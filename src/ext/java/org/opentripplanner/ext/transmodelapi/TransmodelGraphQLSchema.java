@@ -25,7 +25,6 @@ import org.opentripplanner.ext.transmodelapi.mapping.TransitIdMapper;
 import org.opentripplanner.ext.transmodelapi.model.DefaultRoutingRequestType;
 import org.opentripplanner.ext.transmodelapi.model.EnumTypes;
 import org.opentripplanner.ext.transmodelapi.model.PlanResponse;
-import org.opentripplanner.ext.transmodelapi.model.TransmodelTransportSubmode;
 import org.opentripplanner.ext.transmodelapi.model.TransportModeSlack;
 import org.opentripplanner.ext.transmodelapi.model.TripTimeShortHelper;
 import org.opentripplanner.ext.transmodelapi.model.framework.AuthorityType;
@@ -60,6 +59,7 @@ import org.opentripplanner.ext.transmodelapi.model.timetable.TripMetadataType;
 import org.opentripplanner.ext.transmodelapi.support.GqlUtil;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.Route;
+import org.opentripplanner.model.modes.TransitModeService;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
@@ -111,17 +111,28 @@ public class TransmodelGraphQLSchema {
 
   private final GqlUtil gqlUtil;
 
+  private final TransitModeService transitModeService;
+
   private final Relay relay = new Relay();
 
 
-  private TransmodelGraphQLSchema(RoutingRequest defaultRequest, GqlUtil gqlUtil) {
+  private TransmodelGraphQLSchema(
+      RoutingRequest defaultRequest,
+      GqlUtil gqlUtil,
+      TransitModeService transitModeService
+  ) {
     this.gqlUtil = gqlUtil;
     this.routing = new DefaultRoutingRequestType(defaultRequest);
     this.tripTimeShortHelper = new TripTimeShortHelper();
+    this.transitModeService = transitModeService;
   }
 
-  public static GraphQLSchema create(RoutingRequest defaultRequest, GqlUtil qglUtil) {
-    return new TransmodelGraphQLSchema(defaultRequest, qglUtil).create();
+  public static GraphQLSchema create(
+      RoutingRequest defaultRequest,
+      GqlUtil qglUtil,
+      TransitModeService transitModeService
+  ) {
+    return new TransmodelGraphQLSchema(defaultRequest, qglUtil, transitModeService).create();
   }
 
 
@@ -177,6 +188,8 @@ public class TransmodelGraphQLSchema {
     GraphQLNamedOutputType quayAtDistance = QuayAtDistanceType.createQD(quayType, relay);
 //    GraphQLNamedOutputType placeAtDistanceType = PlaceAtDistanceType.create(relay);
 
+    GraphQLEnumType transportSubMode = EnumTypes.createTransitSubModeEnum(transitModeService);
+
     // Network
     GraphQLObjectType presentationType = PresentationType.create();
     GraphQLOutputType destinationDisplayType = DestinationDisplayType.create();
@@ -189,7 +202,8 @@ public class TransmodelGraphQLSchema {
           presentationType,
           JourneyPatternType.REF,
           ServiceJourneyType.REF,
-          PtSituationElementType.REF
+          PtSituationElementType.REF,
+          transportSubMode
       );
       GraphQLOutputType interchangeType = InterchangeType.create(lineType, ServiceJourneyType.REF);
 
@@ -227,6 +241,25 @@ public class TransmodelGraphQLSchema {
           gqlUtil
       );
 
+      GraphQLInputObjectType transportModeInputType = GraphQLInputObjectType
+          .newInputObject()
+          .name("transportModes")
+          .field(GraphQLInputObjectField
+              .newInputObjectField()
+              .name("transportMode")
+              .description("A transportMode that should be allowed for this search. You can further"
+                  + "narrow it down by specifying a list of transportSubModes")
+              .type(TRANSPORT_MODE)
+              .build())
+          .field(GraphQLInputObjectField.newInputObjectField()
+              .name("transportSubModes")
+              .description("The allowed transportSubModes for this search. If this element is not"
+                  + "present or null, it will default to all transportSubModes for the specified"
+                  + "TransportMode. Be aware that all transportSubModes have an associated "
+                  + "TransportMode, which must match what is specified in the transportMode field.")
+              .type(new GraphQLList(transportSubMode))
+              .build())
+          .build();
 
       GraphQLInputObjectType modesInputType = GraphQLInputObjectType
         .newInputObject()
@@ -260,11 +293,11 @@ public class TransmodelGraphQLSchema {
             .build())
         .field(GraphQLInputObjectField
             .newInputObjectField()
-            .name("transportMode")
-            .description("The allowed modes for the transit part of the trip. Use an empty list "
-                + "to disallow transit for this search. If the element is not present or null, "
-                + "it will default to all transport modes.")
-            .type(new GraphQLList(TRANSPORT_MODE))
+            .name("transportModes")
+            .description("The allowed modes for the transit part of the trip. Use an empty list to "
+                + "disallow transit for this search. If the element is not present or null, it will "
+                + "default to all transport modes.")
+            .type(new GraphQLList(transportModeInputType))
             .build())
         .build();
 
@@ -280,8 +313,8 @@ public class TransmodelGraphQLSchema {
             estimatedCallType,
             lineType,
             serviceJourneyType,
-            ptSituationElementType
-
+            ptSituationElementType,
+            transportSubMode
         );
 
         GraphQLInputObjectType preferredInputType = GraphQLInputObjectType.newInputObject()
@@ -1800,7 +1833,8 @@ public class TransmodelGraphQLSchema {
         GraphQLOutputType estimatedCallType,
         GraphQLOutputType lineType,
         GraphQLOutputType serviceJourneyType,
-        GraphQLOutputType ptSituationElementType
+        GraphQLOutputType ptSituationElementType,
+        GraphQLEnumType transportSubMode
         ) {
         final GraphQLObjectType placeType = GraphQLObjectType.newObject()
                 .name("Place")
@@ -2001,11 +2035,14 @@ public class TransmodelGraphQLSchema {
                         .dataFetcher(environment -> ((Leg) environment.getSource()).mode)
                         .build())
                 .field(GraphQLFieldDefinition.newFieldDefinition()
-                        .name("transportSubmode")
-                        .description("The transport sub mode (e.g., localBus or expressBus) used when traversing this leg. Null if leg is not a ride")
-                        .type(EnumTypes.TRANSPORT_SUBMODE)
-                        .dataFetcher(environment -> TransmodelTransportSubmode.UNDEFINED)
-                        .build())
+                    .name("transportSubmode")
+                    .description("The transport sub mode (e.g., localBus or expressBus) used when traversing this leg. Null if leg is not a ride")
+                    .type(transportSubMode)
+                    .dataFetcher(environment -> ((Leg)environment.getSource()).getRoute() != null
+                        && ((Leg)environment.getSource()).getRoute().getMode().getNetexOutputSubmode() != null
+                        ? ((Leg)environment.getSource()).getRoute().getMode()
+                        : null)
+                    .build())
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("duration")
                         .description("The legs's duration in seconds")
