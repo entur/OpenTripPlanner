@@ -19,8 +19,6 @@ import graphql.schema.GraphQLOutputType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.GraphQLType;
 import org.apache.commons.collections.CollectionUtils;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.common.MavenVersion;
 import org.opentripplanner.ext.transmodelapi.mapping.PlaceMapper;
 import org.opentripplanner.ext.transmodelapi.mapping.TransitIdMapper;
@@ -650,7 +648,12 @@ public class TransmodelGraphQLSchema {
                         .type(Scalars.GraphQLBoolean)
                         .defaultValue(routing.request.debugItineraryFilter)
                         .build())
-
+                .argument(GraphQLArgument.newArgument()
+                    .name("flexibleOnly")
+                    .description("Only return itineraries containing at least one flexible leg.")
+                    .type(Scalars.GraphQLBoolean)
+                    .defaultValue(routing.request.flexibleOnly)
+                    .build())
                 .dataFetcher(environment -> new TransmodelGraphQLPlanner().plan(environment))
                 .build();
 
@@ -2194,11 +2197,11 @@ public class TransmodelGraphQLSchema {
     }
 
 
-    //private <T extends Object> List<String> reverseMapEnumVals(GraphQLEnumType enumType, Collection<T> otpVals) {
-    //    return enumType.getValues().stream().filter(e -> otpVals.contains(e.getValue())).map(e -> e.getName()).collect(Collectors.toList());
-    //}
+  //private <T extends Object> List<String> reverseMapEnumVals(GraphQLEnumType enumType, Collection<T> otpVals) {
+  //    return enumType.getValues().stream().filter(e -> otpVals.contains(e.getValue())).map(e -> e.getName()).collect(Collectors.toList());
+  //}
 
-    private static String reverseMapEnumVal(GraphQLEnumType enumType, Object otpVal) {
-        return enumType.getValues().stream().filter(e -> e.getValue().equals(otpVal)).findFirst().get().getName();
-    }
+  private static String reverseMapEnumVal(GraphQLEnumType enumType, Object otpVal) {
+    return enumType.getValues().stream().filter(e -> e.getValue().equals(otpVal)).findFirst().get().getName();
+  }
 }
