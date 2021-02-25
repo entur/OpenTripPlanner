@@ -178,6 +178,7 @@ public class HSLFareServiceImpl extends DefaultFareServiceImpl {
             bestFare = specialRouteFare;
             bestAttribute = specialFareAttribute;
         }
+        LOG.debug("HSL {} best for {}", bestAttribute, rides);
         return new FareAndId(bestFare, bestAttribute == null ? null : bestAttribute.getId());
     }
 }
