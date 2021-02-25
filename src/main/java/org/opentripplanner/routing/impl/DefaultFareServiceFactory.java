@@ -78,15 +78,21 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
             if (contains != null) {
                 fareRule.addContains(contains);
             }
+
             String origin = rule.getOriginId();
             String destination = rule.getDestinationId();
-            if (origin != null || destination != null) {
-                fareRule.addOriginDestination(origin, destination);
-            }
             Route route = rule.getRoute();
+
             if (route != null) {
                 FeedScopedId routeId = route.getId();
                 fareRule.addRoute(routeId);
+                if (origin != null && destination != null) {
+                    fareRule.addRouteOriginDestination(routeId.toString(), origin, destination);
+                }
+            } else {
+                if (origin != null || destination != null) {
+                    fareRule.addOriginDestination(origin, destination);
+                }
             }
         }
     }

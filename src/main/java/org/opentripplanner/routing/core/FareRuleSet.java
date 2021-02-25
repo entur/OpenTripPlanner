@@ -7,6 +7,7 @@ import java.util.Set;
 import org.opentripplanner.model.FeedScopedId;
 import org.opentripplanner.model.FareAttribute;
 import org.opentripplanner.common.model.P2;
+import org.opentripplanner.common.model.P3;
 
 public class FareRuleSet implements Serializable {
 
@@ -16,26 +17,29 @@ public class FareRuleSet implements Serializable {
     private Set<FeedScopedId> routes;
     private Set<P2<String>> originDestinations;
     private Set<String> contains;
+    private Set<P3<String>> routeOriginDestinations;
+
     public Set<String> getContains() {
         return contains;
     }
 
     private FareAttribute fareAttribute;
     private Set<FeedScopedId> trips;
-    
+
     public FareRuleSet(FareAttribute fareAttribute) {
         this.fareAttribute = fareAttribute;
         routes = new HashSet<FeedScopedId>();
         originDestinations= new HashSet<P2<String>>();
         contains = new HashSet<String>();
         trips = new HashSet<FeedScopedId>();
+        routeOriginDestinations= new HashSet<P3<String>>();
     }
 
     public void setAgency(String agency) {
         // TODO With new GTFS lib, read value from fareAttribute directly?
         this.agency = agency;
     }
-    
+
     public String getAgency() {
     	return agency;
     }
@@ -51,11 +55,11 @@ public class FareRuleSet implements Serializable {
     public void addContains(String containsId) {
         contains.add(containsId);
     }
-    
+
     public void addRoute(FeedScopedId route) {
         routes.add(route);
     }
-    
+
     public Set<FeedScopedId> getRoutes() {
     	return routes;
     }
@@ -71,11 +75,19 @@ public class FareRuleSet implements Serializable {
     public void addTrip(FeedScopedId trip) {
     	trips.add(trip);
     }
-    
+
     public Set<FeedScopedId> getTrips() {
     	return trips;
     }
-    
+
+    public void addRouteOriginDestination(String route, String origin, String destination) {
+        routeOriginDestinations.add(new P3<String>(route, origin, destination));
+    }
+
+    public Set<P3<String>> getRouteOriginDestinations() {
+        return routeOriginDestinations;
+    }
+
     public boolean matches(Set<String> agencies, String startZone, String endZone, Set<String> zonesVisited,
                            Set<FeedScopedId> routesVisited, Set<FeedScopedId> tripsVisited) {
         //check for matching agency
@@ -111,7 +123,7 @@ public class FareRuleSet implements Serializable {
                 return false;
             }
         }
-        
+
         //check for matching trips
         if (trips.size() != 0) {
         	if (!trips.containsAll(tripsVisited)) {
