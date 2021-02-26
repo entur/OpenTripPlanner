@@ -58,7 +58,7 @@ public final class FareRule implements Serializable {
     }
 
     public String toString() {
-        return "<FareRule"
+        return "<FareRule "
                 + toStrOpt(" route=", route)
                 + toStrOpt(" origin=", originId)
                 + toStrOpt(" contains=", containsId)

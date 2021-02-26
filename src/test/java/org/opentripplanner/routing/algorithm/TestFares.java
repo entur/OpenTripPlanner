@@ -28,7 +28,7 @@ import static org.opentripplanner.calendar.impl.CalendarServiceDataFactoryImpl.c
 public class TestFares extends TestCase {
 
     private AStar aStar = new AStar();
-    
+
     public void testBasic() throws Exception {
 
         Graph gg = new Graph();
@@ -51,7 +51,7 @@ public class TestFares extends TestCase {
         path = spt.getPath(gg.getVertex(feedId + ":Mountain View Caltrain"), true);
 
         FareService fareService = gg.getService(FareService.class);
-        
+
         Fare cost = fareService.getCost(path);
         assertEquals(cost.getFare(FareType.regular), new Money(new WrappedCurrency("USD"), 425));
     }
@@ -86,9 +86,9 @@ public class TestFares extends TestCase {
         path = spt.getPath(gg.getVertex(feedId + ":1252"), true);
         assertNotNull(path);
         cost = fareService.getCost(path);
-        
+
         //assertEquals(cost.getFare(FareType.regular), new Money(new WrappedCurrency("USD"), 460));
-        
+
         // complex trip
         options.maxTransfers = 5;
         startTime = TestUtils.dateInSeconds("America/Los_Angeles", 2009, 11, 1, 14, 0, 0);
@@ -103,50 +103,6 @@ public class TestFares extends TestCase {
         // this is commented out because portland's fares are, I think, broken in the gtfs. see
         // thread on gtfs-changes.
         // assertEquals(cost.getFare(FareType.regular), new Money(new WrappedCurrency("USD"), 430));
-    }
-    
-    
-    public void testKCM() throws Exception {
-    	
-    	Graph gg = new Graph();
-        GtfsContext context = GtfsLibrary.readGtfs(new File(ConstantsForTests.KCM_GTFS));
-        
-        PatternHopFactory factory = new PatternHopFactory(context);
-        factory.setFareServiceFactory(new SeattleFareServiceFactory());
-        
-        factory.run(gg);
-        gg.putService(
-                CalendarServiceData.class,
-                createCalendarServiceData(context.getOtpTransitService())
-        );
-        RoutingRequest options = new RoutingRequest();
-        String feedId = gg.getFeedIds().iterator().next();
-       
-        String vertex0 = feedId + ":2010";
-        String vertex1 = feedId + ":2140";
-        ShortestPathTree spt;
-        GraphPath path = null;
-        
-        FareService fareService = gg.getService(FareService.class);        
-        
-        long offPeakStartTime = TestUtils.dateInSeconds("America/Los_Angeles", 2016, 5, 24, 5, 0, 0);
-        options.dateTime = offPeakStartTime;
-        options.setRoutingContext(gg, vertex0, vertex1);
-        spt = aStar.getShortestPathTree(options);
-        path = spt.getPath(gg.getVertex(vertex1), true);
-
-        Fare costOffPeak = fareService.getCost(path);
-        assertEquals(costOffPeak.getFare(FareType.regular), new Money(new WrappedCurrency("USD"), 250));
-        
-        long onPeakStartTime = TestUtils.dateInSeconds("America/Los_Angeles", 2016, 5, 24, 8, 0, 0);
-        options.dateTime = onPeakStartTime;
-        options.setRoutingContext(gg, vertex0, vertex1);
-        spt = aStar.getShortestPathTree(options);
-        path = spt.getPath(gg.getVertex(vertex1), true);
-
-        Fare costOnPeak = fareService.getCost(path);
-        assertEquals(costOnPeak.getFare(FareType.regular), new Money(new WrappedCurrency("USD"), 275));
-        
     }
 
     public void testFareComponent() throws Exception {
