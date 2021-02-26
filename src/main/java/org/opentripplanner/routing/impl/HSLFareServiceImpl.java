@@ -100,17 +100,25 @@ public class HSLFareServiceImpl extends DefaultFareServiceImpl {
         long startTime = rides.get(0).startTime;
         long lastRideStartTime = startTime;
 
+        float specialRouteFare = Float.POSITIVE_INFINITY;
+        FareAttribute specialFareAttribute = null;
+
         for (Ride ride : rides) {
             lastRideStartTime = ride.startTime;
 
-            /* HSL specific logig: all exception routes start and end from the defined zone set,
+            /* HSL specific logic: all exception routes start and end from the defined zone set,
                but visit temporarily (maybe 1 stop only) an 'external' zone */
             float bestSpecialFare = Float.POSITIVE_INFINITY;
             Set<String> ruleZones = null;
             for (FareRuleSet ruleSet : fareRules) {
-                if(ruleSet.getRoutes().contains(ride.route) &&
+                String routeOriginDestination = String.valueOf(ride.route) + ", " + String.valueOf(ride.startZone) + ", " + String.valueOf(ride.endZone);
+                boolean isSpecialRoute = false;
+                if(!ruleSet.getRouteOriginDestinations().isEmpty() && ruleSet.getRouteOriginDestinations().toString().indexOf(routeOriginDestination) != -1) {
+                    isSpecialRoute = true;
+                }
+                if(isSpecialRoute || (ruleSet.getRoutes().contains(ride.route) &&
                    ruleSet.getContains().contains(ride.startZone) &&
-                   ruleSet.getContains().contains(ride.endZone)) {
+                   ruleSet.getContains().contains(ride.endZone))) {
                     // check validity of this special rule and that it is the cheapest applicable one
                     FareAttribute attribute = ruleSet.getFareAttribute();
                     if (!attribute.isTransferDurationSet() ||
@@ -119,6 +127,10 @@ public class HSLFareServiceImpl extends DefaultFareServiceImpl {
                             if (newFare < bestSpecialFare) {
                                 bestSpecialFare = newFare;
                                 ruleZones = ruleSet.getContains();
+                                if(isSpecialRoute) {
+                                    specialRouteFare = bestSpecialFare;
+                                    specialFareAttribute = attribute;
+                                }
                             }
                         }
                 }
@@ -137,29 +149,34 @@ public class HSLFareServiceImpl extends DefaultFareServiceImpl {
         float bestFare = Float.POSITIVE_INFINITY;
         long tripTime = lastRideStartTime - startTime;
 
-        // find the best fare that matches this set of rides
-        for (FareRuleSet ruleSet : fareRules) {
-            /* another HSL specific change: We do not set rules for every possible zone combination,
-               but for the largest zone set allowed for a certain ticket type.
-               This way we need only a few rules instead of hundreds of rules. Good for speed!
-            */
-            if (ruleSet.getContains().containsAll(zones)) { // contains, not equals !!
-                FareAttribute attribute = ruleSet.getFareAttribute();
-                // transfers are evaluated at boarding time
-                if (attribute.isTransferDurationSet()) {
-                    if(tripTime > attribute.getTransferDuration()) {
-                        LOG.debug("transfer time exceeded; {} > {} in fare {}", tripTime, attribute.getTransferDuration(), attribute.getId());
-                        continue;
-                    } else {
-                        LOG.debug("transfer time OK; {} < {} in fare {}", tripTime, attribute.getTransferDuration(), attribute.getId());
+        if(zones.size() > 0) {
+            // find the best fare that matches this set of rides
+            for (FareRuleSet ruleSet : fareRules) {
+                /* another HSL specific change: We do not set rules for every possible zone combination,
+                but for the largest zone set allowed for a certain ticket type.
+                This way we need only a few rules instead of hundreds of rules. Good for speed!
+                */
+                if (ruleSet.getContains().containsAll(zones)) { // contains, not equals !!
+                    FareAttribute attribute = ruleSet.getFareAttribute();
+                    // transfers are evaluated at boarding time
+                    if (attribute.isTransferDurationSet()) {
+                        if(tripTime > attribute.getTransferDuration()) {
+                            LOG.debug("transfer time exceeded; {} > {} in fare {}", tripTime, attribute.getTransferDuration(), attribute.getId());
+                            continue;
+                        } else {
+                            LOG.debug("transfer time OK; {} < {} in fare {}", tripTime, attribute.getTransferDuration(), attribute.getId());
+                        }
+                    }
+                    float newFare = getFarePrice(attribute, fareType);
+                    if (newFare < bestFare) {
+                        bestAttribute = attribute;
+                        bestFare = newFare;
                     }
                 }
-                float newFare = getFarePrice(attribute, fareType);
-                if (newFare < bestFare) {
-                    bestAttribute = attribute;
-                    bestFare = newFare;
-                }
             }
+        } else if (specialRouteFare != Float.POSITIVE_INFINITY && specialFareAttribute != null) {
+            bestFare = specialRouteFare;
+            bestAttribute = specialFareAttribute;
         }
         LOG.debug("HSL {} best for {}", bestAttribute, rides);
         return new FareAndId(bestFare, bestAttribute == null ? null : bestAttribute.getId());
