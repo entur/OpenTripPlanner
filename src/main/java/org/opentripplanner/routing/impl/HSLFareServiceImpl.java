@@ -113,7 +113,7 @@ public class HSLFareServiceImpl extends DefaultFareServiceImpl {
             for (FareRuleSet ruleSet : fareRules) {
                 String routeOriginDestination = String.valueOf(ride.route) + ", " + String.valueOf(ride.startZone) + ", " + String.valueOf(ride.endZone);
                 boolean isSpecialRoute = false;
-                if(ruleSet.getRoutes().size() == 1 && !ruleSet.getRouteOriginDestinations().isEmpty() && ruleSet.getRouteOriginDestinations().toString().indexOf(routeOriginDestination) != -1) {
+                if(!ruleSet.getRouteOriginDestinations().isEmpty() && ruleSet.getRouteOriginDestinations().toString().indexOf(routeOriginDestination) != -1) {
                     isSpecialRoute = true;
                 }
                 if(isSpecialRoute || (ruleSet.getRoutes().contains(ride.route) &&

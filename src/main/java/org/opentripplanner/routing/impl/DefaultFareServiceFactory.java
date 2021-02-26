@@ -89,9 +89,6 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
                     fareRule.addRouteOriginDestination(routeId.toString(), origin, destination);
                 } else {
                     fareRule.addRoute(routeId);
-                    if (origin != null || destination != null) {
-                        fareRule.addOriginDestination(origin, destination);
-                    }
                 }
             } else {
                 if (origin != null || destination != null) {
