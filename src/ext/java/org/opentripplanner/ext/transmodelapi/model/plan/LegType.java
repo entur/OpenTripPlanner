@@ -293,6 +293,11 @@ public class LegType {
             .name("bookingArrangements")
             .type(bookingArrangementType)
             .build())
+        .field(GraphQLFieldDefinition
+            .newFieldDefinition()
+            .name("bikeRentalNetworks")
+            .type(new GraphQLNonNull(new GraphQLList(Scalars.GraphQLString)))
+            .build())
         .build();
   }
 }
