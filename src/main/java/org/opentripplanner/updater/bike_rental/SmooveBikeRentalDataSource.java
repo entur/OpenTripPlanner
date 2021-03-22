@@ -63,7 +63,6 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
      * </pre>
      */
     public BikeRentalStation makeStation(JsonNode node) {
-        // TODO: final winter maintenance value not known yet
         BikeRentalStation station = new BikeRentalStation();
         station.id = node.path("name").asText().split("\\s", 2)[0];
         station.name = new NonLocalizedString(node.path("name").asText().split("\\s", 2)[1]);
@@ -76,9 +75,11 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
             if (station.state.equals("Station on")) {
                 station.bikesAvailable = node.path("avl_bikes").asInt();
                 station.spacesAvailable = node.path("free_slots").asInt();
+                station.capacity = node.path("total_slots").asInt();
             } else {
                 station.bikesAvailable = 0;
                 station.spacesAvailable = 0;
+                station.capacity = node.path("total_slots").asInt();
             }
             return station;
         } catch (NumberFormatException e) {
