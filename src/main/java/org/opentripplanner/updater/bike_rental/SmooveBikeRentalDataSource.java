@@ -31,19 +31,21 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
     private static final Logger log = LoggerFactory.getLogger(SmooveBikeRentalDataSource.class);
 
     private String networkName;
+    private boolean allowOverloading = false;
 
-    public SmooveBikeRentalDataSource(String networkName) {
+    public SmooveBikeRentalDataSource(String networkName, boolean allowOverloading) {
         super("result");
         this.networkName = defaultIfEmpty(networkName, "smoove");
+	this.allowOverloading = allowOverloading;
     }
-    
+
     private String defaultIfEmpty(String value, String defaultValue) {
         if (value == null || value.isEmpty())
             return defaultValue;
-        
+
         return value;
     }
-    
+
     /**
      * <pre>
      * {
@@ -69,6 +71,8 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
         station.state = node.path("style").asText();
         station.networks = new HashSet<String>();
         station.networks.add(this.networkName);
+	station.allowOverloading = this.allowOverloading;
+
         try {
             station.y = Double.parseDouble(node.path("coordinates").asText().split(",")[0].trim());
             station.x = Double.parseDouble(node.path("coordinates").asText().split(",")[1].trim());
