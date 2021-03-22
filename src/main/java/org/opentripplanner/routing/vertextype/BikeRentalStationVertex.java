@@ -38,6 +38,7 @@ public class BikeRentalStationVertex extends Vertex {
         this.setId(station.id);
         this.setBikesAvailable(station.bikesAvailable);
         this.setSpacesAvailable(station.spacesAvailable);
+	this.setAllowOverloading(station.allowOverloading);
         this.isCarStation = station.isCarStation;
         this.station = station;
     }

@@ -64,6 +64,7 @@ public class BikeRentalUpdater extends PollingGraphUpdater {
         // stations for another network. TODO shouldn't we give each updater a unique network ID by default?
         String networkName = config.path("network").asText();
 	boolean allowOverloading = config.path("allowOverloading").asText().equals("true");
+
         BikeRentalDataSource source = null;
         if (sourceType != null) {
             if (sourceType.equals("jcdecaux")) {

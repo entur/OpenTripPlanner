@@ -72,7 +72,6 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
         station.networks = new HashSet<String>();
         station.networks.add(this.networkName);
 	station.allowOverloading = this.allowOverloading;
-
         try {
             station.y = Double.parseDouble(node.path("coordinates").asText().split(",")[0].trim());
             station.x = Double.parseDouble(node.path("coordinates").asText().split(",")[1].trim());
