@@ -35,7 +35,7 @@ public class TestBikeRentalStationSource extends TestCase {
     }
 
     public void testSmoove() {
-        SmooveBikeRentalDataSource source = new SmooveBikeRentalDataSource(null);
+        SmooveBikeRentalDataSource source = new SmooveBikeRentalDataSource(null, false);
         source.setUrl("file:src/test/resources/bike/smoove.json");
         assertTrue(source.update());
         List<BikeRentalStation> rentalStations = source.getStations();
@@ -73,7 +73,7 @@ public class TestBikeRentalStationSource extends TestCase {
         // Ignores mismatch with total_slots
 
         // Test giving network name to data source
-        SmooveBikeRentalDataSource sourceWithCustomNetwork = new SmooveBikeRentalDataSource("Helsinki");
+        SmooveBikeRentalDataSource sourceWithCustomNetwork = new SmooveBikeRentalDataSource("Helsinki", true);
         sourceWithCustomNetwork.setUrl("file:src/test/resources/bike/smoove.json");
         assertTrue(sourceWithCustomNetwork.update());
         List<BikeRentalStation> rentalStationsWithCustomNetwork = sourceWithCustomNetwork.getStations();

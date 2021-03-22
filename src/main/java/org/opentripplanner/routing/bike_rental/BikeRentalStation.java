@@ -24,7 +24,11 @@ public class BikeRentalStation implements Serializable, Cloneable {
     @JsonSerialize
     public int spacesAvailable = Integer.MAX_VALUE;
     @JsonSerialize
+    public int capacity = 0; // default, means nominal capacity not defined
+    @JsonSerialize
     public boolean allowDropoff = true;
+    @JsonSerialize
+    public boolean allowOverloading = false;
     @JsonSerialize
     public boolean isFloatingBike = false;
     @JsonSerialize

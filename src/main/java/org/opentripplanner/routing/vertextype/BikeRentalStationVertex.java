@@ -25,6 +25,8 @@ public class BikeRentalStationVertex extends Vertex {
 
     private int spacesAvailable;
 
+    private boolean allowOverloading;
+
     private String id;
 
     /** Some car rental systems and flex transit systems work exactly like bike rental, but with cars. */
@@ -36,6 +38,7 @@ public class BikeRentalStationVertex extends Vertex {
         this.setId(station.id);
         this.setBikesAvailable(station.bikesAvailable);
         this.setSpacesAvailable(station.spacesAvailable);
+	this.setAllowOverloading(station.allowOverloading);
         this.isCarStation = station.isCarStation;
         this.station = station;
     }
@@ -48,12 +51,20 @@ public class BikeRentalStationVertex extends Vertex {
         return spacesAvailable;
     }
 
+    public boolean getAllowOverloading() {
+        return allowOverloading;
+    }
+
     public void setBikesAvailable(int bikes) {
         this.bikesAvailable = bikes;
     }
 
     public void setSpacesAvailable(int spaces) {
         this.spacesAvailable = spaces;
+    }
+
+    public void setAllowOverloading(boolean allowOverloading) {
+        this.allowOverloading = allowOverloading;
     }
 
     public String getId() {
@@ -81,5 +92,6 @@ public class BikeRentalStationVertex extends Vertex {
         this.station = station;
         this.bikesAvailable = station.bikesAvailable;
         this.spacesAvailable = station.spacesAvailable;
+	this.allowOverloading = station.allowOverloading;
     }
 }

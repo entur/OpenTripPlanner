@@ -31,19 +31,21 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
     private static final Logger log = LoggerFactory.getLogger(SmooveBikeRentalDataSource.class);
 
     private String networkName;
+    private boolean allowOverloading = false;
 
-    public SmooveBikeRentalDataSource(String networkName) {
+    public SmooveBikeRentalDataSource(String networkName, boolean allowOverloading) {
         super("result");
         this.networkName = defaultIfEmpty(networkName, "smoove");
+	this.allowOverloading = allowOverloading;
     }
-    
+
     private String defaultIfEmpty(String value, String defaultValue) {
         if (value == null || value.isEmpty())
             return defaultValue;
-        
+
         return value;
     }
-    
+
     /**
      * <pre>
      * {
@@ -63,22 +65,24 @@ public class SmooveBikeRentalDataSource extends GenericJsonBikeRentalDataSource 
      * </pre>
      */
     public BikeRentalStation makeStation(JsonNode node) {
-        // TODO: final winter maintenance value not known yet
         BikeRentalStation station = new BikeRentalStation();
         station.id = node.path("name").asText().split("\\s", 2)[0];
         station.name = new NonLocalizedString(node.path("name").asText().split("\\s", 2)[1]);
         station.state = node.path("style").asText();
         station.networks = new HashSet<String>();
         station.networks.add(this.networkName);
+	station.allowOverloading = this.allowOverloading;
         try {
             station.y = Double.parseDouble(node.path("coordinates").asText().split(",")[0].trim());
             station.x = Double.parseDouble(node.path("coordinates").asText().split(",")[1].trim());
             if (station.state.equals("Station on")) {
                 station.bikesAvailable = node.path("avl_bikes").asInt();
                 station.spacesAvailable = node.path("free_slots").asInt();
+                station.capacity = node.path("total_slots").asInt();
             } else {
                 station.bikesAvailable = 0;
                 station.spacesAvailable = 0;
+                station.capacity = node.path("total_slots").asInt();
             }
             return station;
         } catch (NumberFormatException e) {

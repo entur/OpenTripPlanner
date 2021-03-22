@@ -50,11 +50,11 @@ public abstract class RentABikeAbstractEdge extends Edge {
          */
         if (noBikeRentalNetworkAllowed(options.allowedBikeRentalNetworks))
             return null;
-        
+
         BikeRentalStationVertex dropoff = (BikeRentalStationVertex) tov;
         if (options.useBikeRentalAvailabilityInformation && dropoff.getBikesAvailable() == 0)
             return null;
-        
+
         StateEditor editor = state.edit(this);
         editor.incrementWeight(options.arriveBy ? options.bikeRentalDropoffCost : options.bikeRentalPickupCost);
         editor.incrementTimeInSeconds(options.arriveBy ? options.bikeRentalDropoffTime : options.bikeRentalPickupTime);
@@ -92,7 +92,7 @@ public abstract class RentABikeAbstractEdge extends Edge {
             return null;
         
         BikeRentalStationVertex pickup = (BikeRentalStationVertex) tov;
-        if (options.useBikeRentalAvailabilityInformation && pickup.getSpacesAvailable() == 0)
+        if (options.useBikeRentalAvailabilityInformation && pickup.getSpacesAvailable() == 0  && !pickup.getAllowOverloading())
             return null;
         
         StateEditor editor = state.edit(this);
