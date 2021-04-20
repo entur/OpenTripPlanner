@@ -811,10 +811,15 @@ public class GraphIndex {
 
         final TimetableSnapshot snapshot = (graph.timetableSnapshotSource != null)
             ? graph.timetableSnapshotSource.getTimetableSnapshot() : null;
-
         Date date = new Date(startTime * 1000);
-        final ServiceDate[] serviceDates = {new ServiceDate(date).previous(), new ServiceDate(date), new ServiceDate(date).next()};
-            // Loop through all possible days
+        int timeRangeInDays = timeRange / 1440;
+        int serviceDateArrayLength = (timeRangeInDays > 0 ? timeRangeInDays : 3);
+        ServiceDate[] serviceDates = new ServiceDate[serviceDateArrayLength + 1];
+        for(int i = -1; i < serviceDateArrayLength; i++)  {
+            ServiceDate serviceDate = new ServiceDate(date).shift(i);
+            serviceDates[i + 1] = serviceDate;
+        }  
+
         for (final ServiceDate serviceDate : serviceDates) {
             final ServiceDay sd = new ServiceDay(graph, serviceDate, calendarService,
                     pattern.route.getAgency().getId());
@@ -825,7 +830,7 @@ public class GraphIndex {
                     tt = pattern.scheduledTimetable;
                 }
 
-                if (!tt.temporallyViable(sd, startTime, timeRange, true)) continue;
+                // if (!tt.temporallyViable(sd, startTime, timeRange, true)) continue;
 
             final int starttimeSecondsSinceMidnight = sd.secondsSinceMidnight(startTime);
             int stopIndex = 0;
