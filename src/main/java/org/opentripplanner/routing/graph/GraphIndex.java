@@ -812,7 +812,7 @@ public class GraphIndex {
         final TimetableSnapshot snapshot = (graph.timetableSnapshotSource != null)
             ? graph.timetableSnapshotSource.getTimetableSnapshot() : null;
         Date date = new Date(startTime * 1000);
-        int timeRangeInDays = timeRange / 1440;
+        int timeRangeInDays = timeRange / 86400;
         int serviceDateArrayLength = (timeRangeInDays > 0 ? timeRangeInDays : 3);
         ServiceDate[] serviceDates = new ServiceDate[serviceDateArrayLength + 1];
         for(int i = -1; i < serviceDateArrayLength; i++)  {
