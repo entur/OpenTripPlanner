@@ -830,7 +830,7 @@ public class GraphIndex {
                     tt = pattern.scheduledTimetable;
                 }
 
-                // if (!tt.temporallyViable(sd, startTime, timeRange, true)) continue;
+                if (!tt.temporallyViable(sd, startTime, timeRange, true)) continue;
 
             final int starttimeSecondsSinceMidnight = sd.secondsSinceMidnight(startTime);
             int stopIndex = 0;
