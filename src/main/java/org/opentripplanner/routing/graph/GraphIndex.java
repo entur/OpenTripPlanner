@@ -813,13 +813,12 @@ public class GraphIndex {
             ? graph.timetableSnapshotSource.getTimetableSnapshot() : null;
         Date date = new Date(startTime * 1000);
         int timeRangeInDays = timeRange / 86400;
-        int serviceDateArrayLength = (timeRangeInDays > 0 ? timeRangeInDays : 3);
+        int serviceDateArrayLength = (timeRangeInDays > 1 ? timeRangeInDays : 2);
         ServiceDate[] serviceDates = new ServiceDate[serviceDateArrayLength + 1];
         for(int i = -1; i < serviceDateArrayLength; i++)  {
             ServiceDate serviceDate = new ServiceDate(date).shift(i);
             serviceDates[i + 1] = serviceDate;
         }  
-
         for (final ServiceDate serviceDate : serviceDates) {
             final ServiceDay sd = new ServiceDay(graph, serviceDate, calendarService,
                     pattern.route.getAgency().getId());
