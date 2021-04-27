@@ -858,12 +858,17 @@ public class GraphIndex {
                             ret.insertWithOverflow(new TripTimeShort(freq.materialize(stopIndex, departureTime, true),
                                     stopIndex, currStop, sd));
                                 departureTime += freq.headway;
-                            }
                         }
                     }
-                stopIndex++;
                 }
+                stopIndex++;
             }
+            System.out.println(serviceDate);
+            System.out.println(ret.size());
+            if (ret.size() >= numberOfDepartures) {
+                break;
+            }
+        }
 
         final List<TripTimeShort> result = new ArrayList<>();
         while(ret.size()>0) {
