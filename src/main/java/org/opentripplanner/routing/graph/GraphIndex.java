@@ -863,8 +863,6 @@ public class GraphIndex {
                 }
                 stopIndex++;
             }
-            System.out.println(serviceDate);
-            System.out.println(ret.size());
             if (ret.size() >= numberOfDepartures) {
                 break;
             }
