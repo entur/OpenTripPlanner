@@ -2559,7 +2559,7 @@ public class IndexGraphQLSchema {
                         .build())
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("tags")
-                        .description("Car park's services and authentication methods")
+                        .description("Additional information labels (tags) for the car park")
                         .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
                         .dataFetcher(environment -> ((CarPark) environment.getSource()).tags)
                         .build())
