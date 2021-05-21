@@ -51,15 +51,16 @@ public class HslBikeParkDataSource extends GenericJsonBikeParkDataSource{
             ArrayNode servicesArray = (ArrayNode) node.get("services");
             if (servicesArray.isArray()) {
                 for (JsonNode jsonNode : servicesArray) {
-                    tags.add((String) jsonNode.asText());
+                    tags.add("SERVICE_" + jsonNode.asText());
                 }
             }
             ArrayNode authenticationMethods = (ArrayNode) node.get("authenticationMethods");
             if (authenticationMethods.isArray()) {
                 for (JsonNode jsonNode : authenticationMethods) {
-                    tags.add((String) jsonNode.asText());
+                    tags.add("AUTHENTICATION_METHOD_" + jsonNode.asText());
                 }
             }
+            tags.add("PRICING_METHOD_" + node.path("pricingMethod").asText());
             station.tags = tags;
             return station;
         } catch (Exception e) {
