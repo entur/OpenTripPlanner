@@ -2557,6 +2557,12 @@ public class IndexGraphQLSchema {
                         .type(Scalars.GraphQLFloat)
                         .dataFetcher(environment -> ((CarPark) environment.getSource()).y)
                         .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("tags")
+                        .description("Car park's services and authentication methods")
+                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .dataFetcher(environment -> ((CarPark) environment.getSource()).tags)
+                        .build())
                 .build();
 
         GraphQLInputObjectType filterInputType = GraphQLInputObjectType.newInputObject()
