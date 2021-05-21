@@ -2448,6 +2448,12 @@ public class IndexGraphQLSchema {
                         .type(Scalars.GraphQLFloat)
                         .dataFetcher(environment -> ((BikePark) environment.getSource()).y)
                         .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("tags")
+                        .description("Bike park's services and authentication methods")
+                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .dataFetcher(environment -> ((BikePark) environment.getSource()).tags)
+                        .build())
                 .build();
 
         ticketType = GraphQLObjectType.newObject()
