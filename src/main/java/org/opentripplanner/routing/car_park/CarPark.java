@@ -19,6 +19,8 @@ import org.opentripplanner.util.I18NString;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 
@@ -59,6 +61,9 @@ public class CarPark implements Serializable {
     public boolean realTimeData = true;
 
     public Geometry geometry;
+
+    @JsonSerialize
+    public List<String> tags;
 
     public boolean equals(Object o) {
         if (!(o instanceof CarPark)) {

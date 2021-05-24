@@ -1,6 +1,8 @@
 package org.opentripplanner.routing.bike_park;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -38,6 +40,9 @@ public class BikePark implements Serializable {
     @XmlAttribute
     @JsonSerialize
     public boolean realTimeData = true;
+
+    @JsonSerialize
+    public List<String> tags;
 
     public boolean equals(Object o) {
         if (!(o instanceof BikePark)) {

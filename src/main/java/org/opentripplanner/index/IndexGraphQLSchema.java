@@ -2448,6 +2448,12 @@ public class IndexGraphQLSchema {
                         .type(Scalars.GraphQLFloat)
                         .dataFetcher(environment -> ((BikePark) environment.getSource()).y)
                         .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("tags")
+                        .description("Additional information labels (tags) for the Bike park")
+                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .dataFetcher(environment -> ((BikePark) environment.getSource()).tags)
+                        .build())
                 .build();
 
         ticketType = GraphQLObjectType.newObject()
@@ -2550,6 +2556,12 @@ public class IndexGraphQLSchema {
                         .description("Latitude of the car park (WGS 84)")
                         .type(Scalars.GraphQLFloat)
                         .dataFetcher(environment -> ((CarPark) environment.getSource()).y)
+                        .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("tags")
+                        .description("Additional information labels (tags) for the car park")
+                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .dataFetcher(environment -> ((CarPark) environment.getSource()).tags)
                         .build())
                 .build();
 
