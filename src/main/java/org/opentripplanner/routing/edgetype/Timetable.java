@@ -615,14 +615,10 @@ public class Timetable implements Serializable {
                                 LOG.error("Arrival time at index {} is erroneous.", i);
                                 return null;
                             }
-                        } else {
-                            if (delay == null) {
-                                newTimes.cancelArrivalTime(i);
-                            } else {
-                                newTimes.updateArrivalDelay(i, delay);
-                                if (newTimes.isCanceledArrival(i)) {
-                                    newTimes.unCancelArrivalTime(i);
-                                }
+                        } else if (delay != null) {
+                            newTimes.updateArrivalDelay(i, delay);
+                            if (newTimes.isCanceledArrival(i)) {
+                                newTimes.unCancelArrivalTime(i);
                             }
                         }
 
@@ -645,14 +641,10 @@ public class Timetable implements Serializable {
                                 LOG.error("Departure time at index {} is erroneous.", i);
                                 return null;
                             }
-                        } else {
-                            if (delay == null) {
-                                newTimes.cancelDepartureTime(i);
-                            } else {
-                                newTimes.updateDepartureDelay(i, delay);
-                                if (newTimes.isCanceledDeparture(i)) {
-                                    newTimes.unCancelDepartureTime(i);
-                                }
+                        } else if (delay != null) {
+                            newTimes.updateDepartureDelay(i, delay);
+                            if (newTimes.isCanceledDeparture(i)) {
+                                newTimes.unCancelDepartureTime(i);
                             }
                         }
                     }
