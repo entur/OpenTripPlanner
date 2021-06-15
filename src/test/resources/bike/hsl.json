@@ -72,9 +72,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": ["LIGHTING","BICYCLE_FRAME_LOCK"],
-      "authenticationMethods": ["HSL_TRAVEL_CARD"]
+      ]
     },
 
     {
@@ -146,9 +144,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -220,9 +216,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -299,9 +293,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -373,9 +365,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -447,9 +437,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -521,9 +509,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -595,9 +581,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -670,9 +654,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -744,9 +726,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -818,9 +798,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     },
 
     {
@@ -892,9 +870,7 @@
       "usages":
       [
         "PARK_AND_RIDE"
-      ],
-      "services": [],
-      "authenticationMethods": []
+      ]
     }
   ]
 }

@@ -1,10 +1,6 @@
 package org.opentripplanner.updater.bike_park;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -47,21 +43,6 @@ public class HslBikeParkDataSource extends GenericJsonBikeParkDataSource{
             } else {
                 station.spacesAvailable = node.path("builtCapacity").path("BICYCLE").asInt();
             }
-            List<String> tags = new ArrayList<String>();
-            ArrayNode servicesArray = (ArrayNode) node.get("services");
-            if (servicesArray.isArray()) {
-                for (JsonNode jsonNode : servicesArray) {
-                    tags.add("SERVICE_" + jsonNode.asText());
-                }
-            }
-            ArrayNode authenticationMethods = (ArrayNode) node.get("authenticationMethods");
-            if (authenticationMethods.isArray()) {
-                for (JsonNode jsonNode : authenticationMethods) {
-                    tags.add("AUTHENTICATION_METHOD_" + jsonNode.asText());
-                }
-            }
-            tags.add("PRICING_METHOD_" + node.path("pricingMethod").asText());
-            station.tags = tags;
             return station;
         } catch (Exception e) {
             log.warn("Error parsing bike rental station " + station.id, e);
