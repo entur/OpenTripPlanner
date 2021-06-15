@@ -3,7 +3,6 @@ package org.opentripplanner.updater.car_park;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -19,10 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,21 +63,6 @@ public class HslCarParkDataSource extends GenericJsonCarParkDataSource{
             } else {
                 station.spacesAvailable = station.maxCapacity;
             }
-            List<String> tags = new ArrayList<String>();
-            ArrayNode servicesArray = (ArrayNode) node.get("services");
-            if (servicesArray.isArray()) {
-                for (JsonNode jsonNode : servicesArray) {
-                    tags.add("SERVICE_" + jsonNode.asText());
-                }
-            }
-            ArrayNode authenticationMethods = (ArrayNode) node.get("authenticationMethods");
-            if (authenticationMethods.isArray()) {
-                for (JsonNode jsonNode : authenticationMethods) {
-                    tags.add("AUTHENTICATION_METHOD_" + jsonNode.asText());
-                }
-            }
-            tags.add("PRICING_METHOD_" + node.path("pricingMethod").asText());
-            station.tags = tags;
             return station;
         } catch (Exception e) {
             log.warn("Error parsing car park " + station.id, e);
