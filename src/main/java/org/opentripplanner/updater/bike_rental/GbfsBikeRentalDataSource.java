@@ -29,8 +29,8 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
     /** Some car rental systems and flex transit systems work exactly like bike rental, but with cars. */
     private boolean routeAsCar;
 
-    public GbfsBikeRentalDataSource (String networkName) {
-        stationInformationSource = new GbfsStationDataSource();
+    public GbfsBikeRentalDataSource (String networkName, boolean allowOverloading) {
+        stationInformationSource = new GbfsStationDataSource(allowOverloading);
         stationStatusSource = new GbfsStationStatusDataSource();
         floatingBikeSource = new GbfsFloatingBikeDataSource();
         if (networkName != null && !networkName.isEmpty()) {
@@ -74,6 +74,9 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
             BikeRentalStation status = statusLookup.get(station.id);
             station.bikesAvailable = status.bikesAvailable;
             station.spacesAvailable = status.spacesAvailable;
+            if (station.capacity == 0) {
+                station.capacity = station.bikesAvailable + station.spacesAvailable;
+            }
         }
 
         // Copy the full list of station objects (with status updates) into a List, appending the floating bike stations.
@@ -107,8 +110,11 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
 
     class GbfsStationDataSource extends GenericJsonBikeRentalDataSource {
 
-        public GbfsStationDataSource () {
+        private boolean allowOverloading = false;
+
+        public GbfsStationDataSource (boolean allowOverloading) {
             super("data/stations");
+            this.allowOverloading = allowOverloading;
         }
 
         @Override
@@ -119,6 +125,8 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
             brstation.y = stationNode.path("lat").asDouble();
             brstation.name =  new NonLocalizedString(stationNode.path("name").asText());
             brstation.isCarStation = routeAsCar;
+            brstation.capacity = stationNode.path("capacity").asInt();
+            brstation.allowOverloading = this.allowOverloading;
             return brstation;
         }
     }
@@ -154,10 +162,12 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
             brstation.x = stationNode.path("lon").asDouble();
             brstation.y = stationNode.path("lat").asDouble();
             brstation.bikesAvailable = 1;
+            brstation.capacity = 1;
             brstation.spacesAvailable = 0;
             brstation.allowDropoff = false;
             brstation.isFloatingBike = true;
             brstation.isCarStation = routeAsCar;
+            brstation.allowOverloading = false;
             return brstation;
         }
     }
