@@ -2451,7 +2451,7 @@ public class IndexGraphQLSchema {
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("tags")
                         .description("Additional information labels (tags) for the Bike park")
-                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .type(new GraphQLList(Scalars.GraphQLString))
                         .dataFetcher(environment -> ((BikePark) environment.getSource()).tags)
                         .build())
                 .build();
@@ -2560,7 +2560,7 @@ public class IndexGraphQLSchema {
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("tags")
                         .description("Additional information labels (tags) for the car park")
-                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .type(new GraphQLList(Scalars.GraphQLString))
                         .dataFetcher(environment -> ((CarPark) environment.getSource()).tags)
                         .build())
                 .build();
