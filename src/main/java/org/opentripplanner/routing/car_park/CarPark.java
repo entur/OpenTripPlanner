@@ -62,7 +62,6 @@ public class CarPark implements Serializable {
 
     public Geometry geometry;
 
-    @JsonSerialize
     public List<String> tags;
 
     public boolean equals(Object o) {

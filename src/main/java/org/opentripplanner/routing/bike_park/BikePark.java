@@ -41,7 +41,6 @@ public class BikePark implements Serializable {
     @JsonSerialize
     public boolean realTimeData = true;
 
-    @JsonSerialize
     public List<String> tags;
 
     public boolean equals(Object o) {
