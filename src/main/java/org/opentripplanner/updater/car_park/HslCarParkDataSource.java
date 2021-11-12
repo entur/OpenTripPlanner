@@ -10,6 +10,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
+import org.opentripplanner.common.LocalTimeSpan;
+import org.opentripplanner.common.LocalTimeSpanWeek;
 import org.opentripplanner.routing.car_park.CarPark;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.util.HttpUtils;
@@ -81,11 +83,53 @@ public class HslCarParkDataSource extends GenericJsonCarParkDataSource{
             }
             tags.add("PRICING_METHOD_" + node.path("pricingMethod").asText());
             station.tags = tags;
+
+            LocalTimeSpanWeek timeSpanWeek = new LocalTimeSpanWeek();
+            JsonNode openDayHours = node.path("openingHours").path("byDayType");
+            if (openDayHours.has("BUSINESS_DAY") && openDayHours.path("BUSINESS_DAY").has("from")) {
+                timeSpanWeek.addSpan(
+                    LocalTimeSpanWeek.DayType.BUSINESS_DAY,
+                    convertOpeningHoursToLocalTimeSpan(openDayHours.path("BUSINESS_DAY"))
+                );
+            }
+            if (openDayHours.has("SATURDAY") && openDayHours.path("SATURDAY").has("from")) {
+                timeSpanWeek.addSpan(
+                    LocalTimeSpanWeek.DayType.SATURDAY,
+                    convertOpeningHoursToLocalTimeSpan(openDayHours.path("SATURDAY"))
+                );
+            }
+            if (openDayHours.has("SUNDAY") && openDayHours.path("SUNDAY").has("from")) {
+                timeSpanWeek.addSpan(
+                    LocalTimeSpanWeek.DayType.SUNDAY,
+                    convertOpeningHoursToLocalTimeSpan(openDayHours.path("SUNDAY"))
+                );
+            }
+
+            station.openingHours = timeSpanWeek;
+
             return station;
         } catch (Exception e) {
             log.warn("Error parsing car park " + station.id, e);
             return null;
         }
+    }
+
+    /**
+     * Parses a {@link LocalTimeSpan} from an openingHour definition for a day type.
+     * The times can either have just hours or hours:minutes.
+     */
+    private LocalTimeSpan convertOpeningHoursToLocalTimeSpan(JsonNode dayHours) {
+        String from = dayHours.path("from").asText();
+        int fromSecondsFromMidnight = Integer.parseInt(from.substring(0, 2)) * 60 * 60;
+        if (from.length() > 2) {
+            fromSecondsFromMidnight += Integer.parseInt(from.substring(3, 5)) * 60;
+        }
+        String to = dayHours.path("until").asText();
+        int toSecondsFromMidnight = Integer.parseInt(to.substring(0, 2)) * 60 * 60;
+        if (to.length() > 2) {
+            toSecondsFromMidnight += Integer.parseInt(to.substring(3, 5)) * 60;
+        }
+        return new LocalTimeSpan(fromSecondsFromMidnight, toSecondsFromMidnight);
     }
 
     public boolean update() {

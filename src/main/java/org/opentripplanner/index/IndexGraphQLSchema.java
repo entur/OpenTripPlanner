@@ -13,6 +13,8 @@ import org.opentripplanner.api.common.Message;
 import org.opentripplanner.api.model.*;
 import org.opentripplanner.api.parameter.QualifiedMode;
 import org.opentripplanner.api.parameter.QualifiedModeSet;
+import org.opentripplanner.common.LocalTimeSpan;
+import org.opentripplanner.common.LocalTimeSpanDate;
 import org.opentripplanner.common.model.P2;
 import org.opentripplanner.gtfs.GtfsLibrary;
 import org.opentripplanner.index.model.StopTimesInPattern;
@@ -261,6 +263,10 @@ public class IndexGraphQLSchema {
     public GraphQLObjectType queryType;
 
     public GraphQLOutputType planType = new GraphQLTypeReference("Plan");
+
+    public GraphQLOutputType localTimeSpanType = new GraphQLTypeReference("LocalTimeSpan");
+
+    public GraphQLOutputType localTimeSpanDateType = new GraphQLTypeReference("LocalTimeSpanDate");
 
     public GraphQLSchema indexSchema;
 
@@ -2400,6 +2406,40 @@ public class IndexGraphQLSchema {
                         .build())
                 .build();
 
+        localTimeSpanType = GraphQLObjectType.newObject()
+                .name("LocalTimeSpan")
+                .description("A span of time.")
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("from")
+                        .description("The start of the time timespan as seconds from midnight.")
+                        .type(new GraphQLNonNull(Scalars.GraphQLInt))
+                        .dataFetcher(environment -> ((LocalTimeSpan) environment.getSource()).from)
+                        .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("to")
+                        .description("The end of the timespan as seconds from midnight.")
+                        .type(new GraphQLNonNull(Scalars.GraphQLInt))
+                        .dataFetcher(environment -> ((LocalTimeSpan) environment.getSource()).to)
+                        .build())
+                .build();
+
+        localTimeSpanDateType = GraphQLObjectType.newObject()
+                .name("LocalTimeSpanDate")
+                .description("A date using the local timezone of the object that can contain timespans.")
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("timeSpans")
+                        .description("The time spans for this date.")
+                        .type(new GraphQLList(localTimeSpanType))
+                        .dataFetcher(environment -> ((LocalTimeSpanDate) environment.getSource()).localTimeSpans)
+                        .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("date")
+                        .description("The date of this time span. Format: YYYYMMDD.")
+                        .type(new GraphQLNonNull(Scalars.GraphQLString))
+                        .dataFetcher(environment -> ((LocalTimeSpanDate) environment.getSource()).date)
+                        .build())
+                .build();
+
         bikeParkType = GraphQLObjectType.newObject()
                 .name("BikePark")
                 .description("Bike park represents a location where bicycles can be parked.")
@@ -2451,8 +2491,23 @@ public class IndexGraphQLSchema {
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("tags")
                         .description("Additional information labels (tags) for the Bike park")
-                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .type(new GraphQLList(Scalars.GraphQLString))
                         .dataFetcher(environment -> ((BikePark) environment.getSource()).tags)
+                        .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("openingHours")
+                        .description("Opening hours for the selected dates using the local time of the park. Each date can have multiple time spans.")
+                        .type(new GraphQLList(localTimeSpanDateType))
+                        .argument(GraphQLArgument.newArgument()
+                                .name("dates")
+                                .description("Opening hours will be returned for these dates. Dates should use YYYYMMDD format")
+                                .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Scalars.GraphQLString)))))
+                        .dataFetcher(environment -> {
+                                if (environment.getArgument("dates") instanceof List) {
+                                        return ((BikePark) environment.getSource()).getOpeningHoursForDates(environment.getArgument("dates"));
+                                }
+                                return new ArrayList<String>();
+                        })
                         .build())
                 .build();
 
@@ -2560,8 +2615,23 @@ public class IndexGraphQLSchema {
                 .field(GraphQLFieldDefinition.newFieldDefinition()
                         .name("tags")
                         .description("Additional information labels (tags) for the car park")
-                        .type(new GraphQLList(GraphQLNonNull.nonNull(Scalars.GraphQLString)))
+                        .type(new GraphQLList(Scalars.GraphQLString))
                         .dataFetcher(environment -> ((CarPark) environment.getSource()).tags)
+                        .build())
+                .field(GraphQLFieldDefinition.newFieldDefinition()
+                        .name("openingHours")
+                        .description("Opening hours for the selected dates using the local time of the park. Each date can have multiple time spans.")
+                        .type(new GraphQLList(localTimeSpanDateType))
+                        .argument(GraphQLArgument.newArgument()
+                                .name("dates")
+                                .description("Opening hours will be returned for these dates. Dates should use YYYYMMDD format")
+                                .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Scalars.GraphQLString)))))
+                        .dataFetcher(environment -> {
+                                if (environment.getArgument("dates") instanceof List) {
+                                        return ((CarPark) environment.getSource()).getOpeningHoursForDates(environment.getArgument("dates"));
+                                }
+                                return new ArrayList<String>();
+                        })
                         .build())
                 .build();
 
