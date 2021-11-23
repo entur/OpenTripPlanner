@@ -30,10 +30,10 @@ public class TestHslCarParkDataSource {
         assertEquals(46, ainola.maxCapacity);
         assertEquals(46, ainola.spacesAvailable);
         assertEquals(4, ainola.tags.size());
-        assertEquals("SERVICE_LIGHTING", ainola.tags.get(0));
-        assertEquals("SERVICE_BICYCLE_FRAME_LOCK", ainola.tags.get(1));
-        assertEquals("AUTHENTICATION_METHOD_HSL_TRAVEL_CARD", ainola.tags.get(2));
-        assertEquals("PRICING_METHOD_PARK_AND_RIDE_247_FREE", ainola.tags.get(3));
+        assertEquals("hslpark:SERVICE_LIGHTING", ainola.tags.get(0));
+        assertEquals("hslpark:SERVICE_BICYCLE_FRAME_LOCK", ainola.tags.get(1));
+        assertEquals("hslpark:AUTHENTICATION_METHOD_HSL_TRAVEL_CARD", ainola.tags.get(2));
+        assertEquals("hslpark:PRICING_METHOD_PARK_AND_RIDE_247_FREE", ainola.tags.get(3));
 
         CarPark fake = carParks.get(2);
         assertEquals("Asemakuja itäinen", fake.name.toString());
