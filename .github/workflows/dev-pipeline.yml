@@ -1,19 +1,19 @@
-name: Process master push or pr
+name: Process dev-1.x push or pr
 on:
   push:
     branches:
-      - master
+      - dev-1.x
   pull_request:
     branches:
-      - master
+      - dev-1.x
 jobs:
   docker-push:
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/dev-1.x'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build docker image from master and push it
+      - name: Build docker image from dev-1.x and push it
         run: ./.github/workflows/scripts/build_and_push_dev.sh
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USER }}
