@@ -74,6 +74,7 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
             BikeRentalStation status = statusLookup.get(station.id);
             station.bikesAvailable = status.bikesAvailable;
             station.spacesAvailable = status.spacesAvailable;
+            station.state = status.state;
             if (station.capacity == 0) {
                 station.capacity = station.bikesAvailable + station.spacesAvailable;
             }
@@ -120,7 +121,7 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
         @Override
         public BikeRentalStation makeStation(JsonNode stationNode) {
             BikeRentalStation brstation = new BikeRentalStation();
-            brstation.id = stationNode.path("station_id").toString();
+            brstation.id = stationNode.path("station_id").asText();
             brstation.x = stationNode.path("lon").asDouble();
             brstation.y = stationNode.path("lat").asDouble();
             brstation.name =  new NonLocalizedString(stationNode.path("name").asText());
@@ -140,9 +141,18 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
         @Override
         public BikeRentalStation makeStation(JsonNode stationNode) {
             BikeRentalStation brstation = new BikeRentalStation();
-            brstation.id = stationNode.path("station_id").toString();
+            brstation.id = stationNode.path("station_id").asText();
             brstation.bikesAvailable = stationNode.path("num_bikes_available").asInt();
             brstation.spacesAvailable = stationNode.path("num_docks_available").asInt();
+            if (
+                stationNode.path("is_installed").asBoolean(false) &&
+                stationNode.path("is_renting").asBoolean(false) &&
+                stationNode.path("is_returning").asBoolean(false)
+            ) {
+                brstation.state = "Station on";
+            } else {
+                brstation.state = "Station off";
+            }
             brstation.isCarStation = routeAsCar;
             return brstation;
         }
