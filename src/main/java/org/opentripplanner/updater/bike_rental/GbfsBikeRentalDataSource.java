@@ -26,10 +26,12 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
 
     private String networkName;
 
+    private boolean missesFileExtension;
+
     /** Some car rental systems and flex transit systems work exactly like bike rental, but with cars. */
     private boolean routeAsCar;
 
-    public GbfsBikeRentalDataSource (String networkName, boolean allowOverloading) {
+    public GbfsBikeRentalDataSource (String networkName, boolean allowOverloading, boolean missesFileExtension) {
         stationInformationSource = new GbfsStationDataSource(allowOverloading);
         stationStatusSource = new GbfsStationStatusDataSource();
         // floatingBikeSource = new GbfsFloatingBikeDataSource();
@@ -38,14 +40,16 @@ public class GbfsBikeRentalDataSource implements BikeRentalDataSource, JsonConfi
         } else {
             this.networkName = "GBFS";
         }
+        this.missesFileExtension = missesFileExtension;
     }
 
     public void setBaseUrl (String url) {
         baseUrl = url;
         if (!baseUrl.endsWith("/")) baseUrl += "/";
-        stationInformationSource.setUrl(baseUrl + "station_information.json");
-        stationStatusSource.setUrl(baseUrl + "station_status.json");
-        // floatingBikeSource.setUrl(baseUrl + "free_bike_status.json");
+        String fileExtension = missesFileExtension ? "" : ".json";
+        stationInformationSource.setUrl(baseUrl + "station_information" + fileExtension);
+        stationStatusSource.setUrl(baseUrl + "station_status" + fileExtension);
+        // floatingBikeSource.setUrl(baseUrl + "free_bike_status" + fileExtension);
     }
 
     @Override
