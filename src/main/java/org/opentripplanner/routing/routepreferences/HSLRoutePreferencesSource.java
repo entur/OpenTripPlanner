@@ -23,8 +23,9 @@ public class HSLRoutePreferencesSource implements RoutePreferencesSource {
     private static final String U_ROUTE_REGEX = "^HSL:7.*$";
     // Routes between HSL:2143 - HSL:2165
     // that include character 'A' within 2 characters after the 4 digits
+    // and also route HSL:2321
     private static final String ESPOO_FAST_ROUTES_REGEX 
-            = "^HSL:21(4[3-9]|5[0-9]|6[0-5])(A|[B-Z]A).*$";
+            = "^HSL:(21(4[3-9]|5[0-9]|6[0-5])(A|[B-Z]A).*|2321)$";
 
     private static final Logger LOG = LoggerFactory.getLogger(HSLRoutePreferencesSource.class);
 
