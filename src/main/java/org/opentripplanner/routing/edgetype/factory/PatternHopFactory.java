@@ -598,11 +598,11 @@ public class PatternHopFactory {
                 st0 = stopTimes.get(i);
                 StopTime st1 = stopTimes.get(i + 1);
                 geoms[i] = getHopGeometryViaShapeDistTraveled(graph, shapeId, st0, st1);
-                if (!geoms[i]) {
+                if (geoms[i] == null) {
                     break;
                 }
             }
-            if (i>=hopCount) {
+            if (i >= hopCount) {
                 return geoms;
             }
             // else proceed to method which ignores shape_dist_traveled
