@@ -593,8 +593,9 @@ public class PatternHopFactory {
         boolean hasShapeDist = st0.isShapeDistTraveledSet();
         int hopCount = stopTimes.size() - 1;
         if (hasShapeDist) {
+	    int i;
             // this trip has shape_dist in stop_times
-            for (int i = 0; i < hopCount; ++i) {
+            for (i = 0; i < hopCount; ++i) {
                 st0 = stopTimes.get(i);
                 StopTime st1 = stopTimes.get(i + 1);
                 geoms[i] = getHopGeometryViaShapeDistTraveled(graph, shapeId, st0, st1);
