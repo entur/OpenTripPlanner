@@ -591,14 +591,22 @@ public class PatternHopFactory {
         // Detect presence or absence of shape_dist_traveled on a per-trip basis
         StopTime st0 = stopTimes.get(0);
         boolean hasShapeDist = st0.isShapeDistTraveledSet();
+        int hopCount = stopTimes.size() - 1;
         if (hasShapeDist) {
+	    int i;
             // this trip has shape_dist in stop_times
-            for (int i = 0; i < stopTimes.size() - 1; ++i) {
+            for (i = 0; i < hopCount; ++i) {
                 st0 = stopTimes.get(i);
                 StopTime st1 = stopTimes.get(i + 1);
                 geoms[i] = getHopGeometryViaShapeDistTraveled(graph, shapeId, st0, st1);
+                if (geoms[i] == null) {
+                    break;
+                }
             }
-            return geoms;
+            if (i >= hopCount) {
+                return geoms;
+            }
+            // else proceed to method which ignores shape_dist_traveled
         }
         LineString shape = getLineStringForShapeId(shapeId);
         if (shape == null) {
@@ -1093,8 +1101,7 @@ public class PatternHopFactory {
 
             if (equals(startIndex, endIndex)) {
                 //bogus shape_dist_traveled
-                graph.addBuilderAnnotation(new BogusShapeDistanceTraveled(st1));
-                return createSimpleGeometry(st0.getStop(), st1.getStop());
+                return null;
             }
             LineString line = getLineStringForShapeId(shapeId);
             LocationIndexedLine lol = new LocationIndexedLine(line);
