@@ -593,7 +593,7 @@ public class PatternHopFactory {
         boolean hasShapeDist = st0.isShapeDistTraveledSet();
         int hopCount = stopTimes.size() - 1;
         if (hasShapeDist) {
-	    int i;
+            int i;
             // this trip has shape_dist in stop_times
             for (i = 0; i < hopCount; ++i) {
                 st0 = stopTimes.get(i);
@@ -1176,8 +1176,7 @@ public class PatternHopFactory {
 
             if (!isValid(geometry, st0.getStop(), st1.getStop())) {
                 LOG.warn(graph.addBuilderAnnotation(new BogusShapeGeometryCaught(shapeId, st0, st1)));
-                //fall back to trivial geometry
-                geometry = createSimpleGeometry(st0.getStop(), st1.getStop());
+                return null;
             }
             geometriesByShapeSegmentKey.put(key, (LineString) geometry);
         }
