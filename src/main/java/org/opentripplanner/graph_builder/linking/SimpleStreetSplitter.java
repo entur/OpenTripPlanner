@@ -5,6 +5,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.index.SpatialIndex;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.locationtech.jts.linearref.LocationIndexedLine;
@@ -34,6 +37,7 @@ import org.opentripplanner.routing.edgetype.StreetTransitLink;
 import org.opentripplanner.routing.edgetype.TemporaryFreeEdge;
 import org.opentripplanner.routing.edgetype.AreaEdgeList;
 import org.opentripplanner.routing.edgetype.AreaEdge;
+import org.opentripplanner.routing.edgetype.NamedArea;
 import org.opentripplanner.routing.edgetype.StreetTraversalPermission;
 import org.opentripplanner.routing.graph.Edge;
 import org.opentripplanner.routing.graph.Graph;
@@ -88,6 +92,8 @@ public class SimpleStreetSplitter {
     /** if there are two ways and the distances to them differ by less than this value, we link to both of them */
     public static final double DUPLICATE_WAY_EPSILON_METERS = 0.001;
 
+    private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
+
     private Graph graph;
 
     private HashGridSpatialIndex<Edge> idx;
@@ -140,7 +146,7 @@ public class SimpleStreetSplitter {
     }
 
     /** Link all relevant vertices to the street network */
-    public void link () {	
+    public void link () {        
         for (Vertex v : graph.getVertices()) {
             if (v instanceof TransitStop || v instanceof BikeRentalStationVertex || v instanceof BikeParkVertex) {
                 boolean alreadyLinked = v.getOutgoing().stream().anyMatch(e -> e instanceof StreetTransitLink);
@@ -321,27 +327,88 @@ public class SimpleStreetSplitter {
         return edge.getRef() != null && edge.getRef().equals(code);
     }
 
-    // Link to all vertices in area/platform
+    // Link to all unblocked vertices in area/platform
     private void linkTransitToAreaVertices(Vertex splitterVertex, AreaEdgeList area) {
         List<Vertex> vertices = new ArrayList<>();
 
-        for (AreaEdge areaEdge : area.getEdges()) {
-            if (!vertices.contains(areaEdge.getToVertex())) vertices.add(areaEdge.getToVertex());
-            if (!vertices.contains(areaEdge.getFromVertex())) vertices.add(areaEdge.getFromVertex());
+        Polygon originalEdges = area.getOriginalEdges();
+        Coordinate splitCoord = splitterVertex.getCoordinate();
+        Point splitPoint = GEOMETRY_FACTORY.createPoint(splitCoord);
+
+        // Do not connect to area boundary unless vertex is inside area
+        if (originalEdges == null || !originalEdges.contains(splitPoint)) {
+            return;
         }
 
-        for (Vertex vertex : vertices) {
-            if (vertex instanceof  StreetVertex && !vertex.equals(splitterVertex)) {
-                LineString line = geometryFactory.createLineString(new Coordinate[] { splitterVertex.getCoordinate(), vertex.getCoordinate()});
-                double length = SphericalDistanceLibrary.distance(splitterVertex.getCoordinate(),
-                        vertex.getCoordinate());
-                I18NString name = new LocalizedString("", new OSMWithTags());
+        for (AreaEdge areaEdge : area.getEdges()) {
+            if (!vertices.contains(areaEdge.getToVertex())) { vertices.add(areaEdge.getToVertex()); }
+            if (!vertices.contains(areaEdge.getFromVertex())) { vertices.add(areaEdge.getFromVertex()); }
+        }
 
-                edgeFactory.createAreaEdge((IntersectionVertex) splitterVertex, (IntersectionVertex) vertex, line, name, length,StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, false, area);
-                edgeFactory.createAreaEdge((IntersectionVertex) vertex, (IntersectionVertex) splitterVertex, line, name, length,StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, false, area);
+        int linkCount = 0;
+        for (Vertex vertex : vertices) {
+            if (vertex instanceof StreetVertex && !vertex.equals(splitterVertex)) {
+                LineString line = GEOMETRY_FACTORY.createLineString(
+                  new Coordinate[] {
+                    splitCoord,
+                    vertex.getCoordinate()
+                  });
+            double length = SphericalDistanceLibrary.distance(
+              splitterVertex.getCoordinate(),
+              vertex.getCoordinate()
+            );
+
+            NamedArea okArea = null;
+            Geometry polygon;
+
+            // Create connection if the line is completely inside a single area.
+            // This can be tested simply by verifying that intersection with the area
+            // does not remove any part of the connecting line
+            for (NamedArea a : area.getAreas()) {
+                polygon = a.getPolygon();
+                Geometry intersection = line.intersection(polygon);
+                if (intersection instanceof LineString) {
+                    LineString line2 = (LineString)intersection;
+                    // make sure that intersection is still a single line segment
+                    if (line2.getNumPoints() != 2) {
+                        continue;
+                    }
+                    Coordinate p1 = line2.getCoordinateN(0);
+                    Coordinate p2 = line2.getCoordinateN(1);
+                    double length2 = SphericalDistanceLibrary.distance(p1, p2);
+                    // length remains the same if no part of the line falls outside the area
+                    if (length - length2 < 0.0000001) {
+                        okArea = a;
+                        break;
+                    }
+                }
+            }
+            if (okArea != null) {
+                linkCount++;
+                I18NString name = new LocalizedString("", new OSMWithTags());
+                edgeFactory.createAreaEdge(
+                  (IntersectionVertex) splitterVertex,
+                  (IntersectionVertex) vertex,
+                  line,
+                  name,
+                  length,
+                  okArea.getPermission(),
+                  false,
+                  area
+                );
+                edgeFactory.createAreaEdge(
+                  (IntersectionVertex) vertex,
+                  (IntersectionVertex) splitterVertex,
+                  line,
+                  name,
+                  length,
+                  okArea.getPermission(),
+                  true,
+                  area
+                );
             }
         }
-    }
+    }}
 
     /** split the edge and link in the transit stop */
     private void link(Vertex tstop, StreetEdge edge, double xscale, RoutingRequest options) {
