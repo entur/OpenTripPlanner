@@ -92,6 +92,8 @@ public class SimpleStreetSplitter {
     /** if there are two ways and the distances to them differ by less than this value, we link to both of them */
     public static final double DUPLICATE_WAY_EPSILON_METERS = 0.001;
 
+    private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
+
     private Graph graph;
 
     private HashGridSpatialIndex<Edge> idx;
@@ -406,7 +408,7 @@ public class SimpleStreetSplitter {
                 );
             }
         }
-    }
+    }}
 
     /** split the edge and link in the transit stop */
     private void link(Vertex tstop, StreetEdge edge, double xscale, RoutingRequest options) {
