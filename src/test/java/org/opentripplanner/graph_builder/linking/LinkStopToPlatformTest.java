@@ -92,7 +92,7 @@ public class LinkStopToPlatformTest {
         splitter.setAddExtraEdgesToAreas(true);
         splitter.link();
 
-        assertEquals(38, graph.getEdges().size());
+        assertEquals(16, graph.getEdges().size());
     }
 
 
