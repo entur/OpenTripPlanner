@@ -36,7 +36,7 @@ public class HSLRoutePreferencesSource implements RoutePreferencesSource {
     public void setRoutePreferences(RoutingRequest routingRequest, Graph graph) {
         // Either U_ROUTE_REGEX or ESPOO_FAST_ROUTES_REGEX
         Pattern patternsCombined = Pattern.compile(String.format(
-                "(%s|%s)", U_ROUTE_REGEX, ESPOO_FAST_ROUTES_REGEX, SINGLE_ROUTES_REGEX));
+                "(%s|%s|%s)", U_ROUTE_REGEX, ESPOO_FAST_ROUTES_REGEX, SINGLE_ROUTES_REGEX));
         for (Route route : graph.index.routeForId.values()) {
             FeedScopedId routeId = route.getId();
             Matcher matcher = patternsCombined.matcher(routeId.toString());
