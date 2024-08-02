@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - dev-1.x
-      - jib-refactor-otp1
 jobs:
   docker-push:
     runs-on: ubuntu-latest
@@ -22,11 +21,11 @@ jobs:
           node-version: 18
       - name: Build container image with Jib, push to Dockerhub
         env:
-          CONTAINER_REPO: docker.io/hsldevcom/opentripplanner:jib-testing-v1
+          CONTAINER_REPO: docker.io/hsldevcom/opentripplanner:v1
           CONTAINER_REGISTRY_USER: ${{ secrets.DOCKER_USER }}
           CONTAINER_REGISTRY_PASSWORD: ${{ secrets.DOCKER_AUTH }}
         run: |
-          otp_version="jib-testing-v1"
+          otp_version="v1"
           commit_hash=`git rev-parse --short "$GITHUB_SHA"`
           date_time=`date +"%Y-%m-%dT%H-%M-%S"`
           docker_tag_long="$otp_version-$date_time-$commit_hash"
