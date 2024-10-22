@@ -39,7 +39,7 @@ public class HslCarParkDataSource extends GenericJsonCarParkDataSource{
 
     private GeometryFactory gf = new GeometryFactory();
 
-    private String utilizationUrl = "https://p.hsl.fi/api/v1/utilizations";
+    private String utilizationUrl = "https://parking.fintraffic.fi/api/v1/utilizations";
 
     private Map<String, Integer> utilizations = Collections.EMPTY_MAP;
 
