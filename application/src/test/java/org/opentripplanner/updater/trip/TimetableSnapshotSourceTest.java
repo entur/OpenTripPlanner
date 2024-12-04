@@ -24,7 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.framework.time.ServiceDateUtils;
 import org.opentripplanner.model.Timetable;
 import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -37,6 +36,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.updater.TimetableSnapshotSourceParameters;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 
 public class TimetableSnapshotSourceTest {
 
@@ -61,7 +61,7 @@ public class TimetableSnapshotSourceTest {
     timetableRepository = model.timetableRepository();
     transitService = new DefaultTransitService(timetableRepository);
 
-    feedId = transitService.getFeedIds().stream().findFirst().get();
+    feedId = transitService.listFeedIds().stream().findFirst().get();
   }
 
   @Test
@@ -206,8 +206,8 @@ public class TimetableSnapshotSourceTest {
     // Original trip pattern
     {
       final FeedScopedId tripId = new FeedScopedId(feedId, modifiedTripId);
-      final Trip trip = transitService.getTripForId(tripId);
-      final TripPattern originalTripPattern = transitService.getPatternForTrip(trip);
+      final Trip trip = transitService.getTrip(tripId);
+      final TripPattern originalTripPattern = transitService.findPattern(trip);
 
       final Timetable originalTimetableForToday = snapshot.resolve(
         originalTripPattern,

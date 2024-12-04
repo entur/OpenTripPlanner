@@ -10,6 +10,7 @@ import org.opentripplanner.ext.emissions.EmissionsService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
+import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.inspector.raster.TileRendererManager;
@@ -22,6 +23,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.GraphFinder;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
+import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
@@ -95,21 +97,17 @@ public interface OtpServerRequestContext {
 
   VehicleRentalService vehicleRentalService();
 
+  VehicleParkingService vehicleParkingService();
+
   TransitTuningParameters transitTuningParameters();
 
   RaptorTuningParameters raptorTuningParameters();
 
   List<RideHailingService> rideHailingServices();
 
-  @Nullable
-  StopConsolidationService stopConsolidationService();
-
   StreetLimitationParametersService streetLimitationParametersService();
 
   MeterRegistry meterRegistry();
-
-  @Nullable
-  EmissionsService emissionsService();
 
   /** Inspector/debug services */
   TileRendererManager tileRendererManager();
@@ -129,6 +127,8 @@ public interface OtpServerRequestContext {
 
   VectorTileConfig vectorTileConfig();
 
+  /* Sandbox modules */
+
   @Nullable
   default DataOverlayContext dataOverlayContext(RouteRequest request) {
     return OTPFeature.DataOverlay.isOnElseNull(() ->
@@ -140,5 +140,14 @@ public interface OtpServerRequestContext {
   }
 
   @Nullable
+  EmissionsService emissionsService();
+
+  @Nullable
   LuceneIndex lucenceIndex();
+
+  @Nullable
+  StopConsolidationService stopConsolidationService();
+
+  @Nullable
+  SorlandsbanenNorwayService sorlandsbanenService();
 }

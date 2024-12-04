@@ -19,6 +19,7 @@ import org.onebusaway.gtfs.model.Trip;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.network.BikeAccess;
+import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.timetable.Direction;
 
 public class TripMapperTest {
@@ -26,6 +27,7 @@ public class TripMapperTest {
   private static final String FEED_ID = "FEED";
   private static final AgencyAndId AGENCY_AND_ID = new AgencyAndId("A", "1");
   private static final int BIKES_ALLOWED = 1;
+  private static final int CARS_ALLOWED = 1;
   private static final String BLOCK_ID = "Block Id";
   private static final int DIRECTION_ID = 1;
   private static final String TRIP_HEADSIGN = "Trip Headsign";
@@ -52,6 +54,7 @@ public class TripMapperTest {
 
     TRIP.setId(AGENCY_AND_ID);
     TRIP.setBikesAllowed(BIKES_ALLOWED);
+    TRIP.setCarsAllowed(CARS_ALLOWED);
     TRIP.setBlockId(BLOCK_ID);
     TRIP.setDirectionId(Integer.toString(DIRECTION_ID));
     TRIP.setRoute(data.route);
@@ -83,6 +86,7 @@ public class TripMapperTest {
     assertEquals(TRIP_SHORT_NAME, result.getShortName());
     assertEquals(Accessibility.POSSIBLE, result.getWheelchairBoarding());
     assertEquals(BikeAccess.ALLOWED, result.getBikesAllowed());
+    assertEquals(CarAccess.ALLOWED, result.getCarsAllowed());
   }
 
   @Test
@@ -104,6 +108,7 @@ public class TripMapperTest {
     assertEquals(Direction.UNKNOWN, result.getDirection());
     assertEquals(Accessibility.NO_INFORMATION, result.getWheelchairBoarding());
     assertEquals(BikeAccess.UNKNOWN, result.getBikesAllowed());
+    assertEquals(CarAccess.UNKNOWN, result.getCarsAllowed());
   }
 
   /** Mapping the same object twice, should return the same instance. */
@@ -145,8 +150,8 @@ public class TripMapperTest {
 
   private static Stream<Arguments> provideOffsetAndFactor() {
     return Stream.of(
-      Arguments.of(1.5d, 60d, 1.5d, Duration.ofHours(1)),
-      Arguments.of(null, 120d, 1d, Duration.ofHours(2)),
+      Arguments.of(1.5d, 60d, 1.5d, Duration.ofMinutes(1)),
+      Arguments.of(null, 120d, 1d, Duration.ofMinutes(2)),
       Arguments.of(1.5d, null, 1.5d, Duration.ZERO)
     );
   }

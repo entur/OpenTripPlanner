@@ -10,6 +10,8 @@ import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
 import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
 import org.opentripplanner.ext.ridehailing.configure.RideHailingServicesModule;
+import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
+import org.opentripplanner.ext.sorlandsbanen.configure.SorlandsbanenNorwayModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.ext.stopconsolidation.configure.StopConsolidationServiceModule;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
@@ -20,6 +22,9 @@ import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.configure.RealtimeVehicleRepositoryModule;
 import org.opentripplanner.service.realtimevehicles.configure.RealtimeVehicleServiceModule;
+import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
+import org.opentripplanner.service.vehicleparking.VehicleParkingService;
+import org.opentripplanner.service.vehicleparking.configure.VehicleParkingServiceModule;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.vehiclerental.configure.VehicleRentalRepositoryModule;
@@ -52,9 +57,11 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     RealtimeVehicleRepositoryModule.class,
     VehicleRentalServiceModule.class,
     VehicleRentalRepositoryModule.class,
+    VehicleParkingServiceModule.class,
     ConstructApplicationModule.class,
     RideHailingServicesModule.class,
     EmissionsServiceModule.class,
+    SorlandsbanenNorwayModule.class,
     StopConsolidationServiceModule.class,
     InteractiveLauncherModule.class,
     StreetLimitationParametersServiceModule.class,
@@ -72,6 +79,8 @@ public interface ConstructApplicationFactory {
   RealtimeVehicleService realtimeVehicleService();
   VehicleRentalRepository vehicleRentalRepository();
   VehicleRentalService vehicleRentalService();
+  VehicleParkingRepository vehicleParkingRepository();
+  VehicleParkingService vehicleParkingService();
   DataImportIssueSummary dataImportIssueSummary();
 
   @Nullable
@@ -89,6 +98,9 @@ public interface ConstructApplicationFactory {
   StopConsolidationRepository stopConsolidationRepository();
 
   StreetLimitationParameters streetLimitationParameters();
+
+  @Nullable
+  SorlandsbanenNorwayService enturSorlandsbanenService();
 
   @Nullable
   LuceneIndex luceneIndex();
@@ -114,6 +126,9 @@ public interface ConstructApplicationFactory {
     Builder stopConsolidationRepository(
       @Nullable StopConsolidationRepository stopConsolidationRepository
     );
+
+    @BindsInstance
+    Builder vehicleParkingRepository(VehicleParkingRepository parkingRepository);
 
     @BindsInstance
     Builder dataImportIssueSummary(DataImportIssueSummary issueSummary);

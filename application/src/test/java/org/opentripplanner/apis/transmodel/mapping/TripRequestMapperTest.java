@@ -5,8 +5,8 @@ import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.opentripplanner.framework.time.TimeUtils.time;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
+import static org.opentripplanner.utils.time.TimeUtils.time;
 
 import graphql.ExecutionInput;
 import graphql.execution.ExecutionId;
@@ -47,6 +47,8 @@ import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
+import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
+import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeService;
@@ -144,7 +146,9 @@ public class TripRequestMapperTest implements PlanTestConstants {
           new DefaultWorldEnvelopeService(new DefaultWorldEnvelopeRepository()),
           new DefaultRealtimeVehicleService(transitService),
           new DefaultVehicleRentalService(),
+          new DefaultVehicleParkingService(new DefaultVehicleParkingRepository()),
           new DefaultEmissionsService(new EmissionsDataModel()),
+          null,
           RouterConfig.DEFAULT.flexParameters(),
           List.of(),
           null,

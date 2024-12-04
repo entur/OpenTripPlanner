@@ -14,8 +14,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.opentripplanner.framework.io.OtpHttpClient;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
-import org.opentripplanner.framework.tostring.ToStringBuilder;
 import org.opentripplanner.updater.spi.HttpHeaders;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +73,7 @@ public class GtfsRealtimeTripUpdateSource {
         if (feedEntity.hasTripUpdate()) updates.add(feedEntity.getTripUpdate());
       }
     } catch (Exception e) {
-      LOG.error("Failed to parse GTFS-RT feed from {}", url, e);
+      LOG.error("Failed to process GTFS-RT TripUpdates feed from {}", url, e);
     }
     return updates;
   }

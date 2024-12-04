@@ -3,7 +3,7 @@ package org.opentripplanner.transit.model.timetable.booking;
 import java.time.Duration;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.framework.tostring.ToStringBuilder;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
  * This is the contract between booking info and the router. The router will enforce
@@ -151,17 +151,17 @@ public final class RoutingBookingInfo {
         return this;
       }
       withLatestBookingTime(bookingInfo.getLatestBookingTime());
-      withMinimumBookingNotice(bookingInfo.getMinimumBookingNotice());
+      withMinimumBookingNotice(bookingInfo.getMinimumBookingNotice().orElse(null));
       return this;
     }
 
-    public Builder withLatestBookingTime(BookingTime latestBookingTime) {
+    public Builder withLatestBookingTime(@Nullable BookingTime latestBookingTime) {
       this.latestBookingTime =
         latestBookingTime == null ? NOT_SET : latestBookingTime.relativeTimeSeconds();
       return this;
     }
 
-    public Builder withMinimumBookingNotice(Duration minimumBookingNotice) {
+    public Builder withMinimumBookingNotice(@Nullable Duration minimumBookingNotice) {
       this.minimumBookingNotice =
         minimumBookingNotice == null ? NOT_SET : (int) minimumBookingNotice.toSeconds();
       return this;

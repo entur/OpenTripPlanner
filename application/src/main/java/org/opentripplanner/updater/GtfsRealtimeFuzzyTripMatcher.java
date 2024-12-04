@@ -4,8 +4,6 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
 import gnu.trove.set.TIntSet;
 import java.text.ParseException;
 import java.time.LocalDate;
-import org.opentripplanner.framework.time.ServiceDateUtils;
-import org.opentripplanner.framework.time.TimeUtils;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.gtfs.mapping.DirectionMapper;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -15,6 +13,8 @@ import org.opentripplanner.transit.model.timetable.Direction;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
+import org.opentripplanner.utils.time.ServiceDateUtils;
+import org.opentripplanner.utils.time.TimeUtils;
 
 /**
  * This class is used for matching TripDescriptors without trip_ids to scheduled GTFS data and to
@@ -35,7 +35,9 @@ public class GtfsRealtimeFuzzyTripMatcher {
   }
 
   public TripDescriptor match(String feedId, TripDescriptor trip) {
-    if (trip.hasTripId()) {
+    if (
+      trip.hasTripId() && transitService.containsTrip(new FeedScopedId(feedId, trip.getTripId()))
+    ) {
       // trip_id already exists
       return trip;
     }
@@ -55,7 +57,7 @@ public class GtfsRealtimeFuzzyTripMatcher {
     } catch (ParseException e) {
       return trip;
     }
-    Route route = transitService.getRouteForId(routeId);
+    Route route = transitService.getRoute(routeId);
     if (route == null) {
       return trip;
     }
@@ -85,7 +87,7 @@ public class GtfsRealtimeFuzzyTripMatcher {
     LocalDate date
   ) {
     TIntSet servicesRunningForDate = transitService.getServiceCodesRunningForDate(date);
-    for (TripPattern pattern : transitService.getPatternsForRoute(route)) {
+    for (TripPattern pattern : transitService.findPatterns(route)) {
       if (pattern.getDirection() != direction) continue;
       for (TripTimes times : pattern.getScheduledTimetable().getTripTimes()) {
         if (
