@@ -1,0 +1,234 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$(dirname "$0")/release_env"
+
+GIT_REMOTE_REPO="`git remote -v | grep "https://github.com/${GIT_REMOTE_RELEASE_ORG}/OpenTripPlanner.git" | grep "push" | awk '{print $1;}'`"
+STATUS_FILE=".prepare_release.tmp"
+STATUS=""
+DRY_RUN=""
+OTP_BASE=""
+
+function main() {
+    setup "$@"
+    resumePreviousExecution
+    resetReleaseBranch
+    rebaseAndMergeExtBranch ext_config
+    logSuccess
+}
+
+function setup() {
+    if [[ $# -eq 2 &&  "$1" == "--dryRun" ]] ; then
+      DRY_RUN="--dryRun"
+      OTP_BASE="$2"
+    elif [[ $# -eq 1 ]] ; then
+      OTP_BASE="$1"
+    else
+        printHelp
+        exit 1
+    fi
+
+    echo ""
+    echo "Options:                 ${DRY_RUN}"
+    echo "Git base branch/commit:  ${OTP_BASE}"
+    echo "Release branch:          ${GIT_REMOTE_RELEASE_BRANCH}"
+    echo "Remote repo(pull/push):  ${GIT_REMOTE_REPO}"
+    echo ""
+
+    if git diff-index --quiet HEAD --; then
+       echo ""
+       echo "OK - No local changes, prepare to checkout '${GIT_REMOTE_RELEASE_BRANCH}'"
+       echo ""
+    else
+       echo ""
+       echo "You have local modification, the script will abort. Nothing done!"
+       exit 2
+    fi
+
+    git fetch ${GIT_REMOTE_REPO}
+}
+
+# This script create a status file '.prepare_release.tmp'. This file is used to resume the
+# script in the same spot as where is left when the error occurred. This allow us to fix the
+# problem (merge conflict or compile error) and re-run the script to complete the proses.
+function resumePreviousExecution() {
+    readStatus
+
+    if [[ -n "${STATUS}" ]] ; then
+        echo ""
+        echo "Resume: ${STATUS}?"
+        echo ""
+        echo "    If all problems are resolved you may continue."
+        echo "    Exit to clear status and start over."
+        echo ""
+
+        ANSWER=""
+        while [[ ! "$ANSWER" =~ [yx] ]]; do
+            echo "Do you want to resume: [y:Yes, x:Exit]"
+            read ANSWER
+        done
+
+        if [[ "${ANSWER}" == "x" ]] ; then
+            exit 0
+        fi
+    fi
+}
+
+function resetReleaseBranch() {
+    echo ""
+    echo "## ------------------------------------------------------------------------------------- ##"
+    echo "##   RESET '${GIT_REMOTE_RELEASE_BRANCH}' TO '${OTP_BASE}'"
+    echo "## ------------------------------------------------------------------------------------- ##"
+    echo ""
+    echo "Would you like to reset the '${GIT_REMOTE_RELEASE_BRANCH}' to '${OTP_BASE}'? "
+    echo ""
+
+    whatDoYouWant
+
+    if [[ "${ANSWER}" == "y" ]] ; then
+      echo ""
+      echo "Checkout '${GIT_REMOTE_RELEASE_BRANCH}'"
+      git checkout ${GIT_REMOTE_RELEASE_BRANCH}
+
+      echo ""
+      echo "Reset '${GIT_REMOTE_RELEASE_BRANCH}' branch to '${OTP_BASE}' (hard)"
+      git reset --hard "${OTP_BASE}"
+      echo ""
+    fi
+}
+
+function rebaseAndMergeExtBranch() {
+    EXT_BRANCH="$1"
+    EXT_STATUS_REBASE="Rebase '${EXT_BRANCH}'"
+    EXT_STATUS_COMPILE="Compile '${EXT_BRANCH}'"
+
+    echo ""
+    echo "## ------------------------------------------------------------------------------------- ##"
+    echo "##   REBASE AND MERGE '${EXT_BRANCH}' INTO '${GIT_REMOTE_RELEASE_BRANCH}'"
+    echo "## ------------------------------------------------------------------------------------- ##"
+    echo ""
+    echo "You are about to rebase and merge '${EXT_BRANCH}' into '${GIT_REMOTE_RELEASE_BRANCH}'. Any local"
+    echo "modification in the '${EXT_BRANCH}' will be lost."
+    echo ""
+
+    whatDoYouWant
+
+    if [[ "${ANSWER}" == "y" ]] ; then
+        echo ""
+        echo "Checkout '${EXT_BRANCH}'"
+        git checkout "${EXT_BRANCH}"
+
+        echo ""
+        echo "Reset to '${GIT_REMOTE_REPO}/${EXT_BRANCH}'"
+        git reset --hard "${GIT_REMOTE_REPO}/${EXT_BRANCH}"
+
+        echo ""
+        echo "Top 2 commits in '${EXT_BRANCH}'"
+        echo "-------------------------------------------------------------------------------------------"
+        git --no-pager log -2 
+        echo "-------------------------------------------------------------------------------------------"
+        echo ""
+        echo "You are about to rebase the TOP COMMIT ONLY(see above). Check that the "
+        echo "'${EXT_BRANCH}' only have ONE commit that you want to keep."
+        echo ""
+
+        whatDoYouWant
+
+        if [[ "${ANSWER}" == "y" ]] ; then
+            echo ""
+            echo "Rebase '${EXT_BRANCH}' onto '${GIT_REMOTE_RELEASE_BRANCH}'"
+            setStatus "${EXT_STATUS_REBASE}"
+            git rebase --onto ${GIT_REMOTE_RELEASE_BRANCH} HEAD~1
+        fi
+    fi
+
+    if [[ "${STATUS}" == "${EXT_STATUS_REBASE}" || "${STATUS}" == "${EXT_STATUS_COMPILE}" ]] ; then
+        # Reset status in case the test-compile fails. We need to do this because the status file
+        # is deleted after reading the status in the setup() function. 
+        setStatus "${EXT_STATUS_COMPILE}"
+
+        mvn clean test-compile
+        clearStatus
+
+        echo ""
+        echo "Push '${EXT_BRANCH}'"
+        if [[ -z "${DRY_RUN}" ]] ; then
+          git push -f
+        else
+          echo "Skip: git push -f   (--dryRun)"
+        fi
+
+        echo ""
+        echo "Checkout '${GIT_REMOTE_RELEASE_BRANCH}' and merge in '${EXT_BRANCH}'"
+        git checkout "${GIT_REMOTE_RELEASE_BRANCH}"
+        git merge "${EXT_BRANCH}"
+    fi
+}
+
+function logSuccess() {
+    echo ""
+    echo "## ------------------------------------------------------------------------------------- ##"
+    echo "##   PREPARE RELEASE DONE  --  SUCCESS"
+    echo "## ------------------------------------------------------------------------------------- ##"
+    echo "   - '${GIT_REMOTE_REPO}/${GIT_REMOTE_RELEASE_BRANCH}' reset to '${OTP_BASE}'"
+    echo "   - '${GIT_REMOTE_RELEASE_BRANCH}' merged"
+    echo ""
+    echo ""
+}
+
+function whatDoYouWant() {
+    echo ""
+    ANSWER=""
+
+    if [[ -n "${STATUS}" ]] ; then
+      # Skip until process is resumed
+      ANSWER="s"
+    else
+      while [[ ! "$ANSWER" =~ [ysx] ]]; do
+        echo "Do you want to continue: [y:Yes, s:Skip, x:Exit]"
+        read ANSWER
+      done
+
+      if [[ "${ANSWER}" == "x" ]] ; then
+        exit 0
+      fi
+    fi
+}
+
+function setStatus() {
+    STATUS="$1"
+    echo "$STATUS" > "${STATUS_FILE}"
+}
+
+function readStatus() {
+    if [[ -f "${STATUS_FILE}" ]] ; then
+        STATUS=`cat $STATUS_FILE`
+        rm "$STATUS_FILE"
+    else
+         STATUS=""
+    fi
+}
+
+function clearStatus() {
+    STATUS=""
+    rm "${STATUS_FILE}"
+}
+
+function printHelp() {
+    echo ""
+    echo "This script take ONE argument , the base **branch** or **commit** to use for the"
+    echo "release. The '${GIT_REMOTE_RELEASE_BRANCH}' branch is reset to this commit and then the extension"
+    echo "branches is rebased onto that. The 'release' script is used to complete the release."
+    echo "It tag and push all changes to remote git repo."
+    echo ""
+    echo "Options:"
+    echo "   --dryRun : Run script locally, nothing is pushed to remote server."
+    echo ""
+    echo "Usage:"
+    echo "  $ .circleci/prepare_release otp/dev-2.x"
+    echo "  $ .circleci/prepare_release --dryRun otp/dev-2.x"
+    echo ""
+}
+
+main "$@"
