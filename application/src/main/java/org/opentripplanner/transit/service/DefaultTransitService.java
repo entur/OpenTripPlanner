@@ -60,8 +60,12 @@ import org.opentripplanner.transit.model.site.StopLocationsGroup;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.GraphUpdaterStatus;
 import org.opentripplanner.utils.collection.CollectionsView;
+import org.opentripplanner.utils.time.ServiceDateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of the Transit Service and Transit Editor Service.
@@ -71,6 +75,7 @@ import org.opentripplanner.utils.collection.CollectionsView;
  */
 public class DefaultTransitService implements TransitEditorService {
 
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultTransitService.class);
   private final TimetableRepository timetableRepository;
 
   private final TimetableRepositoryIndex timetableRepositoryIndex;
@@ -92,6 +97,45 @@ public class DefaultTransitService implements TransitEditorService {
   ) {
     this(timetableRepository);
     this.timetableSnapshot = timetableSnapshotBuffer;
+  }
+
+  public Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip) {
+    TripPattern tripPattern = findPattern(trip);
+    if (tripPattern == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(
+      TripTimeOnDate.fromTripTimes(tripPattern.getScheduledTimetable(), trip)
+    );
+  }
+
+  public Optional<List<TripTimeOnDate>> getTripTimeOnDates(Trip trip, LocalDate serviceDate) {
+    TripPattern pattern = findPattern(trip, serviceDate);
+
+    Timetable timetable = findTimetable(pattern, serviceDate);
+
+    // If realtime moved pattern back to original trip, fetch it instead
+    if (timetable.getTripIndex(trip.getId()) == -1) {
+      LOG.warn(
+        "Trip {} not found in realtime pattern. This should not happen, and indicates a bug.",
+        trip
+      );
+      pattern = findPattern(trip);
+      timetable = findTimetable(pattern, serviceDate);
+    }
+
+    // This check is made here to avoid changing TripTimeOnDate.fromTripTimes
+    TripTimes times = timetable.getTripTimes(trip);
+    if (!this.getServiceCodesRunningForDate(serviceDate).contains(times.getServiceCode())) {
+      return Optional.empty();
+    } else {
+      Instant midnight = ServiceDateUtils
+        .asStartOfService(serviceDate, this.getTimeZone())
+        .toInstant();
+      return Optional.ofNullable(
+        TripTimeOnDate.fromTripTimes(timetable, trip, serviceDate, midnight)
+      );
+    }
   }
 
   @Override
