@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_ROOT=$(dirname "$0")
+RELEASE_ENV="$SCRIPT_ROOT/release_env"
+
+source "${RELEASE_ENV}"
+
+UTILS_MODULE=utils
+TAGS_FILE=target/_git-tag-list.txt
+DRY_RUN=""
+
+function main() {
+    setup "$@"
+    listAllTags
+    mergeInOldReleaseWithNoChanges
+    setPomVersion
+    tagRelease
+    pushToRemote
+}
+
+function setup() {
+    echo ""
+    echo "git fetch ${GIT_REMOTE_RELEASE_ORG}"
+    git fetch ${GIT_REMOTE_RELEASE_ORG}
+
+    echo "Verify current branch is ${GIT_REMOTE_RELEASE_BRANCH} "
+    git status | grep -q "On branch ${GIT_REMOTE_RELEASE_BRANCH}"
+
+    if [[ "${1+x}" == "--dryRun" ]] ; then
+       DRY_RUN="--dryRun"
+    fi
+}
+
+function listAllTags() {
+    ## List all tags to allow the UpdatePomVersion java program find the next version number
+    echo ""
+    echo "Dump all tags to ${TAGS_FILE}"
+    mkdir -p target
+    git tag -l | grep ${GIT_REMOTE_RELEASE_ORG} > ${TAGS_FILE}
+}
+
+function setPomVersion() {
+    echo ""
+    VERSION="`java -cp ${UTILS_MODULE}/target/classes org.opentripplanner.utils.ci.MavenUpdatePomVersion ${GIT_REMOTE_RELEASE_ORG} ${TAGS_FILE}`"
+    echo ""
+    echo "New version set: ${VERSION}"
+    echo ""
+
+    ## Verify everything builds and tests run
+    echo ""
+    mvn clean test
+
+    ## Add [ci skip] here before moving this to the CI server
+    echo ""
+    echo "Add and commit pom.xml"
+    git commit -m "Version ${VERSION}" "**pom.xml"
+}
+
+function mergeInOldReleaseWithNoChanges() {
+    echo ""
+    echo "Merge the old version of '${GIT_REMOTE_RELEASE_ORG}' into the new version. This only keep "
+    echo "a reference to the old version, the resulting tree of the merge is that of the new"
+    echo "branch head, effectively ignoring all changes from the old release."
+    git merge -s ours "${GIT_REMOTE_RELEASE_ORG}/${GIT_REMOTE_RELEASE_BRANCH}" -m "Merge old release into '${GIT_REMOTE_RELEASE_BRANCH}' - NO CHANGES COPIED OVER"
+}
+
+
+function tagRelease() {
+    echo ""
+    echo "Tag version ${VERSION}"
+    git tag -a v${VERSION} -m "Version ${VERSION}"
+}
+
+function pushToRemote() {
+    echo ""
+    echo "Push pom.xml and new tag"
+    if [[ -z "${DRY_RUN}" ]] ; then
+        git push -f "${GIT_REMOTE_RELEASE_ORG}" "v${VERSION}" "${GIT_REMOTE_RELEASE_BRANCH}"
+    else
+        echo "Skip: push -f ${GIT_REMOTE_RELEASE_ORG} \"v${VERSION}\" ${GIT_REMOTE_RELEASE_BRANCH}   (--dryRun)"
+    fi
+}
+
+main "$@"
