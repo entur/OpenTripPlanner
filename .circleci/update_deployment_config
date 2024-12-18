@@ -9,7 +9,6 @@
 ## Note! There is no need to run this script locally, unless you want to debug it.
 ## - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - ##
 
-
 set -euo pipefail
 
 OTP_DEPLOYMENT_CONFIG=target/otp-deployment-config
