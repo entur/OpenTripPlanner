@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+GIT_REMOTE_RELEASE_BRANCH=main
+GIT_REMOTE_RELEASE_ORG="entur"
