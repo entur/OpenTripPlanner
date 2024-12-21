@@ -65,7 +65,7 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
         Collection<TripPattern> patternsForStop = transitService.findPatterns(ts1);
 
         if (OTPFeature.IncludeEmptyRailStopsInTransfers.isOn()) {
-          if (patternsForStop.isEmpty() && regularStop.isRailStop()) {
+          if (patternsForStop.isEmpty()) {
             uniqueStopsResult.add(nearbyStop);
           }
         }
