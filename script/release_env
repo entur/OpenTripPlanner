@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export GIT_REMOTE_RELEASE_BRANCH="test_release"
+export GIT_REMOTE_RELEASE_ORG="entur"
