@@ -13,6 +13,11 @@ import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 public class RaptorTransferIndex {
 
+  private enum RequestSource {
+    SETUP,
+    REQUEST_SCOPE,
+  }
+
   private final List<RaptorTransfer>[] forwardTransfers;
 
   private final List<RaptorTransfer>[] reversedTransfers;
@@ -27,15 +32,29 @@ public class RaptorTransferIndex {
   }
 
   /**
-   * Create an index to be put into the transfer cache
-   *
-   * @param isRuntimeRequest true if the request originates from the client during the runtime,
-   *                         false if the request comes from transferCacheRequests in router-config.json
+   * Create an index for a route request configured in router-config.json
    */
-  public static RaptorTransferIndex create(
+  public static RaptorTransferIndex createInitialSetup(
+    List<List<Transfer>> transfersByStopIndex,
+    StreetSearchRequest request
+  ) {
+    return create(transfersByStopIndex, request, RequestSource.SETUP);
+  }
+
+  /**
+   * Create an index for a route request originated from the client
+   */
+  public static RaptorTransferIndex createRequestScope(
+    List<List<Transfer>> transfersByStopIndex,
+    StreetSearchRequest request
+  ) {
+    return create(transfersByStopIndex, request, RequestSource.REQUEST_SCOPE);
+  }
+
+  private static RaptorTransferIndex create(
     List<List<Transfer>> transfersByStopIndex,
     StreetSearchRequest request,
-    boolean isRuntimeRequest
+    RequestSource requestSource
   ) {
     var forwardTransfers = new ArrayList<List<RaptorTransfer>>(transfersByStopIndex.size());
     var reversedTransfers = new ArrayList<List<RaptorTransfer>>(transfersByStopIndex.size());
@@ -49,7 +68,7 @@ public class RaptorTransferIndex {
     var stopIndices = IntStream.range(0, transfersByStopIndex.size());
     // we want to always parallelize the cache building during the startup
     // and only parallelize during runtime requests if the feature flag is on
-    if (!isRuntimeRequest || OTPFeature.ParallelRouting.isOn()) {
+    if (requestSource == RequestSource.SETUP || OTPFeature.ParallelRouting.isOn()) {
       stopIndices = stopIndices.parallel();
     }
     stopIndices.forEach(fromStop -> {
