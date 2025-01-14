@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.Locale;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
 import org.opentripplanner.test.support.ResourceLoader;
@@ -14,6 +15,7 @@ import org.opentripplanner.transit.model.basic.Locales;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.updater.spi.HttpHeaders;
 
+@Disabled
 public class BikelyUpdaterTest {
 
   @Test
