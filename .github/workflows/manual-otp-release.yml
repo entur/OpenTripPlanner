@@ -23,6 +23,7 @@ jobs:
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git remote -v
           git ls-remote otp refs/heads/dev-2.x
+          git rev-parse --quiet --verify otp/dev-2.x
           chmod +x script/custom-release.py
           script/custom-release.py --dryRun otp/dev-2.x
           
