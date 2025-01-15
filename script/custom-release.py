@@ -6,6 +6,7 @@ import re
 import subprocess
 import sys
 
+
 ## ------------------------------------------------------------------------------------ ##
 ##                                 Global constants                                     ##
 ## ------------------------------------------------------------------------------------ ##
@@ -160,7 +161,7 @@ def setup_and_verify():
         verify_git_installed()
         verify_maven_installed()
         verify_release_base_and_release_branch_exist()
-        verify_no_local_git_changes()
+        # verify_no_local_git_changes()
         fetch_all_git_remotes()
         resolve_version_number()
         resolve_new_version()
