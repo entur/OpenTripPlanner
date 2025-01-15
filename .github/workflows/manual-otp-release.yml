@@ -40,6 +40,6 @@ jobs:
           echo "Fetching entur"
           git fetch entur
           chmod +x script/custom-release.py
-          script/custom-release.py --dryRun otp/dev-2.x
+          script/custom-release.py otp/dev-2.x
           
           
