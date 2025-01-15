@@ -67,6 +67,7 @@ import org.opentripplanner.apis.gtfs.datafetchers.RoutingErrorImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopCallImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopGeometriesImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopImpl;
+import org.opentripplanner.apis.gtfs.datafetchers.StopInPatternImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopOnRouteImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopOnTripImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopRelationshipImpl;
@@ -175,6 +176,7 @@ class GtfsGraphQLIndex {
         .type(typeWiring.build(VehicleRentalNetworkImpl.class))
         .type(typeWiring.build(RentalVehicleImpl.class))
         .type(typeWiring.build(RentalVehicleTypeImpl.class))
+        .type(typeWiring.build(StopInPatternImpl.class))
         .type(typeWiring.build(StopOnRouteImpl.class))
         .type(typeWiring.build(StopOnTripImpl.class))
         .type(typeWiring.build(UnknownImpl.class))
