@@ -19,9 +19,10 @@ jobs:
           GIT_HUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Start otp release script"
-          git remote add entur  https://github.com/entur/OpenTripPlanner.git
+          git git remote rename origin entur
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git remote -v
+          git ls-remote otp refs/heads/dev-2.x
           chmod +x script/custom-release.py
           script/custom-release.py --dryRun otp/dev-2.x
           
