@@ -46,6 +46,6 @@ jobs:
           git status
           echo "git diff"
           git diff script/custom-release.py
-          script/custom-release.py otp/dev-2.x
+          script/custom-release.py --debug otp/dev-2.x
           
           
