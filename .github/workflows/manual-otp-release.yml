@@ -32,6 +32,8 @@ jobs:
           GIT_HUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Start otp release script"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git remote rename origin entur
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git remote -v
