@@ -43,7 +43,7 @@ jobs:
           echo "git status"
           git status
           echo "git diff"
-          git diff scripts/custom-release.py
+          git diff script/custom-release.py
           script/custom-release.py otp/dev-2.x
           
           
