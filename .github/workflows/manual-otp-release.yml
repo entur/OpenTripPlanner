@@ -1,0 +1,23 @@
+name: Manual OTP Release
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prd'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Release OTP
+        env:
+          GIT_HUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Start otp release script"
+          git remote add entur  https://github.com/entur/OpenTripPlanner.git
+          git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
+          script/custom-release.py --dryRun otp/dev-2.x
+          
+          
