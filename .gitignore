@@ -8,6 +8,7 @@
 .settings
 .sonar
 .nvmrc
+.custom_release_resume_state.json
 *~
 *.ipr
 *.iml
