@@ -66,6 +66,16 @@ import org.opentripplanner.updater.GraphUpdaterStatus;
  *   copy-on-write and shares a lot of objects with any other TransitLayer instances.
  */
 public interface TransitService {
+  /**
+   * @return empty if the trip doesn't exist in the timetable (e.g. real-time added)
+   */
+  Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip);
+
+  /**
+   * @return empty if the trip doesn't run on the date specified
+   */
+  Optional<List<TripTimeOnDate>> getTripTimeOnDates(Trip trip, LocalDate serviceDate);
+
   Collection<String> listFeedIds();
 
   Collection<Agency> listAgencies();
