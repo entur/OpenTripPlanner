@@ -1,4 +1,4 @@
-name: Entur Build and push
+name: Entur - Build and push Docker
 on:
   push:
     branches:
