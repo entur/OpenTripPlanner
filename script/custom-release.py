@@ -569,7 +569,7 @@ def read_ser_ver_id_from_pom_file(git_hash):
 
 def run_maven_test():
     if section_w_resume('run_maven_test', 'Run unit tests'):
-        mvn('clean', 'test')
+        mvn('clean', '-PprettierSkip', 'test')
 
 def git(*cmd, error_msg=None):
     return execute('git', *cmd, error_msg=error_msg)
@@ -648,18 +648,17 @@ def section(msg: str):
 
 
 def info(msg):
-    print(f'{msg}')
+    print(f'{msg}', flush=True)
 
 
 def error(msg):
-    print(f'\nERROR {msg}\n')
-    sys.stdout.flush()
+    print(f'\nERROR {msg}\n', flush=True)
     exit(1)
 
 
 def debug(msg):
     if options.debugging:
-        print(f'DEBUG {msg}')
+        print(f'DEBUG {msg}', flush=True)
 
 def crop(text):
     return text if len(text) <= 1600 else ("%s..."%(text[:1597]))
