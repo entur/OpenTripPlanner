@@ -1,0 +1,47 @@
+name: Entur - Release OTP Maven project
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'prd'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout entur/OpenTripPlanner
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21.0.5+11
+          distribution: liberica
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-maven-
+            ${{ runner.os }}-
+      - name: Release OTP
+        env:
+          GIT_HUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Start otp release script"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git remote rename origin entur
+          git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
+          git fetch --no-tags otp
+          git remote -v
+          echo "Run script/custom-release.py --debug otp/dev-2.x"
+          script/custom-release.py --debug otp/dev-2.x
+          
+          
