@@ -178,6 +178,7 @@ def reset_release_branch_to_base_revision():
     # is not deep enough.
     git('fetch', config.release_remote, config.release_branch)
     git('checkout', '-B', config.release_branch, config.release_branch_path())
+    git('reset', '--hard', options.base_revision)
 
 
 def merge_in_labeled_prs():
