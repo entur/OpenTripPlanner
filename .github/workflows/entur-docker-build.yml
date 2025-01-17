@@ -2,7 +2,7 @@ name: Entur - Build and push Docker
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*'
 jobs:
   maven-verify:
     runs-on: ubuntu-24.04
@@ -32,7 +32,7 @@ jobs:
         with:
           path: otp-shaded/target/*.jar
   docker-build:
-    if: github.repository_owner == 'entur' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.repository_owner == 'entur'
     needs: [maven-verify]
     uses: entur/gha-docker/.github/workflows/build.yml@v1
     with:
@@ -45,5 +45,5 @@ jobs:
     uses: entur/gha-docker/.github/workflows/push.yml@v1
     with:
       git_tag: false
-      image_tag: ${{ github.ref }}
+      image_tag: ${{ github.ref_name }}
       image_name: 'otp2'
