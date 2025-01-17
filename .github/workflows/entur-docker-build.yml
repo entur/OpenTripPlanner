@@ -1,18 +1,13 @@
 name: Entur - Build and push Docker
 on:
   push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
+    tags:
+      - 'v*'
 jobs:
   maven-verify:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-    outputs:
-      docker-image-tag: ${{ steps.set_tag.outputs.docker-image-tag }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,9 +28,6 @@ jobs:
 
       - name: Run maven build
         run: mvn verify -Dps -DskipTests
-      - name: Set Docker image tag
-        id: set_tag
-        run: echo "docker-image-tag=$(git describe --tags --abbrev=0)" >> "$GITHUB_OUTPUT"
       - uses: actions/upload-artifact@v4.4.0
         with:
           path: otp-shaded/target/*.jar
@@ -53,5 +45,5 @@ jobs:
     uses: entur/gha-docker/.github/workflows/push.yml@v1
     with:
       git_tag: false
-      image_tag: ${{ needs.maven-verify.outputs.docker-image-tag }}
+      image_tag: ${{ github.ref }}
       image_name: 'otp2'
