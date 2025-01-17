@@ -42,6 +42,6 @@ jobs:
           git fetch --no-tags otp
           git remote -v
           echo "Run script/custom-release.py --debug otp/dev-2.x"
-          script/custom-release.py otp/dev-2.x
+          script/custom-release.py --debug otp/dev-2.x
           
           

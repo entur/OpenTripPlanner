@@ -593,7 +593,9 @@ def git_im(*cmd, error_msg=None):
 
 # Run maven and pipe the output to sdtout and stderr
 def mvn(*cmd):
-    p = subprocess.run(['mvn'] + list(cmd))
+    cmd_line = ['mvn'] + list(cmd)
+    info(f'Run: {cmd_line}')
+    p = subprocess.run(cmd_line)
     if p.returncode:
         exit(p.returncode)
 
@@ -602,7 +604,7 @@ def execute(*cmd, quiet=True, quiet_err=False, error_msg=None, impact=False):
     if options.dry_run and impact:
         info(f'=> {cmd}  (--dryRun SKIPPED)')
         return
-    debug(f'Run command: {cmd}')
+    info(f'Run: {cmd}')
     p = subprocess.run(args=list(cmd), capture_output=True, text=True, timeout=20)
 
     if options.debugging:
