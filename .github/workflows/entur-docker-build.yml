@@ -3,8 +3,6 @@ on:
   push:
     tags:
       - 'v*-entur-[0-9]+'
-    branches:
-      - main
 jobs:
   maven-verify:
     runs-on: ubuntu-24.04
