@@ -246,6 +246,7 @@ def set_ser_ver_id():
 
 def commit_new_versions():
     section('Commit new version with version and serialization version id set ...')
+    git('add', '.')
     git_dr('commit', '--all', '-m', state.new_version_description())
     info(f'Commit done: {state.new_version_description()}')
 
