@@ -2,10 +2,21 @@ name: Entur - Release OTP Maven project
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Environment to deploy to'
+      logLevel:
+        description: 'Log level'
         required: true
-        default: 'prd'
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - debug
+  schedule:
+      - cron: '33 0 * * *'
+  workflow_run:
+    types: [ requested ]
+    branches:
+      - 'main'
+      - 'main_config'
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -32,7 +43,8 @@ jobs:
             ${{ runner.os }}-
       - name: Release OTP
         env:
-          GIT_HUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.logLevel }}
         run: |
           echo "Start otp release script"
           git config user.name github-actions[bot]
@@ -41,7 +53,7 @@ jobs:
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git fetch --no-tags otp
           git remote -v
-          echo "Run script/custom-release.py --debug otp/dev-2.x"
-          script/custom-release.py --debug otp/dev-2.x
+          echo "Run script/custom-release.py otp/dev-2.x"
+          script/custom-release.py otp/dev-2.x
           
           

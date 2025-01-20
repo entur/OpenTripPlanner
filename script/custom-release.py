@@ -271,6 +271,8 @@ def push_release_branch_and_tag():
 ## ------------------------------------------------------------------------------------ ##
 
 def parse_and_verify_cli_arguments_and_options():
+    if os.getenv('CUSTOM_RELEASE_LOG_LEVEL') == 'debug':
+        options.debugging = True
     args = []
     for arg in sys.argv[1:]:
         if re.match(r'(-h|--help)', arg):
@@ -404,7 +406,7 @@ def list_labeled_prs():
       "operationName":"ReadOpenPullRequests"
     }
     '''
-    git_hub_access_token = os.environ['GIT_HUB_ACCESS_TOKEN']
+    git_hub_access_token = os.environ['CUSTOM_RELEASE_GIT_HUB_API_TOKEN']
     result = execute('curl', '-H', f'Authorization: Bearer {git_hub_access_token}', '-X', 'POST',
                      '-d', post_body, 'https://api.github.com/graphql',
                      error_msg='GitHub GraphQL Query failed!', quiet_err=True)
