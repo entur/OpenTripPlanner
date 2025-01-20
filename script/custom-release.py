@@ -58,15 +58,15 @@ class CliOptions:
         self.base_revision = None
         self.dry_run = False
         self.debugging = False
-        self.hotfix = False
+        self.releaseOnly = False
         self.bump_ser_ver_id = False
         self.skip_prs = False
 
     def verify(self):
-        if self.hotfix and self.base_revision:
-            error("No arguments allowed with option '--hotfix'")
+        if self.releaseOnly and self.base_revision:
+            error("No arguments allowed with option '--release'")
 
-    # Return the script <base revision> argument if set, if not use 'HEAD'(--hotfix)
+    # Return the script <base revision> argument if set, if not use 'HEAD'(--release)
     def release_base(self):
         return self.base_revision if self.base_revision else 'HEAD'
 
@@ -75,7 +75,7 @@ class CliOptions:
                 f"base_revision: {self.base_revision}, "
                 f"dry_run: {self.dry_run}, "
                 f"debugging: {self.debugging}, "
-                f"hotfix: '{self.hotfix}', "
+                f"release: '{self.releaseOnly}', "
                 f"bump_ser_ver_id: '{self.bump_ser_ver_id}', "
                 f"skip_prs: '{self.skip_prs}'>")
 
@@ -132,7 +132,7 @@ def main():
     setup_and_verify()
 
     # Prepare release
-    if not options.hotfix:
+    if not options.releaseOnly:
         reset_release_branch_to_base_revision()
         merge_in_labeled_prs()
         merge_in_ext_branches()
@@ -210,13 +210,14 @@ def merge_in_ext_branches():
 def merge_in_old_release_with_no_changes():
     section('Merge old release into the release branch ...')
     git('merge', '-s', 'ours', config.release_branch_path(), '-m',
-           'Merge old release into the release branch - NO CHANGES COPIED OVER')
+        'Merge old release into the release branch - NO CHANGES COPIED OVER')
     info('Merged - NO CHANGES COPIED OVER')
 
 
 def set_maven_pom_version():
     section('Set Maven project version ...')
-    execute('mvn', 'versions:set', f'-DnewVersion={state.new_version}', '-DgenerateBackupPoms=false', quiet=True)
+    execute('mvn', 'versions:set', f'-DnewVersion={state.new_version}',
+            '-DgenerateBackupPoms=false', quiet=True)
     info(f'New version set: {state.new_version}')
 
 
@@ -253,6 +254,7 @@ def push_release_branch_and_tag():
     delete_script_state()
     info('\nRELEASE SUCCESS!\n')
 
+
 ## ------------------------------------------------------------------------------------ ##
 ##                                   Setup and verify                                   ##
 ## ------------------------------------------------------------------------------------ ##
@@ -266,8 +268,8 @@ def parse_and_verify_cli_arguments_and_options():
             options.dry_run = True
         elif re.match(r'(--debug)', arg):
             options.debugging = True
-        elif re.match(r'(--hotfix)', arg):
-            options.hotfix = True
+        elif re.match(r'(--release)', arg):
+            options.releaseOnly = True
         elif re.match(r'(--serVerId)', arg):
             options.bump_ser_ver_id = True
         elif re.match(r'(--skipPRs)', arg):
@@ -318,9 +320,8 @@ def load_config():
         debug(f'Config loaded: {config}')
 
     if len(config.ser_ver_id_prefix) != 2:
-        error(
-            f"Configure the 'ser_ver_id_prefix'. The prefix must be exactly two characters long. "
-            f"Value: <{config.ser_ver_id_prefix}>")
+        error(f"Configure the 'ser_ver_id_prefix'. The prefix must be exactly two characters long. "
+              f"Value: <{config.ser_ver_id_prefix}>")
 
 
 def verify_script_run_from_root():
@@ -337,7 +338,7 @@ def verify_maven_installed():
 
 
 def verify_release_base_and_release_branch_exist():
-    if options.hotfix:
+    if options.releaseOnly:
         info('Verify release branch/commit exist ...')
     else:
         info('Verify base revision and release branch/commit exist ...')
@@ -384,7 +385,7 @@ def list_labeled_prs():
     # The query body needs to be on one line, for an unknown reason.
     query_text = ('query ReadOpenPullRequests { '
                   'repository(owner:\\"opentripplanner\\", name:\\"OpenTripPlanner\\") { '
-                  f'pullRequests(first: 100, states: OPEN, labels: \\"{config.include_prs_label}\\") ' 
+                  f'pullRequests(first: 100, states: OPEN, labels: \\"{config.include_prs_label}\\") '
                   '{ nodes { number, labels(first: 20) { nodes { name } } } } } } }')
     post_body = '''
     {
@@ -438,9 +439,8 @@ def resolve_new_ser_ver_id():
 
         # Update serialization version id in release if serialization version id has changed
         bump_ser_ver_id = curr_upstream_id != base_upstream_id
-        info(
-            f'  - The current upstream serialization.ver.id is {curr_upstream_id} '
-            f'and the base upstream id is {base_upstream_id}.')
+        info(f'  - The current upstream serialization.ver.id is {curr_upstream_id} '
+             f'and the base upstream id is {base_upstream_id}.')
 
     state.current_ser_ver_id = curr_ser_ver_id
     if bump_ser_ver_id:
@@ -471,7 +471,7 @@ CLI Options
   - Bump ser.ver.id ............. : {options.bump_ser_ver_id}
   - Dry run  .................... : {options.dry_run}
   - Debugging ................... : {options.debugging}
-  - Hotfix ...................... : {options.hotfix}
+  - Release ...................... : {options.releaseOnly}
 
 Config
   - Upstream git repo remote name : {config.upstream_remote}
@@ -572,6 +572,7 @@ def run_maven_test():
     if section_w_resume('run_maven_test', 'Run unit tests'):
         mvn('clean', '-PprettierSkip', 'test')
 
+
 def git(*cmd, error_msg=None):
     return execute('git', *cmd, error_msg=error_msg)
 
@@ -663,8 +664,10 @@ def debug(msg):
     if options.debugging:
         print(f'DEBUG {msg}', flush=True)
 
+
 def crop(text):
-    return text if len(text) <= 1600 else ("%s..."%(text[:1597]))
+    return text if len(text) <= 1600 else ("%s..." % (text[:1597]))
+
 
 ## ------------------------------------------------------------------------------------ ##
 ##                                     Help function                                    ##
@@ -694,13 +697,13 @@ def print_help():
         <base-revision> : The base branch or commit to use as the base for the release. The
                           'otp/dev-2.x' is the most common base branch to use, but you can
                           create a new release on top of any <commit>.
-                          This parameter is required unless option --hotfix is used.
+                          This parameter is required unless option --release is used.
 
     Options
       -h, --help : Print this help.
       --debug    : Run script with debug output enabled.
       --dryRun   : Run script locally, nothing is pushed to remote server.
-      --hotfix   : Create a new release from the current local Git repo HEAD. It updates the
+      --release   : Create a new release from the current local Git repo HEAD. It updates the
                    maven-project-version and the serialization-version-id, creates a new tag
                    and push the release. You should apply all fixes and commit BEFORE running
                    this script. Can not be used with the <base-revision> argument set.
@@ -711,7 +714,7 @@ def print_help():
       # script/prepare_release.py otp/dev-2.x
       # script/prepare_release.py 0715be88
       # script/prepare_release.py --dryRun --debug entur/my-feature-branch
-      # script/prepare_release.py --hotfix --serVerId
+      # script/prepare_release.py --release --serVerId
 
 
     Failure
