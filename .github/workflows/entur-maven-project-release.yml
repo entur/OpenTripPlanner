@@ -55,5 +55,18 @@ jobs:
           git remote -v
           echo "Run script/custom-release.py otp/dev-2.x"
           script/custom-release.py otp/dev-2.x
+          echo "GHA_DOCKER_PUSH_IMAGE_TAG=`git describe --tags --abbrev=0`" >> $GITHUB_ENV
+      - name: Trigger downstream CI
+        run: |
+          repo_owner="entur"
+          repo_name="OpenTripPlanner"
+          event_type="trigger-downstream-ci"
+          service="otp"   
+          echo "Triggering downstream CI for $service with version $GHA_DOCKER_PUSH_IMAGE_TAG"
+          curl -X POST \
+          -H "Authorization: token ${{ secrets.GITFLOW_PAT }}" \
+          -H "Accept: application/vnd.github.everest-preview+json" \
+          -H "Content-Type: application/json" https://api.github.com/repos/$repo_owner/$repo_name/dispatches \
+          -d "{\"event_type\": \"$event_type\", \"client_payload\": {\"service\": \"$service\", \"version\": \"$GHA_DOCKER_PUSH_IMAGE_TAG\", \"unit\": false, \"integration\": true}}"
           
           
