@@ -138,6 +138,7 @@ def main():
         merge_in_ext_branches()
         merge_in_old_release_with_no_changes()
 
+    run_custom_release_extensions()
     set_maven_pom_version()
     set_ser_ver_id()
     run_maven_test()
@@ -212,6 +213,15 @@ def merge_in_old_release_with_no_changes():
     git('merge', '-s', 'ours', config.release_branch_path(), '-m',
         'Merge old release into the release branch - NO CHANGES COPIED OVER')
     info('Merged - NO CHANGES COPIED OVER')
+
+
+def run_custom_release_extensions():
+    section('Run custom release extensions bash script ...')
+    ext_script = 'script/custom-release-extension'
+    if os.path.exists(ext_script):
+        execute(ext_script)
+    else:
+        print(f"Script '{ext_script}' not found!")
 
 
 def set_maven_pom_version():
