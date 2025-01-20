@@ -11,12 +11,7 @@ on:
           - info
           - debug
   schedule:
-      - cron: '33 0 * * *'
-  workflow_run:
-    types: [ requested ]
-    branches:
-      - 'main'
-      - 'main_config'
+    - cron: '33 0 * * *'
 jobs:
   release:
     runs-on: ubuntu-latest
