@@ -115,6 +115,15 @@ class ScriptState:
             debug(f'Skip step: {step}')
             return False
 
+    @staticmethod
+    def do_resume():
+        return os.path.exists(STATE_FILE)
+
+    def delete_progress_file(self):
+        execute('rm', STATE_FILE)
+        self.gotoStep = False
+        self.step = None
+
 
 ## ------------------------------------------------------------------------------------ ##
 ##                                  Global Variables                                    ##
@@ -154,7 +163,7 @@ def main():
 def setup_and_verify():
     section('Setting up release process and verifying the environment')
     parse_and_verify_cli_arguments_and_options()
-    if os.path.exists(STATE_FILE):
+    if state.do_resume():
         resume()
     else:
         load_config()
@@ -301,21 +310,27 @@ def resume():
       Do you want to resume the previous execution of the script?
        - You must first fix the merge conflict or unit-test failing.
        - Then commit your changes.
-       - Then run this script again, the script will automatically resume the release process
-         at the same place it failed.
+       - Then run this script again, the script will automatically resume the release
+         process at the same place it failed.
          
-      If not, exit and delete the progress tracking file: 
+      | NOTE!  The script entered resume because a progress tracking file exist. To
+      |        avoid this you may delete the {STATE_FILE} before starting the script.
+      |
+      |        > rm {STATE_FILE}
       
-        # rm {STATE_FILE}    
-      
-
-      Do you want to resume the release process?
+      Press
+        'y' to resume release.
+        'x' to exit.
+        'd' to exit and delete progress file. 
     ''')
-    answer = 'answer'
-    p = re.compile(r'[\syYxX]')
+    answer = 'NOT_SET'
+    p = re.compile(r'[\syYxXdD]')
     while not p.match(answer):
-        answer = input("Press 'y' to continue, 'x' to exit: ")
+        answer = input("Press 'x', 'y', or 'd' then <enter>: ").lower()
     if answer == 'x':
+        exit(0)
+    if answer == 'd':
+        state.delete_progress_file()
         exit(0)
     read_script_state()
 
