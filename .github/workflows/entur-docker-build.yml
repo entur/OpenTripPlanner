@@ -1,8 +1,7 @@
 name: Entur - Build and push Docker
 on:
-  push:
-    tags:
-      - 'v*-entur-[0-9]+'
+  repository_dispatch:
+    types: [trigger-downstream-ci]
 jobs:
   maven-verify:
     runs-on: ubuntu-24.04
