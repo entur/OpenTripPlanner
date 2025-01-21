@@ -248,7 +248,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
               serviceDate,
               backwardsDelayPropagationType
             );
-            case ADDED -> validateAndHandleAddedTrip(
+            case NEW, ADDED -> validateAndHandleAddedTrip(
               tripUpdate,
               tripDescriptor,
               tripId,
@@ -302,7 +302,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
   /**
    * Remove previous realtime updates for this trip. This is necessary to avoid previous stop
    * pattern modifications from persisting. If a trip was previously added with the
-   * ScheduleRelationship ADDED and is now cancelled or deleted, we still want to keep the realtime
+   * ScheduleRelationship NEW and is now cancelled or deleted, we still want to keep the realtime
    * added trip pattern.
    */
   private void purgePatternModifications(
@@ -323,7 +323,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
     ) {
       // Remove previous realtime updates for this trip. This is necessary to avoid previous
       // stop pattern modifications from persisting. If a trip was previously added with the ScheduleRelationship
-      // ADDED and is now cancelled or deleted, we still want to keep the realtime added trip pattern.
+      // NEW and is now cancelled or deleted, we still want to keep the realtime added trip pattern.
       this.snapshotManager.revertTripToScheduledTripPattern(tripId, serviceDate);
     }
   }
@@ -465,7 +465,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
   }
 
   /**
-   * Validate and handle GTFS-RT TripUpdate message containing an ADDED trip.
+   * Validate and handle GTFS-RT TripUpdate message containing an NEW trip.
    *
    * @param tripUpdate     GTFS-RT TripUpdate message
    * @param tripDescriptor GTFS-RT TripDescriptor
@@ -489,9 +489,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
     final Trip trip = transitEditorService.getScheduledTrip(tripId);
 
     if (trip != null) {
-      // TODO: should we support this and add a new instantiation of this trip (making it
-      // frequency based)?
-      debug(tripId, serviceDate, "Graph already contains trip id of ADDED trip, skipping.");
+      debug(tripId, serviceDate, "Graph already contains trip id of NEW trip, skipping.");
       return UpdateError.result(tripId, TRIP_ALREADY_EXISTS);
     }
 
@@ -501,7 +499,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
       debug(
         tripId,
         serviceDate,
-        "ADDED trip doesn't have a start date in TripDescriptor, skipping."
+        "NEW trip doesn't have a start date in TripDescriptor, skipping."
       );
       return UpdateError.result(tripId, NO_START_DATE);
     }
@@ -520,7 +518,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
 
     // check if after filtering the stops we still have at least 2
     if (stopTimeUpdates.size() < 2) {
-      debug(tripId, serviceDate, "ADDED trip has fewer than two known stops, skipping.");
+      debug(tripId, serviceDate, "NEW trip has fewer than two known stops, skipping.");
       return UpdateError.result(tripId, TOO_FEW_STOPS);
     }
 
@@ -556,7 +554,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
           debug(
             tripId,
             serviceDate,
-            "Stop '{}' not found in graph. Removing from ADDED trip.",
+            "Stop '{}' not found in graph. Removing from NEW trip.",
             st.getStopId()
           );
         }
@@ -566,7 +564,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
   }
 
   /**
-   * Check stop time updates of trip update that results in a new trip (ADDED or MODIFIED) and find
+   * Check stop time updates of trip update that results in a new trip (NEW or REPLACEMENT) and find
    * all stops of that trip.
    *
    * @return stops when stop time updates are correct; null if there are errors
@@ -601,7 +599,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
         }
         previousStopSequence = stopSequence;
       } else {
-        // Allow missing stop sequences for ADDED and MODIFIED trips
+        // Allow missing stop sequences for NEW and REPLACEMENT trips
       }
 
       // Find stops
@@ -668,7 +666,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
   }
 
   /**
-   * Handle GTFS-RT TripUpdate message containing an ADDED trip.
+   * Handle GTFS-RT TripUpdate message containing an NEW trip.
    *
    * @param stopTimeUpdates GTFS-RT stop time updates
    * @param tripDescriptor  GTFS-RT TripDescriptor
@@ -717,7 +715,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
       debug(
         tripId,
         serviceDate,
-        "ADDED trip has service date {} for which no service id is available, skipping.",
+        "NEW trip has service date {} for which no service id is available, skipping.",
         serviceDate.toString()
       );
       return UpdateError.result(tripId, NO_SERVICE_ON_DATE);
@@ -869,7 +867,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
           debug(
             trip.getId(),
             serviceDate,
-            "ADDED trip has invalid arrival time (compared to start date in " +
+            "NEW trip has invalid arrival time (compared to start date in " +
             "TripDescriptor), skipping."
           );
           return UpdateError.result(trip.getId(), INVALID_ARRIVAL_TIME);
@@ -885,7 +883,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
           debug(
             trip.getId(),
             serviceDate,
-            "ADDED trip has invalid departure time (compared to start date in " +
+            "NEW trip has invalid departure time (compared to start date in " +
             "TripDescriptor), skipping."
           );
           return UpdateError.result(trip.getId(), INVALID_DEPARTURE_TIME);
@@ -1070,7 +1068,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
   }
 
   /**
-   * Validate and handle GTFS-RT TripUpdate message containing a MODIFIED trip.
+   * Validate and handle GTFS-RT TripUpdate message containing a REPLACEMENT trip.
    *
    * @param tripUpdate     GTFS-RT TripUpdate message
    * @param tripDescriptor GTFS-RT TripDescriptor
@@ -1094,8 +1092,7 @@ public class TimetableSnapshotSource implements TimetableSnapshotProvider {
     Trip trip = transitEditorService.getTrip(tripId);
 
     if (trip == null) {
-      // TODO: should we support this and consider it an ADDED trip?
-      debug(tripId, serviceDate, "Feed does not contain trip id of MODIFIED trip, skipping.");
+      debug(tripId, serviceDate, "Feed does not contain trip id of REPLACEMENT trip, skipping.");
       return UpdateError.result(tripId, TRIP_NOT_FOUND);
     }
 
