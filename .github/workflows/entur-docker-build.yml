@@ -44,5 +44,5 @@ jobs:
     uses: entur/gha-docker/.github/workflows/push.yml@v1
     with:
       git_tag: false
-      image_tag: ${{ github.ref_name }}
+      image_tag: ${{ github.event.client_payload.version }}
       image_name: 'otp2'
