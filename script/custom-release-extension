@@ -8,6 +8,11 @@ set -euo pipefail
 ENTUR_WORKFLOWS=(
   "entur-docker-build.yml"
   "entur-maven-project-release.yml"
+  "en-deploy-pipeline.yml"
+  "en-deploy.yml"
+  "en-docker-image-build.yml"
+  "en-main-pipeline.yml"
+  "en-release.yml"
 )
 
 pushd .github/workflows
