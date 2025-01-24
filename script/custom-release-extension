@@ -33,13 +33,13 @@ popd
 git add .github/workflows
 git commit -m "Remove upstream workflows"
 
-# Move a directory/file from 'entur-deployment-config/' to root directory. If the directory
+# Move a directory/file from 'entur/deployment-config/' to root directory. If the directory
 # already exist at root level, then remove it before moving the entur directory to avoid any
 # conflicts.
 function moveToRoot() {
   echo "Move '$1' directory to project root."
   rm -Rf "$1"
-  mv "entur-deployment-config/$1" .
+  mv "entur/deployment-config/$1" .
 }
 
 moveToRoot "terraform"
