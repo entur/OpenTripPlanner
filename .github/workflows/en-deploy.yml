@@ -16,15 +16,21 @@ on:
         required: false
         type: string
 jobs:
+  build-transit-graph:
+    name: Build Transit Graph (RC)
+    runs-on: ubuntu-latest
+    environment: ${{inputs.target}}
+    steps:
+      - run: echo "Build Transit Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
   deploy-gb:
     name: "Deploy Graph Builder ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
     runs-on: ubuntu-latest
-    environment: ${{inputs.target}}
+    needs: build-transit-graph
     steps:
       - run: echo "Deploy Graph Builder ${{inputs.version}}  (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
   deploy-jp:
     name: "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
     runs-on: ubuntu-latest
-    environment: ${{inputs.target}}
+    needs: build-transit-graph
     steps:
       - run: echo "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
