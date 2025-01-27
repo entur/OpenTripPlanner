@@ -1,0 +1,67 @@
+name: Build, Tag & Release OTP JAR
+on:
+  workflow_call:
+    inputs:
+      logLevel:
+        type: string
+        default: 'info'
+    outputs:
+      version:
+        description: 'The OTP version'
+        value: ${{ jobs.release-otp.outputs.version }}
+      ser_ver_id:
+        description: 'The OTP serialization id'
+        value: ${{ jobs.release-otp.outputs.ser_ver_id }}
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{steps.set_version.outputs.version}}
+      ser_ver_id: ${{steps.set_ser_ver_id.outputs.ser_ver_id}}
+    steps:
+      - name: Checkout entur/OpenTripPlanner
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21.0.5+11
+          distribution: liberica
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-maven-
+            ${{ runner.os }}-
+      - name: Release OTP
+        env:
+          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.logLevel }}
+        run: |
+          echo "Start otp release script"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git remote rename origin entur
+          git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
+          git fetch --no-tags otp
+          git remote -v
+          echo "Run script/custom-release.py otp/dev-2.x"
+          script/custom-release.py otp/dev-2.x
+      - name: Set serialization version ID
+        id: set_ser_ver_id
+        run: |
+          SER_VER_ID=$(mvn help:evaluate -Dexpression=otp.serialization.version.id -q -DforceStdout)
+          echo "Set ser_ver_id=${SER_VER_ID}"
+          echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
+      - name: Set serialization version ID
+        id: set_version
+        run: |
+          GIT_TAG_VERSION=$(git describe --exact-match HEAD)
+          echo "Set 'version=${GIT_TAG_VERSION}'"
+          echo "version=${GIT_TAG_VERSION}" >> $GITHUB_OUTPUT

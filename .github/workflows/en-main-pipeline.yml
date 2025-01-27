@@ -1,0 +1,43 @@
+name: OTP Pipline
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - debug
+jobs:
+  release-otp:
+    name: "Build, test, tag & release OTP"
+    uses: ./.github/workflows/en-release.yml
+    with:
+      logLevel: ${{ inputs.logLevel }}
+
+  build-docker-image:
+    name: Build and publish docker image
+    uses: ./.github/workflows/en-docker-image-build.yml
+    needs: release-otp
+    with:
+      version: ${{needs.release-otp.outputs.version}}
+
+  deploy-en-dev:
+    name: Deploy OTP
+    uses: ./.github/workflows/en-deploy-pipeline.yml
+    needs: [release-otp, build-docker-image]
+    with:
+      version: ${{needs.release-otp.outputs.version}}
+      ser_ver_id: ${{needs.release-otp.outputs.ser_ver_id}}
+      target: dev
+
+  deploy-en-test:
+    name: Deploy OTP
+    uses: ./.github/workflows/en-deploy-pipeline.yml
+    needs: [release-otp, build-docker-image]
+    with:
+      version: ${{needs.release-otp.outputs.version}}
+      ser_ver_id: ${{needs.release-otp.outputs.ser_ver_id}}
+      target: test
