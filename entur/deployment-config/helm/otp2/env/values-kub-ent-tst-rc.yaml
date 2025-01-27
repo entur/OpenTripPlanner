@@ -1,6 +1,0 @@
-journeyPlanner:
-  enabled: false
-cronjobRedeployGraphBuilder:
-    releaseCandidateGraphBuilderEnabled: true
-    mardukBucket: marduk-test
-    ignoreFareFrame: false
