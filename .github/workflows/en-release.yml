@@ -5,19 +5,21 @@ on:
       logLevel:
         type: string
         default: 'info'
+      gitTag:
+        type: string
     outputs:
       version:
         description: 'The OTP version'
-        value: ${{ jobs.release-otp.outputs.version }}
-      ser_ver_id:
+        value: ${{ jobs.setVersion.outputs.version }}
+      serVerId:
         description: 'The OTP serialization id'
-        value: ${{ jobs.release-otp.outputs.ser_ver_id }}
+        value: ${{ jobs.setSerVerId.outputs.serVerId }}
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
       version: ${{steps.set_version.outputs.version}}
-      ser_ver_id: ${{steps.set_ser_ver_id.outputs.ser_ver_id}}
+      serVerId: ${{steps.set_serVerId.outputs.serVerId}}
     steps:
       - name: Checkout entur/OpenTripPlanner
         uses: actions/checkout@v4
@@ -40,6 +42,7 @@ jobs:
             ${{ runner.os }}-maven-
             ${{ runner.os }}-
       - name: Release OTP
+        if: ${{ ! inputs.gitTag }}
         env:
           CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.logLevel }}
@@ -53,15 +56,19 @@ jobs:
           git remote -v
           echo "Run script/custom-release.py otp/dev-2.x"
           script/custom-release.py otp/dev-2.x
+      - name: Checkout Released OTP Tag
+        if: ${{ inputs.gitTag }}
+        run: |
+          git checkout "tags/${{ inputs.gitTag }}"
+      - name: Set version (Git repository Tag)
+        id: setVersion
+        run: |
+          VERSION_GIT_TAG=$(git describe --exact-match HEAD)
+          echo "Set 'version=${VERSION_GIT_TAG}'"
+          echo "version=${VERSION_GIT_TAG}" >> $GITHUB_OUTPUT
       - name: Set serialization version ID
-        id: set_ser_ver_id
+        id: setSerVerId
         run: |
           SER_VER_ID=$(mvn help:evaluate -Dexpression=otp.serialization.version.id -q -DforceStdout)
-          echo "Set ser_ver_id=${SER_VER_ID}"
-          echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
-      - name: Set serialization version ID
-        id: set_version
-        run: |
-          GIT_TAG_VERSION=$(git describe --exact-match HEAD)
-          echo "Set 'version=${GIT_TAG_VERSION}'"
-          echo "version=${GIT_TAG_VERSION}" >> $GITHUB_OUTPUT
+          echo "Set serVerId=${SER_VER_ID}"
+          echo "serVerId=${SER_VER_ID}" >> $GITHUB_OUTPUT
