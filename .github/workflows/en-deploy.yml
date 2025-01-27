@@ -7,7 +7,7 @@ on:
         description: "The OTP version"
         required: true
         type: string
-      ser_ver_id:
+      serVerId:
         description: "The OTP Serialization version id"
         required: true
         type: string
@@ -17,11 +17,11 @@ on:
         type: string
 jobs:
   deploy-gb:
-    name: "Deploy Graph Builder ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+    name: "Deploy Graph Builder ${{inputs.version}} (${{inputs.serVerId}}) in ${{inputs.target}}"
     runs-on: ubuntu-latest
     environment: ${{inputs.target}}
     steps:
-      - run: echo "Deploy Graph Builder ${{inputs.version}}  (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+      - run: echo "Deploy Graph Builder ${{inputs.version}}  (${{inputs.serVerId}}) in ${{inputs.target}}"
   deploy-jp:
     name: "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
     runs-on: ubuntu-latest

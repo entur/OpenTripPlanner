@@ -7,7 +7,7 @@ on:
         description: "The OTP version"
         required: true
         type: string
-      ser_ver_id:
+      serVerId:
         description: "The OTP Serialization version id"
         required: true
         type: string
@@ -20,24 +20,24 @@ jobs:
     name: Deploy Graph Builder RC
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Deploy Graph Builder RC ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+      - run: echo "Deploy Graph Builder RC ${{inputs.version}} (${{inputs.serVerId}}) in ${{inputs.target}}"
   build-street-graph:
     name: Build Street Graph (RC)
     runs-on: ubuntu-latest
     needs: deploy-gb-rc
     steps:
-      - run: echo "Build Street Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+      - run: echo "Build Street Graph ${{inputs.version}} (${{inputs.serVerId}}) in ${{inputs.target}}"
   build-transit-graph:
     name: Build Transit Graph (RC)
     runs-on: ubuntu-latest
     needs: build-street-graph
     steps:
-      - run: echo "Build Transit Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+      - run: echo "Build Transit Graph ${{inputs.version}} (${{inputs.serVerId}}) in ${{inputs.target}}"
   deploy-otp:
     name: Deploy
     uses: ./.github/workflows/en-deploy.yml
     needs: build-transit-graph
     with:
       version: ${{inputs.version}}
-      ser_ver_id: ${{inputs.ser_ver_id}}
+      serVerId: ${{inputs.serVerId}}
       target: ${{inputs.target}}
