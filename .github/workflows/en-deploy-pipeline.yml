@@ -1,5 +1,5 @@
-name: Deploy OTP Pipline
-run-name: Deploy OTP ${{inputs.version}} to ${{inputs.target}}
+name: "Deploy OTP Pipline"
+run-name: "Deploy OTP ${{inputs.version}} to ${{inputs.target}}"
 on:
   workflow_call:
     inputs:
@@ -27,16 +27,10 @@ jobs:
     needs: deploy-gb-rc
     steps:
       - run: echo "Build Street Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
-  build-transit-graph:
-    name: Build Transit Graph (RC)
-    runs-on: ubuntu-latest
-    needs: build-street-graph
-    steps:
-      - run: echo "Build Transit Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
   deploy-otp:
     name: Deploy
     uses: ./.github/workflows/en-deploy.yml
-    needs: build-transit-graph
+    needs: build-street-graph
     with:
       version: ${{inputs.version}}
       ser_ver_id: ${{inputs.ser_ver_id}}

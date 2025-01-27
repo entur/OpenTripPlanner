@@ -1,8 +1,8 @@
-name: OTP Pipline
+name: "OTP Pipline"
 on:
   workflow_dispatch:
     inputs:
-      logLevel:
+      log_level:
         description: 'Log level'
         required: true
         default: 'info'
@@ -10,34 +10,51 @@ on:
         options:
           - info
           - debug
+      git_tag:
+        description: 'Manually set OTP Git tag to promote - run pipline using an existing OTP
+           release. This is used when building a release on a local developer machine.
+           Example input: v2.7.0-entur-48'
+        required: false
+        default: ''
+        type: string
 jobs:
   release-otp:
     name: "Build, test, tag & release OTP"
     uses: ./.github/workflows/en-release.yml
     with:
-      logLevel: ${{ inputs.logLevel }}
+      git_tag: ${{ inputs.git_tag }}
+      log_level: ${{ inputs.log_level }}
 
   build-docker-image:
-    name: Build and publish docker image
+    name: "Build and publish docker image 🎁"
     uses: ./.github/workflows/en-docker-image-build.yml
     needs: release-otp
     with:
       version: ${{needs.release-otp.outputs.version}}
 
   deploy-en-dev:
-    name: Deploy OTP
+    name: "Deploy OTP to DEV 🟩"
     uses: ./.github/workflows/en-deploy-pipeline.yml
     needs: [release-otp, build-docker-image]
     with:
-      version: ${{needs.release-otp.outputs.version}}
-      ser_ver_id: ${{needs.release-otp.outputs.ser_ver_id}}
+      version: ${{ needs.release-otp.outputs.version }}
+      ser_ver_id: ${{ needs.release-otp.outputs.ser_ver_id }}
       target: dev
 
   deploy-en-test:
-    name: Deploy OTP
+    name: "Deploy OTP to TEST 🟧"
     uses: ./.github/workflows/en-deploy-pipeline.yml
     needs: [release-otp, build-docker-image]
     with:
-      version: ${{needs.release-otp.outputs.version}}
-      ser_ver_id: ${{needs.release-otp.outputs.ser_ver_id}}
+      version: ${{ needs.release-otp.outputs.version }}
+      ser_ver_id: ${{ needs.release-otp.outputs.ser_ver_id }}
       target: test
+
+  deploy-en-prod:
+    name: "Deploy OTP to PROD 🟥"
+    uses: ./.github/workflows/en-deploy-pipeline.yml
+    needs: [release-otp, build-docker-image]
+    with:
+      version: ${{ needs.release-otp.outputs.version }}
+      ser_ver_id: ${{ needs.release-otp.outputs.ser_ver_id }}
+      target: prod

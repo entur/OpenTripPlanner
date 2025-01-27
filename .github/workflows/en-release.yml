@@ -2,16 +2,18 @@ name: Build, Tag & Release OTP JAR
 on:
   workflow_call:
     inputs:
-      logLevel:
+      log_level:
         type: string
         default: 'info'
+      git_tag:
+        type: string
     outputs:
       version:
         description: 'The OTP version'
-        value: ${{ jobs.release-otp.outputs.version }}
+        value: ${{ jobs.release.outputs.version }}
       ser_ver_id:
         description: 'The OTP serialization id'
-        value: ${{ jobs.release-otp.outputs.ser_ver_id }}
+        value: ${{ jobs.release.outputs.ser_ver_id }}
 jobs:
   release:
     runs-on: ubuntu-latest
@@ -40,9 +42,10 @@ jobs:
             ${{ runner.os }}-maven-
             ${{ runner.os }}-
       - name: Release OTP
+        if: ${{ ! inputs.git_tag }}
         env:
           CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.logLevel }}
+          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.log_level }}
         run: |
           echo "Start otp release script"
           git config user.name github-actions[bot]
@@ -53,15 +56,19 @@ jobs:
           git remote -v
           echo "Run script/custom-release.py otp/dev-2.x"
           script/custom-release.py otp/dev-2.x
+      - name: Checkout Released OTP Tag
+        if: ${{ inputs.git_tag }}
+        run: |
+          git checkout "tags/${{ inputs.git_tag }}"
+      - name: Set version (Git repository Tag)
+        id: set_version
+        run: |
+          VERSION_GIT_TAG=$(git describe --exact-match HEAD)
+          echo "Set 'version=${VERSION_GIT_TAG}'"
+          echo "version=${VERSION_GIT_TAG}" >> $GITHUB_OUTPUT
       - name: Set serialization version ID
         id: set_ser_ver_id
         run: |
           SER_VER_ID=$(mvn help:evaluate -Dexpression=otp.serialization.version.id -q -DforceStdout)
           echo "Set ser_ver_id=${SER_VER_ID}"
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
-      - name: Set serialization version ID
-        id: set_version
-        run: |
-          GIT_TAG_VERSION=$(git describe --exact-match HEAD)
-          echo "Set 'version=${GIT_TAG_VERSION}'"
-          echo "version=${GIT_TAG_VERSION}" >> $GITHUB_OUTPUT
