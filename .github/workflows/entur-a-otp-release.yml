@@ -65,8 +65,7 @@ jobs:
           git fetch --no-tags otp
           git remote -v
           echo "Run script/custom-release.py otp/dev-2.x"
-          script/custom-release.py otp/dev-2.x
-          echo "GHA_DOCKER_PUSH_IMAGE_TAG=`git describe --tags --abbrev=0`" >> $GITHUB_ENV
+          script/custom-release.py --summary otp/dev-2.x
       - name: Checkout Released OTP Tag
         if: ${{ inputs.git_tag }}
         run: |
@@ -83,5 +82,5 @@ jobs:
           SER_VER_ID=$(mvn help:evaluate -Dexpression=otp.serialization.version.id -q -DforceStdout)
           echo "Set ser_ver_id=${SER_VER_ID}"
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
-          
-          
+      - name: Create Summary
+        run: cat .custom_release_summary.md >> GITHUB_STEP_SUMMARY
