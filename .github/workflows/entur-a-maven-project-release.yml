@@ -1,4 +1,4 @@
-name: Entur - Release OTP Maven project
+name: "A - Release OTP Maven project"
 on:
   workflow_dispatch:
     inputs:

@@ -1,4 +1,4 @@
-name: Entur - Build and push Docker
+name: "B - Build and push docker"
 run-name: "Build and push docker image - ${{inputs.version}}"
 on:
   workflow_call:
@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ inputs.version }}
       - uses: actions/setup-java@v4
         with:
           java-version: 21.0.5+11
@@ -29,9 +30,6 @@ jobs:
             ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             ${{ runner.os }}-maven-
             ${{ runner.os }}-
-      - name: "Checkout OTP using Git tag - ${{ inputs.version }} "
-        run: |
-          git checkout "tags/${{ inputs.version }}"
       - name: Run maven build
         run: mvn verify -Dps -DskipTests
       - uses: actions/upload-artifact@v4.4.0
@@ -51,5 +49,5 @@ jobs:
     uses: entur/gha-docker/.github/workflows/push.yml@v1
     with:
       git_tag: false
-      image_tag: ${{ github.event.client_payload.version }}
+      image_tag: ${{ inputs.version }}
       image_name: 'otp2'
