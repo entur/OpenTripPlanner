@@ -2,24 +2,24 @@ name: Build, Tag & Release OTP JAR
 on:
   workflow_call:
     inputs:
-      logLevel:
+      log_level:
         type: string
         default: 'info'
-      gitTag:
+      git_tag:
         type: string
     outputs:
       version:
         description: 'The OTP version'
-        value: ${{ jobs.setVersion.outputs.version }}
-      serVerId:
+        value: ${{ jobs.release.outputs.version }}
+      ser_ver_id:
         description: 'The OTP serialization id'
-        value: ${{ jobs.setSerVerId.outputs.serVerId }}
+        value: ${{ jobs.release.outputs.ser_ver_id }}
 jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
       version: ${{steps.set_version.outputs.version}}
-      serVerId: ${{steps.set_serVerId.outputs.serVerId}}
+      ser_ver_id: ${{steps.set_ser_ver_id.outputs.ser_ver_id}}
     steps:
       - name: Checkout entur/OpenTripPlanner
         uses: actions/checkout@v4
@@ -42,10 +42,10 @@ jobs:
             ${{ runner.os }}-maven-
             ${{ runner.os }}-
       - name: Release OTP
-        if: ${{ ! inputs.gitTag }}
+        if: ${{ ! inputs.git_tag }}
         env:
           CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.logLevel }}
+          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.log_level }}
         run: |
           echo "Start otp release script"
           git config user.name github-actions[bot]
@@ -57,18 +57,18 @@ jobs:
           echo "Run script/custom-release.py otp/dev-2.x"
           script/custom-release.py otp/dev-2.x
       - name: Checkout Released OTP Tag
-        if: ${{ inputs.gitTag }}
+        if: ${{ inputs.git_tag }}
         run: |
-          git checkout "tags/${{ inputs.gitTag }}"
+          git checkout "tags/${{ inputs.git_tag }}"
       - name: Set version (Git repository Tag)
-        id: setVersion
+        id: set_version
         run: |
           VERSION_GIT_TAG=$(git describe --exact-match HEAD)
           echo "Set 'version=${VERSION_GIT_TAG}'"
           echo "version=${VERSION_GIT_TAG}" >> $GITHUB_OUTPUT
       - name: Set serialization version ID
-        id: setSerVerId
+        id: set_ser_ver_id
         run: |
           SER_VER_ID=$(mvn help:evaluate -Dexpression=otp.serialization.version.id -q -DforceStdout)
-          echo "Set serVerId=${SER_VER_ID}"
-          echo "serVerId=${SER_VER_ID}" >> $GITHUB_OUTPUT
+          echo "Set ser_ver_id=${SER_VER_ID}"
+          echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT

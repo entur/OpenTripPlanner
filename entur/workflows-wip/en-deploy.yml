@@ -7,7 +7,7 @@ on:
         description: "The OTP version"
         required: true
         type: string
-      serVerId:
+      ser_ver_id:
         description: "The OTP Serialization version id"
         required: true
         type: string
@@ -16,15 +16,21 @@ on:
         required: false
         type: string
 jobs:
-  deploy-gb:
-    name: "Deploy Graph Builder ${{inputs.version}} (${{inputs.serVerId}}) in ${{inputs.target}}"
+  build-transit-graph:
+    name: Build Transit Graph (RC)
     runs-on: ubuntu-latest
     environment: ${{inputs.target}}
     steps:
-      - run: echo "Deploy Graph Builder ${{inputs.version}}  (${{inputs.serVerId}}) in ${{inputs.target}}"
+      - run: echo "Build Transit Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+  deploy-gb:
+    name: "Deploy Graph Builder ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+    runs-on: ubuntu-latest
+    needs: build-transit-graph
+    steps:
+      - run: echo "Deploy Graph Builder ${{inputs.version}}  (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
   deploy-jp:
     name: "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
     runs-on: ubuntu-latest
-    environment: ${{inputs.target}}
+    needs: build-transit-graph
     steps:
       - run: echo "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
