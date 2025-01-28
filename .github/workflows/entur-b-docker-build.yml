@@ -35,7 +35,7 @@ jobs:
         run: mvn verify -Dps -DskipTests
       - uses: actions/upload-artifact@v4.4.0
         with:
-          path: otp-shaded/target/*.jar
+          path: otp-shaded/target/otp-shaded-*.jar
   docker-build:
     if: github.repository_owner == 'entur'
     needs: [maven-verify]
