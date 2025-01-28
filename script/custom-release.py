@@ -6,7 +6,6 @@ import re
 import subprocess
 import sys
 
-
 ## ------------------------------------------------------------------------------------ ##
 ##                                 Global constants                                     ##
 ## ------------------------------------------------------------------------------------ ##
@@ -19,6 +18,7 @@ SER_VER_ID_PROPERTY_PTN = SER_VER_ID_PROPERTY.replace('.', r'\.')
 SER_VER_ID_PATTERN = re.compile(
     '<' + SER_VER_ID_PROPERTY_PTN + r'>\s*(.*)\s*</' + SER_VER_ID_PROPERTY_PTN + '>')
 STATE_FILE = '.custom_release_resume_state.json'
+SUMMARY_FILE = '.custom_release_summary.md'
 
 
 ## ------------------------------------------------------------------------------------ ##
@@ -61,10 +61,11 @@ class CliOptions:
         self.releaseOnly = False
         self.bump_ser_ver_id = False
         self.skip_prs = False
+        self.printSummary = False
 
     def verify(self):
         if self.releaseOnly and self.base_revision:
-            error("No arguments allowed with option '--release'")
+            error(f"<base-revision> is not allowed with option '--release', was: {options.base_revision}")
 
     # Return the script <base revision> argument if set, if not use 'HEAD'(--release)
     def release_base(self):
@@ -75,9 +76,10 @@ class CliOptions:
                 f"base_revision: {self.base_revision}, "
                 f"dry_run: {self.dry_run}, "
                 f"debugging: {self.debugging}, "
-                f"release: '{self.releaseOnly}', "
+                f"releaseOnly: '{self.releaseOnly}', "
                 f"bump_ser_ver_id: '{self.bump_ser_ver_id}', "
-                f"skip_prs: '{self.skip_prs}'>")
+                f"skip_prs: '{self.skip_prs}', "
+                f"printSummary: '{self.printSummary}'>")
 
 
 # The execution state of the script + the CLI arguments
@@ -89,13 +91,17 @@ class ScriptState:
         self.major_version = None
         self.current_version = None
         self.new_version = None
-        self.prs_to_merge = {}
+        self.pr_labels = {}
+        self.pr_titles = {}
         self.prs_bump_ser_ver_id = False
         self.gotoStep = False
         self.step = None
 
     def new_version_tag(self):
         return f'v{self.new_version}'
+
+    def curr_version_tag(self):
+        return f'v{self.current_version}'
 
     def new_version_description(self):
         return f'Version {self.new_version} ({self.new_ser_ver_id})'
@@ -154,6 +160,7 @@ def main():
     commit_new_versions()
     tag_release()
     push_release_branch_and_tag()
+    print_summary()
 
 
 ## ------------------------------------------------------------------------------------ ##
@@ -193,10 +200,10 @@ def reset_release_branch_to_base_revision():
 
 def merge_in_labeled_prs():
     section('Merge in labeled PRs ...')
-    for pr in state.prs_to_merge:
+    for pr in state.pr_labels:
         # A temp branch is needed here since the PR is in the upstream remote repo
         temp_branch = f'pull-request-{pr}'
-        if section_w_resume(temp_branch, f'Merge in PR #{pr}'):
+        if section_w_resume(temp_branch, f'Merge in PR #{pr} - {state.pr_titles[pr]}'):
             git('fetch', config.upstream_remote, f'pull/{pr}/head:{temp_branch}')
             git('merge', temp_branch)
             git('branch', '-D', temp_branch)
@@ -275,6 +282,34 @@ def push_release_branch_and_tag():
     info('\nRELEASE SUCCESS!\n')
 
 
+def print_summary():
+    if not options.printSummary:
+        return
+    section(f'Print summary file: {SUMMARY_FILE}')
+
+    release_version_summary = f"""
+# OTP Release Summary
+
+## Version
+
+  - New version/git tag: `{state.new_version}` 
+  - New serialization version: `{state.new_ser_ver_id}` 
+  - Old serialization version: `{state.current_ser_ver_id}`
+
+"""
+    with open(SUMMARY_FILE, mode="w", encoding="UTF-8") as f:
+        print(release_version_summary, file=f)
+        if len(state.pr_titles) > 0:
+            print("## Pull Requests", file=f)
+            print(f"These PRs are tagged with {config.include_prs_label}.\n", file=f)
+        for pr in state.pr_titles:
+            url = f"https://github.com/opentripplanner/OpenTripPlanner/pull/{pr}"
+            print(f"  - [#{pr} - {state.pr_titles[pr]}]({url}) {state.pr_labels[pr]}".replace("'", "`"),
+                  file=f)
+        p = execute("./script/changelog-diff.py", state.curr_version_tag(), state.new_version_tag())
+        print(p.stdout, file=f)
+
+
 ## ------------------------------------------------------------------------------------ ##
 ##                                   Setup and verify                                   ##
 ## ------------------------------------------------------------------------------------ ##
@@ -296,6 +331,8 @@ def parse_and_verify_cli_arguments_and_options():
             options.bump_ser_ver_id = True
         elif re.match(r'(--skipPRs)', arg):
             options.skip_prs = True
+        elif re.match(r'(--summary)', arg):
+            options.printSummary = True
         else:
             options.base_revision = arg
             args.append(arg)
@@ -414,7 +451,7 @@ def list_labeled_prs():
     query_text = ('query ReadOpenPullRequests { '
                   'repository(owner:\\"opentripplanner\\", name:\\"OpenTripPlanner\\") { '
                   f'pullRequests(first: 100, states: OPEN, labels: \\"{config.include_prs_label}\\") '
-                  '{ nodes { number, labels(first: 20) { nodes { name } } } } } } }')
+                  '{ nodes { number, title, labels(first: 20) { nodes { name } } } } } } }')
     post_body = '''
     {
       "query":"''' + query_text + '''",
@@ -431,6 +468,7 @@ def list_labeled_prs():
     json_doc = json.loads(result.stdout)
     for node in json_doc['data']['repository']['pullRequests']['nodes']:
         pr_number = node['number']
+        state.pr_titles[str(pr_number)] = node['title']
         pr_labels = []
         labels = node['labels']['nodes']
         # GitHub labels are not case-sensitive, hence the '(?i)'
@@ -439,10 +477,10 @@ def list_labeled_prs():
             lbl_name = label['name']
             if ptn.match(lbl_name):
                 pr_labels.append(lbl_name)
-        state.prs_to_merge[str(pr_number)] = pr_labels
+        state.pr_labels[str(pr_number)] = pr_labels
 
     state.prs_bump_ser_ver_id = any(
-        LBL_BUMP_SER_VER_ID in labels for labels in state.prs_to_merge.values())
+        LBL_BUMP_SER_VER_ID in labels for labels in state.pr_labels.values())
 
 
 def resolve_new_ser_ver_id():
@@ -510,8 +548,8 @@ Config
 ''')
     if config.include_prs_label:
         info(f'PRs to merge')
-        for pr in state.prs_to_merge:
-            info(f'  - {pr} with labels {state.prs_to_merge[pr]}')
+        for pr in state.pr_labels:
+            info(f'  - {pr} with labels {state.pr_labels[pr]}')
     info(f'''
 Release info
   - Project major version ....... : {state.major_version}
@@ -731,15 +769,16 @@ def print_help():
       -h, --help : Print this help.
       --debug    : Run script with debug output enabled.
       --dryRun   : Run script locally, nothing is pushed to remote server.
-      --release   : Create a new release from the current local Git repo HEAD. It updates the
+      --release  : Create a new release from the current local Git repo HEAD. It updates the
                    maven-project-version and the serialization-version-id, creates a new tag
                    and push the release. You should apply all fixes and commit BEFORE running
                    this script. Can not be used with the <base-revision> argument set.
       --serVerId : Force incrementation of the serialization version id.
       --skipPRs  : Skip PRs labeled with the configured 'include_prs_label'.
+      --summary  : Print a markdown summary to '.custom_release_summary.md'
 
     Examples
-      # script/prepare_release.py otp/dev-2.x
+      # script/prepare_release.py otp/dev-2.x --printSummary
       # script/prepare_release.py 0715be88
       # script/prepare_release.py --dryRun --debug entur/my-feature-branch
       # script/prepare_release.py --release --serVerId
