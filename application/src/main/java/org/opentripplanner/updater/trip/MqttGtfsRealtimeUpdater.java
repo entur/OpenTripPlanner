@@ -138,7 +138,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
       UpdateIncrementality updateIncrementality = FULL_DATASET;
       try {
         // Decode message
-        GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.parseFrom(
+        GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.PARSER.parseFrom(
           message.getPayload()
         );
         List<GtfsRealtime.FeedEntity> feedEntityList = feedMessage.getEntityList();
