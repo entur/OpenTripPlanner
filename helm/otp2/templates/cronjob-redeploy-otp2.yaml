@@ -1,0 +1,71 @@
+{{- if .Values.journeyPlanner.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    {{- include "graph.builder.labels" . | indent 4 }}
+  name: cronjob-redeploy-{{ template "app.name" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  concurrencyPolicy: {{ .Values.cronjobRedeployOtp2.concurrencyPolicy }}
+  failedJobsHistoryLimit: {{ .Values.cronjobRedeployOtp2.failedJobsHistoryLimit }}
+  jobTemplate:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        {{- include "graph.builder.labels" . | indent 12 }}
+    spec:
+      template:
+        spec:
+          serviceAccountName: application
+          containers:
+            - command:
+                - ./redeploy_on_change_deployment.sh
+              env:
+                - name: TZ
+                  value: Europe/Oslo
+                - name: CLOUDSDK_CORE_PROJECT
+                  value: {{ .Values.cronjobRedeployOtp2.environmentValues.cloudsdkCoreProject }}
+                - name: CURRENT_FILE_PATH
+                  value: {{ .Values.environmentValues.mardukGcpBaseName }}current-otp2
+                - name: LAST_FILE_PATH
+                  value: {{ .Values.environmentValues.mardukGcpBaseName }}last-otp2
+                - name: DEPLOYMENT
+                  value: {{ template "app.name" . }}
+              envFrom:
+                - secretRef:
+                    name: otp2-secrets
+              image: {{ .Values.cronjobRedeployOtp2.image.repo }}
+              imagePullPolicy: IfNotPresent
+              name: redeploy-otp2-job
+              resources:
+                limits:
+                  cpu: {{ .Values.cronjobRedeployOtp2.resources.cpuLimit }}
+                  memory: {{ .Values.cronjobRedeployOtp2.resources.memLimit }}
+                requests:
+                  cpu: {{ .Values.cronjobRedeployOtp2.resources.cpuRequest }}
+                  memory: {{ .Values.cronjobRedeployOtp2.resources.memRequest }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop: [ "ALL" ]
+                seccompProfile:
+                  type: RuntimeDefault
+              terminationMessagePath: /dev/termination-log
+              terminationMessagePolicy: File
+          dnsPolicy: ClusterFirst
+          restartPolicy: Never
+          schedulerName: default-scheduler
+          securityContext:
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          terminationGracePeriodSeconds: 30
+  schedule: '*/1 * * * *'
+  successfulJobsHistoryLimit: {{ .Values.cronjobRedeployOtp2.successfulJobsHistoryLimit }}
+  suspend: false
+  {{- end }}
