@@ -1,0 +1,60 @@
+name: OTP Pipline
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - debug
+      gitTag:
+        description: 'Manually set OTP GitTag to promote - run pipline using an existing OTP
+           release. This is used when building a release on a local developer machine.
+           Example input: v2.7.0-entur-48'
+        required: false
+        default: ''
+        type: string
+jobs:
+  release-otp:
+    name: "Build, test, tag & release OTP"
+    uses: ./.github/workflows/en-release.yml
+    with:
+      gitTag: ${{ inputs.gitTag }}
+      logLevel: ${{ inputs.logLevel }}
+
+  build-docker-image:
+    name: "Build and publish docker image"
+    uses: ./.github/workflows/en-docker-image-build.yml
+    needs: release-otp
+    with:
+      version: ${{needs.release-otp.outputs.version}}
+
+  deploy-en-dev:
+    name: "Deploy OTP to DEV"
+    uses: ./.github/workflows/en-deploy-pipeline.yml
+    needs: [release-otp, build-docker-image]
+    with:
+      version: ${{ needs.release-otp.outputs.version }}
+      serVerId: ${{ needs.release-otp.outputs.serVerId }}
+      target: dev
+
+  ## DUMMY FOR TEST, COPY DEV WHEN WORKING
+  deploy-en-test:
+    name: "Deploy OTP to TEST (STAGING)"
+    needs: [release-otp, build-docker-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to TEST
+        run: echo Deploy to TEST
+
+  ## DUMMY FOR PROD, COPY DEV WHEN WORKING
+  deploy-en-prod:
+    name: "Deploy OTP to PROD"
+    needs: [release-otp, build-docker-image]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to PROD
+        run: echo Deploy to PROD

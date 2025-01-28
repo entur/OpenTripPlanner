@@ -1,0 +1,74 @@
+name: Build, Tag & Release OTP JAR
+on:
+  workflow_call:
+    inputs:
+      logLevel:
+        type: string
+        default: 'info'
+      gitTag:
+        type: string
+    outputs:
+      version:
+        description: 'The OTP version'
+        value: ${{ jobs.setVersion.outputs.version }}
+      serVerId:
+        description: 'The OTP serialization id'
+        value: ${{ jobs.setSerVerId.outputs.serVerId }}
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{steps.set_version.outputs.version}}
+      serVerId: ${{steps.set_serVerId.outputs.serVerId}}
+    steps:
+      - name: Checkout entur/OpenTripPlanner
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21.0.5+11
+          distribution: liberica
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-maven-
+            ${{ runner.os }}-
+      - name: Release OTP
+        if: ${{ ! inputs.gitTag }}
+        env:
+          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.logLevel }}
+        run: |
+          echo "Start otp release script"
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git remote rename origin entur
+          git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
+          git fetch --no-tags otp
+          git remote -v
+          echo "Run script/custom-release.py otp/dev-2.x"
+          script/custom-release.py otp/dev-2.x
+      - name: Checkout Released OTP Tag
+        if: ${{ inputs.gitTag }}
+        run: |
+          git checkout "tags/${{ inputs.gitTag }}"
+      - name: Set version (Git repository Tag)
+        id: setVersion
+        run: |
+          VERSION_GIT_TAG=$(git describe --exact-match HEAD)
+          echo "Set 'version=${VERSION_GIT_TAG}'"
+          echo "version=${VERSION_GIT_TAG}" >> $GITHUB_OUTPUT
+      - name: Set serialization version ID
+        id: setSerVerId
+        run: |
+          SER_VER_ID=$(mvn help:evaluate -Dexpression=otp.serialization.version.id -q -DforceStdout)
+          echo "Set serVerId=${SER_VER_ID}"
+          echo "serVerId=${SER_VER_ID}" >> $GITHUB_OUTPUT
