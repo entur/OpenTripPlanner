@@ -63,7 +63,7 @@ configuration:
     enabled: true
     topicProjectName: ent-anshar-prd
     subscriptionProjectName: ent-otp2-prd
-    pubsubTopicName: protobuf.estimated_timetables
+    pubsubTopicName: xml.estimated_timetables
     dataInitializationUrl: http://realtime-cache.prd.entur.internal/et
     producerMetrics: false
   siriSXUpdater: http://realtime-cache.prd.entur.internal/sx

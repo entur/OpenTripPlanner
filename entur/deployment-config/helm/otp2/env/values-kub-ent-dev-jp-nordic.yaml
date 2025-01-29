@@ -56,7 +56,7 @@ configuration:
     enabled: false
     topicProjectName: ent-anshar-dev
     subscriptionProjectName: ent-otp2nor-dev
-    pubsubTopicName: protobuf.estimated_timetables
+    pubsubTopicName: xml.estimated_timetables
     dataInitializationUrl: http://anshar.dev.entur.internal/anshar/rest/et-monitored-cache
   vehicleRentalServiceDirectory:
     url: "http://lamassu.dev.entur.internal/gbfs-internal"
