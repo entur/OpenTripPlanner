@@ -1,10 +1,9 @@
 package org.opentripplanner.graph_builder.module.osm;
 
 import java.util.ArrayList;
-import javax.annotation.Nullable;
 import org.opentripplanner.street.model.edge.StreetEdge;
 
-public record StreetEdgePair(@Nullable StreetEdge main, @Nullable StreetEdge back) {
+public record StreetEdgePair(StreetEdge main, StreetEdge back) {
   /**
    * Return the non-null elements of this pair as an Iterable.
    */
