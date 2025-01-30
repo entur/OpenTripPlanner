@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.Graphwide;
 import org.opentripplanner.osm.model.OsmWithTags;
@@ -75,8 +74,8 @@ class SafetyValueNormalizer {
   }
 
   void applyWayProperties(
-    @Nullable StreetEdge street,
-    @Nullable StreetEdge backStreet,
+    StreetEdge street,
+    StreetEdge backStreet,
     WayProperties wayData,
     OsmWithTags way
   ) {

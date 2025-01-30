@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -432,9 +431,8 @@ public class OsmModule implements GraphBuilderModule {
           normalizer.applyWayProperties(street, backStreet, wayData, way);
 
           platform.ifPresent(plat -> {
-            for (var s : streets.asIterable()) {
-              osmInfoGraphBuildRepository.addPlatform(s, plat);
-            }
+            osmInfoGraphBuildRepository.addPlatform(street, plat);
+            osmInfoGraphBuildRepository.addPlatform(backStreet, plat);
           });
 
           applyEdgesToTurnRestrictions(way, startNode, endNode, street, backStreet);
@@ -496,8 +494,8 @@ public class OsmModule implements GraphBuilderModule {
     OsmWay way,
     long startNode,
     long endNode,
-    @Nullable StreetEdge street,
-    @Nullable StreetEdge backStreet
+    StreetEdge street,
+    StreetEdge backStreet
   ) {
     /* Check if there are turn restrictions starting on this segment */
     Collection<TurnRestrictionTag> restrictionTags = osmdb.getFromWayTurnRestrictions(way.getId());
