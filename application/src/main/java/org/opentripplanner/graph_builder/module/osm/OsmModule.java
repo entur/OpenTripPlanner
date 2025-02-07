@@ -19,6 +19,7 @@ import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
+import org.opentripplanner.osm.DefaultOsmProvider;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmNode;
@@ -82,7 +83,13 @@ public class OsmModule implements GraphBuilderModule {
     this.issueStore = issueStore;
     this.params = params;
     this.osmdb = new OsmDatabase(issueStore);
-    this.vertexGenerator = new VertexGenerator(osmdb, graph, params.boardingAreaRefTags());
+    this.vertexGenerator =
+      new VertexGenerator(
+        osmdb,
+        graph,
+        params.boardingAreaRefTags(),
+        params.includeOsmSubwayEntrances()
+      );
     this.normalizer = new SafetyValueNormalizer(graph, issueStore);
     this.streetLimitationParameters = Objects.requireNonNull(streetLimitationParameters);
   }
@@ -112,7 +119,7 @@ public class OsmModule implements GraphBuilderModule {
 
   @Override
   public void buildGraph() {
-    for (OsmProvider provider : providers) {
+    for (var provider : providers) {
       LOG.info("Gathering OSM from provider: {}", provider);
       LOG.info(
         "Using OSM way configuration from {}.",
@@ -130,7 +137,7 @@ public class OsmModule implements GraphBuilderModule {
 
   @Override
   public void checkInputs() {
-    for (OsmProvider provider : providers) {
+    for (var provider : providers) {
       provider.checkInputs();
     }
   }
@@ -446,7 +453,8 @@ public class OsmModule implements GraphBuilderModule {
   }
 
   private Optional<Platform> getPlatform(OsmWay way) {
-    if (way.isBoardingLocation()) {
+    var references = way.getMultiTagValues(params.boardingAreaRefTags());
+    if (way.isBoardingLocation() && !references.isEmpty()) {
       var nodeRefs = way.getNodeRefs();
       var size = nodeRefs.size();
       var nodes = new Coordinate[size];
@@ -457,8 +465,6 @@ public class OsmModule implements GraphBuilderModule {
       var geometryFactory = GeometryUtils.getGeometryFactory();
 
       var geometry = geometryFactory.createLineString(nodes);
-
-      var references = way.getMultiTagValues(params.boardingAreaRefTags());
 
       return Optional.of(
         new Platform(
@@ -613,7 +619,7 @@ public class OsmModule implements GraphBuilderModule {
 
   private float getMaxCarSpeed() {
     float maxSpeed = 0f;
-    for (OsmProvider provider : providers) {
+    for (var provider : providers) {
       var carSpeed = provider.getOsmTagMapper().getMaxUsedCarSpeed(provider.getWayPropertySet());
       if (carSpeed > maxSpeed) {
         maxSpeed = carSpeed;

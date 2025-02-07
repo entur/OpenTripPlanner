@@ -40,6 +40,7 @@ import org.opentripplanner.gtfs.graphbuilder.GtfsFeedParameters;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.netex.NetexModule;
 import org.opentripplanner.netex.configure.NetexConfigure;
+import org.opentripplanner.osm.DefaultOsmProvider;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.routing.graph.Graph;
@@ -69,10 +70,11 @@ public class GraphBuilderModules {
     List<OsmProvider> providers = new ArrayList<>();
     for (ConfiguredDataSource<OsmExtractParameters> osmConfiguredDataSource : dataSources.getOsmConfiguredDatasource()) {
       providers.add(
-        new OsmProvider(
+        new DefaultOsmProvider(
           osmConfiguredDataSource.dataSource(),
           osmConfiguredDataSource.config().osmTagMapper(),
           osmConfiguredDataSource.config().timeZone(),
+          osmConfiguredDataSource.config().includeOsmSubwayEntrances(),
           config.osmCacheDataInMem,
           issueStore
         )
@@ -88,6 +90,7 @@ public class GraphBuilderModules {
       .withStaticBikeParkAndRide(config.staticBikeParkAndRide)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
+      .withIncludeOsmSubwayEntrances(config.osmDefaults.includeOsmSubwayEntrances())
       .withIssueStore(issueStore)
       .withStreetLimitationParameters(streetLimitationParameters)
       .build();
@@ -257,7 +260,8 @@ public class GraphBuilderModules {
       timetableRepository,
       issueStore,
       config.maxTransferDuration,
-      config.transferRequests
+      config.transferRequests,
+      config.transferParametersForMode
     );
   }
 

@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -36,12 +37,14 @@ import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.routing.stoptimes.ArrivalDeparture;
 import org.opentripplanner.routing.stoptimes.StopTimesHelper;
 import org.opentripplanner.transit.api.request.FindRegularStopsByBoundingBoxRequest;
+import org.opentripplanner.transit.api.request.FindRoutesRequest;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
 import org.opentripplanner.transit.model.filter.transit.RegularStopMatcherFactory;
+import org.opentripplanner.transit.model.filter.transit.RouteMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.TripMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateMatcherFactory;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
@@ -104,9 +107,6 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip) {
     TripPattern tripPattern = findPattern(trip);
-    if (tripPattern == null) {
-      return Optional.empty();
-    }
     return Optional.ofNullable(
       TripTimeOnDate.fromTripTimes(tripPattern.getScheduledTimetable(), trip)
     );
@@ -118,19 +118,12 @@ public class DefaultTransitService implements TransitEditorService {
 
     Timetable timetable = findTimetable(pattern, serviceDate);
 
-    // If realtime moved pattern back to original trip, fetch it instead
-    if (timetable.getTripIndex(trip.getId()) == -1) {
-      LOG.warn(
-        "Trip {} not found in realtime pattern. This should not happen, and indicates a bug.",
-        trip
-      );
-      pattern = findPattern(trip);
-      timetable = findTimetable(pattern, serviceDate);
-    }
-
     // This check is made here to avoid changing TripTimeOnDate.fromTripTimes
     TripTimes times = timetable.getTripTimes(trip);
-    if (!this.getServiceCodesRunningForDate(serviceDate).contains(times.getServiceCode())) {
+    if (
+      times == null ||
+      !this.getServiceCodesRunningForDate(serviceDate).contains(times.getServiceCode())
+    ) {
       return Optional.empty();
     } else {
       Instant midnight = ServiceDateUtils
@@ -237,6 +230,17 @@ public class DefaultTransitService implements TransitEditorService {
       }
     }
     return timetableRepositoryIndex.getRouteForId(id);
+  }
+
+  @Override
+  public Collection<Route> getRoutes(Collection<FeedScopedId> ids) {
+    return ids.stream().map(this::getRoute).filter(Objects::nonNull).toList();
+  }
+
+  @Override
+  public Collection<Route> findRoutes(FindRoutesRequest request) {
+    Matcher<Route> matcher = RouteMatcherFactory.of(request, this.getFlexIndex()::contains);
+    return listRoutes().stream().filter(matcher::match).toList();
   }
 
   /**
