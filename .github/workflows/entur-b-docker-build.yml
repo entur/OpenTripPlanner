@@ -1,0 +1,54 @@
+name: "B - Build and push docker"
+run-name: "Build and push docker image - ${{inputs.version}}"
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The OTP version"
+        required: false
+        type: string
+jobs:
+  maven-verify:
+    name: "Maven Verify - ${{ inputs.version }}"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.version }}
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21.0.5+11
+          distribution: liberica
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-maven-
+            ${{ runner.os }}-
+      - name: Run maven build
+        run: mvn verify -Dps -DskipTests
+      - uses: actions/upload-artifact@v4.4.0
+        with:
+          path: otp-shaded/target/otp-shaded-*.jar
+  docker-build:
+    if: github.repository_owner == 'entur'
+    needs: [maven-verify]
+    uses: entur/gha-docker/.github/workflows/build.yml@v1
+    with:
+      build_artifact_name: artifact
+      build_artifact_path: otp-shaded/target
+      dockerfile: 'entur/deployment-config/Dockerfile'
+      image_name: 'otp2'
+  docker-push:
+    needs: [docker-build]
+    uses: entur/gha-docker/.github/workflows/push.yml@v1
+    with:
+      git_tag: false
+      image_tag: ${{ inputs.version }}
+      image_name: 'otp2'
