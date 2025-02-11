@@ -176,7 +176,10 @@ public class TripUpdateBuilder {
       arrivalDelay,
       NO_DELAY,
       DEFAULT_SCHEDULE_RELATIONSHIP,
-      null
+      null,
+      null,
+      null,
+      NO_VALUE
     );
   }
 
@@ -188,7 +191,10 @@ public class TripUpdateBuilder {
       NO_DELAY,
       departureDelay,
       DEFAULT_SCHEDULE_RELATIONSHIP,
-      null
+      null,
+      null,
+      null,
+      NO_VALUE
     );
   }
 
