@@ -41,6 +41,7 @@ import org.opentripplanner.street.service.StreetLimitationParametersServiceModul
 import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
+import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.visualizer.GraphVisualizer;
 
 /**
@@ -51,21 +52,21 @@ import org.opentripplanner.visualizer.GraphVisualizer;
 @Component(
   modules = {
     ConfigModule.class,
-    TransitModule.class,
-    WorldEnvelopeServiceModule.class,
+    ConstructApplicationModule.class,
+    EmissionsServiceModule.class,
+    GeocoderModule.class,
+    InteractiveLauncherModule.class,
     RealtimeVehicleServiceModule.class,
     RealtimeVehicleRepositoryModule.class,
-    VehicleRentalServiceModule.class,
-    VehicleRentalRepositoryModule.class,
-    VehicleParkingServiceModule.class,
-    ConstructApplicationModule.class,
     RideHailingServicesModule.class,
-    EmissionsServiceModule.class,
+    TransitModule.class,
+    VehicleParkingServiceModule.class,
+    VehicleRentalRepositoryModule.class,
+    VehicleRentalServiceModule.class,
     SorlandsbanenNorwayModule.class,
     StopConsolidationServiceModule.class,
-    InteractiveLauncherModule.class,
     StreetLimitationParametersServiceModule.class,
-    GeocoderModule.class,
+    WorldEnvelopeServiceModule.class,
   }
 )
 public interface ConstructApplicationFactory {
@@ -81,6 +82,7 @@ public interface ConstructApplicationFactory {
   VehicleRentalService vehicleRentalService();
   VehicleParkingRepository vehicleParkingRepository();
   VehicleParkingService vehicleParkingService();
+  TimetableSnapshotManager timetableSnapshotManager();
   DataImportIssueSummary dataImportIssueSummary();
 
   @Nullable

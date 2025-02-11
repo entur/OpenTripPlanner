@@ -12,12 +12,12 @@ import org.opentripplanner.graph_builder.GraphBuilder;
 import org.opentripplanner.graph_builder.GraphBuilderDataSources;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TransitLayerMapper;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TransitLayerUpdater;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
@@ -34,9 +34,9 @@ import org.opentripplanner.standalone.server.GrizzlyServer;
 import org.opentripplanner.standalone.server.OTPWebApplication;
 import org.opentripplanner.street.model.StreetLimitationParameters;
 import org.opentripplanner.street.model.elevation.ElevationUtils;
-import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
+import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.utils.logging.ProgressTracker;
 import org.opentripplanner.visualizer.GraphVisualizer;
 import org.slf4j.Logger;
@@ -64,6 +64,11 @@ public class ConstructApplication {
 
   private final CommandLineParameters cli;
   private final GraphBuilderDataSources graphBuilderDataSources;
+  /**
+   * The OSM Info is injected into the graph-builder, but not the web-server; Hence not part of
+   * the application context.
+   */
+  private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
   private final ConstructApplicationFactory factory;
 
   /**
@@ -72,6 +77,7 @@ public class ConstructApplication {
   ConstructApplication(
     CommandLineParameters cli,
     Graph graph,
+    OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     ConfigModel config,
@@ -84,6 +90,7 @@ public class ConstructApplication {
   ) {
     this.cli = cli;
     this.graphBuilderDataSources = graphBuilderDataSources;
+    this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
 
     // We create the optional GraphVisualizer here, because it would be significant more complex to
     // use Dagger DI to do it - passing in a parameter to enable it or not.
@@ -130,7 +137,8 @@ public class ConstructApplication {
       buildConfig(),
       graphBuilderDataSources,
       graph(),
-      timetableRepository(),
+      osmInfoGraphBuildRepository,
+      factory.timetableRepository(),
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
       factory.emissionsDataModel(),
@@ -162,7 +170,7 @@ public class ConstructApplication {
     enableRequestTraceLogging();
     createMetricsLogging();
 
-    creatTransitLayerForRaptor(timetableRepository(), routerConfig().transitTuningConfig());
+    createRaptorTransitData(timetableRepository(), routerConfig().transitTuningConfig());
 
     /* Create updater modules from JSON config. */
     UpdaterConfigurator.configure(
@@ -171,6 +179,7 @@ public class ConstructApplication {
       vehicleRentalRepository(),
       vehicleParkingRepository(),
       timetableRepository(),
+      snapshotManager(),
       routerConfig().updaterConfig()
     );
 
@@ -183,6 +192,7 @@ public class ConstructApplication {
         routerConfig().transmodelApi(),
         timetableRepository(),
         routerConfig().routingRequestDefaults(),
+        routerConfig().server().apiDocumentationProfile(),
         routerConfig().transitTuningConfig()
       );
     }
@@ -207,7 +217,7 @@ public class ConstructApplication {
   /**
    * Create transit layer for Raptor routing. Here we map the scheduled timetables.
    */
-  public static void creatTransitLayerForRaptor(
+  public static void createRaptorTransitData(
     TimetableRepository timetableRepository,
     TransitTuningParameters tuningParameters
   ) {
@@ -217,14 +227,11 @@ public class ConstructApplication {
       );
     }
     LOG.info("Creating transit layer for Raptor routing.");
-    timetableRepository.setTransitLayer(
-      TransitLayerMapper.map(tuningParameters, timetableRepository)
+    timetableRepository.setRaptorTransitData(
+      RaptorTransitDataMapper.map(tuningParameters, timetableRepository)
     );
-    timetableRepository.setRealtimeTransitLayer(
-      new TransitLayer(timetableRepository.getTransitLayer())
-    );
-    timetableRepository.setTransitLayerUpdater(
-      new TransitLayerUpdater(new DefaultTransitService(timetableRepository))
+    timetableRepository.setRealtimeRaptorTransitData(
+      new RaptorTransitData(timetableRepository.getRaptorTransitData())
     );
   }
 
@@ -243,7 +250,7 @@ public class ConstructApplication {
       LOG.info(progress.startMessage());
 
       transferCacheRequests.forEach(request -> {
-        timetableRepository.getTransitLayer().initTransferCacheForRequest(request);
+        timetableRepository.getRaptorTransitData().initTransferCacheForRequest(request);
 
         //noinspection Convert2MethodRef
         progress.step(s -> LOG.info(s));
@@ -261,6 +268,10 @@ public class ConstructApplication {
     return factory.dataImportIssueSummary();
   }
 
+  public OsmInfoGraphBuildRepository osmInfoGraphBuildRepository() {
+    return osmInfoGraphBuildRepository;
+  }
+
   public StopConsolidationRepository stopConsolidationRepository() {
     return factory.stopConsolidationRepository();
   }
@@ -271,6 +282,10 @@ public class ConstructApplication {
 
   public VehicleRentalRepository vehicleRentalRepository() {
     return factory.vehicleRentalRepository();
+  }
+
+  private TimetableSnapshotManager snapshotManager() {
+    return factory.timetableSnapshotManager();
   }
 
   public VehicleParkingService vehicleParkingService() {

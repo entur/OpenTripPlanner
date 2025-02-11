@@ -53,7 +53,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
   private final String clientId = "OpenTripPlanner-" + MqttClient.generateClientId();
   private final String configRef;
   private final MemoryPersistence persistence = new MemoryPersistence();
-  private final TimetableSnapshotSource snapshotSource;
+  private final GtfsRealTimeTripUpdateAdapter adapter;
   private final Consumer<UpdateResult> recordMetrics;
   private WriteToGraphCallback saveResultOnGraph;
 
@@ -63,7 +63,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
 
   public MqttGtfsRealtimeUpdater(
     MqttGtfsRealtimeUpdaterParameters parameters,
-    TimetableSnapshotSource snapshotSource
+    GtfsRealTimeTripUpdateAdapter adapter
   ) {
     this.configRef = parameters.configRef();
     this.url = parameters.url();
@@ -71,7 +71,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
     this.feedId = parameters.feedId();
     this.qos = parameters.getQos();
     this.backwardsDelayPropagationType = parameters.getBackwardsDelayPropagationType();
-    this.snapshotSource = snapshotSource;
+    this.adapter = adapter;
     // Set properties of realtime data snapshot source
     this.fuzzyTripMatching = parameters.getFuzzyTripMatching();
     this.recordMetrics = TripUpdateMetrics.streaming(parameters);
@@ -138,7 +138,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
       UpdateIncrementality updateIncrementality = FULL_DATASET;
       try {
         // Decode message
-        GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.PARSER.parseFrom(
+        GtfsRealtime.FeedMessage feedMessage = GtfsRealtime.FeedMessage.parseFrom(
           message.getPayload()
         );
         List<GtfsRealtime.FeedEntity> feedEntityList = feedMessage.getEntityList();
@@ -170,7 +170,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
         // Handle trip updates via graph writer runnable
         saveResultOnGraph.execute(
           new TripUpdateGraphWriterRunnable(
-            snapshotSource,
+            adapter,
             fuzzyTripMatching,
             backwardsDelayPropagationType,
             updateIncrementality,

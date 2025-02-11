@@ -2,10 +2,10 @@ package org.opentripplanner.updater.trip;
 
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
-import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.metrics.BatchTripUpdateMetrics;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
@@ -19,7 +19,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
   private static final Logger LOG = LoggerFactory.getLogger(PollingTripUpdater.class);
 
   private final GtfsRealtimeTripUpdateSource updateSource;
-  private final TimetableSnapshotSource snapshotSource;
+  private final GtfsRealTimeTripUpdateAdapter adapter;
 
   /**
    * Feed id that is used for the trip ids in the TripUpdates
@@ -34,24 +34,20 @@ public class PollingTripUpdater extends PollingGraphUpdater {
   private final Consumer<UpdateResult> recordMetrics;
 
   /**
-   * Parent update manager. Is used to execute graph writer runnables.
-   */
-  private WriteToGraphCallback saveResultOnGraph;
-  /**
    * Set only if we should attempt to match the trip_id from other data in TripDescriptor
    */
   private final boolean fuzzyTripMatching;
 
   public PollingTripUpdater(
     PollingTripUpdaterParameters parameters,
-    TimetableSnapshotSource snapshotSource
+    GtfsRealTimeTripUpdateAdapter adapter
   ) {
     super(parameters);
     // Create update streamer from preferences
     this.feedId = parameters.feedId();
     this.updateSource = new GtfsRealtimeTripUpdateSource(parameters);
     this.backwardsDelayPropagationType = parameters.backwardsDelayPropagationType();
-    this.snapshotSource = snapshotSource;
+    this.adapter = adapter;
     this.fuzzyTripMatching = parameters.fuzzyTripMatching();
 
     this.recordMetrics = BatchTripUpdateMetrics.batch(parameters);
@@ -63,17 +59,12 @@ public class PollingTripUpdater extends PollingGraphUpdater {
     );
   }
 
-  @Override
-  public void setup(WriteToGraphCallback writeToGraphCallback) {
-    this.saveResultOnGraph = writeToGraphCallback;
-  }
-
   /**
    * Repeatedly makes blocking calls to an UpdateStreamer to retrieve new stop time updates, and
    * applies those updates to the graph.
    */
   @Override
-  public void runPolling() {
+  public void runPolling() throws InterruptedException, ExecutionException {
     // Get update lists from update source
     List<TripUpdate> updates = updateSource.getUpdates();
     var incrementality = updateSource.incrementalityOfLastUpdates();
@@ -81,7 +72,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
     if (updates != null) {
       // Handle trip updates via graph writer runnable
       TripUpdateGraphWriterRunnable runnable = new TripUpdateGraphWriterRunnable(
-        snapshotSource,
+        adapter,
         fuzzyTripMatching,
         backwardsDelayPropagationType,
         incrementality,
@@ -89,7 +80,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
         feedId,
         recordMetrics
       );
-      saveResultOnGraph.execute(runnable);
+      updateGraph(runnable);
     }
   }
 

@@ -11,8 +11,9 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.ParkAndRideUnlinked;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
-import org.opentripplanner.osm.OsmProvider;
+import org.opentripplanner.osm.DefaultOsmProvider;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
@@ -161,9 +162,14 @@ public class UnconnectedAreasTest {
     var siteRepository = new SiteRepository();
     var graph = new Graph(deduplicator);
     var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
-    OsmProvider provider = new OsmProvider(RESOURCE_LOADER.file(osmFileName), false);
+    DefaultOsmProvider provider = new DefaultOsmProvider(RESOURCE_LOADER.file(osmFileName), false);
     OsmModule loader = OsmModule
-      .of(provider, graph, new DefaultVehicleParkingRepository())
+      .of(
+        provider,
+        graph,
+        new DefaultOsmInfoGraphBuildRepository(),
+        new DefaultVehicleParkingRepository()
+      )
       .withIssueStore(issueStore)
       .withAreaVisibility(true)
       .withStaticParkAndRide(true)

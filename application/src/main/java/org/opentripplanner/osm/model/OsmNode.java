@@ -11,6 +11,13 @@ public class OsmNode extends OsmWithTags {
   public double lat;
   public double lon;
 
+  public OsmNode() {}
+
+  public OsmNode(double lat, double lon) {
+    this.lat = lat;
+    this.lon = lon;
+  }
+
   public String toString() {
     return "osm node " + id;
   }
@@ -61,6 +68,15 @@ public class OsmNode extends OsmWithTags {
       isMotorVehicleExplicitlyDenied() ||
       isGeneralAccessDenied()
     );
+  }
+
+  /**
+   * Checks if this node is a subway station entrance.
+   *
+   * @return true if it is
+   */
+  public boolean isSubwayEntrance() {
+    return hasTag("railway") && "subway_entrance".equals(getTag("railway"));
   }
 
   /**
