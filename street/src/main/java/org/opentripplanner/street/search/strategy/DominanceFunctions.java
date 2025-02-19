@@ -153,7 +153,7 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
 
     @Override
     protected boolean betterOrEqual(State a, State b) {
-      return a.getWalkDistance() <= b.getWalkDistance();
+      return a.getTraversalDistanceMeters() <= b.getTraversalDistanceMeters();
     }
   }
 

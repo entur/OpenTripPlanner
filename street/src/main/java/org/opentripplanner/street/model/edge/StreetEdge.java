@@ -1064,12 +1064,16 @@ public class StreetEdge
         case CAR -> request.car().reluctance();
         case FLEX -> 1;
       };
+      if (!traverseMode.isInCar()) {
+        s1.incrementTraversalDistanceMeters(turnDuration / 100); // just a tie-breaker
+      }
+
       time_ms += (long) Math.ceil(1000.0 * turnDuration);
       weight += modeReluctance * request.turnReluctance() * turnDuration;
     }
 
     if (!traverseMode.isInCar()) {
-      s1.incrementWalkDistance(getDistanceWithElevation());
+      s1.incrementTraversalDistanceMeters(getDistanceWithElevation());
     }
 
     if (costExtension != null) {
