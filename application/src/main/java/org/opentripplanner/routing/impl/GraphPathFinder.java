@@ -1,5 +1,6 @@
 package org.opentripplanner.routing.impl;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Iterator;
@@ -152,12 +153,18 @@ public class GraphPathFinder {
         // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
         if (request.arriveBy()) {
           if (graphPath.states.getLast().getTime().isAfter(reqTime)) {
-            LOG.error("A graph path arrives after the requested time. This implies a bug.");
+            LOG.error(
+              "A graph path arrives {} seconds after the requested time. This implies a bug.",
+              Duration.between(reqTime, graphPath.states.getLast().getTime()).toSeconds()
+            );
             gpi.remove();
           }
         } else {
           if (graphPath.states.getFirst().getTime().isBefore(reqTime)) {
-            LOG.error("A graph path leaves before the requested time. This implies a bug.");
+            LOG.error(
+              "A graph path leaves {} seconds before the requested time. This implies a bug.",
+              Duration.between(graphPath.states.getFirst().getTime(), reqTime).toSeconds()
+            );
             gpi.remove();
           }
         }
