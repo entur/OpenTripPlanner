@@ -83,4 +83,5 @@ jobs:
           echo "Set ser_ver_id=${SER_VER_ID}"
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
+        if: ${{ ! inputs.git_tag }}
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
