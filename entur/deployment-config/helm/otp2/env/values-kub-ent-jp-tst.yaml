@@ -65,7 +65,7 @@ configuration:
     subscriptionProjectName: ent-otp2-tst
     pubsubTopicName: xml.estimated_timetables
     dataInitializationUrl: http://realtime-cache.tst.entur.internal/et
-    producerMetrics: false
+    producerMetrics: true
   siriSXUpdater: http://realtime-cache.tst.entur.internal/sx
   transferConstraints: true
   vehicleRentalServiceDirectory:
