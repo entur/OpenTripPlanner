@@ -3,6 +3,7 @@ package org.opentripplanner.street.search.state;
 import static org.opentripplanner.utils.lang.ObjectUtils.requireNotInitialized;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
@@ -526,6 +527,9 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
   }
 
   private State reversedClone() {
+    // these must be getTime(), not getTimeAccurate(), so that the reversed path (which does not
+    // have arriveBy true anymore) has times which round correctly, as the rounding rules
+    // depend on arriveBy
     StreetSearchRequest reversedRequest = request
       .copyOfReversed(getTime())
       .withPreferences(p -> {
