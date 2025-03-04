@@ -212,7 +212,7 @@ data:
         },
         "transmodelApi": {
           "hideFeedId": true,
-          "maxNumberOfResultFields": 900000
+          "maxNumberOfResultFields": 800000
         },
         "timetableUpdates": {
           "purgeExpiredData": false
