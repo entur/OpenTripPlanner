@@ -65,7 +65,7 @@ configuration:
     subscriptionProjectName: ent-otp2-prd
     pubsubTopicName: xml.estimated_timetables
     dataInitializationUrl: http://realtime-cache.prd.entur.internal/et
-    producerMetrics: false
+    producerMetrics: true
   siriSXUpdater: http://realtime-cache.prd.entur.internal/sx
   transferConstraints: true
   vehicleRentalServiceDirectory:
