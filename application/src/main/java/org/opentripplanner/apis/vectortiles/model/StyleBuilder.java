@@ -293,6 +293,11 @@ public class StyleBuilder {
     return filterClasses(classToFilter);
   }
 
+  @SafeVarargs
+  public final StyleBuilder classFilter(Class<?>... classToFilter) {
+    return filterClasses(classToFilter);
+  }
+
   public StyleBuilder filterValueInProperty(String propertyName, String... values) {
     var newFilter = new ArrayList<>();
     newFilter.add("any");
@@ -337,9 +342,8 @@ public class StyleBuilder {
   }
 
   private void validate() {
-    Stream
-      .of(TYPE)
-      .forEach(p -> Objects.requireNonNull(props.get(p), "%s must be set".formatted(p)));
+    Stream.of(TYPE).forEach(p -> Objects.requireNonNull(props.get(p), "%s must be set".formatted(p))
+    );
   }
 
   private void setLineColor(List<Object> valueSpecifier) {

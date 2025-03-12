@@ -52,6 +52,104 @@
       }
     },
     {
+      "id" : "rental-vehicle",
+      "type" : "circle",
+      "source" : "vectorSource",
+      "source-layer" : "rental",
+      "minzoom" : 13,
+      "maxzoom" : 23,
+      "paint" : {
+        "circle-stroke-color" : "#140d0e",
+        "circle-stroke-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.2,
+          23,
+          3.0
+        ],
+        "circle-radius" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          1.4,
+          23,
+          10.0
+        ],
+        "circle-color" : "#277eb5"
+      },
+      "filter" : [
+        "in",
+        "class",
+        "VehicleRentalVehicle"
+      ],
+      "layout" : {
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Rental"
+      }
+    },
+    {
+      "id" : "rental-station",
+      "type" : "circle",
+      "source" : "vectorSource",
+      "source-layer" : "rental",
+      "minzoom" : 13,
+      "maxzoom" : 23,
+      "paint" : {
+        "circle-stroke-color" : "#140d0e",
+        "circle-stroke-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0.5,
+          23,
+          5.0
+        ],
+        "circle-radius" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          0.5,
+          23,
+          10.0
+        ],
+        "circle-color" : "#1cafad"
+      },
+      "filter" : [
+        "in",
+        "class",
+        "VehicleRentalStation"
+      ],
+      "layout" : {
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Rental"
+      }
+    },
+    {
       "id" : "wheelchair-accessible",
       "source" : "vectorSource",
       "source-layer" : "edges",
@@ -566,7 +664,65 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Safety"
+        "group" : "Bicycle safety"
+      }
+    },
+    {
+      "id" : "bicycle-safety-text",
+      "source" : "vectorSource",
+      "source-layer" : "edges",
+      "type" : "symbol",
+      "minzoom" : 17,
+      "maxzoom" : 23,
+      "paint" : {
+        "text-color" : "#000",
+        "text-halo-color" : "#fff",
+        "text-halo-blur" : 4,
+        "text-halo-width" : 3
+      },
+      "filter" : [
+        "in",
+        "class",
+        "StreetEdge",
+        "AreaEdge",
+        "EscalatorEdge",
+        "PathwayEdge",
+        "ElevatorHopEdge",
+        "TemporaryPartialStreetEdge",
+        "TemporaryFreeEdge"
+      ],
+      "layout" : {
+        "symbol-placement" : "line-center",
+        "symbol-spacing" : 1000,
+        "text-field" : "{bicycleSafetyFactor}",
+        "text-font" : [
+          "KlokanTech Noto Sans Regular"
+        ],
+        "text-size" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          10,
+          6.0,
+          24,
+          12.0
+        ],
+        "text-max-width" : 100,
+        "text-keep-upright" : true,
+        "text-rotation-alignment" : "map",
+        "text-overlap" : "never",
+        "text-offset" : [
+          0,
+          1.0
+        ],
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Bicycle safety"
       }
     },
     {
@@ -652,65 +808,7 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Safety"
-      }
-    },
-    {
-      "id" : "bicycle-safety-text",
-      "source" : "vectorSource",
-      "source-layer" : "edges",
-      "type" : "symbol",
-      "minzoom" : 17,
-      "maxzoom" : 23,
-      "paint" : {
-        "text-color" : "#000",
-        "text-halo-color" : "#fff",
-        "text-halo-blur" : 4,
-        "text-halo-width" : 3
-      },
-      "filter" : [
-        "in",
-        "class",
-        "StreetEdge",
-        "AreaEdge",
-        "EscalatorEdge",
-        "PathwayEdge",
-        "ElevatorHopEdge",
-        "TemporaryPartialStreetEdge",
-        "TemporaryFreeEdge"
-      ],
-      "layout" : {
-        "symbol-placement" : "line-center",
-        "symbol-spacing" : 1000,
-        "text-field" : "{bicycleSafetyFactor}",
-        "text-font" : [
-          "KlokanTech Noto Sans Regular"
-        ],
-        "text-size" : [
-          "interpolate",
-          [
-            "linear"
-          ],
-          [
-            "zoom"
-          ],
-          10,
-          6.0,
-          24,
-          12.0
-        ],
-        "text-max-width" : 100,
-        "text-keep-upright" : true,
-        "text-rotation-alignment" : "map",
-        "text-overlap" : "never",
-        "text-offset" : [
-          0,
-          1.0
-        ],
-        "visibility" : "none"
-      },
-      "metadata" : {
-        "group" : "Safety"
+        "group" : "Walk safety"
       }
     },
     {
@@ -768,7 +866,7 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Safety"
+        "group" : "Walk safety"
       }
     },
     {
