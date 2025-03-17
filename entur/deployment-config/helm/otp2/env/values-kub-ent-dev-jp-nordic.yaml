@@ -1,0 +1,90 @@
+journeyPlanner:
+  enabled: false
+
+nordicJourneyPlanner:
+  enabled: true
+
+replicas: 2
+default_replicas: 2
+
+horizontalPodAutoscaler:
+  enabled: true
+  maxReplicas: 10
+  minReplicas: 2
+  targetCPUUtilizationPercentage: 80
+
+rollingUpdate:
+  maxSurge: 50%
+  maxUnavailable: 1
+
+resources:
+  cpuLimit: "8"
+  memLimit: 27000Mi
+  cpuRequest: "4"
+  memRequest: 25000Mi
+  xmx: 24g
+  xms: 24g
+
+maxConcurrentRoutingRequests: 5
+
+configMap:
+  logbackConfig: env/logback.xml
+
+environmentValues:
+  mardukGcpBaseName: "gs://ror-otp-graphs-gcp2-dev/"
+
+configmapMounts:
+  - name: config-volume
+    mountPath: /code/otpdata/norway/router-config.json
+    subPath: router-config.json
+    configMap: otp-router-config
+    readOnly: true
+
+ingress:
+  enabled: true
+  otpApi:
+    domainName: .dev.entur.io
+  otpDebug:
+    domainName: .dev.entur.org
+
+# Realtime-updaters use internal service instead of external (Apigee) to avoid inexplicable timeouts
+configuration:
+  siriETUpdater: https://api.entur.io/realtime/v1/services-cache
+  siriETUpdaterVar: http://anshar.dev.entur.internal/anshar/services/VAR
+  siriSXUpdater: https://api.entur.io/realtime/v1/services-cache
+  siriETPubsubUpdater:
+    enabled: false
+    topicProjectName: ent-anshar-dev
+    subscriptionProjectName: ent-otp2nor-dev
+    pubsubTopicName: xml.estimated_timetables
+    dataInitializationUrl: http://anshar.dev.entur.internal/anshar/rest/et-monitored-cache
+  vehicleRentalServiceDirectory:
+    url: "http://lamassu.dev.entur.internal/gbfs-internal"
+    sourcesName: "systems"
+    updaterUrlName: "url"
+    updaterNetworkName: "id"
+  flexRouting: true
+  floatingBike: true
+  restApiConfigJsonParam: true
+  optimizeTransfers: true
+  transferConstraints: true
+  parallelRouting: true
+  extraSearchCoachReluctance: 1.6
+  
+
+cronjobRedeployGraphBuilder:
+  resources:
+    xms: 512m
+    xmx: 48g
+    cpuLimit: "14"
+    memLimit: 60000Mi
+    cpuRequest: "8"
+    memRequest: 50000Mi
+  imagePullPolicy: Always
+
+rorOtpNordicSamtrafikenApiKey: ${serviceVariable.rorOtpNordicSamtrafikenApiKey}
+
+
+secrets:
+  otp2-secrets:
+   - SAMTRAFIKEN_API_KEY

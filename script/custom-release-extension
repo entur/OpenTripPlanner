@@ -1,0 +1,50 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Delete all none entur specific workflows. These workflows are defined in the upstream
+# opentripplanner project.
+
+ENTUR_WORKFLOWS=(
+  "entur-0-main-pipeline.yml"
+  "entur-a-otp-release.yml"
+  "entur-b-docker-build.yml"
+)
+
+pushd .github/workflows
+
+for file in *.yml; do
+  KEEP=false
+  for keep in "${ENTUR_WORKFLOWS[@]}" ; do
+    if [[ "$file" == "$keep" ]] ; then
+      KEEP=true
+    fi
+  done
+
+
+  if ( $KEEP ); then
+    echo "Keep '$file'"
+  else
+    echo "rm -f $file"
+    rm -f "$file"
+  fi
+done
+
+popd
+git add .github/workflows
+git commit -m "Remove upstream workflows"
+
+# Move a directory/file from 'entur/deployment-config/' to root directory. If the directory
+# already exist at root level, then remove it before moving the entur directory to avoid any
+# conflicts.
+function moveToRoot() {
+  echo "Move '$1' directory to project root."
+  rm -Rf "$1"
+  mv "entur/deployment-config/$1" .
+}
+
+moveToRoot "terraform"
+moveToRoot "helm"
+
+git add terraform helm
+git commit -m "Move terraform and helm to root directory"
