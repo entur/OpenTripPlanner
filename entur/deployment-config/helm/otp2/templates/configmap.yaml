@@ -56,22 +56,14 @@ data:
           },
           "wheelchairAccessibility": {
             "trip": {
-              "onlyConsiderAccessible": false,
-              "unknownCost": 600,
-              "inaccessibleCost": 3600
+              "onlyConsiderAccessible": false
             },
             "stop": {
-              "onlyConsiderAccessible": false,
-              "unknownCost": 600,
-              "inaccessibleCost": 3600
+              "onlyConsiderAccessible": false
             },
             "elevator": {
               "onlyConsiderAccessible": false
-            },
-            "inaccessibleStreetReluctance": 25,
-            "maxSlope": 0.08333,
-            "slopeExceededReluctance": 50,
-            "stairsReluctance": 25
+            }
           },
           "otherThanPreferredRoutesPenalty": 300,
           "transferSlack": 120,
