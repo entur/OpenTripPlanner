@@ -1,0 +1,76 @@
+default_replicas: 40
+
+horizontalPodAutoscaler:
+  enabled: true
+  maxReplicas: 110
+  minReplicas: 8
+  targetCPUUtilizationPercentage: 75
+
+rollingUpdate:
+  maxSurge: 25%
+  maxUnavailable: 0
+
+resources:
+  cpuLimit: "8"
+  memLimit: 22000Mi
+  cpuRequest: "4"
+  memRequest: 20000Mi
+  xmx: 18g
+  xms: 18g
+
+maxConcurrentRoutingRequests: 5
+
+environmentValues:
+  mardukGcpBaseName: "gs://ror-otp-graphs-gcp2-production/"
+
+configmapMounts:
+  - name: config-volume
+    mountPath: /code/otpdata/norway/router-config.json
+    subPath: router-config.json
+    configMap: otp-router-config
+    readOnly: true
+
+ingress:
+  enabled: true
+  otpApi:
+    domainName: -gcp2.entur.io
+  otpDebug:
+    domainName: .entur.org
+
+cronjobRedeployOtp2:
+  environmentValues:
+    cloudsdkCoreProject: kub-ent-jp-prd
+
+proxy:
+  enabled: true
+  exposed: true
+  googlePubsubProjectId: ent-otp2-prd
+  googlePubsubRequestTopic: ror.otp2.outbound.bigdaddy
+  googlePubsubResponseTopic: ror.otp2.outbound.bigdaddy.tripresponse
+
+# Realtime-updaters use internal service instead of external (Apigee) to avoid inexplicable timeouts
+configuration:
+  apiProcessingTimeout: "20s"
+  extraSearchCoachReluctance: 1.6
+  flexRouting: true
+  floatingBike: true
+  sorlandsbanen: true
+  optimizeTransfers: true
+  parallelRouting: false
+  restApiConfigJsonParam: false
+  siriETUpdater: http://anshar.prd.entur.internal/anshar/services
+  siriETPubsubUpdater:
+    enabled: true
+    topicProjectName: ent-anshar-prd
+    subscriptionProjectName: ent-otp2-prd
+    pubsubTopicName: xml.estimated_timetables
+    dataInitializationUrl: http://realtime-cache.prd.entur.internal/et
+    producerMetrics: true
+  siriSXUpdater: http://realtime-cache.prd.entur.internal/sx
+  transferConstraints: true
+  vehicleRentalServiceDirectory:
+    url: "http://mobility-cache.prd.entur.internal/gbfs-internal"
+    sourcesName: "systems"
+    updaterUrlName: "url"
+    updaterNetworkName: "id"
+    enableGeofencingZones: false
