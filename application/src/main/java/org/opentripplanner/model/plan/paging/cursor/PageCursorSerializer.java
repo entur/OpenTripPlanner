@@ -75,7 +75,7 @@ final class PageCursorSerializer {
 
   @Nullable
   public static PageCursor decode(String cursor) {
-    if (StringUtils.hasNoValue(cursor)) {
+    if (StringUtils.hasNoValue(cursor) || "-1".equals(cursor)) {
       return null;
     }
     try {
