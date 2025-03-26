@@ -2,6 +2,7 @@
 
 : ${GRAPH_FILE_TARGET_PATH="/code/otpdata/norway/graph.obj"}
 : ${FILE_TMP_PATH="/tmp/graph_obj_from_gcs"}
+: ${FILE_TMP_GRAPH_FILE_LIST="/tmp/list_graph_files.txt"}
 # Notice ending slash here, it is correct
 : ${MARDUK_GCP_BASE="gs://marduk/"}
 : ${GRAPH_POINTER_FILE="current-otp2"}
@@ -9,8 +10,8 @@
 echo "GRAPH_FILE_TARGET_PATH: $GRAPH_FILE_TARGET_PATH"
 serializationVersionId=$(java -jar otp-shaded.jar --serializationVersionId)
 echo serializationVersionId: $serializationVersionId
-gcloud storage cat ${MARDUK_GCP_BASE}netex-otp2/${serializationVersionId}/${GRAPH_POINTER_FILE} 2> temp 1>temp
-   if grep -q 'ERROR' temp; then
+gcloud storage cat ${MARDUK_GCP_BASE}netex-otp2/${serializationVersionId}/${GRAPH_POINTER_FILE} 2> ${FILE_TMP_GRAPH_FILE_LIST} 1>${FILE_TMP_GRAPH_FILE_LIST}
+   if grep -q 'ERROR' ${FILE_TMP_GRAPH_FILE_LIST}; then
       echo "RC Graph with serialId not found " $serializationVersionId
       echo "Use main graph file"
       FILENAME=$(gcloud storage cat ${MARDUK_GCP_BASE}${GRAPH_POINTER_FILE})
@@ -20,7 +21,7 @@ gcloud storage cat ${MARDUK_GCP_BASE}netex-otp2/${serializationVersionId}/${GRAP
 
    fi
    echo "FILENAME: " $FILENAME
-rm temp
+rm ${FILE_TMP_GRAPH_FILE_LIST}
 
 DOWNLOAD="${MARDUK_GCP_BASE}${FILENAME}"
 echo "Downloading $DOWNLOAD"
