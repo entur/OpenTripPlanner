@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21.0.6_7-jdk-noble
+FROM eclipse-temurin:21.0.6_7-jdk-jammy
 
 RUN mkdir -p /code/otpdata/norway
 
