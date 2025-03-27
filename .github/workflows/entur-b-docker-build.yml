@@ -38,6 +38,7 @@ jobs:
     uses: entur/gha-docker/.github/workflows/build.yml@v1
     with:
       build_artifact_name: artifact
+      context: ${{ github.repositoryUrl }}#${{ inputs.version }}
       build_artifact_path: otp-shaded/target
       dockerfile: 'entur/deployment-config/Dockerfile'
       image_name: 'otp2'
