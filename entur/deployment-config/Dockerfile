@@ -33,7 +33,7 @@ RUN chmod a+x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 RUN  addgroup appuser && adduser --disabled-password --gecos "" appuser --ingroup appuser
-RUN chown -R appuser:appuser /code
+RUN chown -R appuser:appuser /code/otpdata
 USER appuser
 
 EXPOSE 8080
