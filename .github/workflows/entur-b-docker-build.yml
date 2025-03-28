@@ -16,8 +16,8 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-java@v4
         with:
-          java-version: 21.0.5+11
-          distribution: liberica
+          java-version: 21
+          distribution: temurin
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
