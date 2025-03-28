@@ -11,7 +11,6 @@ data:
           "streetRoutingTimeout": "5s",
           "numItineraries": 12,
           "transferPenalty": 0,
-          "extraSearchCoachReluctance" : {{ .Values.configuration.extraSearchCoachReluctance }},
           "turnReluctance": 1.0,
           "elevatorBoardTime": 90,
           "elevatorBoardCost": 90,

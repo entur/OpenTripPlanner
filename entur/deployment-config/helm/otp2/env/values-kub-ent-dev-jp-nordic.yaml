@@ -69,8 +69,7 @@ configuration:
   optimizeTransfers: true
   transferConstraints: true
   parallelRouting: true
-  extraSearchCoachReluctance: 1.6
-  
+
 
 cronjobRedeployGraphBuilder:
   resources:
