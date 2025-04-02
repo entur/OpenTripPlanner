@@ -17,9 +17,7 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get install -y \
 # From https://cloud.google.com/sdk/docs/install
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key --keyring /usr/share/keyrings/cloud.google.gpg  add - && apt-get update -y && apt-get install google-cloud-sdk -y
 
-COPY otp-shaded/target/otp-shaded-*.jar /code/otp-shaded.jar
-
-RUN chmod 444 /code/otp-shaded.jar
+COPY --chmod=444 otp-shaded/target/otp-shaded-*.jar /code/otp-shaded.jar
 
 # Copy metrics agent (used only by Graph Builder)
 RUN mkdir -p /opt/agent-bond \
@@ -28,8 +26,8 @@ RUN mkdir -p /opt/agent-bond \
  && chmod 444 /opt/agent-bond/agent-bond.jar
 ADD entur/deployment-config/docker/jmx_exporter_config.yml /opt/agent-bond/
 
-COPY entur/deployment-config/docker/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod a+x /docker-entrypoint.sh
+COPY --chmod=755 entur/deployment-config/docker/docker-entrypoint.sh /docker-entrypoint.sh
+
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 RUN  addgroup appuser && adduser --disabled-password --gecos "" appuser --ingroup appuser
