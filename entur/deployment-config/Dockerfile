@@ -23,18 +23,18 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 COPY --chmod=444 otp-shaded/target/otp-shaded-*.jar /code/otp-shaded.jar
 
 # Copy metrics agent (used only by Graph Builder)
-RUN mkdir -p /opt/agent-bond \
-  && curl https://repo1.maven.org/maven2/io/fabric8/agent-bond-agent/1.2.0/agent-bond-agent-1.2.0.jar \
-         -o /opt/agent-bond/agent-bond.jar \
- && chmod 444 /opt/agent-bond/agent-bond.jar
-ADD entur/deployment-config/docker/jmx_exporter_config.yml /opt/agent-bond/
+RUN mkdir -p /opt/agent-bond
+ADD --chmod=444 https://repo1.maven.org/maven2/io/fabric8/agent-bond-agent/1.2.0/agent-bond-agent-1.2.0.jar /opt/agent-bond/agent-bond.jar
+COPY --chmod=444 entur/deployment-config/docker/jmx_exporter_config.yml /opt/agent-bond/
 
 COPY --chmod=755 entur/deployment-config/docker/docker-entrypoint.sh /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-RUN  addgroup appuser && adduser --disabled-password --gecos "" appuser --ingroup appuser
-RUN chown -R appuser:appuser /code/otpdata
+RUN  addgroup appuser \
+     && adduser --disabled-password --gecos "" appuser --ingroup appuser \
+     && chown -R appuser:appuser /code/otpdata
+
 USER appuser
 
 EXPOSE 8080
