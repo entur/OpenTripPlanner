@@ -2,6 +2,7 @@ package org.opentripplanner.datastore.api;
 
 import java.io.Closeable;
 import java.util.Collection;
+import javax.annotation.Nullable;
 
 /**
  * A composite data source contain a collection of other {@link DataSource}s.
@@ -24,6 +25,7 @@ public interface CompositeDataSource extends DataSource, Closeable {
    * <p>
    * {@code DataSource routesSrc = gtfsSource.entry("routes.txt")}
    */
+  @Nullable
   DataSource entry(String name);
 
   /**

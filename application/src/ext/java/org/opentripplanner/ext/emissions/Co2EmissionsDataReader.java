@@ -35,13 +35,13 @@ public class Co2EmissionsDataReader {
     try {
       var emissionsDataSource = catalog.entry(EMISSIONS_FILE_NAME);
 
-      if (emissionsDataSource.exists()) {
+      if (emissionsDataSource != null && emissionsDataSource.exists()) {
         return readEmissions(emissionsDataSource.asInputStream(), resolvedFeedId);
       } else {
         return Map.of();
       }
     } catch (IOException e) {
-      LOG.error("Failed to read emission data. Details: " + e.getMessage(), e);
+      LOG.error("Failed to read emission data. Details: {}", e.getMessage(), e);
       return Map.of();
     }
   }
@@ -98,19 +98,6 @@ public class Co2EmissionsDataReader {
       }
     }
     return emissionsData;
-  }
-
-  private String readFeedId(InputStream stream) {
-    try {
-      CsvReader reader = new CsvReader(stream, StandardCharsets.UTF_8);
-      reader.readHeaders();
-      reader.readRecord();
-      return reader.get("feed_id");
-    } catch (IOException e) {
-      issueStore.add("InvalidEmissionData", "Reading feed_info.txt failed.");
-      LOG.error("InvalidEmissionData: reading feed_info.txt failed.", e);
-      throw new RuntimeException(e);
-    }
   }
 
   private Optional<Double> calculateEmissionsPerPassengerPerMeter(
