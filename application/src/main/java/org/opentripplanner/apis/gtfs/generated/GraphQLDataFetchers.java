@@ -40,7 +40,6 @@ import org.opentripplanner.model.fare.FareMedium;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.fare.FareProductUse;
 import org.opentripplanner.model.fare.RiderCategory;
-import org.opentripplanner.model.plan.Emission;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.LegCallTime;
@@ -481,7 +480,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<Double> elevationLost();
 
-    public DataFetcher<Emission> emissionsPerPerson();
+    public DataFetcher<org.opentripplanner.model.plan.Emission> emissionsPerPerson();
 
     public DataFetcher<java.time.OffsetDateTime> end();
 
