@@ -11,8 +11,8 @@ import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.org.siri.siri20.EstimatedTimetableDeliveryStructure;
-import uk.org.siri.siri20.ServiceDelivery;
+import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
+import uk.org.siri.siri21.ServiceDelivery;
 
 /**
  * Update OTP stop timetables from some a Siri-ET HTTP sources.
@@ -77,7 +77,7 @@ public class SiriETUpdater extends PollingGraphUpdater {
         List<EstimatedTimetableDeliveryStructure> etds =
           serviceDelivery.getEstimatedTimetableDeliveries();
         if (etds != null) {
-          saveResultOnGraph.execute(context -> {
+          updateGraph(context -> {
             var result = estimatedTimetableHandler.applyUpdate(etds, incrementality, context);
             ResultLogger.logUpdateResult(feedId, "siri-et", result);
             metricsConsumer.accept(result);

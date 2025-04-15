@@ -18,8 +18,8 @@ import org.opentripplanner.updater.trip.UrlUpdaterParameters;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.org.siri.siri20.ServiceDelivery;
-import uk.org.siri.siri20.Siri;
+import uk.org.siri.siri21.ServiceDelivery;
+import uk.org.siri.siri21.Siri;
 
 public class SiriSXUpdater extends PollingGraphUpdater implements TransitAlertProvider {
 
@@ -142,7 +142,8 @@ public class SiriSXUpdater extends PollingGraphUpdater implements TransitAlertPr
           // All that said, out of all the update types, Alerts (and SIRI SX) are probably the ones
           // that would be most tolerant of non-versioned application-wide storage since they don't
           // participate in routing and are tacked on to already-completed routing responses.
-          saveResultOnGraph.execute(context -> {
+
+          updateGraph(context -> {
             updateHandler.update(serviceDelivery, context);
             if (markPrimed) {
               primed = true;

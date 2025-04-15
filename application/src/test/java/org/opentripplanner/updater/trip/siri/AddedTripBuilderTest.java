@@ -38,7 +38,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.alert.siri.mapping.SiriTransportModeMapper;
 import org.opentripplanner.updater.spi.UpdateError;
-import uk.org.siri.siri20.VehicleModesEnumeration;
+import uk.org.siri.siri21.VehicleModesEnumeration;
 
 class AddedTripBuilderTest {
 
@@ -534,7 +534,7 @@ class AddedTripBuilderTest {
 
     assertTrue(addedTrip.isFailure(), "Trip creation should fail");
     assertEquals(
-      UpdateError.UpdateErrorType.NO_VALID_STOPS,
+      UpdateError.UpdateErrorType.UNKNOWN_STOP,
       addedTrip.failureValue().errorType(),
       "Trip creation should fail with call referring to unknown stop"
     );
