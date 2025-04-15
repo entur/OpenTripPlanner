@@ -1,0 +1,15 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- script: JAVA_HOME=$JAVA_HOME_21_X64 mvn package
+- script: cp otp-shaded/target/otp-shaded-2.8.0-SNAPSHOT.jar '$(Pipeline.Workspace)/otp-shaded.jar'
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(Pipeline.Workspace)/otp-shaded.jar' # string. Alias: path. Required. File or directory path. Default: $(Pipeline.Workspace).
+    artifact: otp-shaded.jar
