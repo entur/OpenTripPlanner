@@ -252,12 +252,6 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
       getTransitService(environment).getScheduledTripTimes(getSource(environment)).orElse(null);
   }
 
-  /**
-   * If stoptimesForDate does not have a parameter, and the trip does not run today, we will
-   * still return a list of TripTimeOnDates, the same list as bare stoptimes() would return.
-   * This is illogical, but existing UIs depend on this longstanding behavior.
-   * @return
-   */
   @Override
   public DataFetcher<Iterable<TripTimeOnDate>> stoptimesForDate() {
     return environment -> {
@@ -266,12 +260,11 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
       var args = new GraphQLTypes.GraphQLTripStoptimesForDateArgs(environment.getArguments());
 
       ZoneId timeZone = transitService.getTimeZone();
-      if (args.getGraphQLServiceDate() != null) {
-        LocalDate serviceDate = ServiceDateUtils.parseString(args.getGraphQLServiceDate());
-        return transitService.getTripTimeOnDates(trip, serviceDate).orElse(null);
-      } else {
-        return transitService.getTripTimeOnDates(trip, LocalDate.now(timeZone), true).orElse(null);
-      }
+      LocalDate serviceDate = args.getGraphQLServiceDate() != null
+        ? ServiceDateUtils.parseString(args.getGraphQLServiceDate())
+        : LocalDate.now(timeZone);
+
+      return transitService.getTripTimeOnDates(trip, serviceDate).orElse(null);
     };
   }
 
