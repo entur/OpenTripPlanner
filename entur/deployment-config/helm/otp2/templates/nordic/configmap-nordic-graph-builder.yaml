@@ -72,7 +72,7 @@ data:
         {
           "type": "gtfs",
           "feedId": "FI",
-          "source": "https://gtfsdatav2.blob.core.windows.net/gtfsdata-blob/matka.zip"
+          "source": "https://mobility.mobility-database.fintraffic.fi/static/finland_gtfs.zip"
         },
         {
           "type": "netex",
