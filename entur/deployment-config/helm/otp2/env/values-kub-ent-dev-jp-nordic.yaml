@@ -21,7 +21,7 @@ resources:
   cpuLimit: "8"
   memLimit: 27000Mi
   cpuRequest: "4"
-  memRequest: 25000Mi
+  memRequest: 27000Mi
   xmx: 24g
   xms: 24g
 
