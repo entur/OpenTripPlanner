@@ -60,7 +60,7 @@ data:
           "feeds": [
             {
               "feedId": "RB",
-              "source": "https://storage.googleapis.com/emissions-to-otp/emissions-to-otp.csv"
+              "source": "gs://emissions-to-otp/emissions-to-otp.csv"
             }
           ]
         },
