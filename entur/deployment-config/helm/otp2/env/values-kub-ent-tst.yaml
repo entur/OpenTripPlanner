@@ -1,9 +1,0 @@
-features:
-  emission: false
-journeyPlanner:
-  enabled: false
-cronjobRedeployGraphBuilder:
-    enabled: true
-    mardukBucket: marduk-test
-    mardukInternalBucket: ror-marduk-internal-test
-    ignoreFareFrame: false
