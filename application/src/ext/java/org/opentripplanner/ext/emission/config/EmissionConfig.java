@@ -37,7 +37,7 @@ public class EmissionConfig {
         .of("carAvgCo2PerKm")
         .since(V2_5)
         .summary("The average CO₂ emissions of a car in grams per kilometer.")
-        .asInt(CAR_DEFAULTS.avgCo2PerKm()),
+        .asGram(CAR_DEFAULTS.avgCo2PerKm()),
       c
         .of("carAvgOccupancy")
         .since(V2_5)
@@ -50,7 +50,7 @@ public class EmissionConfig {
     return c
       .of("feeds")
       .since(V2_8)
-      .summary("List of emmistion feeds.")
+      .summary("List of emisstion feeds.")
       .asObjects(List.of(), EmissionConfig::mapFeed);
   }
 
