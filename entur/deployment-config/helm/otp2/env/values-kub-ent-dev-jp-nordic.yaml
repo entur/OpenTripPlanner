@@ -63,6 +63,7 @@ configuration:
     sourcesName: "systems"
     updaterUrlName: "url"
     updaterNetworkName: "id"
+  emission: false
   flexRouting: true
   floatingBike: true
   restApiConfigJsonParam: true

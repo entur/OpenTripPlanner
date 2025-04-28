@@ -5,6 +5,7 @@ data:
    {
       "otpFeatures": {
         "ActuatorAPI": true,
+        "Emission": {{ .Values.configuration.emission }}
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
         "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
