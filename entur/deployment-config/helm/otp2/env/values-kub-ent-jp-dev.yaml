@@ -51,6 +51,7 @@ proxy:
 # Realtime-updaters use internal service instead of external (Apigee) to avoid inexplicable timeouts
 configuration:
   apiProcessingTimeout: "7s"
+  emission: true
   flexRouting: true
   floatingBike: true
   sorlandsbanen: true
