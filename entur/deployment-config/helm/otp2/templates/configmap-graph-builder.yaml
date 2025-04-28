@@ -12,7 +12,7 @@ data:
         "configVersion" : "{{ .Values.build.number }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
-            "Emission" : {{ .Values.build.emission }},
+            "Emission" : {{ .Values.features.emission }},
             "GoogleCloudStorage" : true,
             "FlexRouting": true
         }
