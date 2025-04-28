@@ -12,6 +12,7 @@ data:
         "configVersion" : "{{ .Values.build.number }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
+            "Emission" : {{ .Values.build.emission }},
             "GoogleCloudStorage" : true,
             "FlexRouting": true
         }
@@ -55,6 +56,14 @@ data:
             "ignoreFareFrame": {{ .Values.cronjobRedeployGraphBuilder.ignoreFareFrame }}
           }
         ],
+        "emission": {
+          "feeds": [
+            {
+              "feedId": "RB",
+              "source": "https://storage.googleapis.com/emissions-to-otp/emissions-to-otp.csv"
+            }
+          ]
+        },
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",
         "graph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/Graph-otp2-${otp.serialization.version.id}.obj",
         "buildReportDir": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/report"
