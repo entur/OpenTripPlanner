@@ -3,6 +3,7 @@ package org.opentripplanner.ext.emission.internal.csvdata.trip;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.ext.emission.model.TripPatternEmission;
 import org.opentripplanner.framework.error.OtpError;
 import org.opentripplanner.framework.error.WordList;
@@ -26,20 +27,30 @@ class EmissionAggregator {
   private final List<OtpError> issues = new ArrayList<>();
   private boolean semanticValidationDone = false;
 
-  EmissionAggregator(FeedScopedId tripId, List<StopLocation> stops) {
+  EmissionAggregator(FeedScopedId tripId, @Nullable List<StopLocation> stops) {
     this.tripId = tripId;
     this.stops = stops;
 
-    int size = stops.size() - 1;
+    if (this.stops == null || this.stops.isEmpty()) {
+      this.emissions = null;
+      this.counts = null;
+      warnOnMissingStopPatternForTrip();
+    } else {
+      int size = stops.size() - 1;
 
-    this.emissions = new Emission[size];
-    Arrays.fill(emissions, Emission.ZERO);
+      this.emissions = new Emission[size];
+      Arrays.fill(emissions, Emission.ZERO);
 
-    this.counts = new int[size];
-    Arrays.fill(counts, 0);
+      this.counts = new int[size];
+      Arrays.fill(counts, 0);
+    }
   }
 
   EmissionAggregator mergeEmissionForleg(TripLegsRow row) {
+    if (stops == null) {
+      return this;
+    }
+
     if (semanticValidationDone) {
       throw new IllegalStateException("Rows can not be added after validate() is called.");
     }
@@ -93,6 +104,10 @@ class EmissionAggregator {
   }
 
   boolean validate() {
+    if (stops == null) {
+      return false;
+    }
+
     performSemanticValidation();
     boolean hasErrors = issues.isEmpty();
 
@@ -128,6 +143,16 @@ class EmissionAggregator {
     addEmissionMissingLegIssue(buf);
   }
 
+  private void warnOnMissingStopPatternForTrip() {
+    issues.add(
+      OtpError.of(
+        "EmissionTripLegMissingTripStopPattern",
+        "Warn! No trip with a stop pattern found for trip(%s). The trip is skipped.",
+        tripId
+      )
+    );
+  }
+
   private void warnOnDuplicates() {
     if (Arrays.stream(counts).anyMatch(i -> i > 1)) {
       issues.add(
@@ -145,7 +170,7 @@ class EmissionAggregator {
     issues.add(
       OtpError.of(
         "EmissionStopSeqNr",
-        "The emission 'from_stop_sequence'(%d) is out of bounds[1 - %d]: %s",
+        "The emission 'from_stop_sequence'(%d) is out of bounds[1, %d]: %s",
         row.fromStopSequence(),
         upperBoundInclusive,
         row.toString()
@@ -157,7 +182,7 @@ class EmissionAggregator {
     issues.add(
       OtpError.of(
         "EmissionMissingLeg",
-        "All legs in a trip(%s) must have an emission value. Leg number %s does not have emissions.",
+        "All legs in a trip(%s) must have an emission value. Leg number %s does not have an emission value.",
         tripId,
         buf.toString()
       )
