@@ -60,7 +60,7 @@ data:
           "feeds": [
             {
               "feedId": "RB",
-              "source": "gs://emissions-to-otp/emissions-to-otp.csv"
+              "source": "gs://marduk-dev/emission/emissions-to-otp.csv"
             }
           ]
         },
