@@ -76,9 +76,13 @@ data:
           "accessEgress": {
             "maxDurationForMode" : {
               "BIKE_RENTAL": "20m",
+              "CAR": "3h",
               "SCOOTER_RENTAL" : "20m"
+            },
+            "maxStopCountForMode" : {
+              "CAR" : 0
             }
-          },  
+          },
           "maxDirectStreetDurationForMode": {
             "CAR": "12h"
           },

@@ -25,11 +25,6 @@ data:
         "embedRouterConfig": true,
         "areaVisibility": true,
         "platformEntriesLinking": true,
-        "osmDefaults": {
-          "osmTagMapping": "norway",
-          "timeZone": "Europe/Oslo"
-        },
-        "osmCacheDataInMem": "true",
         "staticParkAndRide": true,
         "staticBikeParkAndRide": true,
         "maxDataImportIssuesPerFile": 1000,
@@ -37,6 +32,34 @@ data:
         "distanceBetweenElevationSamples": 25,
         "multiThreadElevationCalculations": true,
         "boardingLocationTags": [],
+        "transferParametersForMode": {
+          "CAR": {
+            "disableDefaultTransfers": true,
+            "carsAllowedStopMaxTransferDuration": "3h"
+          }
+        },
+        "transferRequests" : [
+          { 
+            "modes" : "WALK" 
+          },
+          {
+            "modes" : "WALK",
+            "wheelchairAccessibility" : {
+              "enabled" : true
+            }
+          },
+          {
+            "modes" : "BICYCLE"
+          },
+          {
+            "modes" : "CAR"
+          }
+        ],
+        "osmDefaults": {
+          "osmTagMapping": "norway",
+          "timeZone": "Europe/Oslo"
+        },
+        "osmCacheDataInMem": "true",
         "osm" : [
           {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/osm/norway-latest.osm.pbf"},
           {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/osm/static/osm_static_sweden_extract.pbf"},
