@@ -5,8 +5,9 @@ import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.internal.csvdata.route.RouteDataReader;
 import org.opentripplanner.ext.emission.internal.csvdata.trip.TripDataReader;
-import org.opentripplanner.ext.emission.internal.csvdata.trip.TripLegMapper;
+import org.opentripplanner.ext.emission.internal.csvdata.trip.TripHopMapper;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.utils.logging.ProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,14 +23,14 @@ public class EmissionDataReader {
 
   private final DataImportIssueStore issueStore;
   private final EmissionRepository emissionRepository;
-  private final TripLegMapper tripLegMapper;
+  private final TripHopMapper tripHopMapper;
 
   public EmissionDataReader(
     EmissionRepository emissionRepository,
-    TripLegMapper tripLegMapper,
+    TripHopMapper tripHopMapper,
     DataImportIssueStore issueStore
   ) {
-    this.tripLegMapper = tripLegMapper;
+    this.tripHopMapper = tripHopMapper;
     this.issueStore = issueStore;
     this.emissionRepository = emissionRepository;
   }
@@ -39,23 +40,41 @@ public class EmissionDataReader {
   }
 
   public void read(DataSource emissionDataSource, String resolvedFeedId) {
+    LOG.info(
+      "Reading EMISSION data: %s (feedId: %s)".formatted(
+          emissionDataSource.detailedInfo(),
+          resolvedFeedId
+        )
+    );
     if (emissionDataSource.exists()) {
-      // Assume input CO₂ emission data is Route avarage data
-      var routeReader = new RouteDataReader(issueStore);
+      var progress = ProgressTracker.track("Read " + emissionDataSource.name(), 10_000, -1);
+      // Assume input CO₂ emission data is Route average data
+      var routeReader = new RouteDataReader(emissionDataSource, issueStore);
       this.emissionRepository.addRouteEmissions(
-          routeReader.read(emissionDataSource, resolvedFeedId)
+          routeReader.read(resolvedFeedId, () -> logProgress(progress))
         );
 
-      // Assume input CO₂ emission data is per trip leg
-      tripLegMapper.setCurrentFeedId(resolvedFeedId);
-      var tripReader = new TripDataReader(issueStore);
+      // Assume input CO₂ emission data is per trip hop
+      tripHopMapper.setCurrentFeedId(resolvedFeedId);
+      var tripReader = new TripDataReader(emissionDataSource, issueStore);
       this.emissionRepository.addTripPatternEmissions(
-          tripLegMapper.map(tripReader.read(emissionDataSource))
+          tripHopMapper.map(tripReader.read(() -> logProgress(progress)))
         );
 
+      LOG.info(progress.completeMessage());
       if (!(routeReader.isDataProcessed() || tripReader.isDataProcessed())) {
-        LOG.error("No emission data read from: " + emissionDataSource.detailedInfo());
+        LOG.error(
+          "No emission data read from: " +
+          emissionDataSource.detailedInfo() +
+          ". Do the header columns match?"
+        );
       }
     }
+  }
+
+  private static void logProgress(ProgressTracker progress) {
+    // Do not convert this to a lambda expression. The logger will not be
+    // able to log the correct source and line number for the caller.
+    progress.step(m -> LOG.info(m));
   }
 }
