@@ -129,6 +129,21 @@ public class DurationUtilsTest {
   }
 
   @Test
+  public void testRequireNonNegativeWithSubject() {
+    // positive value is legal
+    assertEquals(Duration.ofSeconds(1), requireNonNegative(Duration.ofSeconds(1), "test"));
+
+    // null is not supported
+    assertThrows(NullPointerException.class, () -> requireNonNegative(null, "test"));
+
+    // negative value is not supported
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      requireNonNegative(Duration.ofSeconds(-1), "test")
+    );
+    assertEquals("Duration test can't be negative: PT-1S", ex.getMessage());
+  }
+
+  @Test
   public void testRequireNonNegativeAndMaxLimit() {
     // Firs make sure legal values are accepted
     requireNonNegative(Duration.ZERO, D2h, "test");
