@@ -57,7 +57,7 @@ proxy:
     cpuRequest: 100m
     memRequest: 100Mi
   image:
-    repo: eu.gcr.io/entur-system-1287/otp2-proxy:0.0.25
+    repo: eu.gcr.io/entur-system-1287/otp2-proxy:0.0.27
 
 cronjobRedeployGraphBuilder:
   releaseCandidateGraphBuilderEnabled: false
