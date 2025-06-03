@@ -39,7 +39,8 @@ based on the `base revision` - a branch, tag or commit, for example `otp/dev-2.x
    file. Each release is given a unique version number specific to your fork, like 
    `v2.7.0-MY_ORG-1`. The release script uses both the git history and the GitHub GraphQL API 
    (PRs labeled `bump serialization id`) to resolve the serialization version number. 
-7. The script finally tag and push the release.
+7. Finally the release is tagged and pushed to the remote Git repository. The repository is 
+   configured in the `custom-release-env.json` file.
 
 Do not worry about deleting more recent versions, the release script will preserve the history so
 nothing is lost.
@@ -80,7 +81,7 @@ new release (v3).
 When you make a new releae all open PRs tagged with your custom `TEST` label is automatically
 merged in. This is ilustrated with the _feature-branch-in-progress_ above. 
 
-## Extention branches
+## Extension branches
 
 You should create one or more branches in the local git repository where you keep your 
 deployment-specific config. Put the following in this(these) branch(es):
@@ -105,12 +106,12 @@ The branch may include(optional):
 
 The config branches are merged into the release - so the best way to avoid merge conflict is to
 use a "old" commit from the **base branch/repo** as the base for your config. Do not use a commit 
-witch only exist in the release branch, this will lead to conficts with the pom.xml version number.
+which only exist in the release branch, this will lead to conficts with the pom.xml version number.
 
 
 ## Setup
 
-Create a configuration extention branch (`main_config`) in your local fork based on a commit in the
+Create a configuration extension branch (`main_config`) in your local fork based on a commit in the
 upstream repo, for example `HEAD` of `opentripplanner/OpenTripPlanner/dev-2.x`. 
 
 Add the `script/custom-release-env.json` file to your branch. The content of the file should be:
@@ -247,7 +248,7 @@ you rerun the script.
 > generated you mark the conflict as resolved.
 
 If a conflic happens in the CI/CD pipline it is recomended to fix the branch causing the conflict.
-The conflict can normally be fixed by rebasing or merging the extention branches or PRs. If not,
+The conflict can normally be fixed by rebasing or merging the extension branches or PRs. If not,
 you will have to make the release on a local mashine resolving conflicts by hand.
 
 
