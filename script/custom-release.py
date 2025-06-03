@@ -583,9 +583,9 @@ def resolve_next_ser_ver_id():
             info(f'  - The latest upstream serialization.ver.id {latest_upstream_ser_id} '
                  f'and the base upstream id {base_upstream_ser_id} is diffrent. '
                  'The serialization.ver.id is bumped.')
-            state.next_ser_ver_id = bump_release_ser_ver_id(latest_ser_ver_id)
+            state.next_ser_ver_id = bump_release_ser_ver_id(state.latest_ser_ver_id)
         else:
-            state.next_ser_ver_id = latest_ser_ver_id
+            state.next_ser_ver_id = state.latest_ser_ver_id
 
 
 # Find the serialization-version-id for the upstream git project using the git log starting
