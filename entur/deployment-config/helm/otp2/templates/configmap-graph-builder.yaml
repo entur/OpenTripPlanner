@@ -47,13 +47,13 @@ data:
             "wheelchairAccessibility" : {
               "enabled" : true
             }
-          // Exclude BIKE and CAR transfers
-          //},
+          },
+          // Exclude BIKE transfers
           //{
           //  "modes" : "BICYCLE"
           //},
-          //{
-          //  "modes" : "CAR"
+          {
+            "modes" : "CAR"
           }
         ],
         "osmDefaults": {
