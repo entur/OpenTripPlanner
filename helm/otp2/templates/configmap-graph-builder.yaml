@@ -48,10 +48,9 @@ data:
               "enabled" : true
             }
           },
-          // Exclude BIKE transfers
-          //{
-          //  "modes" : "BICYCLE"
-          //},
+          {
+            "modes" : "BICYCLE"
+          },
           {
             "modes" : "CAR"
           }
