@@ -39,8 +39,8 @@ data:
           }
         },
         "transferRequests" : [
-          { 
-            "modes" : "WALK" 
+          {
+            "modes" : "WALK"
           },
           {
             "modes" : "WALK",
