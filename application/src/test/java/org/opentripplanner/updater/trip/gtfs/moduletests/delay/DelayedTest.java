@@ -27,6 +27,7 @@ class DelayedTest implements RealtimeTestConstants {
   private final RegularStop STOP_A = ENV_BUILDER.stop(STOP_A_ID);
   private final RegularStop STOP_B = ENV_BUILDER.stop(STOP_B_ID);
   private final RegularStop STOP_C = ENV_BUILDER.stop(STOP_C_ID);
+  private final RegularStop STOP_D = ENV_BUILDER.stop(STOP_D_ID);
 
   private static final int DELAY = 1;
   private static final int STOP_SEQUENCE = 1;
@@ -125,11 +126,11 @@ class DelayedTest implements RealtimeTestConstants {
   @Test
   void delayedAfterNextStopDeparture() {
     var tripInput = TripInput.of(TRIP_2_ID)
-      .addStop(STOP_A1, "0:00:00", "0:00:00")
+      .addStop(STOP_A, "0:00:00", "0:00:00")
       // 5-minute dwell
-      .addStop(STOP_B1, "0:05:00", "0:10:00")
-      .addStop(STOP_C1, "0:15:00", "0:16:00")
-      .addStop(STOP_D1, "0:20:00", "0:20:00")
+      .addStop(STOP_B, "0:05:00", "0:10:00")
+      .addStop(STOP_C, "0:15:00", "0:16:00")
+      .addStop(STOP_D, "0:20:00", "0:20:00")
       .build();
     var env = RealtimeTestEnvironment.of().addTrip(tripInput).build();
 
@@ -153,11 +154,11 @@ class DelayedTest implements RealtimeTestConstants {
     assertEquals(RealTimeState.SCHEDULED, originalTripTimesScheduled.getRealTimeState());
 
     assertEquals(
-      "SCHEDULED | A1 0:00 0:00 | B1 0:05 0:10 | C1 0:15 0:16 | D1 0:20 0:20",
+      "SCHEDULED | A 0:00 0:00 | B 0:05 0:10 | C 0:15 0:16 | D 0:20 0:20",
       env.getScheduledTimetable(TRIP_2_ID)
     );
     assertEquals(
-      "UPDATED | A1 0:00 0:00 | B1 0:20 0:20 | C1 0:24 0:25 | D1 0:27 0:27",
+      "UPDATED | A 0:00 0:00 | B 0:20 0:20 | C 0:24 0:25 | D 0:27 0:27",
       env.getRealtimeTimetable(TRIP_2_ID)
     );
   }
