@@ -95,10 +95,10 @@ public class RealtimeTestEnvironmentBuilder {
     return stop;
   }
 
-  private static Trip createTrip(TripInput tripInput, TimetableRepository timetableRepository) {
+  static void createTrip(TripInput tripInput, TimetableRepository timetableRepository) {
     var trip = Trip.of(id(tripInput.id()))
       .withRoute(tripInput.route())
-      .withHeadsign(I18NString.of("Headsign of %s".formatted(tripInput.id())))
+      .withHeadsign(tripInput.headsign() == null ? null : I18NString.of(tripInput.headsign()))
       .withServiceId(SERVICE_ID)
       .build();
 
@@ -135,8 +135,6 @@ public class RealtimeTestEnvironmentBuilder {
       .build();
 
     timetableRepository.addTripPattern(pattern.getId(), pattern);
-
-    return trip;
   }
 
   private static StopTime createStopTime(
