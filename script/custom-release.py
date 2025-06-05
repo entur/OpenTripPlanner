@@ -260,7 +260,7 @@ def run_custom_release_extensions():
     section('Run custom release extensions bash script ...')
     ext_script = 'script/custom-release-extension'
     if os.path.exists(ext_script):
-        execute(ext_script)
+        execute(ext_script, quiet=False, quiet_err=False)
     else:
         print(f"Script '{ext_script}' not found!")
 
