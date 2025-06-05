@@ -32,13 +32,12 @@ data:
         "distanceBetweenElevationSamples": 25,
         "multiThreadElevationCalculations": true,
         "boardingLocationTags": [],
-        // Exclude CAR transfers
-        //"transferParametersForMode": {
-        //  "CAR": {
-        //    "disableDefaultTransfers": true,
-        //    "carsAllowedStopMaxTransferDuration": "3h"
-        //  }
-        //},
+        "transferParametersForMode": {
+          "CAR": {
+            "disableDefaultTransfers": true,
+            "carsAllowedStopMaxTransferDuration": "3h"
+          }
+        },
         "transferRequests" : [
           {
             "modes" : "WALK"
@@ -51,10 +50,9 @@ data:
           },
           {
             "modes" : "BICYCLE"
-          //},
-          // Exclude CAR transfers
-          //{
-          //  "modes" : "CAR"
+          },
+          {
+            "modes" : "CAR"
           }
         ],
         "osmDefaults": {
