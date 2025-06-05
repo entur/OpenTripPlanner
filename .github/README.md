@@ -1,9 +1,11 @@
-## Overview
+![OTP Logo](/doc/user/images/otp-logo.svg) 
+
+# OTP - Entur fork overview
 
 This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner). 
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
-of the Entur specific content is just OTP and deployment configuration. We use the code from
-the parent `dev-2.x` branch as is.
+of the Entur specific content is just continuous integration and deployment configuration. We use 
+the code from the `dev-2.x` branch in the upstream repository as is.
 
 ## Entur OTP continuous integration and deployment 
 
@@ -39,9 +41,9 @@ not Entur specific.
 
 
 ## Links
-- [OTP Build Application](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) (GitHub Workflow)
-- [OTP Build Docker image](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml) (GitHub Workflow)
-- OTP Debug UI [DEV](https://otp2debug.dev.entur.org/) [STAGING](https://otp2debug.staging.entur.org/) [PROD](https://otp2debug.entur.org/)
-- OTP Built-in GraphQL Client [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) [STAGING](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel)
+- [OTP Build Application 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) (GitHub Workflow)
+- [OTP Build Docker image 🎁](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml) (GitHub Workflow)
+- OTP Debug UI ○ [DEV](https://otp2debug.dev.entur.org/) ○ [STAGING](https://otp2debug.staging.entur.org/) ○ [PROD](https://otp2debug.entur.org/) ○
+- OTP Built-in GraphQL Client ○ [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) ○ [STAGING](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) ○ [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel) ○
 - [OTP GraphQL API](https://api.staging.entur.io/graphql-explorer/journey-planner-v3) (Shamash)
 - [OTP Planning request performance in Grafana](https://grafana.entur.org/d/X1pi-Jxnz/otp-apis-performance-operations?orgId=1)
