@@ -57,7 +57,7 @@ data:
             "maxDurationForMode" : {
               "BIKE_RENTAL": "20m",
               "SCOOTER_RENTAL" : "20m"
-            }      
+            }
           },
           "maxDirectStreetDurationForMode": {
             "CAR": "12h"

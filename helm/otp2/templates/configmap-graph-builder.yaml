@@ -32,15 +32,16 @@ data:
         "distanceBetweenElevationSamples": 25,
         "multiThreadElevationCalculations": true,
         "boardingLocationTags": [],
-        "transferParametersForMode": {
-          "CAR": {
-            "disableDefaultTransfers": true,
-            "carsAllowedStopMaxTransferDuration": "3h"
-          }
-        },
+        // Exclude CAR transfers
+        //"transferParametersForMode": {
+        //  "CAR": {
+        //    "disableDefaultTransfers": true,
+        //    "carsAllowedStopMaxTransferDuration": "3h"
+        //  }
+        //},
         "transferRequests" : [
-          { 
-            "modes" : "WALK" 
+          {
+            "modes" : "WALK"
           },
           {
             "modes" : "WALK",
