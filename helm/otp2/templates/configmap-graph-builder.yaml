@@ -48,9 +48,9 @@ data:
               "enabled" : true
             }
           },
-          //{
-          //  "modes" : "BICYCLE"
-          //},
+          {
+            "modes" : "BICYCLE"
+          },
           {
             "modes" : "CAR"
           }
