@@ -1,6 +1,8 @@
 ![OTP Logo](/doc/user/images/otp-logo.svg) 
 
-# OTP - Entur fork overview
+# Open Trip Planner (OTP) - Entur fork
+> _✏️ Edit this file in the `main_config` branch._
+
 
 This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner). 
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
@@ -9,9 +11,9 @@ the code from the `dev-2.x` branch in the upstream repository as is.
 
 ## Entur OTP continuous integration and deployment 
 
-Here is an introduction to the Entur CI and CD process. For details see the [release script](/script/custom-release.py) and the 
-[release documentation readme](/script/Readme.md). The release script is part of the upstream project, so the doc is generic,
-not Entur specific.
+Here is an introduction to the Entur CI and CD process. For details see the [release script](/script/custom-release.py)
+and the [release documentation readme](/script/CUSTOM_RELEASE_README.md). The release script is part
+of the upstream project, so the doc is generic, not Entur specific.
 
 - The `main` branch contains all [tagged releases](https://github.com/opentripplanner/OpenTripPlanner/tags), 
   like `v2.8.0-entur-100`. All releases are "stand-alone" synthetic releases. Nothing in the `main` 
