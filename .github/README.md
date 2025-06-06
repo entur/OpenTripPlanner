@@ -43,7 +43,7 @@ not Entur specific.
 ## Links
 - [OTP Build Application 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) (GitHub Workflow)
 - [OTP Build Docker image 🎁](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml) (GitHub Workflow)
-- OTP Debug UI ○ [DEV](https://otp2debug.dev.entur.org/) ○ [STAGING](https://otp2debug.staging.entur.org/) ○ [PROD](https://otp2debug.entur.org/) ○
-- OTP Built-in GraphQL Client ○ [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) ○ [STAGING](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) ○ [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel) ○
+- OTP Debug UI ・ [DEV](https://otp2debug.dev.entur.org/) ・ [STAGING](https://otp2debug.staging.entur.org/) ・ [PROD](https://otp2debug.entur.org/) 
+- OTP Built-in GraphQL Client ・ [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) ・ [STAGING](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) ・ [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel) 
 - [OTP GraphQL API](https://api.staging.entur.io/graphql-explorer/journey-planner-v3) (Shamash)
 - [OTP Planning request performance in Grafana](https://grafana.entur.org/d/X1pi-Jxnz/otp-apis-performance-operations?orgId=1)
