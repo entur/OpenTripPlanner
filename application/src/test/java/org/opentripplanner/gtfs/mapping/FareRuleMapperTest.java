@@ -17,8 +17,10 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 public class FareRuleMapperTest {
 
   private static final String FEED_ID = "FEED";
+  private static final IdFactory ID_FACTORY = new IdFactory(FEED_ID);
 
-  private static final org.onebusaway.gtfs.model.FareRule FARE_RULE = new org.onebusaway.gtfs.model.FareRule();
+  private static final org.onebusaway.gtfs.model.FareRule FARE_RULE =
+    new org.onebusaway.gtfs.model.FareRule();
 
   private static final AgencyAndId AGENCY_AND_ID = new AgencyAndId("A", "1");
 
@@ -33,8 +35,13 @@ public class FareRuleMapperTest {
   private static final String ORIGIN_ID = "Origin Id";
 
   private final FareRuleMapper subject = new FareRuleMapper(
-    new RouteMapper(new AgencyMapper(FEED_ID), DataImportIssueStore.NOOP, new TranslationHelper()),
-    new FareAttributeMapper()
+    new RouteMapper(
+      ID_FACTORY,
+      new AgencyMapper(ID_FACTORY),
+      DataImportIssueStore.NOOP,
+      new TranslationHelper()
+    ),
+    new FareAttributeMapper(ID_FACTORY)
   );
 
   static {

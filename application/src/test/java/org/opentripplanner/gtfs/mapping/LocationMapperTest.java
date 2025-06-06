@@ -20,6 +20,8 @@ import org.opentripplanner.transit.service.SiteRepository;
 
 class LocationMapperTest {
 
+  private static final IdFactory ID_FACTORY = new IdFactory("A");
+
   static Stream<Arguments> testCases() {
     return Stream.of(Arguments.of(null, true), Arguments.of("a name", false));
   }
@@ -29,7 +31,7 @@ class LocationMapperTest {
   void testMapping(String name, boolean isBogusName) {
     var gtfsLocation = getLocation(name, Polygons.OSLO);
 
-    var mapper = new LocationMapper(SiteRepository.of(), DataImportIssueStore.NOOP);
+    var mapper = new LocationMapper(ID_FACTORY, SiteRepository.of(), DataImportIssueStore.NOOP);
     var flexLocation = mapper.map(gtfsLocation);
 
     assertEquals(isBogusName, flexLocation.hasFallbackName());
@@ -43,19 +45,17 @@ class LocationMapperTest {
     var gtfsLocation = getLocation("invalid", selfIntersecting);
 
     var issueStore = new DefaultDataImportIssueStore();
-    var mapper = new LocationMapper(SiteRepository.of(), issueStore);
+    var mapper = new LocationMapper(ID_FACTORY, SiteRepository.of(), issueStore);
 
     mapper.map(gtfsLocation);
 
     assertEquals(
-      List
-        .of(
-          Issue.issue(
-            "InvalidFlexAreaGeometry",
-            "GTFS flex location 1:zone-3 has an invalid geometry: Self-intersection at (lat: 1.0, lon: 2.0)"
-          )
+      List.of(
+        Issue.issue(
+          "InvalidFlexAreaGeometry",
+          "GTFS flex location A:zone-3 has an invalid geometry: Self-intersection at (lat: 1.0, lon: 2.0)"
         )
-        .toString(),
+      ).toString(),
       issueStore.listIssues().toString()
     );
   }

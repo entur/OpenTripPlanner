@@ -4,7 +4,8 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 
 import java.util.List;
 import org.opentripplanner.graph_builder.model.DataSourceConfig;
-import org.opentripplanner.gtfs.graphbuilder.GtfsFeedParameters;
+import org.opentripplanner.gtfs.config.GtfsDefaultParameters;
+import org.opentripplanner.gtfs.config.GtfsFeedParameters;
 import org.opentripplanner.netex.config.NetexFeedParameters;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 
@@ -14,7 +15,7 @@ public class TransitFeedConfig {
     NodeAdapter root,
     String parameterName,
     NetexFeedParameters netexDefaults,
-    GtfsFeedParameters gtfsDefaults
+    GtfsDefaultParameters gtfsDefaults
   ) {
     List<DataSourceConfig> list = root
       .of(parameterName)
@@ -26,7 +27,7 @@ public class TransitFeedConfig {
         of scanning for transit data files in the [base directory](Configuration.md#Base-Directory).
         You can specify data located outside the local filesystem (including cloud storage services)
         or at various different locations around the local filesystem.
-        
+
         When a feed of a particular type (`netex` or `gtfs`) is specified in the transitFeeds
         section, auto-scanning in the base directory for this feed type will be disabled.
         """
@@ -42,7 +43,7 @@ public class TransitFeedConfig {
   private static DataSourceConfig mapTransitFeed(
     NodeAdapter feedNode,
     NetexFeedParameters netexDefaults,
-    GtfsFeedParameters gtfsDefaults
+    GtfsDefaultParameters gtfsDefaults
   ) {
     var type = feedNode
       .of("type")

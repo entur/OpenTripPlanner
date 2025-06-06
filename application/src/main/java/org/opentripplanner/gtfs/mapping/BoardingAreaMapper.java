@@ -19,15 +19,19 @@ class BoardingAreaMapper {
 
   static final String DEFAULT_NAME = "Boarding area";
 
-  private final Map<org.onebusaway.gtfs.model.Stop, BoardingArea> mappedBoardingAreas = new HashMap<>();
+  private final IdFactory idFactory;
+  private final Map<org.onebusaway.gtfs.model.Stop, BoardingArea> mappedBoardingAreas =
+    new HashMap<>();
 
   private final TranslationHelper translationHelper;
   private final Function<FeedScopedId, RegularStop> stationLookUp;
 
   BoardingAreaMapper(
+    IdFactory idFactory,
     TranslationHelper translationHelper,
     Function<FeedScopedId, RegularStop> stationLookUp
   ) {
+    this.idFactory = idFactory;
     this.translationHelper = translationHelper;
     this.stationLookUp = stationLookUp;
   }
@@ -48,10 +52,9 @@ class BoardingAreaMapper {
       );
     }
 
-    StopMappingWrapper base = new StopMappingWrapper(gtfsStop);
+    StopMappingWrapper base = new StopMappingWrapper(idFactory, gtfsStop);
 
-    var builder = BoardingArea
-      .of(base.getId())
+    var builder = BoardingArea.of(base.getId())
       .withCode(base.getCode())
       .withCoordinate(base.getCoordinate())
       .withWheelchairAccessibility(base.getWheelchairAccessibility())

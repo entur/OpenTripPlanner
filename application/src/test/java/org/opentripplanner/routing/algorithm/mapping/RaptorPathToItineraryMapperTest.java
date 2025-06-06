@@ -28,8 +28,8 @@ import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.model.plan.ScheduledTransitLeg;
-import org.opentripplanner.model.plan.StreetLeg;
+import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
+import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorCostConverter;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
@@ -51,8 +51,8 @@ import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessE
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultRaptorTransfer;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.FlexAccessEgressAdapter;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.Transfer;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.DefaultCostCalculator;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -81,15 +81,16 @@ public class RaptorPathToItineraryMapperTest {
 
   private static final int TRANSIT_START = TimeUtils.time("10:00");
   private static final int TRANSIT_END = TimeUtils.time("11:00");
-  private static final Route ROUTE = TimetableRepositoryForTest.route("route").build();
+  private static final Route ROUTE = TEST_MODEL.route("route").build();
 
-  public static final RaptorCostCalculator<TestTripSchedule> COST_CALCULATOR = new DefaultCostCalculator<>(
-    BOARD_COST_SEC,
-    TRANSFER_COST_SEC,
-    WAIT_RELUCTANCE,
-    TRANSIT_RELUCTANCE,
-    STOP_COSTS
-  );
+  public static final RaptorCostCalculator<TestTripSchedule> COST_CALCULATOR =
+    new DefaultCostCalculator<>(
+      BOARD_COST_SEC,
+      TRANSFER_COST_SEC,
+      WAIT_RELUCTANCE,
+      TRANSIT_RELUCTANCE,
+      STOP_COSTS
+    );
 
   private static final RegularStop S1 = TEST_MODEL.stop("STOP1").build();
   private static final RegularStop S2 = TEST_MODEL.stop("STOP2").build();
@@ -101,8 +102,9 @@ public class RaptorPathToItineraryMapperTest {
     // Arrange
     RaptorPathToItineraryMapper<TestTripSchedule> mapper = getRaptorPathToItineraryMapper();
 
-    RaptorPath<TestTripSchedule> path = createTestTripSchedulePath(getTestTripSchedule())
-      .egress(TestAccessEgress.free(2, RaptorCostConverter.toRaptorCost(lastLegCost)));
+    RaptorPath<TestTripSchedule> path = createTestTripSchedulePath(getTestTripSchedule()).egress(
+      TestAccessEgress.free(2, RaptorCostConverter.toRaptorCost(lastLegCost))
+    );
 
     int transitLegCost = path.accessLeg().nextLeg().c1();
     int egressLegCost = path.accessLeg().nextLeg().nextLeg().c1();
@@ -112,10 +114,10 @@ public class RaptorPathToItineraryMapperTest {
 
     // Assert
     assertNotNull(itinerary);
-    assertEquals(1, itinerary.getLegs().size(), "The wrong number of legs was returned");
+    assertEquals(1, itinerary.legs().size(), "The wrong number of legs was returned");
     assertEquals(
       RaptorCostConverter.toOtpDomainCost(transitLegCost + egressLegCost),
-      itinerary.getLegs().get(0).getGeneralizedCost(),
+      itinerary.legs().get(0).generalizedCost(),
       "Incorrect cost returned"
     );
   }
@@ -126,7 +128,7 @@ public class RaptorPathToItineraryMapperTest {
 
     var path = transferAtSameStopPath();
     var itinerary = mapper.createItinerary(path);
-    assertThat(itinerary.getLegs().stream().map(Object::getClass)).doesNotContain(StreetLeg.class);
+    assertThat(itinerary.legs().stream().map(Object::getClass)).doesNotContain(StreetLeg.class);
   }
 
   @Test
@@ -144,7 +146,7 @@ public class RaptorPathToItineraryMapperTest {
       var itinerary = mapper.createItinerary(path);
       assertEquals(
         List.of(ScheduledTransitLeg.class, StreetLeg.class, ScheduledTransitLeg.class),
-        itinerary.getLegs().stream().map(Leg::getClass).toList()
+        itinerary.legs().stream().map(Leg::getClass).toList()
       );
     });
   }
@@ -168,8 +170,8 @@ public class RaptorPathToItineraryMapperTest {
 
     // Assert
     assertNotNull(itinerary);
-    assertEquals(4708, itinerary.getGeneralizedCost());
-    assertNotEquals(4708, itinerary.getGeneralizedCostIncludingPenalty());
+    assertEquals(4708, itinerary.generalizedCost());
+    assertNotEquals(4708, itinerary.generalizedCostIncludingPenalty().toSeconds());
   }
 
   /**
@@ -220,7 +222,7 @@ public class RaptorPathToItineraryMapperTest {
 
     // Assert
     assertNotNull(itinerary);
-    assertEquals(3, itinerary.getLegs().size(), "The wrong number of legs was returned");
+    assertEquals(3, itinerary.legs().size(), "The wrong number of legs was returned");
   }
 
   private RaptorPath<TestTripSchedule> transferAtSameStopPath() {
@@ -257,8 +259,9 @@ public class RaptorPathToItineraryMapperTest {
   void isSearchWindowAware() {
     var mapper = getRaptorPathToItineraryMapper();
 
-    var path = createTestTripSchedulePath(getTestTripSchedule())
-      .egress(TestAccessEgress.free(2, RaptorCostConverter.toRaptorCost(100)));
+    var path = createTestTripSchedulePath(getTestTripSchedule()).egress(
+      TestAccessEgress.free(2, RaptorCostConverter.toRaptorCost(100))
+    );
     var itinerary = mapper.createItinerary(path);
     assertTrue(itinerary.isSearchWindowAware());
   }
@@ -279,8 +282,7 @@ public class RaptorPathToItineraryMapperTest {
       stopTimes.add(stopTime);
     }
 
-    var builder = TripPattern
-      .of(new FeedScopedId("TestFeed", "TestId"))
+    var builder = TripPattern.of(new FeedScopedId("TestFeed", "TestId"))
       .withRoute(pattern.route())
       .withStopPattern(new StopPattern(stopTimes));
     return builder.build();
@@ -292,8 +294,7 @@ public class RaptorPathToItineraryMapperTest {
   }
 
   private RaptorPathToItineraryMapper<TestTripSchedule> getRaptorPathToItineraryMapper() {
-    Instant dateTime = LocalDateTime
-      .of(2022, Month.OCTOBER, 10, 12, 0, 0)
+    Instant dateTime = LocalDateTime.of(2022, Month.OCTOBER, 10, 12, 0, 0)
       .atZone(ZoneIds.STOCKHOLM)
       .toInstant();
     TimetableRepository timetableRepository = new TimetableRepository();
@@ -301,19 +302,18 @@ public class RaptorPathToItineraryMapperTest {
     return new RaptorPathToItineraryMapper<>(
       new Graph(),
       new DefaultTransitService(timetableRepository),
-      getTransitLayer(),
+      getRaptorTransitData(),
       dateTime.atZone(ZoneIds.CET),
       new RouteRequest()
     );
   }
 
-  private static TransitLayer getTransitLayer() {
-    return new TransitLayer(
+  private static RaptorTransitData getRaptorTransitData() {
+    return new RaptorTransitData(
       new HashMap<>(),
       null,
       null,
-      TEST_MODEL
-        .siteRepositoryBuilder()
+      TEST_MODEL.siteRepositoryBuilder()
         .withRegularStop(S1)
         .withRegularStop(S2)
         .withRegularStop(S3)

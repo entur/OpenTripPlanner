@@ -1,10 +1,9 @@
 package org.opentripplanner.apis.gtfs.mapping;
 
-import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAbsoluteDirection;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRelativeDirection;
-import org.opentripplanner.model.plan.AbsoluteDirection;
-import org.opentripplanner.model.plan.RelativeDirection;
+import org.opentripplanner.model.plan.walkstep.AbsoluteDirection;
+import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 
 public final class DirectionMapper {
 
@@ -27,7 +26,7 @@ public final class DirectionMapper {
       case HARD_LEFT -> GraphQLRelativeDirection.HARD_LEFT;
       case LEFT -> GraphQLRelativeDirection.LEFT;
       case SLIGHTLY_LEFT -> GraphQLRelativeDirection.SLIGHTLY_LEFT;
-      case CONTINUE -> GraphQLRelativeDirection.CONTINUE;
+      case CONTINUE, ENTER_OR_EXIT_STATION -> GraphQLRelativeDirection.CONTINUE;
       case SLIGHTLY_RIGHT -> GraphQLRelativeDirection.SLIGHTLY_RIGHT;
       case RIGHT -> GraphQLRelativeDirection.RIGHT;
       case HARD_RIGHT -> GraphQLRelativeDirection.HARD_RIGHT;

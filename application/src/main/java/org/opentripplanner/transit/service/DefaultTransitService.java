@@ -14,6 +14,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -31,17 +32,19 @@ import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.transfer.TransferService;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.routing.stoptimes.ArrivalDeparture;
-import org.opentripplanner.routing.stoptimes.StopTimesHelper;
 import org.opentripplanner.transit.api.request.FindRegularStopsByBoundingBoxRequest;
+import org.opentripplanner.transit.api.request.FindRoutesRequest;
+import org.opentripplanner.transit.api.request.FindStopLocationsRequest;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
 import org.opentripplanner.transit.model.filter.transit.RegularStopMatcherFactory;
+import org.opentripplanner.transit.model.filter.transit.RouteMatcherFactory;
+import org.opentripplanner.transit.model.filter.transit.StopLocationMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.TripMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateMatcherFactory;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
@@ -62,8 +65,10 @@ import org.opentripplanner.transit.model.site.StopLocationsGroup;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.GraphUpdaterStatus;
 import org.opentripplanner.utils.collection.CollectionsView;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
  * Default implementation of the Transit Service and Transit Editor Service.
@@ -78,22 +83,63 @@ public class DefaultTransitService implements TransitEditorService {
   private final TimetableRepositoryIndex timetableRepositoryIndex;
 
   /**
-   * This should only be accessed through the getTimetableSnapshot method.
+   * A nullable timetable snapshot containing real-time updates. If {@code null} then this
+   * instance does not contain any real-time information.
    */
-  private TimetableSnapshot timetableSnapshot;
+  @Nullable
+  private final TimetableSnapshot timetableSnapshot;
 
-  @Inject
+  /**
+   * Helper for fetching stop times for APIs.
+   */
+  private final StopTimesHelper stopTimesHelper;
+
+  /**
+   * Create a service without a real-time snapshot (and therefore without any real-time data).
+   */
   public DefaultTransitService(TimetableRepository timetableRepository) {
-    this.timetableRepository = timetableRepository;
-    this.timetableRepositoryIndex = timetableRepository.getTimetableRepositoryIndex();
+    this(timetableRepository, null);
   }
 
+  @Inject
   public DefaultTransitService(
     TimetableRepository timetableRepository,
-    TimetableSnapshot timetableSnapshotBuffer
+    @Nullable TimetableSnapshot timetableSnapshot
   ) {
-    this(timetableRepository);
-    this.timetableSnapshot = timetableSnapshotBuffer;
+    this.timetableRepository = timetableRepository;
+    this.timetableRepositoryIndex = timetableRepository.getTimetableRepositoryIndex();
+    this.timetableSnapshot = timetableSnapshot;
+    this.stopTimesHelper = new StopTimesHelper(this);
+  }
+
+  @Override
+  public Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip) {
+    TripPattern tripPattern = findPattern(trip);
+    return Optional.ofNullable(
+      TripTimeOnDate.fromTripTimes(tripPattern.getScheduledTimetable(), trip)
+    );
+  }
+
+  @Override
+  public Optional<List<TripTimeOnDate>> getTripTimeOnDates(Trip trip, LocalDate serviceDate) {
+    TripPattern pattern = findPattern(trip, serviceDate);
+
+    Timetable timetable = findTimetable(pattern, serviceDate);
+
+    // This check is made here to avoid changing TripTimeOnDate.fromTripTimes
+    TripTimes times = timetable.getTripTimes(trip);
+    if (
+      times == null ||
+      !this.getServiceCodesRunningForDate(serviceDate).contains(times.getServiceCode())
+    ) {
+      return Optional.empty();
+    } else {
+      Instant midnight = ServiceDateUtils.asStartOfService(
+        serviceDate,
+        this.getTimeZone()
+      ).toInstant();
+      return Optional.of(TripTimeOnDate.fromTripTimes(timetable, trip, serviceDate, midnight));
+    }
   }
 
   @Override
@@ -183,14 +229,24 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public Route getRoute(FeedScopedId id) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      Route realtimeAddedRoute = currentSnapshot.getRealtimeAddedRoute(id);
+    if (timetableSnapshot != null) {
+      Route realtimeAddedRoute = timetableSnapshot.getRealtimeAddedRoute(id);
       if (realtimeAddedRoute != null) {
         return realtimeAddedRoute;
       }
     }
     return timetableRepositoryIndex.getRouteForId(id);
+  }
+
+  @Override
+  public Collection<Route> getRoutes(Collection<FeedScopedId> ids) {
+    return ids.stream().map(this::getRoute).filter(Objects::nonNull).toList();
+  }
+
+  @Override
+  public Collection<Route> findRoutes(FindRoutesRequest request) {
+    Matcher<Route> matcher = RouteMatcherFactory.of(request, this.getFlexIndex()::contains);
+    return listRoutes().stream().filter(matcher::match).toList();
   }
 
   /**
@@ -243,6 +299,12 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
+  public Collection<StopLocation> findStopLocations(FindStopLocationsRequest request) {
+    Matcher<StopLocation> matcher = StopLocationMatcherFactory.of(request);
+    return listStopLocations().stream().filter(matcher::match).toList();
+  }
+
+  @Override
   public Collection<StopLocation> findStopOrChildStops(FeedScopedId id) {
     return timetableRepository.getSiteRepository().findStopOrChildStops(id);
   }
@@ -260,9 +322,8 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public Trip getTrip(FeedScopedId id) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      Trip trip = currentSnapshot.getRealTimeAddedTrip(id);
+    if (timetableSnapshot != null) {
+      Trip trip = timetableSnapshot.getRealTimeAddedTrip(id);
       if (trip != null) {
         return trip;
       }
@@ -282,7 +343,6 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public List<TripOnServiceDate> listCanceledTrips() {
     OTPRequestTimeoutException.checkForTimeout();
-    var timetableSnapshot = lazyGetTimeTableSnapShot();
     if (timetableSnapshot == null) {
       return List.of();
     }
@@ -294,11 +354,10 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public Collection<Trip> listTrips() {
     OTPRequestTimeoutException.checkForTimeout();
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
+    if (timetableSnapshot != null) {
       return new CollectionsView<>(
         timetableRepositoryIndex.getAllTrips(),
-        currentSnapshot.listRealTimeAddedTrips()
+        timetableSnapshot.listRealTimeAddedTrips()
       );
     }
     return Collections.unmodifiableCollection(timetableRepositoryIndex.getAllTrips());
@@ -307,11 +366,10 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public Collection<Route> listRoutes() {
     OTPRequestTimeoutException.checkForTimeout();
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
+    if (timetableSnapshot != null) {
       return new CollectionsView<>(
         timetableRepositoryIndex.getAllRoutes(),
-        currentSnapshot.listRealTimeAddedRoutes()
+        timetableSnapshot.listRealTimeAddedRoutes()
       );
     }
     return timetableRepositoryIndex.getAllRoutes();
@@ -319,9 +377,8 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public TripPattern findPattern(Trip trip) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      TripPattern realtimeAddedTripPattern = currentSnapshot.getRealTimeAddedPatternForTrip(trip);
+    if (timetableSnapshot != null) {
+      TripPattern realtimeAddedTripPattern = timetableSnapshot.getRealTimeAddedPatternForTrip(trip);
       if (realtimeAddedTripPattern != null) {
         return realtimeAddedTripPattern;
       }
@@ -344,11 +401,9 @@ public class DefaultTransitService implements TransitEditorService {
     Collection<TripPattern> tripPatterns = new HashSet<>(
       timetableRepositoryIndex.getPatternsForRoute(route)
     );
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      Collection<TripPattern> realTimeAddedPatternForRoute = currentSnapshot.getRealTimeAddedPatternForRoute(
-        route
-      );
+    if (timetableSnapshot != null) {
+      Collection<TripPattern> realTimeAddedPatternForRoute =
+        timetableSnapshot.getRealTimeAddedPatternForRoute(route);
       tripPatterns.addAll(realTimeAddedPatternForRoute);
     }
     return tripPatterns;
@@ -359,22 +414,6 @@ public class DefaultTransitService implements TransitEditorService {
     return this.timetableRepository.getSiteRepository().getMultiModalStationForStation(station);
   }
 
-  /**
-   * Fetch upcoming vehicle departures from a stop. It goes though all patterns passing the stop for
-   * the previous, current and next service date. It uses a priority queue to keep track of the next
-   * departures. The queue is shared between all dates, as services from the previous service date
-   * can visit the stop later than the current service date's services. This happens eg. with
-   * sleeper trains.
-   * <p>
-   * TODO: Add frequency based trips
-   *
-   * @param stop                  Stop object to perform the search for
-   * @param startTime             Start time for the search.
-   * @param timeRange             Searches forward for timeRange from startTime
-   * @param numberOfDepartures    Number of departures to fetch per pattern
-   * @param arrivalDeparture      Filter by arrivals, departures, or both
-   * @param includeCancelledTrips If true, cancelled trips will also be included in result.
-   */
   @Override
   public List<StopTimesInPattern> findStopTimesInPattern(
     StopLocation stop,
@@ -385,8 +424,7 @@ public class DefaultTransitService implements TransitEditorService {
     boolean includeCancelledTrips
   ) {
     OTPRequestTimeoutException.checkForTimeout();
-    return StopTimesHelper.stopTimesForStop(
-      this,
+    return stopTimesHelper.stopTimesForStop(
       stop,
       startTime,
       timeRange,
@@ -396,13 +434,6 @@ public class DefaultTransitService implements TransitEditorService {
     );
   }
 
-  /**
-   * Get a list of all trips that pass through a stop during a single ServiceDate. Useful when
-   * creating complete stop timetables for a single day.
-   *
-   * @param stop        Stop object to perform the search for
-   * @param serviceDate Return all departures for the specified date
-   */
   @Override
   public List<StopTimesInPattern> findStopTimesInPattern(
     StopLocation stop,
@@ -411,8 +442,7 @@ public class DefaultTransitService implements TransitEditorService {
     boolean includeCancellations
   ) {
     OTPRequestTimeoutException.checkForTimeout();
-    return StopTimesHelper.stopTimesForStop(
-      this,
+    return stopTimesHelper.stopTimesForStop(
       stop,
       serviceDate,
       arrivalDeparture,
@@ -420,21 +450,6 @@ public class DefaultTransitService implements TransitEditorService {
     );
   }
 
-  /**
-   * Fetch upcoming vehicle departures from a stop for a specific pattern, passing the stop for the
-   * previous, current and next service date. It uses a priority queue to keep track of the next
-   * departures. The queue is shared between all dates, as services from the previous service date
-   * can visit the stop later than the current service date's services.
-   * <p>
-   * TODO: Add frequency based trips
-   *
-   * @param stop               Stop object to perform the search for
-   * @param pattern            Pattern object to perform the search for
-   * @param startTime          Start time for the search.
-   * @param timeRange          Searches forward for timeRange from startTime
-   * @param numberOfDepartures Number of departures to fetch per pattern
-   * @param arrivalDeparture   Filter by arrivals, departures, or both
-   */
   @Override
   public List<TripTimeOnDate> findTripTimeOnDate(
     StopLocation stop,
@@ -446,8 +461,7 @@ public class DefaultTransitService implements TransitEditorService {
     boolean includeCancellations
   ) {
     OTPRequestTimeoutException.checkForTimeout();
-    return StopTimesHelper.stopTimesForPatternAtStop(
-      this,
+    return stopTimesHelper.stopTimesForPatternAtStop(
       stop,
       pattern,
       startTime,
@@ -469,9 +483,8 @@ public class DefaultTransitService implements TransitEditorService {
     Set<TripPattern> tripPatterns = new HashSet<>(findPatterns(stop));
 
     if (includeRealtimeUpdates) {
-      TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-      if (currentSnapshot != null) {
-        tripPatterns.addAll(currentSnapshot.getPatternsForStop(stop));
+      if (timetableSnapshot != null) {
+        tripPatterns.addAll(timetableSnapshot.getPatternsForStop(stop));
       }
     }
     return tripPatterns;
@@ -502,48 +515,31 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public Timetable findTimetable(TripPattern tripPattern, LocalDate serviceDate) {
     OTPRequestTimeoutException.checkForTimeout();
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    return currentSnapshot != null
-      ? currentSnapshot.resolve(tripPattern, serviceDate)
+    return timetableSnapshot != null
+      ? timetableSnapshot.resolve(tripPattern, serviceDate)
       : tripPattern.getScheduledTimetable();
   }
 
   @Override
   public TripPattern findNewTripPatternForModifiedTrip(FeedScopedId tripId, LocalDate serviceDate) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot == null) {
+    if (timetableSnapshot == null) {
       return null;
     }
-    return currentSnapshot.getNewTripPatternForModifiedTrip(tripId, serviceDate);
+    return timetableSnapshot.getNewTripPatternForModifiedTrip(tripId, serviceDate);
   }
 
   @Override
   public boolean hasNewTripPatternsForModifiedTrips() {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot == null) {
+    if (timetableSnapshot == null) {
       return false;
     }
-    return currentSnapshot.hasNewTripPatternsForModifiedTrips();
-  }
-
-  /**
-   * Lazy-initialization of TimetableSnapshot
-   *
-   * @return The same TimetableSnapshot is returned throughout the lifecycle of this object.
-   */
-  @Nullable
-  private TimetableSnapshot lazyGetTimeTableSnapShot() {
-    if (this.timetableSnapshot == null) {
-      timetableSnapshot = timetableRepository.getTimetableSnapshot();
-    }
-    return this.timetableSnapshot;
+    return timetableSnapshot.hasNewTripPatternsForModifiedTrips();
   }
 
   @Override
   public TripOnServiceDate getTripOnServiceDate(FeedScopedId id) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      TripOnServiceDate tripOnServiceDate = currentSnapshot.getRealTimeAddedTripOnServiceDateById(
+    if (timetableSnapshot != null) {
+      TripOnServiceDate tripOnServiceDate = timetableSnapshot.getRealTimeAddedTripOnServiceDateById(
         id
       );
       if (tripOnServiceDate != null) {
@@ -555,11 +551,10 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public Collection<TripOnServiceDate> listTripsOnServiceDate() {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
+    if (timetableSnapshot != null) {
       return new CollectionsView<>(
         timetableRepository.getAllTripsOnServiceDates(),
-        currentSnapshot.listRealTimeAddedTripOnServiceDate()
+        timetableSnapshot.listRealTimeAddedTripOnServiceDate()
       );
     }
     return timetableRepository.getAllTripsOnServiceDates();
@@ -567,11 +562,9 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public TripOnServiceDate getTripOnServiceDate(TripIdAndServiceDate tripIdAndServiceDate) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      TripOnServiceDate tripOnServiceDate = currentSnapshot.getRealTimeAddedTripOnServiceDateForTripAndDay(
-        tripIdAndServiceDate
-      );
+    if (timetableSnapshot != null) {
+      TripOnServiceDate tripOnServiceDate =
+        timetableSnapshot.getRealTimeAddedTripOnServiceDateForTripAndDay(tripIdAndServiceDate);
       if (tripOnServiceDate != null) {
         return tripOnServiceDate;
       }
@@ -593,14 +586,18 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public boolean containsTrip(FeedScopedId id) {
-    TimetableSnapshot currentSnapshot = lazyGetTimeTableSnapShot();
-    if (currentSnapshot != null) {
-      Trip trip = currentSnapshot.getRealTimeAddedTrip(id);
+    if (timetableSnapshot != null) {
+      Trip trip = timetableSnapshot.getRealTimeAddedTrip(id);
       if (trip != null) {
         return true;
       }
     }
     return this.timetableRepositoryIndex.containsTrip(id);
+  }
+
+  @Override
+  public Optional<RegularStop> findStopByScheduledStopPoint(FeedScopedId scheduledStopPoint) {
+    return timetableRepository.findStopByScheduledStopPoint(scheduledStopPoint);
   }
 
   /**
@@ -643,30 +640,15 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
-  public TransitLayer getTransitLayer() {
+  public RaptorTransitData getRaptorTransitData() {
     OTPRequestTimeoutException.checkForTimeout();
-    return this.timetableRepository.getTransitLayer();
+    return this.timetableRepository.getRaptorTransitData();
   }
 
   @Override
-  public TransitLayer getRealtimeTransitLayer() {
+  public RaptorTransitData getRealtimeRaptorTransitData() {
     OTPRequestTimeoutException.checkForTimeout();
-    return this.timetableRepository.getRealtimeTransitLayer();
-  }
-
-  @Override
-  public void setTransitLayer(TransitLayer transitLayer) {
-    this.timetableRepository.setTransitLayer(transitLayer);
-  }
-
-  @Override
-  public void setRealtimeTransitLayer(TransitLayer realtimeTransitLayer) {
-    timetableRepository.setRealtimeTransitLayer(realtimeTransitLayer);
-  }
-
-  @Override
-  public boolean hasRealtimeTransitLayer() {
-    return timetableRepository.hasRealtimeTransitLayer();
+    return this.timetableRepository.getRealtimeRaptorTransitData();
   }
 
   @Override
@@ -714,9 +696,8 @@ public class DefaultTransitService implements TransitEditorService {
       .getSiteRepository()
       .findRegularStops(request.envelope());
 
-    Matcher<RegularStop> matcher = RegularStopMatcherFactory.of(
-      request,
-      stop -> !findPatterns(stop, true).isEmpty()
+    Matcher<RegularStop> matcher = RegularStopMatcherFactory.of(request, stop ->
+      !findPatterns(stop, true).isEmpty()
     );
     return stops.stream().filter(matcher::match).toList();
   }
@@ -736,8 +717,7 @@ public class DefaultTransitService implements TransitEditorService {
   public List<TransitMode> findTransitModes(StopLocationsGroup station) {
     return sortByOccurrenceAndReduce(
       station.getChildStops().stream().flatMap(this::getPatternModesOfStop)
-    )
-      .toList();
+    ).toList();
   }
 
   @Override

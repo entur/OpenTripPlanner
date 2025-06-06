@@ -2,29 +2,36 @@ package org.opentripplanner.ext.stopconsolidation.model;
 
 import java.util.Objects;
 import org.opentripplanner.model.plan.Place;
-import org.opentripplanner.model.plan.ScheduledTransitLeg;
-import org.opentripplanner.model.plan.ScheduledTransitLegBuilder;
-import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
+import org.opentripplanner.model.plan.leg.ScheduledTransitLegBuilder;
 
 public class ConsolidatedStopLeg extends ScheduledTransitLeg {
 
-  private final StopLocation from;
-  private final StopLocation to;
+  private final Place from;
+  private final Place to;
 
-  public ConsolidatedStopLeg(ScheduledTransitLeg original, StopLocation from, StopLocation to) {
-    super(new ScheduledTransitLegBuilder<>(original));
-    this.from = Objects.requireNonNull(from);
-    this.to = Objects.requireNonNull(to);
-    this.setFareProducts(original.fareProducts());
+  ConsolidatedStopLeg(ConsolidatedStopLegBuilder builder) {
+    super(builder);
+    this.from = Objects.requireNonNull(builder.from());
+    this.to = Objects.requireNonNull(builder.to());
+  }
+
+  public static ConsolidatedStopLegBuilder of(ScheduledTransitLeg stl) {
+    return new ConsolidatedStopLegBuilder(stl);
   }
 
   @Override
-  public Place getFrom() {
-    return Place.forStop(from);
+  public ScheduledTransitLegBuilder copyOf() {
+    return new ConsolidatedStopLegBuilder(this);
   }
 
   @Override
-  public Place getTo() {
-    return Place.forStop(to);
+  public Place from() {
+    return from;
+  }
+
+  @Override
+  public Place to() {
+    return to;
   }
 }

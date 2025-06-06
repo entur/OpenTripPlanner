@@ -2,6 +2,7 @@ package org.opentripplanner.datastore;
 
 import static org.opentripplanner.datastore.api.FileType.CONFIG;
 import static org.opentripplanner.datastore.api.FileType.DEM;
+import static org.opentripplanner.datastore.api.FileType.EMISSION;
 import static org.opentripplanner.datastore.api.FileType.GRAPH;
 import static org.opentripplanner.datastore.api.FileType.GTFS;
 import static org.opentripplanner.datastore.api.FileType.NETEX;
@@ -100,14 +101,18 @@ public class OtpDataStore {
     addAll(findMultipleSources(config.demFiles(), DEM));
     addAll(findMultipleCompositeSources(config.gtfsFiles(), GTFS));
     addAll(findMultipleCompositeSources(config.netexFiles(), NETEX));
+    addAll(findMultipleSources(config.emissionFiles(), EMISSION));
 
     streetGraph = findSingleSource(config.streetGraph(), STREET_GRAPH_FILENAME, GRAPH);
     graph = findSingleSource(config.graph(), GRAPH_FILENAME, GRAPH);
     buildReportDir = findCompositeSource(config.reportDirectory(), BUILD_REPORT_DIR, REPORT);
 
     if (config.stopConsolidation() != null) {
-      stopConsolidation =
-        findSingleSource(config.stopConsolidation(), config.stopConsolidation().toString(), GTFS);
+      stopConsolidation = findSingleSource(
+        config.stopConsolidation(),
+        config.stopConsolidation().toString(),
+        GTFS
+      );
     }
 
     addAll(Arrays.asList(streetGraph, graph, buildReportDir));

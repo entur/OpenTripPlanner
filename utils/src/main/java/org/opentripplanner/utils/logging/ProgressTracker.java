@@ -13,7 +13,7 @@ import org.opentripplanner.utils.time.DurationUtils;
 /**
  * The progress tracker notify the caller based a time interval.
  * <p>
- * To avoid the caller from being notified to often the tracker  uses a 'timer'. The 'timer' prevent
+ * To avoid the caller from being notified to often the tracker uses a 'timer'. The 'timer' prevent
  * notification unless a minimum amount of time is passed since last time the caller was notified.
  * The quiet period is set to 5 seconds.
  * <p>
@@ -227,7 +227,7 @@ public class ProgressTracker {
     long ii = stepCounter.get();
     Duration totalTime = Duration.between(startTime, Instant.now());
     // Add 1 millisecond to prevent / by zero.
-    String stepsPerSecond = toStr(Math.round(1000d * ii / (totalTime.toMillis() + 1)));
+    String stepsPerSecond = toStr(Math.round((1000d * ii) / (totalTime.toMillis() + 1)));
     return String.format(
       "%s progress tracking complete. %s done in %s (%s per second). ",
       actionName,

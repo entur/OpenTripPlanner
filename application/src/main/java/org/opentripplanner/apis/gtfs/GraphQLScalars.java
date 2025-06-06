@@ -21,16 +21,16 @@ import org.opentripplanner.framework.graphql.scalar.DateScalarFactory;
 import org.opentripplanner.framework.graphql.scalar.DurationScalarFactory;
 import org.opentripplanner.framework.json.ObjectMappers;
 import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.framework.model.Grams;
+import org.opentripplanner.framework.model.Gram;
 import org.opentripplanner.utils.time.OffsetDateTimeParser;
 
 public class GraphQLScalars {
 
   private static final ObjectMapper GEOJSON_MAPPER = ObjectMappers.geoJson();
-  public static final GraphQLScalarType DURATION_SCALAR = DurationScalarFactory.createDurationScalar();
+  public static final GraphQLScalarType DURATION_SCALAR =
+    DurationScalarFactory.createDurationScalar();
 
-  public static final GraphQLScalarType POLYLINE_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType POLYLINE_SCALAR = GraphQLScalarType.newScalar()
     .name("Polyline")
     .description(
       "List of coordinates in an encoded polyline format (see https://developers.google.com/maps/documentation/utilities/polylinealgorithm). The value appears in JSON as a string."
@@ -58,8 +58,7 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType OFFSET_DATETIME_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType OFFSET_DATETIME_SCALAR = GraphQLScalarType.newScalar()
     .name("OffsetDateTime")
     .coercing(
       new Coercing<OffsetDateTime, String>() {
@@ -113,8 +112,7 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType COORDINATE_VALUE_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType COORDINATE_VALUE_SCALAR = GraphQLScalarType.newScalar()
     .name("CoordinateValue")
     .coercing(
       new Coercing<Double, Double>() {
@@ -138,12 +136,14 @@ public class GraphQLScalars {
         @Override
         public Double parseValue(Object input) throws CoercingParseValueException {
           if (input instanceof Double doubleValue) {
-            return validateCoordinate(doubleValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateCoordinate(doubleValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           if (input instanceof Integer intValue) {
-            return validateCoordinate(intValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateCoordinate(intValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseValueException(
             "Expected a number, got %s %s".formatted(input.getClass().getSimpleName(), input)
@@ -153,12 +153,14 @@ public class GraphQLScalars {
         @Override
         public Double parseLiteral(Object input) throws CoercingParseLiteralException {
           if (input instanceof FloatValue coordinate) {
-            return validateCoordinate(coordinate.getValue().doubleValue())
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateCoordinate(coordinate.getValue().doubleValue()).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           if (input instanceof IntValue coordinate) {
-            return validateCoordinate(coordinate.getValue().doubleValue())
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateCoordinate(coordinate.getValue().doubleValue()).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseLiteralException(
             "Expected a number, got: " + input.getClass().getSimpleName()
@@ -175,8 +177,7 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType COST_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType COST_SCALAR = GraphQLScalarType.newScalar()
     .name("Cost")
     .coercing(
       new Coercing<Cost, Integer>() {
@@ -202,8 +203,9 @@ public class GraphQLScalars {
         @Override
         public Cost parseValue(Object input) throws CoercingParseValueException {
           if (input instanceof Integer intValue) {
-            return validateCost(intValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateCost(intValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseValueException(
             "Expected an integer, got %s %s".formatted(input.getClass().getSimpleName(), input)
@@ -214,8 +216,9 @@ public class GraphQLScalars {
         public Cost parseLiteral(Object input) throws CoercingParseLiteralException {
           if (input instanceof IntValue intValue) {
             var value = intValue.getValue().intValue();
-            return validateCost(value)
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateCost(value).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseLiteralException(
             "Expected an integer, got: " + input.getClass().getSimpleName()
@@ -232,10 +235,10 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType LOCAL_DATE_SCALAR = DateScalarFactory.createGtfsDateScalar();
+  public static final GraphQLScalarType LOCAL_DATE_SCALAR =
+    DateScalarFactory.createGtfsDateScalar();
 
-  public static final GraphQLScalarType GEOJSON_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType GEOJSON_SCALAR = GraphQLScalarType.newScalar()
     .name("GeoJson")
     .description("Geographic data structures in JSON format. See: https://geojson.org/")
     .coercing(
@@ -262,8 +265,7 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType GRAPHQL_ID_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType GRAPHQL_ID_SCALAR = GraphQLScalarType.newScalar()
     .name("ID")
     .coercing(
       new Coercing<Relay.ResolvedGlobalId, String>() {
@@ -302,27 +304,26 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType GRAMS_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType GRAMS_SCALAR = GraphQLScalarType.newScalar()
     .name("Grams")
     .coercing(
-      new Coercing<Grams, Double>() {
+      new Coercing<Gram, Double>() {
         @Override
         public Double serialize(Object dataFetcherResult) throws CoercingSerializeException {
-          if (dataFetcherResult instanceof Grams) {
-            var grams = (Grams) dataFetcherResult;
-            return Double.valueOf(grams.asDouble());
+          if (dataFetcherResult instanceof Gram) {
+            var gram = (Gram) dataFetcherResult;
+            return Double.valueOf(gram.asDouble());
           }
           return null;
         }
 
         @Override
-        public Grams parseValue(Object input) throws CoercingParseValueException {
+        public Gram parseValue(Object input) throws CoercingParseValueException {
           if (input instanceof Double doubleValue) {
-            return new Grams(doubleValue);
+            return Gram.of(doubleValue);
           }
           if (input instanceof Integer intValue) {
-            return new Grams(intValue);
+            return Gram.of(intValue);
           }
           throw new CoercingParseValueException(
             "Expected a number, got %s %s".formatted(input.getClass().getSimpleName(), input)
@@ -330,12 +331,12 @@ public class GraphQLScalars {
         }
 
         @Override
-        public Grams parseLiteral(Object input) throws CoercingParseLiteralException {
-          if (input instanceof FloatValue coordinate) {
-            return new Grams(coordinate.getValue().doubleValue());
+        public Gram parseLiteral(Object input) throws CoercingParseLiteralException {
+          if (input instanceof FloatValue floatValue) {
+            return Gram.of(floatValue.getValue().doubleValue());
           }
-          if (input instanceof IntValue coordinate) {
-            return new Grams(coordinate.getValue().doubleValue());
+          if (input instanceof IntValue intValue) {
+            return Gram.of(intValue.getValue().doubleValue());
           }
           throw new CoercingParseLiteralException(
             "Expected a number, got: " + input.getClass().getSimpleName()
@@ -345,8 +346,7 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType RATIO_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType RATIO_SCALAR = GraphQLScalarType.newScalar()
     .name("Ratio")
     .coercing(
       new Coercing<Double, Double>() {
@@ -372,12 +372,14 @@ public class GraphQLScalars {
         @Override
         public Double parseValue(Object input) throws CoercingParseValueException {
           if (input instanceof Double doubleValue) {
-            return validateRatio(doubleValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateRatio(doubleValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           if (input instanceof Integer intValue) {
-            return validateRatio(intValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateRatio(intValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseValueException(
             "Expected a number, got %s %s".formatted(input.getClass().getSimpleName(), input)
@@ -387,12 +389,14 @@ public class GraphQLScalars {
         @Override
         public Double parseLiteral(Object input) throws CoercingParseLiteralException {
           if (input instanceof FloatValue ratio) {
-            return validateRatio(ratio.getValue().doubleValue())
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateRatio(ratio.getValue().doubleValue()).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           if (input instanceof IntValue ratio) {
-            return validateRatio(ratio.getValue().doubleValue())
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateRatio(ratio.getValue().doubleValue()).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseLiteralException(
             "Expected a number, got: " + input.getClass().getSimpleName()
@@ -409,8 +413,7 @@ public class GraphQLScalars {
     )
     .build();
 
-  public static final GraphQLScalarType RELUCTANCE_SCALAR = GraphQLScalarType
-    .newScalar()
+  public static final GraphQLScalarType RELUCTANCE_SCALAR = GraphQLScalarType.newScalar()
     .name("Reluctance")
     .coercing(
       new Coercing<Double, Double>() {
@@ -437,12 +440,14 @@ public class GraphQLScalars {
         @Override
         public Double parseValue(Object input) throws CoercingParseValueException {
           if (input instanceof Double doubleValue) {
-            return validateReluctance(doubleValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateReluctance(doubleValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           if (input instanceof Integer intValue) {
-            return validateReluctance(intValue)
-              .orElseThrow(() -> new CoercingParseValueException(VALIDATION_ERROR_MESSAGE));
+            return validateReluctance(intValue).orElseThrow(() ->
+              new CoercingParseValueException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseValueException(
             "Expected a number, got %s %s".formatted(input.getClass().getSimpleName(), input)
@@ -452,12 +457,14 @@ public class GraphQLScalars {
         @Override
         public Double parseLiteral(Object input) throws CoercingParseLiteralException {
           if (input instanceof FloatValue reluctance) {
-            return validateReluctance(reluctance.getValue().doubleValue())
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateReluctance(reluctance.getValue().doubleValue()).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           if (input instanceof IntValue reluctance) {
-            return validateReluctance(reluctance.getValue().doubleValue())
-              .orElseThrow(() -> new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE));
+            return validateReluctance(reluctance.getValue().doubleValue()).orElseThrow(() ->
+              new CoercingParseLiteralException(VALIDATION_ERROR_MESSAGE)
+            );
           }
           throw new CoercingParseLiteralException(
             "Expected a number, got: " + input.getClass().getSimpleName()

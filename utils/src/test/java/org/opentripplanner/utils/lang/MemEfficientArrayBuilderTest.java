@@ -25,8 +25,7 @@ class MemEfficientArrayBuilderTest {
 
   @Test
   void with() {
-    var smallWeekend = MemEfficientArrayBuilder
-      .of(WEEKEND)
+    var smallWeekend = MemEfficientArrayBuilder.of(WEEKEND)
       .with(0, DayOfWeek.THURSDAY)
       .with(1, DayOfWeek.FRIDAY)
       .build();
@@ -77,7 +76,7 @@ class MemEfficientArrayBuilderTest {
     DayOfWeek[] candidate = { TUESDAY, WEDNESDAY };
     var array = MemEfficientArrayBuilder.of(WEEKEND);
 
-    // Without changes, we expect the original to be retuned
+    // Without changes, we expect the original to be returned
     assertSame(WEEKEND, array.build(candidate));
 
     // Second value set, but not first

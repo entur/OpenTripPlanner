@@ -1,21 +1,22 @@
 package org.opentripplanner.routing.algorithm.mapping;
 
-import static org.opentripplanner.model.plan.RelativeDirection.ENTER_STATION;
-import static org.opentripplanner.model.plan.RelativeDirection.EXIT_STATION;
-import static org.opentripplanner.model.plan.RelativeDirection.FOLLOW_SIGNS;
+import static org.opentripplanner.model.plan.walkstep.RelativeDirection.ENTER_STATION;
+import static org.opentripplanner.model.plan.walkstep.RelativeDirection.EXIT_STATION;
+import static org.opentripplanner.model.plan.walkstep.RelativeDirection.FOLLOW_SIGNS;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.framework.geometry.DirectionUtils;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.model.plan.ElevationProfile;
-import org.opentripplanner.model.plan.RelativeDirection;
-import org.opentripplanner.model.plan.WalkStep;
-import org.opentripplanner.model.plan.WalkStepBuilder;
+import org.opentripplanner.model.plan.leg.ElevationProfile;
+import org.opentripplanner.model.plan.walkstep.RelativeDirection;
+import org.opentripplanner.model.plan.walkstep.WalkStep;
+import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.Edge;
@@ -25,9 +26,11 @@ import org.opentripplanner.street.model.edge.PathwayEdge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetTransitEntranceLink;
 import org.opentripplanner.street.model.vertex.ExitVertex;
+import org.opentripplanner.street.model.vertex.StationEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.transit.model.site.Entrance;
 
 /**
  * Process a list of states into a list of walking/driving instructions for a street leg.
@@ -105,14 +108,10 @@ public class StatesToWalkStepsMapper {
     RelativeDirection d1 = lastStep.relativeDirection();
     RelativeDirection d2 = twoBack.relativeDirection();
     return (
-      (
-        (d1 == RelativeDirection.RIGHT || d1 == RelativeDirection.HARD_RIGHT) &&
-        (d2 == RelativeDirection.RIGHT || d2 == RelativeDirection.HARD_RIGHT)
-      ) ||
-      (
-        (d1 == RelativeDirection.LEFT || d1 == RelativeDirection.HARD_LEFT) &&
-        (d2 == RelativeDirection.LEFT || d2 == RelativeDirection.HARD_LEFT)
-      )
+      ((d1 == RelativeDirection.RIGHT || d1 == RelativeDirection.HARD_RIGHT) &&
+        (d2 == RelativeDirection.RIGHT || d2 == RelativeDirection.HARD_RIGHT)) ||
+      ((d1 == RelativeDirection.LEFT || d1 == RelativeDirection.HARD_LEFT) &&
+        (d2 == RelativeDirection.LEFT || d2 == RelativeDirection.HARD_LEFT))
     );
   }
 
@@ -158,7 +157,7 @@ public class StatesToWalkStepsMapper {
       return;
     } else if (edge instanceof StreetTransitEntranceLink link) {
       var direction = relativeDirectionForTransitLink(link);
-      createAndSaveStep(backState, forwardState, link.getName(), direction, edge);
+      createAndSaveStep(backState, forwardState, link.getName(), direction, edge, link.entrance());
       return;
     }
 
@@ -175,8 +174,18 @@ public class StatesToWalkStepsMapper {
     if (edge instanceof ElevatorAlightEdge) {
       addStep(createElevatorWalkStep(backState, forwardState, edge));
       return;
+    } else if (backState.getVertex() instanceof StationEntranceVertex stationEntranceVertex) {
+      addStep(createStationEntranceWalkStep(backState, forwardState, stationEntranceVertex));
+      return;
     } else if (edge instanceof PathwayEdge pwe && pwe.signpostedAs().isPresent()) {
-      createAndSaveStep(backState, forwardState, pwe.signpostedAs().get(), FOLLOW_SIGNS, edge);
+      createAndSaveStep(
+        backState,
+        forwardState,
+        pwe.signpostedAs().get(),
+        FOLLOW_SIGNS,
+        edge,
+        null
+      );
       return;
     }
 
@@ -194,8 +203,7 @@ public class StatesToWalkStepsMapper {
       // went on to or off of a roundabout
       edge.isRoundabout() !=
       (roundaboutExit > 0) ||
-      isLink(edge) &&
-      !isLink(backState.getBackEdge())
+      (isLink(edge) && !isLink(backState.getBackEdge()))
     ) {
       // Street name has changed, or we've gone on to or off of a roundabout.
 
@@ -267,11 +275,11 @@ public class StatesToWalkStepsMapper {
         boolean isOnSameStreet = lastStep
           .directionTextNoParens()
           .equals(threeBack.directionTextNoParens());
-        if (twoBack.distance() < MAX_ZAG_DISTANCE && isOnSameStreet) {
+        if (twoBack.distance() < MAX_ZAG_DISTANCE && isOnSameStreet && !twoBack.hasEntrance()) {
           if (isUTurn(twoBack, lastStep)) {
             steps.remove(lastIndex - 1);
             processUTurn(lastStep, twoBack);
-          } else {
+          } else if (!lastStep.hasEntrance()) {
             // total hack to remove zags.
             steps.remove(lastIndex);
             steps.remove(lastIndex - 1);
@@ -515,12 +523,32 @@ public class StatesToWalkStepsMapper {
     return step;
   }
 
+  private WalkStepBuilder createStationEntranceWalkStep(
+    State backState,
+    State forwardState,
+    StationEntranceVertex vertex
+  ) {
+    Entrance entrance = Entrance.of(vertex.id())
+      .withCode(vertex.code())
+      .withCoordinate(new WgsCoordinate(vertex.getCoordinate()))
+      .withWheelchairAccessibility(vertex.wheelchairAccessibility())
+      .build();
+
+    // don't care what came before or comes after
+    return createWalkStep(forwardState, backState)
+      // There is not a way to definitively determine if a user is entering or exiting the station,
+      // since the doors might be between or inside stations.
+      .withRelativeDirection(RelativeDirection.ENTER_OR_EXIT_STATION)
+      .withEntrance(entrance);
+  }
+
   private void createAndSaveStep(
     State backState,
     State forwardState,
     I18NString name,
     RelativeDirection direction,
-    Edge edge
+    Edge edge,
+    @Nullable Entrance entrance
   ) {
     addStep(
       createWalkStep(forwardState, backState)
@@ -528,6 +556,7 @@ public class StatesToWalkStepsMapper {
         .withNameIsDerived(false)
         .withDirections(lastAngle, DirectionUtils.getFirstAngle(edge.getGeometry()), false)
         .withRelativeDirection(direction)
+        .withEntrance(entrance)
         .addDistance(edge.getDistanceMeters())
     );
 
@@ -539,8 +568,7 @@ public class StatesToWalkStepsMapper {
   private WalkStepBuilder createWalkStep(State forwardState, State backState) {
     Edge en = forwardState.getBackEdge();
 
-    return WalkStep
-      .builder()
+    return WalkStep.builder()
       .withDirectionText(en.getName())
       .withStartLocation(new WgsCoordinate(backState.getVertex().getCoordinate()))
       .withNameIsDerived(en.nameIsDerived())

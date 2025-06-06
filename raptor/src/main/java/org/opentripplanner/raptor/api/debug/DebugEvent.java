@@ -86,7 +86,7 @@ public class DebugEvent<E> {
   }
 
   /**
-   * The element was dominated  by the this element. This may or may not affect the final result
+   * The element was dominated by the this element. This may or may not affect the final result
    * depending on the round/iteration the original element was accepted.
    * <p/>
    * The rejectedDroppedByElement is optional. It can be {@code null}.
@@ -109,8 +109,7 @@ public class DebugEvent<E> {
 
   @Override
   public String toString() {
-    return ToStringBuilder
-      .of(DebugEvent.class)
+    return ToStringBuilder.of(DebugEvent.class)
       .addEnum("action", action)
       .addServiceTime("iterationStartTime", iterationStartTime)
       .addObj("element", element)

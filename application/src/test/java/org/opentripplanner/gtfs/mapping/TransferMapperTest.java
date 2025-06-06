@@ -30,7 +30,7 @@ public class TransferMapperTest {
 
   private static final TranslationHelper TRANSLATION_HELPER = new TranslationHelper();
 
-  public static final DataImportIssueStore ISSUE_STORE = DataImportIssueStore.NOOP;
+  private static final DataImportIssueStore ISSUE_STORE = DataImportIssueStore.NOOP;
   private static RouteMapper ROUTE_MAPPER;
 
   private static TripMapper TRIP_MAPPER;
@@ -39,7 +39,10 @@ public class TransferMapperTest {
 
   private static final SiteRepositoryBuilder SITE_REPOSITORY_BUILDER = SiteRepository.of();
 
+  private static final IdFactory ID_FACTORY = new IdFactory(FEED_ID);
+
   private static final StopMapper STOP_MAPPER = new StopMapper(
+    ID_FACTORY,
     TRANSLATION_HELPER,
     stationId -> null,
     SITE_REPOSITORY_BUILDER
@@ -47,11 +50,13 @@ public class TransferMapperTest {
   private static final BookingRuleMapper BOOKING_RULE_MAPPER = new BookingRuleMapper();
 
   private static final LocationMapper LOCATION_MAPPER = new LocationMapper(
+    ID_FACTORY,
     SITE_REPOSITORY_BUILDER,
     ISSUE_STORE
   );
 
   private static final LocationGroupMapper LOCATION_GROUP_MAPPER = new LocationGroupMapper(
+    ID_FACTORY,
     STOP_MAPPER,
     LOCATION_MAPPER,
     SITE_REPOSITORY_BUILDER
@@ -82,26 +87,39 @@ public class TransferMapperTest {
 
   @BeforeEach
   void prepare() {
-    ROUTE_MAPPER = new RouteMapper(new AgencyMapper(FEED_ID), ISSUE_STORE, new TranslationHelper());
+    ROUTE_MAPPER = new RouteMapper(
+      ID_FACTORY,
+      new AgencyMapper(ID_FACTORY),
+      ISSUE_STORE,
+      new TranslationHelper()
+    );
 
-    TRIP_MAPPER =
-      new TripMapper(ROUTE_MAPPER, new DirectionMapper(ISSUE_STORE), TRANSLATION_HELPER);
+    TRIP_MAPPER = new TripMapper(
+      ID_FACTORY,
+      ROUTE_MAPPER,
+      new DirectionMapper(ISSUE_STORE),
+      TRANSLATION_HELPER
+    );
 
-    STATION_MAPPER = new StationMapper(TRANSLATION_HELPER, StopTransferPriority.ALLOWED);
+    STATION_MAPPER = new StationMapper(
+      ID_FACTORY,
+      TRANSLATION_HELPER,
+      StopTransferPriority.ALLOWED
+    );
 
-    STOP_TIME_MAPPER =
-      new StopTimeMapper(
-        STOP_MAPPER,
-        LOCATION_MAPPER,
-        LOCATION_GROUP_MAPPER,
-        new TripMapper(
-          new RouteMapper(new AgencyMapper(FEED_ID), ISSUE_STORE, TRANSLATION_HELPER),
-          new DirectionMapper(ISSUE_STORE),
-          TRANSLATION_HELPER
-        ),
-        BOOKING_RULE_MAPPER,
-        new TranslationHelper()
-      );
+    STOP_TIME_MAPPER = new StopTimeMapper(
+      STOP_MAPPER,
+      LOCATION_MAPPER,
+      LOCATION_GROUP_MAPPER,
+      new TripMapper(
+        ID_FACTORY,
+        new RouteMapper(ID_FACTORY, new AgencyMapper(ID_FACTORY), ISSUE_STORE, TRANSLATION_HELPER),
+        new DirectionMapper(ISSUE_STORE),
+        TRANSLATION_HELPER
+      ),
+      BOOKING_RULE_MAPPER,
+      new TranslationHelper()
+    );
 
     tripStopTimes = new TripStopTimes();
 
@@ -239,8 +257,7 @@ public class TransferMapperTest {
       tripStopTimes,
       false,
       ISSUE_STORE
-    )
-      .map(transfer);
+    ).map(transfer);
 
     assertNotNull(result);
     assertNotNull(result.getFrom());

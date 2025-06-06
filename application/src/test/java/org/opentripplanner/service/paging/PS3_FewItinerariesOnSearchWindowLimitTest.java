@@ -6,6 +6,7 @@ import static org.opentripplanner.model.plan.paging.cursor.PageType.PREVIOUS_PAG
 import static org.opentripplanner.service.paging.TestPagingUtils.cleanStr;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -98,8 +99,12 @@ class PS3_FewItinerariesOnSearchWindowLimitTest {
 
     if (arriveBy) {
       expectedSortOrder = SortOrder.STREET_AND_DEPARTURE_TIME;
-      driver =
-        model.arriveByDriver(currTime, LATEST_ARRIVAL_TIME, SEARCH_WINDOW, NUM_OF_ITINERARIES);
+      driver = model.arriveByDriver(
+        currTime,
+        LATEST_ARRIVAL_TIME,
+        SEARCH_WINDOW,
+        NUM_OF_ITINERARIES
+      );
     } else {
       expectedSortOrder = SortOrder.STREET_AND_ARRIVAL_TIME;
       driver = model.departAfterDriver(currTime, SEARCH_WINDOW, NUM_OF_ITINERARIES);
@@ -137,10 +142,10 @@ class PS3_FewItinerariesOnSearchWindowLimitTest {
     }
   }
 
-  private List<TestCase> parseTestCases(String tokens) {
-    tokens = tokens.replaceAll("\\s+", "");
+  private List<TestCase> parseTestCases(String tokensAsText) {
+    var tokens = tokensAsText.split("\\s+");
     var sequence = new StringBuilder();
-    return tokens.chars().mapToObj(ch -> parseToken(Character.toString(ch), sequence)).toList();
+    return Arrays.stream(tokens).map(token -> parseToken(token, sequence)).toList();
   }
 
   private TestCase parseToken(String token, StringBuilder sequence) {

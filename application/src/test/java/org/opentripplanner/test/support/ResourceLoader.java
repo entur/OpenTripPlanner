@@ -11,6 +11,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
+import org.opentripplanner.datastore.api.CompositeDataSource;
+import org.opentripplanner.datastore.api.DataSource;
+import org.opentripplanner.datastore.api.FileType;
+import org.opentripplanner.datastore.file.FileDataSource;
+import org.opentripplanner.datastore.file.FileDataSourceRepository;
 
 /**
  * Loads files from the resources folder relative to the package name of the class/instances
@@ -42,6 +47,19 @@ public class ResourceLoader {
   }
 
   /**
+   * Return a composite datasource (directory or zip) in the resource catalog. The given
+   * {@code relativePath} should be a directory in the "package" catalog.
+   */
+  public CompositeDataSource catalogDataSource(String relativePath, FileType fileType) {
+    return FileDataSourceRepository.compositeSource(file(relativePath), fileType);
+  }
+
+  /** Return a file datasource with the given {@code filename}. */
+  public DataSource dataSource(String filename, FileType fileType) {
+    return new FileDataSource(file(filename), fileType);
+  }
+
+  /**
    * Return a File instance for the given path.
    */
   public File file(String path) {
@@ -52,11 +70,22 @@ public class ResourceLoader {
     } catch (URISyntaxException e) {
       throw new RuntimeException(e);
     }
-    assertTrue(
-      file.exists(),
-      "File '%s' not found on file system.".formatted(file.getAbsolutePath())
-    );
+    assertFileExists(file);
     return file;
+  }
+
+  /**
+   * Returns a File instance in the original test resources folder.
+   */
+  public File testResourceFile(String path) {
+    return resourceFile("test", path);
+  }
+
+  /**
+   * Returns a File instance in the original ext-test resources folder.
+   */
+  public File extTestResourceFile(String path) {
+    return resourceFile("ext-test", path);
   }
 
   /**
@@ -114,5 +143,28 @@ public class ResourceLoader {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private static void assertFileExists(File file) {
+    assertTrue(
+      file.exists(),
+      "File '%s' not found on file system.".formatted(file.getAbsolutePath())
+    );
+  }
+
+  /**
+   * Returns a File instance from the resources folder of the specified resourceDir (for example
+   * test).
+   */
+  private File resourceFile(String resourceDir, String path) {
+    var fullPath =
+      "src/%s/resources/%s/%s".formatted(
+          resourceDir,
+          clazz.getPackage().getName().replace(".", "/"),
+          path
+        );
+    File file = new File(fullPath);
+    assertFileExists(file);
+    return file;
   }
 }

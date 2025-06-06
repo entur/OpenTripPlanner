@@ -12,13 +12,15 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FareLegRule;
 import org.onebusaway.gtfs.model.FareMedium;
 import org.onebusaway.gtfs.model.FareProduct;
-import org.opentripplanner.ext.fares.model.Distance;
 import org.opentripplanner.ext.fares.model.FareDistance;
 import org.opentripplanner.ext.fares.model.FareDistance.LinearDistance;
 import org.opentripplanner.ext.fares.model.FareDistance.Stops;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.transit.model.basic.Distance;
 
 class FareLegRuleMapperTest {
+
+  public static final IdFactory ID_FACTORY = new IdFactory("A");
 
   private record TestCase(
     Integer distanceType,
@@ -33,15 +35,18 @@ class FareLegRuleMapperTest {
       1,
       5000d,
       10000d,
-      new LinearDistance(Distance.ofKilometers(5), Distance.ofKilometers(10))
+      new LinearDistance(
+        Distance.ofKilometersBoxed(5d, ignore -> {}).orElse(null),
+        Distance.ofKilometersBoxed(10d, ignore -> {}).orElse(null)
+      )
     ),
     new TestCase(null, null, null, null)
   );
 
   @TestFactory
   Stream<DynamicTest> mapDistance() {
-    var productMapper = new FareProductMapper();
-    var ruleMapper = new FareLegRuleMapper(productMapper, DataImportIssueStore.NOOP);
+    var productMapper = new FareProductMapper(ID_FACTORY);
+    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, productMapper, DataImportIssueStore.NOOP);
     var productId = new AgencyAndId("1", "1");
     var fp = new FareProduct();
     fp.setAmount(10);
@@ -53,31 +58,28 @@ class FareLegRuleMapperTest {
     return testCases
       .stream()
       .map(tc ->
-        dynamicTest(
-          tc.toString(),
-          () -> {
-            var obaRule = new FareLegRule();
-            obaRule.setFareProductId(fp.getFareProductId());
-            obaRule.setDistanceType(tc.distanceType);
-            obaRule.setMinDistance(tc.minDistance);
-            obaRule.setMaxDistance(tc.maxDistance);
+        dynamicTest(tc.toString(), () -> {
+          var obaRule = new FareLegRule();
+          obaRule.setFareProductId(fp.getFareProductId());
+          obaRule.setDistanceType(tc.distanceType);
+          obaRule.setMinDistance(tc.minDistance);
+          obaRule.setMaxDistance(tc.maxDistance);
 
-            var mappedRules = List.copyOf(ruleMapper.map(List.of(obaRule)));
-            assertEquals(1, mappedRules.size());
+          var mappedRules = List.copyOf(ruleMapper.map(List.of(obaRule)));
+          assertEquals(1, mappedRules.size());
 
-            var otpRule = mappedRules.get(0);
-            assertEquals(otpRule.fareDistance(), tc.expectedDistance);
-            assert (otpRule.fareProducts().size() == 1);
-            assert (otpRule.fareProducts().contains(internalProduct));
-          }
-        )
+          var otpRule = mappedRules.get(0);
+          assertEquals(otpRule.fareDistance(), tc.expectedDistance);
+          assert (otpRule.fareProducts().size() == 1);
+          assert (otpRule.fareProducts().contains(internalProduct));
+        })
       );
   }
 
   @Test
   void multipleProducts() {
-    var productMapper = new FareProductMapper();
-    var ruleMapper = new FareLegRuleMapper(productMapper, DataImportIssueStore.NOOP);
+    var productMapper = new FareProductMapper(ID_FACTORY);
+    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, productMapper, DataImportIssueStore.NOOP);
 
     var cashMedium = new FareMedium();
     cashMedium.setId(new AgencyAndId("1", "cash"));
@@ -121,8 +123,8 @@ class FareLegRuleMapperTest {
 
   @Test
   void noProducts() {
-    var productMapper = new FareProductMapper();
-    var ruleMapper = new FareLegRuleMapper(productMapper, DataImportIssueStore.NOOP);
+    var productMapper = new FareProductMapper(ID_FACTORY);
+    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, productMapper, DataImportIssueStore.NOOP);
     var obaRule = new FareLegRule();
     var mappedRules = List.copyOf(ruleMapper.map(List.of(obaRule)));
     assertEquals(0, mappedRules.size());

@@ -43,8 +43,6 @@ import org.opentripplanner.utils.lang.MemEfficientArrayBuilder;
  */
 public final class StopPattern implements Serializable {
 
-  public static final int NOT_FOUND = -1;
-
   private final StopLocation[] stops;
   private final PickDrop[] pickups;
   private final PickDrop[] dropoffs;
@@ -294,13 +292,11 @@ public final class StopPattern implements Serializable {
     var origin = getStop(index).getParentStation();
     var destionation = getStop(index + 1).getParentStation();
 
-    var sameOrigin = Optional
-      .ofNullable(origin)
+    var sameOrigin = Optional.ofNullable(origin)
       .map(o -> o.equals(otherOrigin))
       .orElse(getStop(index).equals(other.getStop(index)));
 
-    var sameDestination = Optional
-      .ofNullable(destionation)
+    var sameDestination = Optional.ofNullable(destionation)
       .map(o -> o.equals(otherDestination))
       .orElse(getStop(index + 1).equals(other.getStop(index + 1)));
 

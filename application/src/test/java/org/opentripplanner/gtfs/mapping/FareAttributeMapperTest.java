@@ -18,7 +18,8 @@ import org.opentripplanner.transit.model.basic.Money;
 
 public class FareAttributeMapperTest {
 
-  private static final org.onebusaway.gtfs.model.FareAttribute FARE_ATTRIBUTE = new org.onebusaway.gtfs.model.FareAttribute();
+  private static final org.onebusaway.gtfs.model.FareAttribute FARE_ATTRIBUTE =
+    new org.onebusaway.gtfs.model.FareAttribute();
 
   private static final AgencyAndId ID = new AgencyAndId("A", "1");
 
@@ -38,7 +39,7 @@ public class FareAttributeMapperTest {
 
   private static final int TRANSFERS = 2;
   private static final Currency NOK = Currency.getInstance("NOK");
-  private final FareAttributeMapper subject = new FareAttributeMapper();
+  private final FareAttributeMapper subject = new FareAttributeMapper(new IdFactory("A"));
 
   static {
     FARE_ATTRIBUTE.setId(ID);

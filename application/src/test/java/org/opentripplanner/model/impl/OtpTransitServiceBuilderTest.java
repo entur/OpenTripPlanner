@@ -64,7 +64,7 @@ public class OtpTransitServiceBuilderTest {
     assertEquals(2, frequencies.size());
 
     assertEquals(
-      "Frequency{trip: agency:15.1, start: 6:00, end: 10:00:01}",
+      "Frequency{trip: F:15.1, start: 6:00, end: 10:00:01}",
       frequencies.get(0).toString()
     );
   }
@@ -74,7 +74,7 @@ public class OtpTransitServiceBuilderTest {
     Collection<Route> routes = subject.getRoutes().values();
 
     assertEquals(19, routes.size());
-    assertEquals("Route{agency:1 BUS 1}", first(routes).toString());
+    assertEquals("Route{F:1 BUS 1}", first(routes).toString());
   }
 
   @Test
@@ -88,8 +88,10 @@ public class OtpTransitServiceBuilderTest {
   /* private methods */
 
   private static OtpTransitServiceBuilder createBuilder() throws IOException {
-    OtpTransitServiceBuilder builder = contextBuilder(FEED_ID, ConstantsForTests.SIMPLE_GTFS)
-      .getTransitBuilder();
+    OtpTransitServiceBuilder builder = contextBuilder(
+      FEED_ID,
+      ConstantsForTests.SIMPLE_GTFS
+    ).getTransitBuilder();
     Agency agency = agency(builder);
 
     // Supplement test data with at least one entity in all collections

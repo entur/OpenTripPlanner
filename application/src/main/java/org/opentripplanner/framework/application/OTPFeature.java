@@ -15,6 +15,11 @@ import org.slf4j.LoggerFactory;
  * file.
  */
 public enum OTPFeature {
+  AlertMetrics(
+    false,
+    false,
+    "Starts a background thread to continuously publish metrics about alerts. Needs to be enabled together with `ActuactorAPI`."
+  ),
   APIBikeRental(true, false, "Enable the bike rental endpoint."),
   APIServerInfo(true, false, "Enable the server info endpoint."),
   APIUpdaterStatus(true, false, "Enable endpoint for graph updaters status."),
@@ -22,12 +27,12 @@ public enum OTPFeature {
     false,
     false,
     """
-      Turning this on guarantees that Rail stops without scheduled departures still get included
-      when generating transfers using `ConsiderPatternsForDirectTransfers`. It is common for stops
-      to be assign at real-time for Rail. Turning this on will help to avoid dropping transfers which
-      are needed, when the stop is in use later. Turning this on, if
-      ConsiderPatternsForDirectTransfers is off has no effect.
-      """
+    Turning this on guarantees that Rail stops without scheduled departures still get included
+    when generating transfers using `ConsiderPatternsForDirectTransfers`. It is common for stops
+    to be assign at real-time for Rail. Turning this on will help to avoid dropping transfers which
+    are needed, when the stop is in use later. Turning this on, if
+    ConsiderPatternsForDirectTransfers is off has no effect.
+    """
   ),
   ConsiderPatternsForDirectTransfers(
     true,
@@ -38,10 +43,10 @@ public enum OTPFeature {
     true,
     false,
     """
-      Enable the debug GraphQL client and web UI and located at the root of the web server as well as the debug map tiles it uses.
-      Be aware that the map tiles are not a stable API and can change without notice.
-      Use the [vector tiles feature if](sandbox/MapboxVectorTilesApi.md) you want a stable map tiles API.
-      """
+    Enable the debug GraphQL client and web UI and located at the root of the web server as well as the debug map tiles it uses.
+    Be aware that the map tiles are not a stable API and can change without notice.
+    Use the [vector tiles feature if](sandbox/MapboxVectorTilesApi.md) you want a stable map tiles API.
+    """
   ),
   ExtraTransferLegOnSameStop(
     false,
@@ -98,16 +103,16 @@ public enum OTPFeature {
     "Make all polling updaters wait for graph updates to complete before finishing. " +
     "If this is not enabled, the updaters will finish after submitting the task to update the graph."
   ),
-  Co2Emissions(false, true, "Enable the emissions sandbox module."),
+  Emission(false, true, "Enable the emission sandbox module."),
   DataOverlay(
     false,
     true,
     "Enable usage of data overlay when calculating costs for the street network."
   ),
+  DebugRasterTiles(false, true, "Enable debug raster tile API."),
   FaresV2(false, true, "Enable import of GTFS-Fares v2 data."),
   FlexRouting(false, true, "Enable FLEX routing."),
   GoogleCloudStorage(false, true, "Enable Google Cloud Storage integration."),
-  LegacyRestApi(false, true, "Enable legacy REST API. This API will be removed in the future."),
   MultiCriteriaGroupMaxFilter(
     false,
     false,
@@ -122,11 +127,6 @@ public enum OTPFeature {
     "When routing with ignoreRealtimeUpdates=true, add an extra step which populates results with real-time data"
   ),
   ReportApi(false, true, "Enable the report API."),
-  RestAPIPassInDefaultConfigAsJson(
-    false,
-    false,
-    "Enable a default RouteRequest to be passed in as JSON on the REST API - FOR DEBUGGING ONLY!"
-  ),
   SandboxAPIGeocoder(false, true, "Enable the Geocoder API."),
   SandboxAPIMapboxVectorTilesApi(false, true, "Enable Mapbox vector tiles API."),
   SandboxAPIParkAndRideApi(false, true, "Enable park-and-ride endpoint."),
@@ -254,8 +254,7 @@ public enum OTPFeature {
   }
 
   private static String valuesAsString(boolean enabled) {
-    return Arrays
-      .stream(values())
+    return Arrays.stream(values())
       .filter(it -> it.enabled == enabled)
       .map(Enum::name)
       .collect(Collectors.joining("\n\t"));

@@ -21,10 +21,11 @@ import org.opentripplanner.model.Timetable;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.transfer.TransferService;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitLayer;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.routing.stoptimes.ArrivalDeparture;
 import org.opentripplanner.transit.api.request.FindRegularStopsByBoundingBoxRequest;
+import org.opentripplanner.transit.api.request.FindRoutesRequest;
+import org.opentripplanner.transit.api.request.FindStopLocationsRequest;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.model.basic.Notice;
@@ -56,16 +57,26 @@ import org.opentripplanner.updater.GraphUpdaterStatus;
  * fetching tables of specific information like the routes passing through a particular stop, or for
  * gaining access to the entirety of the data to perform routing.
  * <p>
- * TODO RT_AB: this interface seems to provide direct access to TransitLayer but not TimetableRepository.
- *   Is this intentional, because TransitLayer is meant to be read-only and TimetableRepository is not?
+ * TODO RT_AB: this interface seems to provide direct access to RaptorTransitData but not TimetableRepository.
+ *   Is this intentional, because RaptorTransitData is meant to be read-only and TimetableRepository is not?
  *   Should this be renamed TransitDataService since it seems to provide access to the data but
  *   not to transit routing functionality (which is provided by the RoutingService)?
  *   The DefaultTransitService implementation has a TimetableRepository instance and many of its methods
  *   read through to that TimetableRepository instance. But that field itself is not exposed, while the
- *   TransitLayer is here. It seems like exposing the raw TransitLayer is still a risk since it's
- *   copy-on-write and shares a lot of objects with any other TransitLayer instances.
+ *   RaptorTransitData is here. It seems like exposing the raw RaptorTransitData is still a risk since it's
+ *   copy-on-write and shares a lot of objects with any other RaptorTransitData instances.
  */
 public interface TransitService {
+  /**
+   * @return empty if the trip doesn't exist in the timetable (e.g. real-time added)
+   */
+  Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip);
+
+  /**
+   * @return empty if the trip doesn't run on the date specified
+   */
+  Optional<List<TripTimeOnDate>> getTripTimeOnDates(Trip trip, LocalDate serviceDate);
+
   Collection<String> listFeedIds();
 
   Collection<Agency> listAgencies();
@@ -106,6 +117,11 @@ public interface TransitService {
   Route getRoute(FeedScopedId id);
 
   /**
+   * Return all routes for a given set of ids, including routes created by real-time updates.
+   */
+  Collection<Route> getRoutes(Collection<FeedScopedId> ids);
+
+  /**
    * Return the routes using the given stop, not including real-time updates.
    */
   Set<Route> findRoutes(StopLocation stop);
@@ -132,7 +148,7 @@ public interface TransitService {
 
   Collection<GroupStop> listGroupStops();
 
-  StopLocation getStopLocation(FeedScopedId parseId);
+  StopLocation getStopLocation(FeedScopedId id);
 
   /**
    * Return all stops associated with the given id. If a Station, a MultiModalStation, or a
@@ -186,6 +202,22 @@ public interface TransitService {
 
   MultiModalStation findMultiModalStation(Station station);
 
+  /**
+   * Fetch upcoming vehicle departures from a stop. It goes though all patterns passing the stop for
+   * the previous, current and next service date. It uses a priority queue to keep track of the next
+   * departures. The queue is shared between all dates, as services from the previous service date
+   * can visit the stop later than the current service date's services. This happens eg. with
+   * sleeper trains.
+   * <p>
+   * TODO: Add frequency based trips
+   *
+   * @param stop                  Stop object to perform the search for
+   * @param startTime             Start time for the search.
+   * @param timeRange             Searches forward for timeRange from startTime
+   * @param numberOfDepartures    Number of departures to fetch per pattern
+   * @param arrivalDeparture      Filter by arrivals, departures, or both
+   * @param includeCancelledTrips If true, cancelled trips will also be included in result.
+   */
   List<StopTimesInPattern> findStopTimesInPattern(
     StopLocation stop,
     Instant startTime,
@@ -195,6 +227,13 @@ public interface TransitService {
     boolean includeCancelledTrips
   );
 
+  /**
+   * Get a list of all trips that pass through a stop during a single ServiceDate. Useful when
+   * creating complete stop timetables for a single day.
+   *
+   * @param stop        Stop object to perform the search for
+   * @param serviceDate Return all departures for the specified date
+   */
   List<StopTimesInPattern> findStopTimesInPattern(
     StopLocation stop,
     LocalDate serviceDate,
@@ -202,6 +241,24 @@ public interface TransitService {
     boolean includeCancellations
   );
 
+  /**
+   * Fetch upcoming vehicle departures from a stop for a specific pattern, passing the stop for the
+   * previous, current and next service date. It uses a priority queue to keep track of the next
+   * departures. The queue is shared between all dates, as services from the previous service date
+   * can visit the stop later than the current service date's services.
+   * <p>
+   * TODO: Add frequency based trips
+   *
+   * @param stop                 Stop object to perform the search for
+   * @param pattern              Pattern object to perform the search for
+   * @param startTime            Start time for the search.
+   * @param timeRange            Searches forward for timeRange from startTime
+   * @param numberOfDepartures   Number of departures to fetch per pattern
+   * @param arrivalDeparture     Filter by arrivals, departures, or both
+   * @param includeCancellations If the result should include those trip times where either the entire
+   *                             trip or the stop at the given stop location has been cancelled.
+   *                             Deleted trips are never returned no matter the value of this parameter.
+   */
   List<TripTimeOnDate> findTripTimeOnDate(
     StopLocation stop,
     TripPattern pattern,
@@ -223,7 +280,6 @@ public interface TransitService {
    * Return the timetable for a given trip pattern and date, taking into account real-time updates.
    * If no real-times update are applied, fall back to scheduled data.
    */
-  @Nullable
   Timetable findTimetable(TripPattern tripPattern, LocalDate serviceDate);
 
   /**
@@ -252,9 +308,9 @@ public interface TransitService {
 
   Collection<PathTransfer> findPathTransfers(StopLocation stop);
 
-  TransitLayer getTransitLayer();
+  RaptorTransitData getRaptorTransitData();
 
-  TransitLayer getRealtimeTransitLayer();
+  RaptorTransitData getRealtimeRaptorTransitData();
 
   CalendarService getCalendarService();
 
@@ -328,10 +384,25 @@ public interface TransitService {
   boolean containsTrip(FeedScopedId id);
 
   /**
+   * @see TimetableRepository#findStopByScheduledStopPoint(FeedScopedId)
+   */
+  Optional<RegularStop> findStopByScheduledStopPoint(FeedScopedId scheduledStopPoint);
+
+  /**
    * Returns a list of {@link RegularStop}s that lay within a bounding box and match the other criteria
    * in the request object.
    */
   Collection<RegularStop> findRegularStopsByBoundingBox(
     FindRegularStopsByBoundingBoxRequest request
   );
+
+  /**
+   * Returns a list of {@link Route}s that match the filtering defined in the request.
+   */
+  Collection<Route> findRoutes(FindRoutesRequest request);
+
+  /**
+   * Returns a list of {@link StopLocation}s that match the filtering defined in the request.
+   */
+  Collection<StopLocation> findStopLocations(FindStopLocationsRequest request);
 }

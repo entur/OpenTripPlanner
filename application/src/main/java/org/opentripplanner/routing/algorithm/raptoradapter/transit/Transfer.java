@@ -2,11 +2,9 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.raptor.api.model.RaptorCostConverter;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
@@ -15,7 +13,7 @@ import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.EdgeTraverser;
-import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.street.search.state.StateEditor;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
@@ -32,22 +30,24 @@ public class Transfer {
 
   private final int distanceMeters;
 
+  /** EnumSet is modifiable, please do not modify or expose this outside the class */
+  private final EnumSet<StreetMode> modes;
+
   private final List<Edge> edges;
 
-  private final Set<StreetMode> modes;
+  private Transfer(int toStop, int distanceMeters, EnumSet<StreetMode> modes, List<Edge> edges) {
+    this.toStop = toStop;
+    this.distanceMeters = distanceMeters;
+    this.modes = EnumSet.copyOf(modes);
+    this.edges = edges;
+  }
 
   public Transfer(int toStop, List<Edge> edges, EnumSet<StreetMode> modes) {
-    this.toStop = toStop;
-    this.edges = edges;
-    this.distanceMeters = (int) edges.stream().mapToDouble(Edge::getDistanceMeters).sum();
-    this.modes = Collections.unmodifiableSet(modes);
+    this(toStop, (int) edges.stream().mapToDouble(Edge::getDistanceMeters).sum(), modes, edges);
   }
 
   public Transfer(int toStopIndex, int distanceMeters, EnumSet<StreetMode> modes) {
-    this.toStop = toStopIndex;
-    this.distanceMeters = distanceMeters;
-    this.edges = null;
-    this.modes = Collections.unmodifiableSet(modes);
+    this(toStopIndex, distanceMeters, modes, null);
   }
 
   public List<Coordinate> getCoordinates() {
@@ -97,8 +97,10 @@ public class Transfer {
       );
     }
 
-    var initialStates = State.getInitialStates(Set.of(edges.getFirst().getFromVertex()), request);
-    var state = EdgeTraverser.traverseEdges(initialStates, edges);
+    StateEditor se = new StateEditor(edges.get(0).getFromVertex(), request);
+    se.setTimeSeconds(0);
+
+    var state = EdgeTraverser.traverseEdges(se.makeState(), edges);
 
     return state.map(s ->
       new DefaultRaptorTransfer(
@@ -108,6 +110,13 @@ public class Transfer {
         this
       )
     );
+  }
+
+  /**
+   * This return "WALK" or "[BIKE, WALK]". Intended for debugging and logging, do not parse.
+   */
+  public String modesAsString() {
+    return modes.size() == 1 ? modes.stream().findFirst().get().toString() : modes.toString();
   }
 
   /**
@@ -141,8 +150,7 @@ public class Transfer {
 
   @Override
   public String toString() {
-    return ToStringBuilder
-      .of(Transfer.class)
+    return ToStringBuilder.of(Transfer.class)
       .addNum("toStop", toStop)
       .addNum("distance", distanceMeters, "m")
       .toString();

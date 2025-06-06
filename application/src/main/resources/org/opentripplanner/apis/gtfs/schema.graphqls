@@ -12,11 +12,22 @@ This is only worth it when the execution is long running, i.e. more than ~50 mil
 """
 directive @async on FIELD_DEFINITION
 
+"This directive allows results to be deferred during execution"
+directive @defer(
+    "Deferred behaviour is controlled by this argument"
+    if: Boolean! = true,
+    "A unique label that represents the fragment being deferred"
+    label: String
+  ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
 "Marks the field, argument, input field or enum value as deprecated"
 directive @deprecated(
     "The reason for the deprecation"
-    reason: String = "No longer supported"
+    reason: String! = "No longer supported"
   ) on FIELD_DEFINITION | ARGUMENT_DEFINITION | ENUM_VALUE | INPUT_FIELD_DEFINITION
+
+"This directive disables error propagation when a non nullable field returns null for the given operation."
+directive @experimental_disableErrorPropagation on QUERY | MUTATION | SUBSCRIPTION
 
 "Directs the executor to include this field or fragment only when the `if` argument is true"
 directive @include(
@@ -81,6 +92,9 @@ union CallStopLocation = Stop
 
 "Rental place union that represents either a VehicleRentalStation or a RentalVehicle"
 union RentalPlace = RentalVehicle | VehicleRentalStation
+
+"A feature for a step"
+union StepFeature = Entrance
 
 union StopPosition = PositionAtStop | PositionBetweenStops
 
@@ -486,6 +500,18 @@ type DepartureRow implements Node & PlaceInterface {
 type Emissions {
   "CO₂ emissions in grams."
   co2: Grams
+}
+
+"Station entrance or exit, originating from OSM or GTFS data."
+type Entrance {
+  "ID of the entrance in the format of `FeedId:EntranceId`. If the `FeedId` is `osm`, the entrance originates from OSM data."
+  entranceId: String!
+  "Name of the entrance or exit."
+  name: String
+  "Short text or a number that identifies the entrance or exit for passengers. For example, `A` or `B`."
+  publicCode: String
+  "Whether the entrance or exit is accessible by wheelchair"
+  wheelchairAccessible: WheelchairBoarding
 }
 
 "Real-time estimates for an arrival or departure at a certain place."
@@ -1705,8 +1731,8 @@ type QueryType {
     preferences: PlanPreferencesInput,
     """
     Duration of the search window. This either starts at the defined earliest departure
-    time or ends at the latest arrival time. If this is not provided, a reasonable
-    search window is automatically generated. When searching for earlier or later itineraries
+    time or ends at the latest arrival time. If this is not provided or the value is set as null,
+    a reasonable search window is automatically generated. When searching for earlier or later itineraries
     with paging, this search window is no longer used and the new window will be based
     on how many suggestions were returned in the previous search. The new search window can be
     shorter or longer than the original search window. Note, itineraries are returned faster
@@ -1874,6 +1900,8 @@ type RealTimeEstimate {
 type RentalVehicle implements Node & PlaceInterface {
   "If true, vehicle is currently available for renting."
   allowPickupNow: Boolean
+  "Fuel or battery status of the rental vehicle"
+  fuel: RentalVehicleFuel
   "Global object ID provided by Relay. This value can be used to refetch this object using **node** query."
   id: ID!
   "Latitude of the vehicle (WGS 84)"
@@ -1901,6 +1929,14 @@ type RentalVehicleEntityCounts {
   byType: [RentalVehicleTypeCount!]!
   "The total number of entities (e.g. vehicles, spaces)."
   total: Int!
+}
+
+"Rental vehicle fuel represent the current status of the battery or fuel of a rental vehicle"
+type RentalVehicleFuel {
+  "Fuel or battery power remaining in the vehicle. Expressed from 0 to 1."
+  percent: Ratio
+  "Range in meters that the vehicle can travel with the current charge or fuel."
+  range: Int
 }
 
 type RentalVehicleType {
@@ -2419,7 +2455,11 @@ type Trip implements Node {
     """
     types: [TripAlertType]
   ): [Alert]
-  "Arrival time to the final stop"
+  """
+  Arrival time to the final stop. If the trip does not run on the given date,
+  it will return scheduled times from another date. This field is slightly
+  confusing and will be deprecated when a better replacement is implemented.
+  """
   arrivalStoptime(
     """
     Date for which the arrival time is returned. Format: YYYYMMDD. If this
@@ -2430,7 +2470,11 @@ type Trip implements Node {
   "Whether bikes are allowed on board the vehicle running this trip"
   bikesAllowed: BikesAllowed
   blockId: String
-  "Departure time from the first stop"
+  """
+  Departure time from the first stop. If the trip does not run on the given date,
+  it will return scheduled times from another date. This field is slightly
+  confusing and will be deprecated when a better replacement is implemented.
+  """
   departureStoptime(
     """
     Date for which the departure time is returned. Format: YYYYMMDD. If this
@@ -2469,6 +2513,12 @@ type Trip implements Node {
   stops: [Stop!]!
   "List of times when this trip arrives to or departs from a stop"
   stoptimes: [Stoptime]
+  """
+  List of times when this trip arrives to or departs from each stop on a given date, or
+  today if the date is not given. If the trip does not run on the given date, it will
+  return scheduled times from another date. This field is slightly confusing and
+  will be deprecated when a better replacement is implemented.
+  """
   stoptimesForDate(
     "Date for which stoptimes are returned. Format: YYYYMMDD"
     serviceDate: String
@@ -2634,8 +2684,10 @@ type VehiclePosition {
   heading: Float
   "Human-readable label of the vehicle, eg. a publicly visible number or a license plate"
   label: String
+  "When the position of the vehicle was recorded."
+  lastUpdate: OffsetDateTime
   "When the position of the vehicle was recorded in seconds since the UNIX epoch."
-  lastUpdated: Long
+  lastUpdated: Long @deprecated(reason : "Use `lastUpdate` instead.")
   "Latitude of the vehicle"
   lat: Float
   "Longitude of the vehicle"
@@ -2844,6 +2896,8 @@ type step {
   elevationProfile: [elevationProfileComponent]
   "When exiting a highway or traffic circle, the exit name/number."
   exit: String
+  "Information about an feature associated with a step e.g. an station entrance or exit"
+  feature: StepFeature
   "The latitude of the start of the step."
   lat: Float
   "The longitude of the start of the step."
@@ -3518,15 +3572,40 @@ enum RealtimeState {
   UPDATED
 }
 
-"Actions to take relative to the current position when engaging a walking/driving step."
+"""
+A direction that is not absolute but rather fuzzy and context-dependent.
+It provides the passenger with information what they should do in this step depending on where they
+were in the previous one.
+"""
 enum RelativeDirection {
   CIRCLE_CLOCKWISE
   CIRCLE_COUNTERCLOCKWISE
+  """
+  Moving straight ahead in one of these cases
+    
+    - Passing through a crossing or intersection.
+    - Passing through a station entrance or exit when it is not know whether the passenger is
+      entering or exiting. If it _is_ known then `ENTER_STATION`/`EXIT_STATION` is used.
+      More information about the entrance is in the `step.feature` field.
+  """
   CONTINUE
   DEPART
   ELEVATOR
+  """
+  Entering a public transport station. If it's not known if the passenger is entering or exiting
+  then `CONTINUE` is used.
+    
+  More information about the entrance is in the `step.feature` field.
+  """
   ENTER_STATION
+  """
+  Exiting a public transport station. If it's not known if the passenger is entering or exiting
+  then `CONTINUE` is used.
+    
+  More information about the entrance is in the `step.feature` field.
+  """
   EXIT_STATION
+  "Follow the signs indicating a specific location like \"platform 1\" or \"exit B\"."
   FOLLOW_SIGNS
   HARD_LEFT
   HARD_RIGHT
@@ -3861,7 +3940,10 @@ input BicyclePreferencesInput {
 
 "Preferences related to bicycle rental (station based or floating bicycle rental)."
 input BicycleRentalPreferencesInput {
-  "Rental networks which can be potentially used as part of an itinerary."
+  """
+  Rental networks which can be potentially used as part of an itinerary. If this field has no default value,
+  it means that all networks are allowed unless some are banned with `bannedNetworks`.
+  """
   allowedNetworks: [String!]
   "Rental networks which cannot be used as part of an itinerary."
   bannedNetworks: [String!]
@@ -3942,6 +4024,8 @@ input CarParkingPreferencesInput {
 
 "Preferences related to traveling on a car (excluding car travel on transit services such as taxi)."
 input CarPreferencesInput {
+  "Cost of boarding a vehicle with a car."
+  boardCost: Cost
   "Car parking related preferences."
   parking: CarParkingPreferencesInput
   "A multiplier for how bad travelling on car is compared to being in transit for equal lengths of time."
@@ -3952,7 +4036,10 @@ input CarPreferencesInput {
 
 "Preferences related to car rental (station based or floating car rental)."
 input CarRentalPreferencesInput {
-  "Rental networks which can be potentially used as part of an itinerary."
+  """
+  Rental networks which can be potentially used as part of an itinerary. If this field has no default value,
+  it means that all networks are allowed unless some are banned with `bannedNetworks`.
+  """
   allowedNetworks: [String!]
   "Rental networks which cannot be used as part of an itinerary."
   bannedNetworks: [String!]
@@ -4267,7 +4354,6 @@ input PlanModesInput {
   If more than one mode is selected, at least one of them must be used but not necessarily all.
   There are modes that automatically also use walking such as the rental modes. To force rental
   to be used, this should only include the rental mode and not `WALK` in addition.
-  The default access mode is `WALK`.
   """
   direct: [PlanDirectMode!]
   "Should only the direct search without any transit be done."
@@ -4275,8 +4361,7 @@ input PlanModesInput {
   """
   Modes for different phases of an itinerary when transit is included. Also
   includes street mode selections related to connecting to the transit network
-  and transfers. By default, all transit modes are usable and `WALK` is used for
-  access, egress and transfers.
+  and transfers. By default, all transit modes are usable.
   """
   transit: PlanTransitModesInput
   """
@@ -4369,7 +4454,6 @@ input PlanTransitModesInput {
   If more than one mode is selected, at least one of them must be used but not necessarily all.
   There are modes that automatically also use walking such as the rental modes. To force rental
   to be used, this should only include the rental mode and not `WALK` in addition.
-  The default access mode is `WALK`.
   """
   access: [PlanAccessMode!]
   """
@@ -4377,13 +4461,9 @@ input PlanTransitModesInput {
   If more than one mode is selected, at least one of them must be used but not necessarily all.
   There are modes that automatically also use walking such as the rental modes. To force rental
   to be used, this should only include the rental mode and not `WALK` in addition.
-  The default access mode is `WALK`.
   """
   egress: [PlanEgressMode!]
-  """
-  Street mode that is used when searching for transfers. Selection of only one allowed for now.
-  The default transfer mode is `WALK`.
-  """
+  "Street mode that is used when searching for transfers. Selection of only one allowed for now."
   transfer: [PlanTransferMode!]
   """
   Transit modes and reluctances associated with them. Each defined mode can be used in
@@ -4409,10 +4489,14 @@ A visit-via-location is a physical visit to one of the stop locations or coordin
 on-board visit does not count, the traveler must alight or board at the given stop for it to to
 be accepted. To visit a coordinate, the traveler must walk(bike or drive) to the closest point
 in the street network from a stop and back to another stop to join the transit network.
-
-NOTE! Coordinates are NOT supported yet.
 """
 input PlanVisitViaLocationInput {
+  """
+  A coordinate to route through. To visit a coordinate, the traveler must walk(bike or drive)
+  to the closest point in the street network from a stop and back to another stop to join the transit
+  network.
+  """
+  coordinate: PlanCoordinateInput
   "The label/name of the location. This is pass-through information and is not used in routing."
   label: String
   """
@@ -4456,7 +4540,10 @@ input ScooterPreferencesInput {
 
 "Preferences related to scooter rental (station based or floating scooter rental)."
 input ScooterRentalPreferencesInput {
-  "Rental networks which can be potentially used as part of an itinerary."
+  """
+  Rental networks which can be potentially used as part of an itinerary. If this field has no default value,
+  it means that all networks are allowed unless some are banned with `bannedNetworks`.
+  """
   allowedNetworks: [String!]
   "Rental networks which cannot be used as part of an itinerary."
   bannedNetworks: [String!]
@@ -4505,11 +4592,11 @@ input TransferPreferencesInput {
   "How many transfers there can be at maximum in an itinerary."
   maximumTransfers: Int
   """
-  A global minimum transfer time (in seconds) that specifies the minimum amount of time
-  that must pass between exiting one transit vehicle and boarding another. This time is
-  in addition to time it might take to walk between transit stops. Setting this value
-  as `PT0S`, for example, can lead to passenger missing a connection when the vehicle leaves
-  ahead of time or the passenger arrives to the stop later than expected.
+  A global minimum transfer time that specifies the minimum amount of time that must pass
+  between exiting one transit vehicle and boarding another. This time is in addition to
+  time it might take to walk between transit stops. Setting this value as `PT0S`, for
+  example, can lead to passenger missing a connection when the vehicle leaves ahead of time
+  or the passenger arrives to the stop later than expected.
   """
   slack: Duration
 }

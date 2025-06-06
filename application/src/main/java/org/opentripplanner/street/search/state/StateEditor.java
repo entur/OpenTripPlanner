@@ -2,6 +2,7 @@ package org.opentripplanner.street.search.state;
 
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.routing.algorithm.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -117,7 +118,9 @@ public class StateEditor {
       // check that time changes are coherent with edge traversal
       // direction
       if (
-        traversingBackward ? (child.getTimeDeltaSeconds() > 0) : (child.getTimeDeltaSeconds() < 0)
+        traversingBackward
+          ? (child.getTimeDeltaMilliseconds() > 0)
+          : (child.getTimeDeltaMilliseconds() < 0)
       ) {
         LOG.trace(
           "Time was incremented the wrong direction during state editing. {}",
@@ -173,8 +176,8 @@ public class StateEditor {
    * is inferred from the direction of traversal. This is the only element of state that runs
    * backward when traversing backward.
    */
-  public void incrementTimeInSeconds(int seconds) {
-    if (seconds < 0) {
+  public void incrementTimeInMilliseconds(long milliseconds) {
+    if (milliseconds < 0) {
       LOG.warn(
         "A state's time is being incremented by a negative amount while traversing edge " +
         child.getBackEdge()
@@ -182,7 +185,11 @@ public class StateEditor {
       defectiveTraversal = true;
       return;
     }
-    child.time += (traversingBackward ? -seconds : seconds);
+    child.time_ms += (traversingBackward ? -milliseconds : milliseconds);
+  }
+
+  public void incrementTimeInSeconds(long seconds) {
+    incrementTimeInMilliseconds(1000L * seconds);
   }
 
   public void incrementWalkDistance(double length) {
@@ -316,8 +323,9 @@ public class StateEditor {
     if (reverse) {
       child.stateData.mayKeepRentedVehicleAtDestination = false;
       child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
-      child.stateData.currentMode =
-        formFactor != null ? formFactor.traverseMode : TraverseMode.BICYCLE;
+      child.stateData.currentMode = formFactor != null
+        ? formFactor.traverseMode
+        : StreetModeToRentalTraverseModeMapper.map(child.getRequest().mode());
       child.stateData.vehicleRentalNetwork = network;
       child.stateData.rentalVehicleFormFactor = formFactor;
     } else {
@@ -362,7 +370,11 @@ public class StateEditor {
   }
 
   public void setTimeSeconds(long seconds) {
-    child.time = seconds;
+    child.time_ms = 1000 * seconds;
+  }
+
+  public void setTimeMilliseconds(long milliseconds) {
+    child.time_ms = milliseconds;
   }
 
   /* PUBLIC GETTER METHODS */

@@ -2,11 +2,11 @@ package org.opentripplanner.model.plan;
 
 import org.opentripplanner.transit.model.basic.TransitMode;
 
-public interface TransitLeg extends Leg {
+public interface TransitLeg extends Leg, AlertsAware<TransitLeg>, FareProductAware<TransitLeg> {
   /**
    * The mode (e.g., <code>BUS</code>) used when traversing this leg.
    */
-  TransitMode getMode();
+  TransitMode mode();
 
   @Override
   default boolean isTransitLeg() {
@@ -15,6 +15,6 @@ public interface TransitLeg extends Leg {
 
   @Override
   default boolean hasSameMode(Leg other) {
-    return other instanceof TransitLeg trLeg && getMode().equals(trLeg.getMode());
+    return other instanceof TransitLeg trLeg && mode().equals(trLeg.mode());
   }
 }
