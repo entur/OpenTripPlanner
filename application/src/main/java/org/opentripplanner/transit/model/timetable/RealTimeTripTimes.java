@@ -14,6 +14,8 @@ import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A TripTimes represents the arrival and departure times for a single trip in an Timetable. It is
@@ -22,6 +24,7 @@ import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
  * GTFS).
  */
 public final class RealTimeTripTimes implements TripTimes {
+  private static final Logger LOG = LoggerFactory.getLogger(RealTimeTripTimes.class);
 
   private ScheduledTripTimes scheduledTripTimes;
 
@@ -597,8 +600,14 @@ public final class RealTimeTripTimes implements TripTimes {
     );
   }
 
-  private static int getOrElse(int index, int[] array, IntUnaryOperator defaultValue) {
-    return array != null ? array[index] : defaultValue.applyAsInt(index);
+  private int getOrElse(int index, int[] array, IntUnaryOperator defaultValue) {
+    try {
+      return array != null ? array[index] : defaultValue.applyAsInt(index);
+    }
+    catch (ArrayIndexOutOfBoundsException ae) {
+      LOG.error("ArrayOutOfBounds for trip {} : {}", getTrip().getId(), ae.getMessage());
+      throw ae;
+    }
   }
 
   /**
