@@ -1,8 +1,8 @@
 name: "A - Release new OTP version 🛠️"
 run-name: "Release new OTP version 🛠️"
 on:
-  schedule:
-    - cron: '33 0 * * 1-5'
+  #schedule:
+  #  - cron: '33 0 * * 1-5'
   workflow_dispatch:
     inputs:
       log_level:
