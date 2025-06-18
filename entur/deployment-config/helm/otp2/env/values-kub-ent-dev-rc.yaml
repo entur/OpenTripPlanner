@@ -1,8 +1,0 @@
-features:
-  emission: true
-journeyPlanner:
-  enabled: false
-cronjobRedeployGraphBuilder:
-    releaseCandidateGraphBuilderEnabled: true
-    mardukBucket: marduk-dev
-    ignoreFareFrame: false
