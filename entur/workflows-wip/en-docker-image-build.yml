@@ -1,0 +1,68 @@
+name: "Build and push docker image"
+run-name: "Build and push docker image - ${{inputs.version}}"
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The OTP version"
+        default: "<not set>"
+        required: false
+        type: string
+jobs:
+  maven-verify:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+            ${{ runner.os }}-maven-
+            ${{ runner.os }}-
+
+      - name: Run maven build
+        run: mvn verify -Dps -DskipTests
+      ## TODO : ENABLE UPLOAD
+      #- uses: actions/upload-artifact@v4.4.0
+      #  with:
+      #    path: otp-shaded/target/*.jar
+  docker-build:
+    if: github.repository_owner == 'entur'
+    needs: [ maven-verify ]
+    ## TODO : ENABLE BUILD
+    # uses: entur/gha-docker/.github/workflows/build.yml@v1
+    # with:
+    #  build_artifact_name: artifact
+    #  build_artifact_path: otp-shaded/target
+    #  dockerfile: 'entur/deployment-config/Dockerfile'
+    #  image_name: 'otp2'
+    ## TODO: REMOVE DUMMY CODE
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Build docker image - ${{ inputs.version }}"
+        run: echo "Build docker image - ${{ inputs.version }}"
+
+  docker-push:
+    needs: [ docker-build ]
+    ## TODO : ENABLE BUILD
+    # uses: entur/gha-docker/.github/workflows/push.yml@v1
+    #with:
+    #  git_tag: false
+    #  image_tag: ${{ inputs.version }}
+    #  image_name: 'otp2'
+    # TODO: REMOVE DUMMY CODE
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Push docker image - ${{ inputs.version }}"
+        run: echo "Push docker image - ${{ inputs.version }}"
