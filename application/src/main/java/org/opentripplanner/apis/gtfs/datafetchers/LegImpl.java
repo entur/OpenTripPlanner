@@ -129,8 +129,8 @@ public class LegImpl implements GraphQLDataFetchers.GraphQLLeg {
     return environment -> getSource(environment).isInterlinedWithPreviousLeg();
   }
 
-  // TODO
   @Override
+  @Deprecated
   public DataFetcher<Boolean> intermediatePlace() {
     return environment -> false;
   }
