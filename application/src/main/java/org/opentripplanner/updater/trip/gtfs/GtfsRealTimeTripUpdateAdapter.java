@@ -140,6 +140,7 @@ public class GtfsRealTimeTripUpdateAdapter {
    */
   public UpdateResult applyTripUpdates(
     @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
+    ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
     UpdateIncrementality updateIncrementality,
     List<TripUpdate> updates,
@@ -230,6 +231,7 @@ public class GtfsRealTimeTripUpdateAdapter {
             tripUpdate,
             tripId,
             serviceDate,
+            forwardsDelayPropagationType,
             backwardsDelayPropagationType
           );
           case NEW, ADDED -> validateAndHandleAddedTrip(
@@ -353,6 +355,7 @@ public class GtfsRealTimeTripUpdateAdapter {
     TripUpdate tripUpdate,
     FeedScopedId tripId,
     LocalDate serviceDate,
+    ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType
   ) {
     final TripPattern pattern = getPatternForTripId(tripId);
@@ -387,6 +390,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       tripUpdate,
       timeZone,
       serviceDate,
+      forwardsDelayPropagationType,
       backwardsDelayPropagationType
     );
 
