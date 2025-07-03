@@ -168,36 +168,6 @@ public class TripUpdateBuilder {
     );
   }
 
-  public TripUpdateBuilder addDelayedArrivalStopTime(int stopSequence, int arrivalDelay) {
-    return addStopTime(
-      null,
-      -1,
-      stopSequence,
-      arrivalDelay,
-      NO_DELAY,
-      DEFAULT_SCHEDULE_RELATIONSHIP,
-      null,
-      null,
-      null,
-      NO_VALUE
-    );
-  }
-
-  public TripUpdateBuilder addDelayedDepartureStopTime(int stopSequence, int departureDelay) {
-    return addStopTime(
-      null,
-      -1,
-      stopSequence,
-      NO_DELAY,
-      departureDelay,
-      DEFAULT_SCHEDULE_RELATIONSHIP,
-      null,
-      null,
-      null,
-      NO_VALUE
-    );
-  }
-
   public TripUpdateBuilder addDelayedStopTime(
     int stopSequence,
     int arrivalDelay,
@@ -362,14 +332,6 @@ public class TripUpdateBuilder {
     }
     if (departureDelay != NO_DELAY) {
       departureBuilder.setDelay(departureDelay);
-    }
-
-    if (!arrivalBuilder.hasTime() && !arrivalBuilder.hasDelay()) {
-      stopTimeUpdateBuilder.clearArrival();
-    }
-
-    if (!departureBuilder.hasTime() && !departureBuilder.hasDelay()) {
-      stopTimeUpdateBuilder.clearDeparture();
     }
 
     return this;
