@@ -81,6 +81,7 @@ public class GenerateTripPatternsOperation {
     /* Loop over all trips, handling each one as a frequency-based or scheduled trip. */
     for (Trip trip : trips) {
       try {
+        LOG.debug("Building trip pattern for " + trip);
         buildTripPatternForTrip(trip);
         //noinspection Convert2MethodRef
         progressLogger.step(m -> LOG.info(m));
