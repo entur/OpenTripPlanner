@@ -11,10 +11,8 @@ import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_N
 import com.google.transit.realtime.GtfsRealtime;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.gtfs.mapping.PickDropMapper;
@@ -114,11 +112,12 @@ class TripTimesUpdater {
     Iterator<GtfsRealtime.TripUpdate.StopTimeUpdate> updates = tripUpdate
       .getStopTimeUpdateList()
       .iterator();
+    GtfsRealtime.TripUpdate.StopTimeUpdate update = null;
     if (!updates.hasNext()) {
-      LOG.warn("Won't apply zero-length trip update to trip {}.", tripId);
-      return Result.failure(new UpdateError(feedScopedTripId, TOO_FEW_STOPS));
+      LOG.warn("Zero-length trip update to trip {}.", tripId);
+    } else {
+      update = updates.next();
     }
-    GtfsRealtime.TripUpdate.StopTimeUpdate update = updates.next();
 
     int numStops = tripTimes.getNumStops();
 
