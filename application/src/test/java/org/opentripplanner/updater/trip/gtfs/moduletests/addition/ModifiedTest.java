@@ -14,7 +14,6 @@ import static org.opentripplanner.updater.trip.gtfs.moduletests.addition.AddedTe
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.RealtimeTestEnvironment;
@@ -56,12 +55,6 @@ public class ModifiedTest implements RealtimeTestConstants {
     var tripId = TimetableRepositoryForTest.id(TRIP_1_ID);
 
     var transitService = env.getTransitService();
-    // We do not support trip headsign by service date
-    // TODO: I currently have no idea how TripOnServiceDate will behave, and will need to revisit this after #5393 is merged
-    assertEquals(
-      I18NString.of("Original Headsign"),
-      transitService.getTrip(TimetableRepositoryForTest.id(TRIP_1_ID)).getHeadsign()
-    );
 
     // Original trip pattern
     {
@@ -94,6 +87,12 @@ public class ModifiedTest implements RealtimeTestConstants {
         "Original trip times should be deleted in time table for service date"
       );
       assertEquals(RealTimeState.DELETED, originalTripTimesForToday.getRealTimeState());
+      assertEquals(I18NString.of("Original Headsign"), trip.getHeadsign());
+      assertEquals(
+        I18NString.of("Original Headsign"),
+        originalTripTimesScheduled.getTripHeadsign()
+      );
+      assertEquals(I18NString.of("Original Headsign"), originalTripTimesForToday.getTripHeadsign());
       assertEquals(I18NString.of("Original Headsign"), originalTripTimesScheduled.getHeadsign(0));
       assertEquals(I18NString.of("Original Headsign"), originalTripTimesScheduled.getHeadsign(1));
       assertEquals(I18NString.of("Original Headsign"), originalTripTimesForToday.getHeadsign(0));
@@ -120,6 +119,7 @@ public class ModifiedTest implements RealtimeTestConstants {
         "New trip should not be found in scheduled time table"
       );
 
+      assertEquals(I18NString.of("New Headsign"), tripTimes.getTripHeadsign());
       assertEquals(I18NString.of("New Headsign"), tripTimes.getHeadsign(0));
       assertEquals(I18NString.of("Changed Headsign"), tripTimes.getHeadsign(1));
       assertEquals(I18NString.of("New Headsign"), tripTimes.getHeadsign(2));
