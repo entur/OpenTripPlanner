@@ -20,14 +20,14 @@ import org.opentripplanner.updater.trip.RealtimeTestEnvironment;
 import org.opentripplanner.updater.trip.TripInput;
 import org.opentripplanner.updater.trip.TripUpdateBuilder;
 
-public class ModifiedTest implements RealtimeTestConstants {
+public class ReplacementTest implements RealtimeTestConstants {
 
   @Test
-  void modifiedTrip() {
+  void replacementTrip() {
     var TRIP_INPUT = TripInput.of(TRIP_1_ID)
       .addStop(STOP_A, "8:30:00", "8:30:00")
       .addStop(STOP_B, "8:40:00", "8:40:00")
-      .withHeadsign("Original Headsign")
+      .withHeadsign(I18NString.of("Original Headsign"))
       .build();
     var env = RealtimeTestEnvironment.of()
       .withStops(STOP_A_ID, STOP_B_ID, STOP_C_ID, STOP_D_ID)
@@ -42,9 +42,9 @@ public class ModifiedTest implements RealtimeTestConstants {
       "SW1234" // we can't change trip short name at real-time yet
     );
     builder
-      .addStopTime(STOP_A_ID, 30)
-      .addStopTime(STOP_B_ID, 45, "Changed Headsign")
-      .addStopTime(STOP_C_ID, 60);
+      .addStopTime(STOP_A_ID, "00:30")
+      .addStopTime(STOP_B_ID, "00:45", "Changed Headsign")
+      .addStopTime(STOP_C_ID, "01:00");
 
     var tripUpdate = builder.build();
 
@@ -59,6 +59,7 @@ public class ModifiedTest implements RealtimeTestConstants {
     // Original trip pattern
     {
       var trip = transitService.getTrip(tripId);
+      assertNotNull(trip);
       var originalTripPattern = transitService.findPattern(trip);
 
       var originalTimetableForToday = snapshot.resolve(originalTripPattern, SERVICE_DATE);
