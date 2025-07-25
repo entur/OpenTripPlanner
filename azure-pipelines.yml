@@ -8,7 +8,7 @@ pool:
 
 steps:
 - script: JAVA_HOME=$JAVA_HOME_21_X64 mvn package
-- script: cp otp-shaded/target/otp-shaded-2.8.0-SNAPSHOT-aubin-14.jar '$(Pipeline.Workspace)/otp-shaded.jar'
+- script: cp otp-shaded/target/otp-shaded-2.8.0-SNAPSHOT-aubin-15.jar '$(Pipeline.Workspace)/otp-shaded.jar'
 - task: PublishPipelineArtifact@1
   inputs:
     targetPath: '$(Pipeline.Workspace)/otp-shaded.jar' # string. Alias: path. Required. File or directory path. Default: $(Pipeline.Workspace).
