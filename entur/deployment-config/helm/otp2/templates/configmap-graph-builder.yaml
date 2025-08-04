@@ -49,9 +49,10 @@ data:
               "enabled" : true
             }
           },
-          {
-            "modes" : "BICYCLE"
-          },
+          // Exclude BICYCLE transfer generation, this require a large amout of data
+          //{
+          //  "modes" : "BICYCLE"
+          //},
           {
             "modes" : "CAR"
           }
