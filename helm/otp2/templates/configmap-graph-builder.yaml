@@ -31,7 +31,8 @@ data:
         "maxTransferDuration": "30m",
         "distanceBetweenElevationSamples": 25,
         "multiThreadElevationCalculations": true,
-        "boardingLocationTags": [],
+        // Test boarding location tags, TODO: Ddecide if we want to keep it!
+        "boardingLocationTags": [ "ref:NSR" ],
         "transferParametersForMode": {
           "CAR": {
             "disableDefaultTransfers": true,
@@ -48,9 +49,10 @@ data:
               "enabled" : true
             }
           },
-          {
-            "modes" : "BICYCLE"
-          },
+          // Exclude BICYCLE transfer generation, this require a large amout of data
+          //{
+          //  "modes" : "BICYCLE"
+          //},
           {
             "modes" : "CAR"
           }
