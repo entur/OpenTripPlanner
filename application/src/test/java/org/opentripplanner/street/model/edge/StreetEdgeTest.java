@@ -14,6 +14,9 @@ import static org.opentripplanner.street.model._data.StreetModelForTest.streetEd
 import java.time.Instant;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
@@ -21,6 +24,7 @@ import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.routing.util.SlopeCosts;
@@ -377,6 +381,34 @@ public class StreetEdgeTest {
     result = testStreet.traverse(startState)[0];
     double expectedWeight = timeWeight * 0.33 + slopeWeight * 0.33 + safetyWeight * 0.34;
     assertEquals(expectedWeight, result.getWeight(), DELTA);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TraverseMode.class, names = { "BICYCLE", "SCOOTER" })
+  void testBikeSpeed(TraverseMode mode) {
+    StreetEdge e1 = streetEdgeBuilder(v1, v2, 100.0, ALL).withCarSpeed(8.0f).buildAndConnect();
+    assertEquals(
+      5.0f,
+      e1.calculateSpeed(
+        RoutingPreferences.DEFAULT.copyOf()
+          .withBike(bike -> bike.withSpeed(5.0f))
+          .withScooter(scooter -> scooter.withSpeed(5.0f))
+          .build(),
+        mode,
+        false
+      )
+    );
+    assertEquals(
+      8.0f,
+      e1.calculateSpeed(
+        RoutingPreferences.DEFAULT.copyOf()
+          .withBike(bike -> bike.withSpeed(10.0f))
+          .withScooter(scooter -> scooter.withSpeed(10.0f))
+          .build(),
+        mode,
+        false
+      )
+    );
   }
 
   @Test
