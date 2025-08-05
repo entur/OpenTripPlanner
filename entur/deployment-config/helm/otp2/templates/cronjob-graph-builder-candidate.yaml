@@ -107,7 +107,7 @@ spec:
           volumes:
           - configMap:
               defaultMode: 420
-              name: graph-builder-otp2
+              name: graph-builder-otp2-candidate
             name: application-config
           - configMap:
               defaultMode: 420
