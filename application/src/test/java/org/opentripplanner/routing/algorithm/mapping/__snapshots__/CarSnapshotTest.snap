@@ -10,7 +10,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPark=[
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 496,
+      "generalizedCost" : 483,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -144,7 +144,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPark=[
             },
             "vertexType" : "BIKEPARK"
           },
-          "generalizedCost" : 291,
+          "generalizedCost" : 278,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
             "length" : 6,
@@ -233,7 +233,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 729,
+      "generalizedCost" : 672,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -248,7 +248,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
             "name" : "Chapman Elementary School (P3)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 167,
+          "generalizedCost" : 135,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
             "length" : 10,
@@ -365,7 +365,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
             "name" : "corner of Northwest 22nd Avenue and path",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 256,
+          "generalizedCost" : 230,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
             "length" : 12,
@@ -428,7 +428,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 729,
+      "generalizedCost" : 672,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -443,7 +443,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
             "name" : "Chapman Elementary School (P3)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 303,
+          "generalizedCost" : 271,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
             "length" : 10,
@@ -560,7 +560,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
             "name" : "corner of Northwest 22nd Avenue and path",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 128,
+          "generalizedCost" : 103,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
             "length" : 12,
