@@ -540,9 +540,11 @@ public class WayPropertySet {
   ) {
     double bicycle = result.bicycleSafety();
     double walk = result.walkSafety();
+    StreetTraversalPermission permission = result.getPermission();
     for (var mixin : mixins) {
-      bicycle *= mixin.getBicycleSafety(direction);
-      walk *= mixin.getWalkSafety(direction);
+      var properties = mixin.getDirectionalProperties(direction);
+      bicycle *= properties.bicycleSafety();
+      walk *= properties.walkSafety();
     }
     return result.mutate().bicycleSafety(bicycle).walkSafety(walk).build();
   }
