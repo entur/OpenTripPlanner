@@ -1,10 +1,10 @@
-{{- if .Values.cronjobRedeployGraphBuilder.enabled}}
+{{- if or (.Values.cronjobRedeployGraphBuilder.enabled) (.Values.cronjobRedeployGraphBuilder.releaseCandidateGraphBuilderEnabled) }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
     {{- include "graph.builder.labels" . | indent 4 }}
-  name: graph-builder-otp2
+  name: graph-builder-otp2{{- if .Values.cronjobRedeployGraphBuilder.releaseCandidateGraphBuilderEnabled }}-candidate{{end}}
   namespace: {{ .Release.Namespace }}
 data:
   otp-config.json: |+
