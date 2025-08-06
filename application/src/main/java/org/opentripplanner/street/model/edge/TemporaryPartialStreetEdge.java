@@ -83,6 +83,6 @@ public final class TemporaryPartialStreetEdge extends StreetEdge implements Temp
    */
   @Override
   public int getOutAngle() {
-    return parentEdge.getInAngle();
+    return parentEdge.getOutAngle();
   }
 }
