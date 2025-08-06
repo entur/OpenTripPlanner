@@ -1,7 +1,10 @@
 package org.opentripplanner.graph_builder.module.osm;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Multimap;
 import gnu.trove.list.TLongList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -31,6 +34,16 @@ class VertexGenerator {
   private final Map<Long, IntersectionVertex> intersectionNodes = new HashMap<>();
 
   private final HashMap<Long, Map<OsmLevel, OsmVertex>> multiLevelNodes = new HashMap<>();
+
+  /**
+   * The map from node to the barrier it belongs to.
+   */
+  private final Multimap<OsmNode, OsmWay> nodesInBarrierWays = HashMultimap.create();
+
+  /**
+   * The map from node to the split vertex for each routable way connecting it.
+   */
+  private final Map<OsmNode, Map<OsmEntity, OsmVertex>> splitVerticesOnBarriers = new HashMap<>();
   private final OsmDatabase osmdb;
   private final Set<String> boardingAreaRefTags;
   private final Boolean includeOsmSubwayEntrances;
@@ -66,6 +79,10 @@ class VertexGenerator {
     if (node.isMultiLevel()) {
       // make a separate node for every level
       return recordLevel(node, way);
+    }
+    // make a separate vertex if the node is on a barrier
+    if (nodesInBarrierWays.containsKey(node)) {
+      return getSplitVertexOnBarrier(node, way);
     }
     // single-level case
     long nid = node.getId();
@@ -109,18 +126,26 @@ class VertexGenerator {
       }
 
       if (iv == null) {
-        iv = vertexFactory.osm(
-          coordinate,
-          node,
-          node.hasHighwayTrafficLight(),
-          node.hasCrossingTrafficLight()
-        );
+        iv = vertexFactory.osm(node);
       }
 
       intersectionNodes.put(nid, iv);
     }
 
     return iv;
+  }
+
+  private IntersectionVertex getSplitVertexOnBarrier(OsmNode node, OsmEntity way) {
+    splitVerticesOnBarriers.putIfAbsent(node, new HashMap<>());
+    var vertices = splitVerticesOnBarriers.get(node);
+    var existing = vertices.get(way);
+    if (existing != null) {
+      return existing;
+    }
+
+    var vertex = vertexFactory.osmOnLinearBarrier(node, way);
+    vertices.put(way, vertex);
+    return vertex;
   }
 
   /**
@@ -152,6 +177,33 @@ class VertexGenerator {
     )) {
       for (Ring outerRing : area.outermostRings) {
         intersectAreaRingNodes(possibleIntersectionNodes, outerRing);
+      }
+    }
+  }
+
+  Collection<OsmWay> getLinearBarriersAtNode(OsmNode node) {
+    return nodesInBarrierWays.get(node);
+  }
+
+  /**
+   * Get a mapping from a barrier way ID to a map of vertices, indexed by the node ID
+   */
+  Map<OsmNode, Map<OsmEntity, OsmVertex>> splitVerticesOnBarriers() {
+    return splitVerticesOnBarriers;
+  }
+
+  public Multimap<OsmNode, OsmWay> nodesInBarrierWays() {
+    return nodesInBarrierWays;
+  }
+
+  void initNodesInBarrierWays() {
+    for (OsmWay way : osmdb.getWays()) {
+      if (way.isBarrier()) {
+        TLongList nodes = way.getNodeRefs();
+        boolean isClosed = nodes.get(0) == nodes.get(nodes.size() - 1);
+        for (int i = 0; i < nodes.size() - (isClosed ? 1 : 0); i++) {
+          nodesInBarrierWays.put(osmdb.getNode(nodes.get(i)), way);
+        }
       }
     }
   }

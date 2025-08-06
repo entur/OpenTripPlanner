@@ -1,6 +1,10 @@
 package org.opentripplanner.osm.model;
 
 import static org.opentripplanner.osm.model.Permission.DENY;
+import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
+import static org.opentripplanner.street.model.StreetTraversalPermission.NONE;
+import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN;
+import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
 
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
@@ -54,6 +58,74 @@ public class OsmEntity {
 
   private static final Set<String> LEVEL_TAGS = Set.of("level", "layer");
   private static final Set<String> DEFAULT_LEVEL = Set.of("0");
+
+  protected static final Map<String, StreetTraversalPermission> BARRIER_PERMISSIONS = Map.ofEntries(
+    // refer to https://wiki.openstreetmap.org/wiki/Key:barrier for meanings
+    // if it is not listed, it is assumed to be ALL
+    Map.entry("cable_barrier", PEDESTRIAN),
+    Map.entry("city_wall", NONE),
+    Map.entry("ditch", NONE),
+    Map.entry("guard_rail", PEDESTRIAN),
+    Map.entry("handrail", PEDESTRIAN),
+    Map.entry("hedge", NONE),
+    Map.entry("retaining_wall", NONE),
+    Map.entry("wall", NONE),
+    Map.entry("block", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("bollard", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("bus_trap", PEDESTRIAN),
+    Map.entry("cycle_barrier", PEDESTRIAN),
+    Map.entry("debris", PEDESTRIAN),
+    Map.entry("full-height_turnstile", PEDESTRIAN),
+    Map.entry("horse_stile", PEDESTRIAN),
+    Map.entry("kent_carriage_gap", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("kissing_gate", PEDESTRIAN),
+    Map.entry("motorcycle_barrier", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("planter", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("stile", PEDESTRIAN),
+    Map.entry("sump_buster", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("turnstile", PEDESTRIAN),
+    Map.entry("wedge", NONE),
+    Map.entry("wicket_gate", PEDESTRIAN),
+    Map.entry("bar", PEDESTRIAN),
+    Map.entry("barrier_board", PEDESTRIAN),
+    Map.entry("chain", PEDESTRIAN),
+    Map.entry("fence", NONE),
+    Map.entry("jersey_barrier", PEDESTRIAN),
+    Map.entry("log", PEDESTRIAN),
+    Map.entry("rope", PEDESTRIAN),
+    Map.entry("tank_trap", PEDESTRIAN),
+    Map.entry("tyres", PEDESTRIAN),
+    Map.entry("delineator_kerb", PEDESTRIAN_AND_BICYCLE),
+    Map.entry("armadillo", PEDESTRIAN_AND_BICYCLE)
+  );
+
+  private static final Set<String> WHEELCHAIR_INACCESSIBLE_BARRIERS = Set.of(
+    "cable_barrier",
+    "city_wall",
+    "ditch",
+    "guard_rail",
+    "handrail",
+    "hedge",
+    "retaining_wall",
+    "wall",
+    "block",
+    "bus_trap",
+    "debris",
+    "horse_stile",
+    "stile",
+    "turnstile",
+    "wedge",
+    "bar",
+    "barrier_board",
+    "chain",
+    "fence",
+    "jersey_barrier",
+    "kerb",
+    "log",
+    "tank_trap",
+    "tyres"
+  );
+
   private static final Consumer<String> NO_OP = i -> {};
 
   /**
@@ -772,7 +844,10 @@ public class OsmEntity {
    *         of other information.
    */
   public boolean isWheelchairAccessible() {
-    return !isTagFalse("wheelchair");
+    return (
+      isTagTrue("wheelchair") ||
+      (!isTagFalse("wheelchair") && !isOneOfTags("barrier", WHEELCHAIR_INACCESSIBLE_BARRIERS))
+    );
   }
 
   /**
@@ -825,6 +900,14 @@ public class OsmEntity {
     return levels;
   }
 
+  public StreetTraversalPermission getBarrierPermission() {
+    String barrier = getTag("barrier");
+    if (barrier == null) {
+      return ALL;
+    }
+    return Objects.requireNonNullElse(BARRIER_PERMISSIONS.get(barrier), ALL);
+  }
+
   /**
    * Given an assumed traversal permissions, check if there are explicit additional tags, like bicycle=no
    * or bicycle=yes that override them.
@@ -834,6 +917,8 @@ public class OsmEntity {
     @Nullable TraverseDirection direction
   ) {
     StreetTraversalPermission permission = def;
+
+    permission = permission.intersection(getBarrierPermission());
 
     if (isGeneralAccessDenied(direction)) {
       permission = StreetTraversalPermission.NONE;

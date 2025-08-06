@@ -3,8 +3,6 @@ package org.opentripplanner.osm.model;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import java.util.Set;
-import org.opentripplanner.graph_builder.module.osm.StreetTraversalPermissionPair;
-import org.opentripplanner.street.model.StreetTraversalPermission;
 
 public class OsmWay extends OsmEntity {
 
@@ -100,6 +98,10 @@ public class OsmWay extends OsmEntity {
         isIndoorRoutable()) &&
       getNodeRefs().size() > 2
     );
+  }
+
+  public boolean isBarrier() {
+    return hasTag("barrier");
   }
 
   @Override
