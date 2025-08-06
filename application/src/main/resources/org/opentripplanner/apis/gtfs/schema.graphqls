@@ -1000,7 +1000,7 @@ type Place {
   bikeRentalStation: BikeRentalStation @deprecated(reason : "Use vehicleRentalStation and rentalVehicle instead")
   """
   For intermediate places, if the call is cancelled by a real-time update.
-  
+    
   For boarding and alighting places, if the rider is no longer able to board or alight at the place by a real-time update.
   This can include a cancelled call or a change in pickup / drop off rules.
   """
