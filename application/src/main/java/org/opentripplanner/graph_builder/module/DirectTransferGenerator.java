@@ -29,6 +29,7 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.logging.ProgressTracker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +99,8 @@ public class DirectTransferGenerator implements GraphBuilderModule {
     List<TransitStopVertex> stops = graph.getVerticesOfType(TransitStopVertex.class);
     Set<StopLocation> carsAllowedStops =
       timetableRepository.getStopLocationsUsedForCarsAllowedTrips();
+    Set<StopLocation> bikesAllowedStops =
+      timetableRepository.getStopLocationsUsedForBikesAllowedTrips();
 
     LOG.info("Creating transfers based on requests:");
     transferRequests.forEach(transferProfile -> LOG.info(transferProfile.toString()));
@@ -129,7 +132,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
 
     stops
       .stream()
-      .parallel()
+      //.parallel()
       .forEach(ts0 -> {
         /* Make transfers to each nearby stop that has lowest weight on some trip pattern.
          * Use map based on the list of edges, so that only distinct transfers are stored. */
@@ -142,7 +145,13 @@ public class DirectTransferGenerator implements GraphBuilderModule {
 
         LOG.debug("Linking stop '{}' {}", stop, ts0);
 
-        calculateDefaultTransfers(transferConfiguration, ts0, stop, distinctTransfers);
+        calculateDefaultTransfers(
+          transferConfiguration,
+          ts0,
+          stop,
+          distinctTransfers,
+          bikesAllowedStops
+        );
         calculateFlexTransfers(transferConfiguration, ts0, stop, distinctTransfers);
         calculateCarsAllowedTransfers(
           transferConfiguration,
@@ -253,9 +262,9 @@ public class DirectTransferGenerator implements GraphBuilderModule {
     // Check that the mode specified in transferParametersForMode can also be found in transferRequests.
     for (StreetMode mode : transferParametersForMode.keySet()) {
       if (
-        !transferRequests
+        transferRequests
           .stream()
-          .anyMatch(transferProfile -> transferProfile.journey().transfer().mode() == mode)
+          .noneMatch(transferProfile -> transferProfile.journey().transfer().mode() == mode)
       ) {
         throw new IllegalArgumentException(
           String.format(
@@ -320,6 +329,14 @@ public class DirectTransferGenerator implements GraphBuilderModule {
     );
   }
 
+  private boolean doesNotServeBikes(Set<StopLocation> bikesAllowedStops, StopLocation stop) {
+    var transitService = new DefaultTransitService(timetableRepository);
+    if (OTPFeature.LimitBikeTransfer.isOff()) {
+      return false;
+    }
+    return !transitService.findPatterns(stop).isEmpty() && !bikesAllowedStops.contains(stop);
+  }
+
   /**
    * This method calculates default transfers.
    */
@@ -327,10 +344,16 @@ public class DirectTransferGenerator implements GraphBuilderModule {
     TransferConfiguration transferConfiguration,
     TransitStopVertex ts0,
     RegularStop stop,
-    Map<TransferKey, PathTransfer> distinctTransfers
+    Map<TransferKey, PathTransfer> distinctTransfers,
+    Set<StopLocation> bikesAllowedStops
   ) {
     for (RouteRequest transferProfile : transferConfiguration.defaultTransferRequests()) {
       StreetMode mode = transferProfile.journey().transfer().mode();
+
+      if (mode.includesBiking() && doesNotServeBikes(bikesAllowedStops, stop)) {
+        return;
+      }
+
       var nearbyStops = transferConfiguration
         .defaultNearbyStopFinderForMode()
         .get(mode)
@@ -340,6 +363,10 @@ public class DirectTransferGenerator implements GraphBuilderModule {
         if (sd.stop == stop) {
           continue;
         }
+        if (mode.includesBiking() && doesNotServeBikes(bikesAllowedStops, sd.stop)) {
+          continue;
+        }
+
         if (sd.stop.transfersNotAllowed()) {
           continue;
         }
