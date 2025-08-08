@@ -1,3 +1,5 @@
 package org.opentripplanner.ext.carpooling.internal;
 
-public class DefaultCarpoolingRepository {}
+import org.opentripplanner.ext.carpooling.CarpoolingRepository;
+
+public class DefaultCarpoolingRepository implements CarpoolingRepository {}
