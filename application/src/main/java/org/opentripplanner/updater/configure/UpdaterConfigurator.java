@@ -181,6 +181,11 @@ public class UpdaterConfigurator {
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
     }
+    for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
+      updaters.add(
+        SiriETCarpoolingModule.createSiriETCarpoolingUpdater(configItem, provideSiriAdapter())
+      );
+    }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
     }
