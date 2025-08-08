@@ -83,42 +83,6 @@ public final class StopTimeUpdate {
     return stopTimeUpdate.getScheduleRelationship();
   }
 
-  private PickDrop getEffectivePickDrop(
-    @Nullable GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties.DropOffPickupType dropOffPickupType,
-    @Nullable MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupType extensionDropOffPickup
-  ) {
-    if (isSkipped()) {
-      return PickDrop.CANCELLED;
-    }
-
-    if (dropOffPickupType != null) {
-      return PickDropMapper.map(dropOffPickupType.getNumber());
-    }
-
-    if (extensionDropOffPickup != null) {
-      return PickDropMapper.map(extensionDropOffPickup.getNumber());
-    }
-
-    return PickDrop.SCHEDULED;
-  }
-
-  private Optional<GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties> stopTimeProperties() {
-    return stopTimeUpdate.hasStopTimeProperties()
-      ? Optional.of(stopTimeUpdate.getStopTimeProperties())
-      : Optional.empty();
-  }
-
-  private Optional<
-    MfdzRealtimeExtensions.StopTimePropertiesExtension
-  > stopTimePropertiesExtension() {
-    return stopTimeProperties()
-      .map(stopTimeProperties ->
-        stopTimeProperties.hasExtension(MfdzRealtimeExtensions.stopTimeProperties)
-          ? stopTimeProperties.getExtension(MfdzRealtimeExtensions.stopTimeProperties)
-          : null
-      );
-  }
-
   public OptionalLong scheduledArrivalTimeWithRealTimeFallback() {
     return stopTimeUpdate.hasArrival()
       ? getScheduledTimeWithRealTimeFallback(stopTimeUpdate.getArrival())
@@ -143,25 +107,6 @@ public final class StopTimeUpdate {
       : OptionalLong.empty();
   }
 
-  private OptionalLong getTime(StopTimeEvent stopTimeEvent) {
-    return stopTimeEvent.hasTime()
-      ? OptionalLong.of(stopTimeEvent.getTime())
-      : OptionalLong.empty();
-  }
-
-  /**
-   * Get the scheduled time of a StopTimeEvent.
-   * If it is not specified, calculate it from time - delay.
-   */
-  private OptionalLong getScheduledTimeWithRealTimeFallback(StopTimeEvent stopTimeEvent) {
-    return stopTimeEvent.hasScheduledTime()
-      ? OptionalLong.of(stopTimeEvent.getScheduledTime())
-      : getTime(stopTimeEvent)
-        .stream()
-        .map(time -> time - getDelay(stopTimeEvent).orElse(0))
-        .findFirst();
-  }
-
   public OptionalInt arrivalDelay() {
     return stopTimeUpdate.hasArrival()
       ? getDelay(stopTimeUpdate.getArrival())
@@ -172,14 +117,6 @@ public final class StopTimeUpdate {
     return stopTimeUpdate.hasDeparture()
       ? getDelay(stopTimeUpdate.getDeparture())
       : OptionalInt.empty();
-  }
-
-  private OptionalInt getDelay(StopTimeEvent stopTimeEvent) {
-    return stopTimeEvent.hasDelay()
-      ? OptionalInt.of(stopTimeEvent.getDelay())
-      : stopTimeEvent.hasTime() && stopTimeEvent.hasScheduledTime()
-        ? OptionalInt.of((int) (stopTimeEvent.getTime() - stopTimeEvent.getScheduledTime()))
-        : OptionalInt.empty();
   }
 
   /**
@@ -237,5 +174,68 @@ public final class StopTimeUpdate {
   public Optional<String> assignedStopId() {
     return stopTimeProperties()
       .flatMap(p -> p.hasAssignedStopId() ? Optional.of(p.getAssignedStopId()) : Optional.empty());
+  }
+
+  private PickDrop getEffectivePickDrop(
+    @Nullable GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties.DropOffPickupType dropOffPickupType,
+    @Nullable MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupType extensionDropOffPickup
+  ) {
+    if (isSkipped()) {
+      return PickDrop.CANCELLED;
+    }
+
+    if (dropOffPickupType != null) {
+      return PickDropMapper.map(dropOffPickupType.getNumber());
+    }
+
+    if (extensionDropOffPickup != null) {
+      return PickDropMapper.map(extensionDropOffPickup.getNumber());
+    }
+
+    return PickDrop.SCHEDULED;
+  }
+
+  private Optional<GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties> stopTimeProperties() {
+    return stopTimeUpdate.hasStopTimeProperties()
+      ? Optional.of(stopTimeUpdate.getStopTimeProperties())
+      : Optional.empty();
+  }
+
+  private Optional<
+    MfdzRealtimeExtensions.StopTimePropertiesExtension
+  > stopTimePropertiesExtension() {
+    return stopTimeProperties()
+      .map(stopTimeProperties ->
+        stopTimeProperties.hasExtension(MfdzRealtimeExtensions.stopTimeProperties)
+          ? stopTimeProperties.getExtension(MfdzRealtimeExtensions.stopTimeProperties)
+          : null
+      );
+  }
+
+  private OptionalLong getTime(StopTimeEvent stopTimeEvent) {
+    return stopTimeEvent.hasTime()
+      ? OptionalLong.of(stopTimeEvent.getTime())
+      : OptionalLong.empty();
+  }
+
+  /**
+   * Get the scheduled time of a StopTimeEvent.
+   * If it is not specified, calculate it from time - delay.
+   */
+  private OptionalLong getScheduledTimeWithRealTimeFallback(StopTimeEvent stopTimeEvent) {
+    return stopTimeEvent.hasScheduledTime()
+      ? OptionalLong.of(stopTimeEvent.getScheduledTime())
+      : getTime(stopTimeEvent)
+        .stream()
+        .map(time -> time - getDelay(stopTimeEvent).orElse(0))
+        .findFirst();
+  }
+
+  private OptionalInt getDelay(StopTimeEvent stopTimeEvent) {
+    return stopTimeEvent.hasDelay()
+      ? OptionalInt.of(stopTimeEvent.getDelay())
+      : stopTimeEvent.hasTime() && stopTimeEvent.hasScheduledTime()
+        ? OptionalInt.of((int) (stopTimeEvent.getTime() - stopTimeEvent.getScheduledTime()))
+        : OptionalInt.empty();
   }
 }
