@@ -112,6 +112,7 @@ public class TestServerContext {
       createVehicleRentalService(),
       createViaTransferResolver(graph, transitService),
       createWorldEnvelopeService(),
+      null,
       createEmissionsItineraryDecorator(),
       null,
       null,
