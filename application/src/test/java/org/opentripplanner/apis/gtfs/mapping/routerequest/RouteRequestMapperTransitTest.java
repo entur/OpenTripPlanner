@@ -79,6 +79,10 @@ class RouteRequestMapperTransitTest {
                 entry("maximumAdditionalTransfers", maximumAdditionalTransfers),
                 entry("maximumTransfers", maximumTransfers)
               )
+            ),
+            entry(
+              "filters",
+              List.of(Map.of("exclude", List.of(Map.of("routes", List.of("f:route1")))))
             )
           )
         )
@@ -91,7 +95,10 @@ class RouteRequestMapperTransitTest {
     assertEquals(slack, transferPreferences.slack());
     assertEquals(maximumAdditionalTransfers, transferPreferences.maxAdditionalTransfers());
     assertEquals(maximumTransfers + 1, transferPreferences.maxTransfers());
-    assertEquals("[ALLOW_ALL]", routeRequest.journey().transit().filters().toString());
+    assertEquals(
+      "[(select: [(transportModes: ALL)], not: [(transportModes: EMPTY, routes: [f:route1])])]",
+      routeRequest.journey().transit().filters().toString()
+    );
   }
 
   @Test
