@@ -71,7 +71,7 @@ public class RouteRequestMapper {
     );
 
     request.withJourney(journeyRequestBuilder ->
-      setModes(journeyRequestBuilder, args, environment)
+      setModes(journeyRequestBuilder, args.getGraphQLModes(), environment)
     );
 
     // sadly we need to use the raw collection because it is cast to the wrong type

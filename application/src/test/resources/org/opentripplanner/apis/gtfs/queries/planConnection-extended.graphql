@@ -91,10 +91,6 @@
           includePlannedCancellations: false
           includeRealTimeCancellations: true
         }
-        filters: [
-          { include: [{ routes: ["A:r1"] }] }
-          { exclude: [{ agencies: ["A:a1"] }] }
-        ]
       }
     }
 
