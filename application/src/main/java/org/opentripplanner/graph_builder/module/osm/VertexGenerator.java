@@ -135,6 +135,11 @@ class VertexGenerator {
     return iv;
   }
 
+  /**
+   * If a node is on a barrier, a vertex needs to be created for each way using it.
+   *
+   * @return a vertex for the given node specific to the given way
+   */
   private IntersectionVertex getSplitVertexOnBarrier(OsmNode node, OsmEntity way) {
     splitVerticesOnBarriers.putIfAbsent(node, new HashMap<>());
     var vertices = splitVerticesOnBarriers.get(node);
@@ -202,7 +207,10 @@ class VertexGenerator {
         TLongList nodes = way.getNodeRefs();
         boolean isClosed = nodes.get(0) == nodes.get(nodes.size() - 1);
         for (int i = 0; i < nodes.size() - (isClosed ? 1 : 0); i++) {
-          nodesInBarrierWays.put(osmdb.getNode(nodes.get(i)), way);
+          OsmNode node = osmdb.getNode(nodes.get(i));
+          if (node != null) {
+            nodesInBarrierWays.put(node, way);
+          }
         }
       }
     }

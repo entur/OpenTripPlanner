@@ -910,7 +910,11 @@ public class OsmEntity {
     return levels;
   }
 
-  public StreetTraversalPermission getBarrierPermission() {
+  public StreetTraversalPermission getPermission(@Nullable TraverseDirection direction) {
+    return getOsmProvider().getWayPropertySet().getDataForEntity(this, direction).getPermission();
+  }
+
+  private StreetTraversalPermission getBarrierPermission() {
     String barrier = getTag("barrier");
     if (barrier == null) {
       return ALL;
