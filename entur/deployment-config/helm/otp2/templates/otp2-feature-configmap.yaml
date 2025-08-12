@@ -8,14 +8,15 @@ data:
         "Emission": {{ .Values.configuration.emission }},
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
-        "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
+        "IncludeEmptyRailStopsInTransfers" : true,
+        "LegacyRestApi" : true,
         "MultiCriteriaGroupMaxFilter" : true,
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
         "ParallelRouting": {{ .Values.configuration.parallelRouting }},
         "ReportApi": true,
         "RestAPIPassInDefaultConfigAsJson": {{ .Values.configuration.restApiConfigJsonParam }},
-        "TransferConstraints": {{ .Values.configuration.transferConstraints }},
-        "LegacyRestApi" : true
+        "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
+        "TransferConstraints": {{ .Values.configuration.transferConstraints }}
       }
    }
 kind: ConfigMap
