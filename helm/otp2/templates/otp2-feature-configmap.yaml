@@ -15,6 +15,7 @@ data:
         "ReportApi": true,
         "RestAPIPassInDefaultConfigAsJson": {{ .Values.configuration.restApiConfigJsonParam }},
         "TransferConstraints": {{ .Values.configuration.transferConstraints }},
+        "IncludeEmptyRailStopsInTransfers" : true,
         "LegacyRestApi" : true
       }
    }
