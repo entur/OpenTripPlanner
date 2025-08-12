@@ -132,7 +132,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
 
     stops
       .stream()
-      //.parallel()
+      .parallel()
       .forEach(ts0 -> {
         /* Make transfers to each nearby stop that has lowest weight on some trip pattern.
          * Use map based on the list of edges, so that only distinct transfers are stored. */
