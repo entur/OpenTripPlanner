@@ -21,6 +21,7 @@ import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.OsmBoardingLocationVertex;
 import org.opentripplanner.street.model.vertex.OsmVertex;
+import org.opentripplanner.street.model.vertex.StationEntranceVertex;
 import org.opentripplanner.street.model.vertex.VertexFactory;
 
 /**
@@ -112,17 +113,26 @@ class VertexGenerator {
         }
       }
 
-      if (node.isBarrier()) {
-        BarrierVertex bv = vertexFactory.barrier(nid, coordinate);
+      if (includeOsmSubwayEntrances && node.isSubwayEntrance()) {
+        String ref = node.getTag("ref");
+        StationEntranceVertex bv = vertexFactory.stationEntrance(
+          nid,
+          coordinate,
+          ref,
+          node.wheelchairAccessibility()
+        );
         bv.setBarrierPermissions(
           node.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
         );
         iv = bv;
       }
 
-      if (includeOsmSubwayEntrances && node.isSubwayEntrance()) {
-        String ref = node.getTag("ref");
-        iv = vertexFactory.stationEntrance(nid, coordinate, ref, node.wheelchairAccessibility());
+      if (iv == null && node.isBarrier()) {
+        BarrierVertex bv = vertexFactory.barrier(nid, coordinate);
+        bv.setBarrierPermissions(
+          node.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+        );
+        iv = bv;
       }
 
       if (iv == null) {
