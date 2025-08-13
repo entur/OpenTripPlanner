@@ -6,6 +6,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GtfsApiParameters;
 import org.opentripplanner.astar.spi.TraverseVisitor;
+import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
@@ -62,6 +63,9 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   /* Optional fields */
 
   @Nullable
+  private final CarpoolingService carpoolingService;
+
+  @Nullable
   private final ItineraryDecorator emissionItineraryDecorator;
 
   @Nullable
@@ -112,6 +116,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     VehicleRentalService vehicleRentalService,
     ViaCoordinateTransferFactory viaTransferResolver,
     WorldEnvelopeService worldEnvelopeService,
+    @Nullable CarpoolingService carpoolingService,
     @Nullable ItineraryDecorator emissionItineraryDecorator,
     @Nullable LuceneIndex luceneIndex,
     @Nullable GraphQLSchema schema,
@@ -140,6 +145,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     this.worldEnvelopeService = worldEnvelopeService;
 
     // Optional fields
+    this.carpoolingService = carpoolingService;
     this.emissionItineraryDecorator = emissionItineraryDecorator;
     this.luceneIndex = luceneIndex;
     this.schema = schema;
@@ -262,6 +268,12 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Override
   public GtfsApiParameters gtfsApiParameters() {
     return gtfsApiParameters;
+  }
+
+  @Nullable
+  @Override
+  public CarpoolingService carpoolingService() {
+    return carpoolingService;
   }
 
   @Nullable
