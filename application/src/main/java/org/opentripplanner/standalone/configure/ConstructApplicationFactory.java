@@ -6,6 +6,8 @@ import graphql.schema.GraphQLSchema;
 import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.configure.SchemaModule;
+import org.opentripplanner.ext.carpooling.CarpoolingService;
+import org.opentripplanner.ext.carpooling.configure.CarpoolingModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
@@ -57,6 +59,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
 @Singleton
 @Component(
   modules = {
+    CarpoolingModule.class,
     ConfigModule.class,
     ConstructApplicationModule.class,
     EmissionServiceModule.class,
@@ -92,6 +95,9 @@ public interface ConstructApplicationFactory {
   VehicleParkingService vehicleParkingService();
   TimetableSnapshotManager timetableSnapshotManager();
   DataImportIssueSummary dataImportIssueSummary();
+
+  @Nullable
+  CarpoolingService carpoolingService();
 
   @Nullable
   EmissionRepository emissionRepository();

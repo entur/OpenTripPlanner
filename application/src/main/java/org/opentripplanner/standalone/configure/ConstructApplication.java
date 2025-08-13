@@ -183,6 +183,8 @@ public class ConstructApplication {
       vehicleRentalRepository(),
       vehicleParkingRepository(),
       timetableRepository(),
+      //TODO Carpooling inject car pooling repository
+      null,
       snapshotManager(),
       routerConfig().updaterConfig()
     );
