@@ -3,4 +3,5 @@ journeyPlanner:
 cronjobRedeployGraphBuilder:
     releaseCandidateGraphBuilderEnabled: true
     mardukBucket: marduk-production
+    mardukInternalBucket: ror-marduk-internal-production
     ignoreFareFrame: false
