@@ -1,5 +1,3 @@
-features:
-  emission: false
 journeyPlanner:
   enabled: false
 cronjobRedeployGraphBuilder:
