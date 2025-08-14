@@ -13,6 +13,10 @@ on:
         options:
           - info
           - debug
+      bump_ser_ver_id:
+        description: 'Force bumping the ser.ver.id'
+        default: false
+        type: boolean
   workflow_call:
     inputs:
       log_level:
@@ -65,8 +69,10 @@ jobs:
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git fetch --no-tags otp
           git remote -v
-          echo "Run script/custom-release.py otp/dev-2.x"
-          script/custom-release.py --summary otp/dev-2.x
+          if [ "${{inputs.bump_ser_ver_id}}" == "true" ]; then
+            SER_VER="--serVerId"
+          fi
+          script/custom-release.py --summary $SER_VER otp/dev-2.x
       - name: Set version (Git repository Tag)
         id: set_version
         run: |
