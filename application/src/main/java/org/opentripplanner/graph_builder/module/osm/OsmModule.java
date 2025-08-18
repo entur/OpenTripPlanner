@@ -1,5 +1,7 @@
 package org.opentripplanner.graph_builder.module.osm;
 
+import static org.opentripplanner.graph_builder.module.osm.LinearBarrierNodeType.BARRIER_VERTEX;
+import static org.opentripplanner.graph_builder.module.osm.LinearBarrierNodeType.SPLIT;
 import static org.opentripplanner.osm.TraverseDirection.BACKWARD;
 import static org.opentripplanner.osm.TraverseDirection.FORWARD;
 
@@ -163,10 +165,8 @@ public class OsmModule implements GraphBuilderModule {
   }
 
   private void build(OsmDatabase osmdb, VertexGenerator vertexGenerator) {
-    var parkingProcessor = new ParkingProcessor(
-      graph,
-      issueStore,
-      vertexGenerator::getVertexForOsmNode
+    var parkingProcessor = new ParkingProcessor(graph, issueStore, (node, way) ->
+      vertexGenerator.getVertexForOsmNode(node, way, SPLIT)
     );
 
     var parkingLots = new ArrayList<VehicleParking>();
@@ -416,7 +416,8 @@ public class OsmModule implements GraphBuilderModule {
           nodes.subList(0, i).contains(nodes.get(i)) ||
           osmEndNode.hasTag("ele") ||
           osmEndNode.isBoardingLocation() ||
-          osmEndNode.isBarrier()
+          osmEndNode.isBarrier() ||
+          vertexGenerator.nodesInBarrierWays().containsKey(osmEndNode)
         ) {
           segmentCoordinates.add(osmEndNode.getCoordinate());
 
@@ -432,7 +433,7 @@ public class OsmModule implements GraphBuilderModule {
         if (startEndpoint == null) { // first iteration on this way
           // make or get a shared vertex for flat intersections,
           // one vertex per level for multilevel nodes like elevators
-          startEndpoint = vertexGenerator.getVertexForOsmNode(osmStartNode, way);
+          startEndpoint = vertexGenerator.getVertexForOsmNode(osmStartNode, way, BARRIER_VERTEX);
           String ele = segmentStartOsmNode.getTag("ele");
           if (ele != null) {
             Double elevation = ElevationUtils.parseEleTag(ele);
@@ -444,7 +445,7 @@ public class OsmModule implements GraphBuilderModule {
           startEndpoint = endEndpoint;
         }
 
-        endEndpoint = vertexGenerator.getVertexForOsmNode(osmEndNode, way);
+        endEndpoint = vertexGenerator.getVertexForOsmNode(osmEndNode, way, BARRIER_VERTEX);
         String ele = osmEndNode.getTag("ele");
         if (ele != null) {
           Double elevation = ElevationUtils.parseEleTag(ele);
