@@ -26,18 +26,15 @@ spec:
         {{- include "common.nordic.labels" . | indent 8 }}
     spec:
       affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app
-                      operator: In
-                      values:
-                        - otp
-                        - otp2
-                topologyKey: kubernetes.io/hostname
-              weight: 100
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: cloud.google.com/gke-nodepool
+                    operator: In
+                    values:
+                      - nordic-gb-pool-2
+
       serviceAccountName: application
       containers:
       - image: {{ .Values.image.identifier }}
@@ -153,6 +150,11 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 61
+      tolerations:
+        - effect: NoSchedule
+          key: ngbpool
+          operator: Equal
+          value: "true"
       volumes:
       - configMap:
           defaultMode: 420
