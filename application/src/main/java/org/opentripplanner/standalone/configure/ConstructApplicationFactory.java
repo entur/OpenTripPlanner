@@ -6,6 +6,7 @@ import graphql.schema.GraphQLSchema;
 import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.configure.SchemaModule;
+import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.configure.CarpoolingModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
@@ -98,6 +99,9 @@ public interface ConstructApplicationFactory {
 
   @Nullable
   CarpoolingService carpoolingService();
+
+  @Nullable
+  CarpoolingRepository carpoolingRepository();
 
   @Nullable
   EmissionRepository emissionRepository();
