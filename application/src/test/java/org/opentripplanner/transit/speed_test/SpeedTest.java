@@ -100,7 +100,7 @@ public class SpeedTest {
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingRepository(),
       timetableRepository,
-      new DefaultCarpoolingRepository(),
+      new DefaultCarpoolingRepository(graph),
       new TimetableSnapshotManager(null, TimetableSnapshotParameters.DEFAULT, LocalDate::now),
       config.updatersConfig
     );
