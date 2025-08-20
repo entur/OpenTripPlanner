@@ -4,6 +4,7 @@ import jakarta.ws.rs.core.Application;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.transmodel.TransmodelAPI;
 import org.opentripplanner.datastore.api.DataSource;
+import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
@@ -185,6 +186,7 @@ public class ConstructApplication {
       vehicleRentalRepository(),
       vehicleParkingRepository(),
       timetableRepository(),
+      carpoolingRepository(),
       snapshotManager(),
       routerConfig().updaterConfig()
     );
@@ -268,6 +270,10 @@ public class ConstructApplication {
 
   public TimetableRepository timetableRepository() {
     return factory.timetableRepository();
+  }
+
+  public CarpoolingRepository carpoolingRepository() {
+    return factory.carpoolingRepository();
   }
 
   public DataImportIssueSummary dataImportIssueSummary() {
