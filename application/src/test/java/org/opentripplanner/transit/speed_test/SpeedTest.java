@@ -14,8 +14,9 @@ import java.util.Map;
 import java.util.function.Predicate;
 import org.opentripplanner.TestServerContext;
 import org.opentripplanner.ext.carpooling.internal.DefaultCarpoolingRepository;
-import org.opentripplanner.ext.fares.impl.DefaultFareService;
+import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.framework.application.OtpAppException;
+import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -96,6 +97,7 @@ public class SpeedTest {
 
     UpdaterConfigurator.configure(
       graph,
+      TestVertexLinker.of(graph),
       new DefaultRealtimeVehicleService(transitService),
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingRepository(),
@@ -131,6 +133,7 @@ public class SpeedTest {
       VectorTileConfig.DEFAULT,
       TestServerContext.createVehicleParkingService(),
       TestServerContext.createVehicleRentalService(),
+      TestVertexLinker.of(graph),
       TestServerContext.createViaTransferResolver(graph, transitService),
       TestServerContext.createWorldEnvelopeService(),
       null,
