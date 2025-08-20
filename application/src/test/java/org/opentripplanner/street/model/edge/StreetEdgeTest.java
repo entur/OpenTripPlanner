@@ -14,7 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
@@ -402,28 +401,40 @@ public class StreetEdgeTest {
   @EnumSource(value = TraverseMode.class, names = { "BICYCLE", "SCOOTER" })
   void testBikeSpeed(TraverseMode mode) {
     StreetEdge e1 = streetEdgeBuilder(v1, v2, 100.0, ALL).withCarSpeed(8.0f).buildAndConnect();
-    assertEquals(
-      5.0f,
-      e1.calculateSpeed(
-        RoutingPreferences.DEFAULT.copyOf()
-          .withBike(bike -> bike.withSpeed(5.0f))
-          .withScooter(scooter -> scooter.withSpeed(5.0f))
-          .build(),
-        mode,
-        false
+    assertEquals(5.0, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(5.0f), mode, false));
+    assertEquals(8.0, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(10.0f), mode, false));
+  }
+
+  private static RoutingPreferences getPreferencesForBikeAndScooterSpeed(float speed) {
+    return RoutingPreferences.DEFAULT.copyOf()
+      .withBike(bike -> bike.withSpeed(speed))
+      .withScooter(scooter -> scooter.withSpeed(speed))
+      .build();
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = TraverseMode.class, names = { "BICYCLE", "SCOOTER" })
+  void testBikeSpeedWithElevation(TraverseMode mode) {
+    StreetEdge e1 = streetEdgeBuilder(v1, v2, 100.0, ALL)
+      .withCarSpeed(8.0f)
+      .withElevationExtension(
+        new StreetElevationExtension(
+          100,
+          false,
+          new PackedCoordinateSequence.Float(0, 2, 0),
+          1.0f,
+          1.2,
+          1.5,
+          1.1,
+          1.3,
+          1.0,
+          0.1f,
+          false
+        )
       )
-    );
-    assertEquals(
-      8.0f,
-      e1.calculateSpeed(
-        RoutingPreferences.DEFAULT.copyOf()
-          .withBike(bike -> bike.withSpeed(10.0f))
-          .withScooter(scooter -> scooter.withSpeed(10.0f))
-          .build(),
-        mode,
-        false
-      )
-    );
+      .buildAndConnect();
+    assertEquals(9.0, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(9.0f), mode, false));
+    assertEquals(9.6, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(10.0f), mode, false));
   }
 
   @Test
