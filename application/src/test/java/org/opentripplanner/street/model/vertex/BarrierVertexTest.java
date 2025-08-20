@@ -36,35 +36,35 @@ public class BarrierVertexTest {
       Accessibility.NO_INFORMATION
     );
     bv.setBarrierPermissions(
-      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, bv.getBarrierPermissions());
 
     simpleBarrier.addTag("foot", "yes");
     bv.setBarrierPermissions(
-      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, bv.getBarrierPermissions());
     simpleBarrier.addTag("bicycle", "yes");
     bv.setBarrierPermissions(
-      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, bv.getBarrierPermissions());
     simpleBarrier.addTag("access", "no");
     bv.setBarrierPermissions(
-      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, bv.getBarrierPermissions());
 
     simpleBarrier.addTag("motor_vehicle", "no");
     bv.setBarrierPermissions(
-      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE, bv.getBarrierPermissions());
 
     simpleBarrier.addTag("bicycle", "no");
     bv.setBarrierPermissions(
-      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      simpleBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN, bv.getBarrierPermissions());
 
@@ -73,7 +73,7 @@ public class BarrierVertexTest {
     complexBarrier.addTag("access", "no");
 
     bv.setBarrierPermissions(
-      complexBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      complexBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.NONE, bv.getBarrierPermissions());
 
@@ -82,7 +82,7 @@ public class BarrierVertexTest {
     noBikeBollard.addTag("bicycle", "no");
 
     bv.setBarrierPermissions(
-      noBikeBollard.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      noBikeBollard.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.PEDESTRIAN, bv.getBarrierPermissions());
 
@@ -91,7 +91,7 @@ public class BarrierVertexTest {
     accessBarrier.addTag("access", "no");
 
     bv.setBarrierPermissions(
-      accessBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+      accessBarrier.overridePermissions(BarrierVertex.defaultBarrierPermissions)
     );
     assertEquals(StreetTraversalPermission.NONE, bv.getBarrierPermissions());
   }

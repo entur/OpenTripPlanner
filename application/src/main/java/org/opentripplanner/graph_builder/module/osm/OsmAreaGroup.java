@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import gnu.trove.list.TLongList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -155,7 +154,7 @@ class OsmAreaGroup {
             .filter(barrier -> {
               boolean blocksTraversal =
                 crossablePermissions.intersection(
-                  Objects.requireNonNull(barrier).getPermission(null)
+                  Objects.requireNonNull(barrier).getPermission()
                 ) !=
                 crossablePermissions;
               boolean sharesEdgeWithBothAreas = !CollectionUtils.intersection(

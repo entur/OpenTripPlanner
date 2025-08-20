@@ -163,7 +163,7 @@ class OsmArea {
   }
 
   public StreetTraversalPermission getPermission() {
-    return parent.getPermission(null);
+    return parent.getPermission();
   }
 
   private MultiPolygon calculateJTSMultiPolygon() {

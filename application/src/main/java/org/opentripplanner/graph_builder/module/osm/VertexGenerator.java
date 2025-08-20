@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.osm.model.OsmEntity;
@@ -140,7 +139,7 @@ class VertexGenerator {
       if (iv instanceof BarrierVertex bv) {
         if (node.isBarrier()) {
           bv.setBarrierPermissions(
-            node.overridePermissions(BarrierVertex.defaultBarrierPermissions, null)
+            node.overridePermissions(BarrierVertex.defaultBarrierPermissions)
           );
           if (
             bv.wheelchairAccessibility() == Accessibility.NO_INFORMATION &&
@@ -151,7 +150,7 @@ class VertexGenerator {
         } else if (isNodeOnLinearBarrier) {
           for (var barrier : nodesInBarrierWays.get(node)) {
             bv.setBarrierPermissions(
-              Objects.requireNonNull(barrier).overridePermissions(bv.getBarrierPermissions(), null)
+              Objects.requireNonNull(barrier).overridePermissions(bv.getBarrierPermissions())
             );
             if (
               bv.wheelchairAccessibility() == Accessibility.NO_INFORMATION &&

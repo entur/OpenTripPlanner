@@ -1,14 +1,8 @@
 package org.opentripplanner.osm.model;
 
-import static org.opentripplanner.osm.model.Permission.DENY;
 import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
 
-import java.util.Optional;
-import java.util.Set;
-import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.osm.TraverseDirection;
-import org.opentripplanner.street.model.StreetTraversalPermission;
 
 public class OsmNode extends OsmEntity {
 
@@ -55,7 +49,7 @@ public class OsmNode extends OsmEntity {
    * @return true if it does
    */
   public boolean isBarrier() {
-    return overridePermissions(ALL, null) != ALL;
+    return overridePermissions(ALL) != ALL;
   }
 
   /**

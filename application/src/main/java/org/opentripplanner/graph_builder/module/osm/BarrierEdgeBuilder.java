@@ -33,7 +33,7 @@ public class BarrierEdgeBuilder {
     if (!node.hasTag("barrier")) {
       for (var barrier : barriers) {
         permission = permission.intersection(
-          barrier.overridePermissions(StreetTraversalPermission.ALL, null)
+          barrier.overridePermissions(StreetTraversalPermission.ALL)
         );
         wheelchairAccessible = wheelchairAccessible && barrier.isWheelchairAccessible();
         if (!barrier.hasNoName()) {
@@ -42,7 +42,7 @@ public class BarrierEdgeBuilder {
       }
     }
 
-    permission = node.overridePermissions(permission, null);
+    permission = node.overridePermissions(permission);
     if (permission.allowsNothing()) {
       return;
     }
