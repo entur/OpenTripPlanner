@@ -238,6 +238,15 @@ data:
               "dataInitializationUrl": "{{ .Values.configuration.siriETPubsubUpdater.dataInitializationUrl }}",
               "fuzzyTripMatching": true,
               "producerMetrics": {{ .Values.configuration.siriETPubsubUpdater.producerMetrics }}
+            },
+            {
+              "type": "siri-et-carpooling-updater",
+              "frequency": "20s",
+              "url":  "https://api.dev.entur.io/realtime/v1/services/ENT?SIRI_VERSION=2.1",
+              "feedId": "EN",
+              "timeout": "10s",
+              "blockReadinessUntilInitialized": true,
+              "fuzzyTripMatching": true
             }
     {{- else -}}
             // SIRI ET updater
