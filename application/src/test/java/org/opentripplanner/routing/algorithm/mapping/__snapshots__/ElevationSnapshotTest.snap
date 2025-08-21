@@ -2,7 +2,7 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.directBike=[
   [
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 713,
+      "duration" : 717,
       "elevationGained" : 18.9,
       "elevationLost" : 30.64,
       "endTime" : "2009-10-21T23:10:00.000+00:00",
@@ -10,41 +10,41 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.directBike=[
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 1449,
+      "generalizedCost" : 1467,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 2652.79,
+          "distance" : 2635.31,
           "endTime" : "2009-10-21T23:10:00.000+00:00",
           "from" : {
-            "departure" : "2009-10-21T22:58:07.000+00:00",
+            "departure" : "2009-10-21T22:58:03.000+00:00",
             "lat" : 45.52832,
             "lon" : -122.70059,
             "name" : "SW Johnson St. & NW 24th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 1449,
+          "generalizedCost" : 1467,
           "interlineWithPreviousLeg" : false,
-          "legElevation" : "0,63.7,1,63.7,11,63.4,21,63.2,31,63.3,41,63.5,51,63.3,61,62.9,71,62.5,81,62.2,91,62.0,101,61.7,111,61.5,121,61.2,131,60.9,141,60.6,151,60.3,160,60.2,240,60.2,1193,60.2,1272,55.5,1589,55.5,1668,40.4,1851,40.4,1920,37.3,1932,37.3,2079,55.5,2462,55.5,2462,NaN,2653,NaN",
+          "legElevation" : "0,63.7,1,63.7,11,63.4,21,63.2,31,63.3,41,63.5,51,63.3,61,62.9,71,62.5,81,62.2,91,62.0,101,61.7,111,61.5,121,61.2,131,60.9,141,60.6,151,60.3,160,60.2,240,60.2,1032,60.2,1190,55.5,1430,55.5,1506,40.4,1849,40.4,1919,37.3,1931,37.3,2078,55.5,2503,55.5,2503,NaN,2635,NaN",
           "legGeometry" : {
-            "length" : 64,
-            "points" : "}f{tGv}{kVC?mCBmCDoCDmCDmCBoCDmCDkCDoCB_CBM@iGEE@MB[H}@@s@@oCDmCBC@CkEAiEAg@AaC?YCqEAkECiEK?wDD}@@I?IAECKMKOIKyAmBCCQScB`DeAzBOVYj@eCxECF{@eAJSDYAa@[g@qAiCa@g@SGk@NqAb@g@Bk@j@_@z@U`AKhAAF"
+            "length" : 59,
+            "points" : "}f{tGv}{kVC?mCBmCDoCDmCDmCBoCDmCDkCDoCB_CBM@iGEE@MB[H}@@s@@GsKAkCCkCA}BCkE?EAcEoCB{BBS@K?wDD}@@I?IAECKMKOIKyAmBCCQScB`DeAzBOVYj@eCxECF{@eAq@nAcAzBeAbBKDy@Ou@a@k@]c@_@Ws@M{@BsA"
           },
           "mode" : "BICYCLE",
           "pathway" : false,
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-10-21T22:58:07.000+00:00",
+          "startTime" : "2009-10-21T22:58:03.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "NORTH",
               "area" : false,
               "bogusName" : false,
-              "distance" : 1193.29,
-              "elevation" : "0,63.7,1,63.7,3,63.7,13,63.4,23,63.2,33,63.3,43,63.5,53,63.3,63,62.9,73,62.5,83,62.2,93,62.0,103,61.7,113,61.5,123,61.2,133,60.9,143,60.6,153,60.3,161,60.2,241,60.2,1195,60.2",
+              "distance" : 1032.39,
+              "elevation" : "0,63.7,1,63.7,3,63.7,13,63.4,23,63.2,33,63.3,43,63.5,53,63.3,63,62.9,73,62.5,83,62.2,93,62.0,103,61.7,113,61.5,123,61.2,133,60.9,143,60.6,153,60.3,161,60.2,241,60.2,1034,60.2",
               "lat" : 45.5283199,
               "lon" : -122.7005963,
               "relativeDirection" : "DEPART",
@@ -56,23 +56,23 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.directBike=[
               "absoluteDirection" : "EAST",
               "area" : false,
               "bogusName" : false,
-              "distance" : 474.29,
-              "elevation" : "0,60.2,79,55.5,396,55.5,474,40.4",
-              "lat" : 45.539042,
-              "lon" : -122.7009919,
+              "distance" : 473.92,
+              "elevation" : "0,60.2,157,55.5,397,55.5,474,40.4",
+              "lat" : 45.5375956,
+              "lon" : -122.7009344,
               "relativeDirection" : "RIGHT",
               "stayOn" : false,
-              "streetName" : "Northwest York Street",
+              "streetName" : "Northwest Wilson Street",
               "walkingBike" : false
             },
             {
               "absoluteDirection" : "NORTH",
               "area" : false,
               "bogusName" : false,
-              "distance" : 264.57,
-              "elevation" : "0,40.4,183,40.4,252,37.3,265,37.3",
-              "lat" : 45.5391456,
-              "lon" : -122.6949041,
+              "distance" : 424.41,
+              "elevation" : "0,40.4,343,40.4,412,37.3,424,37.3",
+              "lat" : 45.5377086,
+              "lon" : -122.6948518,
               "relativeDirection" : "LEFT",
               "stayOn" : false,
               "streetName" : "Northwest 21st Avenue",
@@ -95,8 +95,8 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.directBike=[
               "absoluteDirection" : "NORTHEAST",
               "area" : false,
               "bogusName" : true,
-              "distance" : 422.05,
-              "elevation" : "0,55.5,232,55.5",
+              "distance" : 406.0,
+              "elevation" : "0,55.5,273,55.5",
               "lat" : 45.5430449,
               "lon" : -122.6969354,
               "relativeDirection" : "RIGHT",
@@ -116,14 +116,14 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.directBike=[
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-10-21T22:58:07.000+00:00",
+      "startTime" : "2009-10-21T22:58:03.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 0,
       "waitingTime" : 0,
-      "walkDistance" : 2652.79,
+      "walkDistance" : 2635.31,
       "walkLimitExceeded" : false,
-      "walkTime" : 713
+      "walkTime" : 717
     }
   ]
 ]

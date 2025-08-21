@@ -2669,7 +2669,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 678,
+      "generalizedCost" : 679,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -2756,7 +2756,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
           "agencyTimeZoneOffset" : -25200000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 712.45,
+          "distance" : 711.97,
           "endTime" : "2009-10-21T23:10:00.000+00:00",
           "from" : {
             "arrival" : "2009-10-21T23:06:58.000+00:00",
@@ -2770,11 +2770,11 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
             ],
             "vertexType" : "BIKESHARE"
           },
-          "generalizedCost" : 389,
+          "generalizedCost" : 390,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
-            "length" : 9,
-            "points" : "ic{tGl|{kVV@GsJEuKjCC?g@GmJEuK?C"
+            "length" : 11,
+            "points" : "ic{tGl|{kVV@GsJL?F?tBCEuK?g@GmJEuK?C"
           },
           "mode" : "BICYCLE",
           "pathway" : false,
@@ -2800,7 +2800,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
               "absoluteDirection" : "EAST",
               "area" : false,
               "bogusName" : false,
-              "distance" : 302.89,
+              "distance" : 144.55,
               "elevation" : "",
               "lat" : 45.5276173,
               "lon" : -122.7003923,
@@ -2813,23 +2813,23 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
               "absoluteDirection" : "SOUTH",
               "area" : false,
               "bogusName" : false,
-              "distance" : 78.25,
+              "distance" : 77.98,
               "elevation" : "",
-              "lat" : 45.5276898,
-              "lon" : -122.6965055,
+              "lat" : 45.5276519,
+              "lon" : -122.6985374,
               "relativeDirection" : "RIGHT",
               "stayOn" : false,
-              "streetName" : "Northwest 22nd Avenue",
+              "streetName" : "Northwest 23rd Avenue",
               "walkingBike" : false
             },
             {
               "absoluteDirection" : "EAST",
               "area" : false,
               "bogusName" : false,
-              "distance" : 317.96,
+              "distance" : 476.09,
               "elevation" : "",
-              "lat" : 45.5269863,
-              "lon" : -122.696481,
+              "lat" : 45.5269509,
+              "lon" : -122.6985103,
               "relativeDirection" : "LEFT",
               "stayOn" : false,
               "streetName" : "Northwest Hoyt Street",
@@ -2852,7 +2852,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
       "transfers" : 0,
       "transitTime" : 0,
       "waitingTime" : 0,
-      "walkDistance" : 819.04,
+      "walkDistance" : 818.56,
       "walkLimitExceeded" : false,
       "walkTime" : 329
     }
@@ -2959,7 +2959,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
           "agencyTimeZoneOffset" : -25200000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 712.45,
+          "distance" : 712.49,
           "endTime" : "2009-10-21T23:15:29.000+00:00",
           "from" : {
             "arrival" : "2009-10-21T23:12:27.000+00:00",
@@ -2976,8 +2976,8 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
           "generalizedCost" : 389,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : {
-            "length" : 9,
-            "points" : "ic{tGl|{kVV@GsJEuKjCC?g@GmJEuK?C"
+            "length" : 10,
+            "points" : "ic{tGl|{kVV@GsJEuKE}HAwAAo@EcJlCE?C"
           },
           "mode" : "BICYCLE",
           "pathway" : false,
@@ -3003,7 +3003,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
               "absoluteDirection" : "EAST",
               "area" : false,
               "bogusName" : false,
-              "distance" : 302.89,
+              "distance" : 618.39,
               "elevation" : "",
               "lat" : 45.5276173,
               "lon" : -122.7003923,
@@ -3016,23 +3016,23 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
               "absoluteDirection" : "SOUTH",
               "area" : false,
               "bogusName" : false,
-              "distance" : 78.25,
+              "distance" : 78.79,
               "elevation" : "",
-              "lat" : 45.5276898,
-              "lon" : -122.6965055,
+              "lat" : 45.5277652,
+              "lon" : -122.6924569,
               "relativeDirection" : "RIGHT",
               "stayOn" : false,
-              "streetName" : "Northwest 22nd Avenue",
+              "streetName" : "Northwest 20th Avenue",
               "walkingBike" : false
             },
             {
               "absoluteDirection" : "EAST",
               "area" : false,
               "bogusName" : false,
-              "distance" : 317.96,
+              "distance" : 1.97,
               "elevation" : "",
-              "lat" : 45.5269863,
-              "lon" : -122.696481,
+              "lat" : 45.527057,
+              "lon" : -122.6924259,
               "relativeDirection" : "LEFT",
               "stayOn" : false,
               "streetName" : "Northwest Hoyt Street",
@@ -3055,7 +3055,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
       "transfers" : 0,
       "transitTime" : 0,
       "waitingTime" : 0,
-      "walkDistance" : 819.04,
+      "walkDistance" : 819.08,
       "walkLimitExceeded" : false,
       "walkTime" : 329
     }

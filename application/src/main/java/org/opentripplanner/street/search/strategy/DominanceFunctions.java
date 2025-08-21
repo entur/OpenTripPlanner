@@ -3,9 +3,7 @@ package org.opentripplanner.street.search.strategy;
 import java.io.Serializable;
 import java.util.Objects;
 import org.opentripplanner.astar.spi.DominanceFunction;
-import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.street.model.edge.StreetEdge;
-import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.search.state.State;
 
 /**
@@ -91,15 +89,13 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
      * including the loops should still result in a route. Often this will be preferable to
      * taking a detour due to turn restrictions anyway.
      */
-    var notComparable =
+    if (
       a.backEdge != b.getBackEdge() &&
-      a.backEdge instanceof StreetEdge &&
-      (OTPFeature.ConsiderIncomingEdgeInDominance.isOn()
-          ? a.getVertex() instanceof IntersectionVertex && b.backEdge instanceof StreetEdge
-          : a.getBackMode() != null &&
-          a.getBackMode().isInCar() &&
-          a.getRequest().isCloseToStartOrEnd(a.getVertex()));
-    if (notComparable) {
+      (a.backEdge instanceof StreetEdge) &&
+      a.getBackMode() != null &&
+      a.getBackMode().isInCar() &&
+      a.getRequest().isCloseToStartOrEnd(a.getVertex())
+    ) {
       return false;
     }
 
