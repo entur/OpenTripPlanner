@@ -1,14 +1,24 @@
-![OTP Logo](/doc/user/images/otp-logo.svg) 
+# <img src="/doc/user/images/otp-logo.svg" width="56" /> &nbsp; Open Trip Planner (OTP)  &nbsp; — &nbsp; <em>Entur Fork</em>
 
-# Open Trip Planner (OTP) - Entur fork
-> _✏️ Edit this file in the `main_config` branch._
+![OTP Version DEV](http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen)
+
+![OTP Version TEST](http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange)
+
+![OTP Version PROD](http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson)
 
 
-This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner). 
+[![A - Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml)
+
+[![B - Build and push docker image 🎁](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml)
+
+
+This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner).
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
-of the Entur specific content is just continuous integration and deployment configuration. We use 
+of the Entur specific content is just continuous integration and deployment configuration. We use
 the code from the `dev-2.x` branch in the upstream repository as is.
 
+> ✏️ &nbsp;**Tip!**  Edit this file in the **_main_config_** branch.
+ 
 
 # Entur OTP continuous integration and deployment overview
 
