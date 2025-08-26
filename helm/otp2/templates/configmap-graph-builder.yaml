@@ -34,24 +34,6 @@ data:
         "multiThreadElevationCalculations": true,
         // Test boarding location tags, TODO: Ddecide if we want to keep it!
         "boardingLocationTags": [ "ref:NSR" ],
-        "transferParametersForMode": {
-          "CAR": {
-            "disableDefaultTransfers": true,
-            "carsAllowedStopMaxTransferDuration": "3h"
-          }
-        },
-        "transferRequests" : [
-          {
-            "modes" : "WALK"
-          },
-          // Exclude BICYCLE transfer generation, this require a large amout of data
-          //{
-          //  "modes" : "BICYCLE"
-          //},
-          {
-            "modes" : "CAR"
-          }
-        ],
         "osmDefaults": {
           "osmTagMapping": "norway",
           "timeZone": "Europe/Oslo"
