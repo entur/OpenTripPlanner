@@ -44,12 +44,6 @@ data:
           {
             "modes" : "WALK"
           },
-          {
-            "modes" : "WALK",
-            "wheelchairAccessibility" : {
-              "enabled" : true
-            }
-          },
           // Exclude BICYCLE transfer generation, this require a large amout of data
           //{
           //  "modes" : "BICYCLE"
