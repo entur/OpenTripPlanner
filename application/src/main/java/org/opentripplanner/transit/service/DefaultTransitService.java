@@ -39,6 +39,7 @@ import org.opentripplanner.transit.api.request.FindRoutesRequest;
 import org.opentripplanner.transit.api.request.FindStopLocationsRequest;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.api.request.TripRequest;
+import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
@@ -430,7 +431,8 @@ public class DefaultTransitService implements TransitEditorService {
       timeRange,
       numberOfDepartures,
       arrivalDeparture,
-      includeCancelledTrips
+      includeCancelledTrips,
+      TripTimeOnDate.compareByDeparture()
     );
   }
 
@@ -451,7 +453,7 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
-  public List<TripTimeOnDate> findTripTimeOnDate(
+  public List<TripTimeOnDate> findTripTimesOnDate(
     StopLocation stop,
     TripPattern pattern,
     Instant startTime,
@@ -470,6 +472,12 @@ public class DefaultTransitService implements TransitEditorService {
       arrivalDeparture,
       includeCancellations
     );
+  }
+
+  @Override
+  public List<TripTimeOnDate> findTripTimesOnDate(TripTimeOnDateRequest request) {
+    OTPRequestTimeoutException.checkForTimeout();
+    return stopTimesHelper.findTripTimesOnDate(request);
   }
 
   /**

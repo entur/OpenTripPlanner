@@ -18,22 +18,32 @@ class RoutingResult {
 
   private final List<Itinerary> itineraries = new ArrayList<>();
   private final Set<RoutingError> errors = new HashSet<>();
+  private boolean removeWalkAllTheWayResults = false;
 
-  RoutingResult(Collection<Itinerary> itineraries, Collection<RoutingError> errors) {
+  RoutingResult(
+    Collection<Itinerary> itineraries,
+    Collection<RoutingError> errors,
+    boolean removeWalkAllTheWayResults
+  ) {
     addItineraries(itineraries);
     addErrors(errors);
+    this.removeWalkAllTheWayResults = removeWalkAllTheWayResults;
   }
 
   static RoutingResult empty() {
-    return new RoutingResult(List.of(), List.of());
+    return new RoutingResult(List.of(), List.of(), false);
+  }
+
+  static RoutingResult ok(List<Itinerary> itineraries, boolean removeWalkAllTheWayResults) {
+    return new RoutingResult(itineraries, List.of(), removeWalkAllTheWayResults);
   }
 
   static RoutingResult ok(List<Itinerary> itineraries) {
-    return new RoutingResult(itineraries, List.of());
+    return ok(itineraries, false);
   }
 
   static RoutingResult failed(Collection<RoutingError> errors) {
-    return new RoutingResult(List.of(), errors);
+    return new RoutingResult(List.of(), errors, false);
   }
 
   List<Itinerary> itineraries() {
@@ -44,10 +54,17 @@ class RoutingResult {
     return Set.copyOf(errors);
   }
 
+  public boolean removeWalkAllTheWayResults() {
+    return removeWalkAllTheWayResults;
+  }
+
   void merge(RoutingResult... others) {
     for (RoutingResult it : others) {
       addItineraries(it.itineraries);
       addErrors(it.errors);
+      if (it.removeWalkAllTheWayResults) {
+        this.removeWalkAllTheWayResults = true;
+      }
     }
   }
 
@@ -57,9 +74,9 @@ class RoutingResult {
    * router logic - maybe compansate for diffrences in the specific routers. For example setting
    * the {@code generalizedCost2} for direct FLEX results, to allow them to be compared with
    * transit results where the transit router already calculated the {@code generalizedCost2}
-   * value. This should not be used for things like fares witch is just adding more info to the
+   * value. This should not be used for things like fares which is just adding more info to the
    * itineraries, this should be done in the filter chain. Another way to look at it is to use
-   * this for services witch must allways run, while the filter-chain is for configurable
+   * this for services which must allways run, while the filter-chain is for configurable
    * (optional) features.
    */
   void transform(Function<List<Itinerary>, List<Itinerary>> transform) {
