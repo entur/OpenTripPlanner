@@ -1,16 +1,17 @@
-# <img src="/doc/user/images/otp-logo.svg" width="56" /> &nbsp; Open Trip Planner (OTP)  &nbsp; — &nbsp; <em>Entur Fork</em>
-
-![OTP Version DEV](http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen)
-
-![OTP Version TEST](http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange)
-
-![OTP Version PROD](http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson)
-
-
-[![A - Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml)
-
-[![B - Build and push docker image 🎁](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml)
-
+<h1 align="center">
+  <img src="/doc/user/images/otp-logo.svg" width="120" /><br>
+  Open Trip Planner (OTP)
+</h1>
+<h3 align="center"><em>Entur - GitHub Fork</em></h3>
+<p align="center">
+  <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen" alt="OTP Version DEV"><br>
+  <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange" alt="OTP Version TEST"/><br>
+  <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/><br>
+</p>
+<p align="center">
+  <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a>
+  <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml/badge.svg" alt="Build and push docker image 🎁"/></a>
+</p>
 
 This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner).
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
