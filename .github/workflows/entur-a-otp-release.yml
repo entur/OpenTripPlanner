@@ -87,3 +87,13 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
+      - name: Create GitHub Release
+        uses: actions/create-release@v1 # Use the create-release action
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN is automatically provided
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }} (${{ser_ver_id}})
+          body: $GITHUB_STEP_SUMMARY
+          draft: false # Set to true to create a draft release
+          prerelease: false # Set to true for a pre-release
