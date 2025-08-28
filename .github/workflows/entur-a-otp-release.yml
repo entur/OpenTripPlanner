@@ -33,8 +33,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     outputs:
-      version: ${{steps.set_version.outputs.version}}
-      ser_ver_id: ${{steps.set_ser_ver_id.outputs.ser_ver_id}}
+      version: ${{ steps.set_version.outputs.version }}
+      ser_ver_id: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
     steps:
       - name: Checkout entur/OpenTripPlanner
         uses: actions/checkout@v4
@@ -87,3 +87,12 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+        run: |
+          TAG_NAME=${{ steps.set_version.outputs.version }}
+          SER_VER_ID=${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
+          gh release create "$TAG_NAME" \
+            --title "Release ${TAG_NAME} (${SER_VER_ID})" \
+            --notes-file .custom_release_summary.md
