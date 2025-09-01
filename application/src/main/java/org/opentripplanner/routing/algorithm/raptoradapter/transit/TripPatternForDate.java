@@ -56,6 +56,8 @@ public class TripPatternForDate implements Comparable<TripPatternForDate> {
    */
   private final LocalDate endOfRunningPeriod;
 
+  private final int hash;
+
   public TripPatternForDate(
     RoutingTripPattern tripPattern,
     List<TripTimes> tripTimes,
@@ -95,6 +97,12 @@ public class TripPatternForDate implements Comparable<TripPatternForDate> {
         last.getArrivalTime(last.getNumStops() - 1)
       ).toLocalDate();
     }
+    hash = Objects.hash(
+      tripPattern,
+      serviceDate,
+      Arrays.hashCode(this.tripTimes),
+      Arrays.hashCode(this.frequencies)
+    );
   }
 
   public List<TripTimes> tripTimes() {
@@ -158,14 +166,15 @@ public class TripPatternForDate implements Comparable<TripPatternForDate> {
     return serviceDate.compareTo(other.serviceDate);
   }
 
+  /**
+   * Computing this hashcode is expensive, and it is called frequently.
+   * Caching it improves performance.
+   * To be revisited when "JEP 502: Stable Values" is available.
+   *
+   */
   @Override
   public int hashCode() {
-    return Objects.hash(
-      tripPattern,
-      serviceDate,
-      Arrays.hashCode(tripTimes),
-      Arrays.hashCode(frequencies)
-    );
+    return hash;
   }
 
   @Override
