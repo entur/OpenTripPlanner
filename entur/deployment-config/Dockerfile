@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21.0.8_9-jre-noble
+FROM eclipse-temurin:21.0.8_9-jdk-noble
 
 # The default user "ubuntu" must be removed, otherwise it supercedes the user "appuser" created
 # in this Dockerfile
