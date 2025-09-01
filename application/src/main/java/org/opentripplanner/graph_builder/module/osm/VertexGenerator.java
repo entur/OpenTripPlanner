@@ -160,7 +160,23 @@ class VertexGenerator {
       }
 
       if (iv == null) {
-        iv = vertexFactory.osm(node);
+        iv = vertexFactory.osm(
+          coordinate,
+          node.getId(),
+          node.hasHighwayTrafficLight(),
+          node.hasCrossingTrafficLight()
+        );
+      }
+
+      if (isNodeOnLinearBarrier && iv instanceof OsmVertex ov) {
+        splitVerticesOnBarriers.putIfAbsent(node, new HashMap<>());
+        var vertices = splitVerticesOnBarriers.get(node);
+        vertices.put(null, ov);
+
+        if (!node.isTaggedBarrierCrossing() && !reportedLinearBarrierCrossings.contains(node)) {
+          issueStore.add(new BarrierIntersectingHighway(node));
+          reportedLinearBarrierCrossings.add(node);
+        }
       }
 
       intersectionNodes.put(nid, iv);
@@ -168,17 +184,6 @@ class VertexGenerator {
 
     if (iv instanceof BarrierVertex) {
       checkLevelOnBarrier(node, way);
-    }
-
-    if (isNodeOnLinearBarrier && iv instanceof OsmVertex ov) {
-      splitVerticesOnBarriers.putIfAbsent(node, new HashMap<>());
-      var vertices = splitVerticesOnBarriers.get(node);
-      vertices.put(null, ov);
-
-      if (!node.isBarrier() && !reportedLinearBarrierCrossings.contains(node)) {
-        issueStore.add(new BarrierIntersectingHighway(node));
-        reportedLinearBarrierCrossings.add(node);
-      }
     }
 
     return iv;
@@ -199,7 +204,11 @@ class VertexGenerator {
       return existing;
     }
 
-    var vertex = vertexFactory.osmOnLinearBarrier(nodeOnBarrier, way);
+    var vertex = vertexFactory.osmOnLinearBarrier(
+      nodeOnBarrier.getCoordinate(),
+      nodeOnBarrier.getId(),
+      way.getId()
+    );
     vertices.put(way, vertex);
     return vertex;
   }
