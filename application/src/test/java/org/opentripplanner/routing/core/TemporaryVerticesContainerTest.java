@@ -15,6 +15,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
+import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
@@ -28,7 +29,6 @@ import org.opentripplanner.street.model.vertex.TemporaryVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TemporaryVerticesContainer;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.service.SiteRepository;
 
 public class TemporaryVerticesContainerTest {
 
@@ -42,9 +42,9 @@ public class TemporaryVerticesContainerTest {
   private final StreetVertex c = StreetModelForTest.intersectionVertex("C", 0.0, 1.0);
   private final List<Vertex> permanentVertexes = Arrays.asList(a, b, c);
   // - And travel *origin* is 0,4 degrees on the road from B to A
-  private final GenericLocation from = new GenericLocation(1.0, 0.4);
+  private final GenericLocation from = GenericLocation.fromCoordinate(1.0, 0.4);
   // - and *destination* is slightly off 0.7 degrees on road from C to A
-  private final GenericLocation to = new GenericLocation(0.701, 1.001);
+  private final GenericLocation to = GenericLocation.fromCoordinate(0.701, 1.001);
   private TemporaryVerticesContainer subject;
 
   // - and some roads
@@ -54,13 +54,20 @@ public class TemporaryVerticesContainerTest {
     createStreetEdge(a, b, "a -> b");
     createStreetEdge(b, a, "b -> a");
     createStreetEdge(a, c, "a -> c");
-    g.index(new SiteRepository());
+    g.index();
   }
 
   @Test
   public void temporaryChangesRemovedOnClose() {
     // When - the container is created
-    subject = new TemporaryVerticesContainer(g, from, to, StreetMode.WALK, StreetMode.WALK);
+    subject = new TemporaryVerticesContainer(
+      g,
+      TestVertexLinker.of(g),
+      from,
+      to,
+      StreetMode.WALK,
+      StreetMode.WALK
+    );
 
     // Then:
     originAndDestinationInsertedCorrect();

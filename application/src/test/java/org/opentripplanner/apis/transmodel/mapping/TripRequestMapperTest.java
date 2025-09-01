@@ -1,6 +1,7 @@
 package org.opentripplanner.apis.transmodel.mapping;
 
 import static graphql.execution.ExecutionContextBuilder.newExecutionContextBuilder;
+import static java.util.Map.entry;
 import static java.util.stream.Collectors.toList;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,14 +29,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.TestServerContext;
 import org.opentripplanner._support.time.ZoneIds;
+import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.apis.transmodel.TransmodelRequestContext;
+import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.PlanTestConstants;
-import org.opentripplanner.model.plan.ScheduledTransitLeg;
+import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.preference.StreetPreferences;
@@ -66,7 +69,16 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   private static final Graph graph = new Graph();
   private static final TimetableRepository timetableRepository;
+  private static final Map.Entry<String, Object> ARGUMENT_FROM = entry(
+    "from",
+    Map.of("place", "F:Quay:1")
+  );
+  private static final Map.Entry<String, Object> ARGUMENT_TO = entry(
+    "to",
+    Map.of("place", "F:Quay:2")
+  );
 
+  private static final TripRequestMapper MAPPER = new TripRequestMapper(new DefaultFeedIdMapper());
   private TransmodelRequestContext context;
 
   static {
@@ -106,22 +118,25 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   @BeforeEach
   void setup() {
-    final RouteRequest defaultRequest = new RouteRequest();
-
     // Change defaults for FLEXIBLE to a lower value than the default 45m. This should restrict the
     // input to be less than 20m, not 45m.
-    defaultRequest.withPreferences(pb ->
-      pb.withStreet(sp ->
-        sp
-          .withAccessEgress(ae -> ae.withMaxDuration(b -> b.with(StreetMode.FLEXIBLE, MAX_FLEXIBLE))
-          )
-          .withMaxDirectDuration(b -> b.with(StreetMode.FLEXIBLE, MAX_FLEXIBLE))
+    final RouteRequest defaultRequest = RouteRequest.of()
+      .withPreferences(pb ->
+        pb.withStreet(sp ->
+          sp
+            .withAccessEgress(ae ->
+              ae.withMaxDuration(b -> b.with(StreetMode.FLEXIBLE, MAX_FLEXIBLE))
+            )
+            .withMaxDirectDuration(b -> b.with(StreetMode.FLEXIBLE, MAX_FLEXIBLE))
+        )
       )
-    );
+      .buildDefault();
 
     var otpServerRequestContext = TestServerContext.createServerContext(
       graph,
+      null,
       timetableRepository,
+      new DefaultFareService(),
       null,
       defaultRequest
     );
@@ -149,9 +164,9 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   @Test
   public void testMaxAccessEgressDurationForMode() {
-    Map<String, Object> arguments = Map.of("maxAccessEgressDurationForMode", DURATIONS);
+    Map<String, Object> arguments = arguments("maxAccessEgressDurationForMode", DURATIONS);
 
-    var routeRequest = TripRequestMapper.createRequest(executionContext(arguments));
+    var routeRequest = MAPPER.createRequest(executionContext(arguments));
     assertNotNull(routeRequest);
     var preferences = routeRequest.preferences();
     assertNotNull(preferences);
@@ -169,9 +184,9 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   @Test
   public void testMaxDirectDurationForMode() {
-    Map<String, Object> arguments = Map.of("maxDirectDurationForMode", DURATIONS);
+    Map<String, Object> arguments = arguments("maxDirectDurationForMode", DURATIONS);
 
-    var routeRequest = TripRequestMapper.createRequest(executionContext(arguments));
+    var routeRequest = MAPPER.createRequest(executionContext(arguments));
     assertNotNull(routeRequest);
     var preferences = routeRequest.preferences();
     assertNotNull(preferences);
@@ -197,21 +212,29 @@ public class TripRequestMapperTest implements PlanTestConstants {
       Map.of("streetMode", StreetMode.WALK, "duration", defaultValue.plusSeconds(1))
     );
 
-    Map<String, Object> arguments = Map.of("maxAccessEgressDurationForMode", duration);
+    Map<String, Object> arguments = arguments("maxAccessEgressDurationForMode", duration);
 
-    assertThrows(IllegalArgumentException.class, () ->
-      TripRequestMapper.createRequest(executionContext(arguments))
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      MAPPER.createRequest(executionContext(arguments))
+    );
+    assertEquals(
+      "Invalid duration for mode WALK. The value 45m1s is not greater than the default 45m.",
+      ex.getMessage()
     );
   }
 
   @Test
   public void testMaxAccessEgressDurationForFlexWithTooLongDuration() {
-    Map<String, Object> arguments = Map.of(
+    Map<String, Object> arguments = arguments(
       "maxAccessEgressDurationForMode",
       List.of(Map.of("streetMode", StreetMode.FLEXIBLE, "duration", MAX_FLEXIBLE.plusSeconds(1)))
     );
-    assertThrows(IllegalArgumentException.class, () ->
-      TripRequestMapper.createRequest(executionContext(arguments))
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      MAPPER.createRequest(executionContext(arguments))
+    );
+    assertEquals(
+      "Invalid duration for mode FLEXIBLE. The value 20m1s is not greater than the default 20m.",
+      ex.getMessage()
     );
   }
 
@@ -222,47 +245,55 @@ public class TripRequestMapperTest implements PlanTestConstants {
       Map.of("streetMode", StreetMode.WALK, "duration", defaultValue.plusSeconds(1))
     );
 
-    Map<String, Object> arguments = Map.of("maxDirectDurationForMode", duration);
+    Map<String, Object> arguments = arguments("maxDirectDurationForMode", duration);
 
-    assertThrows(IllegalArgumentException.class, () ->
-      TripRequestMapper.createRequest(executionContext(arguments))
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      MAPPER.createRequest(executionContext(arguments))
+    );
+    assertEquals(
+      "Invalid duration for mode WALK. The value 4h1s is not greater than the default 4h.",
+      ex.getMessage()
     );
   }
 
   @Test
   public void testMaxDirectDurationForFlexWithTooLongDuration() {
-    Map<String, Object> arguments = Map.of(
+    Map<String, Object> arguments = arguments(
       "maxDirectDurationForMode",
       List.of(Map.of("streetMode", StreetMode.FLEXIBLE, "duration", MAX_FLEXIBLE.plusSeconds(1)))
     );
-    assertThrows(IllegalArgumentException.class, () ->
-      TripRequestMapper.createRequest(executionContext(arguments))
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      MAPPER.createRequest(executionContext(arguments))
+    );
+    assertEquals(
+      "Invalid duration for mode FLEXIBLE. The value 20m1s is not greater than the default 20m.",
+      ex.getMessage()
     );
   }
 
   @Test
   public void testBikeTriangleFactors() {
-    Map<String, Object> arguments = Map.of(
+    Map<String, Object> arguments = arguments(
       "bicycleOptimisationMethod",
       VehicleRoutingOptimizeType.TRIANGLE,
       "triangleFactors",
       Map.of("safety", 0.1, "slope", 0.1, "time", 0.8)
     );
 
-    var req1 = TripRequestMapper.createRequest(executionContext(arguments));
+    var request = MAPPER.createRequest(executionContext(arguments));
 
-    assertEquals(VehicleRoutingOptimizeType.TRIANGLE, req1.preferences().bike().optimizeType());
+    assertEquals(VehicleRoutingOptimizeType.TRIANGLE, request.preferences().bike().optimizeType());
     assertEquals(
       new TimeSlopeSafetyTriangle(0.8, 0.1, 0.1),
-      req1.preferences().bike().optimizeTriangle()
+      request.preferences().bike().optimizeTriangle()
     );
   }
 
   @Test
   void testDefaultTriangleFactors() {
-    var req2 = TripRequestMapper.createRequest(executionContext(Map.of()));
-    assertEquals(VehicleRoutingOptimizeType.SAFE_STREETS, req2.preferences().bike().optimizeType());
-    assertEquals(TimeSlopeSafetyTriangle.DEFAULT, req2.preferences().bike().optimizeTriangle());
+    var req = MAPPER.createRequest(executionContext(arguments()));
+    assertEquals(VehicleRoutingOptimizeType.SAFE_STREETS, req.preferences().bike().optimizeType());
+    assertEquals(TimeSlopeSafetyTriangle.DEFAULT, req.preferences().bike().optimizeTriangle());
   }
 
   static Stream<Arguments> noTriangleCases() {
@@ -272,31 +303,29 @@ public class TripRequestMapperTest implements PlanTestConstants {
   @ParameterizedTest
   @MethodSource("noTriangleCases")
   public void testBikeTriangleFactorsHasNoEffect(VehicleRoutingOptimizeType bot) {
-    Map<String, Object> arguments = Map.of(
+    Map<String, Object> arguments = arguments(
       "bicycleOptimisationMethod",
       bot,
       "triangleFactors",
       Map.of("safety", 0.1, "slope", 0.1, "time", 0.8)
     );
 
-    var req1 = TripRequestMapper.createRequest(executionContext(arguments));
+    var request = MAPPER.createRequest(executionContext(arguments));
 
-    assertEquals(bot, req1.preferences().bike().optimizeType());
-    assertEquals(TimeSlopeSafetyTriangle.DEFAULT, req1.preferences().bike().optimizeTriangle());
+    assertEquals(bot, request.preferences().bike().optimizeType());
+    assertEquals(TimeSlopeSafetyTriangle.DEFAULT, request.preferences().bike().optimizeTriangle());
   }
 
   @Test
   void testViaLocations() {
-    TransitIdMapper.clearFixedFeedId();
-
     final List<String> PTP1 = Stream.of(stop1, stop2, stop3).map(STOP_TO_ID).toList();
     final List<String> PTP2 = Stream.of(stop3, stop2).map(STOP_TO_ID).toList();
-    final Map<String, Object> arguments = Map.of(
+    final Map<String, Object> arguments = arguments(
       "passThroughPoints",
       List.of(Map.of("name", "PTP1", "placeIds", PTP1), Map.of("placeIds", PTP2, "name", "PTP2"))
     );
 
-    final List<ViaLocation> viaLocations = TripRequestMapper.createRequest(
+    final List<ViaLocation> viaLocations = MAPPER.createRequest(
       executionContext(arguments)
     ).getViaLocations();
     assertEquals(
@@ -313,7 +342,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   @Test
   public void testNoModes() {
-    var req = TripRequestMapper.createRequest(executionContext(Map.of()));
+    var req = MAPPER.createRequest(executionContext(arguments()));
 
     assertEquals(StreetMode.WALK, req.journey().access().mode());
     assertEquals(StreetMode.WALK, req.journey().egress().mode());
@@ -323,8 +352,8 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   @Test
   public void testEmptyModes() {
-    Map<String, Object> arguments = Map.of("modes", Map.of());
-    var req = TripRequestMapper.createRequest(executionContext(arguments));
+    Map<String, Object> arguments = arguments("modes", Map.of());
+    var req = MAPPER.createRequest(executionContext(arguments));
 
     assertEquals(StreetMode.NOT_SET, req.journey().access().mode());
     assertEquals(StreetMode.NOT_SET, req.journey().egress().mode());
@@ -338,8 +367,9 @@ public class TripRequestMapperTest implements PlanTestConstants {
     modes.put("accessMode", null);
     modes.put("egressMode", null);
     modes.put("directMode", null);
-    Map<String, Object> arguments = Map.of("modes", modes);
-    var req = TripRequestMapper.createRequest(executionContext(arguments));
+
+    Map<String, Object> arguments = arguments("modes", modes);
+    var req = MAPPER.createRequest(executionContext(arguments));
 
     assertEquals(StreetMode.NOT_SET, req.journey().access().mode());
     assertEquals(StreetMode.NOT_SET, req.journey().egress().mode());
@@ -349,7 +379,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   @Test
   public void testExplicitModes() {
-    Map<String, Object> arguments = Map.of(
+    Map<String, Object> arguments = arguments(
       "modes",
       Map.of(
         "accessMode",
@@ -360,7 +390,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
         StreetMode.BIKE_TO_PARK
       )
     );
-    var req = TripRequestMapper.createRequest(executionContext(arguments));
+    var req = MAPPER.createRequest(executionContext(arguments));
 
     assertEquals(StreetMode.SCOOTER_RENTAL, req.journey().access().mode());
     assertEquals(StreetMode.BIKE_RENTAL, req.journey().egress().mode());
@@ -376,15 +406,15 @@ public class TripRequestMapperTest implements PlanTestConstants {
   @ParameterizedTest
   @ValueSource(strings = { "transferSlack", "minimumTransferTime" })
   public void testBackwardsCompatibleTransferSlack(String name) {
-    Map<String, Object> arguments = Map.of(name, 101);
-    var req = TripRequestMapper.createRequest(executionContext(arguments));
+    Map<String, Object> arguments = arguments(name, 101);
+    var req = MAPPER.createRequest(executionContext(arguments));
     assertEquals(Duration.ofSeconds(101), req.preferences().transfer().slack());
   }
 
   @Test
   public void testExplicitModesBikeAccess() {
-    Map<String, Object> arguments = Map.of("modes", Map.of("accessMode", StreetMode.BIKE));
-    var req = TripRequestMapper.createRequest(executionContext(arguments));
+    Map<String, Object> arguments = arguments("modes", Map.of("accessMode", StreetMode.BIKE));
+    var req = MAPPER.createRequest(executionContext(arguments));
 
     assertEquals(StreetMode.BIKE, req.journey().access().mode());
     assertEquals(StreetMode.NOT_SET, req.journey().egress().mode());
@@ -415,11 +445,23 @@ public class TripRequestMapperTest implements PlanTestConstants {
 
   private static List<TripPattern> itineraryPatterns(final Itinerary itinerary) {
     return itinerary
-      .getLegs()
+      .legs()
       .stream()
       .filter(Leg::isScheduledTransitLeg)
       .map(Leg::asScheduledTransitLeg)
-      .map(ScheduledTransitLeg::getTripPattern)
+      .map(ScheduledTransitLeg::tripPattern)
       .collect(toList());
+  }
+
+  private static Map<String, Object> arguments() {
+    return Map.ofEntries(ARGUMENT_FROM, ARGUMENT_TO);
+  }
+
+  private static Map<String, Object> arguments(String key, Object value) {
+    return Map.ofEntries(ARGUMENT_FROM, ARGUMENT_TO, entry(key, value));
+  }
+
+  private static Map<String, Object> arguments(String k1, Object v1, String k2, Object v2) {
+    return Map.ofEntries(ARGUMENT_FROM, ARGUMENT_TO, entry(k1, v1), entry(k2, v2));
   }
 }

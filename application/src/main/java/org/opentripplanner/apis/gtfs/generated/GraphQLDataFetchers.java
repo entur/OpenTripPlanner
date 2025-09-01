@@ -25,6 +25,7 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRoutingErrorC
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLTransitMode;
 import org.opentripplanner.apis.gtfs.model.CallRealTime;
 import org.opentripplanner.apis.gtfs.model.CallSchedule;
+import org.opentripplanner.apis.gtfs.model.CallScheduledTime;
 import org.opentripplanner.apis.gtfs.model.FeedPublisher;
 import org.opentripplanner.apis.gtfs.model.PlanPageInfo;
 import org.opentripplanner.apis.gtfs.model.RideHailingProvider;
@@ -37,16 +38,15 @@ import org.opentripplanner.model.SystemNotice;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.openinghours.OHCalendar;
 import org.opentripplanner.model.fare.FareMedium;
-import org.opentripplanner.model.fare.FareProduct;
-import org.opentripplanner.model.fare.FareProductUse;
+import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.fare.RiderCategory;
-import org.opentripplanner.model.plan.Emissions;
+import org.opentripplanner.model.plan.Emission;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.model.plan.LegCallTime;
-import org.opentripplanner.model.plan.LegRealTimeEstimate;
-import org.opentripplanner.model.plan.StopArrival;
-import org.opentripplanner.model.plan.WalkStep;
+import org.opentripplanner.model.plan.leg.LegCallTime;
+import org.opentripplanner.model.plan.leg.LegRealTimeEstimate;
+import org.opentripplanner.model.plan.leg.StopArrival;
+import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
@@ -264,7 +264,7 @@ public class GraphQLDataFetchers {
 
   /** What is scheduled for a trip on a service date for a stop location. */
   public interface GraphQLCallSchedule {
-    public DataFetcher<Object> time();
+    public DataFetcher<CallScheduledTime> time();
   }
 
   /** Scheduled times for a trip on a service date for a stop location. */
@@ -389,8 +389,22 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<TripTimeOnDate>> stoptimes();
   }
 
+  public interface GraphQLDependentFareProduct {
+    public DataFetcher<Iterable<FareOffer>> dependencies();
+
+    public DataFetcher<String> id();
+
+    public DataFetcher<FareMedium> medium();
+
+    public DataFetcher<String> name();
+
+    public DataFetcher<Money> price();
+
+    public DataFetcher<RiderCategory> riderCategory();
+  }
+
   public interface GraphQLEmissions {
-    public DataFetcher<org.opentripplanner.framework.model.Grams> co2();
+    public DataFetcher<org.opentripplanner.framework.model.Gram> co2();
   }
 
   /** Station entrance or exit, originating from OSM or GTFS data. */
@@ -443,7 +457,7 @@ public class GraphQLDataFetchers {
   public interface GraphQLFareProductUse {
     public DataFetcher<String> id();
 
-    public DataFetcher<FareProduct> product();
+    public DataFetcher<FareOffer> product();
   }
 
   /** A feed provides routing data (stops, routes, timetables, etc.) from one or more public transport agencies. */
@@ -481,7 +495,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<Double> elevationLost();
 
-    public DataFetcher<Emissions> emissionsPerPerson();
+    public DataFetcher<Emission> emissionsPerPerson();
 
     public DataFetcher<java.time.OffsetDateTime> end();
 
@@ -531,7 +545,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<Long> endTime();
 
-    public DataFetcher<Iterable<FareProductUse>> fareProducts();
+    public DataFetcher<Iterable<FareOffer>> fareProducts();
 
     public DataFetcher<StopArrival> from();
 
@@ -579,6 +593,8 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<Iterable<WalkStep>> steps();
 
+    public DataFetcher<Iterable<TripTimeOnDate>> stopCalls();
+
     public DataFetcher<StopArrival> to();
 
     public DataFetcher<Boolean> transitLeg();
@@ -610,6 +626,32 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> date();
 
     public DataFetcher<Iterable<Object>> timeSpans();
+  }
+
+  /**
+   * A stop that isn't a fixed point but zone where passengers can board or alight anywhere.
+   *
+   * This is mostly used by demand-responsive services.
+   */
+  public interface GraphQLLocation {
+    public DataFetcher<Object> geometry();
+
+    public DataFetcher<String> gtfsId();
+
+    public DataFetcher<String> name();
+  }
+
+  /**
+   * A group of fixed stops that are visited in an arbitrary order.
+   *
+   * This is mostly used by demand-responsive services.
+   */
+  public interface GraphQLLocationGroup {
+    public DataFetcher<String> gtfsId();
+
+    public DataFetcher<Iterable<Object>> members();
+
+    public DataFetcher<String> name();
   }
 
   /** An amount of money. */
@@ -919,6 +961,8 @@ public class GraphQLDataFetchers {
   public interface GraphQLRentalVehicle {
     public DataFetcher<Boolean> allowPickupNow();
 
+    public DataFetcher<java.time.OffsetDateTime> availableUntil();
+
     public DataFetcher<RentalVehicleFuel> fuel();
 
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
@@ -1127,7 +1171,12 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> zoneId();
   }
 
-  /** Stop call represents the time when a specific trip on a specific date arrives to and/or departs from a specific stop location. */
+  /**
+   * Represents the time or time window when a specific trip on a specific date arrives to and/or departs
+   * from a specific stop location.
+   *
+   * This may contain real-time information, if available.
+   */
   public interface GraphQLStopCall {
     public DataFetcher<CallRealTime> realTime();
 
@@ -1244,6 +1293,13 @@ public class GraphQLDataFetchers {
     public DataFetcher<Double> price();
 
     public DataFetcher<Iterable<String>> zones();
+  }
+
+  /** A time window when a vehicle visit a stop, area or group of stops. */
+  public interface GraphQLTimeWindow {
+    public DataFetcher<java.time.OffsetDateTime> end();
+
+    public DataFetcher<java.time.OffsetDateTime> start();
   }
 
   /** Text with language */
@@ -1405,6 +1461,8 @@ public class GraphQLDataFetchers {
     public DataFetcher<Double> heading();
 
     public DataFetcher<String> label();
+
+    public DataFetcher<java.time.OffsetDateTime> lastUpdate();
 
     public DataFetcher<Long> lastUpdated();
 
@@ -1570,7 +1628,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Double> distance();
 
     public DataFetcher<
-      Iterable<org.opentripplanner.model.plan.ElevationProfile.Step>
+      Iterable<org.opentripplanner.model.plan.leg.ElevationProfile.Step>
     > elevationProfile();
 
     public DataFetcher<String> exit();

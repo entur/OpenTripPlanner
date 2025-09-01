@@ -3,7 +3,6 @@ package org.opentripplanner.apis.transmodel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.SchemaPrinter;
-import io.micrometer.core.instrument.Tag;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -20,13 +19,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
-import org.opentripplanner.apis.support.graphql.injectdoc.ApiDocumentationProfile;
-import org.opentripplanner.apis.transmodel.mapping.TransitIdMapper;
-import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.apis.support.TracingUtils;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
-import org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig;
-import org.opentripplanner.transit.service.TimetableRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,9 +39,9 @@ public class TransmodelAPI {
 
   private static final Logger LOG = LoggerFactory.getLogger(TransmodelAPI.class);
 
-  private static GraphQLSchema schema;
-  private static Collection<String> tracingHeaderTags;
-  private static int maxNumberOfResultFields;
+  private final GraphQLSchema schema;
+  private final Collection<String> tracingHeaderTags;
+  private final int maxNumberOfResultFields;
 
   private final OtpServerRequestContext serverContext;
   private final TransmodelGraph index;
@@ -55,7 +49,11 @@ public class TransmodelAPI {
 
   public TransmodelAPI(@Context OtpServerRequestContext serverContext) {
     this.serverContext = serverContext;
+    this.schema = serverContext.transmodelSchema();
     this.index = new TransmodelGraph(schema);
+
+    tracingHeaderTags = serverContext.transmodelAPIParameters().tracingHeaderTags();
+    maxNumberOfResultFields = serverContext.transmodelAPIParameters().maxNumberOfResultFields();
   }
 
   /**
@@ -70,31 +68,6 @@ public class TransmodelAPI {
     ) {
       super(serverContext);
     }
-  }
-
-  /**
-   * This method should be called BEFORE the Web-Container is started and load new instances of this
-   * class. This is a hack, and it would be better if the configuration was done more explicit and
-   * enforced, not relaying on a "static" setup method to be called.
-   */
-  public static void setUp(
-    TransmodelAPIParameters config,
-    TimetableRepository timetableRepository,
-    RouteRequest defaultRouteRequest,
-    ApiDocumentationProfile documentationProfile,
-    TransitRoutingConfig transitRoutingConfig
-  ) {
-    if (config.hideFeedId()) {
-      TransitIdMapper.setupFixedFeedId(timetableRepository.getAgencies());
-    }
-    tracingHeaderTags = config.tracingHeaderTags();
-    maxNumberOfResultFields = config.maxNumberOfResultFields();
-    schema = TransmodelGraphQLSchema.create(
-      defaultRouteRequest,
-      timetableRepository.getTimeZone(),
-      documentationProfile,
-      transitRoutingConfig
-    );
   }
 
   @POST
@@ -134,7 +107,7 @@ public class TransmodelAPI {
       variables,
       operationName,
       maxNumberOfResultFields,
-      getTagsFromHeaders(headers)
+      TracingUtils.findTagsInHeaders(tracingHeaderTags, headers)
     );
   }
 
@@ -147,7 +120,7 @@ public class TransmodelAPI {
       null,
       null,
       maxNumberOfResultFields,
-      getTagsFromHeaders(headers)
+      TracingUtils.findTagsInHeaders(tracingHeaderTags, headers)
     );
   }
 
@@ -156,15 +129,5 @@ public class TransmodelAPI {
   public Response getGraphQLSchema() {
     var text = SCHEMA_DOC_HEADER + new SchemaPrinter().print(schema);
     return Response.ok().encoding("UTF-8").entity(text).build();
-  }
-
-  private static Iterable<Tag> getTagsFromHeaders(HttpHeaders headers) {
-    return tracingHeaderTags
-      .stream()
-      .map(header -> {
-        String value = headers.getHeaderString(header);
-        return Tag.of(header, value == null ? "__UNKNOWN__" : value);
-      })
-      .collect(Collectors.toList());
   }
 }

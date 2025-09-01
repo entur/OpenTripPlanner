@@ -9,6 +9,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.utils.time.ServiceDateUtils;
+import org.opentripplanner.utils.time.TimeUtils;
 
 public class TripUpdateBuilder {
 
@@ -43,18 +44,22 @@ public class TripUpdateBuilder {
     LocalDate serviceDate,
     GtfsRealtime.TripDescriptor.ScheduleRelationship scheduleRelationship,
     ZoneId zoneId,
-    String tripHeadsign
+    String tripHeadsign,
+    String tripShortName
   ) {
     this(tripId, serviceDate, scheduleRelationship, zoneId);
     tripUpdateBuilder.setTripProperties(
-      GtfsRealtime.TripUpdate.TripProperties.newBuilder().setTripHeadsign(tripHeadsign).build()
+      GtfsRealtime.TripUpdate.TripProperties.newBuilder()
+        .setTripHeadsign(tripHeadsign)
+        .setTripShortName(tripShortName)
+        .build()
     );
   }
 
-  public TripUpdateBuilder addStopTime(String stopId, int secondsFromMidnight) {
+  public TripUpdateBuilder addStopTime(String stopId, String time) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -62,14 +67,14 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
-  public TripUpdateBuilder addStopTime(String stopId, int secondsFromMidnight, String headsign) {
+  public TripUpdateBuilder addStopTime(String stopId, String time, String headsign) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -77,14 +82,14 @@ public class TripUpdateBuilder {
       null,
       null,
       headsign,
-      NO_VALUE
+      null
     );
   }
 
-  public TripUpdateBuilder addStopTimeWithDelay(String stopId, int secondsFromMidnight, int delay) {
+  public TripUpdateBuilder addStopTimeWithDelay(String stopId, String time, int delay) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       delay,
       delay,
@@ -92,18 +97,18 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
   public TripUpdateBuilder addStopTimeWithScheduled(
     String stopId,
-    int secondsFromMidnight,
-    int scheduledSeconds
+    String time,
+    String scheduledTime
   ) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -111,18 +116,14 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      scheduledSeconds
+      scheduledTime
     );
   }
 
-  public TripUpdateBuilder addStopTime(
-    String stopId,
-    int secondsFromMidnight,
-    DropOffPickupType pickDrop
-  ) {
+  public TripUpdateBuilder addStopTime(String stopId, String time, DropOffPickupType pickDrop) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -130,18 +131,18 @@ public class TripUpdateBuilder {
       pickDrop,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
   public TripUpdateBuilder addStopTime(
     String stopId,
-    int secondsFromMidnight,
+    String time,
     StopTimeUpdate.StopTimeProperties.DropOffPickupType pickDrop
   ) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -149,14 +150,14 @@ public class TripUpdateBuilder {
       null,
       pickDrop,
       null,
-      NO_VALUE
+      null
     );
   }
 
   public TripUpdateBuilder addDelayedStopTime(int stopSequence, int delay) {
     return addStopTime(
       null,
-      -1,
+      null,
       stopSequence,
       delay,
       delay,
@@ -164,37 +165,7 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
-    );
-  }
-
-  public TripUpdateBuilder addDelayedArrivalStopTime(int stopSequence, int arrivalDelay) {
-    return addStopTime(
-      null,
-      -1,
-      stopSequence,
-      arrivalDelay,
-      NO_DELAY,
-      DEFAULT_SCHEDULE_RELATIONSHIP,
-      null,
-      null,
-      null,
-      NO_VALUE
-    );
-  }
-
-  public TripUpdateBuilder addDelayedDepartureStopTime(int stopSequence, int departureDelay) {
-    return addStopTime(
-      null,
-      -1,
-      stopSequence,
-      NO_DELAY,
-      departureDelay,
-      DEFAULT_SCHEDULE_RELATIONSHIP,
-      null,
-      null,
-      null,
-      NO_VALUE
+      null
     );
   }
 
@@ -205,7 +176,7 @@ public class TripUpdateBuilder {
   ) {
     return addStopTime(
       null,
-      NO_VALUE,
+      null,
       stopSequence,
       arrivalDelay,
       departureDelay,
@@ -213,7 +184,7 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
@@ -223,7 +194,7 @@ public class TripUpdateBuilder {
   public TripUpdateBuilder addNoDataStop(int stopSequence) {
     return addStopTime(
       null,
-      NO_VALUE,
+      null,
       stopSequence,
       NO_DELAY,
       NO_DELAY,
@@ -231,7 +202,7 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
@@ -241,7 +212,7 @@ public class TripUpdateBuilder {
   public TripUpdateBuilder addSkippedStop(int stopSequence) {
     return addStopTime(
       null,
-      NO_VALUE,
+      null,
       stopSequence,
       NO_DELAY,
       NO_DELAY,
@@ -249,14 +220,14 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
-  public TripUpdateBuilder addSkippedStop(String stopId, int secondsFromMidnight) {
+  public TripUpdateBuilder addSkippedStop(String stopId, String time) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -264,18 +235,14 @@ public class TripUpdateBuilder {
       null,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
-  public TripUpdateBuilder addSkippedStop(
-    String stopId,
-    int secondsFromMidnight,
-    DropOffPickupType pickDrop
-  ) {
+  public TripUpdateBuilder addSkippedStop(String stopId, String time, DropOffPickupType pickDrop) {
     return addStopTime(
       stopId,
-      secondsFromMidnight,
+      time,
       NO_VALUE,
       NO_DELAY,
       NO_DELAY,
@@ -283,7 +250,7 @@ public class TripUpdateBuilder {
       pickDrop,
       null,
       null,
-      NO_VALUE
+      null
     );
   }
 
@@ -298,7 +265,7 @@ public class TripUpdateBuilder {
 
   private TripUpdateBuilder addStopTime(
     @Nullable String stopId,
-    int secondsFromMidnight,
+    @Nullable String time,
     int stopSequence,
     int arrivalDelay,
     int departureDelay,
@@ -306,7 +273,7 @@ public class TripUpdateBuilder {
     @Nullable DropOffPickupType pickDrop,
     @Nullable StopTimeUpdate.StopTimeProperties.DropOffPickupType gtfsPickDrop,
     @Nullable String headsign,
-    int scheduledSeconds
+    @Nullable String scheduledTime
   ) {
     final StopTimeUpdate.Builder stopTimeUpdateBuilder =
       tripUpdateBuilder.addStopTimeUpdateBuilder();
@@ -345,14 +312,14 @@ public class TripUpdateBuilder {
     final GtfsRealtime.TripUpdate.StopTimeEvent.Builder departureBuilder =
       stopTimeUpdateBuilder.getDepartureBuilder();
 
-    if (secondsFromMidnight > NO_VALUE) {
-      var epochSeconds = midnight.plusSeconds(secondsFromMidnight).toEpochSecond();
+    if (time != null) {
+      var epochSeconds = midnight.plusSeconds(TimeUtils.time(time)).toEpochSecond();
       arrivalBuilder.setTime(epochSeconds);
       departureBuilder.setTime(epochSeconds);
     }
 
-    if (scheduledSeconds > NO_VALUE) {
-      var epochSeconds = midnight.plusSeconds(scheduledSeconds).toEpochSecond();
+    if (scheduledTime != null) {
+      var epochSeconds = midnight.plusSeconds(TimeUtils.time(scheduledTime)).toEpochSecond();
       arrivalBuilder.setScheduledTime(epochSeconds);
       departureBuilder.setScheduledTime(epochSeconds);
     }
@@ -362,14 +329,6 @@ public class TripUpdateBuilder {
     }
     if (departureDelay != NO_DELAY) {
       departureBuilder.setDelay(departureDelay);
-    }
-
-    if (!arrivalBuilder.hasTime() && !arrivalBuilder.hasDelay()) {
-      stopTimeUpdateBuilder.clearArrival();
-    }
-
-    if (!departureBuilder.hasTime() && !departureBuilder.hasDelay()) {
-      stopTimeUpdateBuilder.clearDeparture();
     }
 
     return this;

@@ -17,6 +17,7 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TemporaryVerticesContainer;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 
 /**
  * Generates "direct" street routes, i.e. those that do not use transit and are on the street
@@ -32,18 +33,20 @@ public class DirectStreetRouter {
     }
     OTPRequestTimeoutException.checkForTimeout();
 
-    RouteRequest directRequest = request.clone();
     try (
       var temporaryVertices = new TemporaryVerticesContainer(
         serverContext.graph(),
-        directRequest.from(),
-        directRequest.to(),
+        serverContext.vertexLinker(),
+        request.from(),
+        request.to(),
         request.journey().direct().mode(),
         request.journey().direct().mode()
       )
     ) {
-      var maxCarSpeed = serverContext.streetLimitationParametersService().getMaxCarSpeed();
-      if (!straightLineDistanceIsWithinLimit(directRequest, temporaryVertices, maxCarSpeed)) {
+      StreetLimitationParametersService streetLimitationParametersService =
+        serverContext.streetLimitationParametersService();
+      var maxCarSpeed = streetLimitationParametersService.getMaxCarSpeed();
+      if (!straightLineDistanceIsWithinLimit(request, temporaryVertices, maxCarSpeed)) {
         return Collections.emptyList();
       }
 
@@ -51,10 +54,10 @@ public class DirectStreetRouter {
       GraphPathFinder gpFinder = new GraphPathFinder(
         serverContext.traverseVisitor(),
         serverContext.dataOverlayContext(request),
-        maxCarSpeed
+        streetLimitationParametersService
       );
       List<GraphPath<State, Edge, Vertex>> paths = gpFinder.graphPathFinderEntryPoint(
-        directRequest,
+        request,
         temporaryVertices
       );
 
@@ -65,10 +68,10 @@ public class DirectStreetRouter {
         serverContext.graph().ellipsoidToGeoidDifference
       );
       List<Itinerary> response = graphPathToItineraryMapper.mapItineraries(paths);
-      ItinerariesHelper.decorateItinerariesWithRequestData(
+      response = ItinerariesHelper.decorateItinerariesWithRequestData(
         response,
-        directRequest.wheelchair(),
-        directRequest.preferences().wheelchair()
+        request.journey().wheelchair(),
+        request.preferences().wheelchair()
       );
       return response;
     } catch (PathNotFoundException e) {

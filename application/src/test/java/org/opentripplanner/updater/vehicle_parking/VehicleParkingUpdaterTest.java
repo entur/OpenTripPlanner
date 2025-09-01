@@ -10,6 +10,7 @@ import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingTestGraphData;
@@ -52,7 +53,7 @@ class VehicleParkingUpdaterTest {
     when(dataSource.update()).thenReturn(true);
 
     timetableRepository.index();
-    graph.index(timetableRepository.getSiteRepository());
+    graph.index();
 
     var parameters = new VehicleParkingUpdaterParameters() {
       @Override
@@ -78,7 +79,7 @@ class VehicleParkingUpdaterTest {
     vehicleParkingUpdater = new VehicleParkingUpdater(
       parameters,
       dataSource,
-      graph.getLinker(),
+      TestVertexLinker.of(graph),
       parkingRepository
     );
   }

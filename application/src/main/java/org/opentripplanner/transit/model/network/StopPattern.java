@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -42,8 +43,6 @@ import org.opentripplanner.utils.lang.MemEfficientArrayBuilder;
  * for a TripPattern. Should the route be included in the StopPattern?
  */
 public final class StopPattern implements Serializable {
-
-  public static final int NOT_FOUND = -1;
 
   private final StopLocation[] stops;
   private final PickDrop[] pickups;
@@ -324,15 +323,26 @@ public final class StopPattern implements Serializable {
     }
 
     /**
-     * Sets pickup and dropoff at given stop indices as CANCELLED.
+     * Updates the pickup types at given stop indices.
      *
      * @return StopPatternBuilder
      */
-    public StopPatternBuilder cancelStops(List<Integer> cancelledStopIndices) {
-      cancelledStopIndices.forEach(index -> {
-        pickups.with(index, PickDrop.CANCELLED);
-        dropoffs.with(index, PickDrop.CANCELLED);
-      });
+    public StopPatternBuilder updatePickups(Map<Integer, PickDrop> updatedPickups) {
+      for (var entry : updatedPickups.entrySet()) {
+        pickups.with(entry.getKey(), entry.getValue());
+      }
+      return this;
+    }
+
+    /**
+     * Updates the pickup types at given stop indices.
+     *
+     * @return StopPatternBuilder
+     */
+    public StopPatternBuilder updateDropoffs(Map<Integer, PickDrop> updatedDropoffs) {
+      for (var entry : updatedDropoffs.entrySet()) {
+        dropoffs.with(entry.getKey(), entry.getValue());
+      }
       return this;
     }
 
@@ -346,6 +356,17 @@ public final class StopPattern implements Serializable {
         if (stops.getOrOriginal(i).getId().equals(old)) {
           stops.with(i, newStop);
         }
+      }
+      return this;
+    }
+
+    /**
+     * Replace the stops at given stop indices
+     */
+    public StopPatternBuilder replaceStops(Map<Integer, StopLocation> newStops) {
+      Objects.requireNonNull(newStops);
+      for (var entry : newStops.entrySet()) {
+        stops.with(entry.getKey(), entry.getValue());
       }
       return this;
     }

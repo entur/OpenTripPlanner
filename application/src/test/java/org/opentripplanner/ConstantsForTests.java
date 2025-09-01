@@ -12,13 +12,14 @@ import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.FileType;
 import org.opentripplanner.datastore.file.DirectoryDataSource;
 import org.opentripplanner.datastore.file.ZipFileDataSource;
-import org.opentripplanner.ext.fares.impl.DefaultFareServiceFactory;
+import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareServiceFactory;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
-import org.opentripplanner.graph_builder.ConfiguredDataSource;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.graph_builder.model.ConfiguredCompositeDataSource;
 import org.opentripplanner.graph_builder.module.DirectTransferGenerator;
-import org.opentripplanner.graph_builder.module.GtfsFeedId;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
+import org.opentripplanner.graph_builder.module.TurnRestrictionModule;
+import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.graph_builder.module.ned.ElevationModule;
 import org.opentripplanner.graph_builder.module.ned.GeotiffGridCoverageFactoryImpl;
 import org.opentripplanner.graph_builder.module.osm.OsmModule;
@@ -42,6 +43,7 @@ import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.OtpConfigLoader;
+import org.opentripplanner.street.model.StreetLimitationParameters;
 import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
@@ -50,6 +52,7 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.utils.time.DurationUtils;
 
 public class ConstantsForTests {
 
@@ -104,7 +107,10 @@ public class ConstantsForTests {
     var netexZipFile = new File(NETEX_NORDIC_DIR, NETEX_NORDIC_FILENAME);
 
     var dataSource = new ZipFileDataSource(netexZipFile, FileType.NETEX);
-    var configuredDataSource = new ConfiguredDataSource<>(dataSource, buildConfig.netexDefaults);
+    var configuredDataSource = new ConfiguredCompositeDataSource<>(
+      dataSource,
+      buildConfig.netexDefaults
+    );
     var transitService = new OtpTransitServiceBuilder(
       new SiteRepository(),
       DataImportIssueStore.NOOP
@@ -119,7 +125,10 @@ public class ConstantsForTests {
     var netexZipFile = new File(NETEX_EPIP_DATA_DIR);
 
     var dataSource = new DirectoryDataSource(netexZipFile, FileType.NETEX);
-    var configuredDataSource = new ConfiguredDataSource<>(dataSource, buildConfig.netexDefaults);
+    var configuredDataSource = new ConfiguredCompositeDataSource<>(
+      dataSource,
+      buildConfig.netexDefaults
+    );
     var transitService = new OtpTransitServiceBuilder(
       new SiteRepository(),
       DataImportIssueStore.NOOP
@@ -136,6 +145,8 @@ public class ConstantsForTests {
       var deduplicator = new Deduplicator();
       var graph = new Graph(deduplicator);
       var timetableRepository = new TimetableRepository(new SiteRepository(), deduplicator);
+      var fareFactory = new DefaultFareServiceFactory();
+      var streetLimitationParameters = new StreetLimitationParameters();
       // Add street data from OSM
       {
         var osmProvider = new DefaultOsmProvider(PORTLAND_CENTRAL_OSM, false);
@@ -149,18 +160,13 @@ public class ConstantsForTests {
         )
           .withStaticParkAndRide(true)
           .withStaticBikeParkAndRide(true)
+          .withStreetLimitationParameters(streetLimitationParameters)
           .build();
         osmModule.buildGraph();
       }
       // Add transit data from GTFS
       {
-        addGtfsToGraph(
-          graph,
-          timetableRepository,
-          PORTLAND_GTFS,
-          new DefaultFareServiceFactory(),
-          "prt"
-        );
+        addGtfsToGraph(graph, timetableRepository, PORTLAND_GTFS, fareFactory, "prt");
       }
       // Link transit stops to streets
       TestStreetLinkerModule.link(graph, timetableRepository);
@@ -183,12 +189,12 @@ public class ConstantsForTests {
         timetableRepository,
         DataImportIssueStore.NOOP,
         Duration.ofMinutes(30),
-        List.of(new RouteRequest())
+        List.of(RouteRequest.defaultValue())
       ).buildGraph();
 
-      graph.index(timetableRepository.getSiteRepository());
+      graph.index();
 
-      return new TestOtpModel(graph, timetableRepository);
+      return new TestOtpModel(graph, streetLimitationParameters, timetableRepository, fareFactory);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -211,6 +217,11 @@ public class ConstantsForTests {
         vehicleParkingRepository
       ).build();
       osmModule.buildGraph();
+      TurnRestrictionModule turnRestrictionModule = new TurnRestrictionModule(
+        graph,
+        osmInfoRepository
+      );
+      turnRestrictionModule.buildGraph();
       return new TestOtpModel(graph, timetableRepository);
     } catch (Exception e) {
       throw new RuntimeException(e);
@@ -244,7 +255,7 @@ public class ConstantsForTests {
     var graph = new Graph(deduplicator);
     var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
     addGtfsToGraph(graph, timetableRepository, gtfsFile, fareServiceFactory, null);
-    return new TestOtpModel(graph, timetableRepository);
+    return new TestOtpModel(graph, timetableRepository, fareServiceFactory);
   }
 
   public static TestOtpModel buildNewMinimalNetexGraph() {
@@ -268,7 +279,9 @@ public class ConstantsForTests {
           .copyOf()
           .withSource(NETEX_MINIMAL_DATA_SOURCE.uri())
           .build();
-        var sources = List.of(new ConfiguredDataSource<>(NETEX_MINIMAL_DATA_SOURCE, netexConfig));
+        var sources = List.of(
+          new ConfiguredCompositeDataSource<>(NETEX_MINIMAL_DATA_SOURCE, netexConfig)
+        );
 
         new NetexConfigure(buildConfig)
           .createNetexModule(
@@ -316,8 +329,7 @@ public class ConstantsForTests {
     FareServiceFactory fareServiceFactory,
     @Nullable String feedId
   ) {
-    var bundle = new GtfsBundle(file);
-    bundle.setFeedId(new GtfsFeedId.Builder().id(feedId).build());
+    var bundle = GtfsBundle.forTest(file, feedId);
 
     var module = new GtfsModule(
       List.of(bundle),
@@ -325,36 +337,40 @@ public class ConstantsForTests {
       graph,
       DataImportIssueStore.NOOP,
       ServiceDateInterval.unbounded(),
-      fareServiceFactory
+      fareServiceFactory,
+      150.0,
+      DurationUtils.durationInSeconds("2m")
     );
 
     module.buildGraph();
 
     timetableRepository.index();
-    graph.index(timetableRepository.getSiteRepository());
+    graph.index();
   }
 
   private static void addPortlandVehicleRentals(Graph graph) {
     try {
-      VertexLinker linker = graph.getLinker();
+      VertexLinker linker = TestVertexLinker.of(graph);
       CsvReader reader = new CsvReader(PORTLAND_BIKE_SHARE_CSV, ',', StandardCharsets.UTF_8);
       reader.readHeaders();
       while (reader.readRecord()) {
-        VehicleRentalStation station = new VehicleRentalStation();
-        station.id = new FeedScopedId(reader.get("network"), reader.get("osm_id"));
-        station.latitude = Double.parseDouble(reader.get("lat"));
-        station.longitude = Double.parseDouble(reader.get("lon"));
-        station.name = new NonLocalizedString(reader.get("osm_id"));
         RentalVehicleType vehicleType = RentalVehicleType.getDefaultType(reader.get("network"));
         Map<RentalVehicleType, Integer> availability = Map.of(vehicleType, 2);
-        station.vehicleTypesAvailable = availability;
-        station.vehicleSpacesAvailable = availability;
-        station.realTimeData = false;
-        station.isArrivingInRentalVehicleAtDestinationAllowed = true;
+
+        VehicleRentalStation station = VehicleRentalStation.of()
+          .withId(new FeedScopedId(reader.get("network"), reader.get("osm_id")))
+          .withLatitude(Double.parseDouble(reader.get("lat")))
+          .withLongitude(Double.parseDouble(reader.get("lon")))
+          .withName(new NonLocalizedString(reader.get("osm_id")))
+          .withVehicleTypesAvailable(availability)
+          .withVehicleSpacesAvailable(availability)
+          .withRealTimeData(false)
+          .withIsArrivingInRentalVehicleAtDestinationAllowed(true)
+          .build();
 
         VehicleRentalPlaceVertex stationVertex = new VehicleRentalPlaceVertex(station);
         graph.addVertex(stationVertex);
-        VehicleRentalEdge.createVehicleRentalEdge(stationVertex, vehicleType.formFactor);
+        VehicleRentalEdge.createVehicleRentalEdge(stationVertex, vehicleType.formFactor());
 
         linker.linkVertexPermanently(
           stationVertex,

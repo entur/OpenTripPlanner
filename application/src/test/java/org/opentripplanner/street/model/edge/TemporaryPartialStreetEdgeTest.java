@@ -14,7 +14,6 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.graph.index.StreetIndex;
 import org.opentripplanner.routing.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
@@ -67,6 +66,35 @@ public class TemporaryPartialStreetEdgeTest {
   }
 
   @Test
+  void testAngles() {
+    var from = vertex("from", 0, 0);
+    var to = vertex("to", 0.001, 0.002);
+    var geom = GeometryUtils.makeLineString(0, 0, 0.001, 0.001, 0.002, 0.001);
+    var edge = new StreetEdgeBuilder<>()
+      .withFromVertex(from)
+      .withToVertex(to)
+      .withGeometry(geom)
+      .withMeterLength(geom.getLength())
+      .withBack(false)
+      .withPermission(StreetTraversalPermission.ALL)
+      .buildAndConnect();
+
+    TemporaryPartialStreetEdge pEdge = newTemporaryPartialStreetEdge(
+      edge,
+      from,
+      to,
+      edge.getGeometry(),
+      "pEdge",
+      edge.getDistanceMeters()
+    );
+
+    assertEquals(45, edge.getInAngle(), 2);
+    assertEquals(90, edge.getOutAngle(), 2);
+    assertEquals(45, pEdge.getInAngle(), 2);
+    assertEquals(90, pEdge.getOutAngle(), 2);
+  }
+
+  @Test
   public void testTraversal() {
     StreetSearchRequest request = StreetSearchRequest.of().withMode(StreetMode.CAR).build();
 
@@ -116,7 +144,7 @@ public class TemporaryPartialStreetEdgeTest {
     Coordinate nearestPoint = new Coordinate(0.5, 2.0);
     List<StreetEdge> edges = new ArrayList<>();
     edges.add(e2);
-    TemporaryStreetLocation end = StreetIndex.createTemporaryStreetLocationForTest(
+    TemporaryStreetLocation end = StreetModelForTest.createTemporaryStreetLocationForTest(
       "middle of e2",
       new NonLocalizedString("foo"),
       edges,
@@ -124,7 +152,7 @@ public class TemporaryPartialStreetEdgeTest {
       true,
       tempEdges
     );
-    TemporaryStreetLocation start = StreetIndex.createTemporaryStreetLocationForTest(
+    TemporaryStreetLocation start = StreetModelForTest.createTemporaryStreetLocationForTest(
       "middle of e2",
       new NonLocalizedString("foo"),
       edges,
@@ -135,7 +163,7 @@ public class TemporaryPartialStreetEdgeTest {
 
     StreetSearchRequest request = StreetSearchRequest.of()
       .withMode(StreetMode.CAR)
-      .withPreferences(p -> p.withStreet(s -> s.withTurnReluctance(1.0)))
+      .withPreferences(p -> p.withStreet(s -> s.withTurnReluctance(0.5)))
       .build();
 
     // All intersections take 10 minutes - we'll notice if one isn't counted.
@@ -197,7 +225,7 @@ public class TemporaryPartialStreetEdgeTest {
     assertTrue(Math.abs(durationDiff - expectedDifference) <= 1);
     assertTrue(Math.abs(partialDurationDiff - expectedDifference) <= 1);
 
-    // Turn reluctance is 1.0, so weight == duration.
+    // Turn reluctance is 0.5 and car reluctance is 2.0, so weight == duration.
     double weightDiff = s3.getWeight() - s3NoCost.getWeight();
     double partialWeightDiff = partialS3.getWeight() - partialS3NoCost.getWeight();
     assertTrue(Math.abs(weightDiff - expectedDifference) <= 1);

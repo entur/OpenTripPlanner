@@ -3,25 +3,29 @@ package org.opentripplanner.standalone.api;
 import graphql.schema.GraphQLSchema;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.util.List;
-import java.util.Locale;
 import javax.annotation.Nullable;
+import org.opentripplanner.apis.gtfs.GtfsApiParameters;
+import org.opentripplanner.apis.transmodel.TransmodelAPIParameters;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.ext.dataoverlay.routing.DataOverlayContext;
-import org.opentripplanner.ext.emissions.EmissionsService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
+import org.opentripplanner.ext.trias.parameters.TriasApiParameters;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.GraphFinder;
+import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
@@ -71,11 +75,6 @@ public interface OtpServerRequestContext {
   @HttpRequestScoped
   RouteRequest defaultRouteRequest();
 
-  /**
-   * Return the default routing request locale(without cloning the request).
-   */
-  Locale defaultLocale();
-
   RaptorConfig<TripSchedule> raptorConfig();
 
   Graph graph();
@@ -121,7 +120,11 @@ public interface OtpServerRequestContext {
   TraverseVisitor<State, Edge> traverseVisitor();
 
   default GraphFinder graphFinder() {
-    return GraphFinder.getInstance(graph(), transitService()::findRegularStopsByBoundingBox);
+    return GraphFinder.getInstance(
+      graph(),
+      vertexLinker(),
+      transitService()::findRegularStopsByBoundingBox
+    );
   }
 
   FlexParameters flexParameters();
@@ -129,6 +132,12 @@ public interface OtpServerRequestContext {
   VectorTileConfig vectorTileConfig();
 
   ViaCoordinateTransferFactory viaTransferResolver();
+
+  TriasApiParameters triasApiParameters();
+
+  GtfsApiParameters gtfsApiParameters();
+
+  TransmodelAPIParameters transmodelAPIParameters();
 
   /* Sandbox modules */
 
@@ -143,7 +152,7 @@ public interface OtpServerRequestContext {
   }
 
   @Nullable
-  EmissionsService emissionsService();
+  ItineraryDecorator emissionItineraryDecorator();
 
   @Nullable
   LuceneIndex lucenceIndex();
@@ -155,5 +164,12 @@ public interface OtpServerRequestContext {
   SorlandsbanenNorwayService sorlandsbanenService();
 
   @Nullable
-  GraphQLSchema schema();
+  GraphQLSchema gtfsSchema();
+
+  @Nullable
+  GraphQLSchema transmodelSchema();
+
+  FareService fareService();
+
+  VertexLinker vertexLinker();
 }

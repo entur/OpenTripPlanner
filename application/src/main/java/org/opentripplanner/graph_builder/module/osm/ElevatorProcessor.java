@@ -1,16 +1,16 @@
 package org.opentripplanner.graph_builder.module.osm;
 
 import gnu.trove.list.TLongList;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.OptionalInt;
+import java.util.function.Consumer;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
-import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
@@ -19,9 +19,7 @@ import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
-import org.opentripplanner.street.model.edge.FreeEdge;
-import org.opentripplanner.street.model.vertex.ElevatorOffboardVertex;
-import org.opentripplanner.street.model.vertex.ElevatorOnboardVertex;
+import org.opentripplanner.street.model.vertex.ElevatorVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -40,18 +38,25 @@ class ElevatorProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(ElevatorProcessor.class);
 
-  private final DataImportIssueStore issueStore;
   private final OsmDatabase osmdb;
   private final VertexGenerator vertexGenerator;
+  private final Consumer<String> osmEntityDurationIssueConsumer;
 
   public ElevatorProcessor(
     DataImportIssueStore issueStore,
     OsmDatabase osmdb,
     VertexGenerator vertexGenerator
   ) {
-    this.issueStore = issueStore;
     this.osmdb = osmdb;
     this.vertexGenerator = vertexGenerator;
+    this.osmEntityDurationIssueConsumer = v ->
+      issueStore.add(
+        Issue.issue(
+          "InvalidDuration",
+          "Duration for osm node {} is not a valid duration: '{}'; the value is ignored.",
+          v
+        )
+      );
   }
 
   public void buildElevatorEdges(Graph graph) {
@@ -93,16 +98,19 @@ class ElevatorProcessor {
           levelName
         );
       }
-      int travelTime = parseDuration(node).orElse(-1);
+      long travelTime = node
+        .getDuration(osmEntityDurationIssueConsumer)
+        .map(Duration::toSeconds)
+        .orElse(-1L);
 
-      var wheelchair = node.wheelchairAccessibility();
+      var wheelchair = node.explicitWheelchairAccessibility();
 
       createElevatorHopEdges(
         onboardVertices,
         wheelchair,
-        !node.isBicycleExplicitlyDenied(),
+        !node.isBicycleDenied(),
         levels.length,
-        travelTime
+        (int) travelTime
       );
     } // END elevator edge loop
 
@@ -136,16 +144,19 @@ class ElevatorProcessor {
         );
       }
 
-      int travelTime = parseDuration(elevatorWay).orElse(-1);
+      long travelTime = elevatorWay
+        .getDuration(osmEntityDurationIssueConsumer)
+        .map(Duration::toSeconds)
+        .orElse(-1L);
       int levels = nodes.size();
-      var wheelchair = elevatorWay.wheelchairAccessibility();
+      var wheelchair = elevatorWay.explicitWheelchairAccessibility();
 
       createElevatorHopEdges(
         onboardVertices,
         wheelchair,
-        !elevatorWay.isBicycleExplicitlyDenied(),
+        !elevatorWay.isBicycleDenied(),
         levels,
-        travelTime
+        (int) travelTime
       );
       LOG.debug("Created elevatorHopEdges for way {}", elevatorWay.getId());
     }
@@ -159,21 +170,12 @@ class ElevatorProcessor {
     String levelName
   ) {
     var factory = new VertexFactory(graph);
-    ElevatorOffboardVertex offboardVertex = factory.elevatorOffboard(
-      sourceVertex,
-      label,
-      levelName
-    );
+    ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label, levelName);
 
-    FreeEdge.createFreeEdge(sourceVertex, offboardVertex);
-    FreeEdge.createFreeEdge(offboardVertex, sourceVertex);
-
-    ElevatorOnboardVertex onboardVertex = factory.elevatorOnboard(sourceVertex, label, levelName);
-
-    ElevatorBoardEdge.createElevatorBoardEdge(offboardVertex, onboardVertex);
+    ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex);
     ElevatorAlightEdge.createElevatorAlightEdge(
       onboardVertex,
-      offboardVertex,
+      sourceVertex,
       new NonLocalizedString(levelName)
     );
 
@@ -220,18 +222,5 @@ class ElevatorProcessor {
     // https://www.openstreetmap.org/way/503412863
     // https://www.openstreetmap.org/way/187719215
     return nodeRefs.get(0) != nodeRefs.get(nodeRefs.size() - 1);
-  }
-
-  private OptionalInt parseDuration(OsmEntity element) {
-    return element.getTagAsInt("duration", v ->
-      issueStore.add(
-        Issue.issue(
-          "InvalidDuration",
-          "Duration for osm node %d is not a number: '%s'; it's replaced with '-1' (unknown).",
-          element.getId(),
-          v
-        )
-      )
-    );
   }
 }

@@ -11,6 +11,10 @@ import java.io.Serializable;
 public class StreetLimitationParameters implements Serializable {
 
   private float maxCarSpeed = StreetConstants.DEFAULT_MAX_CAR_SPEED;
+  private int maxAreaNodes = StreetConstants.DEFAULT_MAX_AREA_NODES;
+
+  private float bestBikeSafety = 1;
+  private float bestWalkSafety = 1;
 
   @Inject
   public StreetLimitationParameters() {}
@@ -28,5 +32,35 @@ public class StreetLimitationParameters implements Serializable {
    */
   public float maxCarSpeed() {
     return maxCarSpeed;
+  }
+
+  /**
+   * Initialize limit for area linking
+   */
+  public void initMaxAreaNodes(int maxAreaNodes) {
+    this.maxAreaNodes = maxAreaNodes;
+  }
+
+  /**
+   * Get the limit for area linking
+   */
+  public int maxAreaNodes() {
+    return maxAreaNodes;
+  }
+
+  public float bestBikeSafety() {
+    return bestBikeSafety;
+  }
+
+  public void setBestBikeSafety(float bestBikeSafety) {
+    this.bestBikeSafety = bestBikeSafety;
+  }
+
+  public float bestWalkSafety() {
+    return bestWalkSafety;
+  }
+
+  public void setBestWalkSafety(float bestWalkSafety) {
+    this.bestWalkSafety = bestWalkSafety;
   }
 }

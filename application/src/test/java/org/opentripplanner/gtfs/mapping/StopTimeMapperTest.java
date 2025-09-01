@@ -33,6 +33,7 @@ import org.opentripplanner.transit.service.SiteRepositoryBuilder;
 public class StopTimeMapperTest {
 
   private static final String FEED_ID = "FEED";
+  private static final IdFactory ID_FACTORY = new IdFactory(FEED_ID);
 
   private static final AgencyAndId AGENCY_AND_ID = new AgencyAndId("A", "1");
 
@@ -44,11 +45,7 @@ public class StopTimeMapperTest {
 
   private static final int DROP_OFF_TYPE = 2;
 
-  private static final String FARE_PERIOD_ID = "Fare Period Id";
-
   private static final int PICKUP_TYPE = 3;
-
-  private static final String ROUTE_SHORT_NAME = "Route Short Name";
 
   private static final double SHAPE_DIST_TRAVELED = 2.5d;
 
@@ -72,16 +69,19 @@ public class StopTimeMapperTest {
   private final SiteRepositoryBuilder siteRepositoryBuilder = SiteRepository.of();
 
   private final StopMapper stopMapper = new StopMapper(
+    ID_FACTORY,
     new TranslationHelper(),
     stationId -> null,
     siteRepositoryBuilder
   );
   private final BookingRuleMapper bookingRuleMapper = new BookingRuleMapper();
   private final LocationMapper locationMapper = new LocationMapper(
+    ID_FACTORY,
     siteRepositoryBuilder,
     DataImportIssueStore.NOOP
   );
   private final LocationGroupMapper locationGroupMapper = new LocationGroupMapper(
+    ID_FACTORY,
     stopMapper,
     locationMapper,
     siteRepositoryBuilder
@@ -92,7 +92,8 @@ public class StopTimeMapperTest {
     locationMapper,
     locationGroupMapper,
     new TripMapper(
-      new RouteMapper(new AgencyMapper(FEED_ID), ISSUE_STORE, translationHelper),
+      ID_FACTORY,
+      new RouteMapper(ID_FACTORY, new AgencyMapper(ID_FACTORY), ISSUE_STORE, translationHelper),
       new DirectionMapper(ISSUE_STORE),
       translationHelper
     ),
@@ -133,9 +134,7 @@ public class StopTimeMapperTest {
     stopTime.setArrivalTime(ARRIVAL_TIME);
     stopTime.setDepartureTime(DEPARTURE_TIME);
     stopTime.setDropOffType(DROP_OFF_TYPE);
-    stopTime.setFarePeriodId(FARE_PERIOD_ID);
     stopTime.setPickupType(PICKUP_TYPE);
-    stopTime.setRouteShortName(ROUTE_SHORT_NAME);
     stopTime.setShapeDistTraveled(SHAPE_DIST_TRAVELED);
     stopTime.setStopHeadsign(HEAD_SIGN);
     stopTime.setStopSequence(STOP_SEQUENCE);
@@ -158,9 +157,7 @@ public class StopTimeMapperTest {
     assertEquals(ARRIVAL_TIME, result.getArrivalTime());
     assertEquals(DEPARTURE_TIME, result.getDepartureTime());
     assertEquals(PickDrop.CALL_AGENCY, result.getDropOffType());
-    assertEquals(FARE_PERIOD_ID, result.getFarePeriodId());
     assertEquals(PickDrop.COORDINATE_WITH_DRIVER, result.getPickupType());
-    assertEquals(ROUTE_SHORT_NAME, result.getRouteShortName());
     assertEquals(SHAPE_DIST_TRAVELED, result.getShapeDistTraveled(), 0.0001d);
     assertNotNull(result.getStop());
     assertEquals(HEAD_SIGN, result.getStopHeadsign().toString());
@@ -178,9 +175,7 @@ public class StopTimeMapperTest {
     assertFalse(result.isArrivalTimeSet());
     assertFalse(result.isDepartureTimeSet());
     assertEquals(PickDrop.SCHEDULED, result.getDropOffType());
-    assertNull(result.getFarePeriodId());
     assertEquals(PickDrop.SCHEDULED, result.getPickupType());
-    assertNull(result.getRouteShortName());
     assertFalse(result.isShapeDistTraveledSet());
     assertNotNull(result.getStop());
     assertNull(result.getStopHeadsign());
@@ -217,7 +212,7 @@ public class StopTimeMapperTest {
     assertInstanceOf(AreaStop.class, mapped.getStop());
     var areaStop = (AreaStop) mapped.getStop();
     assertEquals(Polygons.BERLIN, areaStop.getGeometry());
-    assertEquals("A:1", areaStop.getId().toString());
+    assertEquals("FEED:1", areaStop.getId().toString());
   }
 
   @Test
@@ -232,6 +227,6 @@ public class StopTimeMapperTest {
     assertInstanceOf(GroupStop.class, mapped.getStop());
 
     var groupStop = (GroupStop) mapped.getStop();
-    assertEquals("[RegularStop{A:1 Stop}]", groupStop.getChildLocations().toString());
+    assertEquals("[RegularStop{FEED:1 Stop}]", groupStop.getChildLocations().toString());
   }
 }

@@ -1,12 +1,10 @@
 package org.opentripplanner.osm.model;
 
-import java.util.Set;
+import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
+
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.street.model.StreetTraversalPermission;
 
 public class OsmNode extends OsmEntity {
-
-  static final Set<String> MOTOR_VEHICLE_BARRIERS = Set.of("bollard", "bar", "chain");
 
   public double lat;
   public double lon;
@@ -46,28 +44,12 @@ public class OsmNode extends OsmEntity {
   }
 
   /**
-   * Checks if this node is a barrier which prevents motor vehicle traffic.
-   *
-   * @return true if it is
-   */
-  public boolean isMotorVehicleBarrier() {
-    return isOneOfTags("barrier", MOTOR_VEHICLE_BARRIERS);
-  }
-
-  /**
    * Checks if this node blocks traversal in any way
    *
    * @return true if it does
    */
   public boolean isBarrier() {
-    return (
-      isMotorVehicleBarrier() ||
-      isPedestrianExplicitlyDenied() ||
-      isBicycleExplicitlyDenied() ||
-      isMotorcarExplicitlyDenied() ||
-      isMotorVehicleExplicitlyDenied() ||
-      isGeneralAccessDenied()
-    );
+    return overridePermissions(ALL) != ALL;
   }
 
   /**
@@ -77,18 +59,6 @@ public class OsmNode extends OsmEntity {
    */
   public boolean isSubwayEntrance() {
     return hasTag("railway") && "subway_entrance".equals(getTag("railway"));
-  }
-
-  /**
-   * Consider barrier tag in  permissions. Leave the rest for the super class.
-   */
-  @Override
-  public StreetTraversalPermission overridePermissions(StreetTraversalPermission def) {
-    StreetTraversalPermission permission = def;
-    if (isMotorVehicleBarrier()) {
-      permission = permission.remove(StreetTraversalPermission.CAR);
-    }
-    return super.overridePermissions(permission);
   }
 
   @Override

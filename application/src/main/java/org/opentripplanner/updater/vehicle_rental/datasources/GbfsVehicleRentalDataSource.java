@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  * VehicleRentalServiceDirectoryFetcher endpoint (which may be outside our control) will not be
  * used.
  */
-class GbfsVehicleRentalDataSource implements VehicleRentalDatasource {
+class GbfsVehicleRentalDataSource implements VehicleRentalDataSource {
 
   private static final Logger LOG = LoggerFactory.getLogger(GbfsVehicleRentalDataSource.class);
 
@@ -106,7 +106,7 @@ class GbfsVehicleRentalDataSource implements VehicleRentalDatasource {
             .stream()
             .map(stationInformationMapper::mapStationInformation)
             .filter(Objects::nonNull)
-            .peek(stationStatusMapper::fillStationStatus)
+            .map(stationStatusMapper::mapStationStatus)
             .toList()
         );
       }
@@ -135,7 +135,7 @@ class GbfsVehicleRentalDataSource implements VehicleRentalDatasource {
     if (params.geofencingZones()) {
       var zones = loader.getFeed(GBFSGeofencingZones.class);
       if (zones != null) {
-        var mapper = new GbfsGeofencingZoneMapper(system.systemId);
+        var mapper = new GbfsGeofencingZoneMapper(system.systemId());
         this.geofencingZones = mapper.mapGeofencingZone(zones);
       } else {
         if (logGeofencingZonesDoesNotExistWarning) {
@@ -185,13 +185,13 @@ class GbfsVehicleRentalDataSource implements VehicleRentalDatasource {
       .stream()
       .map(vehicleTypeMapper::mapRentalVehicleType)
       .distinct()
-      .collect(Collectors.toMap(v -> v.id.getId(), Function.identity()));
+      .collect(Collectors.toMap(v -> v.id().getId(), Function.identity()));
   }
 
   private Map<String, RentalVehicleType> getVehicleTypes(VehicleRentalSystem system) {
     GBFSVehicleTypes rawVehicleTypes = loader.getFeed(GBFSVehicleTypes.class);
     if (rawVehicleTypes != null) {
-      GbfsVehicleTypeMapper vehicleTypeMapper = new GbfsVehicleTypeMapper(system.systemId);
+      GbfsVehicleTypeMapper vehicleTypeMapper = new GbfsVehicleTypeMapper(system.systemId());
       List<GBFSVehicleType> gbfsVehicleTypes = rawVehicleTypes.getData().getVehicleTypes();
       return mapVehicleTypes(vehicleTypeMapper, gbfsVehicleTypes);
     }

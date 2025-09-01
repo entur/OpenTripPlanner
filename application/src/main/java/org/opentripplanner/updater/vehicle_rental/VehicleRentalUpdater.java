@@ -31,7 +31,7 @@ import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
-import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDatasource;
+import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -50,7 +50,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   private final Throttle unlinkedPlaceThrottle;
 
-  private final VehicleRentalDatasource source;
+  private final VehicleRentalDataSource source;
   private final String nameForLogging;
 
   private Map<StreetEdge, RentalRestrictionExtension> latestModifiedEdges = Map.of();
@@ -63,7 +63,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   public VehicleRentalUpdater(
     VehicleRentalUpdaterParameters parameters,
-    VehicleRentalDatasource source,
+    VehicleRentalDataSource source,
     VertexLinker vertexLinker,
     VehicleRentalRepository repository
   ) throws IllegalArgumentException {
@@ -155,8 +155,8 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       /* add any new stations and update vehicle counts for existing stations */
       for (VehicleRentalPlace station : stations) {
         service.addVehicleRentalStation(station);
-        stationSet.add(station.getId());
-        VehicleRentalPlaceVertex vehicleRentalVertex = verticesByStation.get(station.getId());
+        stationSet.add(station.id());
+        VehicleRentalPlaceVertex vehicleRentalVertex = verticesByStation.get(station.id());
 
         if (vehicleRentalVertex == null) {
           vehicleRentalVertex = vertexFactory.vehicleRentalPlace(station);
@@ -190,16 +190,16 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
             );
           }
           Set<RentalFormFactor> formFactors = Stream.concat(
-            station.getAvailablePickupFormFactors(false).stream(),
-            station.getAvailableDropoffFormFactors(false).stream()
+            station.availablePickupFormFactors(false).stream(),
+            station.availableDropoffFormFactors(false).stream()
           ).collect(Collectors.toSet());
           for (RentalFormFactor formFactor : formFactors) {
             tempEdges.addEdge(
               VehicleRentalEdge.createVehicleRentalEdge(vehicleRentalVertex, formFactor)
             );
           }
-          verticesByStation.put(station.getId(), vehicleRentalVertex);
-          tempEdgesByStation.put(station.getId(), tempEdges);
+          verticesByStation.put(station.id(), vehicleRentalVertex);
+          tempEdgesByStation.put(station.id(), tempEdges);
         } else {
           vehicleRentalVertex.setStation(station);
         }
@@ -228,9 +228,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
         latestModifiedEdges.forEach(StreetEdge::removeRentalExtension);
 
-        var updater = new GeofencingVertexUpdater(
-          context.graph().getStreetIndex()::getEdgesForEnvelope
-        );
+        var updater = new GeofencingVertexUpdater(context.graph()::findEdges);
         latestModifiedEdges = updater.applyGeofencingZones(geofencingZones);
         latestAppliedGeofencingZones = geofencingZones;
 

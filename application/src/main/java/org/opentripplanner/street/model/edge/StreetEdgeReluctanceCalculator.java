@@ -1,9 +1,11 @@
 package org.opentripplanner.street.model.edge;
 
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
+import org.opentripplanner.routing.api.request.preference.VehicleWalkingPreferences;
+import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.street.search.TraverseMode;
 
-class StreetEdgeReluctanceCalculator {
+public class StreetEdgeReluctanceCalculator {
 
   /** Utility class, private constructor to prevent instantiation */
   private StreetEdgeReluctanceCalculator() {}
@@ -18,19 +20,28 @@ class StreetEdgeReluctanceCalculator {
     boolean walkingBike,
     boolean edgeIsStairs
   ) {
-    if (edgeIsStairs) {
-      return pref.walk().stairsReluctance();
-    } else {
-      return switch (traverseMode) {
-        case WALK -> walkingBike ? pref.bike().walking().reluctance() : pref.walk().reluctance();
-        case BICYCLE -> pref.bike().reluctance();
-        case CAR -> pref.car().reluctance();
-        case SCOOTER -> pref.scooter().reluctance();
-        default -> throw new IllegalArgumentException(
-          "getReluctance(): Invalid mode " + traverseMode
-        );
-      };
-    }
+    return switch (traverseMode) {
+      case WALK -> walkingBike
+        ? computeBikeWalkingReluctance(pref.bike().walking(), edgeIsStairs)
+        : computeWalkReluctance(pref.walk(), edgeIsStairs);
+      case BICYCLE -> pref.bike().reluctance();
+      case CAR -> pref.car().reluctance();
+      case SCOOTER -> pref.scooter().reluctance();
+      default -> throw new IllegalArgumentException(
+        "getReluctance(): Invalid mode " + traverseMode
+      );
+    };
+  }
+
+  private static double computeWalkReluctance(WalkPreferences pref, boolean edgeIsStairs) {
+    return pref.reluctance() * (edgeIsStairs ? pref.stairsReluctance() : 1);
+  }
+
+  private static double computeBikeWalkingReluctance(
+    VehicleWalkingPreferences pref,
+    boolean edgeIsStairs
+  ) {
+    return pref.reluctance() * (edgeIsStairs ? pref.stairsReluctance() : 1);
   }
 
   static double computeWheelchairReluctance(
@@ -59,5 +70,14 @@ class StreetEdgeReluctanceCalculator {
       }
     }
     return reluctance;
+  }
+
+  /**
+   * Exaggerate the safety for SAFEST_STREET routing.
+   * The effect is to make normal streets not safe, "reasonably safe" streets appear neutral, and
+   * "very safe" streets appear safe.
+   */
+  public static double getSafetyForSafestStreet(double originalSafety) {
+    return originalSafety * originalSafety * 2.0;
   }
 }

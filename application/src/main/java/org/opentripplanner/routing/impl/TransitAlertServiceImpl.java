@@ -5,6 +5,7 @@ import com.google.common.collect.Multimap;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import org.opentripplanner.routing.alertpatch.EntityKey;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
@@ -76,31 +77,20 @@ public class TransitAlertServiceImpl implements TransitAlertService {
     FeedScopedId stopId,
     Set<StopCondition> stopConditions
   ) {
-    Set<TransitAlert> result = new HashSet<>();
     EntitySelector.Stop entitySelector = new EntitySelector.Stop(stopId, stopConditions);
-    for (TransitAlert alert : alerts.get(entitySelector.key())) {
-      if (alert.entities().stream().anyMatch(selector -> selector.matches(entitySelector))) {
-        result.add(alert);
-      }
-    }
-    if (result.isEmpty()) {
-      // Search for alerts on parent-stop
-      if (timetableRepository != null) {
-        var quay = timetableRepository.getSiteRepository().getRegularStop(stopId);
-        if (quay != null) {
-          // TODO - SIRI: Add alerts from parent- and multimodal-stops
-          /*
-                    if ( quay.isPartOfStation()) {
-                        // Add alerts for parent-station
-                        result.addAll(patchesByStop.getOrDefault(quay.getParentStationFeedScopedId(), Collections.emptySet()));
-                    }
-                    if (quay.getMultiModalStation() != null) {
-                        // Add alerts for multimodal-station
-                        result.addAll(patchesByStop.getOrDefault(new FeedScopedId(stop.getAgencyId(), quay.getMultiModalStation()), Collections.emptySet()));
-                    }
-                    */
-        }
-      }
+    var result = findMatchingAlerts(entitySelector);
+    var stop = timetableRepository.getSiteRepository().getStopLocation(stopId);
+
+    if (stop != null && stop.isPartOfStation()) {
+      // Add alerts for parent-station
+      result.addAll(
+        findMatchingAlerts(
+          new EntitySelector.Stop(
+            Objects.requireNonNull(stop.getParentStation()).getId(),
+            stopConditions
+          )
+        )
+      );
     }
     return result;
   }
@@ -111,15 +101,13 @@ public class TransitAlertServiceImpl implements TransitAlertService {
   }
 
   @Override
+  public Collection<TransitAlert> getTripAlerts(FeedScopedId trip) {
+    return findMatchingAlerts(new EntitySelector.Trip(trip));
+  }
+
+  @Override
   public Collection<TransitAlert> getTripAlerts(FeedScopedId trip, LocalDate serviceDate) {
-    Set<TransitAlert> result = new HashSet<>();
-    EntitySelector.Trip entitySelector = new EntitySelector.Trip(trip, serviceDate);
-    for (TransitAlert alert : alerts.get(entitySelector.key())) {
-      if (alert.entities().stream().anyMatch(selector -> selector.matches(entitySelector))) {
-        result.add(alert);
-      }
-    }
-    return result;
+    return findMatchingAlerts(new EntitySelector.Trip(trip, serviceDate));
   }
 
   @Override
@@ -133,18 +121,12 @@ public class TransitAlertServiceImpl implements TransitAlertService {
     FeedScopedId route,
     Set<StopCondition> stopConditions
   ) {
-    Set<TransitAlert> result = new HashSet<>();
     EntitySelector.StopAndRoute entitySelector = new EntitySelector.StopAndRoute(
       stop,
       route,
       stopConditions
     );
-    for (TransitAlert alert : alerts.get(entitySelector.key())) {
-      if (alert.entities().stream().anyMatch(selector -> selector.matches(entitySelector))) {
-        result.add(alert);
-      }
-    }
-    return result;
+    return findMatchingAlerts(entitySelector);
   }
 
   @Override
@@ -154,19 +136,13 @@ public class TransitAlertServiceImpl implements TransitAlertService {
     LocalDate serviceDate,
     Set<StopCondition> stopConditions
   ) {
-    Set<TransitAlert> result = new HashSet<>();
     EntitySelector.StopAndTrip entitySelector = new EntitySelector.StopAndTrip(
       stop,
       trip,
       serviceDate,
       stopConditions
     );
-    for (TransitAlert alert : alerts.get(entitySelector.key())) {
-      if (alert.entities().stream().anyMatch(selector -> selector.matches(entitySelector))) {
-        result.add(alert);
-      }
-    }
-    return result;
+    return findMatchingAlerts(entitySelector);
   }
 
   @Override
@@ -185,5 +161,15 @@ public class TransitAlertServiceImpl implements TransitAlertService {
     FeedScopedId route
   ) {
     return alerts.get(new EntityKey.DirectionAndRoute(route, direction));
+  }
+
+  private Collection<TransitAlert> findMatchingAlerts(EntitySelector entitySelector) {
+    Set<TransitAlert> result = new HashSet<>();
+    for (TransitAlert alert : alerts.get(entitySelector.key())) {
+      if (alert.entities().stream().anyMatch(selector -> selector.matches(entitySelector))) {
+        result.add(alert);
+      }
+    }
+    return result;
   }
 }

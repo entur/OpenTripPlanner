@@ -157,9 +157,10 @@ public class OTPMain {
         config.buildConfig(),
         config.routerConfig(),
         DataImportIssueSummary.combine(graphBuilder.issueSummary(), app.dataImportIssueSummary()),
-        app.emissionsDataModel(),
+        app.emissionRepository(),
         app.stopConsolidationRepository(),
-        app.streetLimitationParameters()
+        app.streetLimitationParameters(),
+        app.fareServiceFactory()
       ).save(app.graphOutputDataSource());
       // Log size info for the deduplicator
       LOG.info("Memory optimized {}", app.graph().deduplicator.toString());
@@ -189,7 +190,7 @@ public class OTPMain {
   private static void startOtpWebServer(CommandLineParameters params, ConstructApplication app) {
     // Index graph for travel search
     app.timetableRepository().index();
-    app.graph().index(app.timetableRepository().getSiteRepository());
+    app.graph().index();
 
     // publishing the config version info make it available to the APIs
     setOtpConfigVersionsOnServerInfo(app);

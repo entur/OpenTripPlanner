@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.fail;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,18 +18,20 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.opentripplanner.TestOtpModel;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.framework.DurationForEnum;
+import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -53,6 +54,14 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   private static final Duration MAX_TRANSFER_DURATION = Duration.ofHours(1);
+  private static final RouteRequest REQUEST_WITH_WALK_TRANSFER = RouteRequest.defaultValue();
+  private static final RouteRequest REQUEST_WITH_BIKE_TRANSFER = RouteRequest.of()
+    .withJourney(jb -> jb.withTransfer(new StreetRequest(StreetMode.BIKE)))
+    .buildDefault();
+  private static final RouteRequest REQUEST_WITH_CAR_TRANSFER = RouteRequest.of()
+    .withJourney(jb -> jb.withTransfer(new StreetRequest(StreetMode.CAR)))
+    .buildDefault();
+
   private TransitStopVertex S0, S11, S12, S13, S21, S22, S23;
   private StreetVertex V0, V11, V12, V13, V21, V22, V23;
 
@@ -61,9 +70,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
     var otpModel = model(false);
     var graph = otpModel.graph();
     var timetableRepository = otpModel.timetableRepository();
-    var req = new RouteRequest();
-    req.journey().transfer().setMode(StreetMode.WALK);
-    var transferRequests = List.of(req);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER);
     graph.hasStreets = false;
 
     new DirectTransferGenerator(
@@ -83,9 +90,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
     var graph = otpModel.graph();
     graph.hasStreets = false;
     var timetableRepository = otpModel.timetableRepository();
-    var req = new RouteRequest();
-    req.journey().transfer().setMode(StreetMode.WALK);
-    var transferRequests = List.of(req);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER);
 
     new DirectTransferGenerator(
       graph,
@@ -116,7 +121,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
     var graph = otpModel.graph();
     graph.hasStreets = false;
     var timetableRepository = otpModel.timetableRepository();
-    var transferRequests = List.of(new RouteRequest());
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER);
 
     new DirectTransferGenerator(
       graph,
@@ -144,9 +149,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testSingleRequestWithoutPatterns() {
-    var req = new RouteRequest();
-    req.journey().transfer().setMode(StreetMode.WALK);
-    var transferRequests = List.of(req);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER);
 
     var otpModel = model(false);
     var graph = otpModel.graph();
@@ -166,9 +169,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testSingleRequestWithPatterns() {
-    var req = new RouteRequest();
-    req.journey().transfer().setMode(StreetMode.WALK);
-    var transferRequests = List.of(req);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER);
 
     var otpModel = model(true);
     var graph = otpModel.graph();
@@ -193,13 +194,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testMultipleRequestsWithoutPatterns() {
-    var reqWalk = new RouteRequest();
-    reqWalk.journey().transfer().setMode(StreetMode.WALK);
-
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
-
-    var transferRequests = List.of(reqWalk, reqBike);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER);
 
     var otpModel = model(false);
     var graph = otpModel.graph();
@@ -219,13 +214,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testMultipleRequestsWithPatterns() {
-    var reqWalk = new RouteRequest();
-    reqWalk.journey().transfer().setMode(StreetMode.WALK);
-
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
-
-    var transferRequests = List.of(reqWalk, reqBike);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER);
 
     TestOtpModel model = model(true);
     var graph = model.graph();
@@ -266,9 +255,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
     graph.hasStreets = false;
 
     var timetableRepository = otpModel.timetableRepository();
-    var req = new RouteRequest();
-    req.journey().transfer().setMode(StreetMode.WALK);
-    var transferRequests = List.of(req);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER);
 
     new DirectTransferGenerator(
       graph,
@@ -283,17 +270,14 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testRequestWithCarsAllowedPatterns() {
-    var reqCar = new RouteRequest();
-    reqCar.journey().transfer().setMode(StreetMode.CAR);
-
-    var transferRequests = List.of(reqCar);
+    var transferRequests = List.of(REQUEST_WITH_CAR_TRANSFER);
 
     var otpModel = model(false, false, false, true);
     var graph = otpModel.graph();
     graph.hasStreets = true;
     var timetableRepository = otpModel.timetableRepository();
 
-    TransferParameters.Builder transferParametersBuilder = new TransferParameters.Builder();
+    var transferParametersBuilder = new TransferParameters.Builder();
     transferParametersBuilder.withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(60));
     transferParametersBuilder.withDisableDefaultTransfers(true);
     Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
@@ -317,10 +301,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testRequestWithCarsAllowedPatternsWithDurationLimit() {
-    var reqCar = new RouteRequest();
-    reqCar.journey().transfer().setMode(StreetMode.CAR);
-
-    var transferRequests = List.of(reqCar);
+    var transferRequests = List.of(REQUEST_WITH_CAR_TRANSFER);
 
     var otpModel = model(false, false, false, true);
     var graph = otpModel.graph();
@@ -347,16 +328,11 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testMultipleRequestsWithPatternsAndWithCarsAllowedPatterns() {
-    var reqWalk = new RouteRequest();
-    reqWalk.journey().transfer().setMode(StreetMode.WALK);
-
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
-
-    var reqCar = new RouteRequest();
-    reqCar.journey().transfer().setMode(StreetMode.CAR);
-
-    var transferRequests = List.of(reqWalk, reqBike, reqCar);
+    var transferRequests = List.of(
+      REQUEST_WITH_WALK_TRANSFER,
+      REQUEST_WITH_BIKE_TRANSFER,
+      REQUEST_WITH_CAR_TRANSFER
+    );
 
     var otpModel = model(true, false, false, true);
     var graph = otpModel.graph();
@@ -408,10 +384,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testBikeRequestWithPatternsAndWithCarsAllowedPatterns() {
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
-
-    var transferRequests = List.of(reqBike);
+    var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
 
     var otpModel = model(true, false, false, true);
     var graph = otpModel.graph();
@@ -443,11 +416,65 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
   }
 
   @Test
-  public void testBikeRequestWithPatternsAndWithCarsAllowedPatternsWithoutCarInTransferRequests() {
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
+  public void testBikeRequestWithLimitBikeTransferConsideringPattern() {
+    OTPFeature.IncludeEmptyRailStopsInTransfers.testOn(() -> {
+      var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
 
-    var transferRequests = List.of(reqBike);
+      TestOtpModel model = model(true);
+      var graph = model.graph();
+      graph.hasStreets = true;
+
+      var timetableRepository = model.timetableRepository();
+      new DirectTransferGenerator(
+        graph,
+        timetableRepository,
+        DataImportIssueStore.NOOP,
+        MAX_TRANSFER_DURATION,
+        transferRequests,
+        Map.of(StreetMode.BIKE, new TransferParameters(null, null, Duration.parse("PT1H"), true))
+      ).buildGraph();
+
+      var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
+      assertTransfers(bikeTransfers, tr(S0, 100, List.of(V0, V21), S21));
+    });
+  }
+
+  @Test
+  public void testBikeRequestWithLimitBikeTransferWithoutConsideringPattern() {
+    OTPFeature.ConsiderPatternsForDirectTransfers.testOff(() -> {
+      var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
+
+      TestOtpModel model = model(true);
+      var graph = model.graph();
+      graph.hasStreets = true;
+
+      var timetableRepository = model.timetableRepository();
+      new DirectTransferGenerator(
+        graph,
+        timetableRepository,
+        DataImportIssueStore.NOOP,
+        MAX_TRANSFER_DURATION,
+        transferRequests,
+        Map.of(StreetMode.BIKE, new TransferParameters(null, null, Duration.parse("PT1H"), true))
+      ).buildGraph();
+
+      var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
+      assertTransfers(
+        bikeTransfers,
+        // no transfers involving S11, S12 and S13
+        tr(S0, 100, List.of(V0, V21), S21),
+        tr(S0, 200, List.of(V0, V22), S22),
+        tr(S0, 300, List.of(V0, V22, V23), S23),
+        tr(S21, 100, List.of(V21, V22), S22),
+        tr(S21, 200, List.of(V21, V22, V23), S23),
+        tr(S22, 100, List.of(V22, V23), S23)
+      );
+    });
+  }
+
+  @Test
+  public void testBikeRequestWithPatternsAndWithCarsAllowedPatternsWithoutCarInTransferRequests() {
+    var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
 
     var otpModel = model(true, false, false, true);
     var graph = otpModel.graph();
@@ -472,16 +499,11 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testDisableDefaultTransfersForMode() {
-    var reqWalk = new RouteRequest();
-    reqWalk.journey().transfer().setMode(StreetMode.WALK);
-
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
-
-    var reqCar = new RouteRequest();
-    reqCar.journey().transfer().setMode(StreetMode.CAR);
-
-    var transferRequests = List.of(reqWalk, reqBike, reqCar);
+    var transferRequests = List.of(
+      REQUEST_WITH_WALK_TRANSFER,
+      REQUEST_WITH_BIKE_TRANSFER,
+      REQUEST_WITH_CAR_TRANSFER
+    );
 
     var otpModel = model(true, false, false, true);
     var graph = otpModel.graph();
@@ -523,13 +545,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testMaxTransferDurationForMode() {
-    var reqWalk = new RouteRequest();
-    reqWalk.journey().transfer().setMode(StreetMode.WALK);
-
-    var reqBike = new RouteRequest();
-    reqBike.journey().transfer().setMode(StreetMode.BIKE);
-
-    var transferRequests = List.of(reqWalk, reqBike);
+    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER);
 
     var otpModel = model(true, false, false, true);
     var graph = otpModel.graph();
@@ -594,7 +610,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
             builder.withTransfersNotAllowed(withNoTransfersOnStations)
           );
 
-          S0 = stop("S0", 47.495, 19.001, station);
+          S0 = stop("S0", 47.495, 19.001, station, TransitMode.RAIL);
           S11 = stop("S11", 47.500, 19.001, station);
           S12 = stop("S12", 47.520, 19.001, station);
           S13 = stop("S13", 47.540, 19.001, station);
@@ -646,6 +662,18 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
               TripPattern.of(TimetableRepositoryForTest.id("TP2"))
                 .withRoute(route("R2", TransitMode.BUS, agency))
                 .withStopPattern(new StopPattern(List.of(st(S21), st(S22), st(S23))))
+                .withScheduledTimeTableBuilder(builder ->
+                  builder.addTripTimes(
+                    ScheduledTripTimes.of()
+                      .withTrip(
+                        TimetableRepositoryForTest.trip("bikesAllowedTrip")
+                          .withBikesAllowed(BikeAccess.ALLOWED)
+                          .build()
+                      )
+                      .withDepartureTimes("00:00 01:00 02:00")
+                      .build()
+                  )
+                )
                 .build()
             );
           }

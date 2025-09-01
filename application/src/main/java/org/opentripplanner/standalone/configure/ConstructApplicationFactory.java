@@ -5,9 +5,12 @@ import dagger.Component;
 import graphql.schema.GraphQLSchema;
 import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
+import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.gtfs.configure.SchemaModule;
-import org.opentripplanner.ext.emissions.EmissionsDataModel;
-import org.opentripplanner.ext.emissions.EmissionsServiceModule;
+import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
+import org.opentripplanner.apis.transmodel.configure.TransmodelSchemaModule;
+import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
 import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
@@ -20,7 +23,10 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.VertexLinker;
+import org.opentripplanner.routing.linking.configure.VertexLinkerRoutingModule;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.configure.ViaModule;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
@@ -58,13 +64,14 @@ import org.opentripplanner.visualizer.GraphVisualizer;
   modules = {
     ConfigModule.class,
     ConstructApplicationModule.class,
-    EmissionsServiceModule.class,
+    EmissionServiceModule.class,
     GeocoderModule.class,
     InteractiveLauncherModule.class,
     RealtimeVehicleServiceModule.class,
     RealtimeVehicleRepositoryModule.class,
     RideHailingServicesModule.class,
     SchemaModule.class,
+    TransmodelSchemaModule.class,
     SorlandsbanenNorwayModule.class,
     StopConsolidationServiceModule.class,
     StreetLimitationParametersServiceModule.class,
@@ -73,6 +80,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     VehicleRentalRepositoryModule.class,
     VehicleRentalServiceModule.class,
     ViaModule.class,
+    VertexLinkerRoutingModule.class,
     WorldEnvelopeServiceModule.class,
   }
 )
@@ -80,6 +88,7 @@ public interface ConstructApplicationFactory {
   ConfigModel config();
   RaptorConfig<TripSchedule> raptorConfig();
   Graph graph();
+  VertexLinker vertexLinker();
   TimetableRepository timetableRepository();
   WorldEnvelopeRepository worldEnvelopeRepository();
   WorldEnvelopeService worldEnvelopeService();
@@ -93,7 +102,7 @@ public interface ConstructApplicationFactory {
   DataImportIssueSummary dataImportIssueSummary();
 
   @Nullable
-  EmissionsDataModel emissionsDataModel();
+  EmissionRepository emissionRepository();
 
   @Nullable
   GraphVisualizer graphVisualizer();
@@ -114,10 +123,17 @@ public interface ConstructApplicationFactory {
   SorlandsbanenNorwayService enturSorlandsbanenService();
 
   @Nullable
-  GraphQLSchema schema();
+  @GtfsSchema
+  GraphQLSchema gtfsSchema();
+
+  @Nullable
+  @TransmodelSchema
+  GraphQLSchema transmodelSchema();
 
   @Nullable
   LuceneIndex luceneIndex();
+
+  FareServiceFactory fareServiceFactory();
 
   @Component.Builder
   interface Builder {
@@ -148,13 +164,16 @@ public interface ConstructApplicationFactory {
     Builder dataImportIssueSummary(DataImportIssueSummary issueSummary);
 
     @BindsInstance
-    Builder emissionsDataModel(EmissionsDataModel emissionsDataModel);
+    Builder emissionRepository(EmissionRepository emissionRepository);
 
     @BindsInstance
     Builder schema(RouteRequest defaultRouteRequest);
 
     @BindsInstance
     Builder streetLimitationParameters(StreetLimitationParameters streetLimitationParameters);
+
+    @BindsInstance
+    Builder fareServiceFactory(FareServiceFactory fareService);
 
     ConstructApplicationFactory build();
   }

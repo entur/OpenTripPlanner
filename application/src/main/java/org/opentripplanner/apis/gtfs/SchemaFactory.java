@@ -24,6 +24,7 @@ import org.opentripplanner.apis.gtfs.datafetchers.CoordinatesImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.CurrencyImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.DefaultFareProductImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.DepartureRowImpl;
+import org.opentripplanner.apis.gtfs.datafetchers.DependentFareProductImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.EntranceImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.EstimatedTimeImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.FareProductTypeResolver;
@@ -33,6 +34,8 @@ import org.opentripplanner.apis.gtfs.datafetchers.GeometryImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.ItineraryImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.LegImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.LegTimeImpl;
+import org.opentripplanner.apis.gtfs.datafetchers.LocationGroupImpl;
+import org.opentripplanner.apis.gtfs.datafetchers.LocationImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.MoneyImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.NodeTypeResolver;
 import org.opentripplanner.apis.gtfs.datafetchers.OpeningHoursImpl;
@@ -114,6 +117,8 @@ public class SchemaFactory {
       TypeDefinitionRegistry typeRegistry = new SchemaParser().parse(url.openStream());
       IntrospectionTypeWiring typeWiring = new IntrospectionTypeWiring(typeRegistry);
       RuntimeWiring runtimeWiring = RuntimeWiring.newRuntimeWiring()
+        // This is needed because we have our own implementation for the ID scalar
+        .strictMode(false)
         .scalar(GraphQLScalars.DURATION_SCALAR)
         .scalar(GraphQLScalars.POLYLINE_SCALAR)
         .scalar(GraphQLScalars.GEOJSON_SCALAR)
@@ -165,6 +170,8 @@ public class SchemaFactory {
         .type(typeWiring.build(serviceTimeRangeImpl.class))
         .type(typeWiring.build(stepImpl.class))
         .type(typeWiring.build(StopImpl.class))
+        .type(typeWiring.build(LocationImpl.class))
+        .type(typeWiring.build(LocationGroupImpl.class))
         .type(typeWiring.build(stopAtDistanceImpl.class))
         .type(typeWiring.build(StopInPatternImpl.class))
         .type(typeWiring.build(StoptimeImpl.class))
@@ -194,6 +201,7 @@ public class SchemaFactory {
         .type(typeWiring.build(CurrencyImpl.class))
         .type(typeWiring.build(FareProductUseImpl.class))
         .type(typeWiring.build(DefaultFareProductImpl.class))
+        .type(typeWiring.build(DependentFareProductImpl.class))
         .type(typeWiring.build(TripOnServiceDateImpl.class))
         .type(typeWiring.build(StopCallImpl.class))
         .type(typeWiring.build(TripOccupancyImpl.class))

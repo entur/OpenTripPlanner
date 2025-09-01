@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.opentripplanner.ext.flex.FlexRouter;
+import org.opentripplanner.ext.flex.filter.FilterMapper;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSearchDays;
@@ -28,6 +29,7 @@ public class DirectFlexRouter {
     try (
       var temporaryVertices = new TemporaryVerticesContainer(
         serverContext.graph(),
+        serverContext.vertexLinker(),
         request.from(),
         request.to(),
         request.journey().direct().mode(),
@@ -58,6 +60,7 @@ public class DirectFlexRouter {
         serverContext.graph(),
         serverContext.transitService(),
         serverContext.flexParameters(),
+        FilterMapper.map(request.journey().transit().filters()),
         request.dateTime(),
         request.bookingTime(),
         additionalSearchDays.additionalSearchDaysInPast(),

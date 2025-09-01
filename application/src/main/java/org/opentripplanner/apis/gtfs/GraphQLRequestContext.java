@@ -26,11 +26,11 @@ public record GraphQLRequestContext(
     return new GraphQLRequestContext(
       context.routingService(),
       context.transitService(),
-      context.graph().getFareService(),
+      context.fareService(),
       context.vehicleRentalService(),
       context.vehicleParkingService(),
       context.realtimeVehicleService(),
-      context.schema(),
+      context.gtfsSchema(),
       context.graphFinder(),
       context.defaultRouteRequest()
     );
@@ -42,6 +42,6 @@ public record GraphQLRequestContext(
    */
   @Override
   public RouteRequest defaultRouteRequest() {
-    return defaultRouteRequest.clone();
+    return defaultRouteRequest;
   }
 }

@@ -4,6 +4,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
@@ -37,20 +38,8 @@ public class VertexFactory {
     return addToGraph(new TransitBoardingAreaVertex(boardingArea));
   }
 
-  public ElevatorOnboardVertex elevatorOnboard(
-    Vertex sourceVertex,
-    String label,
-    String levelName
-  ) {
-    return addToGraph(new ElevatorOnboardVertex(sourceVertex, label, levelName));
-  }
-
-  public ElevatorOffboardVertex elevatorOffboard(
-    Vertex sourceVertex,
-    String label,
-    String levelName
-  ) {
-    return addToGraph(new ElevatorOffboardVertex(sourceVertex, label, levelName));
+  public ElevatorVertex elevator(Vertex sourceVertex, String label, String levelName) {
+    return addToGraph(new ElevatorVertex(sourceVertex, label, levelName));
   }
 
   public IntersectionVertex intersection(Coordinate edgeCoordinate) {
@@ -87,8 +76,12 @@ public class VertexFactory {
     return addToGraph(new SplitterVertex(uniqueSplitLabel, x, y, originalEdge.getName()));
   }
 
-  public BarrierVertex barrier(long nid, Coordinate coordinate) {
-    return addToGraph(new BarrierVertex(coordinate.x, coordinate.y, nid));
+  public BarrierVertex barrier(
+    long nid,
+    Coordinate coordinate,
+    Accessibility wheelchairAccessibility
+  ) {
+    return addToGraph(new BarrierVertex(coordinate.x, coordinate.y, nid, wheelchairAccessibility));
   }
 
   public ExitVertex exit(long nid, Coordinate coordinate, String exitName) {
@@ -106,19 +99,25 @@ public class VertexFactory {
     );
   }
 
-  public OsmVertex osm(
-    Coordinate coordinate,
-    OsmNode node,
-    boolean highwayTrafficLight,
-    boolean crossingTrafficLight
-  ) {
+  public OsmVertex osm(OsmNode node) {
     return addToGraph(
       new OsmVertex(
-        coordinate.x,
-        coordinate.y,
+        node.getCoordinate().x,
+        node.getCoordinate().y,
         node.getId(),
-        highwayTrafficLight,
-        crossingTrafficLight
+        node.hasHighwayTrafficLight(),
+        node.hasCrossingTrafficLight()
+      )
+    );
+  }
+
+  public OsmVertex osmOnLinearBarrier(OsmNode node, OsmEntity routableWay) {
+    return addToGraph(
+      new BarrierPassThroughVertex(
+        node.getCoordinate().x,
+        node.getCoordinate().y,
+        node.getId(),
+        routableWay.getId()
       )
     );
   }

@@ -1,6 +1,5 @@
 package org.opentripplanner.routing.impl;
 
-import java.time.Instant;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -14,7 +13,6 @@ import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.error.PathNotFoundException;
-import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.StreetSearchBuilder;
@@ -22,6 +20,7 @@ import org.opentripplanner.street.search.TemporaryVerticesContainer;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,20 +55,20 @@ public class GraphPathFinder {
 
   private final DataOverlayContext dataOverlayContext;
 
-  private final float maxCarSpeed;
+  private final StreetLimitationParametersService streetLimitationParametersService;
 
   public GraphPathFinder(@Nullable TraverseVisitor<State, Edge> traverseVisitor) {
-    this(traverseVisitor, null, StreetConstants.DEFAULT_MAX_CAR_SPEED);
+    this(traverseVisitor, null, StreetLimitationParametersService.DEFAULT);
   }
 
   public GraphPathFinder(
     @Nullable TraverseVisitor<State, Edge> traverseVisitor,
     @Nullable DataOverlayContext dataOverlayContext,
-    float maxCarSpeed
+    StreetLimitationParametersService streetLimitationParametersService
   ) {
     this.traverseVisitor = traverseVisitor;
     this.dataOverlayContext = dataOverlayContext;
-    this.maxCarSpeed = maxCarSpeed;
+    this.streetLimitationParametersService = streetLimitationParametersService;
   }
 
   /**
@@ -84,7 +83,7 @@ public class GraphPathFinder {
     StreetPreferences preferences = request.preferences().street();
 
     StreetSearchBuilder aStar = StreetSearchBuilder.of()
-      .setHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
+      .setHeuristic(new EuclideanRemainingWeightHeuristic(streetLimitationParametersService))
       .setSkipEdgeStrategy(
         new DurationSkipEdgeStrategy(
           preferences.maxDirectDuration().valueOf(request.journey().direct().mode())
@@ -137,7 +136,7 @@ public class GraphPathFinder {
     Set<Vertex> to
   ) {
     OTPRequestTimeoutException.checkForTimeout();
-    Instant reqTime = request.dateTime();
+    var reqTime = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
 
     List<GraphPath<State, Edge, Vertex>> paths = getPaths(request, from, to);
 

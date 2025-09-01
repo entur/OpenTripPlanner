@@ -10,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
@@ -79,6 +80,38 @@ class StreetEdgeCostTest {
     assertEquals(20, result.getElapsedTimeSeconds());
   }
 
+  static Stream<Arguments> bikeSafetyCases() {
+    return Stream.of(
+      Arguments.of(VehicleRoutingOptimizeType.SHORTEST_DURATION, 20),
+      Arguments.of(VehicleRoutingOptimizeType.SAFE_STREETS, 40),
+      Arguments.of(VehicleRoutingOptimizeType.SAFEST_STREETS, 160)
+    );
+  }
+
+  @ParameterizedTest(name = "bikeOptimizeType of {0} should lead to traversal costs of {1}")
+  @MethodSource("bikeSafetyCases")
+  public void bikeSafety(VehicleRoutingOptimizeType type, long expectedCost) {
+    double length = 100;
+    var edge = new StreetEdgeBuilder<>()
+      .withFromVertex(V1)
+      .withToVertex(V2)
+      .withName("edge")
+      .withMeterLength(length)
+      .withPermission(StreetTraversalPermission.ALL)
+      .withBicycleSafetyFactor(2)
+      .withBack(false)
+      .buildAndConnect();
+
+    var req = StreetSearchRequest.of();
+    req.withPreferences(p -> p.withBike(b -> b.withReluctance(1.0).withOptimizeType(type)));
+
+    State result = traverse(edge, req.withMode(StreetMode.BIKE).build());
+    assertNotNull(result);
+    assertEquals(expectedCost, (long) result.weight);
+
+    assertEquals(20, result.getElapsedTimeSeconds());
+  }
+
   static Stream<Arguments> carReluctanceCases() {
     return Stream.of(
       Arguments.of(0.5, 4),
@@ -112,7 +145,7 @@ class StreetEdgeCostTest {
   }
 
   static Stream<Arguments> stairsCases() {
-    return Stream.of(Arguments.of(1, 22), Arguments.of(1.5, 33), Arguments.of(3, 67));
+    return Stream.of(Arguments.of(1, 45), Arguments.of(1.5, 67), Arguments.of(3, 135));
   }
 
   @ParameterizedTest(name = "stairs reluctance of {0} should lead to traversal costs of {1}")
@@ -133,8 +166,11 @@ class StreetEdgeCostTest {
     req.withPreferences(p -> p.withWalk(w -> w.withStairsReluctance(stairsReluctance)));
     req.withMode(StreetMode.WALK);
     var result = traverse(stairsEdge, req.build());
+
+    // length / speed * stairsTimeFactor * walkReluctance * stairsReluctance
     assertEquals(expectedCost, (long) result.weight);
 
+    // length / speed * stairsTimeFactor
     assertEquals(23, result.getElapsedTimeSeconds());
 
     StreetEdge noStairsEdge = stairsEdge.toBuilder().withStairs(false).buildAndConnect();
@@ -143,7 +179,7 @@ class StreetEdgeCostTest {
   }
 
   static Stream<Arguments> bikeStairsCases() {
-    return Stream.of(Arguments.of(1, 45), Arguments.of(1.5, 67), Arguments.of(3, 135));
+    return Stream.of(Arguments.of(1, 112), Arguments.of(1.5, 169), Arguments.of(3, 338));
   }
 
   @ParameterizedTest(name = "bike stairs reluctance of {0} should lead to traversal costs of {1}")
@@ -166,8 +202,11 @@ class StreetEdgeCostTest {
     );
     req.withMode(StreetMode.BIKE);
     var result = traverse(stairsEdge, req.build());
+
+    // length / speed * stairsTimeFactor * bikeWalkingReluctance * stairsReluctance
     assertEquals(expectedCost, (long) result.weight);
 
+    // length / speed * stairsTimeFactor
     assertEquals(23, result.getElapsedTimeSeconds());
 
     StreetEdge noStairsEdge = stairsEdge.toBuilder().withStairs(false).buildAndConnect();

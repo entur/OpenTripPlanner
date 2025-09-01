@@ -17,10 +17,11 @@ import org.opentripplanner.astar.spi.SearchTerminationStrategy;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.routing.algorithm.MultiTargetTerminationStrategy;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.graph.SimpleConcreteEdge;
-import org.opentripplanner.routing.graph.TemporaryConcreteEdge;
+import org.opentripplanner.street.model._data.SimpleConcreteEdge;
 import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model._data.TemporaryConcreteEdge;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -88,13 +89,15 @@ public class AStarTest {
 
   @Test
   public void testForward() {
-    var request = new RouteRequest();
-
-    request.withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)));
+    var request = RouteRequest.of()
+      .withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)))
+      .buildDefault();
     Vertex from = graph.getVertex("56th_24th");
     Vertex to = graph.getVertex("leary_20th");
+    EuclideanRemainingWeightHeuristic heuristic = new EuclideanRemainingWeightHeuristic();
+    heuristic.initialize(StreetMode.WALK, Set.of(to), false, request.preferences());
     ShortestPathTree tree = StreetSearchBuilder.of()
-      .setHeuristic(new EuclideanRemainingWeightHeuristic())
+      .setHeuristic(heuristic)
       .setRequest(request)
       .setFrom(from)
       .setTo(to)
@@ -117,10 +120,11 @@ public class AStarTest {
 
   @Test
   public void testBack() {
-    var request = new RouteRequest();
+    var request = RouteRequest.of()
+      .withPreferences(p -> p.withWalk(w -> w.withSpeed(1.0)))
+      .withArriveBy(true)
+      .buildDefault();
 
-    request.withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)));
-    request.setArriveBy(true);
     Vertex from = graph.getVertex("56th_24th");
     Vertex to = graph.getVertex("leary_20th");
     ShortestPathTree tree = StreetSearchBuilder.of()
@@ -157,9 +161,9 @@ public class AStarTest {
 
   @Test
   public void testForwardExtraEdges() {
-    var request = new RouteRequest();
-
-    request.withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)));
+    var request = RouteRequest.of()
+      .withPreferences(p -> p.withWalk(w -> w.withSpeed(1.0)))
+      .buildDefault();
 
     TemporaryStreetLocation from = new TemporaryStreetLocation(
       new Coordinate(-122.385050, 47.666620),
@@ -199,10 +203,10 @@ public class AStarTest {
 
   @Test
   public void testBackExtraEdges() {
-    var request = new RouteRequest();
-
-    request.withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)));
-    request.setArriveBy(true);
+    var request = RouteRequest.of()
+      .withPreferences(p -> p.withWalk(w -> w.withSpeed(1.0)))
+      .withArriveBy(true)
+      .buildDefault();
 
     TemporaryStreetLocation from = new TemporaryStreetLocation(
       new Coordinate(-122.385050, 47.666620),
@@ -216,8 +220,10 @@ public class AStarTest {
     );
     TemporaryConcreteEdge.createTemporaryConcreteEdge(graph.getVertex("56th_20th"), to);
 
+    EuclideanRemainingWeightHeuristic heuristic = new EuclideanRemainingWeightHeuristic();
+    heuristic.initialize(StreetMode.WALK, Set.of(to), false, request.preferences());
     ShortestPathTree tree = StreetSearchBuilder.of()
-      .setHeuristic(new EuclideanRemainingWeightHeuristic())
+      .setHeuristic(heuristic)
       .setRequest(request)
       .setFrom(from)
       .setTo(to)
@@ -242,9 +248,9 @@ public class AStarTest {
 
   @Test
   public void testMultipleTargets() {
-    var request = new RouteRequest();
-
-    request.withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)));
+    var request = RouteRequest.of()
+      .withPreferences(p -> p.withWalk(w -> w.withSpeed(1.0)))
+      .buildDefault();
 
     Set<Vertex> targets = new HashSet<>();
     targets.add(graph.getVertex("shilshole_22nd"));
@@ -256,8 +262,10 @@ public class AStarTest {
 
     Vertex v1 = graph.getVertex("56th_24th");
     Vertex v2 = graph.getVertex("leary_20th");
+    EuclideanRemainingWeightHeuristic heuristic = new EuclideanRemainingWeightHeuristic();
+    heuristic.initialize(StreetMode.WALK, targets, false, request.preferences());
     ShortestPathTree tree = StreetSearchBuilder.of()
-      .setHeuristic(new EuclideanRemainingWeightHeuristic())
+      .setHeuristic(heuristic)
       .setTerminationStrategy(strategy)
       .setRequest(request)
       .setFrom(v1)

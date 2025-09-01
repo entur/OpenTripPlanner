@@ -1,12 +1,12 @@
 package org.opentripplanner.street.model.edge;
 
+import static org.opentripplanner.street.model.edge.StreetEdgeReluctanceCalculator.computeReluctance;
+import static org.opentripplanner.street.model.edge.StreetEdgeReluctanceCalculator.getSafetyForSafestStreet;
+
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import org.locationtech.jts.geom.LineString;
@@ -22,8 +22,7 @@ import org.opentripplanner.routing.linking.DisposableEdgeCollection;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model.TurnRestriction;
-import org.opentripplanner.street.model.TurnRestrictionType;
+import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.SplitterVertex;
@@ -48,8 +47,6 @@ public class StreetEdge
   implements BikeWalkableEdge, Cloneable, CarPickupableEdge, WheelchairTraversalInformation {
 
   private static final Logger LOG = LoggerFactory.getLogger(StreetEdge.class);
-
-  private static final double SAFEST_STREETS_SAFETY_FACTOR = 0.1;
 
   /** If you have more than 16 flags, increase flags to short or int */
   static final int BACK_FLAG_INDEX = 0;
@@ -114,24 +111,6 @@ public class StreetEdge
   private final byte outAngle;
 
   private StreetElevationExtension elevationExtension;
-
-  /**
-   * The set of turn restrictions of this edge. Since most instances don't have any, we reuse a
-   * global instance in order to conserve memory.
-   * <p>
-   * This field is optimized for low memory consumption and fast access, but modification is
-   * synchronized since it can happen concurrently.
-   * <p>
-   * Why not use null to represent no turn restrictions? This would mean that the access would also
-   * need to be synchronized but since that is a very hot code path, it needs to be fast.
-   * <p>
-   * Why not use a concurrent collection? That would mean that every StreetEdge has its own empty
-   * instance which would increase memory significantly.
-   * <p>
-   * We use specifically an EmptyList here, in order to get very fast iteration, since it has a
-   * static iterator instance, which always returns false in hasNext
-   */
-  private List<TurnRestriction> turnRestrictions = Collections.emptyList();
 
   protected StreetEdge(StreetEdgeBuilder<?> builder) {
     super(builder.fromVertex(), builder.toVertex());
@@ -235,9 +214,9 @@ public class StreetEdge
         case WALK -> walkingBike
           ? preferences.bike().walking().speed()
           : preferences.walk().speed();
-        case BICYCLE -> preferences.bike().speed();
+        case BICYCLE -> Math.min(preferences.bike().speed(), getCyclingSpeedLimit());
         case CAR -> getCarSpeed();
-        case SCOOTER -> preferences.scooter().speed();
+        case SCOOTER -> Math.min(preferences.scooter().speed(), getCyclingSpeedLimit());
         case FLEX -> throw new IllegalArgumentException("getSpeed(): Invalid mode " + traverseMode);
       };
 
@@ -500,34 +479,6 @@ public class StreetEdge
     }
   }
 
-  public boolean canTurnOnto(Edge e, State state, TraverseMode mode) {
-    for (TurnRestriction turnRestriction : turnRestrictions) {
-      /* FIXME: This is wrong for trips that end in the middle of turnRestriction.to
-       */
-
-      // NOTE(flamholz): edge to be traversed decides equivalence. This is important since
-      // it might be a temporary edge that is equivalent to some graph edge.
-      if (turnRestriction.type == TurnRestrictionType.ONLY_TURN) {
-        if (
-          !e.isEquivalentTo(turnRestriction.to) &&
-          turnRestriction.modes.contains(mode) &&
-          turnRestriction.active(state.getTimeSeconds())
-        ) {
-          return false;
-        }
-      } else {
-        if (
-          e.isEquivalentTo(turnRestriction.to) &&
-          turnRestriction.modes.contains(mode) &&
-          turnRestriction.active(state.getTimeSeconds())
-        ) {
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-
   public void shareData(StreetEdge reversedEdge) {
     if (Arrays.equals(compactGeometry, reversedEdge.compactGeometry)) {
       compactGeometry = reversedEdge.compactGeometry;
@@ -599,19 +550,31 @@ public class StreetEdge
     return carSpeed;
   }
 
+  /**
+   * Gets cycling speed limit which is based on the car speed limit. The effective speed limit can
+   * differ from the actual speed limit if the effective cycling distance has been adjusted due to
+   * elevation changes.
+   */
+  private double getCyclingSpeedLimit() {
+    return hasElevationExtension()
+      ? getCarSpeed() * (elevationExtension.getEffectiveBikeDistance() / getDistanceMeters())
+      : getCarSpeed();
+  }
+
   public boolean isSlopeOverride() {
     return BitSetUtils.get(flags, SLOPEOVERRIDE_FLAG_INDEX);
   }
 
   /**
-   * Return the azimuth of the first segment in this edge in integer degrees clockwise from South.
-   * TODO change everything to clockwise from North
+   * Return the azimuth of the first segment in this edge in integer degrees clockwise from North.
    */
   public int getInAngle() {
     return IntUtils.round((this.inAngle * 180) / 128.0);
   }
 
-  /** Return the azimuth of the last segment in this edge in integer degrees clockwise from South. */
+  /**
+   * Return the azimuth of the last segment in this edge in integer degrees clockwise from North.
+   */
   public int getOutAngle() {
     return IntUtils.round((this.outAngle * 180) / 128.0);
   }
@@ -702,9 +665,7 @@ public class StreetEdge
     copyRentalRestrictionsToSplitEdge(se1);
     copyRentalRestrictionsToSplitEdge(se2);
 
-    var splitEdges = new SplitStreetEdge(se1, se2);
-    copyRestrictionsToSplitEdges(this, splitEdges);
-    return splitEdges;
+    return new SplitStreetEdge(se1, se2);
   }
 
   /** Split this street edge and return the resulting street edges. The original edge is kept. */
@@ -749,9 +710,7 @@ public class StreetEdge
       tempEdges.addEdge(e2);
     }
 
-    var splitEdges = new SplitStreetEdge(e1, e2);
-    copyRestrictionsToSplitEdges(this, splitEdges);
-    return splitEdges;
+    return new SplitStreetEdge(e1, e2);
   }
 
   public Optional<Edge> createPartialEdge(StreetVertex from, StreetVertex to) {
@@ -796,85 +755,6 @@ public class StreetEdge
   }
 
   /**
-   * Add a {@link TurnRestriction} to this edge.
-   * <p>
-   * This method is thread-safe as modifying the underlying set is synchronized.
-   */
-  public void addTurnRestriction(TurnRestriction turnRestriction) {
-    if (turnRestriction == null) {
-      return;
-    }
-    synchronized (this) {
-      // in order to guarantee fast access without extra allocations
-      // we make the turn restrictions unmodifiable after a copy-on-write modification
-      var temp = new HashSet<>(turnRestrictions);
-      temp.add(turnRestriction);
-      turnRestrictions = List.copyOf(temp);
-    }
-  }
-
-  /**
-   * Remove a {@link TurnRestriction} from this edge.
-   * <p>
-   * This method is thread-safe as modifying the underlying set is synchronized.
-   */
-  public void removeTurnRestriction(TurnRestriction turnRestriction) {
-    if (turnRestriction == null) {
-      return;
-    }
-    synchronized (this) {
-      if (turnRestrictions.contains(turnRestriction)) {
-        if (turnRestrictions.size() == 1) {
-          turnRestrictions = Collections.emptyList();
-        } else {
-          // in order to guarantee fast access without extra allocations
-          // we make the turn restrictions unmodifiable after a copy-on-write modification
-          var withRemoved = new HashSet<>(turnRestrictions);
-          withRemoved.remove(turnRestriction);
-          turnRestrictions = List.copyOf(withRemoved);
-        }
-      }
-    }
-  }
-
-  public void removeAllTurnRestrictions() {
-    if (turnRestrictions == null) {
-      return;
-    }
-    synchronized (this) {
-      turnRestrictions = Collections.emptyList();
-    }
-  }
-
-  @Override
-  public void removeTurnRestrictionsTo(Edge other) {
-    for (TurnRestriction turnRestriction : this.getTurnRestrictions()) {
-      if (turnRestriction.to == other) {
-        this.removeTurnRestriction(turnRestriction);
-      }
-    }
-  }
-
-  /**
-   * Get the immutable {@link List} of {@link TurnRestriction}s that belongs to this
-   * {@link StreetEdge}.
-   * <p>
-   * This method is thread-safe, even if {@link StreetEdge#addTurnRestriction} or
-   * {@link StreetEdge#removeTurnRestriction} is called concurrently.
-   */
-  public List<TurnRestriction> getTurnRestrictions() {
-    // this can be safely returned as it's unmodifiable
-    return turnRestrictions;
-  }
-
-  @Override
-  public void remove() {
-    removeAllTurnRestrictions();
-
-    super.remove();
-  }
-
-  /**
    * Copy inherited properties from a parent edge to a split edge.
    */
   protected void copyPropertiesToSplitEdge(
@@ -915,61 +795,15 @@ public class StreetEdge
     return length_mm;
   }
 
-  /**
-   * Copy restrictions having former edge as from to appropriate split edge, as well as restrictions
-   * on incoming edges.
-   */
-  private static void copyRestrictionsToSplitEdges(StreetEdge edge, SplitStreetEdge splitEdges) {
-    // Copy turn restriction which have a .to of this edge (present on the incoming edges of fromv)
-    if (splitEdges.head() != null) {
-      edge
-        .getFromVertex()
-        .getIncoming()
-        .stream()
-        .filter(StreetEdge.class::isInstance)
-        .map(StreetEdge.class::cast)
-        .flatMap(originatingEdge -> originatingEdge.getTurnRestrictions().stream())
-        .filter(restriction -> restriction.to == edge)
-        .forEach(restriction ->
-          applyRestrictionsToNewEdge(restriction.from, splitEdges.head(), restriction)
-        );
-    }
-
-    // Copy turn restriction which have a .from of this edge (present on the original street edge)
-    if (splitEdges.tail() != null) {
-      edge
-        .getTurnRestrictions()
-        .forEach(existingTurnRestriction ->
-          applyRestrictionsToNewEdge(
-            splitEdges.tail(),
-            existingTurnRestriction.to,
-            existingTurnRestriction
-          )
-        );
-    }
-  }
-
-  private static void applyRestrictionsToNewEdge(
-    StreetEdge fromEdge,
-    StreetEdge toEdge,
-    TurnRestriction restriction
-  ) {
-    TurnRestriction splitTurnRestriction = new TurnRestriction(
-      fromEdge,
-      toEdge,
-      restriction.type,
-      restriction.modes,
-      restriction.time
-    );
-    LOG.debug("Created new restriction for split edges: {}", splitTurnRestriction);
-    fromEdge.addTurnRestriction(splitTurnRestriction);
-  }
-
   private int computeLength(StreetEdgeBuilder<?> builder) {
     int lengthInMillimeter = builder.hasDefaultLength()
       ? defaultMillimeterLength(builder.geometry())
       : builder.millimeterLength();
-    if (lengthInMillimeter == 0) {
+    if (
+      lengthInMillimeter == 0 &&
+      !(getFromVertex() instanceof BarrierPassThroughVertex ||
+        getToVertex() instanceof BarrierPassThroughVertex)
+    ) {
       LOG.warn(
         "StreetEdge {} from {} to {} has length of 0. This is usually an error.",
         name,
@@ -1127,7 +961,9 @@ public class StreetEdge
       // we are searching in - these traversals are always disallowed (they are U-turns in one direction
       // or the other).
       // TODO profiling indicates that this is a hot spot.
-      if (this.isReverseOf(backEdge) || backEdge.isReverseOf(this)) {
+      // isReverseOf is symmetric so we no longer test in both directions. isReverseOf must
+      // be kept symmetric.
+      if (this.isReverseOf(backEdge)) {
         return null;
       }
     }
@@ -1172,15 +1008,6 @@ public class StreetEdge
       TraverseMode backMode = s0.getBackMode();
       final boolean arriveBy = s0.getRequest().arriveBy();
 
-      // Apply turn restrictions
-      if (
-        arriveBy
-          ? !canTurnOnto(backPSE, s0, backMode)
-          : !backPSE.canTurnOnto(this, s0, traverseMode)
-      ) {
-        return null;
-      }
-
       double backSpeed = backPSE.calculateSpeed(preferences, backMode, s0.isBackWalkingBike());
       final double turnDuration; // Units are seconds.
 
@@ -1195,6 +1022,8 @@ public class StreetEdge
        * that during reverse traversal, we must also use the speed for the mode of
        * the backEdge, rather than of the current edge.
        */
+      var intersectionMode = arriveBy ? backMode : traverseMode;
+      boolean walkingBikeThroughIntersection = arriveBy ? s0.isBackWalkingBike() : walkingBike;
       if (arriveBy && tov instanceof IntersectionVertex traversedVertex) { // arrive-by search
         turnDuration = s0
           .intersectionTraversalCalculator()
@@ -1202,7 +1031,7 @@ public class StreetEdge
             traversedVertex,
             this,
             backPSE,
-            backMode,
+            intersectionMode,
             (float) speed,
             (float) backSpeed
           );
@@ -1213,7 +1042,7 @@ public class StreetEdge
             traversedVertex,
             backPSE,
             this,
-            traverseMode,
+            intersectionMode,
             (float) backSpeed,
             (float) speed
           );
@@ -1223,12 +1052,18 @@ public class StreetEdge
         turnDuration = 0;
       }
 
-      if (!traverseMode.isInCar()) {
-        s1.incrementWalkDistance(turnDuration / 100); // just a tie-breaker
-      }
-
+      var modeReluctance =
+        switch (intersectionMode) {
+          case WALK -> walkingBikeThroughIntersection
+            ? preferences.bike().walking().reluctance()
+            : preferences.walk().reluctance();
+          case BICYCLE -> preferences.bike().reluctance();
+          case SCOOTER -> preferences.scooter().reluctance();
+          case CAR -> preferences.car().reluctance();
+          case FLEX -> 1;
+        };
       time_ms += (long) Math.ceil(1000.0 * turnDuration);
-      weight += preferences.street().turnReluctance() * turnDuration;
+      weight += preferences.street().turnReluctance() * modeReluctance * turnDuration;
     }
 
     if (!traverseMode.isInCar()) {
@@ -1253,14 +1088,7 @@ public class StreetEdge
     double speed
   ) {
     var time = getDistanceMeters() / speed;
-    var weight =
-      time *
-      StreetEdgeReluctanceCalculator.computeReluctance(
-        preferences,
-        traverseMode,
-        walkingBike,
-        isStairs()
-      );
+    var weight = time * computeReluctance(preferences, traverseMode, walkingBike, isStairs());
     return new TraversalCosts(time, weight);
   }
 
@@ -1275,13 +1103,8 @@ public class StreetEdge
       ? pref.bike().optimizeType()
       : pref.scooter().optimizeType();
     switch (optimizeType) {
-      case SAFEST_STREETS -> {
-        weight = (bicycleSafetyFactor * getDistanceMeters()) / speed;
-        if (bicycleSafetyFactor <= SAFEST_STREETS_SAFETY_FACTOR) {
-          // safest streets are treated as even safer than they really are
-          weight *= 0.66;
-        }
-      }
+      case SAFEST_STREETS -> weight = // we exaggerate the safety for this preference
+        (getSafetyForSafestStreet(bicycleSafetyFactor) * getDistanceMeters()) / speed;
       case SAFE_STREETS -> weight = getEffectiveBicycleSafetyDistance() / speed;
       case FLAT_STREETS -> /* see notes in StreetVertex on speed overhead */weight =
         getEffectiveBikeDistanceForWorkCost() / speed;
@@ -1298,12 +1121,7 @@ public class StreetEdge
       }
       default -> weight = getDistanceMeters() / speed;
     }
-    var reluctance = StreetEdgeReluctanceCalculator.computeReluctance(
-      pref,
-      mode,
-      false,
-      isStairs()
-    );
+    var reluctance = computeReluctance(pref, mode, false, isStairs());
     weight *= reluctance;
     return new TraversalCosts(time, weight);
   }
@@ -1330,10 +1148,6 @@ public class StreetEdge
       if (walkingBike) {
         // take slopes into account when walking bikes
         time = weight = (getEffectiveBikeDistance() / speed);
-        if (isStairs()) {
-          // we do allow walking the bike across a stairs but there is a very high default penalty
-          weight *= preferences.bike().walking().stairsReluctance();
-        }
       } else {
         // take slopes into account when walking
         time = getEffectiveWalkDistance() / speed;
@@ -1343,12 +1157,7 @@ public class StreetEdge
         weight /= speed;
       }
 
-      weight *= StreetEdgeReluctanceCalculator.computeReluctance(
-        preferences,
-        traverseMode,
-        walkingBike,
-        isStairs()
-      );
+      weight *= computeReluctance(preferences, traverseMode, walkingBike, isStairs());
     }
 
     return new TraversalCosts(time, weight);
@@ -1417,14 +1226,12 @@ public class StreetEdge
 
     /**
      * Conversion from radians to internal representation as a single signed byte.
-     * We also reorient the angles since OTP seems to use South as a reference
-     * while the azimuth functions use North.
-     * FIXME Use only North as a reference, not a mix of North and South!
+     * <p>
      * Range restriction happens automatically due to Java signed overflow behavior.
      * 180 degrees exists as a negative rather than a positive due to the integer range.
      */
     private static byte convertRadianToByte(double angleRadians) {
-      return (byte) Math.round((angleRadians * 128) / Math.PI + 128);
+      return (byte) Math.round((angleRadians * 128) / Math.PI);
     }
   }
 }

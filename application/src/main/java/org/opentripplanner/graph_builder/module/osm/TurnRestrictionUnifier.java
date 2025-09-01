@@ -1,13 +1,20 @@
 package org.opentripplanner.graph_builder.module.osm;
 
+import static org.opentripplanner.street.search.intersection_model.AbstractIntersectionTraversalCalculator.calculateTurnAngle;
+
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.TurnRestrictionBad;
+import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.street.model.TurnRestriction;
 import org.opentripplanner.street.model.edge.StreetEdge;
 
 class TurnRestrictionUnifier {
 
-  static void unifyTurnRestrictions(OsmDatabase osmdb, DataImportIssueStore issueStore) {
+  static void unifyTurnRestrictions(
+    OsmDatabase osmdb,
+    DataImportIssueStore issueStore,
+    OsmInfoGraphBuildRepository osmInfoGraphBuildRepository
+  ) {
     // Note that usually when the from or to way is not found, it's because OTP has already
     // filtered that way. So many missing edges are not really problems worth issuing warnings on.
     for (Long fromWay : osmdb.getTurnRestrictionWayIds()) {
@@ -36,53 +43,48 @@ class TurnRestrictionUnifier {
               );
               continue;
             }
-            int angleDiff = from.getOutAngle() - to.getInAngle();
-            if (angleDiff < 0) {
-              angleDiff += 360;
-            }
+            int angleDiff = calculateTurnAngle(from, to);
+            // If the angle seems off for the stated restriction direction, add an issue
+            // to the issue store, but do not ignore the restriction.
             switch (restrictionTag.direction) {
               case LEFT -> {
-                if (angleDiff >= 160) {
+                if (angleDiff >= -20) {
                   issueStore.add(
                     new TurnRestrictionBad(
                       restrictionTag.relationOsmID,
                       "Left turn restriction is not on edges which turn left"
                     )
                   );
-                  continue; // not a left turn
                 }
               }
               case RIGHT -> {
-                if (angleDiff <= 200) {
+                if (angleDiff <= 20) {
                   issueStore.add(
                     new TurnRestrictionBad(
                       restrictionTag.relationOsmID,
                       "Right turn restriction is not on edges which turn right"
                     )
                   );
-                  continue; // not a right turn
                 }
               }
               case U -> {
-                if ((angleDiff <= 150 || angleDiff > 210)) {
+                if (Math.abs(angleDiff) <= 150) {
                   issueStore.add(
                     new TurnRestrictionBad(
                       restrictionTag.relationOsmID,
                       "U-turn restriction is not on U-turn"
                     )
                   );
-                  continue; // not a U turn
                 }
               }
               case STRAIGHT -> {
-                if (angleDiff >= 30 && angleDiff < 330) {
+                if (Math.abs(angleDiff) >= 30) {
                   issueStore.add(
                     new TurnRestrictionBad(
                       restrictionTag.relationOsmID,
                       "Straight turn restriction is not on edges which go straight"
                     )
                   );
-                  continue; // not straight
                 }
               }
             }
@@ -90,10 +92,9 @@ class TurnRestrictionUnifier {
               from,
               to,
               restrictionTag.type,
-              restrictionTag.modes,
-              restrictionTag.time
+              restrictionTag.modes
             );
-            from.addTurnRestriction(restriction);
+            osmInfoGraphBuildRepository.addTurnRestriction(restriction);
           }
         }
       }

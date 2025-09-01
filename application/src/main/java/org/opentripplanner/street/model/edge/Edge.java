@@ -68,7 +68,10 @@ public abstract class Edge implements AStarEdge<State, Edge, Vertex>, Serializab
    * Returns true if this edge is the reverse of another.
    */
   public final boolean isReverseOf(Edge e) {
-    return (this.getFromVertex() == e.getToVertex() && this.getToVertex() == e.getFromVertex());
+    return (
+      this.getFromVertex().getParent() == e.getToVertex().getParent() &&
+      this.getToVertex().getParent() == e.getFromVertex().getParent()
+    );
   }
 
   /**
@@ -160,6 +163,10 @@ public abstract class Edge implements AStarEdge<State, Edge, Vertex>, Serializab
     return null;
   }
 
+  public boolean hasGeometry() {
+    return getGeometry() != null;
+  }
+
   public double getDistanceMeters() {
     return 0;
   }
@@ -176,26 +183,10 @@ public abstract class Edge implements AStarEdge<State, Edge, Vertex>, Serializab
     return 0;
   }
 
-  /**
-   * This is the transfer time(duration) spent NOT moving like time in in elevators, escalators and
-   * waiting on read light when crossing a street. This is used together with {@link
-   * #getEffectiveWalkDistance()} to calculate the actual-transfer-time.
-   * <p>
-   * Unit: seconds. Default: 0.
-   */
-  public int getDistanceIndependentTime() {
-    return 0;
-  }
-
   public void remove() {
-    for (Edge edge : this.fromv.getIncoming()) {
-      edge.removeTurnRestrictionsTo(this);
-    }
     this.fromv.removeOutgoing(this);
     this.tov.removeIncoming(this);
   }
-
-  public void removeTurnRestrictionsTo(Edge origin) {}
 
   /**
    * Connect the edge to the graph by adding it to the list of outgoing edges of the origin vertex

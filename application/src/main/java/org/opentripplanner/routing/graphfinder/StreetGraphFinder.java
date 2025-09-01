@@ -11,6 +11,7 @@ import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.TemporaryVerticesContainer;
@@ -27,9 +28,11 @@ import org.opentripplanner.transit.service.TransitService;
 public class StreetGraphFinder implements GraphFinder {
 
   private final Graph graph;
+  private final VertexLinker linker;
 
-  public StreetGraphFinder(Graph graph) {
+  public StreetGraphFinder(Graph graph, VertexLinker linker) {
     this.graph = graph;
+    this.linker = linker;
   }
 
   @Override
@@ -86,17 +89,20 @@ public class StreetGraphFinder implements GraphFinder {
   ) {
     // Make a normal OTP routing request so we can traverse edges and use GenericAStar
     // TODO make a function that builds normal routing requests from profile requests
-    RouteRequest rr = new RouteRequest();
-    rr.setFrom(new GenericLocation(null, null, lat, lon));
-    rr.withPreferences(pref -> pref.withWalk(it -> it.withSpeed(1)));
-    rr.setNumItineraries(1);
+    // TODO: This is incorrect, the configured defaults are not used.
+    var request = RouteRequest.of()
+      .withPreferences(pref -> pref.withWalk(it -> it.withSpeed(1)))
+      .withNumItineraries(1)
+      .buildDefault();
+
     // RR dateTime defaults to currentTime.
     // If elapsed time is not capped, searches are very slow.
     try (
       var temporaryVertices = new TemporaryVerticesContainer(
         graph,
-        rr.from(),
-        rr.to(),
+        linker,
+        GenericLocation.fromCoordinate(lat, lon),
+        GenericLocation.UNKNOWN,
         StreetMode.WALK,
         StreetMode.WALK
       )
@@ -105,7 +111,7 @@ public class StreetGraphFinder implements GraphFinder {
         .setSkipEdgeStrategy(skipEdgeStrategy)
         .setTraverseVisitor(visitor)
         .setDominanceFunction(new DominanceFunctions.LeastWalk())
-        .setRequest(rr)
+        .setRequest(request)
         .setVerticesContainer(temporaryVertices)
         .getShortestPathTree();
     }

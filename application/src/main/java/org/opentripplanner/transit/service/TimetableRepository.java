@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
@@ -36,14 +37,13 @@ import org.opentripplanner.model.transfer.DefaultTransferService;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.impl.DelegatingTransitAlertServiceImpl;
-import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.routing.util.ConcurrentPublished;
 import org.opentripplanner.transit.model.basic.Notice;
-import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
@@ -52,6 +52,7 @@ import org.opentripplanner.transit.model.site.GroupStop;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
 import org.opentripplanner.utils.lang.ObjectUtils;
@@ -90,8 +91,6 @@ public class TimetableRepository implements Serializable {
 
   private final Multimap<AbstractTransitEntity, Notice> noticesByElement = HashMultimap.create();
   private final DefaultTransferService transferService = new DefaultTransferService();
-
-  private final HashSet<TransitMode> transitModes = new HashSet<>();
 
   private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
 
@@ -206,19 +205,6 @@ public class TimetableRepository implements Serializable {
       !time.isBefore(this.transitServiceStarts.toInstant()) &&
       time.isBefore(this.transitServiceEnds.toInstant())
     );
-  }
-
-  /**
-   * Adds mode of transport to transit modes in graph
-   */
-  public void addTransitMode(TransitMode mode) {
-    invalidateIndex();
-    transitModes.add(mode);
-  }
-
-  /** List of transit modes that are available in GTFS data used in this graph **/
-  public HashSet<TransitMode> getTransitModes() {
-    return transitModes;
   }
 
   public CalendarService getCalendarService() {
@@ -599,15 +585,27 @@ public class TimetableRepository implements Serializable {
    * @return set of stop locations that are used for trips that allow cars
    */
   public Set<StopLocation> getStopLocationsUsedForCarsAllowedTrips() {
+    return getStopLocationsUsedByTripTimes(
+      tt -> tt.getTrip().getCarsAllowed() == CarAccess.ALLOWED
+    );
+  }
+
+  /**
+   * Get the stops that are used by transit capable of transporting bikes.
+   * Real-time updates are not considered.
+   */
+  public Set<StopLocation> getStopLocationsUsedForBikesAllowedTrips() {
+    return getStopLocationsUsedByTripTimes(
+      tt -> tt.getTrip().getBikesAllowed() == BikeAccess.ALLOWED
+    );
+  }
+
+  private Set<StopLocation> getStopLocationsUsedByTripTimes(
+    Predicate<TripTimes> tripTimesPredicate
+  ) {
     Set<StopLocation> stopLocations = getAllTripPatterns()
       .stream()
-      .filter(t ->
-        t
-          .getScheduledTimetable()
-          .getTripTimes()
-          .stream()
-          .anyMatch(tt -> tt.getTrip().getCarsAllowed() == CarAccess.ALLOWED)
-      )
+      .filter(t -> t.getScheduledTimetable().getTripTimes().stream().anyMatch(tripTimesPredicate))
       .flatMap(t -> t.getStops().stream())
       .collect(Collectors.toSet());
 

@@ -44,7 +44,6 @@ import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.OsmTag;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.street.model.RepeatingTimePeriod;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.TurnRestrictionType;
 import org.opentripplanner.street.search.TraverseMode;
@@ -140,8 +139,8 @@ public class OsmDatabase {
     return nodesById.get(nodeId);
   }
 
-  public OsmWay getWay(Long nodeId) {
-    return waysById.get(nodeId);
+  public OsmWay getWay(Long wayId) {
+    return waysById.get(wayId);
   }
 
   public Collection<OsmWay> getWays() {
@@ -245,9 +244,7 @@ public class OsmDatabase {
     }
 
     /* filter out ways that are not relevant for routing */
-    if (
-      !(way.isRoutable() || way.isParkAndRide() || way.isBikeParking() || way.isBoardingLocation())
-    ) {
+    if (!(relevantForRouting(way) || way.isBarrier())) {
       return;
     }
 
@@ -271,6 +268,12 @@ public class OsmDatabase {
     }
 
     waysById.put(wayId, way);
+  }
+
+  private static boolean relevantForRouting(OsmWay way) {
+    return (
+      way.isRoutable() || way.isParkAndRide() || way.isBikeParking() || way.isBoardingLocation()
+    );
   }
 
   public void addRelation(OsmRelation relation) {
@@ -322,7 +325,10 @@ public class OsmDatabase {
     // only 2 steps -- ways+relations, followed by used nodes.
     // Ways can be tag-filtered in phase 1.
 
-    markNodesForKeeping(waysById.valueCollection(), waysNodeIds);
+    markNodesForKeeping(
+      waysById.valueCollection().stream().filter(OsmDatabase::relevantForRouting).toList(),
+      waysNodeIds
+    );
     markNodesForKeeping(areaWaysById.valueCollection(), areaNodeIds);
   }
 
@@ -698,6 +704,9 @@ public class OsmDatabase {
       }
       try {
         addArea(new OsmArea(way, List.of(way), Collections.emptyList(), nodesById));
+        // do not keep the way used in an area, it creates duplicated edges from the basic
+        // street graph and from the area processing
+        waysById.remove(way.getId());
       } catch (OsmArea.AreaConstructionException | Ring.RingConstructionException e) {
         // this area cannot be constructed, but we already have all the
         // necessary nodes to construct it. So, something must be wrong with
@@ -761,31 +770,6 @@ public class OsmDatabase {
         addArea(new OsmArea(relation, outerWays, innerWays, nodesById));
       } catch (OsmArea.AreaConstructionException | Ring.RingConstructionException e) {
         issueStore.add(new InvalidOsmGeometry(relation));
-        continue;
-      }
-
-      for (OsmRelationMember member : relation.getMembers()) {
-        // multipolygons for attribute mapping
-        if (!(member.hasTypeWay() && waysById.containsKey(member.getRef()))) {
-          continue;
-        }
-
-        OsmEntity way = waysById.get(member.getRef());
-        if (way == null) {
-          continue;
-        }
-        String[] relationCopyTags = { "highway", "name", "ref" };
-        for (String tag : relationCopyTags) {
-          if (relation.hasTag(tag) && !way.hasTag(tag)) {
-            way.addTag(tag, relation.getTag(tag));
-          }
-        }
-        if (relation.isRailwayPlatform() && !way.hasTag("railway")) {
-          way.addTag("railway", "platform");
-        }
-        if (relation.isPlatform() && !way.hasTag("public_transport")) {
-          way.addTag("public_transport", "platform");
-        }
       }
     }
   }
@@ -794,11 +778,7 @@ public class OsmDatabase {
    * Handler for a new OsmArea (single way area or multipolygon relations)
    */
   private void addArea(OsmArea area) {
-    StreetTraversalPermission permissions = area.parent
-      .getOsmProvider()
-      .getWayPropertySet()
-      .getDataForWay(area.parent)
-      .getPermission();
+    StreetTraversalPermission permissions = area.getPermission();
     if (area.parent.isRoutable() && permissions != StreetTraversalPermission.NONE) {
       walkableAreas.add(area);
     }
@@ -949,26 +929,6 @@ public class OsmDatabase {
       return;
     }
     tag.modes = modes.clone();
-
-    // set the time periods for this restriction, if applicable
-    if (
-      relation.hasTag("day_on") &&
-      relation.hasTag("day_off") &&
-      relation.hasTag("hour_on") &&
-      relation.hasTag("hour_off")
-    ) {
-      try {
-        tag.time = RepeatingTimePeriod.parseFromOsmTurnRestriction(
-          relation.getTag("day_on"),
-          relation.getTag("day_off"),
-          relation.getTag("hour_on"),
-          relation.getTag("hour_off"),
-          relation.getOsmProvider()::getZoneId
-        );
-      } catch (NumberFormatException e) {
-        LOG.info("Unparseable turn restriction: {}", relation.getId());
-      }
-    }
 
     turnRestrictionsByFromWay.put(from, tag);
     turnRestrictionsByToWay.put(to, tag);

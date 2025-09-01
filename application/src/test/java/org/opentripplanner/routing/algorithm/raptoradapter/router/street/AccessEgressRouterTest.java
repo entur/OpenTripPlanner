@@ -8,6 +8,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -206,7 +207,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
   /* Helper methods */
 
   private GenericLocation location(WgsCoordinate coordinate) {
-    return new GenericLocation(coordinate.latitude(), coordinate.longitude());
+    return GenericLocation.fromCoordinate(coordinate.latitude(), coordinate.longitude());
   }
 
   private GenericLocation location(FeedScopedId id) {
@@ -218,10 +219,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
   }
 
   private RouteRequest requestFromTo(GenericLocation from, GenericLocation to) {
-    var routeRequest = new RouteRequest();
-    routeRequest.setFrom(from);
-    routeRequest.setTo(to);
-    return routeRequest;
+    return RouteRequest.of().withFrom(from).withTo(to).buildRequest();
   }
 
   private String nearbyStopDescription(NearbyStop nearbyStop) {
@@ -258,6 +256,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
     try (
       var verticesContainer = new TemporaryVerticesContainer(
         graph,
+        TestVertexLinker.of(graph),
         from,
         to,
         StreetMode.WALK,
@@ -267,7 +266,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
       return AccessEgressRouter.findAccessEgresses(
         request,
         verticesContainer,
-        new StreetRequest(),
+        StreetRequest.DEFAULT,
         null,
         accessEgress,
         durationLimit,
