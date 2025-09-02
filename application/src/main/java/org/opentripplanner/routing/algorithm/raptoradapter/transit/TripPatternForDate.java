@@ -160,12 +160,7 @@ public class TripPatternForDate implements Comparable<TripPatternForDate> {
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-      tripPattern,
-      serviceDate,
-      Arrays.hashCode(tripTimes),
-      Arrays.hashCode(frequencies)
-    );
+    return Objects.hash(tripPattern, serviceDate);
   }
 
   @Override
