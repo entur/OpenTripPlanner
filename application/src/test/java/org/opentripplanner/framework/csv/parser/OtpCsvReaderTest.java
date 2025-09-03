@@ -3,13 +3,12 @@ package org.opentripplanner.framework.csv.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.csvreader.CsvReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.datastore.api.FileType;
-import org.opentripplanner.datastore.base.ByteArrayDataSource;
+import org.opentripplanner.datastore.configure.DataStoreModule;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.utils.lang.IntRange;
 import org.slf4j.Logger;
@@ -21,20 +20,14 @@ class OtpCsvReaderTest {
 
   @Test
   void read() {
-    var ds = new ByteArrayDataSource(
-      "path",
-      "OtpCsvReaderTestDataSource",
+    var ds = DataStoreModule.dataSource(
+      "OtpCsvReaderTest",
       FileType.GTFS,
-      2,
-      System.currentTimeMillis(),
-      false
-    );
-    ds.withBytes(
       """
       a,b,c
       1, "Cat", 1
       2, "Boot", 0
-      """.getBytes(StandardCharsets.UTF_8)
+      """
     );
     var expected = List.of(new AType(1, "Cat", true), new AType(2, "Boot", false));
 
