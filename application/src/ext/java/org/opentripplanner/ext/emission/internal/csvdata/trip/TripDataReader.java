@@ -1,11 +1,11 @@
 package org.opentripplanner.ext.emission.internal.csvdata.trip;
 
-import com.csvreader.CsvReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.opentripplanner.datastore.api.DataSource;
+import org.opentripplanner.framework.csv.parser.OtpCsvReader;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.slf4j.Logger;
 
 /**
  * This class handles reading the CO₂ emissions data from the files in the GTFS package
@@ -22,23 +22,17 @@ public class TripDataReader {
     this.issueStore = issueStore;
   }
 
-  public List<TripHopsRow> read(Runnable logStepCallback) {
-    if (!emissionDataSource.exists()) {
-      return List.of();
-    }
+  public List<TripHopsRow> read(Logger logger) {
     var emissionData = new ArrayList<TripHopsRow>();
-    var reader = new CsvReader(emissionDataSource.asInputStream(), StandardCharsets.UTF_8);
-    var parser = new TripHopsCsvParser(issueStore, reader);
-
-    if (!parser.headersMatch()) {
-      return List.of();
-    }
-
-    while (parser.hasNext()) {
-      logStepCallback.run();
-      emissionData.add(parser.next());
-      dataProcessed = true;
-    }
+    OtpCsvReader.<TripHopsRow>of()
+      .withLogger(logger)
+      .withDataSource(emissionDataSource)
+      .withParserFactory(r -> new TripHopsCsvParser(issueStore, r))
+      .withRowHandler(row -> {
+        emissionData.add(row);
+        dataProcessed = true;
+      })
+      .read();
     return emissionData;
   }
 
