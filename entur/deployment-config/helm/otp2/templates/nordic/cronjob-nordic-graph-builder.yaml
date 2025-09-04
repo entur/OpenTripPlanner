@@ -28,7 +28,7 @@ spec:
                       - key: cloud.google.com/gke-nodepool
                         operator: In
                         values:
-                          - nordic-gb-pool-2
+                          - nordic-gb-pool-3
           serviceAccountName: application
           containers:
           - command:
