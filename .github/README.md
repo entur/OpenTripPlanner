@@ -1,17 +1,21 @@
 <h1 align="center">
   <img src="/doc/user/images/otp-logo.svg" width="120" /><br>
-  Open Trip Planner (OTP)
+  Open Trip Planner (OTP) - Entur Fork
 </h1>
-<h3 align="center"><em>Entur - GitHub Fork</em></h3>
 <p align="center">
-  <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen" alt="OTP Version DEV"><br>
-  <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange" alt="OTP Version TEST"/><br>
-  <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/><br>
+  <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen" alt="OTP Version DEV"> &nbsp;
+  <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange" alt="OTP Version TEST"/> &nbsp;
+  <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/>
 </p>
 <p align="center">
   <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a>
   <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml/badge.svg" alt="Build and push docker image 🎁"/></a>
 </p>
+
+##### OTP Links
+- **OTP Debug UI** ・ [DEV](https://otp2debug.dev.entur.org/) ・ [TEST](https://otp2debug.staging.entur.org/) ・ [PROD](https://otp2debug.entur.org/) 
+- **OTP Built-in GraphQL Client** ・ [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) ・ [TEST](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) ・ [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel) 
+- [**OTP GraphQL API**](https://api.staging.entur.io/graphql-explorer/journey-planner-v3) (Shamash)
 
 This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner).
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
@@ -146,10 +150,4 @@ Harness). Then use Ninkasi to build a candidate _streetGraph_ and a candidate _t
 both graphs are build successfully you can roll out GraphBuilder and JourneyPlanner.
 
 
-# CI/CD Links
-- [OTP Build Application 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) (GitHub Workflow)
-- [OTP Build Docker image 🎁](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml) (GitHub Workflow)
-- OTP Debug UI ・ [DEV](https://otp2debug.dev.entur.org/) ・ [TEST](https://otp2debug.staging.entur.org/) ・ [PROD](https://otp2debug.entur.org/) 
-- OTP Built-in GraphQL Client ・ [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) ・ [TEST](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) ・ [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel) 
-- [OTP GraphQL API](https://api.staging.entur.io/graphql-explorer/journey-planner-v3) (Shamash)
 - [OTP Planning request performance in Grafana](https://grafana.entur.org/d/X1pi-Jxnz/otp-apis-performance-operations?orgId=1)
