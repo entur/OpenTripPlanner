@@ -3,6 +3,7 @@ package org.opentripplanner.ext.empiricaldelay.internal.graphbuilder;
 import static java.util.Comparator.comparingInt;
 
 import java.util.List;
+import java.util.Objects;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.empiricaldelay.internal.csvinput.EmpiricalDelayCsvDataReader;
 import org.opentripplanner.ext.empiricaldelay.internal.model.DelayAtStopDto;
@@ -41,12 +42,12 @@ public class EmpiricalDelayGraphBuilder implements GraphBuilderModule {
     DataImportIssueStore issueStore,
     Deduplicator deduplicator
   ) {
-    this.dataSources = dataSources;
-    this.parameters = parameters;
-    this.repository = repository;
+    this.dataSources = Objects.requireNonNull(dataSources);
+    this.parameters = Objects.requireNonNull(parameters);
+    this.repository = Objects.requireNonNull(repository);
     this.validator = new ConsistencyValidator(timetableRepository, issueStore);
-    this.issueStore = issueStore;
-    this.deduplicator = deduplicator;
+    this.issueStore = Objects.requireNonNull(issueStore);
+    this.deduplicator = Objects.requireNonNull(deduplicator);
   }
 
   public void buildGraph() {
