@@ -5,12 +5,15 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Date;
 import org.opentripplanner.api.model.serverinfo.ApiServerInfo;
 import org.opentripplanner.model.projectinfo.OtpProjectInfo;
 
@@ -56,12 +59,16 @@ public class ServerInfo {
   @GET
   @Path("version-badge.svg")
   @Produces("image/svg+xml;charset=utf-8")
-  public String getVersionBadge(
+  public Response getVersionBadge(
     @QueryParam("color") @DefaultValue("#E43") String color,
     @QueryParam("label") @DefaultValue("OTP Version") String label
   ) {
-    String version = "%s (%s)".formatted(SERVER_INFO.version.getVersion(), SERVER_INFO.otpSerializationVersionId);
-    return generateOtpBadgeSvg(color, label, version);
+    String version =
+      "%s (%s)".formatted(SERVER_INFO.version.getVersion(), SERVER_INFO.otpSerializationVersionId);
+    var svg = generateOtpBadgeSvg(color, label, version);
+    var cacheControl = new CacheControl();
+    cacheControl.setNoCache(true);
+    return Response.ok(svg).cacheControl(cacheControl).lastModified(new Date()).build();
   }
 
   static String generateOtpBadgeSvg(String color, String label, String version) {

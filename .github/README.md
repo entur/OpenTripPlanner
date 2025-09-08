@@ -3,19 +3,39 @@
   Open Trip Planner (OTP) - Entur Fork
 </h1>
 <p align="center">
-  <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen" alt="OTP Version DEV"> &nbsp;
-  <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange" alt="OTP Version TEST"/> &nbsp;
-  <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/>
+  <a href="https://otp2debug.dev.entur.org/">  
+    <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen" alt="OTP Version DEV">
+  </a> &nbsp;
+  <a href="https://otp2debug.staging.entur.org/">
+    <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange" alt="OTP Version TEST"/>
+  </a> &nbsp;
+  <a href="https://otp2debug.entur.org/">
+    <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/>
+  </a>
 </p>
 <p align="center">
-  <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a>
+  <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a> &nbsp;
   <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml/badge.svg" alt="Build and push docker image 🎁"/></a>
 </p>
-
-##### OTP Links
-- **OTP Debug UI** ・ [DEV](https://otp2debug.dev.entur.org/) ・ [TEST](https://otp2debug.staging.entur.org/) ・ [PROD](https://otp2debug.entur.org/) 
-- **OTP Built-in GraphQL Client** ・ [DEV](https://otp2debug.dev.entur.org/graphiql?flavor=transmodel) ・ [TEST](https://otp2debug.staging.entur.org/graphiql?flavor=transmodel) ・ [PROD](https://otp2debug.entur.org/graphiql?flavor=transmodel) 
-- [**OTP GraphQL API**](https://api.staging.entur.io/graphql-explorer/journey-planner-v3) (Shamash)
+<p align="center">
+  <b>
+    OTP Debug ・ 
+    <a href="https://otp2debug.dev.entur.org/">DEV</a> ・
+    <a href="https://otp2debug.staging.entur.org/">TEST</a> ・
+    <a href="https://otp2debug.entur.org/">PROD</a>
+  </b>
+</p>
+<p align="center">
+  <b>
+    OTP GraphQL Explorer ・ 
+    <a href="https://otp2debug.dev.entur.org/graphiql?flavor=transmodel">DEV</a> ・
+    <a href="https://otp2debug.staging.entur.org/graphiql?flavor=transmodel">TEST</a> ・
+    <a href="https://otp2debug.entur.org/graphiql?flavor=transmodel">PROD</a>
+  </b>
+</p>
+<p align="center">
+  <b><a href="https://api.staging.entur.io/graphql-explorer/journey-planner-v3">Entur GraphiQL (Shamash)</a></b>
+</p>
 
 This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner).
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
