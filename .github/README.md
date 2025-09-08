@@ -4,10 +4,10 @@
 </h1>
 <p align="center">
   <a href="https://otp2debug.dev.entur.org/">  
-    <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen" alt="OTP Version DEV">
+    <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen&l=0" alt="OTP Version DEV">
   </a> &nbsp;
   <a href="https://otp2debug.staging.entur.org/">
-    <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange" alt="OTP Version TEST"/>
+    <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange&l=0" alt="OTP Version TEST"/>
   </a> &nbsp;
   <a href="https://otp2debug.entur.org/">
     <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/>
