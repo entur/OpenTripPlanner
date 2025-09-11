@@ -76,10 +76,12 @@ that the GitHub Action Bot does not have rights to move or change these files fo
 GitHub action workflow scripts from the upstream project are deleted. Keeping the Entur config in
 one place is done to keep our stuff separate from the upstream project and avoid merge conflicts.
 
-> **Note!** To make changes to the config, checkout the `main_config` branch. Change the config, 
->           commit and push. The changes will make it into the next release (build nightly) or you 
->           may trigger a new build manually by running the [Release new OTP version](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml)
->           workflow. 
+
+## How-to change the OTP configuration
+1. Check out the `main_conig` branch. Change the config, commit and puch changes. The changes will 
+   make it into the next release (build nightly) or you may trigger a new build manually.
+2. To trigger the build, run [![Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml). 
+   The entire Entur OTP release pipline will run.
 
 
 ## Pending Pull Requests
@@ -93,7 +95,7 @@ next release add/remove the `Entur Test` label.
 
 How to release and make hot fixes is described in the [release documentation readme](/script/CUSTOM_RELEASE_README.md).
 At Entur we have set up a [GitHub Workflow](https://github.com/entur/OpenTripPlanner/actions) to 
-build a new release every night. The [Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) 
+build a new release every night. The [![Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml)
 can also be triggered mnually to start the OTP CI/DI pipline. 
 
 
@@ -145,7 +147,6 @@ environments.
 It takes about 1 hour to build the streetGraph and 15 minutes to build the transitGraph. There are
 two ways to deploy a new version of OTP in an environment - depending on if the 
 serialization-version-id. 
-
 
 ## How-to roll out OTP with THE SAME serialization-version-id as the current running version
 
