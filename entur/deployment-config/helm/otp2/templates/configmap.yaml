@@ -184,25 +184,9 @@ data:
             // By listing a default network all networks NOT listed here are loaded by OTP, we do not det any
             // parameters other than the name, since we want the defaults.
             { "network": "default-network" },
-            // All networks with geofencingZones in STAGING is listed. We will turn on one-by-one, starting with
-            // "boltdrammen"
-            { "network": "voi" },
-            { "network": "boltoslo" },
-            { "network": "boltlillestrom", "geofencingZones" : {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "boltfredrikstad" },
-            { "network": "boltsarpsborg" },
-            { "network": "boltbergen" },
-            { "network": "boltdrammen", "geofencingZones" : {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "boltgjovik" },
-            { "network": "bolthamar" },
-            { "network": "boltlillehammer" },
-            { "network": "boltkristiansand" },
-            { "network": "tierbaerum" },
-            { "network": "tierstavanger", "geofencingZones" : {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "tierasker", "geofencingZones" : {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "tierlillestrom", "geofencingZones" : {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "tierlorenskog" },
-            { "network": "tiertrondheim" }
+            { "network": "voioslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
+            { "network": "boltoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
+            { "network": "rydeoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
           ]
         },
         "transmodelApi": {
