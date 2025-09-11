@@ -15,7 +15,8 @@ data:
         "ReportApi": true,
         "RestAPIPassInDefaultConfigAsJson": {{ .Values.configuration.restApiConfigJsonParam }},
         "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
-        "TransferConstraints": {{ .Values.configuration.transferConstraints }}
+        "TransferConstraints": {{ .Values.configuration.transferConstraints }},
+        "CarPooling": {{ .Values.configuration.carpooling }}
       }
    }
 kind: ConfigMap
