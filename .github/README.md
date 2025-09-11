@@ -93,8 +93,7 @@ next release add/remove the `Entur Test` label.
 
 How to release and make hot fixes is described in the [release documentation readme](/script/CUSTOM_RELEASE_README.md).
 At Entur we have set up a [GitHub Workflow](https://github.com/entur/OpenTripPlanner/actions) to 
-build a new release every night. The
-<a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a>
+build a new release every night. The [![Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml)
 can also be triggered mnually to start the OTP CI/DI pipline. 
 
 
