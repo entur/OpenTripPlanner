@@ -187,6 +187,7 @@ data:
             { "network": "voioslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
             { "network": "boltoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
             { "network": "rydeoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
+            { "network": "oslobysykkel", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
           ]
         },
         "transmodelApi": {
