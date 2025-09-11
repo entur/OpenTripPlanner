@@ -93,7 +93,8 @@ next release add/remove the `Entur Test` label.
 
 How to release and make hot fixes is described in the [release documentation readme](/script/CUSTOM_RELEASE_README.md).
 At Entur we have set up a [GitHub Workflow](https://github.com/entur/OpenTripPlanner/actions) to 
-build a new release every night. The [Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) 
+build a new release every night. The
+<a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a>
 can also be triggered mnually to start the OTP CI/DI pipline. 
 
 
@@ -145,6 +146,10 @@ environments.
 It takes about 1 hour to build the streetGraph and 15 minutes to build the transitGraph. There are
 two ways to deploy a new version of OTP in an environment - depending on if the 
 serialization-version-id. 
+
+## How-to change the OTP configuration
+1. Check out the `main_conig` branch. Change the config, commit and puch changes.
+2. Run the [![Release new OTP version 🛠️](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg)](https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml) to start the OTP release pipline.
 
 
 ## How-to roll out OTP with THE SAME serialization-version-id as the current running version
