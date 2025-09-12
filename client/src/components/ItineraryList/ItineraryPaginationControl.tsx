@@ -16,7 +16,7 @@ export function ItineraryPaginationControl({
   onCompare?: () => void;
 }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+    <div className="pagination-controls-container">
       <Button
         variant="outline-primary"
         size="sm"
