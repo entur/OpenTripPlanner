@@ -20,6 +20,7 @@ import org.opentripplanner.apis.transmodel.mapping.OccupancyStatusMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
+import org.opentripplanner.apis.transmodel.model.timetable.EmpiricalDelayType;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.routing.alertpatch.StopCondition;
@@ -44,6 +45,7 @@ public class EstimatedCallType {
     GraphQLOutputType ptSituationElementType,
     GraphQLOutputType serviceJourneyType,
     GraphQLOutputType datedServiceJourneyType,
+    GraphQLOutputType empiricalDelayType,
     GraphQLScalarType dateTimeScalar
   ) {
     return GraphQLObjectType.newObject()
@@ -153,6 +155,16 @@ public class EstimatedCallType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
+          .name("empiricalDelay")
+          .type(empiricalDelayType)
+          .description(
+            "The typical delay for this trip on this day for this stop based on historical data."
+          )
+          .dataFetcher(EmpiricalDelayType::dataFetcherForTripTimeOnDate)
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
           .name("timingPoint")
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .description(
@@ -201,7 +213,7 @@ public class EstimatedCallType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("stopPositionInPattern")
           .type(new GraphQLNonNull(Scalars.GraphQLInt))
-          .dataFetcher(environment -> ((TripTimeOnDate) environment.getSource()).getStopIndex())
+          .dataFetcher(environment -> ((TripTimeOnDate) environment.getSource()).getStopPosition())
           .build()
       )
       .field(
