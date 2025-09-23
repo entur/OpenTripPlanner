@@ -8,7 +8,6 @@ data:
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
         "IncludeEmptyRailStopsInTransfers" : true,
-        "LegacyRestApi" : true,
         "MultiCriteriaGroupMaxFilter" : true,
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
         "ParallelRouting": {{ .Values.configuration.parallelRouting }},
