@@ -1,0 +1,259 @@
+{{- if .Values.journeyPlanner.enabled }}
+apiVersion: v1
+data:
+  router-config.json: |+
+      {
+        "configVersion" : "{{ .Values.build.number }}",
+        "server": {
+          "apiProcessingTimeout" : "{{ .Values.configuration.apiProcessingTimeout }}",
+          "traceParameters": [
+            {
+              "httpRequestHeader": "X-Correlation-ID",
+              "httpResponseHeader": "X-Correlation-ID",
+              "logKey": "correlationId",
+              "generateIdIfMissing": true
+            },
+            {
+              "httpRequestHeader": "ET-Client-Name",
+              "logKey": "etClientName"
+            }
+          ]
+        },
+        "routingDefaults": {
+          "streetRoutingTimeout": "5s",
+          "numItineraries": 12,
+          "transferPenalty": 0,
+          "turnReluctance": 1.0,
+          "elevatorBoardTime": 90,
+          "elevatorBoardCost": 90,
+          "elevatorHopTime": 20,
+          "elevatorHopCost": 20,
+          "bicycle" : {
+            "speed" : 5,
+            "reluctance" : 5.0,
+            "boardCost" : 600,
+            "walk" : {
+              "reluctance" : 10.0
+            },
+            "parking" : {
+              "cost" : 120
+            }
+          },
+          "car" : {
+            "reluctance" : 10,
+            "decelerationSpeed" : 2.9,
+            "accelerationSpeed" : 2.9,
+            "rental" : {
+              "dropOffTime" : "120s"
+            }
+          },
+          "walk" : {
+            "speed" : 1.3,
+            "reluctance" : 4.0,
+            "stairsReluctance" : 1.65,
+            "boardCost" : 600
+          },
+          "wheelchairAccessibility": {
+            "trip": {
+              "onlyConsiderAccessible": false
+            },
+            "stop": {
+              "onlyConsiderAccessible": false
+            },
+            "elevator": {
+              "onlyConsiderAccessible": false
+            }
+          },
+          "otherThanPreferredRoutesPenalty": 300,
+          "transferSlack": 120,
+          // Default slack for any mode is 0 (zero)
+          "boardSlackForMode": {
+            "AIRPLANE" : "35m"
+          },
+          "alightSlackForMode": {
+            "AIRPLANE" : "15m"
+          },
+          "accessEgress": {
+            "maxDurationForMode" : {
+              "BIKE_RENTAL": "20m",
+              "CAR": "3h",
+              "SCOOTER_RENTAL" : "20m"
+            },
+            "maxStopCountForMode" : {
+              "CAR" : 0
+            }
+          },
+          "maxDirectStreetDurationForMode": {
+            "CAR": "12h"
+          },
+          "itineraryFilters" : {
+            "transitGeneralizedCostLimit" : {
+              "costLimitFunction": "900 + 1.5x",
+              "intervalRelaxFactor": 0.75
+            },
+            "bikeRentalDistanceRatio": 0.3
+          },
+          "ignoreRealtimeUpdates": false,
+          "geoidElevation": false,
+          "maxJourneyDuration": "36h",
+          "drivingDirection": "right",
+          "transferOptimization": {
+            "optimizeTransferWaitTime": true,
+            "minSafeWaitTimeFactor": 5.0,
+            "backTravelWaitTimeFactor": 1.0,
+            "extraStopBoardAlightCostsFactor": 8.0
+          },
+          "relaxTransitGroupPriority" : "12m + 1.12x",
+          "transitGroupPriority": {
+            "global": [
+              {
+                "modes": ["AIRPLANE"]
+              },
+              {
+                "subModes": ["localCarFerry"]
+              },
+              // Flytoget need to be before "RAIL u/LOCAL" to include 'railReplacementBus'
+              { "agencies": [ "RB:FLT:Authority:FLT" ] },
+              {
+                // RAIL (except LOCAL)
+                "subModes": [
+                  // NOT INCLUDED
+                  // "local", "suburbanRailway", "carTransportRailService", "touristRailway",
+                  // "airportLinkRail", "railShuttle", "specialTrain", "rackAndPinionRailway",
+                  "highSpeedRail",
+                  "regionalRail",
+                  "interregionalRail",
+                  "longDistance",
+                  "international",
+                  "sleeperRailService",
+                  "nightRail",
+                  "replacementRailService",
+                  "crossCountryRail",
+                  // We include "bus-for-tog" as well
+                  "railReplacementBus"
+                ]
+              },
+              {
+                "agencies": [
+                  // Flybuss
+                  "RB:ATU:Authority:1",
+                  "RB:BOR:Authority:1",
+                  "RB:BSR:Authority:1",
+                  "RB:BSR:Authority:2",
+                  "RB:TID:Authority:TID",
+                  "RB:UNI:Authority:UNI"
+                ]
+              },
+              // Coach services
+              { "agencies": [ "RB:VYB:Authority:1", "RB:VYX:Authority:1" ] },
+              { "agencies": [ "RB:FLI:Authority:FlixMobility" ] },
+              { "agencies": [ "RB:NBU:Authority:002" ] },
+              { "agencies": [ "RB:NWY:Authority:d1ea7af1-3c2a-4825-893f-21408ef08480" ] }
+            ]
+          }
+        },
+        "transit": {
+          "maxNumberOfTransfers" : 12,
+          "maxSearchWindow": "48h",
+          "dynamicSearchWindow" : {
+            "minTransitTimeCoefficient" : 0.5,
+            "minWaitTimeCoefficient" : 0.5,
+            "minWindow" : "1h",
+            "maxWindow" : "5h"
+          },
+          "stopBoardAlightDuringTransferCost" : {
+            "DISCOURAGED" : 1500,
+            "ALLOWED" : 75,
+            "RECOMMENDED" : 30,
+            "PREFERRED" : 0
+          }
+        },
+        "flex": {
+          "maxTransferDuration" : "5m",
+          "maxFlexTripDuration" : "1h15m"
+        },
+        "vehicleRentalServiceDirectory": {
+          "url": "{{ .Values.configuration.vehicleRentalServiceDirectory.url }}",
+          "sourcesName": "{{ .Values.configuration.vehicleRentalServiceDirectory.sourcesName }}",
+          "updaterUrlName": "{{ .Values.configuration.vehicleRentalServiceDirectory.updaterUrlName }}",
+          "updaterNetworkName": "{{ .Values.configuration.vehicleRentalServiceDirectory.updaterNetworkName }}",
+          "headers": {
+            "ET-Client-Name": "entur-otp2"
+          },
+          "networks": [
+            // By listing a default network all networks NOT listed here are loaded by OTP, we do not det any
+            // parameters other than the name, since we want the defaults.
+            { "network": "default-network" },
+            { "network": "voioslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
+            { "network": "boltoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
+            { "network": "rydeoslo", "geofencingZones": false },
+            { "network": "oslobysykkel", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
+          ]
+        },
+        "transmodelApi": {
+          "hideFeedId": true,
+          "maxNumberOfResultFields": 600000
+        },
+        "timetableUpdates": {
+          "purgeExpiredData": false
+        },
+        "updaters": [
+            // SIRI SX service alerts
+            {
+              "type": "siri-sx-updater",
+              "frequency": "1m",
+              "url": "{{ .Values.configuration.siriSXUpdater }}",
+              "feedId": "RB",
+              "blockReadinessUntilInitialized": true,
+              "headers" : {
+                 "ET-Client-Name": "${HOSTNAME}-SX"
+              },
+              "earlyStart": "0s"
+            },
+    {{- if .Values.configuration.carpooling }}
+          // SIRI ET carpooling updater
+          {
+            "type": "siri-et-carpooling-updater",
+            "frequency": "20s",
+            "url":  "https://api.dev.entur.io/realtime/v1/services/ENT?SIRI_VERSION=2.1",
+            "feedId": "EN",
+            "timeout": "10s",
+            "blockReadinessUntilInitialized": true,
+            "fuzzyTripMatching": true
+          },
+     {{- end }}
+    {{- if .Values.configuration.siriETPubsubUpdater.enabled }}
+            // SIRI ET Google Pubsub updater
+            {
+              "type": "siri-et-google-pubsub-updater",
+              "feedId": "RB",
+              "reconnectPeriod": "5s",
+              "initialGetDataTimeout": "1m20s",
+              "topicProjectName": "{{ .Values.configuration.siriETPubsubUpdater.topicProjectName }}",
+              "subscriptionProjectName": "{{ .Values.configuration.siriETPubsubUpdater.subscriptionProjectName }}",
+              "topicName": "{{ .Values.configuration.siriETPubsubUpdater.pubsubTopicName }}",
+              "dataInitializationUrl": "{{ .Values.configuration.siriETPubsubUpdater.dataInitializationUrl }}",
+              "fuzzyTripMatching": true,
+              "producerMetrics": {{ .Values.configuration.siriETPubsubUpdater.producerMetrics }}
+            }
+    {{- else -}}
+            // SIRI ET updater
+            {
+              "type": "siri-et-updater",
+              "frequency": "20s",
+              "previewInterval": "3h",
+              "url": "{{ .Values.configuration.siriETUpdater }}",
+              "feedId": "RB",
+              "blockReadinessUntilInitialized": true,
+              "fuzzyTripMatching": true
+            }
+     {{- end }}
+        ]
+      }
+kind: ConfigMap
+metadata:
+  name: otp2-router-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+{{- end }}
