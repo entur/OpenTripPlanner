@@ -186,7 +186,7 @@ data:
             { "network": "default-network" },
             { "network": "voioslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
             { "network": "boltoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "rydeoslo", "geofencingZones": false },
+            { "network": "rydeoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
             { "network": "oslobysykkel", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
           ]
         },
