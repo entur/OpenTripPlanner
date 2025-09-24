@@ -65,7 +65,6 @@ configuration:
     updaterNetworkName: "id"
   flexRouting: true
   floatingBike: true
-  restApiConfigJsonParam: true
   optimizeTransfers: true
   transferConstraints: true
   parallelRouting: true

@@ -12,7 +12,6 @@ data:
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
         "ParallelRouting": {{ .Values.configuration.parallelRouting }},
         "ReportApi": true,
-        "RestAPIPassInDefaultConfigAsJson": {{ .Values.configuration.restApiConfigJsonParam }},
         "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
         "TransferConstraints": {{ .Values.configuration.transferConstraints }},
         "CarPooling": {{ .Values.configuration.carpooling }}

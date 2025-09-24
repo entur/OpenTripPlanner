@@ -7,7 +7,6 @@ data:
         "ActuatorAPI": true,
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
-        "RestAPIPassInDefaultConfigAsJson": {{ .Values.configuration.restApiConfigJsonParam }},
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
         "TransferConstraints": {{ .Values.configuration.transferConstraints }},
         "ParallelRouting": {{ .Values.configuration.parallelRouting }},

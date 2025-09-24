@@ -57,7 +57,6 @@ configuration:
   sorlandsbanen: true
   optimizeTransfers: true
   parallelRouting: false
-  restApiConfigJsonParam: true
   siriETUpdater: http://anshar.dev.entur.internal/anshar/services
   siriETPubsubUpdater:
     enabled: true
