@@ -54,6 +54,7 @@ configuration:
   carpooling: false
   flexRouting: true
   floatingBike: true
+  gtfsGraphQlApi: true
   sorlandsbanen: true
   optimizeTransfers: true
   parallelRouting: false

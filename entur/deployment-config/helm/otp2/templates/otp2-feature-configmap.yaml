@@ -7,6 +7,7 @@ data:
         "ActuatorAPI": true,
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
+        "GtfsGraphQlApi": {{ .Values.configuration.gtfsGraphQlApi }},
         "IncludeEmptyRailStopsInTransfers" : true,
         "MultiCriteriaGroupMaxFilter" : true,
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
