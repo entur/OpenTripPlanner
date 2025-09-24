@@ -8,18 +8,22 @@ import com.google.transit.realtime.GtfsRealtime;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.DateTimeHelper;
 import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopTransferPriority;
@@ -123,6 +127,22 @@ public final class RealtimeTestEnvironment {
     var transitService = getTransitService();
     var trip = transitService.getTripOnServiceDate(tripId);
     return transitService.findPattern(trip.getTrip(), serviceDate);
+  }
+
+  public Collection<TripPatternForDate> tripPatternsForDate(LocalDate localDate) {
+    return getTransitService()
+      .getRealtimeRaptorTransitData()
+      .getTripPatternsForRunningDate(localDate);
+  }
+
+  public List<String> routingTripPatternIdsForDate(LocalDate localDate) {
+    return tripPatternsForDate(localDate)
+      .stream()
+      .map(TripPatternForDate::getTripPattern)
+      .map(RoutingTripPattern::getPattern)
+      .map(AbstractTransitEntity::getId)
+      .map(Object::toString)
+      .toList();
   }
 
   /**

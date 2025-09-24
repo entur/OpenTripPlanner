@@ -8,9 +8,6 @@ import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSucce
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
-import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.RealtimeTestEnvironment;
@@ -19,9 +16,7 @@ import org.opentripplanner.updater.trip.TripInput;
 import org.opentripplanner.updater.trip.TripUpdateBuilder;
 
 /**
- * Tests that stops can be SKIPPED for a trip which repeats times for consecutive stops.
- *
- * @link <a href="https://github.com/opentripplanner/OpenTripPlanner/issues/6848">issue</a>
+ * Tests updating and reverting the stops/platforms for existing trips.
  */
 class AssignedStopIdsTest implements RealtimeTestConstants {
 
@@ -43,19 +38,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
 
     assertFalse(env.getPatternForTrip(TRIP_1_ID).isCreatedByRealtimeUpdater());
-    assertEquals(
-      List.of("F:TestTrip1Pattern"),
-      env
-        .getTransitService()
-        .getRealtimeRaptorTransitData()
-        .getTripPatternsForRunningDate(SERVICE_DATE)
-        .stream()
-        .map(TripPatternForDate::getTripPattern)
-        .map(RoutingTripPattern::getPattern)
-        .map(AbstractTransitEntity::getId)
-        .map(Object::toString)
-        .toList()
-    );
+    assertEquals(List.of("F:TestTrip1Pattern"), tripPatternsForDate(env));
 
     var tripUpdate1 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
       .addAssignedStopTime(0, "09:50:00", STOP_D_ID)
@@ -69,19 +52,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
       env.getRealtimeTimetable(TRIP_1_ID)
     );
     assertTrue(env.getPatternForTrip(TRIP_1_ID).isCreatedByRealtimeUpdater());
-    assertEquals(
-      List.of("F:route-1::rt#1"),
-      env
-        .getTransitService()
-        .getRealtimeRaptorTransitData()
-        .getTripPatternsForRunningDate(SERVICE_DATE)
-        .stream()
-        .map(TripPatternForDate::getTripPattern)
-        .map(RoutingTripPattern::getPattern)
-        .map(AbstractTransitEntity::getId)
-        .map(Object::toString)
-        .toList()
-    );
+    assertEquals(List.of("F:route-1::rt#1"), tripPatternsForDate(env));
 
     var tripUpdate2 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
       .addAssignedStopTime(0, "09:55:00", STOP_E_ID)
@@ -95,19 +66,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
       env.getRealtimeTimetable(TRIP_1_ID)
     );
     assertTrue(env.getPatternForTrip(TRIP_1_ID).isCreatedByRealtimeUpdater());
-    assertEquals(
-      List.of("F:route-1::rt#2"),
-      env
-        .getTransitService()
-        .getRealtimeRaptorTransitData()
-        .getTripPatternsForRunningDate(SERVICE_DATE)
-        .stream()
-        .map(TripPatternForDate::getTripPattern)
-        .map(RoutingTripPattern::getPattern)
-        .map(AbstractTransitEntity::getId)
-        .map(Object::toString)
-        .toList()
-    );
+    assertEquals(List.of("F:route-1::rt#2"), tripPatternsForDate(env));
 
     var tripUpdate3 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
       .addAssignedStopTime(0, "10:01:00", STOP_A_ID)
@@ -122,18 +81,10 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     );
 
     assertFalse(env.getPatternForTrip(TRIP_1_ID).isCreatedByRealtimeUpdater());
-    assertEquals(
-      List.of("F:TestTrip1Pattern"),
-      env
-        .getTransitService()
-        .getRealtimeRaptorTransitData()
-        .getTripPatternsForRunningDate(SERVICE_DATE)
-        .stream()
-        .map(TripPatternForDate::getTripPattern)
-        .map(RoutingTripPattern::getPattern)
-        .map(AbstractTransitEntity::getId)
-        .map(Object::toString)
-        .toList()
-    );
+    assertEquals(List.of("F:TestTrip1Pattern"), tripPatternsForDate(env));
+  }
+
+  private List<String> tripPatternsForDate(RealtimeTestEnvironment env) {
+    return env.routingTripPatternIdsForDate(SERVICE_DATE);
   }
 }
