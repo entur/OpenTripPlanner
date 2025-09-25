@@ -185,9 +185,9 @@ data:
             // parameters other than the name, since we want the defaults.
             { "network": "default-network" },
             { "network": "voioslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "boltoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "rydeoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
-            { "network": "oslobysykkel", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
+            //{ "network": "boltoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
+            //{ "network": "rydeoslo", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} },
+            //{ "network": "oslobysykkel", "geofencingZones": {{ .Values.configuration.vehicleRentalServiceDirectory.enableGeofencingZones }} }
           ]
         },
         "transmodelApi": {
