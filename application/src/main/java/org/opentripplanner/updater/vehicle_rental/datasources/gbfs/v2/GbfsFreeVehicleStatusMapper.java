@@ -1,8 +1,7 @@
-package org.opentripplanner.updater.vehicle_rental.datasources;
+package org.opentripplanner.updater.vehicle_rental.datasources.gbfs.v2;
 
 import static java.util.Objects.requireNonNullElse;
 
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +9,6 @@ import javax.annotation.Nullable;
 import org.mobilitydata.gbfs.v2_3.free_bike_status.GBFSBike;
 import org.mobilitydata.gbfs.v2_3.free_bike_status.GBFSRentalUris;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleFuel;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStationUris;
@@ -24,7 +22,7 @@ import org.opentripplanner.utils.logging.Throttle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class GbfsFreeVehicleStatusMapper {
+class GbfsFreeVehicleStatusMapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(GbfsFreeVehicleStatusMapper.class);
   private static final Throttle LOG_THROTTLE = Throttle.ofOneMinute();
