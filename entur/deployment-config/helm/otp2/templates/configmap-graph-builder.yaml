@@ -12,6 +12,7 @@ data:
         "configVersion" : "{{ .Values.build.number }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
+            "EmpiricalDelay": {{ .Values.otpFeatures.EmpiricalDelay }},
             "FlexRouting" : true,
             "GoogleCloudStorage" : true,
             "IncludeEmptyRailStopsInTransfers" : true
@@ -81,6 +82,14 @@ data:
             "ignoreFareFrame": {{ .Values.cronjobRedeployGraphBuilder.ignoreFareFrame }}
           }
         ],
+        "empiricalDelay": {
+          "feeds": [
+            {
+              "feedId": "RB",
+              "source": "gs://empirical_delay/"
+            }
+          ]
+        },
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",
         "graph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/Graph-otp2-${otp.serialization.version.id}.obj",
         "buildReportDir": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/report"
