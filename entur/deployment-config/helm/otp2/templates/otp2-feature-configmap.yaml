@@ -5,6 +5,7 @@ data:
    {
       "otpFeatures": {
         "ActuatorAPI": true,
+        "EmpiricalDelay": {{ .Values.configuration.empiricalDelay }},
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
         "GtfsGraphQlApi": {{ .Values.configuration.gtfsGraphQlApi }},
