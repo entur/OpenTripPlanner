@@ -1,7 +1,7 @@
 package org.opentripplanner.standalone.config.buildconfig;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_8;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import org.opentripplanner.graph_builder.module.TransferParameters;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -58,8 +58,6 @@ public class TransferParametersMapper {
           The transfers are calculated for the mode in a range based on the given duration.
           By default, these transfers are not calculated unless specified for a mode with this field.
 
-          The default transfers are calculated based on a configurable range (configurable by using the `maxTransferDuration` field)
-          which limits transfers from stops to only be calculated to other stops that are in range.
           When compared to walking, using a bike can cover larger distances within the same duration specified in the `maxTransferDuration` field.
           This can lead to large amounts of transfers calculated between stops that do not require bike transfers between them.
           This in turn can lead to a large increase in memory for the stored graph, depending on the data used in the graph.
@@ -69,7 +67,7 @@ public class TransferParametersMapper {
           can be faster compared to the default transfers.
           """
         )
-        .since(V2_8)
+        .since(V2_9)
         .asDuration(TransferParameters.DEFAULT_BIKES_ALLOWED_STOP_MAX_TRANSFER_DURATION)
     );
     builder.withDisableDefaultTransfers(
