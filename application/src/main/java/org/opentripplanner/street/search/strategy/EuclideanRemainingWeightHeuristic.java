@@ -1,5 +1,7 @@
 package org.opentripplanner.street.search.strategy;
 
+import static org.opentripplanner.street.model.edge.StreetEdgeReluctanceCalculator.getSafetyForSafestStreet;
+
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
@@ -80,7 +82,7 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
       case SHORTEST_DURATION -> 1.0;
       case SAFE_STREETS -> safety;
       case FLAT_STREETS -> 1.0;
-      case SAFEST_STREETS -> safety;
+      case SAFEST_STREETS -> getSafetyForSafestStreet(safety);
       case TRIANGLE -> scaleSafety(
         safety,
         Objects.requireNonNull(
@@ -98,6 +100,7 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
     double drivingPace = streetMode.includesDriving()
       ? 1.0 / streetLimitationParametersService.getMaxCarSpeed()
       : Double.MAX_VALUE;
+    double bestBikeSafety = streetLimitationParametersService.getBestBikeSafety();
     double cyclingPace = streetMode.includesBiking()
       ? getCyclingCostPerDistance(preferences.bike())
       : Double.MAX_VALUE;
