@@ -1,0 +1,28 @@
+{{- if .Values.journeyPlanner.enabled }}
+apiVersion: v1
+data:
+  otp-config.json: |+
+   {
+      "otpFeatures": {
+        "ActuatorAPI": true,
+        "EmpiricalDelay": {{ .Values.configuration.empiricalDelay }},
+        "FlexRouting": {{ .Values.configuration.flexRouting }},
+        "FloatingBike": {{ .Values.configuration.floatingBike }},
+        "GtfsGraphQlApi": {{ .Values.configuration.gtfsGraphQlApi }},
+        "IncludeEmptyRailStopsInTransfers" : true,
+        "MultiCriteriaGroupMaxFilter" : true,
+        "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
+        "ParallelRouting": {{ .Values.configuration.parallelRouting }},
+        "ReportApi": true,
+        "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
+        "TransferConstraints": {{ .Values.configuration.transferConstraints }},
+        "CarPooling": {{ .Values.configuration.carpooling }}
+      }
+   }
+kind: ConfigMap
+metadata:
+  name: otp2-feature-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+{{- end }}
