@@ -36,6 +36,15 @@
 <p align="center">
   <b><a href="https://api.staging.entur.io/graphql-explorer/journey-planner-v3">Entur GraphiQL (Shamash)</a></b>
 </p>
+<p align="center">
+  <b>
+    OTP Build Report ・ 
+    <a href="http://otpreport.dev.entur.org">DEV</a> ・
+    <a href="http://otpreport.staging.entur.org">TEST</a> ・
+    <a href="http://otpreport.entur.org">PROD</a>
+  </b>
+</p>
+
 
 This is a Entur's fork of the [GitHub OpenTripPlanner project](https://github.com/opentripplanner/OpenTripPlanner).
 This repository only contains a minimum set of changes for the Entur deployment at Entur. Most
