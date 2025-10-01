@@ -1,9 +1,0 @@
-otpFeatures:
-  EmpiricalDelay: true
-journeyPlanner:
-  enabled: false
-cronjobRedeployGraphBuilder:
-    enabled: true
-    mardukBucket: marduk-dev
-    mardukInternalBucket: ror-marduk-internal-dev
-    ignoreFareFrame: false
