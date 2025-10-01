@@ -63,6 +63,7 @@ configuration:
     sourcesName: "systems"
     updaterUrlName: "url"
     updaterNetworkName: "id"
+  empiricalDelay: false
   flexRouting: true
   floatingBike: true
   optimizeTransfers: true

@@ -52,6 +52,7 @@ proxy:
 configuration:
   apiProcessingTimeout: "7s"
   carpooling: false
+  empiricalDelay: true
   flexRouting: true
   floatingBike: true
   gtfsGraphQlApi: true
