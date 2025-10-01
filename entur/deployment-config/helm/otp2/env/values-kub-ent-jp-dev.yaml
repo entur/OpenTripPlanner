@@ -69,7 +69,7 @@ configuration:
   siriSXUpdater: http://realtime-cache.dev.entur.internal/sx
   transferConstraints: true
   vehicleRentalServiceDirectory:
-    url: "http://mobility-cache.dev.entur.internal/gbfs-internal"
+    url: "http://mobility-cache.dev.entur.internal/gbfs-internal/v3/manifest.json"
     sourcesName: "systems"
     updaterUrlName: "url"
     updaterNetworkName: "id"
