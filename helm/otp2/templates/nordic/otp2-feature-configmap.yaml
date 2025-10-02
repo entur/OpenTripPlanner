@@ -1,0 +1,22 @@
+{{- if .Values.nordicJourneyPlanner.enabled }}
+apiVersion: v1
+data:
+  otp-config.json: |+
+   {
+       "otpFeatures": {
+        "ActuatorAPI": true,
+        "FlexRouting": {{ .Values.configuration.flexRouting }},
+        "FloatingBike": {{ .Values.configuration.floatingBike }},
+        "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
+        "TransferConstraints": {{ .Values.configuration.transferConstraints }},
+        "ParallelRouting": {{ .Values.configuration.parallelRouting }},
+        "ReportApi" : true
+      }
+   }
+kind: ConfigMap
+metadata:
+  name: otp2nordic-feature-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.nordic.labels" . | indent 4 }}
+{{- end }}
