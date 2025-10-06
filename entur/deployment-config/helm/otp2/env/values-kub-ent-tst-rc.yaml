@@ -1,5 +1,5 @@
 otpFeatures:
-  EmpiricalDelay: false
+  empiricalDelay: false
 journeyPlanner:
   enabled: false
 cronjobRedeployGraphBuilder:

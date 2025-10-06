@@ -12,7 +12,7 @@ data:
         "configVersion" : "{{ .Values.build.number }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
-            "EmpiricalDelay": {{ .Values.otpFeatures.EmpiricalDelay }},
+            "EmpiricalDelay": {{ .Values.otpFeatures.empiricalDelay }},
             "FlexRouting" : true,
             "GoogleCloudStorage" : true,
             "IncludeEmptyRailStopsInTransfers" : true
