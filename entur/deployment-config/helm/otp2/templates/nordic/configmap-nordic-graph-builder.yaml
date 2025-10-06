@@ -81,11 +81,12 @@ data:
           "sharedFilePattern": "_stops.xml|_shared_data.xml",
           "groupFilePattern": "line_([0-9]*)_.*\\.xml"
         },
-        {
-          "type": "gtfs",
-          "feedId": "DK",
-          "source": "https://www.rejseplanen.info/labs/GTFS.zip"
-        },
+        // TODO: Danemark dataset disabled: agency is missing, which makes the whole graph building fail.
+        //{
+        //  "type": "gtfs",
+        //  "feedId": "DK",
+        //  "source": "https://www.rejseplanen.info/labs/GTFS.zip"
+        //},
         {
           "type": "gtfs",
           "feedId": "VK",
