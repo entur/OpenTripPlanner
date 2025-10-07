@@ -11,11 +11,13 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.Transfer;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.preference.BikePreferences;
-import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
+import org.opentripplanner.street.search.request.BicycleRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestMapper;
+import org.opentripplanner.street.search.request.WalkRequest;
+import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,22 +112,22 @@ public class RaptorRequestTransferCache {
 
     private final StreetMode transferMode;
     private final boolean wheelchair;
-    private final WalkPreferences walk;
-    private final BikePreferences bike;
-    private final StreetPreferences street;
-    private final WheelchairPreferences wheelchairPreferences;
+    private final WalkRequest walk;
+    private final BicycleRequest bike;
+    private final WheelchairRequest wheelchairPreferences;
+    private final double turnReluctance;
 
     public StreetRelevantOptions(StreetSearchRequest request) {
       this.transferMode = request.mode();
-      this.wheelchair = request.wheelchair();
+      this.wheelchair = request.wheelchairEnabled();
 
-      var preferences = request.preferences();
-      this.walk = preferences.walk();
-      this.bike = transferMode.includesBiking() ? preferences.bike() : BikePreferences.DEFAULT;
-      this.street = preferences.street();
-      this.wheelchairPreferences = this.wheelchair
-        ? preferences.wheelchair()
-        : WheelchairPreferences.DEFAULT;
+      this.walk = request.walk();
+      this.bike = transferMode.includesBiking() ? request.bike() : BicycleRequest.DEFAULT;
+      this.turnReluctance = request.turnReluctance();
+      this.wheelchairPreferences = request.wheelchairEnabled()
+        ? request.wheelchair()
+        : WheelchairRequest.DEFAULT;
+
     }
 
     @Override
@@ -135,14 +137,14 @@ public class RaptorRequestTransferCache {
         .addBoolIfTrue("wheelchair", wheelchair)
         .addObj("walk", walk, WalkPreferences.DEFAULT)
         .addObj("bike", bike, BikePreferences.DEFAULT)
-        .addObj("street", street, StreetPreferences.DEFAULT)
+        .addNum("turnReluctance", turnReluctance)
         .addObj("wheelchairPreferences", wheelchairPreferences, WheelchairPreferences.DEFAULT)
         .toString();
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(transferMode, wheelchair, walk, bike, street, wheelchairPreferences);
+      return Objects.hash(transferMode, wheelchair, walk, bike, turnReluctance, wheelchairPreferences);
     }
 
     @Override
@@ -158,7 +160,7 @@ public class RaptorRequestTransferCache {
         wheelchair == that.wheelchair &&
         Objects.equals(that.walk, walk) &&
         Objects.equals(that.bike, bike) &&
-        Objects.equals(that.street, street) &&
+        Objects.equals(that.turnReluctance, turnReluctance) &&
         Objects.equals(that.wheelchairPreferences, wheelchairPreferences)
       );
     }

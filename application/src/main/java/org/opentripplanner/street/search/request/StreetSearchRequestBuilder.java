@@ -1,30 +1,30 @@
 package org.opentripplanner.street.search.request;
 
 import java.time.Instant;
-import java.util.function.Consumer;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferencesBuilder;
 
 public class StreetSearchRequestBuilder {
 
   Instant startTime;
   StreetMode mode;
-  RoutingPreferences preferences;
   boolean arriveBy;
   boolean wheelchair;
   GenericLocation from;
   GenericLocation to;
+  boolean geoidElevation;
+  double turnReluctance;
+  public RentalRequest rental;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
     this.startTime = original.startTime();
     this.mode = original.mode();
-    this.preferences = original.preferences();
     this.arriveBy = original.arriveBy();
-    this.wheelchair = original.wheelchair();
+    this.wheelchair = original.wheelchairEnabled();
     this.from = original.from();
     this.to = original.to();
+    this.geoidElevation = original.geoidElevation();
+    this.turnReluctance = original.turnReluctance();
   }
 
   public StreetSearchRequestBuilder withStartTime(Instant startTime) {
@@ -35,15 +35,6 @@ public class StreetSearchRequestBuilder {
   public StreetSearchRequestBuilder withMode(StreetMode mode) {
     this.mode = mode;
     return this;
-  }
-
-  public StreetSearchRequestBuilder withPreferences(RoutingPreferences preferences) {
-    this.preferences = preferences;
-    return this;
-  }
-
-  public StreetSearchRequestBuilder withPreferences(Consumer<RoutingPreferencesBuilder> body) {
-    return withPreferences(preferences.copyOf().apply(body).build());
   }
 
   public StreetSearchRequestBuilder withArriveBy(boolean arriveBy) {
@@ -64,6 +55,20 @@ public class StreetSearchRequestBuilder {
   public StreetSearchRequestBuilder withTo(GenericLocation to) {
     this.to = to;
     return this;
+  }
+
+  public StreetSearchRequestBuilder withGeoidElevation(boolean value) {
+    this.geoidElevation = value;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withTurnReluctance(double v) {
+    this.turnReluctance = v;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withUseRentalAvailability(boolean b) {
+    return null;
   }
 
   Instant startTimeOrNow() {

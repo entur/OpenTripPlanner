@@ -108,7 +108,7 @@ abstract class AbstractFlexTemplate {
     else {
       double maxDistanceMeters =
         maxTransferDuration.getSeconds() *
-        accessEgress.state.getRequest().preferences().walk().speed();
+        accessEgress.state.getRequest().walk().speed();
 
       return getTransfersFromTransferStop(callback)
         .stream()

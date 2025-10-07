@@ -401,11 +401,11 @@ public class StreetEdgeTest {
   @EnumSource(value = TraverseMode.class, names = { "BICYCLE", "SCOOTER" })
   void testBikeSpeed(TraverseMode mode) {
     StreetEdge e1 = streetEdgeBuilder(v1, v2, 100.0, ALL).withCarSpeed(8.0f).buildAndConnect();
-    assertEquals(5.0, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(5.0f), mode, false));
-    assertEquals(8.0, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(10.0f), mode, false));
+    assertEquals(5.0, e1.calculateSpeed(getRequestForBikeAndScooterSpeed(5.0f), mode, false));
+    assertEquals(8.0, e1.calculateSpeed(getRequestForBikeAndScooterSpeed(10.0f), mode, false));
   }
 
-  private static RoutingPreferences getPreferencesForBikeAndScooterSpeed(float speed) {
+  private static RoutingPreferences getRequestForBikeAndScooterSpeed(float speed) {
     return RoutingPreferences.DEFAULT.copyOf()
       .withBike(bike -> bike.withSpeed(speed))
       .withScooter(scooter -> scooter.withSpeed(speed))
@@ -433,8 +433,8 @@ public class StreetEdgeTest {
         )
       )
       .buildAndConnect();
-    assertEquals(9.0, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(9.0f), mode, false));
-    assertEquals(9.6, e1.calculateSpeed(getPreferencesForBikeAndScooterSpeed(10.0f), mode, false));
+    assertEquals(9.0, e1.calculateSpeed(getRequestForBikeAndScooterSpeed(9.0f), mode, false));
+    assertEquals(9.6, e1.calculateSpeed(getRequestForBikeAndScooterSpeed(10.0f), mode, false));
   }
 
   @Test

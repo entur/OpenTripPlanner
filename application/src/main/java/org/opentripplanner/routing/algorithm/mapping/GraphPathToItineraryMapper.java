@@ -397,9 +397,7 @@ public class GraphPathToItineraryMapper {
       .withDistanceMeters(distanceMeters)
       .withGeneralizedCost((int) (lastState.getWeight() - firstState.getWeight()))
       .withGeometry(geometry)
-      .withElevationProfile(
-        makeElevation(edges, firstState.getPreferences().system().geoidElevation())
-      )
+      .withElevationProfile(makeElevation(edges, firstState.getRequest().geoidElevation()))
       .withWalkSteps(walkSteps)
       .withRentedVehicle(firstState.isRentingVehicle())
       .withWalkingBike(false);

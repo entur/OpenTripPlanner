@@ -108,7 +108,7 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
 
     StateEditor s1 = createEditorForDrivingOrWalking(s0, this);
 
-    if (s0.getRequest().wheelchair()) {
+    if (s0.getRequest().wheelchairEnabled()) {
       if (
         wheelchairAccessibility != Accessibility.POSSIBLE &&
         preferences.wheelchair().elevator().onlyConsiderAccessible()

@@ -3,6 +3,7 @@ package org.opentripplanner.street.search.request;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
@@ -11,9 +12,9 @@ import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
@@ -35,15 +36,19 @@ public class StreetSearchRequest implements AStarRequest {
 
   // the time at which the search started
   private final Instant startTime;
-  private final RoutingPreferences preferences;
   private final StreetMode mode;
   private final boolean arriveBy;
-  private final boolean wheelchair;
+  public final boolean wheelchair;
 
   private final GenericLocation from;
   private final Envelope fromEnvelope;
   private final GenericLocation to;
   private final Envelope toEnvelope;
+
+  private final boolean geoidElevation;
+
+  private final double turnReluctance;
+  private final RentalRequest rental;
 
   private IntersectionTraversalCalculator intersectionTraversalCalculator =
     IntersectionTraversalCalculator.DEFAULT;
@@ -55,7 +60,6 @@ public class StreetSearchRequest implements AStarRequest {
    */
   private StreetSearchRequest() {
     this.startTime = Instant.now().truncatedTo(ChronoUnit.SECONDS);
-    this.preferences = RoutingPreferences.DEFAULT;
     this.mode = StreetMode.WALK;
     this.arriveBy = false;
     this.wheelchair = false;
@@ -63,11 +67,13 @@ public class StreetSearchRequest implements AStarRequest {
     this.fromEnvelope = null;
     this.to = null;
     this.toEnvelope = null;
+    this.geoidElevation = false;
+    this.turnReluctance = 1.0;
+    this.rental = null;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
     this.startTime = RouteRequest.normalizeDateTime(builder.startTimeOrNow());
-    this.preferences = builder.preferences;
     this.mode = builder.mode;
     this.arriveBy = builder.arriveBy;
     this.wheelchair = builder.wheelchair;
@@ -75,6 +81,9 @@ public class StreetSearchRequest implements AStarRequest {
     this.fromEnvelope = createEnvelope(from);
     this.to = builder.to;
     this.toEnvelope = createEnvelope(to);
+    this.geoidElevation = builder.geoidElevation;
+    this.turnReluctance = builder.turnReluctance;
+    this.rental = builder.rental;
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -89,8 +98,20 @@ public class StreetSearchRequest implements AStarRequest {
     return startTime;
   }
 
-  public RoutingPreferences preferences() {
-    return preferences;
+  public boolean allowsArrivingInRentalAtDestination() {
+    return Optional.ofNullable(rental(mode()))
+      .map(ModeSpecificRentalRequest::allowArrivingInRentedVehicleAtDestination)
+      .orElse(false);
+  }
+
+  public WheelchairRequest wheelchair() {
+    return this.wheelchair();
+  }
+
+
+
+  public boolean geoidElevation() {
+    return geoidElevation;
   }
 
   /**
@@ -106,7 +127,7 @@ public class StreetSearchRequest implements AStarRequest {
     return arriveBy;
   }
 
-  public boolean wheelchair() {
+  public boolean wheelchairEnabled() {
     return wheelchair;
   }
 
@@ -159,6 +180,58 @@ public class StreetSearchRequest implements AStarRequest {
       (fromEnvelope != null && fromEnvelope.intersects(vertex.getCoordinate())) ||
       (toEnvelope != null && toEnvelope.intersects(vertex.getCoordinate()))
     );
+  }
+
+  public WalkRequest walk() {
+    return null;
+  }
+
+  public BicycleRequest bike() {
+    return null;
+  }
+
+  public CarRequest car() {
+    return null;
+  }
+
+  public BicycleRequest scooter() {
+    return null;
+  }
+
+  public double turnReluctance() {
+    return turnReluctance;
+  }
+
+  public ModeSpecificRentalRequest rental(TraverseMode traverseMode) {
+    return switch (traverseMode) {
+      case BICYCLE -> rental.bike();
+
+      case SCOOTER -> rental.scooter();
+      case CAR -> rental.car();
+      case WALK , FLEX -> throw new IllegalArgumentException();
+    };
+  }
+
+  public ModeSpecificRentalRequest rental(StreetMode mode) {
+    return switch (mode) {
+      case BIKE_RENTAL -> rental.bike();
+      case SCOOTER_RENTAL -> rental.scooter();
+      case CAR_RENTAL -> rental.car();
+      case NOT_SET, WALK, BIKE, BIKE_TO_PARK, CAR, CAR_TO_PARK, CAR_PICKUP, CAR_HAILING, FLEXIBLE -> null;
+    };
+  }
+
+  public ElevatorRequest elevator() {
+    return null;
+  }
+
+  public ParkingRequest parking(TraverseMode traverseMode) {
+    return switch (traverseMode) {
+      case BICYCLE -> bike().parking();
+      case SCOOTER -> scooter().parking();
+      case CAR -> car().parking();
+      case WALK, FLEX -> null;
+    };
   }
 
   @Nullable

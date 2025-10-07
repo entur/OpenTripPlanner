@@ -39,7 +39,7 @@ class StreetSearchRequestMapperTest {
     assertEquals(from, subject.from());
     assertEquals(to, subject.to());
     assertEquals(request.preferences(), subject.preferences());
-    assertTrue(subject.wheelchair());
+    assertTrue(subject.wheelchairEnabled());
   }
 
   @Test
@@ -63,6 +63,6 @@ class StreetSearchRequestMapperTest {
     assertNull(subject.from());
     assertNull(subject.to());
     assertEquals(request.preferences(), subject.preferences());
-    assertTrue(subject.wheelchair());
+    assertTrue(subject.wheelchairEnabled());
   }
 }
