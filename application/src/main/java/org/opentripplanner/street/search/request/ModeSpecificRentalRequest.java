@@ -9,12 +9,16 @@ public class ModeSpecificRentalRequest {
   private final Cost dropOffCost;
   private final Duration pickupTime;
   private final Duration dropOffTime;
+  private final Set<String> allowedNetworks;
+  private final Set<String> bannedNetworks;
 
-  public ModeSpecificRentalRequest(Cost pickupCost, Cost dropOffCost, Duration pickupTime, Duration dropOffTime) {
+  public ModeSpecificRentalRequest(Cost pickupCost, Cost dropOffCost, Duration pickupTime, Duration dropOffTime, Set<String> allowedNetworks, Set<String> bannedNetworks) {
     this.pickupCost = pickupCost;
     this.dropOffCost = dropOffCost;
     this.pickupTime = pickupTime;
     this.dropOffTime = dropOffTime;
+    this.allowedNetworks = allowedNetworks;
+    this.bannedNetworks = bannedNetworks;
   }
 
   public boolean useAvailabilityInformation() {
@@ -42,10 +46,14 @@ public class ModeSpecificRentalRequest {
   }
 
   public Set<String> allowedNetworks() {
-    return null;
+    return allowedNetworks;
   }
 
   public Set<String>bannedNetworks() {
+    return bannedNetworks;
+  }
+
+  public Cost arrivingInRentalVehicleAtDestinationCost() {
     return null;
   }
 }

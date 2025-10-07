@@ -1,5 +1,7 @@
 package org.opentripplanner.street.search.request;
 
+import org.opentripplanner.routing.api.request.preference.AccessibilityPreferences;
+
 public class WheelchairRequest {
   public static final WheelchairRequest DEFAULT = new WheelchairRequest();
 
@@ -17,5 +19,13 @@ public class WheelchairRequest {
 
   public double slopeExceededReluctance() {
     return 0;
+  }
+
+  public StopAccessibilityRequest stop() {
+    return null;
+  }
+
+  public StopAccessibilityRequest elevator() {
+    return null;
   }
 }

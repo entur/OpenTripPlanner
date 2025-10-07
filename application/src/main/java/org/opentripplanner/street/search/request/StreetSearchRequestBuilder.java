@@ -67,6 +67,11 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
+  public StreetSearchRequestBuilder withRental(RentalRequest rentalRequest) {
+    this.rental = rentalRequest;
+    return this;
+  }
+
   public StreetSearchRequestBuilder withUseRentalAvailability(boolean b) {
     return null;
   }

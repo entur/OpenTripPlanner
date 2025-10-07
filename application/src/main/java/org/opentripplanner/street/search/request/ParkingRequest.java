@@ -2,7 +2,7 @@ package org.opentripplanner.street.search.request;
 
 import java.time.Duration;
 import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.routing.alertpatch.EntitySelector;
+import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
 
 public class ParkingRequest {
   public Cost cost() {
@@ -17,7 +17,7 @@ public class ParkingRequest {
     return null;
   }
 
-  public EntitySelector preferred() {
+  public VehicleParkingSelect preferred() {
     return null;
   }
 

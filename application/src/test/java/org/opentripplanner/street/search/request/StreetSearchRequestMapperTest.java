@@ -33,7 +33,7 @@ class StreetSearchRequestMapperTest {
     );
 
     var request = builder.buildRequest();
-    var subject = StreetSearchRequestMapper.map(request).build();
+    var subject = StreetSearchRequestMapper.mapModeSpecificRental(request).build();
 
     assertEquals(dateTime, subject.startTime());
     assertEquals(from, subject.from());

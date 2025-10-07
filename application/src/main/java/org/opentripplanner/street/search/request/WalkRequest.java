@@ -2,6 +2,7 @@ package org.opentripplanner.street.search.request;
 
 import java.time.Duration;
 import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.routing.api.request.preference.BikePreferences;
 
 public class WalkRequest {
 
@@ -31,5 +32,9 @@ public class WalkRequest {
 
   public double stairsReluctance() {
     return 0;
+  }
+
+  public EscalatorRequest escalator() {
+    return null;
   }
 }

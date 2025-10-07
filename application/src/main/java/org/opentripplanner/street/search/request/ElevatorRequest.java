@@ -9,4 +9,12 @@ public class ElevatorRequest {
   public long boardTime() {
     return 0;
   }
+
+  public double hopCost() {
+    return 0;
+  }
+
+  public int hopTime() {
+    return 0;
+  }
 }
