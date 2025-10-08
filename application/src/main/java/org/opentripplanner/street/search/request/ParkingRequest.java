@@ -2,6 +2,7 @@ package org.opentripplanner.street.search.request;
 
 import java.time.Duration;
 import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
 
 public class ParkingRequest {
@@ -21,4 +22,7 @@ public class ParkingRequest {
     return null;
   }
 
+  public VehicleParkingFilter filter() {
+    return null;
+  }
 }
