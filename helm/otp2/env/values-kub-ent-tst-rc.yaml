@@ -1,0 +1,9 @@
+otpFeatures:
+  empiricalDelay: true
+journeyPlanner:
+  enabled: false
+cronjobRedeployGraphBuilder:
+    releaseCandidateGraphBuilderEnabled: true
+    mardukBucket: marduk-test
+    mardukInternalBucket: ror-marduk-internal-test
+    ignoreFareFrame: false
