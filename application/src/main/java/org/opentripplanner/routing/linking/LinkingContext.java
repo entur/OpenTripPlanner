@@ -1,14 +1,10 @@
 package org.opentripplanner.routing.linking;
 
-import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * Holds vertices (mainly temporary) that are meant to be used within the scope of a single route
@@ -36,49 +32,6 @@ public class LinkingContext {
     this.toStopVertices = toStopVertices;
     this.to = to;
     this.verticesByLocation = verticesByLocation;
-  }
-
-  public LinkingContext(LinkingContextBuilder builder) {
-    this(
-      builder.from(),
-      builder.to(),
-      builder.verticesByLocation(),
-      builder.fromStopVertices(),
-      builder.toStopVertices()
-    );
-  }
-
-  /**
-   * Create builder when stop locations are not used for locations.
-   */
-  public static LinkingContextBuilder of(
-    TemporaryVerticesContainer container,
-    Graph graph,
-    VertexLinker linker
-  ) {
-    return new LinkingContextBuilder(container, graph, linker, id -> Set.of());
-  }
-
-  /**
-   * Create builder when stop locations are potentially used for locations.
-   */
-  public static LinkingContextBuilder of(
-    TemporaryVerticesContainer container,
-    Graph graph,
-    VertexLinker linker,
-    Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds
-  ) {
-    return new LinkingContextBuilder(container, graph, linker, resolveSiteIds);
-  }
-
-  public static LinkingContext ofForTest(
-    GenericLocation from,
-    GenericLocation to,
-    Map<GenericLocation, Set<Vertex>> verticesByLocation,
-    Set<TransitStopVertex> fromStopVertices,
-    Set<TransitStopVertex> toStopVertices
-  ) {
-    return new LinkingContext(from, to, verticesByLocation, fromStopVertices, toStopVertices);
   }
 
   /**

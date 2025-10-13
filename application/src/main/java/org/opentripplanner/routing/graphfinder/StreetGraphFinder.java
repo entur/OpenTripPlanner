@@ -11,7 +11,8 @@ import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.street.model.edge.Edge;
@@ -88,20 +89,22 @@ public class StreetGraphFinder implements GraphFinder {
     TraverseVisitor<State, Edge> visitor,
     SkipEdgeStrategy<State, Edge> skipEdgeStrategy
   ) {
-    // Make a normal OTP routing request so we can traverse edges and use GenericAStar
-    // TODO make a function that builds normal routing requests from profile requests
-    // TODO: This is incorrect, the configured defaults are not used.
-    var request = RouteRequest.of()
-      .withPreferences(pref -> pref.withWalk(it -> it.withSpeed(1)))
-      .withNumItineraries(1)
-      .buildDefault();
-
     // RR dateTime defaults to currentTime.
     // If elapsed time is not capped, searches are very slow.
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkerContext = LinkingContext.of(temporaryVerticesContainer, graph, linker)
-        .withFrom(GenericLocation.fromCoordinate(lat, lon), StreetMode.WALK)
+      var linkingContextBuilder = new LinkingContextBuilder(graph, linker);
+      var linkingRequest = LinkingContextRequest.of()
+        .withFrom(GenericLocation.fromCoordinate(lat, lon))
+        .withDirectMode(StreetMode.WALK)
         .build();
+      var linkerContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
+      // Make a normal OTP routing request so we can traverse edges and use GenericAStar
+      // TODO make a function that builds normal routing requests from profile requests
+      // TODO: This is incorrect, the configured defaults are not used.
+      var request = RouteRequest.of()
+        .withPreferences(pref -> pref.withWalk(it -> it.withSpeed(1)))
+        .withNumItineraries(1)
+        .buildDefault();
       StreetSearchBuilder.of()
         .setSkipEdgeStrategy(skipEdgeStrategy)
         .setTraverseVisitor(visitor)

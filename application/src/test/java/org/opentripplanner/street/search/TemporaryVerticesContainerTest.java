@@ -2,7 +2,6 @@ package org.opentripplanner.street.search;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.routing.api.request.StreetMode.WALK;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import com.google.common.collect.ImmutableMultimap;
@@ -14,8 +13,11 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetStationCentroidLink;
@@ -61,25 +63,38 @@ class TemporaryVerticesContainerTest {
     .withCoordinate(CENTER.moveNorthMeters(DISTANCE))
     .build();
   private final Graph graph = buildGraph(stationAlpha, stopA, stopB, stopC, stopD);
+  private final LinkingContextBuilder linkingContextBuilder = new LinkingContextBuilder(
+    graph,
+    TestVertexLinker.of(graph)
+  );
 
   @Test
   void coordinates() {
     var container = new TemporaryVerticesContainer();
-    var linkingContext = LinkingContext.of(container, graph, TestVertexLinker.of(graph))
-      .withFrom(GenericLocation.fromCoordinate(stopA.getLat(), stopA.getLon()), WALK)
-      .withTo(GenericLocation.fromCoordinate(stopD.getLat(), stopD.getLon()), WALK)
+    var request = LinkingContextRequest.of()
+      .withFrom(GenericLocation.fromCoordinate(stopA.getLat(), stopA.getLon()))
+      .withTo(GenericLocation.fromCoordinate(stopD.getLat(), stopD.getLon()))
+      .withDirectMode(StreetMode.WALK)
       .build();
+    var linkingContext = linkingContextBuilder.create(container, request);
     assertThat(linkingContext.fromVertices()).hasSize(1);
     assertThat(linkingContext.toVertices()).hasSize(1);
   }
 
   @Test
   void stopId() {
+    var stopLinkingContextBuilder = new LinkingContextBuilder(
+      graph,
+      TestVertexLinker.of(graph),
+      Set::of
+    );
     var container = new TemporaryVerticesContainer();
-    var linkingContext = LinkingContext.of(container, graph, TestVertexLinker.of(graph), Set::of)
-      .withFrom(stopToLocation(stopA), WALK)
-      .withTo(stopToLocation(stopB), WALK)
+    var request = LinkingContextRequest.of()
+      .withFrom(stopToLocation(stopA))
+      .withTo(stopToLocation(stopB))
+      .withDirectMode(StreetMode.WALK)
       .build();
+    var linkingContext = stopLinkingContextBuilder.create(container, request);
     assertEquals(stopA, toStop(linkingContext.fromVertices()));
     assertEquals(stopB, toStop(linkingContext.toVertices()));
   }
@@ -89,26 +104,30 @@ class TemporaryVerticesContainerTest {
     var mapping = ImmutableMultimap.<FeedScopedId, FeedScopedId>builder()
       .putAll(OMEGA_ID, stopC.getId(), stopD.getId())
       .build();
-    var container = new TemporaryVerticesContainer();
-    var linkingContext = LinkingContext.of(
-      container,
+    var stopLinkingContextBuilder = new LinkingContextBuilder(
       graph,
       TestVertexLinker.of(graph),
       mapping::get
-    )
-      .withFrom(GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId()), WALK)
-      .withTo(stopToLocation(stopB), WALK)
+    );
+    var container = new TemporaryVerticesContainer();
+    var request = LinkingContextRequest.of()
+      .withFrom(GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId()))
+      .withTo(stopToLocation(stopB))
+      .withDirectMode(StreetMode.WALK)
       .build();
+    var linkingContext = stopLinkingContextBuilder.create(container, request);
     assertThat(toStops(linkingContext.fromVertices())).containsExactly(stopC, stopD);
   }
 
   @Test
   void centroid() {
     var container = new TemporaryVerticesContainer();
-    var linkingContext = LinkingContext.of(container, graph, TestVertexLinker.of(graph))
-      .withFrom(GenericLocation.fromStopId("station", ALPHA_ID.getFeedId(), ALPHA_ID.getId()), WALK)
-      .withTo(stopToLocation(stopB), WALK)
+    var request = LinkingContextRequest.of()
+      .withFrom(GenericLocation.fromStopId("station", ALPHA_ID.getFeedId(), ALPHA_ID.getId()))
+      .withTo(stopToLocation(stopB))
+      .withDirectMode(StreetMode.WALK)
       .build();
+    var linkingContext = linkingContextBuilder.create(container, request);
     var fromVertices = List.copyOf(linkingContext.fromVertices());
     assertThat(fromVertices).hasSize(1);
 

@@ -21,8 +21,9 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
 
@@ -167,14 +168,9 @@ public class SplitEdgeTurnRestrictionsTest {
       .buildRequest();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContext = LinkingContext.of(
-        temporaryVerticesContainer,
-        graph,
-        TestVertexLinker.of(graph)
-      )
-        .withFrom(from, StreetMode.CAR)
-        .withTo(to, StreetMode.CAR)
-        .build();
+      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph));
+      var linkingRequest = LinkingContextRequestMapper.map(request);
+      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
       var gpf = new GraphPathFinder(null);
       var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
 

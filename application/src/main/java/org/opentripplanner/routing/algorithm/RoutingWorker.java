@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -32,7 +31,9 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.service.paging.PagingService;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
@@ -101,7 +102,7 @@ public class RoutingWorker {
     var result = RoutingResult.empty();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContext = createTemporaryVerticesContainer(temporaryVerticesContainer);
+      var linkingContext = createLinkingContext(temporaryVerticesContainer);
 
       if (OTPFeature.ParallelRouting.isOn()) {
         // TODO: This is not using {@link OtpRequestThreadFactory} which means we do not get
@@ -302,43 +303,13 @@ public class RoutingWorker {
     );
   }
 
-  private LinkingContext createTemporaryVerticesContainer(TemporaryVerticesContainer container) {
-    var fromModes = request.journey().transit().enabled()
-      ? EnumSet.of(request.journey().access().mode())
-      : EnumSet.noneOf(StreetMode.class);
-    var toModes = request.journey().transit().enabled()
-      ? EnumSet.of(request.journey().egress().mode())
-      : EnumSet.noneOf(StreetMode.class);
-    var viaModes = request.journey().transit().enabled()
-      ? EnumSet.of(
-        request.journey().access().mode(),
-        request.journey().egress().mode(),
-        request.journey().transfer().mode()
-      )
-      : EnumSet.noneOf(StreetMode.class);
-    var directMode = resolveDirectMode();
-    if (directMode != StreetMode.NOT_SET) {
-      fromModes.add(directMode);
-      toModes.add(directMode);
-      viaModes.add(directMode);
-    }
-    return LinkingContext.of(
-      container,
+  private LinkingContext createLinkingContext(TemporaryVerticesContainer container) {
+    var linkingContextFactory = new LinkingContextBuilder(
       serverContext.graph(),
       serverContext.vertexLinker(),
       serverContext.transitService()::findStopOrChildIds
-    )
-      .withFrom(request.from(), fromModes)
-      .withTo(request.to(), toModes)
-      .withVia(request.listVisitViaLocations(), viaModes)
-      .build();
-  }
-
-  private StreetMode resolveDirectMode() {
-    var emptyDirectModeHandler = new FilterTransitWhenDirectModeIsEmpty(
-      request.journey().direct().mode(),
-      request.pageCursor() != null
     );
-    return emptyDirectModeHandler.resolveDirectMode();
+    var linkingRequest = LinkingContextRequestMapper.map(request);
+    return linkingContextFactory.create(container, linkingRequest);
   }
 }

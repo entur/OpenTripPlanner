@@ -32,8 +32,9 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
 
@@ -185,16 +186,12 @@ public class BarrierRoutingTest {
     options.accept(builder);
 
     var temporaryVerticesContainer = new TemporaryVerticesContainer();
-    var linkingContext = LinkingContext.of(
-      temporaryVerticesContainer,
-      graph,
-      TestVertexLinker.of(graph)
-    )
-      .withFrom(from, streetMode)
-      .withTo(to, streetMode)
-      .build();
+    var request = builder.buildRequest();
+    var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph));
+    var linkingRequest = LinkingContextRequestMapper.map(request);
+    var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
     var gpf = new GraphPathFinder(null);
-    var paths = gpf.graphPathFinderEntryPoint(builder.buildRequest(), linkingContext);
+    var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
 
     GraphPathToItineraryMapper graphPathToItineraryMapper = new GraphPathToItineraryMapper(
       ZoneIds.BERLIN,

@@ -274,7 +274,7 @@ class RaptorRequestMapperTest {
       null,
       new DummyViaCoordinateTransferFactory(),
       id -> IntStream.of(STOPS_MAP.get(id).getIndex()),
-      LinkingContext.ofForTest(
+      new LinkingContext(
         GenericLocation.UNKNOWN,
         GenericLocation.UNKNOWN,
         Map.of(

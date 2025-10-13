@@ -12,12 +12,12 @@ import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -258,16 +258,12 @@ class AccessEgressRouterTest extends GraphRoutingTest {
     var durationLimit = Duration.ofMinutes(10);
     var request = requestFromTo(from, to);
 
-    try (var verticesContainer2 = new TemporaryVerticesContainer()) {
-      var linkingContext = LinkingContext.of(
-        verticesContainer2,
-        graph,
-        TestVertexLinker.of(graph),
-        id -> new DefaultTransitService(timetableRepository).findStopOrChildIds(id)
-      )
-        .withFrom(from, StreetMode.WALK)
-        .withTo(to, StreetMode.WALK)
-        .build();
+    try (var verticesContainer = new TemporaryVerticesContainer()) {
+      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph), id ->
+        new DefaultTransitService(timetableRepository).findStopOrChildIds(id)
+      );
+      var linkingRequest = LinkingContextRequestMapper.map(request);
+      var linkingContext = linkingContextBuilder.create(verticesContainer, linkingRequest);
 
       return AccessEgressRouter.findAccessEgresses(
         request,

@@ -65,13 +65,16 @@ import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
+import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.VisibilityMode;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -515,21 +518,19 @@ public class GraphVisualizer extends JFrame implements VertexSelectionListener {
     long t0 = System.currentTimeMillis();
     // TODO: check options properly intialized (AMB)
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkerContext = LinkingContext.of(
-        temporaryVerticesContainer,
+      var linkingContextBuilder = new LinkingContextBuilder(
         graph,
         new VertexLinker(
           graph,
           VisibilityMode.TRAVERSE_AREA_EDGES,
           StreetConstants.DEFAULT_MAX_AREA_NODES
         )
-      )
-        .withFrom(request.from(), request.journey().direct().mode())
-        .withTo(request.to(), request.journey().direct().mode())
-        .build();
+      );
+      var linkingRequest = LinkingContextRequestMapper.map(request);
+      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
       List<GraphPath<State, Edge, Vertex>> paths = finder.graphPathFinderEntryPoint(
         request,
-        linkerContext
+        linkingContext
       );
       long dt = System.currentTimeMillis() - t0;
       searchTimeElapsedLabel.setText("search time elapsed: " + dt + "ms");

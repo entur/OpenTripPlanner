@@ -24,9 +24,12 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
 import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
@@ -225,20 +228,25 @@ public class StreetModeLinkingTest extends GraphRoutingTest {
     var linker = TestVertexLinker.of(graph);
     for (final StreetMode streetMode : streetModes) {
       try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-        var linkingContext = LinkingContext.of(temporaryVerticesContainer, graph, linker)
-          .withFrom(location, streetMode)
-          .withTo(ANY_PLACE, streetMode)
+        var linkingContextBuilder = new LinkingContextBuilder(graph, linker);
+        var request = LinkingContextRequest.of()
+          .withFrom(location)
+          .withTo(ANY_PLACE)
+          .withDirectMode(streetMode)
           .build();
+        var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, request);
         assertFromLink(
           expectedFromStreetName.name(),
           streetMode,
           linkingContext.fromVertices().iterator().next()
         );
 
-        var linkingContext2 = LinkingContext.of(temporaryVerticesContainer, graph, linker)
-          .withFrom(ANY_PLACE, streetMode)
-          .withTo(location, streetMode)
+        var request2 = LinkingContextRequest.of()
+          .withFrom(ANY_PLACE)
+          .withTo(location)
+          .withDirectMode(streetMode)
           .build();
+        var linkingContext2 = linkingContextBuilder.create(temporaryVerticesContainer, request2);
         if (expectedToStreetName != null) {
           assertToLink(
             expectedToStreetName.name(),

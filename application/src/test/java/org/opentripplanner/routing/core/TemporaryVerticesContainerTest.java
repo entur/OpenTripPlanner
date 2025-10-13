@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.EnumSet;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,12 +21,15 @@ import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.routing.api.request.via.VisitViaLocation;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
@@ -62,7 +64,7 @@ public class TemporaryVerticesContainerTest {
   private final GenericLocation from = GenericLocation.fromCoordinate(1.0, 0.4);
   // - and *destination* is slightly off 0.7 degrees on road from C to A
   private final GenericLocation to = GenericLocation.fromCoordinate(0.701, 1.001);
-  private final List<VisitViaLocation> viaLocations = List.of(
+  private final List<ViaLocation> viaLocations = List.of(
     new VisitViaLocation("Via1", null, List.of(), List.of(new WgsCoordinate(0.0, 1.5))),
     new VisitViaLocation("Via2", null, List.of(FeedScopedId.parse("F:1")), List.of()),
     new VisitViaLocation(
@@ -71,6 +73,20 @@ public class TemporaryVerticesContainerTest {
       List.of(FeedScopedId.parse("F:2")),
       List.of(new WgsCoordinate(0.1, 1.9))
     )
+  );
+  private final List<GenericLocation> viaLocationsWithCoordinates = viaLocations
+    .stream()
+    .filter(location -> !location.coordinates().isEmpty())
+    .map(location -> {
+      // TODO this can be cleaned up when we don't have support for multiple coordinates anymore
+      var lat = location.coordinates().getFirst().latitude();
+      var lon = location.coordinates().getFirst().longitude();
+      return new GenericLocation(location.label(), null, lat, lon);
+    })
+    .toList();
+  private final LinkingContextBuilder linkingContextBuilder = new LinkingContextBuilder(
+    g,
+    TestVertexLinker.of(g)
   );
 
   // - and some roads
@@ -93,10 +109,12 @@ public class TemporaryVerticesContainerTest {
   void temporaryChangesRemovedOnClose() {
     // When - the container is created
     var container = new TemporaryVerticesContainer();
-    var subject = LinkingContext.of(container, g, TestVertexLinker.of(g))
-      .withFrom(from, StreetMode.WALK)
-      .withTo(to, StreetMode.WALK)
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(to)
+      .withDirectMode(StreetMode.WALK)
       .build();
+    var subject = linkingContextBuilder.create(container, request);
 
     // Then:
     originAndDestinationInsertedCorrect(subject, false);
@@ -106,10 +124,13 @@ public class TemporaryVerticesContainerTest {
   @Test
   void multipleModes() {
     try (var container = new TemporaryVerticesContainer();) {
-      var subject = LinkingContext.of(container, g, TestVertexLinker.of(g))
-        .withFrom(from, EnumSet.of(StreetMode.WALK, StreetMode.CAR_TO_PARK))
-        .withTo(to, StreetMode.WALK)
+      var request = LinkingContextRequest.of()
+        .withFrom(from)
+        .withTo(to)
+        .withDirectMode(StreetMode.WALK)
+        .withAccessMode(StreetMode.CAR_TO_PARK)
         .build();
+      var subject = linkingContextBuilder.create(container, request);
       // When - the container is created
 
       // Then:
@@ -125,11 +146,13 @@ public class TemporaryVerticesContainerTest {
   void temporaryChangesRemovedOnCloseWithVia() {
     // When - the container is created
     var container = new TemporaryVerticesContainer();
-    var subject = LinkingContext.of(container, g, TestVertexLinker.of(g))
-      .withFrom(from, StreetMode.WALK)
-      .withTo(to, StreetMode.WALK)
-      .withVia(viaLocations, EnumSet.of(StreetMode.WALK))
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(to)
+      .withViaLocationsWithCoordinates(viaLocationsWithCoordinates)
+      .withDirectMode(StreetMode.WALK)
       .build();
+    var subject = linkingContextBuilder.create(container, request);
 
     // Then:
     locationsInsertedCorrect(subject);
@@ -138,50 +161,16 @@ public class TemporaryVerticesContainerTest {
 
   @Test
   void locationNotFoundException() {
-    // Stops not found
-    var container = new TemporaryVerticesContainer();
-    var fromException = assertThrows(RoutingValidationException.class, () ->
-      LinkingContext.of(container, g, TestVertexLinker.of(g))
-        .withFrom(
-          new GenericLocation("Stop not found", new FeedScopedId("F", "stop1"), null, null),
-          StreetMode.WALK
-        )
-        .build()
-    );
-    container.close();
-    assertThat(fromException.getRoutingErrors()).hasSize(1);
-    var fromError = fromException.getRoutingErrors().getFirst();
-    assertEquals(InputField.FROM_PLACE, fromError.inputField);
-    assertEquals(RoutingErrorCode.LOCATION_NOT_FOUND, fromError.code);
-
-    var toContainer = new TemporaryVerticesContainer();
-    var toException = assertThrows(RoutingValidationException.class, () ->
-      LinkingContext.of(toContainer, g, TestVertexLinker.of(g))
-        .withFrom(from, StreetMode.WALK)
-        .withTo(
-          new GenericLocation("Stop not found", new FeedScopedId("F", "stop1"), null, null),
-          StreetMode.WALK
-        )
-        .build()
-    );
-    toContainer.close();
-
-    assertThat(toException.getRoutingErrors()).hasSize(1);
-    var toError = toException.getRoutingErrors().getFirst();
-    assertEquals(InputField.TO_PLACE, toError.inputField);
-    assertEquals(RoutingErrorCode.LOCATION_NOT_FOUND, toError.code);
-
     // Coordinate not found (but in bounds)
     var viaContainer = new TemporaryVerticesContainer();
+    var viaRequest = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(to)
+      .withViaLocationsWithCoordinates(List.of(new GenericLocation("Via1", null, 10.0, 0.0)))
+      .withDirectMode(StreetMode.WALK)
+      .build();
     var viaException = assertThrows(RoutingValidationException.class, () ->
-      LinkingContext.of(viaContainer, g, TestVertexLinker.of(g))
-        .withFrom(from, StreetMode.WALK)
-        .withTo(to, StreetMode.WALK)
-        .withVia(
-          List.of(new VisitViaLocation("Via1", null, List.of(), List.of(new WgsCoordinate(10, 0)))),
-          EnumSet.of(StreetMode.WALK)
-        )
-        .build()
+      linkingContextBuilder.create(viaContainer, viaRequest)
     );
     viaContainer.close();
     assertThat(viaException.getRoutingErrors()).hasSize(1);
@@ -193,15 +182,14 @@ public class TemporaryVerticesContainerTest {
   @Test
   void locationOutsideBoundsException() {
     var container = new TemporaryVerticesContainer();
+    var request = LinkingContextRequest.of()
+      .withFrom(GenericLocation.fromCoordinate(0, 0.02))
+      .withTo(GenericLocation.fromCoordinate(0, 0.01))
+      .withViaLocationsWithCoordinates(List.of(new GenericLocation("Via1", null, 78.0, 0.0)))
+      .withDirectMode(StreetMode.WALK)
+      .build();
     var exception = assertThrows(RoutingValidationException.class, () ->
-      LinkingContext.of(container, g, TestVertexLinker.of(g))
-        .withFrom(GenericLocation.fromCoordinate(0, 0.02), StreetMode.WALK)
-        .withTo(GenericLocation.fromCoordinate(0, 0.01), StreetMode.WALK)
-        .withVia(
-          List.of(new VisitViaLocation("Via1", null, List.of(), List.of(new WgsCoordinate(78, 0)))),
-          EnumSet.of(StreetMode.WALK)
-        )
-        .build()
+      linkingContextBuilder.create(container, request)
     );
     container.close();
 
@@ -220,11 +208,13 @@ public class TemporaryVerticesContainerTest {
   @Test
   void walkingBetterThanTransitException() {
     var container = new TemporaryVerticesContainer();
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(from)
+      .withDirectMode(StreetMode.WALK)
+      .build();
     var exception = assertThrows(RoutingValidationException.class, () ->
-      LinkingContext.of(container, g, TestVertexLinker.of(g))
-        .withFrom(from, StreetMode.WALK)
-        .withTo(from, StreetMode.WALK)
-        .build()
+      linkingContextBuilder.create(container, request)
     );
     container.close();
 
@@ -237,12 +227,14 @@ public class TemporaryVerticesContainerTest {
   @Test
   void cleanUpWhenExceptionThrown() {
     var container = new TemporaryVerticesContainer();
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(from)
+      .withViaLocationsWithCoordinates(viaLocationsWithCoordinates)
+      .withDirectMode(StreetMode.WALK)
+      .build();
     assertThrows(RoutingValidationException.class, () ->
-      LinkingContext.of(container, g, TestVertexLinker.of(g))
-        .withFrom(from, StreetMode.WALK)
-        .withTo(from, StreetMode.WALK)
-        .withVia(viaLocations, EnumSet.of(StreetMode.WALK))
-        .build()
+      linkingContextBuilder.create(container, request)
     );
     container.close();
 
@@ -323,10 +315,11 @@ public class TemporaryVerticesContainerTest {
     // Then - only via locations with coordinates are included
     var verticesByLocation = subject.verticesByLocation();
     assertThat(verticesByLocation).hasSize(4);
-    var firstViaVertices = verticesByLocation.get(viaLocations.get(0).coordinateLocation());
+    var visitViaLocations = viaLocations.stream().map(VisitViaLocation.class::cast).toList();
+    var firstViaVertices = verticesByLocation.get(visitViaLocations.get(0).coordinateLocation());
     assertThat(firstViaVertices).hasSize(1);
     assertEquals("Via1", firstViaVertices.iterator().next().getDefaultName());
-    var thirdViaVertices = verticesByLocation.get(viaLocations.get(2).coordinateLocation());
+    var thirdViaVertices = verticesByLocation.get(visitViaLocations.get(2).coordinateLocation());
     assertThat(thirdViaVertices).hasSize(1);
     assertEquals("Via3", thirdViaVertices.iterator().next().getDefaultName());
 

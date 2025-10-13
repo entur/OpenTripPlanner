@@ -15,11 +15,11 @@ import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -96,14 +96,9 @@ class WalkRoutingTest {
       .withArriveBy(arriveBy)
       .buildRequest();
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContext = LinkingContext.of(
-        temporaryVerticesContainer,
-        graph,
-        TestVertexLinker.of(graph)
-      )
-        .withFrom(from, StreetMode.WALK)
-        .withTo(to, StreetMode.WALK)
-        .build();
+      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph));
+      var linkingRequest = LinkingContextRequestMapper.map(request);
+      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
       var gpf = new GraphPathFinder(null);
       return gpf.graphPathFinderEntryPoint(request, linkingContext);
     }

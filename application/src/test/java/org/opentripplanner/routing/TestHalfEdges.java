@@ -25,9 +25,10 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.DisposableEdgeCollection;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.LinkingContextBuilder;
 import org.opentripplanner.routing.linking.SameEdgeAdjuster;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
@@ -566,23 +567,20 @@ public class TestHalfEdges {
       .buildRequest();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var container = LinkingContext.of(
-        temporaryVerticesContainer,
-        graph,
-        TestVertexLinker.of(graph)
-      )
-        .withFrom(walking.from(), StreetMode.WALK)
-        .withTo(walking.to(), StreetMode.WALK)
-        .build();
-      assertFalse(container.fromVertices().isEmpty());
-      assertFalse(container.toVertices().isEmpty());
+      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph));
+      var linkingRequest = LinkingContextRequestMapper.map(walking);
+      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
+      assertFalse(linkingContext.fromVertices().isEmpty());
+      assertFalse(linkingContext.toVertices().isEmpty());
       ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
         .setHeuristic(new EuclideanRemainingWeightHeuristic())
         .setRequest(walking)
-        .setFrom(container.fromVertices())
-        .setTo(container.toVertices())
+        .setFrom(linkingContext.fromVertices())
+        .setTo(linkingContext.toVertices())
         .getShortestPathTree();
-      GraphPath<State, Edge, Vertex> path = spt.getPath(container.toVertices().iterator().next());
+      GraphPath<State, Edge, Vertex> path = spt.getPath(
+        linkingContext.toVertices().iterator().next()
+      );
       for (State s : path.states) {
         assertNotSame(s.getBackEdge(), top);
       }

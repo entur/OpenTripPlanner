@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -24,7 +23,6 @@ import org.opentripplanner.framework.i18n.LocalizedString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.via.VisitViaLocation;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
@@ -44,108 +42,171 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TODO
- * This class is responsible for linking the RouteRequest origin, destination and visit via
- * locations that contain coordinates to the Graph used in the A-Star search. This builder also
- * validates that it was possible to link the locations to the graph. The responsibility of cleaning
- * up the temporary vertices and edges is on the {@link TemporaryVerticesContainer}.
+ * This is a factory that is responsible for linking origin, destination and visit via locations
+ * that contain coordinates to the Graph used in the A-Star search. This factory also validates that
+ * it was possible to link the locations to the graph and throws {@link RoutingValidationException}
+ * if it was not possible. The responsibility of cleaning up the temporary vertices and edges is on
+ * the {@link TemporaryVerticesContainer}.
  */
 public class LinkingContextBuilder {
 
   private static final Logger LOG = LoggerFactory.getLogger(LinkingContextBuilder.class);
 
-  private final TemporaryVerticesContainer container;
   private final Graph graph;
   private final VertexLinker vertexLinker;
   private final Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds;
-  private GenericLocation from = GenericLocation.UNKNOWN;
-  private GenericLocation to = GenericLocation.UNKNOWN;
-  private List<GenericLocation> visitViaLocationsWithCoordinates = List.of();
-  private Set<Vertex> fromVertices = Set.of();
-  private Set<Vertex> toVertices = Set.of();
-  private Map<GenericLocation, Set<Vertex>> visitViaLocationVertices = Map.of();
-  private Set<TransitStopVertex> fromStopVertices = Set.of();
-  private Set<TransitStopVertex> toStopVertices = Set.of();
 
-  LinkingContextBuilder(
-    TemporaryVerticesContainer container,
+  /**
+   * Construct a factory when stop locations are potentially used for locations.
+   */
+  public LinkingContextBuilder(
     Graph graph,
     VertexLinker vertexLinker,
     Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds
   ) {
-    this.container = container;
     this.graph = graph;
     this.vertexLinker = vertexLinker;
     this.resolveSiteIds = resolveSiteIds;
   }
 
-  public LinkingContextBuilder withFrom(GenericLocation location, StreetMode mode) {
-    return withFrom(location, EnumSet.of(mode));
+  /**
+   * Construct a factory when stop locations are not used for locations.
+   */
+  public LinkingContextBuilder(Graph graph, VertexLinker vertexLinker) {
+    this(graph, vertexLinker, id -> Set.of());
   }
 
-  public LinkingContextBuilder withFrom(GenericLocation location, EnumSet<StreetMode> modes) {
-    this.from = location;
-    this.fromVertices = getStreetVerticesForLocation(location, modes, LocationType.FROM);
-    if (location.stopId != null) {
-      this.fromStopVertices = findStopOrChildStopVertices(location.stopId);
-    }
-    return this;
-  }
-
-  GenericLocation from() {
-    return from;
-  }
-
-  Set<TransitStopVertex> fromStopVertices() {
-    return fromStopVertices;
-  }
-
-  public LinkingContextBuilder withTo(GenericLocation location, StreetMode mode) {
-    return withTo(location, EnumSet.of(mode));
-  }
-
-  public LinkingContextBuilder withTo(GenericLocation location, EnumSet<StreetMode> modes) {
-    this.to = location;
-    this.toVertices = getStreetVerticesForLocation(to, modes, LocationType.TO);
-    if (location.stopId != null) {
-      this.toStopVertices = findStopOrChildStopVertices(location.stopId);
-    }
-    return this;
-  }
-
-  GenericLocation to() {
-    return to;
-  }
-
-  Set<TransitStopVertex> toStopVertices() {
-    return toStopVertices;
-  }
-
-  public LinkingContextBuilder withVia(
-    List<VisitViaLocation> visitViaLocations,
-    EnumSet<StreetMode> modes
+  /**
+   * Links locations to the Graph used in the A-Star search. This method also validates that it was
+   * possible to link the locations to the graph and throws {@link RoutingValidationException} if it
+   * was not possible. The responsibility of cleaning up the temporary vertices and edges is on the
+   * {@link TemporaryVerticesContainer}.
+   */
+  public LinkingContext create(
+    TemporaryVerticesContainer container,
+    LinkingContextRequest request
   ) {
-    var visitViaLocationsWithCoordinates = visitViaLocations
-      .stream()
-      .map(VisitViaLocation::coordinateLocation)
-      .filter(Objects::nonNull)
-      .toList();
-    if (visitViaLocationsWithCoordinates.isEmpty()) {
-      return this;
+    var from = request.from();
+    var fromVertices = getFromVertices(container, request);
+    var fromStopVertices = getStopVertices(request.from());
+    var to = request.to();
+    var toVertices = getToVertices(container, request);
+    var toStopVertices = getStopVertices(request.to());
+    var visitViaLocationsWithCoordinates = request.viaLocationsWithCoordinates();
+    var verticesForVisitViaLocationsWithCoordinates = getVerticesForViaLocationsWithCoordinates(
+      container,
+      request
+    );
+    checkIfVerticesFound(
+      from,
+      fromVertices,
+      to,
+      toVertices,
+      visitViaLocationsWithCoordinates,
+      verticesForVisitViaLocationsWithCoordinates
+    );
+    addAdjustedEdges(
+      container,
+      fromVertices,
+      toVertices,
+      visitViaLocationsWithCoordinates,
+      verticesForVisitViaLocationsWithCoordinates
+    );
+    var verticesByLocation = getVerticesByLocation(
+      from,
+      fromVertices,
+      to,
+      toVertices,
+      verticesForVisitViaLocationsWithCoordinates
+    );
+    return new LinkingContext(from, to, verticesByLocation, fromStopVertices, toStopVertices);
+  }
+
+  private Set<Vertex> getFromVertices(
+    TemporaryVerticesContainer container,
+    LinkingContextRequest request
+  ) {
+    var from = request.from();
+    if (from == null || !from.isSpecified()) {
+      return Set.of();
     }
-    this.visitViaLocationsWithCoordinates = visitViaLocationsWithCoordinates;
-    this.visitViaLocationVertices = visitViaLocationsWithCoordinates
+    var modes = request.accessMode() != StreetMode.NOT_SET
+      ? EnumSet.of(request.accessMode())
+      : EnumSet.noneOf(StreetMode.class);
+    if (request.directMode() != StreetMode.NOT_SET) {
+      modes.add(request.directMode());
+    }
+    return getStreetVerticesForLocation(container, from, modes, LocationType.FROM);
+  }
+
+  private Set<Vertex> getToVertices(
+    TemporaryVerticesContainer container,
+    LinkingContextRequest request
+  ) {
+    var to = request.to();
+    if (to == null || !to.isSpecified()) {
+      return Set.of();
+    }
+    var modes = request.egressMode() != StreetMode.NOT_SET
+      ? EnumSet.of(request.egressMode())
+      : EnumSet.noneOf(StreetMode.class);
+    if (request.directMode() != StreetMode.NOT_SET) {
+      modes.add(request.directMode());
+    }
+    return getStreetVerticesForLocation(container, to, modes, LocationType.TO);
+  }
+
+  private Map<GenericLocation, Set<Vertex>> getVerticesForViaLocationsWithCoordinates(
+    TemporaryVerticesContainer container,
+    LinkingContextRequest request
+  ) {
+    var visitViaLocationsWithCoordinates = request.viaLocationsWithCoordinates();
+    if (visitViaLocationsWithCoordinates.isEmpty()) {
+      return Map.of();
+    }
+    var modes = EnumSet.noneOf(StreetMode.class);
+    if (request.accessMode() != StreetMode.NOT_SET) {
+      modes.add(request.accessMode());
+    }
+    if (request.egressMode() != StreetMode.NOT_SET) {
+      modes.add(request.egressMode());
+    }
+    if (request.transferMode() != StreetMode.NOT_SET) {
+      modes.add(request.transferMode());
+    }
+    if (request.directMode() != StreetMode.NOT_SET) {
+      modes.add(request.directMode());
+    }
+    return visitViaLocationsWithCoordinates
       .stream()
       .collect(
         Collectors.toMap(
           location -> location,
-          location -> getStreetVerticesForLocation(location, modes, LocationType.VISIT_VIA_LOCATION)
+          location ->
+            getStreetVerticesForLocation(
+              container,
+              location,
+              modes,
+              LocationType.VISIT_VIA_LOCATION
+            )
         )
       );
-    return this;
   }
 
-  Map<GenericLocation, Set<Vertex>> verticesByLocation() {
+  private Set<TransitStopVertex> getStopVertices(GenericLocation location) {
+    if (location != null && location.stopId != null) {
+      return findStopOrChildStopVertices(location.stopId);
+    }
+    return Set.of();
+  }
+
+  private Map<GenericLocation, Set<Vertex>> getVerticesByLocation(
+    GenericLocation from,
+    Set<Vertex> fromVertices,
+    GenericLocation to,
+    Set<Vertex> toVertices,
+    Map<GenericLocation, Set<Vertex>> visitViaLocationVertices
+  ) {
     var verticesByLocation = new HashMap<GenericLocation, Set<Vertex>>();
     verticesByLocation.put(from, fromVertices);
     verticesByLocation.put(to, toVertices);
@@ -153,22 +214,24 @@ public class LinkingContextBuilder {
     return Collections.unmodifiableMap(verticesByLocation);
   }
 
-  public LinkingContext build() {
-    checkIfVerticesFound();
-    addAdjustedEdges();
-    return new LinkingContext(this);
-  }
-
-  private void addAdjustedEdges() {
-    addAdjustedEdgesBetween(fromVertices, toVertices);
+  private void addAdjustedEdges(
+    TemporaryVerticesContainer container,
+    Set<Vertex> fromVertices,
+    Set<Vertex> toVertices,
+    List<GenericLocation> visitViaLocationsWithCoordinates,
+    Map<GenericLocation, Set<Vertex>> visitViaLocationVertices
+  ) {
+    addAdjustedEdgesBetween(container, fromVertices, toVertices);
     if (visitViaLocationsWithCoordinates.isEmpty()) {
       return;
     }
     addAdjustedEdgesBetween(
+      container,
       fromVertices,
       visitViaLocationVertices.get(visitViaLocationsWithCoordinates.getFirst())
     );
     addAdjustedEdgesBetween(
+      container,
       visitViaLocationVertices.get(visitViaLocationsWithCoordinates.getLast()),
       toVertices
     );
@@ -180,12 +243,16 @@ public class LinkingContextBuilder {
       Set<Vertex> toViaVertices = visitViaLocationVertices.get(
         visitViaLocationsWithCoordinates.get(i)
       );
-      addAdjustedEdgesBetween(fromViaVertices, toViaVertices);
+      addAdjustedEdgesBetween(container, fromViaVertices, toViaVertices);
       i++;
     }
   }
 
-  private void addAdjustedEdgesBetween(Set<Vertex> fromVertices, Set<Vertex> toVertices) {
+  private void addAdjustedEdgesBetween(
+    TemporaryVerticesContainer container,
+    Set<Vertex> fromVertices,
+    Set<Vertex> toVertices
+  ) {
     for (Vertex fromVertex : fromVertices) {
       for (Vertex toVertex : toVertices) {
         container.addEdgeCollection(SameEdgeAdjuster.adjust(fromVertex, toVertex, graph));
@@ -198,6 +265,7 @@ public class LinkingContextBuilder {
    * the stop or station types by id, and if not successful, it uses the coordinates if provided.
    */
   private Set<Vertex> getStreetVerticesForLocation(
+    TemporaryVerticesContainer container,
     GenericLocation location,
     EnumSet<StreetMode> streetModes,
     LocationType type
@@ -220,13 +288,13 @@ public class LinkingContextBuilder {
       }
       if (modes.stream().anyMatch(TraverseMode::isInCar)) {
         // Ensure that there is a car routable vertex (that can originate from stop's coordinate).
-        var carRoutableVertex = getCarRoutableStreetVertex(location, type);
+        var carRoutableVertex = getCarRoutableStreetVertex(container, location, type);
         carRoutableVertex.ifPresent(results::add);
       }
     } else if (location.getCoordinate() != null) {
       // Connect a temporary vertex from coordinate to graph
       results.add(
-        createVertexFromCoordinate(location.getCoordinate(), location.label, modes, type)
+        createVertexFromCoordinate(container, location.getCoordinate(), location.label, modes, type)
       );
     }
 
@@ -258,7 +326,11 @@ public class LinkingContextBuilder {
    * We need to use coordinates of the stop for cars as an alternative as not all stops are routable
    * with cars.
    */
-  private Optional<Vertex> getCarRoutableStreetVertex(GenericLocation location, LocationType type) {
+  private Optional<Vertex> getCarRoutableStreetVertex(
+    TemporaryVerticesContainer container,
+    GenericLocation location,
+    LocationType type
+  ) {
     // Fetch coordinate from stop, if not given in request
     if (location.getCoordinate() == null) {
       var stopVertex = graph.getStopVertex(location.stopId);
@@ -275,6 +347,7 @@ public class LinkingContextBuilder {
     return location.getCoordinate() != null
       ? Optional.of(
         createVertexFromCoordinate(
+          container,
           location.getCoordinate(),
           location.label,
           List.of(TraverseMode.CAR),
@@ -296,6 +369,7 @@ public class LinkingContextBuilder {
   }
 
   private Vertex createVertexFromCoordinate(
+    TemporaryVerticesContainer container,
     Coordinate coordinate,
     @Nullable String label,
     List<TraverseMode> modes,
@@ -330,18 +404,25 @@ public class LinkingContextBuilder {
     return temporaryStreetLocation;
   }
 
-  private void checkIfVerticesFound() {
+  private void checkIfVerticesFound(
+    GenericLocation from,
+    Set<Vertex> fromVertices,
+    @Nullable GenericLocation to,
+    Set<Vertex> toVertices,
+    List<GenericLocation> visitViaLocationsWithCoordinates,
+    Map<GenericLocation, Set<Vertex>> visitViaLocationVertices
+  ) {
     List<RoutingError> routingErrors = new ArrayList<>();
 
     // check that vertices where found if from-location was specified
-    if (from.isSpecified() && isDisconnected(fromVertices, LocationType.FROM)) {
+    if (isDisconnected(fromVertices, LocationType.FROM)) {
       routingErrors.add(
         new RoutingError(getRoutingErrorCodeForDisconnected(from), InputField.FROM_PLACE)
       );
     }
 
     // check that vertices where found if to-location was specified
-    if (to.isSpecified() && isDisconnected(toVertices, LocationType.TO)) {
+    if (to != null && to.isSpecified() && isDisconnected(toVertices, LocationType.TO)) {
       routingErrors.add(
         new RoutingError(getRoutingErrorCodeForDisconnected(to), InputField.TO_PLACE)
       );

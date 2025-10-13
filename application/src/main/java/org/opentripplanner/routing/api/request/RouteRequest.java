@@ -309,6 +309,18 @@ public class RouteRequest implements Serializable {
   }
 
   /**
+   * Return the via locations that are of type {@link VisitViaLocation} and contain a coordinate as
+   * {@link GenericLocation}.
+   */
+  public List<GenericLocation> listViaLocationsWithCoordinates() {
+    return listVisitViaLocations()
+      .stream()
+      .map(VisitViaLocation::coordinateLocation)
+      .filter(Objects::nonNull)
+      .toList();
+  }
+
+  /**
    * This is the time/duration in seconds from the earliest-departure-time(EDT) to
    * latest-departure-time(LDT). In case of a reverse search, it will be the time from earliest to
    * latest arrival time (LAT - EAT).
