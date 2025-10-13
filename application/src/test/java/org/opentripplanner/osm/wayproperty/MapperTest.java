@@ -13,8 +13,8 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTR
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.osm.OsmEntityForTest;
 import org.opentripplanner.osm.model.OsmEntity;
+import org.opentripplanner.osm.model.OsmEntityForTest;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.tagmapping.OsmTagMapper;
 import org.opentripplanner.osm.wayproperty.specifier.BestMatchSpecifier;
