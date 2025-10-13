@@ -2,7 +2,7 @@ import { Table } from 'react-bootstrap';
 import { TripPattern, Leg } from '../../static/query/tripQueryTypes.js';
 import { formatTime } from '../../util/formatTime.ts';
 import { formatDuration } from '../../util/formatDuration.ts';
-import { formatDistance } from '../../util/formatDistance.ts';
+import { formatDistance } from '../../util/distanceUtils.ts';
 
 // Create a unique, content-based key for each leg
 const createLegKey = (leg: Leg, itineraryIdx: number): string => {

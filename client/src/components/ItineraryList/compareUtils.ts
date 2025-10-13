@@ -1,7 +1,7 @@
 import { Mode } from '../../gql/graphql.ts';
 import { formatTime } from '../../util/formatTime.ts';
 import { formatDuration } from '../../util/formatDuration.ts';
-import { formatDistance } from '../../util/formatDistance.ts';
+import { formatDistance } from '../../util/distanceUtils.ts';
 import { TripPattern, Leg } from '../../static/query/tripQueryTypes.js';
 
 export interface ItinerarySummary {
@@ -17,15 +17,6 @@ export interface LegOption {
   value: string;
   label: string;
 }
-
-// Helper function to convert distance strings to meters for comparison
-export const parseDistanceToMeters = (distanceStr: string): number => {
-  const numericValue = parseFloat(distanceStr.replace(/[^0-9.]/g, ''));
-  if (distanceStr.includes('km')) {
-    return numericValue * 1000; // Convert km to meters
-  }
-  return numericValue; // Already in meters
-};
 
 export const getComparisonClass = (
   value1: number | null | undefined,

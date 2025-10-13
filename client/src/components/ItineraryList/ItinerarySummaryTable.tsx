@@ -1,6 +1,7 @@
 import { Table } from 'react-bootstrap';
 import { TripPattern } from '../../static/query/tripQueryTypes.js';
-import { ItinerarySummary, getComparisonClass, parseDistanceToMeters, columnComparisons } from './compareUtils.ts';
+import { ItinerarySummary, getComparisonClass, columnComparisons } from './compareUtils.ts';
+import { parseDistanceToMeters } from '../../util/distanceUtils.ts';
 
 interface ItinerarySummaryTableProps {
   itinerary1: TripPattern;
