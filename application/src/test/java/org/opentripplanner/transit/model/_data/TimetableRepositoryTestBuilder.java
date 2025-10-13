@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -20,13 +20,17 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.network.RouteBuilder;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
+import org.opentripplanner.transit.model.organization.AgencyBuilder;
 import org.opentripplanner.transit.model.organization.Operator;
+import org.opentripplanner.transit.model.organization.OperatorBuilder;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripBuilder;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
@@ -117,29 +121,40 @@ public class TimetableRepositoryTestBuilder {
   }
 
   public Agency agency(String id) {
-    var agency = Agency.of(id(id))
+    return agency(id, b -> {});
+  }
+
+  public Agency agency(String id, Consumer<AgencyBuilder> customizer) {
+    var builder = Agency.of(id(id))
       .withName("Agency Test")
       .withTimezone(timeZone.getId())
-      .withUrl("https://www." + id + ".com")
-      .build();
+      .withUrl("https://www." + id + ".com");
+    if (customizer != null) {
+      customizer.accept(builder);
+    }
+    var agency = builder.build();
     agencies.add(agency);
     return agency;
   }
 
   public Route route(String id) {
-    return route(id, null);
+    return route(id, b -> {});
   }
 
-  public Route route(String id, @Nullable Operator operator) {
+  public Route route(String id, Consumer<RouteBuilder> customizer) {
     var builder = Route.of(id(id))
       .withAgency(defaultAgency)
       .withShortName("R" + id)
       .withMode(TransitMode.BUS);
-    if (operator != null) {
-      builder.withOperator(operator);
+    if (customizer != null) {
+      customizer.accept(builder);
     }
     // Routes aren't stored explicitly in the timetable repository so we don't have a collection for these
     return builder.build();
+  }
+
+  public Route route(String id, Operator operator) {
+    return route(id, builder -> builder.withOperator(operator));
   }
 
   public Operator operator(String operatorId) {
@@ -148,25 +163,21 @@ public class TimetableRepositoryTestBuilder {
     return operator;
   }
 
-  public TimetableRepositoryTestBuilder addTrip(TripInput tripInput) {
-    trip(tripInput);
-    return this;
+  public Operator operator(String operatorId, Consumer<OperatorBuilder> customizer) {
+    var builder = Operator.of(id(operatorId)).withName(operatorId + " name");
+    if (customizer != null) {
+      customizer.accept(builder);
+    }
+    var operator = builder.build();
+    operators.add(operator);
+    return operator;
   }
 
-  public TimetableRepositoryTestBuilder addFlexTrip(FlexTripInput tripInput) {
-    flexTrip(tripInput);
-    return this;
+  public Trip trip(TripInput tripInput) {
+    return trip(tripInput, null);
   }
 
-  public TimetableRepositoryTestBuilder addScheduledStopPointMapping(
-    FeedScopedId scheduledStopPointId,
-    RegularStop stop
-  ) {
-    scheduledStopPointMapping.putAll(Map.of(scheduledStopPointId, stop));
-    return this;
-  }
-
-  private Trip trip(TripInput tripInput) {
+  public Trip trip(TripInput tripInput, Consumer<TripBuilder> customizer) {
     var serviceDates = Optional.ofNullable(tripInput.serviceDates()).orElse(
       List.of(defaultServiceDate)
     );
@@ -175,11 +186,14 @@ public class TimetableRepositoryTestBuilder {
 
     var route = Optional.ofNullable(tripInput.route()).orElse(defaultRoute);
 
-    var trip = Trip.of(id(tripInput.id()))
+    var tripBuilder = Trip.of(id(tripInput.id()))
       .withRoute(route)
       .withHeadsign(tripInput.headsign())
-      .withServiceId(serviceId)
-      .build();
+      .withServiceId(serviceId);
+    if (customizer != null) {
+      customizer.accept(tripBuilder);
+    }
+    var trip = tripBuilder.build();
 
     if (tripInput.tripOnServiceDateId() != null) {
       if (serviceDates.size() != 1) {
@@ -199,7 +213,7 @@ public class TimetableRepositoryTestBuilder {
     return trip;
   }
 
-  private Trip flexTrip(FlexTripInput tripInput) {
+  public Trip flexTrip(FlexTripInput tripInput) {
     var serviceId = getOrCreateServiceId(List.of(defaultServiceDate));
     var route = defaultRoute;
     final var trip = Trip.of(id(tripInput.id()))
@@ -219,6 +233,14 @@ public class TimetableRepositoryTestBuilder {
     flexTrips.add(flexTrip);
 
     return trip;
+  }
+
+  public TimetableRepositoryTestBuilder addScheduledStopPointMapping(
+    FeedScopedId scheduledStopPointId,
+    RegularStop stop
+  ) {
+    scheduledStopPointMapping.putAll(Map.of(scheduledStopPointId, stop));
+    return this;
   }
 
   private TripTimes tripTimes(List<TripInput.StopCall> stops, Trip trip) {

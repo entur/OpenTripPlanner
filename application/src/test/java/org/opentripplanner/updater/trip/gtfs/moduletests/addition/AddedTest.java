@@ -237,7 +237,7 @@ class AddedTest implements RealtimeTestConstants {
 
     // Assert that the tripPattern exists at the given stop
     assertTrue(
-      env.getTimetableSnapshot().getPatternsForStop(stop).contains(tripFetcher.tripPattern())
+      env.timetableSnapshot().getPatternsForStop(stop).contains(tripFetcher.tripPattern())
     );
 
     return tripFetcher.tripPattern();

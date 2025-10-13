@@ -97,7 +97,7 @@ class SkippedTest implements RealtimeTestConstants {
 
     // Check that the there is no longer a realtime added trip pattern for the trip and that the
     // stoptime updates have gone through
-    var snapshot = env.getTimetableSnapshot();
+    var snapshot = env.timetableSnapshot();
 
     assertNull(snapshot.getNewTripPatternForModifiedTrip(id(TRIP_2_ID), env.defaultServiceDate()));
 
@@ -148,7 +148,7 @@ class SkippedTest implements RealtimeTestConstants {
   ) {
     var trip = env.transitService().getTrip(id(tripId));
     var originalTripPattern = env.transitService().findPattern(trip);
-    var snapshot = env.getTimetableSnapshot();
+    var snapshot = env.timetableSnapshot();
     var originalTimetableForToday = snapshot.resolve(originalTripPattern, env.defaultServiceDate());
     var originalTimetableScheduled = snapshot.resolve(originalTripPattern, null);
 
@@ -182,7 +182,7 @@ class SkippedTest implements RealtimeTestConstants {
   private static void assertNewTripTimesIsUpdated(TransitTestEnvironment env, String tripId) {
     var trip = env.transitService().getTrip(id(tripId));
     var originalTripPattern = env.transitService().findPattern(trip);
-    var snapshot = env.getTimetableSnapshot();
+    var snapshot = env.timetableSnapshot();
     var originalTimetableForToday = snapshot.resolve(originalTripPattern, env.defaultServiceDate());
 
     var originalTimetableScheduled = snapshot.resolve(originalTripPattern, null);

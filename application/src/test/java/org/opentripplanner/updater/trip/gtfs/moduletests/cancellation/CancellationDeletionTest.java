@@ -102,7 +102,7 @@ class CancellationDeletionTest implements RealtimeTestConstants {
     update = rt.tripUpdate(addedTripId, relationship).build();
     assertSuccess(rt.applyTripUpdate(update, DIFFERENTIAL));
 
-    var snapshot = env.getTimetableSnapshot();
+    var snapshot = env.timetableSnapshot();
     // Get the trip pattern of the added trip which goes through stopA
     var patternsAtA = snapshot.getPatternsForStop(STOP_A);
 

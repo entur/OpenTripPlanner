@@ -48,7 +48,7 @@ class InvalidInputTest implements RealtimeTestConstants {
 
     var result = rt.applyTripUpdate(update);
 
-    var snapshot = env.getTimetableSnapshot();
+    var snapshot = env.timetableSnapshot();
     assertTrue(snapshot.isEmpty());
     assertFailure(NO_SERVICE_ON_DATE, result);
   }

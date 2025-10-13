@@ -47,7 +47,7 @@ public class ReplacementTest implements RealtimeTestConstants {
     rt.applyTripUpdate(tripUpdate);
 
     // THEN
-    var snapshot = env.getTimetableSnapshot();
+    var snapshot = env.timetableSnapshot();
     var tripId = id(TRIP_1_ID);
 
     var transitService = env.transitService();

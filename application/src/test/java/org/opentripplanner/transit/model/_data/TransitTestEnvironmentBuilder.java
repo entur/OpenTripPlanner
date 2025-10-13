@@ -3,11 +3,18 @@ package org.opentripplanner.transit.model._data;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
+import java.util.function.Consumer;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.network.RouteBuilder;
 import org.opentripplanner.transit.model.organization.Operator;
+import org.opentripplanner.transit.model.organization.OperatorBuilder;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.site.RegularStopBuilder;
+import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.StationBuilder;
+import org.opentripplanner.transit.model.timetable.TripBuilder;
 import org.opentripplanner.transit.service.SiteRepository;
 
 public class TransitTestEnvironmentBuilder {
@@ -45,6 +52,10 @@ public class TransitTestEnvironmentBuilder {
     return site.stop(id);
   }
 
+  public RegularStop stop(String id, Consumer<RegularStopBuilder> customizer) {
+    return site.stop(id, customizer);
+  }
+
   public TransitTestEnvironmentBuilder addStops(String... stopIds) {
     Arrays.stream(stopIds).forEach(site::stop);
     return this;
@@ -59,6 +70,14 @@ public class TransitTestEnvironmentBuilder {
 
   public AreaStop areaStop(String id) {
     return site.areaStop(id);
+  }
+
+  public Station station(String id) {
+    return site.station(id);
+  }
+
+  public Station station(String id, Consumer<StationBuilder> customizer) {
+    return site.station(id, customizer);
   }
 
   /* ~~~~~~~~~~~~~~~~~~ *
@@ -77,17 +96,30 @@ public class TransitTestEnvironmentBuilder {
     return timetable.route(routeId, operator);
   }
 
+  public Route route(String routeId, Consumer<RouteBuilder> customizer) {
+    return timetable.route(routeId, customizer);
+  }
+
   public Operator operator(String operatorId) {
     return timetable.operator(operatorId);
   }
 
+  public Operator operator(String operatorId, Consumer<OperatorBuilder> customizer) {
+    return timetable.operator(operatorId, customizer);
+  }
+
   public TransitTestEnvironmentBuilder addTrip(TripInput trip) {
-    timetable.addTrip(trip);
+    timetable.trip(trip);
+    return this;
+  }
+
+  public TransitTestEnvironmentBuilder addTrip(TripInput trip, Consumer<TripBuilder> consumer) {
+    timetable.trip(trip, consumer);
     return this;
   }
 
   public TransitTestEnvironmentBuilder addFlexTrip(FlexTripInput tripInput) {
-    timetable.addFlexTrip(tripInput);
+    timetable.flexTrip(tripInput);
     return this;
   }
 

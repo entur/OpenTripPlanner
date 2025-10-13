@@ -82,7 +82,7 @@ public final class TransitTestEnvironment {
     return snapshotManager;
   }
 
-  public TimetableSnapshot getTimetableSnapshot() {
+  public TimetableSnapshot timetableSnapshot() {
     return snapshotManager.getTimetableSnapshot();
   }
 

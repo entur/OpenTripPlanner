@@ -14,6 +14,7 @@ import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.RegularStopBuilder;
 import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.site.StationBuilder;
 import org.opentripplanner.transit.model.site.StopTransferPriority;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.SiteRepositoryBuilder;
@@ -83,13 +84,20 @@ public class SiteRepositoryTestBuilder {
   }
 
   public Station station(String stationId) {
-    var station = Station.of(id(stationId))
+    return station(stationId, b -> {});
+  }
+
+  public Station station(String stationId, Consumer<StationBuilder> customizer) {
+    var builder = Station.of(id(stationId))
       .withName(new NonLocalizedString(stationId))
       .withCode(stationId)
       .withCoordinate(ANY_COORDINATE)
       .withDescription(new NonLocalizedString("Station " + stationId))
-      .withPriority(StopTransferPriority.ALLOWED)
-      .build();
+      .withPriority(StopTransferPriority.ALLOWED);
+    if (customizer != null) {
+      customizer.accept(builder);
+    }
+    var station = builder.build();
     siteRepositoryBuilder.withStation(station);
     return station;
   }
