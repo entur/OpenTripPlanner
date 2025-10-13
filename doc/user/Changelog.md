@@ -19,6 +19,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add estimated calls on same service and day in Transmodel API [#6930](https://github.com/opentripplanner/OpenTripPlanner/pull/6930)
 - Debug UI: Fix/enforce up to date package lock [#6959](https://github.com/opentripplanner/OpenTripPlanner/pull/6959)
 - Debug client itinerary compare [#6882](https://github.com/opentripplanner/OpenTripPlanner/pull/6882)
+- doc: add CLAUDE.md file [#6939](https://github.com/opentripplanner/OpenTripPlanner/pull/6939)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
