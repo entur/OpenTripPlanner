@@ -57,6 +57,13 @@ class CostTest {
   }
 
   @Test
+  void testToSeconds() {
+    assertEquals(3, Cost.costOfCentiSeconds(300).toSeconds());
+    assertEquals(3, Cost.costOfCentiSeconds(349).toSeconds());
+    assertEquals(4, Cost.costOfCentiSeconds(350).toSeconds());
+  }
+
+  @Test
   void testToCentiSeconds() {
     assertEquals(100 * VALUE_SECONDS, subject.toCentiSeconds());
   }
