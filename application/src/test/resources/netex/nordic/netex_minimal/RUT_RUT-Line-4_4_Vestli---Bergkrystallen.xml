@@ -186,6 +186,26 @@
                 </TimetabledPassingTime>
               </passingTimes>
             </ServiceJourney>
+            <ServiceJourney version="0" id="RUT:ServiceJourney:4-3">
+              <Name>WithDatedServiceJourney</Name>
+              <JourneyPatternRef ref="RUT:JourneyPattern:4-6" version="0"/>
+              <OperatorRef ref="RUT:Operator:130c"/>
+              <LineRef ref="RUT:Line:4" version="0"/>
+              <passingTimes>
+                <TimetabledPassingTime version="0" id="RUT:TimetabledPassingTime:100">
+                  <StopPointInJourneyPatternRef ref="RUT:StopPointInJourneyPattern:4-6-1" version="0"/>
+                  <DepartureTime>12:10:00</DepartureTime>
+                </TimetabledPassingTime>
+                <TimetabledPassingTime version="0" id="RUT:TimetabledPassingTime:101">
+                  <StopPointInJourneyPatternRef ref="RUT:StopPointInJourneyPattern:4-6-2" version="0"/>
+                  <DepartureTime>12:29:00</DepartureTime>
+                </TimetabledPassingTime>
+              </passingTimes>
+            </ServiceJourney>
+            <DatedServiceJourney id="RUT:DatedServiceJourney:1">
+              <ServiceJourneyRef ref="RUT:ServiceJourney:4-3"/>
+              <OperatingDayRef ref="RUT:OperatingDay:2018-11-01"/>
+            </DatedServiceJourney>
           </vehicleJourneys>
         </TimetableFrame>
       </frames>

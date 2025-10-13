@@ -176,6 +176,11 @@
               <ToDate>2018-01-04T00:00:00</ToDate>
             </OperatingPeriod>
           </operatingPeriods>
+          <operatingDays>
+            <OperatingDay id="RUT:OperatingDay:2018-11-01">
+              <CalendarDate>2018-11-01</CalendarDate>
+            </OperatingDay>
+          </operatingDays>
           <dayTypeAssignments>
             <DayTypeAssignment order="1" version="1" id="RUT:DayTypeAssignment:4-100524-2">
               <OperatingPeriodRef ref="RUT:OperatingPeriod:4-10400" version="1"/>
