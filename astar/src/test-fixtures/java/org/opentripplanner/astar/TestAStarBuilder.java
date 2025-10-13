@@ -6,9 +6,10 @@ import java.util.Set;
 import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
 
-public class TestBuilder extends AStarBuilder<TestState, TestEdge, TestVertex, TestBuilder> {
+public class TestAStarBuilder
+  extends AStarBuilder<TestState, TestEdge, TestVertex, TestAStarBuilder> {
 
-  TestBuilder() {
+  TestAStarBuilder() {
     super();
     setBuilder(this);
     super.withDominanceFunction((a, b) -> a.getWeight() <= b.getWeight());
