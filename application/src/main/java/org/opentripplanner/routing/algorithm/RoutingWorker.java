@@ -31,7 +31,7 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.LinkingContext;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.service.paging.PagingService;
@@ -304,7 +304,7 @@ public class RoutingWorker {
   }
 
   private LinkingContext createLinkingContext(TemporaryVerticesContainer container) {
-    var linkingContextFactory = new LinkingContextBuilder(
+    var linkingContextFactory = new LinkingContextFactory(
       serverContext.graph(),
       serverContext.vertexLinker(),
       serverContext.transitService()::findStopOrChildIds

@@ -15,7 +15,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
@@ -259,11 +259,11 @@ class AccessEgressRouterTest extends GraphRoutingTest {
     var request = requestFromTo(from, to);
 
     try (var verticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph), id ->
+      var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph), id ->
         new DefaultTransitService(timetableRepository).findStopOrChildIds(id)
       );
       var linkingRequest = LinkingContextRequestMapper.map(request);
-      var linkingContext = linkingContextBuilder.create(verticesContainer, linkingRequest);
+      var linkingContext = linkingContextFactory.create(verticesContainer, linkingRequest);
 
       return AccessEgressRouter.findAccessEgresses(
         request,

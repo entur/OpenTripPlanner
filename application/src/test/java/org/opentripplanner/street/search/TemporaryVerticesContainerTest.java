@@ -13,10 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model._data.StreetModelForTest;
@@ -63,7 +62,7 @@ class TemporaryVerticesContainerTest {
     .withCoordinate(CENTER.moveNorthMeters(DISTANCE))
     .build();
   private final Graph graph = buildGraph(stationAlpha, stopA, stopB, stopC, stopD);
-  private final LinkingContextBuilder linkingContextBuilder = new LinkingContextBuilder(
+  private final LinkingContextFactory linkingContextFactory = new LinkingContextFactory(
     graph,
     TestVertexLinker.of(graph)
   );
@@ -76,14 +75,14 @@ class TemporaryVerticesContainerTest {
       .withTo(GenericLocation.fromCoordinate(stopD.getLat(), stopD.getLon()))
       .withDirectMode(StreetMode.WALK)
       .build();
-    var linkingContext = linkingContextBuilder.create(container, request);
+    var linkingContext = linkingContextFactory.create(container, request);
     assertThat(linkingContext.fromVertices()).hasSize(1);
     assertThat(linkingContext.toVertices()).hasSize(1);
   }
 
   @Test
   void stopId() {
-    var stopLinkingContextBuilder = new LinkingContextBuilder(
+    var stopLinkingContextFactory = new LinkingContextFactory(
       graph,
       TestVertexLinker.of(graph),
       Set::of
@@ -94,7 +93,7 @@ class TemporaryVerticesContainerTest {
       .withTo(stopToLocation(stopB))
       .withDirectMode(StreetMode.WALK)
       .build();
-    var linkingContext = stopLinkingContextBuilder.create(container, request);
+    var linkingContext = stopLinkingContextFactory.create(container, request);
     assertEquals(stopA, toStop(linkingContext.fromVertices()));
     assertEquals(stopB, toStop(linkingContext.toVertices()));
   }
@@ -104,7 +103,7 @@ class TemporaryVerticesContainerTest {
     var mapping = ImmutableMultimap.<FeedScopedId, FeedScopedId>builder()
       .putAll(OMEGA_ID, stopC.getId(), stopD.getId())
       .build();
-    var stopLinkingContextBuilder = new LinkingContextBuilder(
+    var stopLinkingContextFactory = new LinkingContextFactory(
       graph,
       TestVertexLinker.of(graph),
       mapping::get
@@ -115,7 +114,7 @@ class TemporaryVerticesContainerTest {
       .withTo(stopToLocation(stopB))
       .withDirectMode(StreetMode.WALK)
       .build();
-    var linkingContext = stopLinkingContextBuilder.create(container, request);
+    var linkingContext = stopLinkingContextFactory.create(container, request);
     assertThat(toStops(linkingContext.fromVertices())).containsExactly(stopC, stopD);
   }
 
@@ -127,7 +126,7 @@ class TemporaryVerticesContainerTest {
       .withTo(stopToLocation(stopB))
       .withDirectMode(StreetMode.WALK)
       .build();
-    var linkingContext = linkingContextBuilder.create(container, request);
+    var linkingContext = linkingContextFactory.create(container, request);
     var fromVertices = List.copyOf(linkingContext.fromVertices());
     assertThat(fromVertices).hasSize(1);
 

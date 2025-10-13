@@ -48,9 +48,9 @@ import org.slf4j.LoggerFactory;
  * if it was not possible. The responsibility of cleaning up the temporary vertices and edges is on
  * the {@link TemporaryVerticesContainer}.
  */
-public class LinkingContextBuilder {
+public class LinkingContextFactory {
 
-  private static final Logger LOG = LoggerFactory.getLogger(LinkingContextBuilder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LinkingContextFactory.class);
 
   private final Graph graph;
   private final VertexLinker vertexLinker;
@@ -59,7 +59,7 @@ public class LinkingContextBuilder {
   /**
    * Construct a factory when stop locations are potentially used for locations.
    */
-  public LinkingContextBuilder(
+  public LinkingContextFactory(
     Graph graph,
     VertexLinker vertexLinker,
     Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds
@@ -72,7 +72,7 @@ public class LinkingContextBuilder {
   /**
    * Construct a factory when stop locations are not used for locations.
    */
-  public LinkingContextBuilder(Graph graph, VertexLinker vertexLinker) {
+  public LinkingContextFactory(Graph graph, VertexLinker vertexLinker) {
     this(graph, vertexLinker, id -> Set.of());
   }
 

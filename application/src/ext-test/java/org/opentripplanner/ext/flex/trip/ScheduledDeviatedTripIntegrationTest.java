@@ -25,11 +25,9 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSearchDays;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.TransitRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContext;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
@@ -175,12 +173,12 @@ class ScheduledDeviatedTripIntegrationTest {
     var additionalSearchDays = AdditionalSearchDays.defaults(dateTime);
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextBuilder = new LinkingContextBuilder(
+      var linkingContextFactory = new LinkingContextFactory(
         serverContext.graph(),
         TestVertexLinker.of(graph)
       );
       var linkingRequest = LinkingContextRequestMapper.map(request);
-      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
+      var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       var result = TransitRouter.route(
         request,
         serverContext,

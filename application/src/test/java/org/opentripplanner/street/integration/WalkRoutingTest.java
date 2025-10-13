@@ -17,7 +17,7 @@ import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.edge.Edge;
@@ -96,9 +96,9 @@ class WalkRoutingTest {
       .withArriveBy(arriveBy)
       .buildRequest();
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph));
+      var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph));
       var linkingRequest = LinkingContextRequestMapper.map(request);
-      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
+      var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       var gpf = new GraphPathFinder(null);
       return gpf.graphPathFinderEntryPoint(request, linkingContext);
     }

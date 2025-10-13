@@ -11,7 +11,7 @@ import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
@@ -92,12 +92,12 @@ public class StreetGraphFinder implements GraphFinder {
     // RR dateTime defaults to currentTime.
     // If elapsed time is not capped, searches are very slow.
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextBuilder = new LinkingContextBuilder(graph, linker);
+      var linkingContextFactory = new LinkingContextFactory(graph, linker);
       var linkingRequest = LinkingContextRequest.of()
         .withFrom(GenericLocation.fromCoordinate(lat, lon))
         .withDirectMode(StreetMode.WALK)
         .build();
-      var linkerContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
+      var linkerContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       // Make a normal OTP routing request so we can traverse edges and use GenericAStar
       // TODO make a function that builds normal routing requests from profile requests
       // TODO: This is incorrect, the configured defaults are not used.

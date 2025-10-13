@@ -28,7 +28,7 @@ import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContext;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetTraversalPermission;
@@ -84,7 +84,7 @@ public class TemporaryVerticesContainerTest {
       return new GenericLocation(location.label(), null, lat, lon);
     })
     .toList();
-  private final LinkingContextBuilder linkingContextBuilder = new LinkingContextBuilder(
+  private final LinkingContextFactory linkingContextFactory = new LinkingContextFactory(
     g,
     TestVertexLinker.of(g)
   );
@@ -114,7 +114,7 @@ public class TemporaryVerticesContainerTest {
       .withTo(to)
       .withDirectMode(StreetMode.WALK)
       .build();
-    var subject = linkingContextBuilder.create(container, request);
+    var subject = linkingContextFactory.create(container, request);
 
     // Then:
     originAndDestinationInsertedCorrect(subject, false);
@@ -130,7 +130,7 @@ public class TemporaryVerticesContainerTest {
         .withDirectMode(StreetMode.WALK)
         .withAccessMode(StreetMode.CAR_TO_PARK)
         .build();
-      var subject = linkingContextBuilder.create(container, request);
+      var subject = linkingContextFactory.create(container, request);
       // When - the container is created
 
       // Then:
@@ -152,7 +152,7 @@ public class TemporaryVerticesContainerTest {
       .withViaLocationsWithCoordinates(viaLocationsWithCoordinates)
       .withDirectMode(StreetMode.WALK)
       .build();
-    var subject = linkingContextBuilder.create(container, request);
+    var subject = linkingContextFactory.create(container, request);
 
     // Then:
     locationsInsertedCorrect(subject);
@@ -170,7 +170,7 @@ public class TemporaryVerticesContainerTest {
       .withDirectMode(StreetMode.WALK)
       .build();
     var viaException = assertThrows(RoutingValidationException.class, () ->
-      linkingContextBuilder.create(viaContainer, viaRequest)
+      linkingContextFactory.create(viaContainer, viaRequest)
     );
     viaContainer.close();
     assertThat(viaException.getRoutingErrors()).hasSize(1);
@@ -189,7 +189,7 @@ public class TemporaryVerticesContainerTest {
       .withDirectMode(StreetMode.WALK)
       .build();
     var exception = assertThrows(RoutingValidationException.class, () ->
-      linkingContextBuilder.create(container, request)
+      linkingContextFactory.create(container, request)
     );
     container.close();
 
@@ -214,7 +214,7 @@ public class TemporaryVerticesContainerTest {
       .withDirectMode(StreetMode.WALK)
       .build();
     var exception = assertThrows(RoutingValidationException.class, () ->
-      linkingContextBuilder.create(container, request)
+      linkingContextFactory.create(container, request)
     );
     container.close();
 
@@ -234,7 +234,7 @@ public class TemporaryVerticesContainerTest {
       .withDirectMode(StreetMode.WALK)
       .build();
     assertThrows(RoutingValidationException.class, () ->
-      linkingContextBuilder.create(container, request)
+      linkingContextFactory.create(container, request)
     );
     container.close();
 

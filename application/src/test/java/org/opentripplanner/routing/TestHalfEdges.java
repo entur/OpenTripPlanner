@@ -25,7 +25,7 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.DisposableEdgeCollection;
-import org.opentripplanner.routing.linking.LinkingContextBuilder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.SameEdgeAdjuster;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
@@ -567,9 +567,9 @@ public class TestHalfEdges {
       .buildRequest();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextBuilder = new LinkingContextBuilder(graph, TestVertexLinker.of(graph));
+      var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph));
       var linkingRequest = LinkingContextRequestMapper.map(walking);
-      var linkingContext = linkingContextBuilder.create(temporaryVerticesContainer, linkingRequest);
+      var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       assertFalse(linkingContext.fromVertices().isEmpty());
       assertFalse(linkingContext.toVertices().isEmpty());
       ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
