@@ -33,8 +33,7 @@ class SkippedTest implements RealtimeTestConstants {
   private final TripInput TRIP_INPUT = TripInput.of(TRIP_2_ID)
     .addStop(STOP_A, "0:01:00", "0:01:01")
     .addStop(STOP_B, "0:01:10", "0:01:11")
-    .addStop(STOP_C, "0:01:20", "0:01:21")
-    .build();
+    .addStop(STOP_C, "0:01:20", "0:01:21");
 
   @Test
   void scheduledTripWithSkippedAndScheduled() {

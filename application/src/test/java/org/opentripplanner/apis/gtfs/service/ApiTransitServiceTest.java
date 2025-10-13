@@ -51,14 +51,12 @@ class ApiTransitServiceTest {
   private final TripInput TRIP1_INPUT = TripInput.of(TRIP_1_ID)
     .addStop(STOP_A, "12:00:00", "12:00:00")
     .addStop(STOP_B, "12:30:00", "12:30:00")
-    .addStop(STOP_C, "13:00:00", "13:00:00")
-    .build();
+    .addStop(STOP_C, "13:00:00", "13:00:00");
 
   private final TripInput TRIP2_INPUT = TripInput.of(TRIP_2_ID)
     .addStop(STOP_A, "12:10:00", "12:10:00")
     .addStop(STOP_B, "12:40:00", "12:40:00")
-    .addStop(STOP_C, "13:10:00", "13:10:00")
-    .build();
+    .addStop(STOP_C, "13:10:00", "13:10:00");
 
   public final Instant T11_59 = SERVICE_DATE.atTime(LocalTime.NOON.minusMinutes(1))
     .atZone(TIME_ZONE)

@@ -31,8 +31,7 @@ class ExtraCallTest implements RealtimeTestConstants {
     .withWithTripOnServiceDate(TRIP_1_ID)
     .withRoute(ROUTE)
     .addStop(STOP_A, "0:00:10", "0:00:11")
-    .addStop(STOP_B, "0:00:20", "0:00:21")
-    .build();
+    .addStop(STOP_B, "0:00:20", "0:00:21");
 
   @Test
   void testExtraCall() {

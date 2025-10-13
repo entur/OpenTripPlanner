@@ -118,11 +118,6 @@ public class TransitTestEnvironmentBuilder {
     return this;
   }
 
-  public TransitTestEnvironmentBuilder addFlexTrip(FlexTripInput tripInput) {
-    timetable.flexTrip(tripInput);
-    return this;
-  }
-
   public TransitTestEnvironmentBuilder addScheduledStopPointMapping(
     FeedScopedId scheduledStopPointId,
     RegularStop stop

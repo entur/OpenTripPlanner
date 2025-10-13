@@ -45,8 +45,7 @@ class OjpServiceTest {
   private final TripInput TRIP_INPUT = TripInput.of("t1")
     .addStop(STOP_A, "12:00", "12:01")
     .addStop(STOP_B, "12:10", "12:11")
-    .addStop(STOP_C, "12:20", "12:21")
-    .build();
+    .addStop(STOP_C, "12:20", "12:21");
 
   private OjpService.StopEventRequestParams params(TransitTestEnvironment env, int departures) {
     return new OjpService.StopEventRequestParams(

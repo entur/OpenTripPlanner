@@ -28,8 +28,7 @@ public class ReplacementTest implements RealtimeTestConstants {
     var TRIP_INPUT = TripInput.of(TRIP_1_ID)
       .addStop(STOP_A, "8:30:00", "8:30:00")
       .addStop(STOP_B, "8:40:00", "8:40:00")
-      .withHeadsign(I18NString.of("Original Headsign"))
-      .build();
+      .withHeadsign(I18NString.of("Original Headsign"));
     var env = builder.addTrip(TRIP_INPUT).build();
     var rt = GtfsRtTestHelper.of(env);
 

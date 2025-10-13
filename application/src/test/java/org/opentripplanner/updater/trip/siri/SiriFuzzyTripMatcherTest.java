@@ -120,7 +120,6 @@ class SiriFuzzyTripMatcherTest implements RealtimeTestConstants {
   private TripInput tripInput(String trip1Id) {
     return TripInput.of(trip1Id)
       .addStop(STOP_A, "0:10:00", "0:10:00")
-      .addStop(STOP_B, "0:20:00", "0:20:00")
-      .build();
+      .addStop(STOP_B, "0:20:00", "0:20:00");
   }
 }

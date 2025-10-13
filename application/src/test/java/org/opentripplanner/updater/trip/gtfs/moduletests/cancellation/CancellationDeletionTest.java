@@ -47,7 +47,6 @@ class CancellationDeletionTest implements RealtimeTestConstants {
         TripInput.of(TRIP_1_ID)
           .addStop(STOP_A, "0:00:10", "0:00:11")
           .addStop(STOP_B, "0:00:20", "0:00:21")
-          .build()
       )
       .build();
     var rt = GtfsRtTestHelper.of(env);
@@ -76,6 +75,7 @@ class CancellationDeletionTest implements RealtimeTestConstants {
   @ParameterizedTest
   @MethodSource("cases")
   void cancelingAddedTrip(ScheduleRelationship relationship, RealTimeState state) {
+    // just to set the scheduling period
     var env = envBuilder
       .addTrip(
         TripInput.of(TRIP_1_ID)
@@ -83,7 +83,6 @@ class CancellationDeletionTest implements RealtimeTestConstants {
           .withServiceDates(envBuilder.defaultServiceDate())
           .addStop(STOP_A, "0:00:10", "0:00:11")
           .addStop(STOP_B, "0:00:20", "0:00:21")
-          .build()
       )
       .build();
     var rt = GtfsRtTestHelper.of(env);

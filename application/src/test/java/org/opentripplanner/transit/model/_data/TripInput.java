@@ -4,10 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -18,90 +20,124 @@ import org.opentripplanner.utils.time.TimeUtils;
  * A simple data structure that is used by the {@link TransitTestEnvironment} to create
  * trips, trips on date and patterns.
  */
-public record TripInput(
-  String id,
-  List<StopCall> stops,
-  // Null means that the default route will be used
-  @Nullable Route route,
-  // Null means that the default service date will be used
-  @Nullable List<LocalDate> serviceDates,
-  @Nullable I18NString headsign,
-  @Nullable String tripOnServiceDateId
-) {
-  public static TripInputBuilder of(String id) {
-    return new TripInputBuilder(id);
+public class TripInput {
+
+  private final String id;
+  private final List<StopCall> stops = new ArrayList<>();
+
+  // Null means use the default route
+  @Nullable
+  private Route route;
+
+  // Null means use default service date
+  @Nullable
+  private List<LocalDate> serviceDates = null;
+
+  @Nullable
+  private I18NString headsign;
+
+  @Nullable
+  private String tripOnServiceDateId;
+
+  private final boolean isFlex;
+
+  private TripInput(String id, boolean isFlex) {
+    this.id = id;
+    this.isFlex = isFlex;
+  }
+
+  public static TripInput of(String id) {
+    return new TripInput(id, false);
+  }
+
+  public static TripInput flex(String id) {
+    return new TripInput(id, true);
+  }
+
+  public String id() {
+    return id;
+  }
+
+  public List<StopTime> stopTimes(Trip trip) {
+    return IntStream.range(0, stops.size())
+      .mapToObj(i -> stops.get(i).toStopTime(trip, i))
+      .toList();
   }
 
   public List<StopLocation> stopLocations() {
-    return stops().stream().map(TripInput.StopCall::stop).toList();
+    return stops.stream().map(StopCall::stopLocation).toList();
   }
 
-  public static class TripInputBuilder {
-
-    private final String id;
-    private final List<StopCall> stops = new ArrayList<>();
-
-    @Nullable
-    private Route route;
-
-    @Nullable
-    private List<LocalDate> serviceDates = null;
-
-    @Nullable
-    private I18NString headsign;
-
-    @Nullable
-    private String tripOnServiceDateId;
-
-    TripInputBuilder(String id) {
-      this.id = id;
-    }
-
-    public TripInputBuilder addStop(RegularStop stopId, String arrivalTime, String departureTime) {
-      this.stops.add(
-          new StopCall(
-            stopId,
-            stops.size(),
-            TimeUtils.time(arrivalTime),
-            TimeUtils.time(departureTime)
-          )
-        );
-      return this;
-    }
-
-    public TripInputBuilder addStop(RegularStop stopId, String arrivalAndDeparture) {
-      return addStop(stopId, arrivalAndDeparture, arrivalAndDeparture);
-    }
-
-    public TripInput build() {
-      return new TripInput(id, stops, route, serviceDates, headsign, tripOnServiceDateId);
-    }
-
-    public TripInputBuilder withRoute(Route route) {
-      this.route = route;
-      return this;
-    }
-
-    public TripInputBuilder withHeadsign(I18NString headsign) {
-      this.headsign = headsign;
-      return this;
-    }
-
-    public TripInputBuilder withServiceDates(LocalDate... serviceDates) {
-      var list = Arrays.stream(serviceDates).toList();
-      ListUtils.requireAtLeastNElements(list, 1);
-      this.serviceDates = list;
-      return this;
-    }
-
-    public TripInputBuilder withWithTripOnServiceDate(String tripOnServiceDateId) {
-      this.tripOnServiceDateId = tripOnServiceDateId;
-      return this;
-    }
+  @Nullable
+  public I18NString headsign() {
+    return headsign;
   }
 
-  record StopCall(StopLocation stop, int stopSequence, int arrivalTime, int departureTime) {
-    public StopTime toStopTime(Trip trip) {
+  @Nullable
+  public List<LocalDate> serviceDates() {
+    return serviceDates;
+  }
+
+  @Nullable
+  public Route route() {
+    return route;
+  }
+
+  @Nullable
+  public String tripOnServiceDateId() {
+    return tripOnServiceDateId;
+  }
+
+  public boolean isFlex() {
+    return isFlex;
+  }
+
+  public TripInput addStop(RegularStop stop, String arrivalTime, String departureTime) {
+    stops.add(
+      new RegularStopCall(stop, TimeUtils.time(arrivalTime), TimeUtils.time(departureTime))
+    );
+    return this;
+  }
+
+  public TripInput addStop(RegularStop stopId, String arrivalAndDeparture) {
+    return addStop(stopId, arrivalAndDeparture, arrivalAndDeparture);
+  }
+
+  public TripInput addStop(AreaStop stop, String windowStart, String windowEnd) {
+    stops.add(new FlexStopCall(stop, TimeUtils.time(windowStart), TimeUtils.time(windowEnd)));
+    return this;
+  }
+
+  public TripInput withRoute(Route route) {
+    this.route = route;
+    return this;
+  }
+
+  public TripInput withHeadsign(I18NString headsign) {
+    this.headsign = headsign;
+    return this;
+  }
+
+  public TripInput withServiceDates(LocalDate... serviceDates) {
+    var list = Arrays.stream(serviceDates).toList();
+    ListUtils.requireAtLeastNElements(list, 1);
+    this.serviceDates = list;
+    return this;
+  }
+
+  public TripInput withWithTripOnServiceDate(String tripOnServiceDateId) {
+    this.tripOnServiceDateId = tripOnServiceDateId;
+    return this;
+  }
+
+  private interface StopCall {
+    StopTime toStopTime(Trip trip, int stopSequence);
+    StopLocation stopLocation();
+  }
+
+  private record RegularStopCall(RegularStop stop, int arrivalTime, int departureTime)
+    implements StopCall {
+    public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
       st.setTrip(trip);
       st.setStopSequence(stopSequence);
@@ -109,6 +145,24 @@ public record TripInput(
       st.setArrivalTime(arrivalTime);
       st.setDepartureTime(departureTime);
       return st;
+    }
+    public StopLocation stopLocation() {
+      return stop;
+    }
+  }
+
+  private record FlexStopCall(AreaStop stop, int windowStart, int windowEnd) implements StopCall {
+    public StopTime toStopTime(Trip trip, int stopSequence) {
+      var st = new StopTime();
+      st.setTrip(trip);
+      st.setStopSequence(stopSequence);
+      st.setStop(stop);
+      st.setFlexWindowStart(windowStart);
+      st.setFlexWindowEnd(windowEnd);
+      return st;
+    }
+    public StopLocation stopLocation() {
+      return stop;
     }
   }
 }

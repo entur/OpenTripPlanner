@@ -38,7 +38,6 @@ class AddedOnServiceDateTest implements RealtimeTestConstants {
         .addStop(STOP_A, "12:00")
         .addStop(STOP_B, "12:10")
         .addStop(STOP_C, "12:20")
-        .build()
     )
     .build();
   private final GtfsRtTestHelper rt = GtfsRtTestHelper.of(env);

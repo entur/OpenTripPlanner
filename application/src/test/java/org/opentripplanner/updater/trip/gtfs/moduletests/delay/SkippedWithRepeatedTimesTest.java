@@ -26,8 +26,7 @@ class SkippedWithRepeatedTimesTest implements RealtimeTestConstants {
   private final TripInput TRIP_INPUT = TripInput.of(TRIP_1_ID)
     .addStop(STOP_A, "10:00:00", "10:01:00")
     .addStop(STOP_B, "10:01:00", "10:01:00")
-    .addStop(STOP_C, "10:01:00", "10:02:00")
-    .build();
+    .addStop(STOP_C, "10:01:00", "10:02:00");
 
   @Test
   void skippedWithRepeatedTimes() {

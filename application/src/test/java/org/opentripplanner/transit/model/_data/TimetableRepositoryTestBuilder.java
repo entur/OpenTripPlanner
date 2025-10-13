@@ -12,7 +12,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.calendar.CalendarServiceData;
@@ -195,6 +194,14 @@ public class TimetableRepositoryTestBuilder {
     }
     var trip = tripBuilder.build();
 
+    var stopPattern = stopPattern(tripInput.stopLocations());
+    var tripPattern = getOrCreateTripPattern(stopPattern, route);
+
+    var stopTimes = tripInput.stopTimes(trip);
+    var tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, null);
+
+    addTripTimesToPattern(tripPattern, tripTimes);
+
     if (tripInput.tripOnServiceDateId() != null) {
       if (serviceDates.size() != 1) {
         throw new IllegalArgumentException(
@@ -204,33 +211,13 @@ public class TimetableRepositoryTestBuilder {
       addTripOnServiceDate(trip, serviceDates.getFirst(), tripInput.tripOnServiceDateId());
     }
 
-    var stopPattern = stopPattern(tripInput.stopLocations());
-    var tripPattern = getOrCreateTripPattern(stopPattern, route);
-
-    var tripTimes = tripTimes(tripInput.stops(), trip);
-    addTripTimesToPattern(tripPattern, tripTimes);
-
-    return trip;
-  }
-
-  public Trip flexTrip(FlexTripInput tripInput) {
-    var serviceId = getOrCreateServiceId(List.of(defaultServiceDate));
-    var route = defaultRoute;
-    final var trip = Trip.of(id(tripInput.id()))
-      .withRoute(route)
-      .withHeadsign(I18NString.of("Headsign of %s".formatted(tripInput.id())))
-      .withServiceId(serviceId)
-      .build();
-
-    var stopTimes = tripInput.stops().stream().map(s -> s.toStopTime(trip)).toList();
-    var tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, null);
-
-    var stopPattern = stopPattern(tripInput.stopLocations());
-    var tripPattern = getOrCreateTripPattern(stopPattern, route);
-    addTripTimesToPattern(tripPattern, tripTimes);
-
-    var flexTrip = UnscheduledTrip.of(trip.getId()).withTrip(trip).withStopTimes(stopTimes).build();
-    flexTrips.add(flexTrip);
+    if (tripInput.isFlex()) {
+      var flexTrip = UnscheduledTrip.of(trip.getId())
+        .withTrip(trip)
+        .withStopTimes(stopTimes)
+        .build();
+      flexTrips.add(flexTrip);
+    }
 
     return trip;
   }
@@ -241,11 +228,6 @@ public class TimetableRepositoryTestBuilder {
   ) {
     scheduledStopPointMapping.putAll(Map.of(scheduledStopPointId, stop));
     return this;
-  }
-
-  private TripTimes tripTimes(List<TripInput.StopCall> stops, Trip trip) {
-    var stopTimes = stops.stream().map(s -> s.toStopTime(trip)).toList();
-    return TripTimesFactory.tripTimes(trip, stopTimes, null);
   }
 
   private void addTripTimesToPattern(TripPattern tripPattern, TripTimes tripTimes) {

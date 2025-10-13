@@ -13,7 +13,6 @@ import org.opentripplanner.apis.gtfs.model.CallScheduledTime.ArrivalDepartureTim
 import org.opentripplanner.apis.gtfs.model.CallScheduledTime.TimeWindow;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.model.TripTimeOnDate;
-import org.opentripplanner.transit.model._data.FlexTripInput;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
@@ -44,13 +43,11 @@ class StopCallImplTest {
   private final TripInput TRIP_INPUT = TripInput.of(TRIP_ID)
     .addStop(STOP_A, "12:00:00", "12:00:00")
     .addStop(STOP_B, "12:30:00", "12:30:00")
-    .addStop(STOP_C, "13:00:00", "13:00:00")
-    .build();
+    .addStop(STOP_C, "13:00:00", "13:00:00");
 
-  private final FlexTripInput FLEX_TRIP_INPUT = FlexTripInput.of(FLEX_TRIP_ID)
+  private final TripInput FLEX_TRIP_INPUT = TripInput.flex(FLEX_TRIP_ID)
     .addStop(STOP_D, "10:00", "10:30")
-    .addStop(STOP_E, "11:00", "11:30")
-    .build();
+    .addStop(STOP_E, "11:00", "11:30");
 
   @Test
   void fixedTrip() throws Exception {
@@ -75,7 +72,7 @@ class StopCallImplTest {
   @Test
   void flexTrip() {
     OTPFeature.FlexRouting.testOn(() -> {
-      var realtimeEnv = envBuilder.addFlexTrip(FLEX_TRIP_INPUT).build();
+      var realtimeEnv = envBuilder.addTrip(FLEX_TRIP_INPUT).build();
       var tripData = realtimeEnv.tripData(FLEX_TRIP_ID);
       var tripTimes = tripData.tripTimes();
       var pattern = tripData.tripPattern();

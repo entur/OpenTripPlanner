@@ -22,8 +22,7 @@ class CancelledStopTest implements RealtimeTestConstants {
     .withWithTripOnServiceDate(TRIP_1_ID)
     .addStop(STOP_A, "0:01:00", "0:01:01")
     .addStop(STOP_B, "0:01:10", "0:01:11")
-    .addStop(STOP_D, "0:01:20", "0:01:21")
-    .build();
+    .addStop(STOP_D, "0:01:20", "0:01:21");
 
   @Test
   void testCancelStop() {
