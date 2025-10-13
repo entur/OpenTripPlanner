@@ -18,12 +18,10 @@ export function ItineraryCompareDialog({
   tripQueryResult: TripQuery | null;
   selectedIndexes: number[];
 }) {
-  // const { containerRef, containerWidth } = useContainerWidth();
   const timeZone = useContext(TimeZoneContext);
   const [selectedLeg1Ids, setSelectedLeg1Ids] = useState<string[]>([]);
   const [selectedLeg2Ids, setSelectedLeg2Ids] = useState<string[]>([]);
 
-  // All selected leg IDs for the comparison table
   const selectedLegIds = [...selectedLeg1Ids, ...selectedLeg2Ids];
 
   if (!tripQueryResult || selectedIndexes.length !== 2) {
@@ -37,7 +35,7 @@ export function ItineraryCompareDialog({
   const summary2 = getItinerarySummary(itinerary2, timeZone);
 
   return (
-    <Modal show={show} onHide={onHide} size="xl" centered>
+    <Modal show={show} onHide={onHide} centered className="full-width-modal">
       <Modal.Header closeButton>
         <Modal.Title>Compare Itineraries</Modal.Title>
       </Modal.Header>
