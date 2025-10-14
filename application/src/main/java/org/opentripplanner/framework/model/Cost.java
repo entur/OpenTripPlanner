@@ -100,6 +100,16 @@ public final class Cost implements Serializable, Comparable<Cost> {
     return this.value <= other.value;
   }
 
+  /**
+   * This method round the cost to the nearest second, dropping any centi-seconds.
+   */
+  public Cost normalize() {
+    if (value % CENTI_FACTOR == 0) {
+      return this;
+    }
+    return Cost.costOfSeconds(toSeconds());
+  }
+
   @Override
   public String toString() {
     return OtpNumberFormat.formatCostCenti(value);

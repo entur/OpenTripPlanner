@@ -3,6 +3,7 @@ package org.opentripplanner.framework.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.framework.model.Cost.ONE_HOUR_WITH_TRANSIT;
 
@@ -117,6 +118,16 @@ class CostTest {
     assertFalse(subject.lessOrEq(smaller));
     assertTrue(subject.lessOrEq(same));
     assertTrue(subject.lessOrEq(bigger));
+  }
+
+  @Test
+  void test() {
+    Cost c2 = Cost.costOfSeconds(2);
+
+    assertSame(c2, c2.normalize());
+    assertEquals(c2, Cost.costOfCentiSeconds(150).normalize());
+    assertEquals(c2, Cost.costOfCentiSeconds(200).normalize());
+    assertEquals(c2, Cost.costOfCentiSeconds(249).normalize());
   }
 
   @Test
