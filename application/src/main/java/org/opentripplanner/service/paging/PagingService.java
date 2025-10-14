@@ -73,7 +73,7 @@ public class PagingService {
       return null;
     }
 
-    if (itinerariesSortOrder.isSortedByAscendingArrivalTime()) {
+    if (itinerariesSortOrder.isSortedForDepartAfterSearch()) {
       return TripSearchMetadata.createForDepartAfter(
         earliestDepartureTime,
         raptorSearchWindowUsed,
@@ -154,7 +154,7 @@ public class PagingService {
    */
   private boolean doCropSearchWindowAtTail() {
     if (pageCursor == null) {
-      return itinerariesSortOrder.isSortedByAscendingArrivalTime();
+      return itinerariesSortOrder.isSortedForDepartAfterSearch();
     }
     return pageCursor.type().isNext();
   }

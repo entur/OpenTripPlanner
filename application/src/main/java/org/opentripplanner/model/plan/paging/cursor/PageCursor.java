@@ -60,7 +60,7 @@ public record PageCursor(
    */
   public ListSection cropItinerariesAt() {
     // Depart after search
-    if (originalSortOrder().isSortedByAscendingArrivalTime()) {
+    if (originalSortOrder().isSortedForDepartAfterSearch()) {
       return switch (type) {
         case NEXT_PAGE -> ListSection.TAIL;
         case PREVIOUS_PAGE -> ListSection.HEAD;
