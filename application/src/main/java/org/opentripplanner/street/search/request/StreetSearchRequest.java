@@ -50,6 +50,8 @@ public class StreetSearchRequest implements AStarRequest {
   private final double turnReluctance;
   private final RentalRequest rental;
   private final WalkRequest walk;
+  private final BikeRequest bike;
+  private final ScooterRequest scooter;
 
   private IntersectionTraversalCalculator intersectionTraversalCalculator =
     IntersectionTraversalCalculator.DEFAULT;
@@ -72,6 +74,8 @@ public class StreetSearchRequest implements AStarRequest {
     this.turnReluctance = 1.0;
     this.rental = null;
     this.walk = WalkRequest.DEFAULT;
+    this.bike = BikeRequest.DEFAULT;
+    this.scooter = ScooterRequest.DEFAULT;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -87,6 +91,8 @@ public class StreetSearchRequest implements AStarRequest {
     this.turnReluctance = builder.turnReluctance;
     this.rental = builder.rental;
     this.walk = builder.walk;
+    this.bike = builder.bike;
+    this.scooter = builder.scooter;
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -184,18 +190,18 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   public WalkRequest walk() {
-    return null;
+    return walk;
   }
 
-  public BicycleRequest bike() {
-    return null;
+  public BikeRequest bike() {
+    return bike;
   }
 
   public CarRequest car() {
     return null;
   }
 
-  public BicycleRequest scooter() {
+  public BikeRequest scooter() {
     return null;
   }
 
@@ -233,7 +239,7 @@ public class StreetSearchRequest implements AStarRequest {
     return null;
   }
 
-  public ParkingRequest parking(TraverseMode traverseMode) {
+  public VehicleParkingRequest parking(TraverseMode traverseMode) {
     return switch (traverseMode) {
       case BICYCLE -> bike().parking();
       case SCOOTER -> scooter().parking();

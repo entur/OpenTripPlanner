@@ -1,6 +1,7 @@
 package org.opentripplanner.street.search.request;
 
 import java.time.Instant;
+import java.util.function.Consumer;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
 
@@ -15,8 +16,11 @@ public class StreetSearchRequestBuilder {
   boolean geoidElevation;
   double turnReluctance;
   WalkRequest walk;
+  BikeRequest bike;
   RentalRequest rental;
   WheelchairRequest wheelchairRequest;
+  CarRequest car;
+  ScooterRequest scooter;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
     this.startTime = original.startTime();
@@ -85,6 +89,26 @@ public class StreetSearchRequestBuilder {
 
   public StreetSearchRequestBuilder withWalk(WalkRequest request) {
     this.walk = request;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withWalk(Consumer<WalkRequest.Builder> body) {
+    this.walk = this.walk.copyOf().apply(body).build();
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withBike(Consumer<BikeRequest.Builder> body) {
+    this.bike = this.bike.copyOf().apply(body).build();
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withCar(Consumer<CarRequest.Builder> body) {
+    this.car = this.car.copyOf().apply(body).build();
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withScooter(Consumer<ScooterRequest.Builder> body) {
+    this.scooter = this.scooter.copyOf().apply(body).build();
     return this;
   }
 

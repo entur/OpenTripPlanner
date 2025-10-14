@@ -13,7 +13,7 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.preference.BikePreferences;
 import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
-import org.opentripplanner.street.search.request.BicycleRequest;
+import org.opentripplanner.street.search.request.BikeRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestMapper;
 import org.opentripplanner.street.search.request.WalkRequest;
@@ -113,7 +113,7 @@ public class RaptorRequestTransferCache {
     private final StreetMode transferMode;
     private final boolean wheelchair;
     private final WalkRequest walk;
-    private final BicycleRequest bike;
+    private final BikeRequest bike;
     private final WheelchairRequest wheelchairPreferences;
     private final double turnReluctance;
 
@@ -122,7 +122,7 @@ public class RaptorRequestTransferCache {
       this.wheelchair = request.wheelchairEnabled();
 
       this.walk = request.walk();
-      this.bike = transferMode.includesBiking() ? request.bike() : BicycleRequest.DEFAULT;
+      this.bike = transferMode.includesBiking() ? request.bike() : BikeRequest.DEFAULT;
       this.turnReluctance = request.turnReluctance();
       this.wheelchairPreferences = request.wheelchairEnabled()
         ? request.wheelchair()

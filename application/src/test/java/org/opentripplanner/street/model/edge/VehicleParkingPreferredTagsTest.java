@@ -80,13 +80,11 @@ class VehicleParkingPreferredTagsTest {
     var req = StreetSearchRequest.of();
     req.withMode(StreetMode.BIKE_TO_PARK);
     req.withArriveBy(arriveBy);
-    req.withPreferences(p ->
-      p.withBike(bike -> {
-        bike.withParking(parkingPreferences -> {
-          parkingPreferences.withUnpreferredVehicleParkingTagCost(EXTRA_COST);
-          parkingPreferences.withPreferredVehicleParkingTags(preferredTags);
-          parkingPreferences.withCost(0);
-        });
+    req.withBike(p ->
+      p.withParking(parkingPreferences -> {
+        parkingPreferences.withUnpreferredVehicleParkingTagCost(EXTRA_COST);
+        parkingPreferences.withPreferredVehicleParkingTags(preferredTags);
+        parkingPreferences.withCost(0);
       })
     );
 

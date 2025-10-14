@@ -15,7 +15,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.WalkRequest;
@@ -191,9 +190,11 @@ class PathwayEdgeTest {
   }
 
   private State assertThatEdgeIsTraversable(PathwayEdge edge, boolean wheelchair) {
-    var req = StreetSearchRequest.of().withWheelchair(wheelchair).
-      withWalk(WalkRequest.of().withSpeed(10).build())
-      .withMode(StreetMode.WALK).withWheelchairRequest(
+    var req = StreetSearchRequest.of()
+      .withWheelchair(wheelchair)
+      .withWalk(WalkRequest.of().withSpeed(10).build())
+      .withMode(StreetMode.WALK)
+      .withWheelchairRequest(
         WheelchairRequest.of()
           .withStopOnlyAccessible()
           .withElevatorOnlyAccessible()
@@ -202,7 +203,7 @@ class PathwayEdgeTest {
           .withSlopeExceededReluctance(1)
           .withStairsReluctance(25)
           .build()
-    );
+      );
 
     var afterTraversal = edge.traverse(new State(from, req.build()))[0];
     assertNotNull(afterTraversal);

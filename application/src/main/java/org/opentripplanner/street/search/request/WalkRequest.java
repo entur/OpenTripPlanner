@@ -1,92 +1,202 @@
 package org.opentripplanner.street.search.request;
 
-import java.time.Duration;
-import org.opentripplanner.framework.model.Cost;
+import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
+import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
-public class WalkRequest {
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.function.Consumer;
+import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.framework.model.Units;
+import org.opentripplanner.routing.api.request.preference.TransferPreferences;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
+
+/**
+ * The walk preferences contain all speed, reluctance, cost and factor preferences for walking
+ * related to street and transit routing. The values are normalized(rounded) so the class
+ * can used as a cache key.
+ * <p>
+ * See the configuration for documentation of each field.
+ * <p>
+ * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
+ */
+public final class WalkRequest implements Serializable {
 
   public static final WalkRequest DEFAULT = new WalkRequest();
+
   private final double speed;
   private final double reluctance;
+  private final Cost boardCost;
+  private final double stairsReluctance;
   private final double stairsTimeFactor;
   private final double safetyFactor;
-  private final Cost mountDismountCost;
-  private final Duration mountDismountTime;
-  private final double stairsReluctance;
+
   private final EscalatorRequest escalator;
 
+  private WalkRequest() {
+    this.speed = 1.33;
+    this.reluctance = 2.0;
+    this.boardCost = Cost.costOfMinutes(10);
+    this.stairsReluctance = 2.0;
+    this.stairsTimeFactor = 3.0;
+    this.safetyFactor = 1.0;
+    this.escalator = EscalatorRequest.DEFAULT;
+  }
+
   private WalkRequest(Builder builder) {
-    this.speed = builder.speed;
-    this.reluctance = builder.reluctance;
-    this.stairsTimeFactor = builder.stairsTimeFactor;
-    this.safetyFactor = builder.safetyFactor;
-    this.mountDismountCost = builder.mountDismountCost;
-    this.mountDismountTime = builder.mountDismountTime;
-    this.stairsReluctance = builder.stairsReluctance;
+    this.speed = Units.speed(builder.speed);
+    this.reluctance = Units.reluctance(builder.reluctance);
+    this.boardCost = builder.boardCost;
+    this.stairsReluctance = Units.reluctance(builder.stairsReluctance);
+    this.stairsTimeFactor = Units.reluctance(builder.stairsTimeFactor);
+    this.safetyFactor = Units.reluctance(builder.safetyFactor);
     this.escalator = builder.escalator;
   }
 
-  public WalkRequest() {
-    speed = 0;
-    reluctance = 0;
-    stairsTimeFactor = 0;
-    safetyFactor = 0;
-    mountDismountCost = null;
-    mountDismountTime = null;
-    stairsReluctance = 0;
-    escalator = null;
-  }
-
   public static Builder of() {
-    return new Builder();
+    return new Builder(DEFAULT);
   }
 
+  public Builder copyOf() {
+    return new Builder(this);
+  }
+
+  /**
+   * Human walk speed along streets, in meters per second.
+   * <p>
+   * Default: 1.33 m/s ~ 3mph, <a href="http://en.wikipedia.org/wiki/Walking">avg. human walk
+   * speed</a>
+   */
   public double speed() {
     return speed;
   }
 
+  /**
+   * A multiplier for how bad walking is, compared to being in transit for equal
+   * lengths of time. Empirically, values between 2 and 4 seem to correspond
+   * well to the concept of not wanting to walk too much without asking for
+   * totally ridiculous itineraries, but this observation should in no way be
+   * taken as scientific or definitive. Your mileage may vary. See
+   * https://github.com/opentripplanner/OpenTripPlanner/issues/4090 for impact on
+   * performance with high values. Default value: 2.0
+   */
   public double reluctance() {
     return reluctance;
+  }
+
+  /**
+   * This prevents unnecessary transfers by adding a cost for boarding a vehicle. This is in
+   * addition to the cost of the transfer(walking) and waiting-time. It is also in addition to the
+   * {@link TransferPreferences#cost()}.
+   */
+  public int boardCost() {
+    return boardCost.toSeconds();
+  }
+
+  /**
+   * Used on top of {@link #reluctance()} for stairs. If the value is set to 1, walking on stairs is
+   * treated the same as walking on flat ground.
+   */
+  public double stairsReluctance() {
+    return stairsReluctance;
   }
 
   public double stairsTimeFactor() {
     return stairsTimeFactor;
   }
 
+  /**
+   * Factor for how much the walk safety is considered in routing. Value should be between 0 and 1.
+   * If the value is set to be 0, safety is ignored.
+   */
   public double safetyFactor() {
     return safetyFactor;
-  }
-
-  public Cost mountDismountCost() {
-    return mountDismountCost;
-  }
-
-  public Duration mountDismountTime() {
-    return mountDismountTime;
-  }
-
-  public double stairsReluctance() {
-    return stairsReluctance;
   }
 
   public EscalatorRequest escalator() {
     return escalator;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    WalkRequest that = (WalkRequest) o;
+    return (
+      doubleEquals(that.speed, speed) &&
+      doubleEquals(that.reluctance, reluctance) &&
+      boardCost.equals(that.boardCost) &&
+      doubleEquals(that.stairsReluctance, stairsReluctance) &&
+      doubleEquals(that.stairsTimeFactor, stairsTimeFactor) &&
+      doubleEquals(that.safetyFactor, safetyFactor) &&
+      escalator.equals(that.escalator)
+    );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+      speed,
+      reluctance,
+      boardCost,
+      stairsReluctance,
+      stairsTimeFactor,
+      safetyFactor,
+      escalator
+    );
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.of(WalkRequest.class)
+      .addNum("speed", speed, DEFAULT.speed)
+      .addNum("reluctance", reluctance, DEFAULT.reluctance)
+      .addObj("boardCost", boardCost, DEFAULT.boardCost)
+      .addNum("stairsReluctance", stairsReluctance, DEFAULT.stairsReluctance)
+      .addNum("stairsTimeFactor", stairsTimeFactor, DEFAULT.stairsTimeFactor)
+      .addNum("safetyFactor", safetyFactor, DEFAULT.safetyFactor)
+      .addObj("escalator", escalator, DEFAULT.escalator)
+      .toString();
+  }
+
   public static class Builder {
 
-    private double speed = 1;
-    private double reluctance = 1;
-    private double stairsTimeFactor = 1;
-    private double safetyFactor = 1;
-    private Cost mountDismountCost = Cost.costOfSeconds(120);
-    private Duration mountDismountTime = Duration.ofSeconds(10);
-    private double stairsReluctance = 0;
-    private EscalatorRequest escalator = null;
+    private final WalkRequest original;
+    private double speed;
+    private double reluctance;
+    private Cost boardCost;
+    private double stairsReluctance;
+    private double stairsTimeFactor;
+    private double safetyFactor;
+
+    private EscalatorRequest escalator;
+
+    public Builder(WalkRequest original) {
+      this.original = original;
+      this.speed = original.speed;
+      this.reluctance = original.reluctance;
+      this.boardCost = original.boardCost;
+      this.stairsReluctance = original.stairsReluctance;
+      this.stairsTimeFactor = original.stairsTimeFactor;
+      this.safetyFactor = original.safetyFactor;
+      this.escalator = original.escalator;
+    }
+
+    public WalkRequest original() {
+      return original;
+    }
+
+    public double speed() {
+      return speed;
+    }
 
     public Builder withSpeed(double speed) {
       this.speed = speed;
       return this;
+    }
+
+    public double reluctance() {
+      return reluctance;
     }
 
     public Builder withReluctance(double reluctance) {
@@ -94,24 +204,17 @@ public class WalkRequest {
       return this;
     }
 
-    public Builder withStairsTimeFactor(double stairsTimeFactor) {
-      this.stairsTimeFactor = stairsTimeFactor;
+    public Cost boardCost() {
+      return boardCost;
+    }
+
+    public Builder withBoardCost(int boardCost) {
+      this.boardCost = Cost.costOfSeconds(boardCost);
       return this;
     }
 
-    public Builder withSafetyFactor(double safetyFactor) {
-      this.safetyFactor = safetyFactor;
-      return this;
-    }
-
-    public Builder withMountDismountCost(Cost mountDismountCost) {
-      this.mountDismountCost = mountDismountCost;
-      return this;
-    }
-
-    public Builder withMountDismountTime(Duration mountDismountTime) {
-      this.mountDismountTime = mountDismountTime;
-      return this;
+    public double stairsReluctance() {
+      return stairsReluctance;
     }
 
     public Builder withStairsReluctance(double stairsReluctance) {
@@ -119,13 +222,51 @@ public class WalkRequest {
       return this;
     }
 
-    public Builder withEscalator(EscalatorRequest escalator) {
-      this.escalator = escalator;
+    public double stairsTimeFactor() {
+      return stairsTimeFactor;
+    }
+
+    public Builder withStairsTimeFactor(double stairsTimeFactor) {
+      this.stairsTimeFactor = stairsTimeFactor;
+      return this;
+    }
+
+    public double safetyFactor() {
+      return safetyFactor;
+    }
+
+    public Builder withSafetyFactor(double safetyFactor) {
+      if (safetyFactor < 0) {
+        this.safetyFactor = 0;
+      } else if (safetyFactor > 1) {
+        this.safetyFactor = 1;
+      } else {
+        this.safetyFactor = safetyFactor;
+      }
+      return this;
+    }
+
+    public EscalatorRequest escalator() {
+      return escalator;
+    }
+
+    public Builder withEscalator(Consumer<EscalatorRequest.Builder> body) {
+      this.escalator = ifNotNull(this.escalator, original.escalator).copyOf().apply(body).build();
+      return this;
+    }
+    public Builder withEscalator(EscalatorRequest req) {
+      this.escalator = req;
+      return this;
+    }
+
+    public Builder apply(Consumer<Builder> body) {
+      body.accept(this);
       return this;
     }
 
     public WalkRequest build() {
-      return new WalkRequest(this);
+      var newObj = new WalkRequest(this);
+      return original.equals(newObj) ? original : newObj;
     }
   }
 }

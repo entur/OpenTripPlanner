@@ -3,6 +3,7 @@ package org.opentripplanner.street.model.edge;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.request.VehicleWalkingRequest;
 import org.opentripplanner.street.search.request.WalkRequest;
 
 class StreetEdgeReluctanceCalculator {
@@ -37,7 +38,10 @@ class StreetEdgeReluctanceCalculator {
     return req.reluctance() * (edgeIsStairs ? req.stairsReluctance() : 1);
   }
 
-  private static double computeBikeWalkingReluctance(WalkRequest pref, boolean edgeIsStairs) {
+  private static double computeBikeWalkingReluctance(
+    VehicleWalkingRequest pref,
+    boolean edgeIsStairs
+  ) {
     return pref.reluctance() * (edgeIsStairs ? pref.stairsReluctance() : 1);
   }
 
