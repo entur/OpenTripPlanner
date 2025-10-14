@@ -15,7 +15,7 @@ import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.test.support.GeoJsonIo;
 
 /**
- * Ensures that visibility edges can be created to connect two exits at opposite sides of platform,
+ * Ensures that visibility edges can be created to connect two exits at opposite sides of a platform.
  * Walkable area builder occasionally failed in that because of numerical accuracy problems.
  * <p>
  * This test duplicates the area routing errors detected in Bletchley station https://www.openstreetmap.org/relation/19170549.
@@ -27,10 +27,10 @@ class BoundaryTest {
 
   @Test
   void connectExits() {
-    var northWest = node(0, new WgsCoordinate(-0.7360985, 51.9962091)); // visi?
+    var northWest = node(0, new WgsCoordinate(-0.7360985, 51.9962091));
     var northEast = node(1, new WgsCoordinate(-0.7360355, 51.9962165));
-    var eastExit = node(2, new WgsCoordinate(-0.7357519, 51.9953057)); // visi?
-    var southEast = node(3, new WgsCoordinate(-0.7356841, 51.9950911)); // visi?
+    var eastExit = node(2, new WgsCoordinate(-0.7357519, 51.9953057));
+    var southEast = node(3, new WgsCoordinate(-0.7356841, 51.9950911));
     var southWest = node(4, new WgsCoordinate(-0.7357458, 51.9950836));
     var westExit = node(5, new WgsCoordinate(-0.7357735232317726, 51.995172067528664));
 
@@ -60,6 +60,7 @@ class BoundaryTest {
 
     var aEdges = graph.getEdgesOfType(AreaEdge.class);
     assertEquals(aEdges.getFirst().getArea().visibilityVertices().size(), 2);
+
     // platform is a loop of 7 points, which adds 6 area edge pairs
     // visibility edge connection adds one pair more
     assertEquals(
