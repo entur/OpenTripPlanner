@@ -271,12 +271,12 @@ public class TimetableRepository implements Serializable {
          * time zone from the first agency is used
          */
         throw new IllegalStateException(
-          ("The graph contains agencies with different time zones: %s != %s. " +
-            "Please configure the one to be used in the %s").formatted(
-              timeZone,
-              agency.getTimezone(),
-              BUILD_CONFIG_FILENAME
-            )
+          String.format(
+            "The graph contains agencies with different time zones: %s != %s. Please configure the one to be used in the %s",
+            timeZone,
+            agency.getTimezone(),
+            BUILD_CONFIG_FILENAME
+          )
         );
       }
     }
