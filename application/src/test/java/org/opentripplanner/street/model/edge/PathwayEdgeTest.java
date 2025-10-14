@@ -18,6 +18,8 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.request.WalkRequest;
+import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.transit.model.site.PathwayMode;
 
@@ -189,22 +191,17 @@ class PathwayEdgeTest {
   }
 
   private State assertThatEdgeIsTraversable(PathwayEdge edge, boolean wheelchair) {
-    var req = StreetSearchRequest.of().withWheelchair(wheelchair).withMode(StreetMode.WALK);
-
-    req.withPreferences(preferences ->
-      preferences
-        .withWalk(builder -> builder.withSpeed(10))
-        .withWheelchair(
-          WheelchairPreferences.of()
-            .withTripOnlyAccessible()
-            .withStopOnlyAccessible()
-            .withElevatorOnlyAccessible()
-            .withInaccessibleStreetReluctance(25)
-            .withMaxSlope(0.08)
-            .withSlopeExceededReluctance(1)
-            .withStairsReluctance(25)
-            .build()
-        )
+    var req = StreetSearchRequest.of().withWheelchair(wheelchair).
+      withWalk(WalkRequest.of().withSpeed(10).build())
+      .withMode(StreetMode.WALK).withWheelchairRequest(
+        WheelchairRequest.of()
+          .withStopOnlyAccessible()
+          .withElevatorOnlyAccessible()
+          .withInaccessibleStreetReluctance(25)
+          .withMaxSlope(0.08)
+          .withSlopeExceededReluctance(1)
+          .withStairsReluctance(25)
+          .build()
     );
 
     var afterTraversal = edge.traverse(new State(from, req.build()))[0];

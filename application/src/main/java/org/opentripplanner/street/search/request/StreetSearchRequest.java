@@ -49,6 +49,7 @@ public class StreetSearchRequest implements AStarRequest {
 
   private final double turnReluctance;
   private final RentalRequest rental;
+  private final WalkRequest walk;
 
   private IntersectionTraversalCalculator intersectionTraversalCalculator =
     IntersectionTraversalCalculator.DEFAULT;
@@ -70,6 +71,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.geoidElevation = false;
     this.turnReluctance = 1.0;
     this.rental = null;
+    this.walk = WalkRequest.DEFAULT;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -84,6 +86,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.geoidElevation = builder.geoidElevation;
     this.turnReluctance = builder.turnReluctance;
     this.rental = builder.rental;
+    this.walk = builder.walk;
   }
 
   public static StreetSearchRequestBuilder of() {

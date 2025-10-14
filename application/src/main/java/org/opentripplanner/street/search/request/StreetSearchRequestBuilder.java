@@ -14,7 +14,9 @@ public class StreetSearchRequestBuilder {
   GenericLocation to;
   boolean geoidElevation;
   double turnReluctance;
-  public RentalRequest rental;
+  WalkRequest walk;
+  RentalRequest rental;
+  WheelchairRequest wheelchairRequest;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
     this.startTime = original.startTime();
@@ -47,6 +49,11 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
+  public StreetSearchRequestBuilder withWheelchairRequest(WheelchairRequest request) {
+    this.wheelchairRequest = request;
+    return this;
+  }
+
   public StreetSearchRequestBuilder withFrom(GenericLocation from) {
     this.from = from;
     return this;
@@ -73,7 +80,12 @@ public class StreetSearchRequestBuilder {
   }
 
   public StreetSearchRequestBuilder withUseRentalAvailability(boolean b) {
-    return null;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withWalk(WalkRequest request) {
+    this.walk = request;
+    return this;
   }
 
   Instant startTimeOrNow() {

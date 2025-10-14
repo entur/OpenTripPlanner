@@ -5,6 +5,7 @@ import org.opentripplanner.framework.model.Cost;
 
 public class WalkRequest {
 
+  public static final WalkRequest DEFAULT = new WalkRequest();
   private final double speed;
   private final double reluctance;
   private final double stairsTimeFactor;
@@ -23,6 +24,17 @@ public class WalkRequest {
     this.mountDismountTime = builder.mountDismountTime;
     this.stairsReluctance = builder.stairsReluctance;
     this.escalator = builder.escalator;
+  }
+
+  public WalkRequest() {
+    speed = 0;
+    reluctance = 0;
+    stairsTimeFactor = 0;
+    safetyFactor = 0;
+    mountDismountCost = null;
+    mountDismountTime = null;
+    stairsReluctance = 0;
+    escalator = null;
   }
 
   public static Builder of() {

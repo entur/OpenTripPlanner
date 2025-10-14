@@ -12,6 +12,9 @@ public class ModeSpecificRentalRequest {
   private final Duration dropOffTime;
   private final Set<String> allowedNetworks;
   private final Set<String> bannedNetworks;
+  private final boolean useAvailabilityInformation;
+  private final boolean allowArrivingInRentedVehicleAtDestination;
+  private final Cost arrivingInRentalVehicleAtDestinationCost;
 
   public ModeSpecificRentalRequest(
     Cost pickupCost,
@@ -27,14 +30,35 @@ public class ModeSpecificRentalRequest {
     this.dropOffTime = dropOffTime;
     this.allowedNetworks = allowedNetworks;
     this.bannedNetworks = bannedNetworks;
+    this.useAvailabilityInformation = false;
+    this.allowArrivingInRentedVehicleAtDestination = false;
+    this.arrivingInRentalVehicleAtDestinationCost = null;
+  }
+
+  private ModeSpecificRentalRequest(Builder builder) {
+    this.pickupCost = builder.pickupCost;
+    this.dropOffCost = builder.dropOffCost;
+    this.pickupTime = builder.pickupTime;
+    this.dropOffTime = builder.dropOffTime;
+    this.allowedNetworks = builder.allowedNetworks;
+    this.bannedNetworks = builder.bannedNetworks;
+    this.useAvailabilityInformation = builder.useAvailabilityInformation;
+    this.allowArrivingInRentedVehicleAtDestination =
+      builder.allowArrivingInRentedVehicleAtDestination;
+    this.arrivingInRentalVehicleAtDestinationCost =
+      builder.arrivingInRentalVehicleAtDestinationCost;
+  }
+
+  public static Builder of() {
+    return new Builder();
   }
 
   public boolean useAvailabilityInformation() {
-    return false;
+    return useAvailabilityInformation;
   }
 
   public boolean allowArrivingInRentedVehicleAtDestination() {
-    return false;
+    return allowArrivingInRentedVehicleAtDestination;
   }
 
   public Cost pickupCost() {
@@ -62,6 +86,72 @@ public class ModeSpecificRentalRequest {
   }
 
   public Cost arrivingInRentalVehicleAtDestinationCost() {
-    return null;
+    return arrivingInRentalVehicleAtDestinationCost;
+  }
+
+  public static class Builder {
+
+    private Cost pickupCost;
+    private Cost dropOffCost;
+    private Duration pickupTime;
+    private Duration dropOffTime;
+    private Set<String> allowedNetworks;
+    private Set<String> bannedNetworks;
+    private boolean useAvailabilityInformation = false;
+    private boolean allowArrivingInRentedVehicleAtDestination = false;
+    private Cost arrivingInRentalVehicleAtDestinationCost = null;
+
+    public Builder withPickupCost(Cost pickupCost) {
+      this.pickupCost = pickupCost;
+      return this;
+    }
+
+    public Builder withDropOffCost(Cost dropOffCost) {
+      this.dropOffCost = dropOffCost;
+      return this;
+    }
+
+    public Builder withPickupTime(Duration pickupTime) {
+      this.pickupTime = pickupTime;
+      return this;
+    }
+
+    public Builder withDropOffTime(Duration dropOffTime) {
+      this.dropOffTime = dropOffTime;
+      return this;
+    }
+
+    public Builder withAllowedNetworks(Set<String> allowedNetworks) {
+      this.allowedNetworks = allowedNetworks;
+      return this;
+    }
+
+    public Builder withBannedNetworks(Set<String> bannedNetworks) {
+      this.bannedNetworks = bannedNetworks;
+      return this;
+    }
+
+    public Builder withUseAvailabilityInformation(boolean useAvailabilityInformation) {
+      this.useAvailabilityInformation = useAvailabilityInformation;
+      return this;
+    }
+
+    public Builder withAllowArrivingInRentedVehicleAtDestination(
+      boolean allowArrivingInRentedVehicleAtDestination
+    ) {
+      this.allowArrivingInRentedVehicleAtDestination = allowArrivingInRentedVehicleAtDestination;
+      return this;
+    }
+
+    public Builder withArrivingInRentalVehicleAtDestinationCost(
+      Cost arrivingInRentalVehicleAtDestinationCost
+    ) {
+      this.arrivingInRentalVehicleAtDestinationCost = arrivingInRentalVehicleAtDestinationCost;
+      return this;
+    }
+
+    public ModeSpecificRentalRequest build() {
+      return new ModeSpecificRentalRequest(this);
+    }
   }
 }
