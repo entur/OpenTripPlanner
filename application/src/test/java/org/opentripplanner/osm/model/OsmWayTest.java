@@ -262,13 +262,12 @@ class OsmWayTest {
     return way;
   }
 
-  private static OsmWay createFootway(
-    String footwayValue,
+  private static OsmWay createCrossing(
     String crossingTag,
     String crossingValue
   ) {
     var way = WayTestData.footway();
-    way.addTag("footway", footwayValue);
+    way.addTag("footway", "crossing");
     way.addTag(crossingTag, crossingValue);
     return way;
   }
@@ -297,13 +296,13 @@ class OsmWayTest {
   static Stream<Arguments> createCrossingCases() {
     return Stream.of(
       Arguments.of(WayTestData.footway(), false),
-      Arguments.of(createFootway("whatever", "unused", "unused"), false),
-      Arguments.of(createFootway("crossing", "crossing", "marked"), true),
-      Arguments.of(createFootway("crossing", "crossing", "other"), true),
-      Arguments.of(createFootway("crossing", "crossing:markings", "yes"), true),
-      Arguments.of(createFootway("crossing", "crossing:markings", "marking-details"), true),
-      Arguments.of(createFootway("crossing", "crossing:markings", null), true),
-      Arguments.of(createFootway("crossing", "crossing:markings", "no"), true)
+      Arguments.of(WayTestData.footwaySidewalk(), false),
+      Arguments.of(createCrossing("crossing", "marked"), true),
+      Arguments.of(createCrossing("crossing", "other"), true),
+      Arguments.of(createCrossing("crossing:markings", "yes"), true),
+      Arguments.of(createCrossing("crossing:markings", "marking-details"), true),
+      Arguments.of(createCrossing("crossing:markings", null), true),
+      Arguments.of(createCrossing("crossing:markings", "no"), true)
     );
   }
 
