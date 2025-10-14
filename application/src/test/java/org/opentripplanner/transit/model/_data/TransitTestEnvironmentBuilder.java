@@ -44,9 +44,7 @@ public class TransitTestEnvironmentBuilder {
     return defaultServiceDate;
   }
 
-  /* ~~~~~~~~~~~~~ *
-   * Site entities *
-   * ~~~~~~~~~~~~~ */
+  /* SITE ENTITIES */
 
   public RegularStop stop(String id) {
     return site.stop(id);
@@ -80,9 +78,7 @@ public class TransitTestEnvironmentBuilder {
     return site.station(id, customizer);
   }
 
-  /* ~~~~~~~~~~~~~~~~~~ *
-   * Timetable entities *
-   * ~~~~~~~~~~~~~~~~~~ */
+  /* TIMETABLE ENTITIES */
 
   public TimetableRepositoryTestBuilder timetable() {
     return timetable;
