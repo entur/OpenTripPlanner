@@ -22,11 +22,12 @@ public interface GraphFinder {
    */
   static GraphFinder getInstance(
     boolean graphHasStreets,
+    StopResolver stopResolver,
     Function<Envelope, Collection<RegularStop>> queryNearbyStops,
     LinkingContextFactory linkingContextFactory
   ) {
     return graphHasStreets
-      ? new StreetGraphFinder(linkingContextFactory)
+      ? new StreetGraphFinder(linkingContextFactory, stopResolver)
       : new DirectGraphFinder(queryNearbyStops);
   }
 

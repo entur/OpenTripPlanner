@@ -4,11 +4,12 @@ import static com.google.common.truth.Truth.assertThat;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
+import org.opentripplanner.graph_builder.module.nearbystops.SiteRepositoryResolver;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -17,6 +18,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.search.state.State;
@@ -60,7 +62,6 @@ class AccessEgressRouterTest extends GraphRoutingTest {
           var noCentroidRoutingStation = stationEntity("NoCentroidRoutingStation", b ->
             b.withCoordinate(D.toWgsCoordinate())
           );
-          var noCentroidRoutingStationVertex = stationCentroid(noCentroidRoutingStation);
 
           // StopForCentroidRoutingStation is a child of centroidRoutingStation
           stopForCentroidRoutingStation = stop(
@@ -79,7 +80,6 @@ class AccessEgressRouterTest extends GraphRoutingTest {
           biLink(A, centroidRoutingStationVertex);
           biLink(B, stopForCentroidRoutingStation);
           biLink(C, stopForNoCentroidRoutingStation);
-          biLink(D, noCentroidRoutingStationVertex);
         }
       }
     );
@@ -259,16 +259,20 @@ class AccessEgressRouterTest extends GraphRoutingTest {
     var request = requestFromTo(from, to);
 
     try (var verticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph), id ->
-        new DefaultTransitService(timetableRepository).findStopOrChildIds(id)
+      var linkingContextFactory = new LinkingContextFactory(
+        graph,
+        VertexLinkerTestFactory.of(graph),
+        id -> new DefaultTransitService(timetableRepository).findStopOrChildIds(id)
       );
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(verticesContainer, linkingRequest);
 
-      return AccessEgressRouter.findAccessEgresses(
+      return new AccessEgressRouter(
+        new SiteRepositoryResolver(timetableRepository.getSiteRepository())
+      ).findAccessEgresses(
         request,
         StreetRequest.DEFAULT,
-        null,
+        List.of(),
         accessEgress,
         durationLimit,
         maxStopCount,

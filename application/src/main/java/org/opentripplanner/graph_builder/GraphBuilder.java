@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OtpAppException;
@@ -27,6 +28,7 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.utils.lang.OtpNumberFormat;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -46,16 +48,19 @@ public class GraphBuilder implements Runnable {
   private final TimetableRepository timetableRepository;
   private final DataImportIssueStore issueStore;
   private final Closeable closeDataSourcesHandle;
+  private final DeduplicatorService deduplicator;
 
   private boolean hasTransitData = false;
 
   public GraphBuilder(
     Graph baseGraph,
+    DeduplicatorService deduplicator,
     TimetableRepository timetableRepository,
     DataImportIssueStore issueStore,
     Closeable closeDataSourcesHandle
   ) {
     this.graph = baseGraph;
+    this.deduplicator = deduplicator;
     this.timetableRepository = timetableRepository;
     this.issueStore = issueStore;
     this.closeDataSourcesHandle = closeDataSourcesHandle;
@@ -75,6 +80,7 @@ public class GraphBuilder implements Runnable {
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository vehicleParkingService,
     @Nullable EmissionRepository emissionRepository,
+    @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetLimitationParameters streetLimitationParameters,
     boolean loadStreetGraph,
@@ -97,6 +103,7 @@ public class GraphBuilder implements Runnable {
       .vehicleParkingRepository(vehicleParkingService)
       .stopConsolidationRepository(stopConsolidationRepository)
       .emissionRepository(emissionRepository)
+      .empiricalDelayRepository(empiricalDelayRepository)
       .streetLimitationParameters(streetLimitationParameters)
       .fareServiceFactory(fareServiceFactory)
       .dataSources(dataSources)
@@ -167,6 +174,11 @@ public class GraphBuilder implements Runnable {
       graphBuilder.addModuleOptional(factory.directTransferAnalyzer(), OTPFeature.TransferAnalyzer);
 
       graphBuilder.addModuleOptional(factory.emissionGraphBuilder(), OTPFeature.Emission);
+
+      graphBuilder.addModuleOptional(
+        factory.empiricalDelayGraphBuilder(),
+        OTPFeature.EmpiricalDelay
+      );
     }
 
     if (loadStreetGraph || hasOsm) {
@@ -202,7 +214,7 @@ public class GraphBuilder implements Runnable {
       new DataImportIssueSummary(issueStore.listIssues()).logSummary();
 
       // Log before we validate, this way we have more information if the validation fails
-      logGraphBuilderCompleteStatus(startTime, graph, timetableRepository);
+      logGraphBuilderCompleteStatus(startTime, graph, timetableRepository, deduplicator);
 
       validate();
     } finally {
@@ -264,7 +276,8 @@ public class GraphBuilder implements Runnable {
   private static void logGraphBuilderCompleteStatus(
     long startTime,
     Graph graph,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    DeduplicatorService deduplicator
   ) {
     long endTime = System.currentTimeMillis();
     String time = DurationUtils.durationToStr(Duration.ofMillis(endTime - startTime));
@@ -283,5 +296,7 @@ public class GraphBuilder implements Runnable {
       nPatterns,
       nTransfers
     );
+    // Log size info for the deduplicator
+    LOG.info("Memory optimized {}", deduplicator.toString());
   }
 }

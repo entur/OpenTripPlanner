@@ -7,6 +7,7 @@ import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
 import org.opentripplanner.astar.spi.TraverseVisitor;
+import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -28,14 +29,16 @@ import org.opentripplanner.transit.service.TransitService;
 public class StreetGraphFinder implements GraphFinder {
 
   private final LinkingContextFactory linkingContextFactory;
+  private StopResolver stopResolver;
 
-  public StreetGraphFinder(LinkingContextFactory linkingContextFactory) {
+  public StreetGraphFinder(LinkingContextFactory linkingContextFactory, StopResolver stopResolver) {
     this.linkingContextFactory = linkingContextFactory;
+    this.stopResolver = stopResolver;
   }
 
   @Override
   public List<NearbyStop> findClosestStops(Coordinate coordinate, double radiusMeters) {
-    StopFinderTraverseVisitor visitor = new StopFinderTraverseVisitor(radiusMeters);
+    StopFinderTraverseVisitor visitor = new StopFinderTraverseVisitor(stopResolver, radiusMeters);
     findClosestUsingStreets(
       coordinate.getY(),
       coordinate.getX(),
@@ -102,11 +105,12 @@ public class StreetGraphFinder implements GraphFinder {
         .withNumItineraries(1)
         .buildDefault();
       StreetSearchBuilder.of()
-        .setSkipEdgeStrategy(skipEdgeStrategy)
-        .setTraverseVisitor(visitor)
-        .setDominanceFunction(new DominanceFunctions.LeastWalk())
-        .setRequest(request)
-        .setFrom(linkerContext.findVertices(from))
+        .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
+        .withSkipEdgeStrategy(skipEdgeStrategy)
+        .withTraverseVisitor(visitor)
+        .withDominanceFunction(new DominanceFunctions.LeastWalk())
+        .withRequest(request)
+        .withFrom(linkerContext.findVertices(from))
         .getShortestPathTree();
     }
   }

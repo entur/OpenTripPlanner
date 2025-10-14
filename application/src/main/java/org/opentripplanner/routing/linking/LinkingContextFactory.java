@@ -335,7 +335,7 @@ public class LinkingContextFactory {
     if (location.getCoordinate() == null) {
       var stopVertex = graph.getStopVertex(location.stopId);
       if (stopVertex != null) {
-        var c = stopVertex.getStop().getCoordinate();
+        var c = stopVertex.toWgsCoordinate();
         location = new GenericLocation(
           location.label,
           location.stopId,

@@ -11,7 +11,6 @@ import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.framework.geometry.EncodedPolyline;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
@@ -23,6 +22,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
@@ -52,7 +52,7 @@ public class BicycleRoutingTest {
     var fritzLeharStr = GenericLocation.fromCoordinate(48.59696, 8.85806);
 
     var polyline1 = computePolyline(herrenbergGraph, mozartStr, fritzLeharStr);
-    assertThatPolylinesAreEqual(polyline1, "_srgHutau@h@B|@Jf@B?PdABJT@jA?DSp@_@fFsAT{@DBpC");
+    assertThatPolylinesAreEqual(polyline1, "_srgHutau@h@B|@Jf@BdAG?\\JT@jA?DSp@_@fFsAT{@DBpC");
 
     var polyline2 = computePolyline(herrenbergGraph, fritzLeharStr, mozartStr);
     assertThatPolylinesAreEqual(polyline2, "{qrgH{aau@CqCz@ErAU^gFRq@?EAkAKUeACg@A_AM_AEDQF@H?");
@@ -88,13 +88,14 @@ public class BicycleRoutingTest {
       .buildRequest();
 
     var temporaryVerticesContainer = new TemporaryVerticesContainer();
-    var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph));
+    var linkingContextFactory = new LinkingContextFactory(graph, VertexLinkerTestFactory.of(graph));
     var linkingRequest = LinkingContextRequestMapper.map(request);
     var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
     var gpf = new GraphPathFinder(null);
     var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
 
     GraphPathToItineraryMapper graphPathToItineraryMapper = new GraphPathToItineraryMapper(
+      id -> null,
       ZoneIds.BERLIN,
       graph.streetNotesService,
       graph.ellipsoidToGeoidDifference

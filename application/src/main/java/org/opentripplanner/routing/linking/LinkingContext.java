@@ -1,7 +1,6 @@
 package org.opentripplanner.routing.linking;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.opentripplanner.model.GenericLocation;

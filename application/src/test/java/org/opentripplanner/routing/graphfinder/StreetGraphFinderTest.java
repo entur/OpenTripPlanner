@@ -3,13 +3,14 @@ package org.opentripplanner.routing.graphfinder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.StreetTraversalPermission;
@@ -20,6 +21,7 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TransitService;
 
@@ -112,15 +114,18 @@ class StreetGraphFinderTest extends GraphRoutingTest {
     );
 
     transitService = new DefaultTransitService(otpModel.timetableRepository());
-    var vertexLinker = TestVertexLinker.of(otpModel.graph());
+    var vertexLinker = VertexLinkerTestFactory.of(otpModel.graph());
     var linkingContextFactory = new LinkingContextFactory(otpModel.graph(), vertexLinker);
-    graphFinder = new StreetGraphFinder(linkingContextFactory);
+    graphFinder = new StreetGraphFinder(
+      linkingContextFactory,
+      otpModel.timetableRepository().getSiteRepository()::getRegularStop
+    );
   }
 
   @Test
   void findClosestStops() {
-    var ns1 = new NearbyStop(S1.getStop(), 0, null, null);
-    var ns2 = new NearbyStop(S2.getStop(), 100, null, null);
+    var ns1 = new NearbyStop(stop(S1), 0, null, null);
+    var ns2 = new NearbyStop(stop(S2), 100, null, null);
     var coordinate = new Coordinate(19.000, 47.500);
 
     assertEquals(List.of(ns1), simplify(graphFinder.findClosestStops(coordinate, 10)));
@@ -130,15 +135,15 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
   @Test
   void findClosestPlacesLimiting() {
-    var ns1 = new PlaceAtDistance(S1.getStop(), 0);
-    var ns2 = new PlaceAtDistance(S2.getStop(), 100);
-    var ns3 = new PlaceAtDistance(S3.getStop(), 200);
+    var ns1 = new PlaceAtDistance(stop(S1), 0);
+    var ns2 = new PlaceAtDistance(stop(S2), 100);
+    var ns3 = new PlaceAtDistance(stop(S3), 200);
     var br1 = new PlaceAtDistance(BR1.getStation(), 0);
     var carParking = new PlaceAtDistance(PR1, 100);
     var bikeParking = new PlaceAtDistance(BP1, 200);
     var br2 = new PlaceAtDistance(BR2.getStation(), 200);
-    var ps11 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP1), 0);
-    var ps21 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP2), 0);
+    var ps11 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP1), 0);
+    var ps21 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP2), 0);
 
     assertEquals(
       List.of(ns1, ps21, ps11, br1),
@@ -203,9 +208,9 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
   @Test
   void findClosestPlacesWithAModeFilter() {
-    var ns1 = new PlaceAtDistance(S1.getStop(), 0);
-    var ns2 = new PlaceAtDistance(S2.getStop(), 100);
-    var ns3 = new PlaceAtDistance(S3.getStop(), 200);
+    var ns1 = new PlaceAtDistance(stop(S1), 0);
+    var ns2 = new PlaceAtDistance(stop(S2), 100);
+    var ns3 = new PlaceAtDistance(stop(S3), 200);
 
     assertEquals(
       List.of(ns1, ns2, ns3),
@@ -246,10 +251,10 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
   @Test
   void findClosestPlacesWithAStopFilter() {
-    var ns1 = new PlaceAtDistance(S1.getStop(), 0);
-    var ns2 = new PlaceAtDistance(S2.getStop(), 100);
-    var ps11 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP1), 0);
-    var ps21 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP2), 0);
+    var ns1 = new PlaceAtDistance(stop(S1), 0);
+    var ns2 = new PlaceAtDistance(stop(S2), 100);
+    var ps11 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP1), 0);
+    var ps21 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP2), 0);
 
     assertEquals(
       List.of(ns1, ps21, ps11, ns2),
@@ -278,7 +283,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
         100,
         null,
         List.of(PlaceType.STOP, PlaceType.PATTERN_AT_STOP),
-        List.of(S2.getStop().getId()),
+        List.of(stop(S2).getId()),
         null,
         null,
         null,
@@ -290,10 +295,10 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
   @Test
   void findClosestPlacesWithAStopAndRouteFilter() {
-    var ns1 = new PlaceAtDistance(S1.getStop(), 0);
-    var ns2 = new PlaceAtDistance(S2.getStop(), 100);
-    var ps11 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP1), 0);
-    var ps21 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP2), 0);
+    var ns1 = new PlaceAtDistance(stop(S1), 0);
+    var ns2 = new PlaceAtDistance(stop(S2), 100);
+    var ps11 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP1), 0);
+    var ps21 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP2), 0);
 
     assertEquals(
       List.of(ns1, ps21, ps11, ns2),
@@ -322,7 +327,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
         100,
         null,
         List.of(PlaceType.STOP, PlaceType.PATTERN_AT_STOP),
-        List.of(S2.getStop().getId()),
+        List.of(S2.getId()),
         null,
         List.of(R1.getId()),
         null,
@@ -334,11 +339,11 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
   @Test
   void findClosestPlacesWithARouteFilter() {
-    var ns1 = new PlaceAtDistance(S1.getStop(), 0);
-    var ns2 = new PlaceAtDistance(S2.getStop(), 100);
-    var ns3 = new PlaceAtDistance(S3.getStop(), 200);
-    var ps11 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP1), 0);
-    var ps21 = new PlaceAtDistance(new PatternAtStop(S1.getStop(), TP2), 0);
+    var ns1 = new PlaceAtDistance(stop(S1), 0);
+    var ns2 = new PlaceAtDistance(stop(S2), 100);
+    var ns3 = new PlaceAtDistance(stop(S3), 200);
+    var ps11 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP1), 0);
+    var ps21 = new PlaceAtDistance(new PatternAtStop(stop(S1), TP2), 0);
 
     assertEquals(
       List.of(ns1, ps21, ps11, ns2, ns3),
@@ -470,5 +475,9 @@ class StreetGraphFinderTest extends GraphRoutingTest {
       .stream()
       .map(ns -> new NearbyStop(ns.stop, ns.distance, null, null))
       .collect(Collectors.toList());
+  }
+
+  private StopLocation stop(TransitStopVertex v) {
+    return Objects.requireNonNull(transitService.getRegularStop(v.getId()));
   }
 }

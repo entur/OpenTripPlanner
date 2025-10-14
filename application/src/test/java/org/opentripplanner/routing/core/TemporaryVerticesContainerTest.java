@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.via.ViaLocation;
@@ -30,6 +29,7 @@ import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.Edge;
@@ -39,7 +39,6 @@ import org.opentripplanner.street.model.vertex.TemporaryVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.RegularStop;
 
@@ -47,15 +46,19 @@ public class TemporaryVerticesContainerTest {
 
   // Given:
   // - a graph with 4 intersections/vertexes and a stop
-  private final Graph g = new Graph(new Deduplicator());
+  private final Graph g = new Graph();
 
   private final StreetVertex a = StreetModelForTest.intersectionVertex("A", 1.0, 1.0);
   private final StreetVertex b = StreetModelForTest.intersectionVertex("B", 1.0, 0.0);
   private final StreetVertex c = StreetModelForTest.intersectionVertex("C", 0.0, 1.0);
   private final StreetVertex d = StreetModelForTest.intersectionVertex("D", 0.0, 2.0);
   private final FeedScopedId stopId = new FeedScopedId("test", "1");
+  private final RegularStop stop = RegularStop.of(stopId, () -> 1)
+    .withCoordinate(WgsCoordinate.GREENWICH)
+    .build();
   private final TransitStopVertex s = TransitStopVertex.of()
-    .withStop(RegularStop.of(stopId, () -> 1).withCoordinate(WgsCoordinate.GREENWICH).build())
+    .withId(stopId)
+    .withPoint(stop.getGeometry())
     .build();
   private final List<Vertex> permanentVertexes = Arrays.asList(a, b, c, d, s);
   // - And travel *origin* is 0,4 degrees on the road from B to A
@@ -84,7 +87,7 @@ public class TemporaryVerticesContainerTest {
     .toList();
   private final LinkingContextFactory linkingContextFactory = new LinkingContextFactory(
     g,
-    TestVertexLinker.of(g)
+    VertexLinkerTestFactory.of(g)
   );
 
   // - and some roads
@@ -158,10 +161,10 @@ public class TemporaryVerticesContainerTest {
     assertEquals(
       "LinkingContext{" +
       "verticesByLocation: [" +
-      "(0.701, 1.001)=[{TempVertex-2 lat,lng=0.701,1.001}], " +
-      "(1.0, 0.4)=[{TempVertex-1 lat,lng=1.0,0.4}], " +
-      "Via1 (0.0, 1.5)=[{TempVertex-3 lat,lng=0.0,1.5}], " +
-      "Via3 (0.1, 1.9)=[{TempVertex-4 lat,lng=0.1,1.9}]" +
+      "(0.701, 1.001)=[{TempVertex-8 lat,lng=0.701,1.001}], " +
+      "(1.0, 0.4)=[{TempVertex-7 lat,lng=1.0,0.4}], " +
+      "Via1 (0.0, 1.5)=[{TempVertex-9 lat,lng=0.0,1.5}], " +
+      "Via3 (0.1, 1.9)=[{TempVertex-10 lat,lng=0.1,1.9}]" +
       "]}",
       subject.toString()
     );

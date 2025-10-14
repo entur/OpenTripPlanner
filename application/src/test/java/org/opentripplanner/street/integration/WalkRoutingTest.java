@@ -12,13 +12,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.astar.model.GraphPath;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -77,7 +77,7 @@ class WalkRoutingTest {
       backwardStates.getLast().getTimeAccurate()
     );
     // should be same for every parametrized offset, otherwise irrelevant
-    int expected = 11483;
+    int expected = 10430;
     assertEquals(expected, forwardDiff);
     assertEquals(expected, backwardDiff);
   }
@@ -96,7 +96,10 @@ class WalkRoutingTest {
       .withArriveBy(arriveBy)
       .buildRequest();
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph));
+      var linkingContextFactory = new LinkingContextFactory(
+        graph,
+        VertexLinkerTestFactory.of(graph)
+      );
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       var gpf = new GraphPathFinder(null);

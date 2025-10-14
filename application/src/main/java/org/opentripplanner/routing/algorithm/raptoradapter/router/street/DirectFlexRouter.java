@@ -7,6 +7,7 @@ import java.util.List;
 import org.opentripplanner.ext.flex.FlexRouter;
 import org.opentripplanner.ext.flex.filter.FilterMapper;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
+import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSearchDays;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -23,24 +24,27 @@ public class DirectFlexRouter {
     AdditionalSearchDays additionalSearchDays,
     LinkingContext linkingContext
   ) {
+    var accessEgressRouter = new AccessEgressRouter(
+      new TransitServiceResolver(serverContext.transitService())
+    );
     if (!StreetMode.FLEXIBLE.equals(request.journey().direct().mode())) {
       return Collections.emptyList();
     }
     OTPRequestTimeoutException.checkForTimeout();
     // Prepare access/egress transfers
-    Collection<NearbyStop> accessStops = AccessEgressRouter.findAccessEgresses(
+    Collection<NearbyStop> accessStops = accessEgressRouter.findAccessEgresses(
       request,
       request.journey().direct(),
-      serverContext.dataOverlayContext(request),
+      serverContext.listExtensionRequestContexts(request),
       AccessEgressType.ACCESS,
       serverContext.flexParameters().maxAccessWalkDuration(),
       0,
       linkingContext
     );
-    Collection<NearbyStop> egressStops = AccessEgressRouter.findAccessEgresses(
+    Collection<NearbyStop> egressStops = accessEgressRouter.findAccessEgresses(
       request,
       request.journey().direct(),
-      serverContext.dataOverlayContext(request),
+      serverContext.listExtensionRequestContexts(request),
       AccessEgressType.EGRESS,
       serverContext.flexParameters().maxEgressWalkDuration(),
       0,
