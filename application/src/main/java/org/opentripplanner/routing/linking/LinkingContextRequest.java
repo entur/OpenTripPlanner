@@ -30,7 +30,7 @@ public class LinkingContextRequest {
   }
 
   public LinkingContextRequest(LinkingContextRequestBuilder builder) {
-    this.from = builder.from();
+    this.from = Objects.requireNonNull(builder.from());
     this.to = builder.to();
     this.viaLocationsWithCoordinates = builder.viaLocationsWithCoordinates();
     this.accessMode = builder.accessMode();
