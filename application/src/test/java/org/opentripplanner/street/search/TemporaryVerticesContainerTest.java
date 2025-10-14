@@ -70,14 +70,16 @@ class TemporaryVerticesContainerTest {
   @Test
   void coordinates() {
     var container = new TemporaryVerticesContainer();
+    var from = GenericLocation.fromCoordinate(stopA.getLat(), stopA.getLon());
+    var to = GenericLocation.fromCoordinate(stopD.getLat(), stopD.getLon());
     var request = LinkingContextRequest.of()
-      .withFrom(GenericLocation.fromCoordinate(stopA.getLat(), stopA.getLon()))
-      .withTo(GenericLocation.fromCoordinate(stopD.getLat(), stopD.getLon()))
+      .withFrom(from)
+      .withTo(to)
       .withDirectMode(StreetMode.WALK)
       .build();
     var linkingContext = linkingContextFactory.create(container, request);
-    assertThat(linkingContext.fromVertices()).hasSize(1);
-    assertThat(linkingContext.toVertices()).hasSize(1);
+    assertThat(linkingContext.findVertices(from)).hasSize(1);
+    assertThat(linkingContext.findVertices(to)).hasSize(1);
   }
 
   @Test
@@ -88,14 +90,16 @@ class TemporaryVerticesContainerTest {
       Set::of
     );
     var container = new TemporaryVerticesContainer();
+    var from = stopToLocation(stopA);
+    var to = stopToLocation(stopB);
     var request = LinkingContextRequest.of()
-      .withFrom(stopToLocation(stopA))
-      .withTo(stopToLocation(stopB))
+      .withFrom(from)
+      .withTo(to)
       .withDirectMode(StreetMode.WALK)
       .build();
     var linkingContext = stopLinkingContextFactory.create(container, request);
-    assertEquals(stopA, toStop(linkingContext.fromVertices()));
-    assertEquals(stopB, toStop(linkingContext.toVertices()));
+    assertEquals(stopA, toStop(linkingContext.findVertices(from)));
+    assertEquals(stopB, toStop(linkingContext.findVertices(to)));
   }
 
   @Test
@@ -109,25 +113,27 @@ class TemporaryVerticesContainerTest {
       mapping::get
     );
     var container = new TemporaryVerticesContainer();
+    var from = GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId());
     var request = LinkingContextRequest.of()
-      .withFrom(GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId()))
+      .withFrom(from)
       .withTo(stopToLocation(stopB))
       .withDirectMode(StreetMode.WALK)
       .build();
     var linkingContext = stopLinkingContextFactory.create(container, request);
-    assertThat(toStops(linkingContext.fromVertices())).containsExactly(stopC, stopD);
+    assertThat(toStops(linkingContext.findVertices(from))).containsExactly(stopC, stopD);
   }
 
   @Test
   void centroid() {
     var container = new TemporaryVerticesContainer();
+    var from = GenericLocation.fromStopId("station", ALPHA_ID.getFeedId(), ALPHA_ID.getId());
     var request = LinkingContextRequest.of()
-      .withFrom(GenericLocation.fromStopId("station", ALPHA_ID.getFeedId(), ALPHA_ID.getId()))
+      .withFrom(from)
       .withTo(stopToLocation(stopB))
       .withDirectMode(StreetMode.WALK)
       .build();
     var linkingContext = linkingContextFactory.create(container, request);
-    var fromVertices = List.copyOf(linkingContext.fromVertices());
+    var fromVertices = List.copyOf(linkingContext.findVertices(from));
     assertThat(fromVertices).hasSize(1);
 
     var station = ((StationCentroidVertex) fromVertices.getFirst()).getStation();

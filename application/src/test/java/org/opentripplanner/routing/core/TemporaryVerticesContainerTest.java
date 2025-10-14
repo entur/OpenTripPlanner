@@ -3,6 +3,7 @@ package org.opentripplanner.routing.core;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,8 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
@@ -46,7 +45,6 @@ import org.opentripplanner.transit.model.site.RegularStop;
 
 public class TemporaryVerticesContainerTest {
 
-  private final GeometryFactory gf = GeometryUtils.getGeometryFactory();
   // Given:
   // - a graph with 4 intersections/vertexes and a stop
   private final Graph g = new Graph(new Deduplicator());
@@ -134,8 +132,9 @@ public class TemporaryVerticesContainerTest {
       // When - the container is created
 
       // Then:
-      assertThat(subject.fromVertices()).hasSize(1);
-      var fromOutgoing = subject.fromVertices().iterator().next().getOutgoing();
+      var fromVertices = subject.findVertices(from);
+      assertThat(fromVertices).hasSize(1);
+      var fromOutgoing = fromVertices.iterator().next().getOutgoing();
       assertThat(fromOutgoing).hasSize(4);
       assertTrue(outgoingEdgeIsTraversableWith(fromOutgoing, TraverseMode.WALK));
       assertTrue(outgoingEdgeIsTraversableWith(fromOutgoing, TraverseMode.CAR));
@@ -155,6 +154,17 @@ public class TemporaryVerticesContainerTest {
     var subject = linkingContextFactory.create(container, request);
 
     // Then:
+    // There are only the expected locations and vertices for them
+    assertEquals(
+      "LinkingContext{" +
+      "verticesByLocation: [" +
+      "(0.701, 1.001)=[{TempVertex-2 lat,lng=0.701,1.001}], " +
+      "(1.0, 0.4)=[{TempVertex-1 lat,lng=1.0,0.4}], " +
+      "Via1 (0.0, 1.5)=[{TempVertex-3 lat,lng=0.0,1.5}], " +
+      "Via3 (0.1, 1.9)=[{TempVertex-4 lat,lng=0.1,1.9}]" +
+      "]}",
+      subject.toString()
+    );
     locationsInsertedCorrect(subject);
     cleanUpAndValidate(container);
   }
@@ -266,16 +276,16 @@ public class TemporaryVerticesContainerTest {
     boolean hasViaLocations
   ) {
     // Then - the origin and destination is
-    var originVertices = subject.fromVertices();
+    var originVertices = subject.findVertices(from);
     assertThat(originVertices).hasSize(1);
     assertEquals("Origin", originVertices.iterator().next().getDefaultName());
-    var destinationVertices = subject.toVertices();
+    var destinationVertices = subject.findVertices(to);
     assertThat(destinationVertices).hasSize(1);
     assertEquals("Destination", destinationVertices.iterator().next().getDefaultName());
 
     // And - from the origin
     Collection<String> vertexesReachableFromOrigin = findAllReachableVertexes(
-      subject.fromVertices().iterator().next(),
+      originVertices.iterator().next(),
       true,
       new ArrayList<>()
     );
@@ -295,7 +305,7 @@ public class TemporaryVerticesContainerTest {
 
     // And - from the destination we can backtrack
     Collection<String> vertexesReachableFromDestination = findAllReachableVertexes(
-      subject.toVertices().iterator().next(),
+      destinationVertices.iterator().next(),
       false,
       new ArrayList<>()
     );
@@ -312,25 +322,30 @@ public class TemporaryVerticesContainerTest {
 
   private void locationsInsertedCorrect(LinkingContext subject) {
     originAndDestinationInsertedCorrect(subject, true);
-    // Then - only via locations with coordinates are included
-    var verticesByLocation = subject.verticesByLocation();
-    assertThat(verticesByLocation).hasSize(4);
-    var visitViaLocations = viaLocations.stream().map(VisitViaLocation.class::cast).toList();
-    var firstViaVertices = verticesByLocation.get(visitViaLocations.get(0).coordinateLocation());
-    assertThat(firstViaVertices).hasSize(1);
-    assertEquals("Via1", firstViaVertices.iterator().next().getDefaultName());
-    var thirdViaVertices = verticesByLocation.get(visitViaLocations.get(2).coordinateLocation());
-    assertThat(thirdViaVertices).hasSize(1);
-    assertEquals("Via3", thirdViaVertices.iterator().next().getDefaultName());
+    // Then - each location should have one vertex
+    var firstVia = viaLocationsWithCoordinates.get(0);
+    var fistViaVertices = subject.findVertices(firstVia);
+    assertNotNull(fistViaVertices);
+    assertThat(fistViaVertices).hasSize(1);
+    var firstViaVertex = fistViaVertices.iterator().next();
+    assertEquals(firstVia.label, firstViaVertex.getDefaultName());
+
+    var secondVia = viaLocationsWithCoordinates.get(1);
+    var secondViaVertices = subject.findVertices(secondVia);
+
+    assertNotNull(secondViaVertices);
+    assertThat(secondViaVertices).hasSize(1);
+    var secondViaVertex = secondViaVertices.iterator().next();
+    assertEquals(secondVia.label, secondViaVertex.getDefaultName());
 
     // And - from the first via location
     Collection<String> vertexesReachableFromFirstViaForward = findAllReachableVertexes(
-      firstViaVertices.iterator().next(),
+      firstViaVertex,
       true,
       new ArrayList<>()
     );
     Collection<String> vertexesReachableFromFirstViaBackward = findAllReachableVertexes(
-      firstViaVertices.iterator().next(),
+      firstViaVertex,
       false,
       new ArrayList<>()
     );
@@ -355,12 +370,12 @@ public class TemporaryVerticesContainerTest {
 
     // And - from the third via location
     Collection<String> vertexesReachableFromThirdViaForward = findAllReachableVertexes(
-      thirdViaVertices.iterator().next(),
+      secondViaVertex,
       true,
       new ArrayList<>()
     );
     Collection<String> vertexesReachableFromThirdViaBackward = findAllReachableVertexes(
-      thirdViaVertices.iterator().next(),
+      secondViaVertex,
       false,
       new ArrayList<>()
     );

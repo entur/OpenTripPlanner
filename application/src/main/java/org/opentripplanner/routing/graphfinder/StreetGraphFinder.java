@@ -88,8 +88,9 @@ public class StreetGraphFinder implements GraphFinder {
     // RR dateTime defaults to currentTime.
     // If elapsed time is not capped, searches are very slow.
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
+      var from = GenericLocation.fromCoordinate(lat, lon);
       var linkingRequest = LinkingContextRequest.of()
-        .withFrom(GenericLocation.fromCoordinate(lat, lon))
+        .withFrom(from)
         .withDirectMode(StreetMode.WALK)
         .build();
       var linkerContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
@@ -105,8 +106,7 @@ public class StreetGraphFinder implements GraphFinder {
         .setTraverseVisitor(visitor)
         .setDominanceFunction(new DominanceFunctions.LeastWalk())
         .setRequest(request)
-        .setFrom(linkerContext.fromVertices())
-        .setTo(linkerContext.toVertices())
+        .setFrom(linkerContext.findVertices(from))
         .getShortestPathTree();
     }
   }

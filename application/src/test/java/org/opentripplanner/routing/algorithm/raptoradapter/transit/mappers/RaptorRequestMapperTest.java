@@ -275,8 +275,6 @@ class RaptorRequestMapperTest {
       new DummyViaCoordinateTransferFactory(),
       id -> IntStream.of(STOPS_MAP.get(id).getIndex()),
       new LinkingContext(
-        GenericLocation.UNKNOWN,
-        GenericLocation.UNKNOWN,
         Map.of(
           VISIT_VIA_LOCATION_COORDINATE.coordinateLocation(),
           Set.of(new LabelledIntersectionVertex("viapoint", 1, 1, false, false))

@@ -119,7 +119,7 @@ public class LinkingContextFactory {
       toVertices,
       verticesForVisitViaLocationsWithCoordinates
     );
-    return new LinkingContext(from, to, verticesByLocation, fromStopVertices, toStopVertices);
+    return new LinkingContext(verticesByLocation, fromStopVertices, toStopVertices);
   }
 
   private Set<Vertex> getFromVertices(

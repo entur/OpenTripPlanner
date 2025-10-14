@@ -561,26 +561,25 @@ public class TestHalfEdges {
   @Test
   public void testTemporaryVerticesContainer() {
     // test that it is possible to travel between two splits on the same street
-    RouteRequest walking = RouteRequest.of()
-      .withFrom(GenericLocation.fromCoordinate(40.004, -74.0))
-      .withTo(GenericLocation.fromCoordinate(40.008, -74.0))
-      .buildRequest();
+    var from = GenericLocation.fromCoordinate(40.004, -74.0);
+    var to = GenericLocation.fromCoordinate(40.008, -74.0);
+    RouteRequest walking = RouteRequest.of().withFrom(from).withTo(to).buildRequest();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
       var linkingContextFactory = new LinkingContextFactory(graph, TestVertexLinker.of(graph));
       var linkingRequest = LinkingContextRequestMapper.map(walking);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
-      assertFalse(linkingContext.fromVertices().isEmpty());
-      assertFalse(linkingContext.toVertices().isEmpty());
+      var fromVertices = linkingContext.findVertices(from);
+      assertFalse(fromVertices.isEmpty());
+      var toVertices = linkingContext.findVertices(to);
+      assertFalse(toVertices.isEmpty());
       ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
         .setHeuristic(new EuclideanRemainingWeightHeuristic())
         .setRequest(walking)
-        .setFrom(linkingContext.fromVertices())
-        .setTo(linkingContext.toVertices())
+        .setFrom(fromVertices)
+        .setTo(toVertices)
         .getShortestPathTree();
-      GraphPath<State, Edge, Vertex> path = spt.getPath(
-        linkingContext.toVertices().iterator().next()
-      );
+      GraphPath<State, Edge, Vertex> path = spt.getPath(toVertices.iterator().next());
       for (State s : path.states) {
         assertNotSame(s.getBackEdge(), top);
       }

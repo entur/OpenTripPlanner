@@ -1,10 +1,13 @@
 package org.opentripplanner.routing.linking;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
  * Holds vertices (mainly temporary) that are meant to be used within the scope of a single route
@@ -14,47 +17,18 @@ import org.opentripplanner.street.model.vertex.Vertex;
  */
 public class LinkingContext {
 
-  private final GenericLocation from;
-  private final GenericLocation to;
   private final Map<GenericLocation, Set<Vertex>> verticesByLocation;
   private final Set<TransitStopVertex> fromStopVertices;
   private final Set<TransitStopVertex> toStopVertices;
 
   public LinkingContext(
-    GenericLocation from,
-    GenericLocation to,
     Map<GenericLocation, Set<Vertex>> verticesByLocation,
     Set<TransitStopVertex> fromStopVertices,
     Set<TransitStopVertex> toStopVertices
   ) {
-    this.from = from;
     this.fromStopVertices = fromStopVertices;
     this.toStopVertices = toStopVertices;
-    this.to = to;
     this.verticesByLocation = verticesByLocation;
-  }
-
-  /**
-   * Vertices that are used for from (origin). This includes both street and stop vertices.
-   */
-  public Set<Vertex> fromVertices() {
-    return verticesByLocation.getOrDefault(from, Set.of());
-  }
-
-  /**
-   * Vertices that are used for to (destination). This includes both street and stop vertices.
-   */
-  public Set<Vertex> toVertices() {
-    return verticesByLocation.getOrDefault(to, Set.of());
-  }
-
-  /**
-   * Vertices that are used for either origin, destination or for via locations. Only the visit via
-   * locations that have a coordinate specified will have vertices available. Stop vertices are not
-   * included via locations.
-   */
-  public Map<GenericLocation, Set<Vertex>> verticesByLocation() {
-    return verticesByLocation;
   }
 
   /**
@@ -80,5 +54,19 @@ public class LinkingContext {
    */
   public Set<Vertex> findVertices(GenericLocation location) {
     return verticesByLocation.getOrDefault(location, Set.of());
+  }
+
+  @Override
+  public String toString() {
+    var sortedVerticesByLocation = verticesByLocation
+      .entrySet()
+      .stream()
+      .sorted(Map.Entry.comparingByKey(Comparator.comparing(GenericLocation::toString)))
+      .toList();
+    return ToStringBuilder.of(LinkingContext.class)
+      .addCol("verticesByLocation", sortedVerticesByLocation)
+      .addCol("fromStops", fromStopVertices)
+      .addCol("toStops", toStopVertices)
+      .toString();
   }
 }

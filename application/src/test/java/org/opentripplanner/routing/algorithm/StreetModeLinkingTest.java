@@ -236,7 +236,7 @@ public class StreetModeLinkingTest extends GraphRoutingTest {
         assertFromLink(
           expectedFromStreetName.name(),
           streetMode,
-          linkingContext.fromVertices().iterator().next()
+          linkingContext.findVertices(location).iterator().next()
         );
 
         var request2 = LinkingContextRequest.of()
@@ -249,7 +249,7 @@ public class StreetModeLinkingTest extends GraphRoutingTest {
           assertToLink(
             expectedToStreetName.name(),
             streetMode,
-            linkingContext2.toVertices().iterator().next()
+            linkingContext2.findVertices(location).iterator().next()
           );
         }
       }
