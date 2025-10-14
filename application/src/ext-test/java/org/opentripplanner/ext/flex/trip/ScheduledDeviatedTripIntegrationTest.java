@@ -18,7 +18,6 @@ import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.ext.flex.FlexIntegrationTestData;
 import org.opentripplanner.framework.geometry.EncodedPolyline;
 import org.opentripplanner.graph_builder.module.ValidateAndInterpolateStopTimesForEachTrip;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.plan.Itinerary;
@@ -27,7 +26,6 @@ import org.opentripplanner.routing.algorithm.raptoradapter.router.TransitRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
@@ -173,12 +171,10 @@ class ScheduledDeviatedTripIntegrationTest {
     var additionalSearchDays = AdditionalSearchDays.defaults(dateTime);
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextFactory = new LinkingContextFactory(
-        serverContext.graph(),
-        TestVertexLinker.of(graph)
-      );
       var linkingRequest = LinkingContextRequestMapper.map(request);
-      var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
+      var linkingContext = serverContext
+        .linkingContextFactory()
+        .create(temporaryVerticesContainer, linkingRequest);
       var result = TransitRouter.route(
         request,
         serverContext,

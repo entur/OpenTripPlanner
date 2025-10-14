@@ -17,6 +17,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.service.DefaultViaCoordinateTransferFactory;
@@ -94,11 +95,14 @@ public class TestServerContext {
       RaptorEnvironmentFactory.create(routerConfig.transitTuningConfig().searchThreadPoolSize())
     );
 
+    var vertexLinker = createVertexLinker(graph);
+
     return new DefaultServerRequestContext(
       DebugUiConfig.DEFAULT,
       fareService,
       routerConfig.flexParameters(),
       graph,
+      createLinkingContextFactory(graph, vertexLinker, transitService),
       Metrics.globalRegistry,
       raptorConfig,
       createRealtimeVehicleService(transitService),
@@ -112,7 +116,7 @@ public class TestServerContext {
       routerConfig.vectorTileConfig(),
       createVehicleParkingService(),
       createVehicleRentalService(),
-      createVertexLinker(graph),
+      vertexLinker,
       createViaTransferResolver(graph, transitService),
       createWorldEnvelopeService(),
       createEmissionsItineraryDecorator(),
@@ -168,5 +172,13 @@ public class TestServerContext {
     TransitService transitService
   ) {
     return new DefaultViaCoordinateTransferFactory(graph, transitService, Duration.ofMinutes(30));
+  }
+
+  public static LinkingContextFactory createLinkingContextFactory(
+    Graph graph,
+    VertexLinker vertexLinker,
+    TransitService transitService
+  ) {
+    return new LinkingContextFactory(graph, vertexLinker, transitService::findStopOrChildIds);
   }
 }

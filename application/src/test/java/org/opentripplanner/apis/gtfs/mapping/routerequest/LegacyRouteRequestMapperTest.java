@@ -38,6 +38,7 @@ import org.opentripplanner.routing.api.request.preference.TransferPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleParkingPreferences;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.GraphFinder;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -62,6 +63,12 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     timetableRepository.initTimeZone(ZoneIds.BERLIN);
     final DefaultTransitService transitService = new DefaultTransitService(timetableRepository);
     var routeRequest = RouteRequest.defaultValue();
+    var vertexLinker = TestVertexLinker.of(graph);
+    var linkingContextFactory = new LinkingContextFactory(
+      graph,
+      vertexLinker,
+      transitService::findStopOrChildIds
+    );
     context = new GraphQLRequestContext(
       new TestRoutingService(List.of()),
       transitService,
@@ -71,9 +78,9 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
       new DefaultRealtimeVehicleService(transitService),
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       GraphFinder.getInstance(
-        graph,
-        TestVertexLinker.of(graph),
-        transitService::findRegularStopsByBoundingBox
+        graph.hasStreets,
+        transitService::findRegularStopsByBoundingBox,
+        linkingContextFactory
       ),
       routeRequest
     );

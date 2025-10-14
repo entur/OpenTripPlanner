@@ -10,11 +10,9 @@ import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
-import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.state.State;
@@ -29,12 +27,10 @@ import org.opentripplanner.transit.service.TransitService;
  */
 public class StreetGraphFinder implements GraphFinder {
 
-  private final Graph graph;
-  private final VertexLinker linker;
+  private final LinkingContextFactory linkingContextFactory;
 
-  public StreetGraphFinder(Graph graph, VertexLinker linker) {
-    this.graph = graph;
-    this.linker = linker;
+  public StreetGraphFinder(LinkingContextFactory linkingContextFactory) {
+    this.linkingContextFactory = linkingContextFactory;
   }
 
   @Override
@@ -92,7 +88,6 @@ public class StreetGraphFinder implements GraphFinder {
     // RR dateTime defaults to currentTime.
     // If elapsed time is not capped, searches are very slow.
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextFactory = new LinkingContextFactory(graph, linker);
       var linkingRequest = LinkingContextRequest.of()
         .withFrom(GenericLocation.fromCoordinate(lat, lon))
         .withDirectMode(StreetMode.WALK)

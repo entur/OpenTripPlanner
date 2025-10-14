@@ -286,6 +286,17 @@ public class SiteRepository implements Serializable {
   }
 
   /**
+   * Return all stop ids associated with the given id.
+   * <p>
+   * If a Station, a MultiModalStation, or a GroupOfStations matches the id, then all child stops
+   * are returned. If the id matches a regular stop, area stop or stop group, then a list with one
+   * item is returned.
+   */
+  public List<FeedScopedId> findStopOrChildIds(FeedScopedId id) {
+    return findStopOrChildStops(id).stream().map(StopLocation::getId).distinct().toList();
+  }
+
+  /**
    * Call this method after deserializing this class. This will reindex the SiteRepository.
    */
   public void reindexAfterDeserialization() {
