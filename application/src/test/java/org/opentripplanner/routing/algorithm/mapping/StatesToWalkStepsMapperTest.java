@@ -104,7 +104,11 @@ class StatesToWalkStepsMapperTest {
     List<WalkStepBuilder> steps = streets
       .stream()
       .map(s ->
-        s != null ? WalkStep.builder().withDirectionText(I18NString.of(s)) : WalkStep.builder()
+        s != null
+          ? WalkStep.builder()
+            .withCrossing(s.startsWith("crossing over "))
+            .withDirectionText(I18NString.of(s))
+          : WalkStep.builder()
       )
       .toList();
 
@@ -118,13 +122,25 @@ class StatesToWalkStepsMapperTest {
 
   static Stream<Arguments> createIsOnSameStreetCases() {
     return Stream.of(
-      Arguments.of(List.of("Street1", "Street2", "Street3"), false, "Is not a zig-zag"),
-      Arguments.of(List.of("Street1", "Street2", "Street1"), true, "Is a zig-zag"),
-      Arguments.of(List.of("Street1", "crossing over Street2", "Street1"), false, "Is a crossing"),
+      Arguments.of(
+        List.of("Street1", "Street2", "Street3"),
+        false,
+        "Three different streets in a row are not the same street."
+      ),
+      Arguments.of(
+        List.of("Street1", "Street2", "Street1"),
+        true,
+        "A street interrupted by another street is the same street."
+      ),
+      Arguments.of(
+        List.of("Street1", "crossing over Street2", "Street1"),
+        false,
+        "A crossing is treated as not the same street."
+      ),
       Arguments.of(
         List.of("crossing over turn lane", "Street1", "crossing over turn lane"),
         false,
-        "Is many crossings"
+        "Multiple crossings are not the same street."
       )
     );
   }

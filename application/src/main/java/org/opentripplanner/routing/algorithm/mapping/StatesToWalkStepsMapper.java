@@ -314,10 +314,7 @@ public class StatesToWalkStepsMapper {
     // Keep an explicit instruction when crossing to the other side of the same street.
     // (An instruction can be given to cross at a particular location because others may not be accessible, practical, etc.)
     return (
-      // TODO: i18n
-      !lastStepName.startsWith("crossing") &&
-      !twoBackStepName.startsWith("crossing") &&
-      lastStepName.equals(threeBackStepName)
+      !lastStep.isCrossing() && !twoBack.isCrossing() && lastStepName.equals(threeBackStepName)
     );
   }
 
@@ -584,18 +581,19 @@ public class StatesToWalkStepsMapper {
   }
 
   private WalkStepBuilder createWalkStep(State forwardState, State backState) {
-    Edge en = forwardState.getBackEdge();
+    Edge backEdge = forwardState.getBackEdge();
 
     return WalkStep.builder()
-      .withDirectionText(en.getName())
+      .withDirectionText(backEdge.getName())
       .withStartLocation(new WgsCoordinate(backState.getVertex().getCoordinate()))
-      .withNameIsDerived(en.nameIsDerived())
-      .withAngle(DirectionUtils.getFirstAngle(forwardState.getBackEdge().getGeometry()))
+      .withNameIsDerived(backEdge.nameIsDerived())
+      .withAngle(DirectionUtils.getFirstAngle(backEdge.getGeometry()))
       .withWalkingBike(forwardState.isBackWalkingBike())
-      .withArea(forwardState.getBackEdge() instanceof AreaEdge)
+      .withArea(backEdge instanceof AreaEdge)
+      .withCrossing(backEdge.isCrossing())
       .addElevation(
         encodeElevationProfile(
-          forwardState.getBackEdge(),
+          backEdge,
           0,
           forwardState.getPreferences().system().geoidElevation() ? -ellipsoidToGeoidDifference : 0
         )
