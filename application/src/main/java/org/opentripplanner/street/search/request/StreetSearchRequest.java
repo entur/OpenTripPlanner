@@ -38,7 +38,7 @@ public class StreetSearchRequest implements AStarRequest {
   private final Instant startTime;
   private final StreetMode mode;
   private final boolean arriveBy;
-  public final boolean wheelchair;
+  private final boolean wheelchair;
 
   private final GenericLocation from;
   private final Envelope fromEnvelope;
@@ -107,8 +107,6 @@ public class StreetSearchRequest implements AStarRequest {
   public WheelchairRequest wheelchair() {
     return this.wheelchair();
   }
-
-
 
   public boolean geoidElevation() {
     return geoidElevation;
@@ -205,10 +203,9 @@ public class StreetSearchRequest implements AStarRequest {
   public ModeSpecificRentalRequest rental(TraverseMode traverseMode) {
     return switch (traverseMode) {
       case BICYCLE -> rental.bike();
-
       case SCOOTER -> rental.scooter();
       case CAR -> rental.car();
-      case WALK , FLEX -> throw new IllegalArgumentException();
+      case WALK, FLEX -> throw new IllegalArgumentException();
     };
   }
 
@@ -217,11 +214,17 @@ public class StreetSearchRequest implements AStarRequest {
       case BIKE_RENTAL -> rental.bike();
       case SCOOTER_RENTAL -> rental.scooter();
       case CAR_RENTAL -> rental.car();
-      case NOT_SET, WALK, BIKE, BIKE_TO_PARK, CAR, CAR_TO_PARK, CAR_PICKUP, CAR_HAILING, FLEXIBLE -> null;
+      case NOT_SET,
+        WALK,
+        BIKE,
+        BIKE_TO_PARK,
+        CAR,
+        CAR_TO_PARK,
+        CAR_PICKUP,
+        CAR_HAILING,
+        FLEXIBLE -> null;
     };
   }
-
-
 
   public ElevatorRequest elevator() {
     return null;

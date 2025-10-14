@@ -84,9 +84,7 @@ public class Transfer {
     WalkRequest walkReq = request.walk();
     if (edges == null || edges.isEmpty()) {
       double durationSeconds = distanceMeters / walkReq.speed();
-      final double domainCost = costLimitSanityCheck(
-        durationSeconds * walkReq.reluctance()
-      );
+      final double domainCost = costLimitSanityCheck(durationSeconds * walkReq.reluctance());
       return Optional.of(
         new DefaultRaptorTransfer(
           this.toStop,

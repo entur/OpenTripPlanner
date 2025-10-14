@@ -1,6 +1,7 @@
 package org.opentripplanner.street.search.request;
 
 public class StopAccessibilityRequest {
+
   public boolean onlyConsiderAccessible() {
     return false;
   }

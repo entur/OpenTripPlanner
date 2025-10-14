@@ -4,6 +4,7 @@ import java.time.Duration;
 import org.opentripplanner.framework.model.Cost;
 
 public class WalkRequest {
+
   private final double speed;
   private final double reluctance;
   private final double stairsTimeFactor;
@@ -61,6 +62,7 @@ public class WalkRequest {
   }
 
   public static class Builder {
+
     private double speed = 1;
     private double reluctance = 1;
     private double stairsTimeFactor = 1;
@@ -114,5 +116,4 @@ public class WalkRequest {
       return new WalkRequest(this);
     }
   }
-}
 }

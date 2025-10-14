@@ -145,8 +145,6 @@ public final class RoutingPreferences implements Serializable {
     return locale;
   }
 
-
-
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

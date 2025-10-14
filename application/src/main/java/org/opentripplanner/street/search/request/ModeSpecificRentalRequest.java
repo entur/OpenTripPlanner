@@ -5,6 +5,7 @@ import java.util.Set;
 import org.opentripplanner.framework.model.Cost;
 
 public class ModeSpecificRentalRequest {
+
   private final Cost pickupCost;
   private final Cost dropOffCost;
   private final Duration pickupTime;
@@ -12,7 +13,14 @@ public class ModeSpecificRentalRequest {
   private final Set<String> allowedNetworks;
   private final Set<String> bannedNetworks;
 
-  public ModeSpecificRentalRequest(Cost pickupCost, Cost dropOffCost, Duration pickupTime, Duration dropOffTime, Set<String> allowedNetworks, Set<String> bannedNetworks) {
+  public ModeSpecificRentalRequest(
+    Cost pickupCost,
+    Cost dropOffCost,
+    Duration pickupTime,
+    Duration dropOffTime,
+    Set<String> allowedNetworks,
+    Set<String> bannedNetworks
+  ) {
     this.pickupCost = pickupCost;
     this.dropOffCost = dropOffCost;
     this.pickupTime = pickupTime;
@@ -49,7 +57,7 @@ public class ModeSpecificRentalRequest {
     return allowedNetworks;
   }
 
-  public Set<String>bannedNetworks() {
+  public Set<String> bannedNetworks() {
     return bannedNetworks;
   }
 

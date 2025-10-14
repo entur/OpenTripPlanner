@@ -127,7 +127,6 @@ public class RaptorRequestTransferCache {
       this.wheelchairPreferences = request.wheelchairEnabled()
         ? request.wheelchair()
         : WheelchairRequest.DEFAULT;
-
     }
 
     @Override
@@ -144,7 +143,14 @@ public class RaptorRequestTransferCache {
 
     @Override
     public int hashCode() {
-      return Objects.hash(transferMode, wheelchair, walk, bike, turnReluctance, wheelchairPreferences);
+      return Objects.hash(
+        transferMode,
+        wheelchair,
+        walk,
+        bike,
+        turnReluctance,
+        wheelchairPreferences
+      );
     }
 
     @Override

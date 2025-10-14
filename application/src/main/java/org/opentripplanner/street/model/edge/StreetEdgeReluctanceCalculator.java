@@ -37,10 +37,7 @@ class StreetEdgeReluctanceCalculator {
     return req.reluctance() * (edgeIsStairs ? req.stairsReluctance() : 1);
   }
 
-  private static double computeBikeWalkingReluctance(
-    WalkRequest pref,
-    boolean edgeIsStairs
-  ) {
+  private static double computeBikeWalkingReluctance(WalkRequest pref, boolean edgeIsStairs) {
     return pref.reluctance() * (edgeIsStairs ? pref.stairsReluctance() : 1);
   }
 

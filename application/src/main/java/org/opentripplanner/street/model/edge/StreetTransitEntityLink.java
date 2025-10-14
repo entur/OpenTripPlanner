@@ -4,7 +4,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -125,7 +124,7 @@ public abstract class StreetTransitEntityLink<T extends Vertex>
     };
   }
 
-  private State[] buildState(State s0, StateEditor s1 ) {
+  private State[] buildState(State s0, StateEditor s1) {
     if (s0.isRentingVehicleFromStation() && s0.mayKeepRentedVehicleAtDestination()) {
       var rentalPreferences = s0.getRequest().rental(s0.getRequest().mode());
       if (rentalPreferences.allowArrivingInRentedVehicleAtDestination()) {

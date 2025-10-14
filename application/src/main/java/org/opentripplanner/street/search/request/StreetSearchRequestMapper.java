@@ -16,8 +16,7 @@ public class StreetSearchRequestMapper {
       .withTo(request.to())
       .withGeoidElevation(request.preferences().system().geoidElevation())
       .withTurnReluctance(request.preferences().street().turnReluctance())
-      .withRental(mapRental(request.preferences()))
-      ;
+      .withRental(mapRental(request.preferences()));
   }
 
   private static RentalRequest mapRental(RoutingPreferences preferences) {
@@ -29,7 +28,14 @@ public class StreetSearchRequestMapper {
   }
 
   private static ModeSpecificRentalRequest mapModeSpecificRental(VehicleRentalPreferences rental) {
-    return new ModeSpecificRentalRequest(rental.pickupCost(), rental.dropOffCost(), rental.pickupTime(), rental.dropOffTime(), rental.allowedNetworks(), rental.bannedNetworks());
+    return new ModeSpecificRentalRequest(
+      rental.pickupCost(),
+      rental.dropOffCost(),
+      rental.pickupTime(),
+      rental.dropOffTime(),
+      rental.allowedNetworks(),
+      rental.bannedNetworks()
+    );
   }
 
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {

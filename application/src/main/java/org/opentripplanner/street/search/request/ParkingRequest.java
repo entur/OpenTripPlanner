@@ -6,6 +6,7 @@ import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingF
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
 
 public class ParkingRequest {
+
   public Cost cost() {
     return null;
   }

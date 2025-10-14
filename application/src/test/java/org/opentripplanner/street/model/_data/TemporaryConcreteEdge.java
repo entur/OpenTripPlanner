@@ -52,6 +52,7 @@ public class TemporaryConcreteEdge extends Edge implements TemporaryEdge {
       getToVertex().getCoordinate()
     );
   }
+
   /**
    * The road speed for a specific traverse mode.
    *
