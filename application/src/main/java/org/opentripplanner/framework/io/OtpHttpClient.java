@@ -29,7 +29,6 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.Header;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHeaders;
-import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
@@ -119,9 +118,9 @@ public class OtpHttpClient {
     ObjectMapper objectMapper,
     Class<T> clazz
   ) {
-    return getAndMap(uri, timeout, headers, is -> {
+    return getAndMap(uri, timeout, headers, response -> {
       try {
-        return objectMapper.readValue(is, clazz);
+        return objectMapper.readValue(response.body(), clazz);
       } catch (Exception e) {
         throw new OtpHttpClientException(e);
       }
@@ -149,9 +148,9 @@ public class OtpHttpClient {
     Map<String, String> headers,
     ObjectMapper objectMapper
   ) {
-    return getAndMap(uri, timeout, headers, is -> {
+    return getAndMap(uri, timeout, headers, response -> {
       try {
-        return objectMapper.readTree(is);
+        return objectMapper.readTree(response.body());
       } catch (Exception e) {
         throw new OtpHttpClientException(e);
       }
@@ -319,7 +318,8 @@ public class OtpHttpClient {
       if (is == null) {
         throw new OtpHttpClientException("HTTP request failed: empty response");
       }
-      return contentMapper.apply(is);
+      OtpHttpResponse httpResponse = new OtpHttpResponse(is, response.getHeaders());
+      return contentMapper.apply(httpResponse);
     } catch (Exception e) {
       throw new OtpHttpClientException(e);
     }
@@ -344,7 +344,9 @@ public class OtpHttpClient {
     } else {
       // Local file probably, try standard java
       try (InputStream is = downloadUrl.openStream()) {
-        return contentMapper.apply(is);
+        // Create empty headers for local file
+        OtpHttpResponse httpResponse = new OtpHttpResponse(is, new Header[0]);
+        return contentMapper.apply(httpResponse);
       } catch (Exception e) {
         throw new OtpHttpClientException(e);
       }
@@ -366,7 +368,7 @@ public class OtpHttpClient {
   /**
    * Returns true if the HTTP status code is not 200.
    */
-  private static boolean isFailedRequest(HttpResponse response) {
+  private static boolean isFailedRequest(org.apache.hc.core5.http.HttpResponse response) {
     return response.getCode() < 200 || response.getCode() >= 300;
   }
 
@@ -398,10 +400,12 @@ public class OtpHttpClient {
   @FunctionalInterface
   public interface ResponseMapper<R> {
     /**
-     * Maps the response input stream.
+     * Maps the HTTP response including headers and body.
      *
+     * @param response the HTTP response containing headers and body stream
      * @return the mapping function result
+     * @throws Exception if an error occurs during mapping
      */
-    R apply(InputStream t) throws Exception;
+    R apply(OtpHttpResponse response) throws Exception;
   }
 }
