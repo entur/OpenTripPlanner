@@ -262,10 +262,7 @@ class OsmWayTest {
     return way;
   }
 
-  private static OsmWay createCrossing(
-    String crossingTag,
-    String crossingValue
-  ) {
+  private static OsmWay createCrossing(String crossingTag, String crossingValue) {
     var way = WayTestData.footway();
     way.addTag("footway", "crossing");
     way.addTag(crossingTag, crossingValue);
