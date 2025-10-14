@@ -9,7 +9,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.framework.geometry.HashGridSpatialIndex;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.osm.model.OsmEntity;
@@ -38,8 +37,8 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
   private static final Logger LOG = LoggerFactory.getLogger(CrosswalkNamer.class);
   private static final int BUFFER_METERS = 25;
 
-  private HashGridSpatialIndex<EdgeOnLevel> streetEdges = new HashGridSpatialIndex<>();
-  private HashGridSpatialIndex<EdgeOnLevel> sidewalkEdges = new HashGridSpatialIndex<>();
+  private StreetEdgeIndex streetIndex = new StreetEdgeIndex();
+  private StreetEdgeIndex sidewalkIndex = new StreetEdgeIndex();
   private Collection<EdgeOnLevel> unnamedCrosswalks = new ArrayList<>();
 
   @Override
@@ -53,13 +52,13 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
       }
       // Record (short) sidewalks to a geometric index
       else if (way.isSidewalk()) {
-        addToSpatialIndex(way, pair, sidewalkEdges, BUFFER_METERS);
+        sidewalkIndex.add(way, pair, BUFFER_METERS);
       }
       // Record named streets, service roads, and slip/turn lanes to a geometric index.
       else if (
         !osmWay.isFootway() && (way.isNamed() || osmWay.isServiceRoad() || isTurnLane(osmWay))
       ) {
-        addToSpatialIndex(way, pair, streetEdges);
+        streetIndex.add(way, pair);
       }
     }
   }
@@ -69,8 +68,8 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
     postprocess(unnamedCrosswalks, BUFFER_METERS, "crosswalks", LOG);
 
     // Set the indices to null so they can be garbage-collected
-    streetEdges = null;
-    sidewalkEdges = null;
+    streetIndex = null;
+    sidewalkIndex = null;
     unnamedCrosswalks = null;
   }
 
@@ -83,10 +82,10 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
     var crosswalk = crosswalkOnLevel.edge();
     OsmWay way = crosswalkOnLevel.way();
 
-    var streetCandidates = streetEdges
-      .query(buffer.getEnvelopeInternal())
+    var streetCandidates = streetIndex
+      .query(buffer)
       .stream()
-      .map(EdgeOnLevel::way)
+      .map(StreetEdgeIndex.EdgeOnLevel::way)
       .toList();
 
     var crossStreetOpt = getIntersectingStreet(way, streetCandidates);
@@ -106,8 +105,8 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
         crosswalk.setName(I18NString.of(String.format("crossing %s", way.getId())));
       }
 
-      var adjacentSidewalks = sidewalkEdges
-        .query(buffer.getEnvelopeInternal())
+      var adjacentSidewalks = sidewalkIndex
+        .query(buffer)
         .stream()
         .filter(e -> e.way().isAdjacentTo(way))
         .filter(e -> e.edge().nameIsDerived())
@@ -128,11 +127,11 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
    * Rename a sidewalk, among candidates, if it is the only adjacent sidewalk to the given crosswalk.
    */
   private void renameAdjacentSidewalk(
-    List<EdgeOnLevel> adjacentSidewalks,
+    List<StreetEdgeIndex.EdgeOnLevel> adjacentSidewalks,
     I18NString crosswalkName,
     long nodeId
   ) {
-    List<EdgeOnLevel> sidewalks = adjacentSidewalks
+    List<StreetEdgeIndex.EdgeOnLevel> sidewalks = adjacentSidewalks
       .stream()
       .filter(e -> e.way().getNodeRefs().contains(nodeId))
       .toList();

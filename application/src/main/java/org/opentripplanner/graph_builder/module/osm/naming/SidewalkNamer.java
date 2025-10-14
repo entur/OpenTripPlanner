@@ -14,7 +14,6 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiLineString;
 import org.locationtech.jts.geom.Point;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.HashGridSpatialIndex;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
@@ -48,7 +47,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
   private static final double MIN_PERCENT_IN_BUFFER = .85;
   private static final int BUFFER_METERS = 25;
 
-  private HashGridSpatialIndex<EdgeOnLevel> streetEdges = new HashGridSpatialIndex<>();
+  private StreetEdgeIndex streetIndex = new StreetEdgeIndex();
   private Collection<EdgeOnLevel> unnamedSidewalks = new ArrayList<>();
 
   @Override
@@ -66,7 +65,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
     }
     // The way is _not_ a sidewalk and does have a name
     else if (way.isNamed() && !way.isLink()) {
-      addToSpatialIndex(way, pair, streetEdges);
+      streetIndex.add(way, pair);
     }
   }
 
@@ -75,7 +74,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
     postprocess(unnamedSidewalks, BUFFER_METERS, "sidewalks", LOG);
 
     // Set the indices to null so they can be garbage-collected
-    streetEdges = null;
+    streetIndex = null;
     unnamedSidewalks = null;
   }
 
@@ -84,7 +83,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
     var sidewalk = sidewalkOnLevel.edge();
     var sidewalkLength = SphericalDistanceLibrary.length(sidewalk.getGeometry());
 
-    var candidates = streetEdges.query(buffer.getEnvelopeInternal());
+    var candidates = streetIndex.query(buffer);
 
     AtomicBoolean result = new AtomicBoolean(false);
 
@@ -124,7 +123,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
    * have a low similarity with the (longer) sidewalk. For that reason we combine them into a group
    * and have a better basis for comparison.
    */
-  private static Stream<CandidateGroup> groupEdgesByName(List<EdgeOnLevel> candidates) {
+  private static Stream<CandidateGroup> groupEdgesByName(List<StreetEdgeIndex.EdgeOnLevel> candidates) {
     return candidates
       .stream()
       .collect(Collectors.groupingBy(e -> e.edge().getName()))
@@ -138,7 +137,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
           .collect(Collectors.toSet());
         return new CandidateGroup(
           entry.getKey(),
-          entry.getValue().stream().map(e -> e.edge()).toList(),
+          entry.getValue().stream().map(StreetEdgeIndex.EdgeOnLevel::edge).toList(),
           levels
         );
       });
