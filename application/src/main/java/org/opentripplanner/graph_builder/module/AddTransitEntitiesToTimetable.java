@@ -38,36 +38,36 @@ public class AddTransitEntitiesToTimetable {
     timetableRepository.addNoticeAssignments(otpTransitService.getNoticeAssignments());
     timetableRepository.addScheduledStopPointMapping(otpTransitService.stopsByScheduledStopPoint());
 
-    addFeedInfoToGraph(timetableRepository);
-    addAgenciesToGraph(timetableRepository);
-    addServicesToTimetableRepository(timetableRepository);
-    addTripPatternsToTimetableRepository(timetableRepository);
+    addFeedInfo(timetableRepository);
+    addAgencies(timetableRepository);
+    addServices(timetableRepository);
+    addTripPatterns(timetableRepository);
 
     /* Interpret the transfers explicitly defined in transfers.txt. */
-    addTransfersToGraph(timetableRepository);
+    addTransfers(timetableRepository);
 
     if (OTPFeature.FlexRouting.isOn()) {
-      addFlexTripsToGraph(timetableRepository);
+      addFlexTrips(timetableRepository);
     }
   }
 
-  private void addFeedInfoToGraph(TimetableRepository timetableRepository) {
+  private void addFeedInfo(TimetableRepository timetableRepository) {
     for (FeedInfo info : otpTransitService.getAllFeedInfos()) {
       timetableRepository.addFeedInfo(info);
     }
   }
 
-  private void addAgenciesToGraph(TimetableRepository timetableRepository) {
+  private void addAgencies(TimetableRepository timetableRepository) {
     for (Agency agency : otpTransitService.getAllAgencies()) {
       timetableRepository.addAgency(agency);
     }
   }
 
-  private void addTransfersToGraph(TimetableRepository timetableRepository) {
+  private void addTransfers(TimetableRepository timetableRepository) {
     timetableRepository.getTransferService().addAll(otpTransitService.getAllTransfers());
   }
 
-  private void addServicesToTimetableRepository(TimetableRepository timetableRepository) {
+  private void addServices(TimetableRepository timetableRepository) {
     /* Assign 0-based numeric codes to all GTFS service IDs. */
     for (FeedScopedId serviceId : otpTransitService.getAllServiceIds()) {
       timetableRepository
@@ -76,7 +76,7 @@ public class AddTransitEntitiesToTimetable {
     }
   }
 
-  private void addTripPatternsToTimetableRepository(TimetableRepository timetableRepository) {
+  private void addTripPatterns(TimetableRepository timetableRepository) {
     Collection<TripPattern> tripPatterns = otpTransitService.getTripPatterns();
 
     /* Loop over all new TripPatterns setting the service codes. */
@@ -84,12 +84,12 @@ public class AddTransitEntitiesToTimetable {
       // TODO this could be more elegant
       tripPattern.getScheduledTimetable().setServiceCodes(timetableRepository.getServiceCodes());
 
-      // Store the tripPattern in the Graph so it will be serialized and usable in routing.
+      // Store the tripPattern in the timetable repository so it will be serialized and usable in routing.
       timetableRepository.addTripPattern(tripPattern.getId(), tripPattern);
     }
   }
 
-  private void addFlexTripsToGraph(TimetableRepository timetableRepository) {
+  private void addFlexTrips(TimetableRepository timetableRepository) {
     for (FlexTrip<?, ?> flexTrip : otpTransitService.getAllFlexTrips()) {
       timetableRepository.addFlexTrip(flexTrip.getId(), flexTrip);
     }
