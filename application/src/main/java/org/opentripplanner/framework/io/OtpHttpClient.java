@@ -311,14 +311,35 @@ public class OtpHttpClient {
         "HTTP request failed with status code " + response.getCode()
       );
     }
-    if (response.getEntity() == null) {
+
+    // There may be other status codes where we expect a body?
+    if (response.getCode() == 200 && response.getEntity() == null) {
       throw new OtpHttpClientException("HTTP request failed: empty response");
     }
+
+    // Here we handle an empty body that was expected
+    if (response.getEntity() == null) {
+      try {
+        OtpHttpResponse httpResponse = new OtpHttpResponse(
+          response.getHeaders(),
+          response.getCode()
+        );
+        return contentMapper.apply(httpResponse);
+      } catch (Exception e) {
+        throw new OtpHttpClientException(e);
+      }
+    }
+
     try (InputStream is = response.getEntity().getContent()) {
       if (is == null) {
+        // This is different from empty response I think?
         throw new OtpHttpClientException("HTTP request failed: empty response");
       }
-      OtpHttpResponse httpResponse = new OtpHttpResponse(is, response.getHeaders());
+      OtpHttpResponse httpResponse = new OtpHttpResponse(
+        is,
+        response.getHeaders(),
+        response.getCode()
+      );
       return contentMapper.apply(httpResponse);
     } catch (Exception e) {
       throw new OtpHttpClientException(e);
@@ -369,7 +390,9 @@ public class OtpHttpClient {
    * Returns true if the HTTP status code is not 200.
    */
   private static boolean isFailedRequest(org.apache.hc.core5.http.HttpResponse response) {
-    return response.getCode() < 200 || response.getCode() >= 300;
+    // Any 2xx or 3xx response is considered successful
+    // We *could* limit this to 2xx and 304?
+    return response.getCode() < 200 || response.getCode() >= 400;
   }
 
   /**

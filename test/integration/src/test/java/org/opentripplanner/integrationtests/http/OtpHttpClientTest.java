@@ -272,4 +272,13 @@ class OtpHttpClientTest {
 
     assertNotNull(result);
   }
+
+  @Test
+  void shouldAccessStatusCode() {
+    URI uri = URI.create("http://localhost:" + port + "/json");
+    client.getAndMap(uri, Map.of(), response -> {
+      assertEquals(200, response.statusCode());
+      return null;
+    });
+  }
 }

@@ -21,17 +21,39 @@ public class OtpHttpResponse {
 
   private final InputStream body;
   private final Map<String, List<String>> headers;
+  private final Integer statusCode;
 
   /**
    * Creates an HTTP response wrapper.
    *
-   * @param body the response body as an InputStream (must not be null)
+   * @param rawHeaders the HTTP headers from the response
+   */
+  OtpHttpResponse(Header[] rawHeaders, Integer statusCode) {
+    this(null, rawHeaders, statusCode);
+  }
+
+  /**
+   * Creates an HTTP response wrapper.
+   *
+   * @param body the response body as an InputStream
    * @param rawHeaders the HTTP headers from the response
    */
   OtpHttpResponse(InputStream body, Header[] rawHeaders) {
-    this.body = Objects.requireNonNull(body, "body cannot be null");
+    this(body, rawHeaders, null);
+  }
+
+  /**
+   * Creates an HTTP response wrapper.
+   *
+   * @param body the response body as an InputStream
+   * @param rawHeaders the HTTP headers from the response
+   * @param statusCode the HTTP status code from the response
+   */
+  OtpHttpResponse(InputStream body, Header[] rawHeaders, Integer statusCode) {
+    this.body = body;
     Objects.requireNonNull(rawHeaders, "rawHeaders cannot be null");
     this.headers = convertHeaders(rawHeaders);
+    this.statusCode = statusCode;
   }
 
   /**
@@ -44,7 +66,7 @@ public class OtpHttpResponse {
    */
   public InputStream body() {
     return body;
-  }
+  } // Maybe desirable to wrap this in Optional
 
   /**
    * Returns all response headers as an immutable map.
@@ -86,6 +108,13 @@ public class OtpHttpResponse {
   public List<String> headerValues(String name) {
     List<String> values = headers.get(normalizeName(name));
     return values != null ? values : Collections.emptyList();
+  }
+
+  /**
+   * Returns the status code of the http response
+   */
+  public int statusCode() {
+    return statusCode;
   }
 
   /**
