@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
+import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.model.TraverseDirection;
@@ -32,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *        e.g. <a href="https://www.openstreetmap.org/way/1139062913">...</a>),
  *        use "crossing over turn lane".
  */
-public class CrosswalkNamer extends NamerWithGeoBuffer {
+public class CrosswalkNamer implements EdgeNamer, AssignNameToEdge {
 
   private static final Logger LOG = LoggerFactory.getLogger(CrosswalkNamer.class);
   private static final int BUFFER_METERS = 25;
@@ -40,6 +41,11 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
   private StreetEdgeIndex streetIndex = new StreetEdgeIndex();
   private StreetEdgeIndex sidewalkIndex = new StreetEdgeIndex();
   private Collection<EdgeOnLevel> unnamedCrosswalks = new ArrayList<>();
+
+  @Override
+  public I18NString name(OsmEntity way) {
+    return way.getAssumedName();
+  }
 
   @Override
   public void recordEdges(OsmEntity way, StreetEdgePair pair) {
@@ -65,7 +71,7 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
 
   @Override
   public void postprocess() {
-    postprocess(unnamedCrosswalks, BUFFER_METERS, "crosswalks", LOG);
+    EdgeProcessorWithBuffer.applyNames(unnamedCrosswalks, this, BUFFER_METERS, "crosswalks", LOG);
 
     // Set the indices to null so they can be garbage-collected
     streetIndex = null;
@@ -74,11 +80,11 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
   }
 
   /**
-   * The actual worker method that runs the business logic on an individual sidewalk edge.
-   * This will also name adjacent sidewalks on each end if they are the only adjacent sidewalks.
+   * The actual logic for naming individual crosswalk edges.
+   * This will also name adjacent sidewalks on each end if they are the only adjacent sidewalks to a crosswalk.
    */
   @Override
-  protected boolean assignNameToEdge(EdgeOnLevel crosswalkOnLevel, Geometry buffer) {
+  public boolean assignNameToEdge(EdgeOnLevel crosswalkOnLevel, Geometry buffer) {
     var crosswalk = crosswalkOnLevel.edge();
     OsmWay way = crosswalkOnLevel.way();
 

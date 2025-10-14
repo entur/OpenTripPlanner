@@ -17,6 +17,7 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
+import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory;
  * the corner, like https://www.openstreetmap.org/way/1059101564. These cases are, however, detected
  * by the above algorithm and the sidewalk name remains the same.
  */
-public class SidewalkNamer extends NamerWithGeoBuffer {
+public class SidewalkNamer implements EdgeNamer, AssignNameToEdge {
 
   private static final Logger LOG = LoggerFactory.getLogger(SidewalkNamer.class);
   private static final double MIN_PERCENT_IN_BUFFER = .85;
@@ -49,6 +50,11 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
 
   private StreetEdgeIndex streetIndex = new StreetEdgeIndex();
   private Collection<EdgeOnLevel> unnamedSidewalks = new ArrayList<>();
+
+  @Override
+  public I18NString name(OsmEntity way) {
+    return way.getAssumedName();
+  }
 
   @Override
   public void recordEdges(OsmEntity way, StreetEdgePair pair) {
@@ -71,15 +77,18 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
 
   @Override
   public void postprocess() {
-    postprocess(unnamedSidewalks, BUFFER_METERS, "sidewalks", LOG);
+    EdgeProcessorWithBuffer.applyNames(unnamedSidewalks, this, BUFFER_METERS, "sidewalks", LOG);
 
     // Set the indices to null so they can be garbage-collected
     streetIndex = null;
     unnamedSidewalks = null;
   }
 
+  /**
+   * The actual logic for naming individual sidewalk edges.
+   */
   @Override
-  protected boolean assignNameToEdge(EdgeOnLevel sidewalkOnLevel, Geometry buffer) {
+  public boolean assignNameToEdge(EdgeOnLevel sidewalkOnLevel, Geometry buffer) {
     var sidewalk = sidewalkOnLevel.edge();
     var sidewalkLength = SphericalDistanceLibrary.length(sidewalk.getGeometry());
 
