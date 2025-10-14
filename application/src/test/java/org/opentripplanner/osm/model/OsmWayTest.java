@@ -262,24 +262,12 @@ class OsmWayTest {
     return way;
   }
 
-  private static OsmWay createGenericHighway() {
-    var way = new OsmWay();
-    way.addTag("highway", "primary");
-    return way;
-  }
-
-  private static OsmWay createGenericFootway() {
-    var way = new OsmWay();
-    way.addTag("highway", "footway");
-    return way;
-  }
-
   private static OsmWay createFootway(
     String footwayValue,
     String crossingTag,
     String crossingValue
   ) {
-    var way = createGenericFootway();
+    var way = WayTestData.footway();
     way.addTag("footway", footwayValue);
     way.addTag(crossingTag, crossingValue);
     return way;
@@ -287,13 +275,13 @@ class OsmWayTest {
 
   @Test
   void footway() {
-    assertFalse(createGenericHighway().isFootway());
-    assertTrue(createGenericFootway().isFootway());
+    assertFalse(WayTestData.highwayPrimary().isFootway());
+    assertTrue(WayTestData.footway().isFootway());
   }
 
   @Test
   void serviceRoad() {
-    assertFalse(createGenericHighway().isServiceRoad());
+    assertFalse(WayTestData.highwayPrimary().isServiceRoad());
 
     var way = new OsmWay();
     way.addTag("highway", "service");
@@ -308,7 +296,7 @@ class OsmWayTest {
 
   static Stream<Arguments> createCrossingCases() {
     return Stream.of(
-      Arguments.of(createGenericFootway(), false),
+      Arguments.of(WayTestData.footway(), false),
       Arguments.of(createFootway("whatever", "unused", "unused"), false),
       Arguments.of(createFootway("crossing", "crossing", "marked"), true),
       Arguments.of(createFootway("crossing", "crossing", "other"), true),

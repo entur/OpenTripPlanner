@@ -230,9 +230,14 @@ public class WayTestData {
     return way;
   }
 
-  public static OsmWay highwayPrimaryWithMotorroad() {
+  public static OsmWay highwayPrimary() {
     var way = new OsmWay();
     way.addTag("highway", "primary");
+    return way;
+  }
+
+  public static OsmWay highwayPrimaryWithMotorroad() {
+    var way = highwayPrimary();
     way.addTag("motorroad", "yes");
     return way;
   }
