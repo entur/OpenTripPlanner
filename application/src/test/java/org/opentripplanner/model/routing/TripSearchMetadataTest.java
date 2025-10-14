@@ -18,9 +18,9 @@ public class TripSearchMetadataTest {
       SEARCH_WINDOW_USED,
       null
     );
-    assertEquals(SEARCH_WINDOW_USED, subject.searchWindowUsed);
-    assertEquals("2020-05-17T09:50:00Z", subject.prevDateTime.toString());
-    assertEquals("2020-05-17T10:50:00Z", subject.nextDateTime.toString());
+    assertEquals(SEARCH_WINDOW_USED, subject.raptorSearchWindowUsed());
+    assertEquals("2020-05-17T09:50:00Z", subject.prevDateTime().toString());
+    assertEquals("2020-05-17T10:50:00Z", subject.nextDateTime().toString());
   }
 
   @Test
@@ -33,9 +33,9 @@ public class TripSearchMetadataTest {
       SEARCH_WINDOW_USED,
       Instant.parse("2020-05-17T10:35:00Z")
     );
-    assertEquals(SEARCH_WINDOW_USED, subject.searchWindowUsed);
-    assertEquals("2020-05-17T10:04:00Z", subject.prevDateTime.toString());
-    assertEquals("2020-05-17T10:50:00Z", subject.nextDateTime.toString());
+    assertEquals(SEARCH_WINDOW_USED, subject.raptorSearchWindowUsed());
+    assertEquals("2020-05-17T10:04:00Z", subject.prevDateTime().toString());
+    assertEquals("2020-05-17T10:50:00Z", subject.nextDateTime().toString());
 
     // New arrival-time without seconds, 10:36:00, should stay the same: 10:36:00
     subject = TripSearchMetadata.createForArriveBy(
@@ -43,8 +43,8 @@ public class TripSearchMetadataTest {
       SEARCH_WINDOW_USED,
       Instant.parse("2020-05-17T11:35:59Z")
     );
-    assertEquals("2020-05-17T11:04:00Z", subject.prevDateTime.toString());
-    assertEquals("2020-05-17T11:50:00Z", subject.nextDateTime.toString());
+    assertEquals("2020-05-17T11:04:00Z", subject.prevDateTime().toString());
+    assertEquals("2020-05-17T11:50:00Z", subject.nextDateTime().toString());
   }
 
   @Test
@@ -54,9 +54,9 @@ public class TripSearchMetadataTest {
       SEARCH_WINDOW_USED,
       null
     );
-    assertEquals(SEARCH_WINDOW_USED, subject.searchWindowUsed);
-    assertEquals("2020-05-17T09:50:00Z", subject.prevDateTime.toString());
-    assertEquals("2020-05-17T10:50:00Z", subject.nextDateTime.toString());
+    assertEquals(SEARCH_WINDOW_USED, subject.raptorSearchWindowUsed());
+    assertEquals("2020-05-17T09:50:00Z", subject.prevDateTime().toString());
+    assertEquals("2020-05-17T10:50:00Z", subject.nextDateTime().toString());
   }
 
   @Test
@@ -69,9 +69,9 @@ public class TripSearchMetadataTest {
       SEARCH_WINDOW_USED,
       Instant.parse("2020-05-17T10:35:00Z")
     );
-    assertEquals(SEARCH_WINDOW_USED, subject.searchWindowUsed);
-    assertEquals("2020-05-17T09:50:00Z", subject.prevDateTime.toString());
-    assertEquals("2020-05-17T10:36:00Z", subject.nextDateTime.toString());
+    assertEquals(SEARCH_WINDOW_USED, subject.raptorSearchWindowUsed());
+    assertEquals("2020-05-17T09:50:00Z", subject.prevDateTime().toString());
+    assertEquals("2020-05-17T10:36:00Z", subject.nextDateTime().toString());
 
     // New departure-time, 11:35:59, should be rounded up to 11:36:00
     subject = TripSearchMetadata.createForDepartAfter(
@@ -79,7 +79,7 @@ public class TripSearchMetadataTest {
       SEARCH_WINDOW_USED,
       Instant.parse("2020-05-17T11:35:59Z")
     );
-    assertEquals("2020-05-17T10:50:00Z", subject.prevDateTime.toString());
-    assertEquals("2020-05-17T11:36:00Z", subject.nextDateTime.toString());
+    assertEquals("2020-05-17T10:50:00Z", subject.prevDateTime().toString());
+    assertEquals("2020-05-17T11:36:00Z", subject.nextDateTime().toString());
   }
 }

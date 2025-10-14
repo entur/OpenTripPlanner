@@ -11,45 +11,23 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  */
 public class TripSearchMetadata {
 
-  /**
-   * This is the time window used by the raptor search. The window is an optional parameter and OTP
-   * might override it/dynamically assign a new value.
-   */
-  public Duration searchWindowUsed;
-
-  /**
-   * This is the suggested search time for the "previous page" or time window. Insert it together
-   * with the {@link #searchWindowUsed} in the request to get a new set of trips preceding in the
-   * time-window BEFORE the current search. No duplicate trips should be returned, unless a trip is
-   * delayed and new realtime-data is available.
-   *
-   * @deprecated Use the PageInfo and request {@code nextCursor} and {@code previousCursor} instead.
-   */
-  @Deprecated
-  public Instant prevDateTime;
-
-  /**
-   * This is the suggested search time for the "next page" or time window. Insert it together with
-   * the {@link #searchWindowUsed} in the request to get a new set of trips following in the
-   * time-window AFTER the current search. No duplicate trips should be returned, unless a trip is
-   * delayed and new realtime-data is available.
-   */
-  @Deprecated
-  public Instant nextDateTime;
+  private final Duration raptorSearchWindowUsed;
+  private final Instant prevDateTime;
+  private final Instant nextDateTime;
 
   private TripSearchMetadata(
-    Duration searchWindowUsed,
+    Duration raptorSearchWindowUsed,
     Instant prevDateTime,
     Instant nextDateTime
   ) {
-    this.searchWindowUsed = searchWindowUsed;
+    this.raptorSearchWindowUsed = raptorSearchWindowUsed;
     this.prevDateTime = prevDateTime;
     this.nextDateTime = nextDateTime;
   }
 
   public static TripSearchMetadata createForArriveBy(
     Instant earliestDepartureTimeUsed,
-    Duration searchWindowUsed,
+    Duration raptorSearchWindowUsed,
     @Nullable Instant firstDepartureTime
   ) {
     Instant actualEdt = firstDepartureTime == null
@@ -58,34 +36,58 @@ public class TripSearchMetadata {
       : firstDepartureTime.minusSeconds(60).truncatedTo(ChronoUnit.MINUTES);
 
     return new TripSearchMetadata(
-      searchWindowUsed,
-      actualEdt.minus(searchWindowUsed),
-      earliestDepartureTimeUsed.plus(searchWindowUsed)
+      raptorSearchWindowUsed,
+      actualEdt.minus(raptorSearchWindowUsed),
+      earliestDepartureTimeUsed.plus(raptorSearchWindowUsed)
     );
   }
 
   public static TripSearchMetadata createForDepartAfter(
     Instant requestDepartureTime,
-    Duration searchWindowUsed,
+    Duration raptorSearchWindowUsed,
     Instant lastDepartureTime
   ) {
     Instant nextDateTime = lastDepartureTime == null
-      ? requestDepartureTime.plus(searchWindowUsed)
+      ? requestDepartureTime.plus(raptorSearchWindowUsed)
       // There is no way to make this work properly. If we round down we get duplicates, if we
       // round up we might skip itineraries.
       : lastDepartureTime.plusSeconds(60).truncatedTo(ChronoUnit.MINUTES);
 
     return new TripSearchMetadata(
-      searchWindowUsed,
-      requestDepartureTime.minus(searchWindowUsed),
+      raptorSearchWindowUsed,
+      requestDepartureTime.minus(raptorSearchWindowUsed),
       nextDateTime
     );
+  }
+
+  /**
+   * This is the time window used by the raptor search. The window is an optional parameter and OTP
+   * might override it/dynamically assign a new value.
+   */
+  public Duration raptorSearchWindowUsed() {
+    return raptorSearchWindowUsed;
+  }
+
+  /**
+   * @deprecated Use the PageInfo and request {@code nextCursor} and {@code previousCursor} instead.
+   */
+  @Deprecated
+  public Instant prevDateTime() {
+    return prevDateTime;
+  }
+
+  /**
+   * @deprecated Use the PageInfo and request {@code nextCursor} and {@code previousCursor} instead.
+   */
+  @Deprecated
+  public Instant nextDateTime() {
+    return nextDateTime;
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.of(TripSearchMetadata.class)
-      .addDuration("searchWindowUsed", searchWindowUsed)
+      .addDuration("searchWindowUsed", raptorSearchWindowUsed)
       .addObj("nextDateTime", nextDateTime)
       .addObj("prevDateTime", prevDateTime)
       .toString();

@@ -26,36 +26,29 @@ public class TripMetadataType {
             "the current search window. The scaling of the search window ensures faster " +
             "paging and limits resource usage. The unit is minutes."
           )
+          .deprecate("This not needed for debugging, and is missleading if the window is croped.")
           .type(new GraphQLNonNull(Scalars.GraphQLInt))
-          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).searchWindowUsed.toMinutes())
+          .dataFetcher(e ->
+            ((TripSearchMetadata) e.getSource()).raptorSearchWindowUsed().toMinutes()
+          )
           .build()
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("nextDateTime")
-          .description(
-            "This is the suggested search time for the \"next page\" or time " +
-            "window. Insert it together with the 'searchWindowUsed' in the " +
-            "request to get a new set of trips following in the time-window " +
-            "AFTER the current search."
-          )
+          .description("This will not be available after Match 2026!")
           .deprecate("Use pageCursor instead")
           .type(dateTimeScalar)
-          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).nextDateTime.toEpochMilli())
+          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).nextDateTime().toEpochMilli())
           .build()
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("prevDateTime")
-          .description(
-            "This is the suggested search time for the \"previous page\" or " +
-            "time-window. Insert it together with the 'searchWindowUsed' in " +
-            "the request to get a new set of trips preceding in the " +
-            "time-window BEFORE the current search."
-          )
+          .description("This will not be available after Match 2026!")
           .deprecate("Use pageCursor instead")
           .type(dateTimeScalar)
-          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).prevDateTime.toEpochMilli())
+          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).prevDateTime().toEpochMilli())
           .build()
       )
       .build();
