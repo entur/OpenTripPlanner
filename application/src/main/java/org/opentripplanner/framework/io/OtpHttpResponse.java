@@ -118,6 +118,6 @@ public class OtpHttpResponse {
    * Uses English locale to ensure consistent behavior across different system locales.
    */
   private static String normalizeName(String name) {
-    return name.toLowerCase(Locale.ENGLISH);
+    return name.toLowerCase(Locale.ROOT);
   }
 }
