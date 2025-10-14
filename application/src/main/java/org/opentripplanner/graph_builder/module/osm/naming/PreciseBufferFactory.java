@@ -16,13 +16,13 @@ import org.locationtech.jts.operation.buffer.BufferParameters;
  * system. Re-using the same CRS for all edges might introduce tiny imprecisions for OTPs use cases
  * but speeds up the processing enormously and is a price well worth paying.
  */
-final class PreciseBuffer {
+final class PreciseBufferFactory {
 
   private final double distanceInMeters;
   private final MathTransform toTransform;
   private final MathTransform fromTransform;
 
-  PreciseBuffer(Coordinate coordinate, double distanceInMeters) {
+  PreciseBufferFactory(Coordinate coordinate, double distanceInMeters) {
     this.distanceInMeters = distanceInMeters;
     String code = "AUTO:42001,%s,%s".formatted(coordinate.x, coordinate.y);
     try {

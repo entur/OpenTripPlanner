@@ -17,7 +17,7 @@ import org.slf4j.Logger;
  */
 public abstract class NamerWithGeoBuffer implements EdgeNamer {
 
-  PreciseBuffer preciseBuffer;
+  PreciseBufferFactory preciseBufferFactory;
 
   @Override
   public I18NString name(OsmEntity way) {
@@ -36,13 +36,13 @@ public abstract class NamerWithGeoBuffer implements EdgeNamer {
       unnamedEdges.size()
     );
 
-    this.preciseBuffer = new PreciseBuffer(computeEnvelopeCenter(unnamedEdges), bufferMeters);
+    this.preciseBufferFactory = new PreciseBufferFactory(computeEnvelopeCenter(unnamedEdges), bufferMeters);
 
     final AtomicInteger namesApplied = new AtomicInteger(0);
     unnamedEdges
       .parallelStream()
       .forEach(edgeOnLevel -> {
-        var buffer = preciseBuffer.preciseBuffer(edgeOnLevel.edge().getGeometry());
+        var buffer = preciseBufferFactory.preciseBuffer(edgeOnLevel.edge().getGeometry());
         if (assignNameToEdge(edgeOnLevel, buffer)) {
           namesApplied.incrementAndGet();
         }
