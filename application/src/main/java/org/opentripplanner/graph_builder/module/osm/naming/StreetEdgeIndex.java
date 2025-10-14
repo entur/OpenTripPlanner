@@ -1,7 +1,6 @@
 package org.opentripplanner.graph_builder.module.osm.naming;
 
 import java.util.List;
-import java.util.Set;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.framework.geometry.HashGridSpatialIndex;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
@@ -13,7 +12,6 @@ import org.opentripplanner.street.model.edge.StreetEdge;
  * Helper class for collecting {@link OsmWay}/{@link StreetEdge} pairs in a {@link HashGridSpatialIndex}.
  */
 class StreetEdgeIndex {
-  public record EdgeOnLevel(OsmWay way, StreetEdge edge, Set<String> levels) {}
 
   private final HashGridSpatialIndex<EdgeOnLevel> index = new HashGridSpatialIndex<>();
 
@@ -27,11 +25,7 @@ class StreetEdgeIndex {
   /**
    * Adds an entry to a geospatial index if its length is less than a threshold.
    */
-  public void add(
-    OsmEntity way,
-    StreetEdgePair pair,
-    int maxLengthMeters
-  ) {
+  public void add(OsmEntity way, StreetEdgePair pair, int maxLengthMeters) {
     // We generate two edges for each osm way: one there and one back. This spatial index only
     // needs to contain one item for each road segment with a unique geometry and name, so we
     // add only one of the two edges.

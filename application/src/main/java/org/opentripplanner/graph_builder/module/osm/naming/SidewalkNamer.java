@@ -123,7 +123,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
    * have a low similarity with the (longer) sidewalk. For that reason we combine them into a group
    * and have a better basis for comparison.
    */
-  private static Stream<CandidateGroup> groupEdgesByName(List<StreetEdgeIndex.EdgeOnLevel> candidates) {
+  private static Stream<CandidateGroup> groupEdgesByName(List<EdgeOnLevel> candidates) {
     return candidates
       .stream()
       .collect(Collectors.groupingBy(e -> e.edge().getName()))
@@ -137,7 +137,7 @@ public class SidewalkNamer extends NamerWithGeoBuffer {
           .collect(Collectors.toSet());
         return new CandidateGroup(
           entry.getKey(),
-          entry.getValue().stream().map(StreetEdgeIndex.EdgeOnLevel::edge).toList(),
+          entry.getValue().stream().map(EdgeOnLevel::edge).toList(),
           levels
         );
       });

@@ -82,11 +82,7 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
     var crosswalk = crosswalkOnLevel.edge();
     OsmWay way = crosswalkOnLevel.way();
 
-    var streetCandidates = streetIndex
-      .query(buffer)
-      .stream()
-      .map(StreetEdgeIndex.EdgeOnLevel::way)
-      .toList();
+    var streetCandidates = streetIndex.query(buffer).stream().map(EdgeOnLevel::way).toList();
 
     var crossStreetOpt = getIntersectingStreet(way, streetCandidates);
     if (crossStreetOpt.isPresent()) {
@@ -127,11 +123,11 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
    * Rename a sidewalk, among candidates, if it is the only adjacent sidewalk to the given crosswalk.
    */
   private void renameAdjacentSidewalk(
-    List<StreetEdgeIndex.EdgeOnLevel> adjacentSidewalks,
+    List<EdgeOnLevel> adjacentSidewalks,
     I18NString crosswalkName,
     long nodeId
   ) {
-    List<StreetEdgeIndex.EdgeOnLevel> sidewalks = adjacentSidewalks
+    List<EdgeOnLevel> sidewalks = adjacentSidewalks
       .stream()
       .filter(e -> e.way().getNodeRefs().contains(nodeId))
       .toList();
@@ -163,7 +159,7 @@ public class CrosswalkNamer extends NamerWithGeoBuffer {
     return oneWayCar.isPresent() && oneWayCar.get() == FORWARD;
   }
 
-  public Collection<EdgeOnLevel> getUnnamedCrosswalks() {
+  Collection<EdgeOnLevel> getUnnamedCrosswalks() {
     return unnamedCrosswalks;
   }
 }
