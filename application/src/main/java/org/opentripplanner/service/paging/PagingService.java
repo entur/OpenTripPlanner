@@ -21,7 +21,6 @@ public class PagingService {
   private final Instant earliestDepartureTime;
   private final Instant latestArrivalTime;
   private final SortOrder itinerariesSortOrder;
-  private final boolean arriveBy;
   private final int numberOfItineraries;
   private final PageCursor pageCursor;
   private final PageCursorInput pageCursorInput;
@@ -39,7 +38,6 @@ public class PagingService {
     @Nullable Instant earliestDepartureTime,
     @Nullable Instant latestArrivalTime,
     SortOrder itinerariesSortOrder,
-    boolean arriveBy,
     int numberOfItineraries,
     @Nullable PageCursor pageCursor,
     PageCursorInput pageCursorInput,
@@ -49,7 +47,6 @@ public class PagingService {
     this.earliestDepartureTime = earliestDepartureTime;
     this.latestArrivalTime = latestArrivalTime;
     this.itinerariesSortOrder = Objects.requireNonNull(itinerariesSortOrder);
-    this.arriveBy = arriveBy;
     this.numberOfItineraries = numberOfItineraries;
     this.pageCursor = pageCursor;
 
@@ -76,17 +73,17 @@ public class PagingService {
       return null;
     }
 
-    if (arriveBy) {
-      return TripSearchMetadata.createForArriveBy(
-        earliestDepartureTime,
-        raptorSearchWindowUsed,
-        firstKeptDepartureTime()
-      );
-    } else {
+    if (itinerariesSortOrder.isSortedByAscendingArrivalTime()) {
       return TripSearchMetadata.createForDepartAfter(
         earliestDepartureTime,
         raptorSearchWindowUsed,
         lastKeptDepartureTime()
+      );
+    } else {
+      return TripSearchMetadata.createForArriveBy(
+        earliestDepartureTime,
+        raptorSearchWindowUsed,
+        firstKeptDepartureTime()
       );
     }
   }
@@ -223,7 +220,6 @@ public class PagingService {
       .addDateTime("earliestDepartureTime", earliestDepartureTime)
       .addDateTime("latestArrivalTime", latestArrivalTime)
       .addEnum("itinerariesSortOrder", itinerariesSortOrder)
-      .addBoolIfTrue("arriveBy", arriveBy)
       .addNum("numberOfItineraries", numberOfItineraries)
       .addObj("pageCursor", pageCursor)
       .toString();
