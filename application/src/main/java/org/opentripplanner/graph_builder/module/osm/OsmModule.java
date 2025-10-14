@@ -223,7 +223,7 @@ public class OsmModule implements GraphBuilderModule {
 
     TurnRestrictionUnifier.unifyTurnRestrictions(osmdb, issueStore, osmInfoGraphBuildRepository);
 
-    params.edgeNamer().postprocess();
+    params.edgeNamer().finalizeNames();
 
     normalizer.applySafetyFactors();
   }

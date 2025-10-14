@@ -76,7 +76,7 @@ public class SidewalkNamer implements EdgeNamer, AssignNameToEdge {
   }
 
   @Override
-  public void postprocess() {
+  public void finalizeNames() {
     EdgeProcessorWithBuffer.applyNames(unnamedSidewalks, this, BUFFER_METERS, "sidewalks", LOG);
 
     // Set the indices to null so they can be garbage-collected

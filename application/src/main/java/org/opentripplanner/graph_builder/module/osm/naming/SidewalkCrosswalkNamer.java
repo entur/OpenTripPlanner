@@ -25,8 +25,8 @@ public class SidewalkCrosswalkNamer implements EdgeNamer {
   }
 
   @Override
-  public void postprocess() {
-    sidewalkNamer.postprocess();
-    crosswalkNamer.postprocess();
+  public void finalizeNames() {
+    sidewalkNamer.finalizeNames();
+    crosswalkNamer.finalizeNames();
   }
 }

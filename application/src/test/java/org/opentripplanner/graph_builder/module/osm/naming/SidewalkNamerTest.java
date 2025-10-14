@@ -27,7 +27,7 @@ class SidewalkNamerTest {
   private static final Logger LOG = LoggerFactory.getLogger(SidewalkNamerTest.class);
 
   @Test
-  void postprocess() {
+  void finalizeNames() {
     var builder = new ModelBuilder();
     var sidewalk = builder.addUnnamedSidewalk(
       new WgsCoordinate(33.75029, -84.39198),
@@ -53,7 +53,7 @@ class SidewalkNamerTest {
     );
 
     assertNotEquals(sidewalk.edge.getName(), pryorStreet.edge.getName());
-    builder.postProcess(new SidewalkNamer());
+    builder.finalizeNames(new SidewalkNamer());
     assertEquals(sidewalk.edge.getName(), pryorStreet.edge.getName());
     assertFalse(sidewalk.edge.nameIsDerived());
   }
@@ -90,9 +90,9 @@ class SidewalkNamerTest {
       return p;
     }
 
-    void postProcess(EdgeNamer namer) {
+    void finalizeNames(EdgeNamer namer) {
       pairs.forEach(p -> namer.recordEdges(p.way, new StreetEdgePair(p.edge, null)));
-      namer.postprocess();
+      namer.finalizeNames();
     }
   }
 

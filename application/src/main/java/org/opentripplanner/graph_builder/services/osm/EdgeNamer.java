@@ -31,7 +31,7 @@ public interface EdgeNamer {
    * Called after each edge has been named to build a more complex name out of the relationships
    * tracked in {@link EdgeNamer#recordEdges(OsmEntity, StreetEdgePair)}.
    */
-  void postprocess();
+  void finalizeNames();
 
   default I18NString getNameForWay(OsmEntity way, String id) {
     var name = name(way);

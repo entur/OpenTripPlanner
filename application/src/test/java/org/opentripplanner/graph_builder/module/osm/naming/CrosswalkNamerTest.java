@@ -91,7 +91,7 @@ class CrosswalkNamerTest {
 
   @ParameterizedTest
   @MethodSource("streetTypes")
-  void recordEdgesAndPostprocess(OsmWay crossStreet, String name) {
+  void recordEdgesAndFinalizeNames(OsmWay crossStreet, String name) {
     var builder = new ModelBuilder();
     var crosswalk = builder.addWay(
       CROSSWALK,
@@ -128,7 +128,7 @@ class CrosswalkNamerTest {
     builder.recordEdges(namer);
     assertEquals(1, namer.getUnnamedCrosswalks().size());
 
-    namer.postprocess();
+    namer.finalizeNames();
     assertEquals(String.format("crossing over %s", name), crosswalk.edge.getName().toString());
     assertFalse(crosswalk.edge.nameIsDerived());
     assertEquals(

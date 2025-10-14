@@ -70,7 +70,7 @@ public class CrosswalkNamer implements EdgeNamer, AssignNameToEdge {
   }
 
   @Override
-  public void postprocess() {
+  public void finalizeNames() {
     EdgeProcessorWithBuffer.applyNames(unnamedCrosswalks, this, BUFFER_METERS, "crosswalks", LOG);
 
     // Set the indices to null so they can be garbage-collected
