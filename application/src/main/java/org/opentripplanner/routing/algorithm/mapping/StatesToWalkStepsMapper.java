@@ -303,7 +303,7 @@ public class StatesToWalkStepsMapper {
 
   /**
    * Determines whether a set of three consecutive instances of {@link WalkStepBuilder} refer to the same street.
-   * The purposes of this check are (i) to give a separate instruction when crossing to the other side of the same street
+   * The purposes of this check are (i) to give a separate instruction when crossing to the other side of the same street, if a crosswalk namer is iin use
    * (an instruction can be given to cross at a particular location because others may not be accessible, practical, etc.),
    * and (ii) to remove trivial turns when a given street briefly merges with another.
    * @return true if the walk steps refer to the same street, false otherwise.
@@ -318,9 +318,10 @@ public class StatesToWalkStepsMapper {
     String threeBackStepName = threeBack.directionTextNoParens();
     if (lastStepName == null || twoBackStepName == null || threeBackStepName == null) return false;
 
-    // TODO: skip crossing condition unless enabled in config with the namer.
     return (
-      !lastStep.isCrossing() && !twoBack.isCrossing() && lastStepName.equals(threeBackStepName)
+      (!lastStep.isCrossing() || lastStep.nameIsDerived()) &&
+      (!twoBack.isCrossing() || twoBack.nameIsDerived()) &&
+      lastStepName.equals(threeBackStepName)
     );
   }
 

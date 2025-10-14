@@ -106,7 +106,8 @@ class StatesToWalkStepsMapperTest {
       .map(s ->
         s != null
           ? WalkStep.builder()
-            .withCrossing(s.startsWith("crossing over "))
+            .withCrossing(s.startsWith("crossing over ") || s.equals("derived name"))
+            .withNameIsDerived(s.equals("derived name"))
             .withDirectionText(I18NString.of(s))
           : WalkStep.builder()
       )
@@ -141,6 +142,11 @@ class StatesToWalkStepsMapperTest {
         List.of("crossing over turn lane", "Street1", "crossing over turn lane"),
         false,
         "Multiple crossings are not the same street."
+      ),
+      Arguments.of(
+        List.of("Street1", "derived name", "Street1"),
+        true,
+        "A street interrupted by a crossing with a derived name (using a default namer) is the same street."
       )
     );
   }
