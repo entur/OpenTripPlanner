@@ -41,6 +41,10 @@ public record PageCursor(
     return generalizedCostMaxLimit != null;
   }
 
+  public Instant latestDepartureTime() {
+    return earliestDepartureTime.plus(searchWindow);
+  }
+
   @Nullable
   public String encode() {
     return PageCursorSerializer.encode(this);

@@ -27,6 +27,9 @@ public class PagingService {
   private final PagingSearchWindowAdjuster searchWindowAdjuster;
   private final List<Itinerary> itineraries;
 
+  private PageCursor nextPageCursor = null;
+  private PageCursor previousPageCursor = null;
+
   // Lazy init
   private PageCursorFactory pageCursorFactory = null;
 
@@ -60,11 +63,17 @@ public class PagingService {
   }
 
   public PageCursor nextPageCursor() {
-    return pageCursorFactory().nextPageCursor();
+    if (nextPageCursor == null) {
+      this.nextPageCursor = pageCursorFactory().nextPageCursor();
+    }
+    return nextPageCursor;
   }
 
   public PageCursor previousPageCursor() {
-    return pageCursorFactory().previousPageCursor();
+    if (previousPageCursor == null) {
+      this.previousPageCursor = pageCursorFactory().previousPageCursor();
+    }
+    return previousPageCursor;
   }
 
   @Nullable
@@ -72,15 +81,21 @@ public class PagingService {
     if (noSuccessfulTransitSearchPerformed()) {
       return null;
     }
+    var edt = previousPageCursor().latestDepartureTime();
+    var ldt = nextPageCursor().earliestDepartureTime();
 
     if (itinerariesSortOrder.isSortedForDepartAfterSearch()) {
       return TripSearchMetadata.createForDepartAfter(
+        edt,
+        ldt,
         earliestDepartureTime,
         raptorSearchWindowUsed,
         lastKeptDepartureTime()
       );
     } else {
       return TripSearchMetadata.createForArriveBy(
+        edt,
+        ldt,
         earliestDepartureTime,
         raptorSearchWindowUsed,
         firstKeptDepartureTime()

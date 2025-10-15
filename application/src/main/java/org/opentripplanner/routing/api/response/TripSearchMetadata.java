@@ -11,21 +11,29 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  */
 public class TripSearchMetadata {
 
+  private final Instant pageDepartureTimeStart;
+  private final Instant pageDepartureTimeEnd;
   private final Duration raptorSearchWindowUsed;
   private final Instant prevDateTime;
   private final Instant nextDateTime;
 
   private TripSearchMetadata(
+    Instant pageDepartureTimeStart,
+    Instant pageDepartureTimeEnd,
     Duration raptorSearchWindowUsed,
     Instant prevDateTime,
     Instant nextDateTime
   ) {
+    this.pageDepartureTimeStart = pageDepartureTimeStart;
+    this.pageDepartureTimeEnd = pageDepartureTimeEnd;
     this.raptorSearchWindowUsed = raptorSearchWindowUsed;
     this.prevDateTime = prevDateTime;
     this.nextDateTime = nextDateTime;
   }
 
   public static TripSearchMetadata createForArriveBy(
+    Instant pageDepartureTimeStart,
+    Instant pageDepartureTimeEnd,
     Instant earliestDepartureTimeUsed,
     Duration raptorSearchWindowUsed,
     @Nullable Instant firstDepartureTime
@@ -36,6 +44,8 @@ public class TripSearchMetadata {
       : firstDepartureTime.minusSeconds(60).truncatedTo(ChronoUnit.MINUTES);
 
     return new TripSearchMetadata(
+      pageDepartureTimeStart,
+      pageDepartureTimeEnd,
       raptorSearchWindowUsed,
       actualEdt.minus(raptorSearchWindowUsed),
       earliestDepartureTimeUsed.plus(raptorSearchWindowUsed)
@@ -43,6 +53,8 @@ public class TripSearchMetadata {
   }
 
   public static TripSearchMetadata createForDepartAfter(
+    Instant pageDepartureTimeStart,
+    Instant pageDepartureTimeEnd,
     Instant requestDepartureTime,
     Duration raptorSearchWindowUsed,
     Instant lastDepartureTime
@@ -54,10 +66,20 @@ public class TripSearchMetadata {
       : lastDepartureTime.plusSeconds(60).truncatedTo(ChronoUnit.MINUTES);
 
     return new TripSearchMetadata(
+      pageDepartureTimeStart,
+      pageDepartureTimeEnd,
       raptorSearchWindowUsed,
       requestDepartureTime.minus(raptorSearchWindowUsed),
       nextDateTime
     );
+  }
+
+  public Instant pageDepartureTimeStart() {
+    return pageDepartureTimeStart;
+  }
+
+  public Instant pageDepartureTimeEnd() {
+    return pageDepartureTimeEnd;
   }
 
   /**
@@ -87,6 +109,8 @@ public class TripSearchMetadata {
   @Override
   public String toString() {
     return ToStringBuilder.of(TripSearchMetadata.class)
+      .addObj("pageDepartureTimeStart", pageDepartureTimeStart)
+      .addObj("pageDepartureTimeEnd", pageDepartureTimeEnd)
       .addDuration("searchWindowUsed", raptorSearchWindowUsed)
       .addObj("nextDateTime", nextDateTime)
       .addObj("prevDateTime", prevDateTime)
