@@ -343,7 +343,7 @@ public class TransitRouter {
       transitSearchTimeZero,
       additionalSearchDays.additionalSearchDaysInPast(),
       additionalSearchDays.additionalSearchDaysInFuture(),
-      new RouteRequestTransitDataProviderFilter(request),
+      RouteRequestTransitDataProviderFilter.ofRequest(request),
       request
     );
   }

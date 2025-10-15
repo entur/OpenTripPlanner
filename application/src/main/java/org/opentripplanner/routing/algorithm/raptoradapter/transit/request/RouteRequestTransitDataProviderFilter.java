@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -42,51 +42,31 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
 
   private final boolean hasSubModeFilters;
 
-  public RouteRequestTransitDataProviderFilter(RouteRequest request) {
-    var wheelchairEnabled = request.journey().wheelchair();
-    var wheelchairPreferences = request.preferences().wheelchair();
+  public RouteRequestTransitDataProviderFilter(
+    RouteRequestTransitDataProviderFilterBuilder builder
+  ) {
+    requireBikesAllowed = builder.requireBikesAllowed();
+    requireCarsAllowed = builder.requireCarsAllowed();
+    requireWheelchairAccessibleTrips = builder.requireWheelchairAccessibleTrips();
+    requireWheelchairAccessibleStops = builder.requireWheelchairAccessibleStops();
+    includePlannedCancellations = builder.includePlannedCancellations();
+    includeRealtimeCancellations = builder.includeRealtimeCancellations();
+    bannedTrips = Set.copyOf(builder.bannedTrips());
 
-    this.requireBikesAllowed = request.journey().transfer().mode() == StreetMode.BIKE;
-    this.requireCarsAllowed = request.journey().transfer().mode() == StreetMode.CAR;
-    this.requireWheelchairAccessibleTrips =
-      wheelchairEnabled && wheelchairPreferences.trip().onlyConsiderAccessible();
-    this.requireWheelchairAccessibleStops =
-      wheelchairEnabled && wheelchairPreferences.stop().onlyConsiderAccessible();
-    this.includePlannedCancellations = request
-      .preferences()
-      .transit()
-      .includePlannedCancellations();
-    this.includeRealtimeCancellations = request
-      .preferences()
-      .transit()
-      .includeRealtimeCancellations();
-    this.bannedTrips = Set.copyOf(request.journey().transit().bannedTrips());
-
-    var filters = request.journey().transit().filters();
+    var filters = builder.filters();
+    if (filters.isEmpty()) {
+      filters = List.of(AllowAllTransitFilter.of());
+    }
     this.filters = filters.toArray(TransitFilter[]::new);
-    this.hasSubModeFilters = filters.stream().anyMatch(TransitFilter::isSubModePredicate);
+    hasSubModeFilters = filters.stream().anyMatch(TransitFilter::isSubModePredicate);
   }
 
-  // This constructor is used only for testing
-  public RouteRequestTransitDataProviderFilter(
-    boolean requireBikesAllowed,
-    boolean requireCarsAllowed,
-    boolean requireWheelchairAccessibleTrips,
-    boolean requireWheelchairAccessibleStops,
-    boolean includePlannedCancellations,
-    boolean includeRealtimeCancellations,
-    Set<FeedScopedId> bannedTrips,
-    List<TransitFilter> filters
-  ) {
-    this.requireBikesAllowed = requireBikesAllowed;
-    this.requireCarsAllowed = requireCarsAllowed;
-    this.requireWheelchairAccessibleTrips = requireWheelchairAccessibleTrips;
-    this.requireWheelchairAccessibleStops = requireWheelchairAccessibleStops;
-    this.includePlannedCancellations = includePlannedCancellations;
-    this.includeRealtimeCancellations = includeRealtimeCancellations;
-    this.bannedTrips = bannedTrips;
-    this.filters = filters.toArray(TransitFilter[]::new);
-    this.hasSubModeFilters = filters.stream().anyMatch(TransitFilter::isSubModePredicate);
+  public static RouteRequestTransitDataProviderFilterBuilder of() {
+    return new RouteRequestTransitDataProviderFilterBuilder();
+  }
+
+  public static RouteRequestTransitDataProviderFilter ofRequest(RouteRequest request) {
+    return RouteRequestTransitDataProviderFilterBuilder.ofRequest(request).build();
   }
 
   public static BikeAccess bikeAccessForTrip(Trip trip) {
