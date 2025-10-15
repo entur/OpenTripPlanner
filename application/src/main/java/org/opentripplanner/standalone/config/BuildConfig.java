@@ -7,6 +7,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
@@ -175,6 +176,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   public final TransitFeeds transitFeeds;
   public final boolean staticParkAndRide;
   public final boolean staticBikeParkAndRide;
+  public final boolean includeEdgeLevelInfo;
   public final double distanceBetweenElevationSamples;
   public final double maxElevationPropagationMeters;
   public final boolean readCachedElevations;
@@ -342,16 +344,21 @@ public class BuildConfig implements OtpDataStoreConfig {
         """
       )
       .asBoolean(true);
-    staticBikeParkAndRide = root
-      .of("staticBikeParkAndRide")
-      .since(V1_5)
-      .summary("Whether we should create bike P+R stations from OSM data.")
-      .asBoolean(false);
     staticParkAndRide = root
       .of("staticParkAndRide")
       .since(V1_5)
       .summary("Whether we should create car P+R stations from OSM data.")
       .asBoolean(true);
+    staticBikeParkAndRide = root
+      .of("staticBikeParkAndRide")
+      .since(V1_5)
+      .summary("Whether we should create bike P+R stations from OSM data.")
+      .asBoolean(false);
+    includeEdgeLevelInfo = root
+      .of("includeEdgeLevelInfo")
+      .since(V2_9)
+      .summary("Whether level info for edges should be stored in the OsmStreetDecoratorService.")
+      .asBoolean(false);
     subwayAccessTime = root
       .of("subwayAccessTime")
       .since(V1_5)

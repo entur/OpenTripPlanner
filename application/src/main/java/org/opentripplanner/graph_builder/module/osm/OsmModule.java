@@ -21,7 +21,6 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
@@ -636,7 +635,7 @@ public class OsmModule implements GraphBuilderModule {
     Optional<EdgeLevelInfo> edgeLevelInfoOptional,
     OsmWay way
   ) {
-    if (OTPFeature.OsmStreetDecorator.isOn() && edgeLevelInfoOptional.isPresent()) {
+    if (params.includeEdgeLevelInfo() && edgeLevelInfoOptional.isPresent()) {
       EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
       Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
       if (
