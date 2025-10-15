@@ -20,6 +20,7 @@ public class StreetSearchRequestBuilder {
   CarRequest car;
   WheelchairRequest wheelchairRequest;
   ScooterRequest scooter;
+  ElevatorRequest elevator;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
     this.startTime = original.startTime();
@@ -35,6 +36,7 @@ public class StreetSearchRequestBuilder {
     this.car = original.car();
     this.scooter = original.scooter();
     this.wheelchairRequest = original.wheelchair();
+    this.elevator = original.elevator();
   }
 
   public StreetSearchRequestBuilder withStartTime(Instant startTime) {

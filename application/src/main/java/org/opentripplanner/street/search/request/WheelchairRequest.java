@@ -12,7 +12,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public class WheelchairRequest  {
+public class WheelchairRequest {
 
   /**
    * Default reluctance for traversing a street that is tagged with wheelchair=no. Since most

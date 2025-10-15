@@ -1,65 +1,130 @@
 package org.opentripplanner.street.search.request;
 
-public class ElevatorRequest {
+import java.io.Serializable;
+import java.util.Objects;
+import java.util.function.Consumer;
+import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.framework.model.Units;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-  private final double boardCost;
-  private final long boardTime;
-  private final double hopCost;
+/**
+ *  TODO: how long does it /really/ take to  an elevator?
+ * <p>
+ * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
+ */
+public final class ElevatorRequest implements Serializable {
+
+  public static final ElevatorRequest DEFAULT = new ElevatorRequest();
+
+  private final Cost boardCost;
+  private final int boardTime;
+  private final Cost hopCost;
   private final int hopTime;
 
   private ElevatorRequest() {
-    this.boardCost = 0;
-    this.boardTime = 0;
-    this.hopCost = 0;
-    this.hopTime = 0;
+    this.boardCost = Cost.costOfSeconds(90);
+    this.boardTime = 90;
+    this.hopCost = Cost.costOfSeconds(20);
+    this.hopTime = 20;
   }
 
   private ElevatorRequest(Builder builder) {
     this.boardCost = builder.boardCost;
-    this.boardTime = builder.boardTime;
+    this.boardTime = Units.duration(builder.boardTime);
     this.hopCost = builder.hopCost;
-    this.hopTime = builder.hopTime;
+    this.hopTime = Units.duration(builder.hopTime);
   }
 
   public static Builder of() {
-    return new Builder();
+    return DEFAULT.copyOf();
   }
 
-  public double boardCost() {
-    return boardCost;
+  public Builder copyOf() {
+    return new Builder(this);
   }
 
-  public long boardTime() {
+  /** What is the cost of boarding an elevator? */
+  public int boardCost() {
+    return boardCost.toSeconds();
+  }
+
+  /**
+   * How long does it take to board an elevator, on average (actually, it probably should be a bit *more*
+   * than average, to prevent optimistic trips)? Setting it to "seems like forever," while accurate,
+   * will probably prevent OTP from working correctly.
+   */
+  public int boardTime() {
     return boardTime;
   }
 
-  public double hopCost() {
-    return hopCost;
+  /** How long does it take to advance one floor on an elevator? */
+  public int hopCost() {
+    return hopCost.toSeconds();
   }
 
+  /**
+   * What is the cost of travelling one floor on an elevator?
+   * It is assumed that getting off an elevator is completely free.
+   */
   public int hopTime() {
     return hopTime;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    ElevatorRequest that = (ElevatorRequest) o;
+    return (
+      boardCost.equals(that.boardCost) &&
+      boardTime == that.boardTime &&
+      hopTime == that.hopTime &&
+      hopCost.equals(that.hopCost)
+    );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(boardCost, boardTime, hopTime, hopCost);
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.of(ElevatorRequest.class)
+      .addObj("boardCost", boardCost, DEFAULT.boardCost)
+      .addDurationSec("boardTime", boardTime, DEFAULT.boardTime)
+      .addObj("hopCost", hopCost, DEFAULT.hopCost)
+      .addDurationSec("hopTime", hopTime, DEFAULT.hopTime)
+      .toString();
+  }
+
   public static class Builder {
 
-    private double boardCost = 0;
-    private long boardTime = 0;
-    private double hopCost = 0;
-    private int hopTime = 0;
+    private final ElevatorRequest original;
+    private Cost boardCost;
+    private int boardTime;
+    private int hopTime;
+    private Cost hopCost;
 
-    public Builder withBoardCost(double boardCost) {
-      this.boardCost = boardCost;
+    public Builder(ElevatorRequest original) {
+      this.original = original;
+      this.boardCost = original.boardCost;
+      this.boardTime = original.boardTime;
+      this.hopCost = original.hopCost;
+      this.hopTime = original.hopTime;
+    }
+
+    public ElevatorRequest original() {
+      return original;
+    }
+
+    public Builder withBoardCost(int boardCost) {
+      this.boardCost = Cost.costOfSeconds(boardCost);
       return this;
     }
 
-    public Builder withBoardTime(long boardTime) {
+    public Builder withBoardTime(int boardTime) {
       this.boardTime = boardTime;
-      return this;
-    }
-
-    public Builder withHopCost(double hopCost) {
-      this.hopCost = hopCost;
       return this;
     }
 
@@ -68,8 +133,19 @@ public class ElevatorRequest {
       return this;
     }
 
-    public ElevatorRequest build() {
-      return new ElevatorRequest(this);
+    public Builder withHopCost(int hopCost) {
+      this.hopCost = Cost.costOfSeconds(hopCost);
+      return this;
+    }
+
+    public Builder apply(Consumer<Builder> body) {
+      body.accept(this);
+      return this;
+    }
+
+    ElevatorRequest build() {
+      var value = new ElevatorRequest(this);
+      return original.equals(value) ? original : value;
     }
   }
 }

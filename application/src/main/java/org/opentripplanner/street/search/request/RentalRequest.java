@@ -13,7 +13,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class RentalRequest  {
+public final class RentalRequest {
 
   public static final RentalRequest DEFAULT = new RentalRequest();
   private final Duration pickupTime;

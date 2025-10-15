@@ -16,7 +16,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class ParkingRequest  {
+public final class ParkingRequest {
 
   public static final ParkingRequest DEFAULT = new ParkingRequest();
   private final Cost unpreferredVehicleParkingTagCost;

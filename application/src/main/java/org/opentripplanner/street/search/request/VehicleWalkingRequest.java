@@ -12,7 +12,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public class VehicleWalkingRequest  {
+public class VehicleWalkingRequest {
 
   public static final VehicleWalkingRequest DEFAULT = new VehicleWalkingRequest();
 

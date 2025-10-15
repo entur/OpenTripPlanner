@@ -21,7 +21,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class ScooterRequest  {
+public final class ScooterRequest {
 
   public static final ScooterRequest DEFAULT = new ScooterRequest();
 

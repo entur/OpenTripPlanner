@@ -55,6 +55,7 @@ public class StreetSearchRequest implements AStarRequest {
   private final ScooterRequest scooter;
   private final CarRequest car;
   private final WheelchairRequest wheelchairRequest;
+  private final ElevatorRequest elevator;
 
   private IntersectionTraversalCalculator intersectionTraversalCalculator =
     IntersectionTraversalCalculator.DEFAULT;
@@ -80,6 +81,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.scooter = ScooterRequest.DEFAULT;
     this.car = CarRequest.DEFAULT;
     this.wheelchairRequest = WheelchairRequest.DEFAULT;
+    this.elevator = ElevatorRequest.DEFAULT;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -98,6 +100,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.scooter = requireNonNull(builder.scooter);
     this.car = requireNonNull(builder.car);
     this.wheelchairRequest = requireNonNull(builder.wheelchairRequest);
+    this.elevator = requireNonNull(builder.elevator);
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -241,16 +244,13 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   public ElevatorRequest elevator() {
-    return null;
+    return elevator;
   }
-
-  public ParkingRequest parking(TraverseMode traverseMode) {
-    return switch (traverseMode) {
-      case BICYCLE -> bike().parking();
-      case SCOOTER -> bike().parking();
-      case CAR -> car().parking();
-      case WALK, FLEX -> null;
-    };
+/**
+   * Get parking preferences for the traverse mode. Note, only car and bike are supported.
+   */
+  public ParkingRequest parking(TraverseMode mode) {
+    return mode == TraverseMode.CAR ? car.parking() : bike.parking();
   }
 
   @Nullable

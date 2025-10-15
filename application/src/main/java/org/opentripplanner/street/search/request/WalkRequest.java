@@ -19,7 +19,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class WalkRequest  {
+public final class WalkRequest {
 
   public static final WalkRequest DEFAULT = new WalkRequest();
 

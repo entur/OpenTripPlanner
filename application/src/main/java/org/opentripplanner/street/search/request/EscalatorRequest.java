@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-public class EscalatorRequest  {
+public class EscalatorRequest {
 
   public static final EscalatorRequest DEFAULT = new EscalatorRequest();
 
