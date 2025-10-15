@@ -440,9 +440,12 @@ public class OsmDatabase {
           }
 
           // Skip if area and way are from "incompatible" levels
-          // TODO Should multi-level edges e.g. stairs and escalators be considered as well?
-          Set<OsmLevel> areaLevelSet = getLevelSetForEntity(ringSegment.area.parent);
-          if (wayLevels.size() != 1 || !areaLevelSet.contains(wayLevels.getFirst())) {
+          List<OsmLevel> areaLevels = getLevelsForEntity(ringSegment.area.parent);
+          if (
+            wayLevels.size() != 1 ||
+            areaLevels.size() != 1 ||
+            !areaLevels.getFirst().equals((wayLevels.getFirst()))
+          ) {
             continue;
           }
 

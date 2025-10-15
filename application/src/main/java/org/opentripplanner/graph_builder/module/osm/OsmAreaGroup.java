@@ -141,8 +141,6 @@ class OsmAreaGroup {
         Set<OsmLevel> levelSet1 = areasLevels.get(area1);
         for (OsmArea area2 : areasForNodePair.get(nodePair)) {
           Set<OsmLevel> levelSet2 = areasLevels.get(area2);
-          // TODO Should the set equality instead be changed to something like:
-          // levelSet1.stream().anyMatch(level -> levelSet2.contains(level)
           boolean onSameLevels =
             (levelSet1 == null && levelSet2 == null) ||
             (levelSet1 != null && levelSet1.equals(levelSet2));
