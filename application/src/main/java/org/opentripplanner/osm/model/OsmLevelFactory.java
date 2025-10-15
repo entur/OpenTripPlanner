@@ -41,7 +41,7 @@ public class OsmLevelFactory {
     return List.of();
   }
 
-  public List<OsmLevel> createLevelListFromTag(
+  private List<OsmLevel> createLevelListFromTag(
     String levelTag,
     @Nullable String nameTag,
     OsmEntity entity
@@ -51,16 +51,19 @@ public class OsmLevelFactory {
     String[] levelArray = levelTag.split(";");
     if (nameTag != null) {
       String[] nameArray = nameTag.split(";");
+      // If the levelTag and nameTag contain multi-level info, the amount of level names in the
+      // nameTag needs to equal the amount of levels in the levelTag.
+      // Otherwise the nameTag data won't be used because the names can't be reliably mapped.
       if (levelArray.length == nameArray.length) {
-        levels = createLevelListFromSubstringArrays(levelArray, nameArray, entity);
+        levels = createLevelListFromSubstringArrays(levelArray, nameArray);
       } else {
-        levels = createLevelListFromSubstringArrays(levelArray, null, entity);
+        levels = createLevelListFromSubstringArrays(levelArray);
         issueStore.add(
           new LevelAndLevelRefDifferentSizes(levelArray.length, nameArray.length, entity)
         );
       }
     } else {
-      levels = createLevelListFromSubstringArrays(levelArray, null, entity);
+      levels = createLevelListFromSubstringArrays(levelArray);
     }
 
     if (levelListIsValid(levels)) {
@@ -82,18 +85,21 @@ public class OsmLevelFactory {
 
   private List<OsmLevel> createLevelListFromSubstringArrays(
     String[] levelArray,
-    @Nullable String[] nameArray,
-    OsmEntity entity
+    String[] nameArray
   ) {
     List<OsmLevel> levels = new ArrayList<>();
     if (nameArray != null) {
       for (int i = 0; i < levelArray.length; i++) {
-        levels.add(createOsmLevelFromTagSubstrings(levelArray[i], nameArray[i], entity));
+        levels.add(createOsmLevelFromTagSubstrings(levelArray[i], nameArray[i]));
       }
-    } else {
-      for (String level : levelArray) {
-        levels.add(createOsmLevelFromTagSubstrings(level, null, entity));
-      }
+    }
+    return levels;
+  }
+
+  private List<OsmLevel> createLevelListFromSubstringArrays(String[] levelArray) {
+    List<OsmLevel> levels = new ArrayList<>();
+    for (String level : levelArray) {
+      levels.add(createOsmLevelFromTagSubstrings(level, null));
     }
     return levels;
   }
@@ -105,8 +111,7 @@ public class OsmLevelFactory {
   @Nullable
   private OsmLevel createOsmLevelFromTagSubstrings(
     String levelString,
-    @Nullable String nameString,
-    OsmEntity entity
+    @Nullable String nameString
   ) {
     try {
       Double level = Double.parseDouble(levelString);
