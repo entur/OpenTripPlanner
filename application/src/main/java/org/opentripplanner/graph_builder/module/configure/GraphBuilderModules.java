@@ -93,6 +93,7 @@ public class GraphBuilderModules {
       .withStaticParkAndRide(config.staticParkAndRide)
       .withStaticBikeParkAndRide(config.staticBikeParkAndRide)
       .withIncludeEdgeLevelInfo(config.includeEdgeLevelInfo)
+      .withOsmStreetDecoratorRepository(osmStreetDecoratorRepository)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
       .withIncludeOsmSubwayEntrances(config.osmDefaults.includeOsmSubwayEntrances())
