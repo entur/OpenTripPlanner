@@ -611,18 +611,18 @@ public class StatesToWalkStepsMapper {
 
       if (edge instanceof EscalatorEdge) {
         return new EscalatorUse(
-          fromVertexInfo.floorNumber(),
+          fromVertexInfo.level(),
           fromVertexInfo.name(),
           inclineType,
-          toVertexInfo.floorNumber(),
+          toVertexInfo.level(),
           toVertexInfo.name()
         );
       } else {
         return new StairsUse(
-          fromVertexInfo.floorNumber(),
+          fromVertexInfo.level(),
           fromVertexInfo.name(),
           inclineType,
-          toVertexInfo.floorNumber(),
+          toVertexInfo.level(),
           toVertexInfo.name()
         );
       }
