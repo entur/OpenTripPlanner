@@ -44,7 +44,7 @@ public class StreetSearchRequestMapper {
     return ScooterRequest.of()
       .withSpeed(scooter.speed())
       .withReluctance(scooter.reluctance())
-      .withRental(b -> mapRental(scooter.rental()))
+      .withRental(mapRental(scooter.rental()))
       .withOptimizeType(scooter.optimizeType())
       .withOptimizeTriangle(scooter.optimizeTriangle())
       .build();
@@ -65,7 +65,7 @@ public class StreetSearchRequestMapper {
     return BikeRequest.of()
       .withReluctance(preferences.reluctance())
       .withSpeed(preferences.speed())
-      .withRental(b -> mapRental(preferences.rental()))
+      .withRental(mapRental(preferences.rental()))
       .withBoardCost(preferences.boardCost())
       .withWalking(mapVehicleWalking(preferences.walking()))
       .withOptimizeType(preferences.optimizeType())
@@ -86,6 +86,7 @@ public class StreetSearchRequestMapper {
   private static RentalRequest mapRental(VehicleRentalPreferences rental) {
     return RentalRequest.of()
       .withPickupTime(rental.pickupTime())
+      .withPickupCost(rental.pickupCost().toSeconds())
       .withDropOffTime(rental.dropOffTime())
       .withDropOffCost(rental.dropOffCost().toSeconds())
       .withBannedNetworks(rental.bannedNetworks())
@@ -93,6 +94,9 @@ public class StreetSearchRequestMapper {
       .withUseAvailabilityInformation(rental.useAvailabilityInformation())
       .withAllowArrivingInRentedVehicleAtDestination(
         rental.allowArrivingInRentedVehicleAtDestination()
+      )
+      .withArrivingInRentalVehicleAtDestinationCost(
+        rental.arrivingInRentalVehicleAtDestinationCost().toSeconds()
       )
       .build();
   }

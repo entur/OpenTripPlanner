@@ -221,6 +221,11 @@ public final class BikeRequest {
       return this;
     }
 
+    public Builder withRental(RentalRequest req) {
+      this.rental = req;
+      return this;
+    }
+
     public VehicleRoutingOptimizeType optimizeType() {
       return optimizeType;
     }

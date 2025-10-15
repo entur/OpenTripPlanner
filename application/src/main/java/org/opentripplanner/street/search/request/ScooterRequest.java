@@ -158,6 +158,11 @@ public final class ScooterRequest {
       return this;
     }
 
+    public Builder withRental(RentalRequest req) {
+      this.rental = req;
+      return this;
+    }
+
     public VehicleRoutingOptimizeType optimizeType() {
       return optimizeType;
     }
