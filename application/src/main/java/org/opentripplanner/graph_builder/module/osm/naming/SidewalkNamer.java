@@ -16,9 +16,11 @@ import org.locationtech.jts.geom.Point;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
+import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.slf4j.Logger;
@@ -62,7 +64,8 @@ public class SidewalkNamer implements EdgeNamer {
   }
 
   @Override
-  public void recordEdges(OsmEntity way, StreetEdgePair pair) {
+  public void recordEdges(OsmEntity way, StreetEdgePair pair, OsmDatabase osmdb) {
+    Set<OsmLevel> levelSet = osmdb.getLevelSetForEntity(way);
     // This way is a sidewalk and hasn't been named yet (and is not explicitly unnamed)
     if (
       way instanceof OsmWay osmWay &&
@@ -72,11 +75,11 @@ public class SidewalkNamer implements EdgeNamer {
     ) {
       pair
         .asIterable()
-        .forEach(edge -> unnamedSidewalks.add(new EdgeOnLevel(osmWay, edge, way.getLevels())));
+        .forEach(edge -> unnamedSidewalks.add(new EdgeOnLevel(osmWay, edge, levelSet)));
     }
     // The way is _not_ a sidewalk and does have a name
     else if (way.isNamed() && !way.isLink()) {
-      streetIndex.add(way, pair);
+      streetIndex.add(way, pair, levelSet);
     }
   }
 
@@ -166,7 +169,7 @@ public class SidewalkNamer implements EdgeNamer {
    * A group of edges that are near a sidewalk that have the same name. These groups are used
    * to figure out if the name of the group can be applied to a nearby sidewalk.
    */
-  private record CandidateGroup(I18NString name, List<StreetEdge> edges, Set<String> levels) {
+  private record CandidateGroup(I18NString name, List<StreetEdge> edges, Set<OsmLevel> levels) {
     /**
      * How much of this group intersects with the given geometry, in meters.
      */

@@ -16,6 +16,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmWay;
@@ -170,7 +172,13 @@ class CrosswalkNamerTest {
     }
 
     void recordEdges(EdgeNamer namer) {
-      pairs.forEach(p -> namer.recordEdges(p.way, new StreetEdgePair(p.edge, null)));
+      pairs.forEach(p ->
+        namer.recordEdges(
+          p.way,
+          new StreetEdgePair(p.edge, null),
+          new OsmDatabase(DataImportIssueStore.NOOP)
+        )
+      );
     }
   }
 

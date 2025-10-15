@@ -1,10 +1,12 @@
 package org.opentripplanner.graph_builder.module.osm.naming;
 
 import java.util.List;
+import java.util.Set;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.framework.geometry.HashGridSpatialIndex;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.osm.model.OsmEntity;
+import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.model.edge.StreetEdge;
 
@@ -18,14 +20,14 @@ class StreetEdgeIndex {
   /**
    * Adds an entry to a geospatial index.
    */
-  public void add(OsmEntity way, StreetEdgePair pair) {
-    add(way, pair, Integer.MAX_VALUE);
+  public void add(OsmEntity way, StreetEdgePair pair, Set<OsmLevel> levels) {
+    add(way, pair, levels, Integer.MAX_VALUE);
   }
 
   /**
    * Adds an entry to a geospatial index if its length is less than a threshold.
    */
-  public void add(OsmEntity way, StreetEdgePair pair, int maxLengthMeters) {
+  public void add(OsmEntity way, StreetEdgePair pair, Set<OsmLevel> levels, int maxLengthMeters) {
     // We generate two edges for each osm way: one there and one back. This spatial index only
     // needs to contain one item for each road segment with a unique geometry and name, so we
     // add only one of the two edges.
@@ -33,7 +35,7 @@ class StreetEdgeIndex {
     if (edge.getDistanceMeters() <= maxLengthMeters) {
       index.insert(
         edge.getGeometry().getEnvelopeInternal(),
-        new EdgeOnLevel((OsmWay) way, edge, way.getLevels())
+        new EdgeOnLevel((OsmWay) way, edge, levels)
       );
     }
   }

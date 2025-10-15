@@ -8,11 +8,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
+import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.model.TraverseDirection;
 import org.slf4j.Logger;
@@ -53,23 +56,24 @@ public class CrosswalkNamer implements EdgeNamer {
   }
 
   @Override
-  public void recordEdges(OsmEntity way, StreetEdgePair pair) {
+  public void recordEdges(OsmEntity way, StreetEdgePair pair, OsmDatabase osmdb) {
     if (way instanceof OsmWay osmWay) {
+      Set<OsmLevel> levelSet = osmdb.getLevelSetForEntity(way);
       // Record unnamed crossings to a list.
       if (osmWay.isCrossing() && way.hasNoName() && !way.isExplicitlyUnnamed()) {
         pair
           .asIterable()
-          .forEach(edge -> unnamedCrosswalks.add(new EdgeOnLevel(osmWay, edge, way.getLevels())));
+          .forEach(edge -> unnamedCrosswalks.add(new EdgeOnLevel(osmWay, edge, levelSet)));
       }
       // Record (short) sidewalks to a geometric index
       else if (way.isSidewalk()) {
-        sidewalkIndex.add(way, pair, BUFFER_METERS);
+        sidewalkIndex.add(way, pair, levelSet, BUFFER_METERS);
       }
       // Record named streets, service roads, and slip/turn lanes to a geometric index.
       else if (
         !osmWay.isFootway() && (way.isNamed() || osmWay.isServiceRoad() || isTurnLane(osmWay))
       ) {
-        streetIndex.add(way, pair);
+        streetIndex.add(way, pair, levelSet);
       }
     }
   }
