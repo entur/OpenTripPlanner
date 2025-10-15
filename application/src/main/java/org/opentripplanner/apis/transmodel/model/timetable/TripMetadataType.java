@@ -39,7 +39,7 @@ public class TripMetadataType {
           .description("This will not be available after Match 2026!")
           .deprecate("Use pageCursor instead")
           .type(dateTimeScalar)
-          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).nextDateTime().toEpochMilli())
+          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).nextDateTime())
           .build()
       )
       .field(
@@ -48,7 +48,7 @@ public class TripMetadataType {
           .description("This will not be available after Match 2026!")
           .deprecate("Use pageCursor instead")
           .type(dateTimeScalar)
-          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).prevDateTime().toEpochMilli())
+          .dataFetcher(e -> ((TripSearchMetadata) e.getSource()).prevDateTime())
           .build()
       )
       .build();
