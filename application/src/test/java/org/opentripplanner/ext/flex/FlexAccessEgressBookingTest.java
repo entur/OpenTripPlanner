@@ -66,7 +66,7 @@ class FlexAccessEgressBookingTest {
   void earliestDepartureAppliesMinimumBookingNotice() {
     int T10_00 = LocalTime.of(10, 0).toSecondOfDay();
     int T12_00 = LocalTime.of(12, 0).toSecondOfDay();
-    
+
     var noticeDuration = Duration.ofMinutes(30);
     int noticeSec = (int) noticeDuration.toSeconds();
 
@@ -88,8 +88,6 @@ class FlexAccessEgressBookingTest {
     int T10_00 = LocalTime.of(10, 0).toSecondOfDay();
 
     var noticeDuration = Duration.ofMinutes(45);
-    int noticeSec = (int) noticeDuration.toSeconds();
-    
     var booking = BookingInfo.of().withMinimumBookingNotice(noticeDuration).build();
 
     var st0 = stopWithWindowAndPickupBooking(T10_00, T11_00, booking);
