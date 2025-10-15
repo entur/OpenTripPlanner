@@ -284,9 +284,62 @@ class OsmWayTest {
     assertTrue(way.isServiceRoad());
   }
 
+  @Test
+  void motorwayRamp() {
+    assertFalse(WayTestData.highwayPrimary().isMotorwayRamp());
+    assertFalse(WayTestData.motorway().isMotorwayRamp());
+    assertTrue(WayTestData.motorwayRamp().isMotorwayRamp());
+  }
+
+  @Test
+  void turnLane() {
+    assertFalse(WayTestData.highwayTertiary().isTurnLane());
+
+    var namedOneWay = new OsmWay();
+    namedOneWay.addTag("name", "3rd Street");
+    namedOneWay.addTag("oneway", "yes");
+    assertFalse(namedOneWay.isTurnLane());
+
+    var oneWay = WayTestData.highwayTertiary();
+    oneWay.addTag("oneway", "yes");
+    assertTrue(oneWay.isTurnLane());
+  }
+
+  @ParameterizedTest
+  @MethodSource("createRampAsTurnLaneCases")
+  void rampAsTurnLane(String turnValue, boolean oneWay, boolean expected) {
+    var ramp = WayTestData.motorwayRamp();
+    if (oneWay) ramp.addTag("oneway", "yes");
+    ramp.addTag("turn:lanes", turnValue);
+
+    assertEquals(
+      expected,
+      ramp.isTurnLane(),
+      String.format(
+        "%s-way ramp with '%s' turn lane attribute %s a turn lane.",
+        oneWay ? "One" : "Two",
+        turnValue,
+        expected ? "should be" : "should not be"
+      )
+    );
+  }
+
+  static Stream<Arguments> createRampAsTurnLaneCases() {
+    return Stream.of(
+      Arguments.of("right", true, true),
+      Arguments.of("right", false, false),
+      Arguments.of("left", true, true),
+      Arguments.of("left", false, false),
+      Arguments.of("merge_left", true, false),
+      Arguments.of("merge_left", false, false),
+      Arguments.of(null, true, false),
+      Arguments.of(null, false, false)
+    );
+  }
+
   @ParameterizedTest
   @MethodSource("createCrossingCases")
-  void markedCrossing(OsmWay way, boolean result) {
+  void crossing(OsmWay way, boolean result) {
     assertEquals(result, way.isCrossing());
   }
 

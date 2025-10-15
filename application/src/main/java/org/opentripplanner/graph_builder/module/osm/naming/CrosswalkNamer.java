@@ -1,7 +1,5 @@
 package org.opentripplanner.graph_builder.module.osm.naming;
 
-import static org.opentripplanner.osm.model.TraverseDirection.FORWARD;
-
 import gnu.trove.list.TLongList;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +14,6 @@ import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.osm.model.TraverseDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +66,7 @@ public class CrosswalkNamer implements EdgeNamer {
       }
       // Record named streets, service roads, and slip/turn lanes to a geometric index.
       else if (
-        !osmWay.isFootway() && (way.isNamed() || osmWay.isServiceRoad() || isTurnLane(osmWay))
+        !osmWay.isFootway() && (way.isNamed() || osmWay.isServiceRoad() || osmWay.isTurnLane())
       ) {
         streetIndex.add(way, pair, Set.of());
       }
@@ -106,7 +103,7 @@ public class CrosswalkNamer implements EdgeNamer {
         );
       } else if (crossStreet.isServiceRoad()) {
         crosswalk.setName(I18NString.of("crossing over service road"));
-      } else if (isTurnLane(crossStreet)) {
+      } else if (crossStreet.isTurnLane()) {
         crosswalk.setName(I18NString.of("crossing over turn lane"));
       } else {
         // Default on using the OSM way ID, which should not happen.
@@ -164,11 +161,6 @@ public class CrosswalkNamer implements EdgeNamer {
         .findFirst();
     }
     return Optional.empty();
-  }
-
-  private static boolean isTurnLane(OsmEntity way) {
-    Optional<TraverseDirection> oneWayCar = way.isOneWay("motorcar");
-    return oneWayCar.isPresent() && oneWayCar.get() == FORWARD;
   }
 
   Collection<EdgeOnLevel> getUnnamedCrosswalks() {

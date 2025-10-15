@@ -2,6 +2,7 @@ package org.opentripplanner.osm.model;
 
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import java.util.Optional;
 import java.util.Set;
 
 public class OsmWay extends OsmEntity {
@@ -114,6 +115,23 @@ public class OsmWay extends OsmEntity {
 
   public boolean isServiceRoad() {
     return isTag("highway", "service");
+  }
+
+  /**
+   * Whether a way is an entrance or an exit of a freeway/motorway or similar access-controlled, car-only road.
+   */
+  public boolean isMotorwayRamp() {
+    return isTag("highway", "motorway_link");
+  }
+
+  public boolean isTurnLane() {
+    Optional<TraverseDirection> oneWayCar = isOneWay("motorcar");
+    boolean oneWay = oneWayCar.isPresent();
+    return (
+      !isNamed() &&
+      oneWay &&
+      (!isMotorwayRamp() || isTag("turn:lanes", "right") || isTag("turn:lanes", "left"))
+    );
   }
 
   /** Whether this way is connected to the given way through their extremities. */
