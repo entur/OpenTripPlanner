@@ -98,6 +98,11 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
+  public StreetSearchRequestBuilder withBike(BikeRequest bike) {
+    this.bike = bike;
+    return this;
+  }
+
   public StreetSearchRequestBuilder withBike(Consumer<BikeRequest.Builder> body) {
     this.bike = this.bike.copyOf().apply(body).build();
     return this;
@@ -110,6 +115,16 @@ public class StreetSearchRequestBuilder {
 
   public StreetSearchRequestBuilder withScooter(Consumer<ScooterRequest.Builder> body) {
     this.scooter = this.scooter.copyOf().apply(body).build();
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withScooter(ScooterRequest request) {
+    this.scooter = request;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withCar(CarRequest carRequest) {
+    this.car = carRequest;
     return this;
   }
 

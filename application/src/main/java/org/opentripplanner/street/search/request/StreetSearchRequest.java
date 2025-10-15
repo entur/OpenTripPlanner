@@ -246,7 +246,8 @@ public class StreetSearchRequest implements AStarRequest {
   public ElevatorRequest elevator() {
     return elevator;
   }
-/**
+
+  /**
    * Get parking preferences for the traverse mode. Note, only car and bike are supported.
    */
   public ParkingRequest parking(TraverseMode mode) {

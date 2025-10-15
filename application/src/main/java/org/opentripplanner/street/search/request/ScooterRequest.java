@@ -183,7 +183,7 @@ public final class ScooterRequest {
     }
 
     public Builder withOptimizeTriangle(Consumer<TimeSlopeSafetyTriangle.Builder> body) {
-      var builder = TimeSlopeSafetyTriangle.of();
+      var builder = optimizeTriangle.copyOf();
       body.accept(builder);
       this.optimizeTriangle = builder.buildOrDefault(this.optimizeTriangle);
       return this;

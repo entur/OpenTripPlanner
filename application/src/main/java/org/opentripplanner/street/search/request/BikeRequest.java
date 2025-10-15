@@ -246,7 +246,7 @@ public final class BikeRequest {
     }
 
     public Builder withOptimizeTriangle(Consumer<TimeSlopeSafetyTriangle.Builder> body) {
-      var builder = TimeSlopeSafetyTriangle.of();
+      var builder = optimizeTriangle.copyOf();
       body.accept(builder);
       this.optimizeTriangle = builder.buildOrDefault(this.optimizeTriangle);
       return this;
@@ -254,6 +254,11 @@ public final class BikeRequest {
 
     public Builder withWalking(Consumer<VehicleWalkingRequest.Builder> body) {
       this.walking = ifNotNull(this.walking, original.walking).copyOf().apply(body).build();
+      return this;
+    }
+
+    public Builder withWalking(VehicleWalkingRequest req) {
+      this.walking = req;
       return this;
     }
 
