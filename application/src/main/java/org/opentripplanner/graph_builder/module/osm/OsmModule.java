@@ -27,6 +27,7 @@ import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
+import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToWay;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
 import org.opentripplanner.osm.OsmProvider;
@@ -653,16 +654,7 @@ public class OsmModule implements GraphBuilderModule {
           osmStreetDecoratorRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
         }
       } else {
-        issueStore.add(
-          Issue.issue(
-            "CouldNotApplyMultiLevelInfoToWay",
-            "Multi-level info for way {} can not be used because node references did not match. " +
-            "This is probably caused by more than 2 intersection nodes in the way. " +
-            "The way has {} nodes in total.",
-            way.url(),
-            way.getNodeRefs().size()
-          )
-        );
+        issueStore.add(new CouldNotApplyMultiLevelInfoToWay(way, way.getNodeRefs().size()));
       }
     }
   }
