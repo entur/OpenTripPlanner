@@ -131,6 +131,10 @@ public class ScheduledTransitLeg implements TransitLeg {
     this.fareOffers = builder.fareOffers().stream().sorted(FARE_OFFER_COMPARATOR).toList();
   }
 
+  public static ScheduledTransitLegBuilder of() {
+    return new ScheduledTransitLegBuilder<>();
+  }
+
   public ScheduledTransitLegBuilder copyOf() {
     return new ScheduledTransitLegBuilder<>(this);
   }
