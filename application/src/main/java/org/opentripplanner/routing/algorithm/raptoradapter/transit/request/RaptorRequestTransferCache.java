@@ -10,9 +10,6 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransfe
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.Transfer;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.BikePreferences;
-import org.opentripplanner.routing.api.request.preference.WalkPreferences;
-import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.street.search.request.BikeRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestMapper;
@@ -134,10 +131,10 @@ public class RaptorRequestTransferCache {
       return ToStringBuilder.of(StreetRelevantOptions.class)
         .addEnum("transferMode", transferMode)
         .addBoolIfTrue("wheelchair", wheelchair)
-        .addObj("walk", walk, WalkPreferences.DEFAULT)
-        .addObj("bike", bike, BikePreferences.DEFAULT)
+        .addObj("walk", walk, WalkRequest.DEFAULT)
+        .addObj("bike", bike, BikeRequest.DEFAULT)
         .addNum("turnReluctance", turnReluctance)
-        .addObj("wheelchairPreferences", wheelchairPreferences, WheelchairPreferences.DEFAULT)
+        .addObj("wheelchairPreferences", wheelchairPreferences, WheelchairRequest.DEFAULT)
         .toString();
     }
 
