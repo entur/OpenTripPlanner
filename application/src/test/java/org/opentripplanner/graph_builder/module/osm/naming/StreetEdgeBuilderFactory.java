@@ -6,7 +6,10 @@ import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 
-class NamerTestUtils {
+/**
+ * Helper class for creating {@link StreetEdgeBuilder} instances.
+ */
+class StreetEdgeBuilderFactory {
 
   public static StreetEdgeBuilder<?> edgeBuilder(WgsCoordinate... c) {
     var coordinates = Arrays.stream(c).toList();

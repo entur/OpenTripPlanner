@@ -3,7 +3,7 @@ package org.opentripplanner.graph_builder.module.osm.naming;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.graph_builder.module.osm.naming.NamerTestUtils.edgeBuilder;
+import static org.opentripplanner.graph_builder.module.osm.naming.StreetEdgeBuilderFactory.edgeBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
