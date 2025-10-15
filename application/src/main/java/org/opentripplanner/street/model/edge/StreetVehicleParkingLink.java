@@ -7,7 +7,7 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.street.search.request.VehicleParkingRequest;
+import org.opentripplanner.street.search.request.ParkingRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
 
@@ -74,7 +74,7 @@ public class StreetVehicleParkingLink extends Edge {
   }
 
   private boolean traversalBanned(
-    VehicleParkingRequest parkingPreferences,
+    ParkingRequest parkingPreferences,
     VehicleParking vehicleParking
   ) {
     return !parkingPreferences.filter().matches(vehicleParking);

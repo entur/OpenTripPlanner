@@ -3,7 +3,6 @@ package org.opentripplanner.street.search.request;
 import java.time.Instant;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
-import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
 
 public class StreetSearchRequestMapper {
 
@@ -15,27 +14,11 @@ public class StreetSearchRequestMapper {
       .withFrom(request.from())
       .withTo(request.to())
       .withGeoidElevation(request.preferences().system().geoidElevation())
-      .withTurnReluctance(request.preferences().street().turnReluctance())
-      .withRental(mapRental(request.preferences()));
+      .withTurnReluctance(request.preferences().street().turnReluctance());
   }
 
   private static RentalRequest mapRental(RoutingPreferences preferences) {
-    return new RentalRequest(
-      mapModeSpecificRental(preferences.bike().rental()),
-      mapModeSpecificRental(preferences.car().rental()),
-      mapModeSpecificRental(preferences.scooter().rental())
-    );
-  }
-
-  private static ModeSpecificRentalRequest mapModeSpecificRental(VehicleRentalPreferences rental) {
-    return new ModeSpecificRentalRequest(
-      rental.pickupCost(),
-      rental.dropOffCost(),
-      rental.pickupTime(),
-      rental.dropOffTime(),
-      rental.allowedNetworks(),
-      rental.bannedNetworks()
-    );
+    return RentalRequest.of().build();
   }
 
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {

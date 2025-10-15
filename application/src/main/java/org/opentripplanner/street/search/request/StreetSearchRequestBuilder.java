@@ -17,9 +17,8 @@ public class StreetSearchRequestBuilder {
   double turnReluctance;
   WalkRequest walk;
   BikeRequest bike;
-  RentalRequest rental;
-  WheelchairRequest wheelchairRequest;
   CarRequest car;
+  WheelchairRequest wheelchairRequest;
   ScooterRequest scooter;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
@@ -31,6 +30,11 @@ public class StreetSearchRequestBuilder {
     this.to = original.to();
     this.geoidElevation = original.geoidElevation();
     this.turnReluctance = original.turnReluctance();
+    this.walk = original.walk();
+    this.bike = original.bike();
+    this.car = original.car();
+    this.scooter = original.scooter();
+    this.wheelchairRequest = original.wheelchair();
   }
 
   public StreetSearchRequestBuilder withStartTime(Instant startTime) {
@@ -75,11 +79,6 @@ public class StreetSearchRequestBuilder {
 
   public StreetSearchRequestBuilder withTurnReluctance(double v) {
     this.turnReluctance = v;
-    return this;
-  }
-
-  public StreetSearchRequestBuilder withRental(RentalRequest rentalRequest) {
-    this.rental = rentalRequest;
     return this;
   }
 

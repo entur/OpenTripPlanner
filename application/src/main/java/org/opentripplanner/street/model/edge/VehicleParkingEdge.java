@@ -7,8 +7,8 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.search.TraverseMode;
+import org.opentripplanner.street.search.request.ParkingRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.opentripplanner.street.search.request.VehicleParkingRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
 
@@ -162,7 +162,7 @@ public class VehicleParkingEdge extends Edge {
     return s0e.makeStateArray();
   }
 
-  private void addUnpreferredTagCost(VehicleParkingRequest request, StateEditor s0e) {
+  private void addUnpreferredTagCost(ParkingRequest request, StateEditor s0e) {
     if (!request.preferred().matches(vehicleParking)) {
       s0e.incrementWeight(request.unpreferredVehicleParkingTagCost().toSeconds());
     }

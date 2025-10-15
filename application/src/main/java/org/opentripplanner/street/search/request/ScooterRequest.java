@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
-import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -29,14 +28,14 @@ public final class ScooterRequest implements Serializable {
 
   private final double speed;
   private final double reluctance;
-  private final VehicleRentalPreferences rental;
+  private final RentalRequest rental;
   private final VehicleRoutingOptimizeType optimizeType;
   private final TimeSlopeSafetyTriangle optimizeTriangle;
 
   private ScooterRequest() {
     this.speed = 5;
     this.reluctance = 2.0;
-    this.rental = VehicleRentalPreferences.DEFAULT;
+    this.rental = RentalRequest.DEFAULT;
     this.optimizeType = SAFE_STREETS;
     this.optimizeTriangle = TimeSlopeSafetyTriangle.DEFAULT;
   }
@@ -69,7 +68,7 @@ public final class ScooterRequest implements Serializable {
   }
 
   /** Rental preferences that can be different per request */
-  public VehicleRentalPreferences rental() {
+  public RentalRequest rental() {
     return rental;
   }
 
@@ -120,7 +119,7 @@ public final class ScooterRequest implements Serializable {
     private final ScooterRequest original;
     private double speed;
     private double reluctance;
-    private VehicleRentalPreferences rental;
+    private RentalRequest rental;
     private VehicleRoutingOptimizeType optimizeType;
     private TimeSlopeSafetyTriangle optimizeTriangle;
 
@@ -155,7 +154,7 @@ public final class ScooterRequest implements Serializable {
       return this;
     }
 
-    public Builder withRental(Consumer<VehicleRentalPreferences.Builder> body) {
+    public Builder withRental(Consumer<RentalRequest.Builder> body) {
       this.rental = ifNotNull(this.rental, original.rental).copyOf().apply(body).build();
       return this;
     }

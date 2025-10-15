@@ -25,8 +25,8 @@ public final class CarRequest implements Serializable {
 
   private final double reluctance;
   private final Cost boardCost;
-  private final VehicleParkingRequest parking;
-  private final VehicleRentalRequest rental;
+  private final ParkingRequest parking;
+  private final RentalRequest rental;
   private final Duration pickupTime;
   private final Cost pickupCost;
   private final double accelerationSpeed;
@@ -36,8 +36,8 @@ public final class CarRequest implements Serializable {
   private CarRequest() {
     this.reluctance = 2.0;
     this.boardCost = Cost.costOfMinutes(10);
-    this.parking = VehicleParkingRequest.DEFAULT;
-    this.rental = VehicleRentalRequest.DEFAULT;
+    this.parking = ParkingRequest.DEFAULT;
+    this.rental = RentalRequest.DEFAULT;
     this.pickupTime = Duration.ofMinutes(1);
     this.pickupCost = Cost.costOfMinutes(2);
     this.accelerationSpeed = 2.9;
@@ -77,12 +77,12 @@ public final class CarRequest implements Serializable {
   }
 
   /** Parking preferences that can be different per request */
-  public VehicleParkingRequest parking() {
+  public ParkingRequest parking() {
     return parking;
   }
 
   /** Rental preferences that can be different per request */
-  public VehicleRentalRequest rental() {
+  public RentalRequest rental() {
     return rental;
   }
 
@@ -163,8 +163,8 @@ public final class CarRequest implements Serializable {
     private final CarRequest original;
     private double reluctance;
     private Cost boardCost;
-    private VehicleParkingRequest parking;
-    private VehicleRentalRequest rental;
+    private ParkingRequest parking;
+    private RentalRequest rental;
     private int pickupTime;
     private Cost pickupCost;
     private double accelerationSpeed;
@@ -200,12 +200,12 @@ public final class CarRequest implements Serializable {
       return this;
     }
 
-    public Builder withParking(Consumer<VehicleParkingRequest.Builder> body) {
+    public Builder withParking(Consumer<ParkingRequest.Builder> body) {
       this.parking = ifNotNull(this.parking, original.parking).copyOf().apply(body).build();
       return this;
     }
 
-    public Builder withRental(Consumer<VehicleRentalRequest.Builder> body) {
+    public Builder withRental(Consumer<RentalRequest.Builder> body) {
       this.rental = ifNotNull(this.rental, original.rental).copyOf().apply(body).build();
       return this;
     }

@@ -1,5 +1,7 @@
 package org.opentripplanner.street.search.request;
 
+import static java.util.Objects.requireNonNull;
+
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -48,10 +50,11 @@ public class StreetSearchRequest implements AStarRequest {
   private final boolean geoidElevation;
 
   private final double turnReluctance;
-  private final RentalRequest rental;
   private final WalkRequest walk;
   private final BikeRequest bike;
   private final ScooterRequest scooter;
+  private final CarRequest car;
+  private final WheelchairRequest wheelchairRequest;
 
   private IntersectionTraversalCalculator intersectionTraversalCalculator =
     IntersectionTraversalCalculator.DEFAULT;
@@ -72,10 +75,11 @@ public class StreetSearchRequest implements AStarRequest {
     this.toEnvelope = null;
     this.geoidElevation = false;
     this.turnReluctance = 1.0;
-    this.rental = null;
     this.walk = WalkRequest.DEFAULT;
     this.bike = BikeRequest.DEFAULT;
     this.scooter = ScooterRequest.DEFAULT;
+    this.car = CarRequest.DEFAULT;
+    this.wheelchairRequest = WheelchairRequest.DEFAULT;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -89,10 +93,11 @@ public class StreetSearchRequest implements AStarRequest {
     this.toEnvelope = createEnvelope(to);
     this.geoidElevation = builder.geoidElevation;
     this.turnReluctance = builder.turnReluctance;
-    this.rental = builder.rental;
-    this.walk = builder.walk;
-    this.bike = builder.bike;
-    this.scooter = builder.scooter;
+    this.walk = requireNonNull(builder.walk);
+    this.bike = requireNonNull(builder.bike);
+    this.scooter = requireNonNull(builder.scooter);
+    this.car = requireNonNull(builder.car);
+    this.wheelchairRequest = requireNonNull(builder.wheelchairRequest);
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -109,12 +114,12 @@ public class StreetSearchRequest implements AStarRequest {
 
   public boolean allowsArrivingInRentalAtDestination() {
     return Optional.ofNullable(rental(mode()))
-      .map(ModeSpecificRentalRequest::allowArrivingInRentedVehicleAtDestination)
+      .map(RentalRequest::allowArrivingInRentedVehicleAtDestination)
       .orElse(false);
   }
 
   public WheelchairRequest wheelchair() {
-    return this.wheelchair();
+    return wheelchairRequest;
   }
 
   public boolean geoidElevation() {
@@ -198,31 +203,31 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   public CarRequest car() {
-    return null;
+    return car;
   }
 
-  public BikeRequest scooter() {
-    return null;
+  public ScooterRequest scooter() {
+    return scooter;
   }
 
   public double turnReluctance() {
     return turnReluctance;
   }
 
-  public ModeSpecificRentalRequest rental(TraverseMode traverseMode) {
+  public RentalRequest rental(TraverseMode traverseMode) {
     return switch (traverseMode) {
-      case BICYCLE -> rental.bike();
-      case SCOOTER -> rental.scooter();
-      case CAR -> rental.car();
+      case BICYCLE -> bike.rental();
+      case SCOOTER -> scooter.rental();
+      case CAR -> car.rental();
       case WALK, FLEX -> throw new IllegalArgumentException();
     };
   }
 
-  public ModeSpecificRentalRequest rental(StreetMode mode) {
+  public RentalRequest rental(StreetMode mode) {
     return switch (mode) {
-      case BIKE_RENTAL -> rental.bike();
-      case SCOOTER_RENTAL -> rental.scooter();
-      case CAR_RENTAL -> rental.car();
+      case BIKE_RENTAL -> bike.rental();
+      case SCOOTER_RENTAL -> scooter.rental();
+      case CAR_RENTAL -> car.rental();
       case NOT_SET,
         WALK,
         BIKE,
@@ -239,10 +244,10 @@ public class StreetSearchRequest implements AStarRequest {
     return null;
   }
 
-  public VehicleParkingRequest parking(TraverseMode traverseMode) {
+  public ParkingRequest parking(TraverseMode traverseMode) {
     return switch (traverseMode) {
       case BICYCLE -> bike().parking();
-      case SCOOTER -> scooter().parking();
+      case SCOOTER -> bike().parking();
       case CAR -> car().parking();
       case WALK, FLEX -> null;
     };
