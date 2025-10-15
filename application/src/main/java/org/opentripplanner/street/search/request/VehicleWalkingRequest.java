@@ -1,6 +1,5 @@
 package org.opentripplanner.street.search.request;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -13,7 +12,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public class VehicleWalkingRequest implements Serializable {
+public class VehicleWalkingRequest  {
 
   public static final VehicleWalkingRequest DEFAULT = new VehicleWalkingRequest();
 

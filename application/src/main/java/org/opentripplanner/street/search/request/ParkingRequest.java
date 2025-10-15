@@ -1,6 +1,5 @@
 package org.opentripplanner.street.search.request;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -17,7 +16,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class ParkingRequest implements Serializable {
+public final class ParkingRequest  {
 
   public static final ParkingRequest DEFAULT = new ParkingRequest();
   private final Cost unpreferredVehicleParkingTagCost;

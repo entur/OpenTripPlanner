@@ -2,12 +2,11 @@ package org.opentripplanner.street.search.request;
 
 import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-public class EscalatorRequest implements Serializable {
+public class EscalatorRequest  {
 
   public static final EscalatorRequest DEFAULT = new EscalatorRequest();
 

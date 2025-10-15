@@ -2,7 +2,6 @@ package org.opentripplanner.street.search.request;
 
 import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -19,7 +18,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class CarRequest implements Serializable {
+public final class CarRequest {
 
   public static final CarRequest DEFAULT = new CarRequest();
 

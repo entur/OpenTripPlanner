@@ -1,6 +1,5 @@
 package org.opentripplanner.street.search.request;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.Set;
@@ -14,7 +13,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class RentalRequest implements Serializable {
+public final class RentalRequest  {
 
   public static final RentalRequest DEFAULT = new RentalRequest();
   private final Duration pickupTime;

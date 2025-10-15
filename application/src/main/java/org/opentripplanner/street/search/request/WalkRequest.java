@@ -3,7 +3,6 @@ package org.opentripplanner.street.search.request;
 import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
@@ -20,7 +19,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class WalkRequest implements Serializable {
+public final class WalkRequest  {
 
   public static final WalkRequest DEFAULT = new WalkRequest();
 

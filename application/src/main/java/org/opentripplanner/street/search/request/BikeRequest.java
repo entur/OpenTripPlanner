@@ -5,7 +5,6 @@ import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.TRIANG
 import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
@@ -22,7 +21,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public final class BikeRequest implements Serializable {
+public final class BikeRequest {
 
   public static final BikeRequest DEFAULT = new BikeRequest();
 

@@ -2,7 +2,6 @@ package org.opentripplanner.street.search.request;
 
 import static org.opentripplanner.street.search.request.AccessibilityRequest.ofCost;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Units;
@@ -13,7 +12,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public class WheelchairRequest implements Serializable {
+public class WheelchairRequest  {
 
   /**
    * Default reluctance for traversing a street that is tagged with wheelchair=no. Since most
