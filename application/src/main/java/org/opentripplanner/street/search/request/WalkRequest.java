@@ -254,6 +254,7 @@ public final class WalkRequest implements Serializable {
       this.escalator = ifNotNull(this.escalator, original.escalator).copyOf().apply(body).build();
       return this;
     }
+
     public Builder withEscalator(EscalatorRequest req) {
       this.escalator = req;
       return this;

@@ -38,7 +38,6 @@ class StreetSearchRequestMapperTest {
     assertEquals(dateTime, subject.startTime());
     assertEquals(from, subject.from());
     assertEquals(to, subject.to());
-    assertEquals(request.preferences(), subject.preferences());
     assertTrue(subject.wheelchairEnabled());
   }
 
@@ -62,7 +61,6 @@ class StreetSearchRequestMapperTest {
     assertEquals(Instant.EPOCH, subject.startTime());
     assertNull(subject.from());
     assertNull(subject.to());
-    assertEquals(request.preferences(), subject.preferences());
     assertTrue(subject.wheelchairEnabled());
   }
 }

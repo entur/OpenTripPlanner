@@ -51,14 +51,12 @@ class StreetVehicleParkingLinkTest {
 
     var req = StreetSearchRequest.of();
     req.withMode(StreetMode.BIKE_TO_PARK);
-    req.withPreferences(p ->
-      p.withBike(bike ->
-        bike.withParking(parkingPreferences -> {
-          parkingPreferences.withRequiredVehicleParkingTags(select);
-          parkingPreferences.withBannedVehicleParkingTags(not);
-          parkingPreferences.withCost(0);
-        })
-      )
+    req.withBike(bike ->
+      bike.withParking(parkingPreferences -> {
+        parkingPreferences.withRequiredVehicleParkingTags(select);
+        parkingPreferences.withBannedVehicleParkingTags(not);
+        parkingPreferences.withCost(0);
+      })
     );
 
     var edge = StreetVehicleParkingLink.createStreetVehicleParkingLink(

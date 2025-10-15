@@ -426,9 +426,9 @@ class StreetEdgeGeofencingTest {
     ) {
       return StreetSearchRequest.of()
         .withScooter(b ->
-            b.withRental(r ->
-              r.withAllowedNetworks(allowedNetworks).withBannedNetworks(bannedNetworks)
-            )
+          b.withRental(r ->
+            r.withAllowedNetworks(allowedNetworks).withBannedNetworks(bannedNetworks)
+          )
         )
         .withMode(StreetMode.SCOOTER_RENTAL)
         .withArriveBy(true)

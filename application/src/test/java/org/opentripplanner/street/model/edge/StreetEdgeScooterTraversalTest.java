@@ -127,9 +127,7 @@ public class StreetEdgeScooterTraversalTest {
     State s0 = new State(StreetModelForTest.V1, request.build());
     State result = e1.traverse(s0)[0];
 
-    request.
-      withScooter(scooter -> scooter.withReluctance(5).withSpeed(8.5)
-    );
+    request.withScooter(scooter -> scooter.withReluctance(5).withSpeed(8.5));
 
     s0 = new State(StreetModelForTest.V1, request.build());
     var scooterReluctanceResult = e1.traverse(s0)[0];
@@ -191,17 +189,16 @@ public class StreetEdgeScooterTraversalTest {
 
     var request = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL);
 
-    request.
-        withScooter(scooter ->
-          scooter
-            .withSpeed(SPEED)
-            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
-            .withOptimizeTriangle(it -> it.withTime(1))
-            .withReluctance(1)
-        )
-        .withWalk(walk -> walk.withReluctance(1))
-        .withCar(car -> car.withReluctance(1)
-    );
+    request
+      .withScooter(scooter ->
+        scooter
+          .withSpeed(SPEED)
+          .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+          .withOptimizeTriangle(it -> it.withTime(1))
+          .withReluctance(1)
+      )
+      .withWalk(walk -> walk.withReluctance(1))
+      .withCar(car -> car.withReluctance(1));
 
     var rentedState = vehicleRentalEdge.traverse(new State(rentalVertex, request.build()));
     var startState = link.traverse(rentedState[0])[0];
@@ -211,9 +208,7 @@ public class StreetEdgeScooterTraversalTest {
     assertEquals(TraverseMode.SCOOTER, result.currentMode());
     assertEquals(expectedTimeWeight, result.getWeight() - startState.getWeight(), DELTA);
 
-    request
-      .withScooter(scooter -> scooter.withOptimizeTriangle(it -> it.withSlope(1))
-    );
+    request.withScooter(scooter -> scooter.withOptimizeTriangle(it -> it.withSlope(1)));
     rentedState = vehicleRentalEdge.traverse(new State(rentalVertex, request.build()));
     startState = link.traverse(rentedState[0])[0];
 
@@ -224,9 +219,7 @@ public class StreetEdgeScooterTraversalTest {
     assertTrue((length * 1.5) / SPEED < slopeWeight);
     assertTrue((length * 1.5 * 10) / SPEED > slopeWeight);
 
-    request.
-      withScooter(scooter -> scooter.withOptimizeTriangle(it -> it.withSafety(1))
-    );
+    request.withScooter(scooter -> scooter.withOptimizeTriangle(it -> it.withSafety(1)));
     rentedState = vehicleRentalEdge.traverse(new State(rentalVertex, request.build()));
     startState = link.traverse(rentedState[0])[0];
 
