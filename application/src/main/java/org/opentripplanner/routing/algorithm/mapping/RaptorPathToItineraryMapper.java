@@ -92,6 +92,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
     this.request = request;
     this.transferStreetRequest = StreetSearchRequestMapper.mapToTransferRequest(request).build();
     this.graphPathToItineraryMapper = new GraphPathToItineraryMapper(
+      transitService::getRegularStop,
       transitService.getTimeZone(),
       graph.streetNotesService,
       osmStreetDecoratorService,

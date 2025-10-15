@@ -11,6 +11,8 @@ import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchemaModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayServiceModule;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
 import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
@@ -67,6 +69,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     ConfigModule.class,
     ConstructApplicationModule.class,
     EmissionServiceModule.class,
+    EmpiricalDelayServiceModule.class,
     GeocoderModule.class,
     InteractiveLauncherModule.class,
     OsmStreetDecoratorServiceModule.class,
@@ -108,6 +111,9 @@ public interface ConstructApplicationFactory {
   EmissionRepository emissionRepository();
 
   OsmStreetDecoratorRepository osmStreetDecoratorRepository();
+
+  @Nullable
+  EmpiricalDelayRepository empiricalDelayRepository();
 
   @Nullable
   GraphVisualizer graphVisualizer();
@@ -173,6 +179,9 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder osmStreetDecoratorRepository(OsmStreetDecoratorRepository osmStreetDecoratorRepository);
+
+    @BindsInstance
+    Builder empiricalDelayRepository(EmpiricalDelayRepository empiricalDelayRepository);
 
     @BindsInstance
     Builder schema(RouteRequest defaultRouteRequest);

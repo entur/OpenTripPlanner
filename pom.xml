@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>205</otp.serialization.version.id>
+        <otp.serialization.version.id>207</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>33.2</geotools.version>
@@ -95,6 +95,7 @@
     <modules>
         <module>utils</module>
         <module>raptor</module>
+        <module>astar</module>
         <module>gtfs-realtime-protobuf</module>
         <module>application</module>
         <module>otp-shaded</module>
@@ -325,6 +326,7 @@
                     <inputGlobs>
                         <inputGlob>src/main/java/**/*.java</inputGlob>
                         <inputGlob>src/test/java/**/*.java</inputGlob>
+                        <inputGlob>src/test-fixtures/java/**/*.java</inputGlob>
                     </inputGlobs>
                 </configuration>
                 <executions>
@@ -415,7 +417,7 @@
                 <!-- This makes sure all google libraries are using compatible versions. -->
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.68.0</version>
+                <version>26.69.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -429,7 +431,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>33.4.8-jre</version>
+                <version>33.5.0-jre</version>
             </dependency>
 
             <!-- Logging API -->

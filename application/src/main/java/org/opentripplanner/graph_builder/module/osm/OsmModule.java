@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -154,6 +155,7 @@ public class OsmModule implements GraphBuilderModule {
     graph.hasStreets = true;
     streetLimitationParameters.initMaxCarSpeed(getMaxCarSpeed());
     streetLimitationParameters.initMaxAreaNodes(params.maxAreaNodes());
+    vertexGenerator.createDifferentLevelsSharingBarrierIssues();
   }
 
   @Override
@@ -193,7 +195,7 @@ public class OsmModule implements GraphBuilderModule {
       osmdb.getWalkableAreas(),
       osmdb.getParkAndRideAreas(),
       osmdb.getBikeParkingAreas()
-    )) setWayName(area.parent);
+    )) setEntityName(area.parent);
 
     // figure out which nodes that are actually intersections
     vertexGenerator.initIntersectionNodes();
@@ -256,9 +258,9 @@ public class OsmModule implements GraphBuilderModule {
     Collection<OsmArea> areas,
     Multimap<OsmNode, OsmWay> barriers
   ) {
-    Map<OsmArea, OsmLevel> areasLevels = new HashMap<>(areas.size());
+    Map<OsmArea, Set<OsmLevel>> areasLevels = new HashMap<>(areas.size());
     for (OsmArea area : areas) {
-      areasLevels.put(area, osmdb.getLevelForWay(area.parent));
+      areasLevels.put(area, osmdb.getLevelSetForEntity(area.parent));
     }
     return OsmAreaGroup.groupAreas(areasLevels, barriers);
   }
@@ -327,7 +329,7 @@ public class OsmModule implements GraphBuilderModule {
 
     WAY: for (OsmWay way : osmdb.getWays()) {
       WayPropertiesPair wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
-      setWayName(way);
+      setEntityName(way);
 
       var forwardPermission = wayData.forward().getPermission();
       var backwardPermission = wayData.backward().getPermission();
@@ -481,7 +483,7 @@ public class OsmModule implements GraphBuilderModule {
             geometry
           );
 
-          params.edgeNamer().recordEdges(way, streets);
+          params.edgeNamer().recordEdges(way, streets, osmdb);
 
           StreetEdge street = streets.main();
           StreetEdge backStreet = streets.back();
@@ -568,7 +570,7 @@ public class OsmModule implements GraphBuilderModule {
   }
 
   private Optional<EdgeLevelInfo> getEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
-    List<OsmLevel> levels = osmdb.getLevelsForWay(way);
+    List<OsmLevel> levels = osmdb.getLevelsForEntity(way);
     var nodeRefs = way.getNodeRefs();
     if (nodeRefs.size() > 1) {
       long firstNodeRef = nodeRefs.get(0);
@@ -576,32 +578,32 @@ public class OsmModule implements GraphBuilderModule {
       if (levels.size() == 2) {
         OsmLevel firstVertexOsmLevel = levels.get(0);
         OsmLevel lastVertexOsmLevel = levels.get(1);
-        if (firstVertexOsmLevel.floorNumber < lastVertexOsmLevel.floorNumber) {
+        if (firstVertexOsmLevel.level() < lastVertexOsmLevel.level()) {
           return Optional.of(
             new EdgeLevelInfo(
               new VertexLevelInfo(
-                firstVertexOsmLevel.floorNumber,
-                firstVertexOsmLevel.levelRef,
+                firstVertexOsmLevel.level(),
+                firstVertexOsmLevel.name(),
                 firstNodeRef
               ),
               new VertexLevelInfo(
-                lastVertexOsmLevel.floorNumber,
-                lastVertexOsmLevel.levelRef,
+                lastVertexOsmLevel.level(),
+                lastVertexOsmLevel.name(),
                 lastNodeRef
               )
             )
           );
-        } else if (firstVertexOsmLevel.floorNumber > lastVertexOsmLevel.floorNumber) {
+        } else if (firstVertexOsmLevel.level() > lastVertexOsmLevel.level()) {
           return Optional.of(
             new EdgeLevelInfo(
               new VertexLevelInfo(
-                lastVertexOsmLevel.floorNumber,
-                lastVertexOsmLevel.levelRef,
+                lastVertexOsmLevel.level(),
+                lastVertexOsmLevel.name(),
                 lastNodeRef
               ),
               new VertexLevelInfo(
-                firstVertexOsmLevel.floorNumber,
-                firstVertexOsmLevel.levelRef,
+                firstVertexOsmLevel.level(),
+                firstVertexOsmLevel.name(),
                 firstNodeRef
               )
             )
@@ -670,11 +672,11 @@ public class OsmModule implements GraphBuilderModule {
     vertices.forEach(bv -> bv.makeBarrierAtEndReachable());
   }
 
-  private void setWayName(OsmEntity way) {
-    if (!way.hasTag("name")) {
-      I18NString creativeName = way.getOsmProvider().getWayPropertySet().getCreativeNameForWay(way);
+  private void setEntityName(OsmEntity entity) {
+    if (!entity.hasTag("name")) {
+      I18NString creativeName = entity.getOsmProvider().getWayPropertySet().getCreativeName(entity);
       if (creativeName != null) {
-        way.setCreativeName(creativeName);
+        entity.setCreativeName(creativeName);
       }
     }
   }

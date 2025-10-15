@@ -9,6 +9,7 @@ import org.opentripplanner.apis.gtfs.GtfsApiParameters;
 import org.opentripplanner.apis.transmodel.TransmodelAPIParameters;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.ext.dataoverlay.routing.DataOverlayContext;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
@@ -126,6 +127,7 @@ public interface OtpServerRequestContext {
     return GraphFinder.getInstance(
       graph(),
       vertexLinker(),
+      transitService()::getRegularStop,
       transitService()::findRegularStopsByBoundingBox
     );
   }
@@ -162,6 +164,9 @@ public interface OtpServerRequestContext {
   ItineraryDecorator emissionItineraryDecorator();
 
   OsmStreetDecoratorService osmStreetDecoratorService();
+
+  @Nullable
+  EmpiricalDelayService empiricalDelayService();
 
   @Nullable
   LuceneIndex lucenceIndex();

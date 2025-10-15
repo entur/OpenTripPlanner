@@ -6,6 +6,8 @@ import com.conveyal.object_differ.ObjectDiffer;
 import java.io.File;
 import java.lang.ref.SoftReference;
 import java.lang.reflect.Method;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,11 @@ import org.opentripplanner.datastore.file.FileDataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionRepository;
 import org.opentripplanner.ext.emission.model.TripPatternEmission;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.empiricaldelay.internal.DefaultEmpiricalDelayRepository;
+import org.opentripplanner.ext.empiricaldelay.model.EmpiricalDelay;
+import org.opentripplanner.ext.empiricaldelay.model.TripDelays;
+import org.opentripplanner.ext.empiricaldelay.model.calendar.EmpiricalDelayCalendar;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareServiceFactory;
 import org.opentripplanner.framework.geometry.HashGridSpatialIndex;
 import org.opentripplanner.framework.model.Gram;
@@ -56,9 +63,11 @@ import org.opentripplanner.transit.service.TimetableRepository;
  */
 public class GraphSerializationTest {
 
-  private static final FeedScopedId A_TRIP_ID = new FeedScopedId("F", "T:1");
+  private static final String FEED_ID = "F";
+  private static final FeedScopedId A_TRIP_ID = new FeedScopedId(FEED_ID, "T:1");
   private static final Gram CO2 = Gram.of(2);
   private static final Emission A_EMISSION = Emission.of(CO2);
+  private static final LocalDate LOCAL_DATE = LocalDate.of(2025, 1, 1);
 
   static Class<?>[] IGNORED_CLASSES = Set.of(
     // Skip AtomicInteger, it does not implement equals/hashCode
@@ -85,6 +94,7 @@ public class GraphSerializationTest {
     var osmStreetDecoratorRepository = new DefaultOsmStreetDecoratorRepository();
     var weRepo = new DefaultWorldEnvelopeRepository();
     var emissionRepository = createEmissionRepository();
+    var empiricalDelayRepository = empiricalDelayRepository();
     var parkingRepository = new DefaultVehicleParkingRepository();
     testRoundTrip(
       model.graph(),
@@ -93,7 +103,8 @@ public class GraphSerializationTest {
       model.timetableRepository(),
       weRepo,
       parkingRepository,
-      emissionRepository
+      emissionRepository,
+      empiricalDelayRepository
     );
   }
 
@@ -107,6 +118,7 @@ public class GraphSerializationTest {
     var osmStreetDecoratorRepository = new DefaultOsmStreetDecoratorRepository();
     var worldEnvelopeRepository = new DefaultWorldEnvelopeRepository();
     var emissionRepository = createEmissionRepository();
+    var empiricalDelayRepository = empiricalDelayRepository();
     var parkingRepository = new DefaultVehicleParkingRepository();
     testRoundTrip(
       model.graph(),
@@ -115,7 +127,8 @@ public class GraphSerializationTest {
       model.timetableRepository(),
       worldEnvelopeRepository,
       parkingRepository,
-      emissionRepository
+      emissionRepository,
+      empiricalDelayRepository
     );
   }
 
@@ -220,7 +233,8 @@ public class GraphSerializationTest {
     TimetableRepository originalTimetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository vehicleParkingRepository,
-    EmissionRepository emissionRepository
+    EmissionRepository emissionRepository,
+    EmpiricalDelayRepository empiricalDelayRepository
   ) throws Exception {
     // Now round-trip the graph through serialization.
     File tempFile = TempFile.createTempFile("graph", "pdx");
@@ -237,6 +251,7 @@ public class GraphSerializationTest {
       RouterConfig.DEFAULT,
       DataImportIssueSummary.empty(),
       emissionRepository,
+      empiricalDelayRepository,
       null,
       streetLimitationParameters,
       new DefaultFareServiceFactory()
@@ -272,5 +287,17 @@ public class GraphSerializationTest {
       Map.of(A_TRIP_ID, new TripPatternEmission(List.of(A_EMISSION)))
     );
     return emissionRepository;
+  }
+
+  private static EmpiricalDelayRepository empiricalDelayRepository() {
+    var repository = new DefaultEmpiricalDelayRepository();
+    var cal = EmpiricalDelayCalendar.of()
+      .with("serviceId", Set.of(DayOfWeek.MONDAY), LOCAL_DATE, LOCAL_DATE)
+      .build();
+    repository.addEmpiricalDelayServiceCalendar(FEED_ID, cal);
+    repository.addTripDelays(
+      TripDelays.of(A_TRIP_ID).with("serviceId", List.of(new EmpiricalDelay(2, 19))).build()
+    );
+    return repository;
   }
 }

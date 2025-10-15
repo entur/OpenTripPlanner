@@ -34,6 +34,7 @@ class GraphPathToItineraryMapperTest {
   @MethodSource("cases")
   void isSearchWindowAware(State state) {
     var mapper = new GraphPathToItineraryMapper(
+      id -> null,
       ZoneIds.UTC,
       new StreetNotesService(),
       new DefaultOsmStreetDecoratorService(new DefaultOsmStreetDecoratorRepository()),

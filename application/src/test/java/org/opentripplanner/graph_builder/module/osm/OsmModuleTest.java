@@ -277,7 +277,7 @@ public class OsmModuleTest {
     );
     namer = new CreativeNamer("sidewalk");
     propset.addCreativeNamer(new BestMatchSpecifier("highway=footway;footway=sidewalk"), namer);
-    assertEquals("sidewalk", propset.getCreativeNameForWay(way).toString());
+    assertEquals("sidewalk", propset.getCreativeName(way).toString());
   }
 
   @Test
@@ -641,7 +641,7 @@ public class OsmModuleTest {
     osmModule.buildGraph();
 
     var edgeLevelInfoSet = Set.of(
-      new EdgeLevelInfo(new VertexLevelInfo(1.0, null, 1), new VertexLevelInfo(2.0, null, 2)),
+      new EdgeLevelInfo(new VertexLevelInfo(1.0, "1", 1), new VertexLevelInfo(2.0, "2", 2)),
       new EdgeLevelInfo(new VertexLevelInfo(null, null, 1), new VertexLevelInfo(null, null, 2)),
       new EdgeLevelInfo(new VertexLevelInfo(-1.0, "P1", 2), new VertexLevelInfo(1.0, "1", 1))
     );
