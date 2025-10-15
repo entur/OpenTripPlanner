@@ -33,6 +33,7 @@ class CrosswalkNamerTest {
   private static final OsmWay STREET = new OsmWay();
   private static final OsmWay SERVICE_ROAD = new OsmWay();
   private static final OsmWay TURN_LANE = new OsmWay();
+  private static final OsmWay MOTORWAY_RAMP = new OsmWay();
   private static final OsmWay OTHER_STREET = new OsmWay();
 
   @BeforeAll
@@ -64,7 +65,7 @@ class CrosswalkNamerTest {
     OTHER_STREET.addTag("name", "Other Street");
     OTHER_STREET.getNodeRefs().add(new long[] { 30001, 30002, 30003, 30004, 30005 });
 
-    // Reusing ids and nodes for SERVICE_ROAD and TURN_LANE as they are not used together with STREET.
+    // Reusing ids and nodes for SERVICE_ROAD, MOTORWAY_RAMP and TURN_LANE as they are not used together with STREET.
     SERVICE_ROAD.setId(50001);
     SERVICE_ROAD.addTag("highway", "service");
     SERVICE_ROAD.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
@@ -73,6 +74,12 @@ class CrosswalkNamerTest {
     TURN_LANE.addTag("highway", "primary_link");
     TURN_LANE.addTag("oneway", "yes");
     TURN_LANE.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
+
+    MOTORWAY_RAMP.setId(50001);
+    MOTORWAY_RAMP.addTag("highway", "motorway_link");
+    MOTORWAY_RAMP.addTag("oneway", "yes");
+    MOTORWAY_RAMP.addTag("turn:lanes", "right");
+    MOTORWAY_RAMP.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
   }
 
   @Test
@@ -149,7 +156,8 @@ class CrosswalkNamerTest {
     return Stream.of(
       Arguments.of(STREET, STREET.getTag("name")),
       Arguments.of(SERVICE_ROAD, "service road"),
-      Arguments.of(TURN_LANE, "turn lane")
+      Arguments.of(TURN_LANE, "turn lane"),
+      Arguments.of(MOTORWAY_RAMP, "freeway ramp")
     );
   }
 

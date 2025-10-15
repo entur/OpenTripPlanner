@@ -103,6 +103,8 @@ public class CrosswalkNamer implements EdgeNamer {
         );
       } else if (crossStreet.isServiceRoad()) {
         crosswalk.setName(I18NString.of("crossing over service road"));
+      } else if (crossStreet.isMotorwayRamp()) {
+        crosswalk.setName(I18NString.of("crossing over freeway ramp"));
       } else if (crossStreet.isTurnLane()) {
         crosswalk.setName(I18NString.of("crossing over turn lane"));
       } else {
