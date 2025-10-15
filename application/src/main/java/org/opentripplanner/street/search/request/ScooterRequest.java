@@ -189,6 +189,11 @@ public final class ScooterRequest {
       return this;
     }
 
+    public Builder withOptimizeTriangle(TimeSlopeSafetyTriangle triangle) {
+      this.optimizeTriangle = triangle;
+      return this;
+    }
+
     public Builder apply(Consumer<Builder> body) {
       body.accept(this);
       return this;

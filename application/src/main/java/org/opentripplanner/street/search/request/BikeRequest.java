@@ -252,6 +252,11 @@ public final class BikeRequest {
       return this;
     }
 
+    public Builder withOptimizeTriangle(TimeSlopeSafetyTriangle triangle) {
+      this.optimizeTriangle = triangle;
+      return this;
+    }
+
     public Builder withWalking(Consumer<VehicleWalkingRequest.Builder> body) {
       this.walking = ifNotNull(this.walking, original.walking).copyOf().apply(body).build();
       return this;

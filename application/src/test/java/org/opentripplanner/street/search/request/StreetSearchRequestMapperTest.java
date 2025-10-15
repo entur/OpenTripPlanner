@@ -15,7 +15,7 @@ import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 class StreetSearchRequestMapperTest {
 
   @Test
-  void map() {
+  void mapVehicleWalking() {
     var builder = RouteRequest.of();
 
     Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");
@@ -42,7 +42,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapToTransferRequest() {
+  void mapVehicleWalkingToTransferRequest() {
     var builder = RouteRequest.of();
 
     Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");

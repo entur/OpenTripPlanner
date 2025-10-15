@@ -4,25 +4,40 @@ import java.time.Instant;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.BikePreferences;
 import org.opentripplanner.routing.api.request.preference.CarPreferences;
+import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.routing.api.request.preference.ScooterPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleWalkingPreferences;
+import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 
 public class StreetSearchRequestMapper {
 
   public static StreetSearchRequestBuilder mapInternal(RouteRequest request) {
     var time = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
+    final RoutingPreferences preferences = request.preferences();
     return StreetSearchRequest.of()
       .withStartTime(time)
       .withArriveBy(request.arriveBy())
       .withWheelchair(request.journey().wheelchair())
       .withFrom(request.from())
       .withTo(request.to())
-      .withGeoidElevation(request.preferences().system().geoidElevation())
-      .withTurnReluctance(request.preferences().street().turnReluctance())
-      .withBike(mapBike(request.preferences().bike()))
-      .withCar(mapCar(request.preferences().car()))
-      .withScooter(mapScooter(request.preferences().scooter()));
+      .withGeoidElevation(preferences.system().geoidElevation())
+      .withTurnReluctance(preferences.street().turnReluctance())
+      .withWalk(mapWalk(preferences.walk()))
+      .withBike(mapBike(preferences.bike()))
+      .withCar(mapCar(preferences.car()))
+      .withScooter(mapScooter(preferences.scooter()));
+  }
+
+  private static WalkRequest mapWalk(WalkPreferences pref) {
+    return WalkRequest.of()
+      .withSpeed(pref.speed())
+      .withReluctance(pref.reluctance())
+      .withStairsReluctance(pref.stairsReluctance())
+      .withStairsTimeFactor(pref.stairsTimeFactor())
+      .withBoardCost(pref.boardCost())
+      .withSafetyFactor(pref.safetyFactor())
+      .build();
   }
 
   private static ScooterRequest mapScooter(ScooterPreferences scooter) {
@@ -31,12 +46,7 @@ public class StreetSearchRequestMapper {
       .withReluctance(scooter.reluctance())
       .withRental(b -> mapRental(scooter.rental()))
       .withOptimizeType(scooter.optimizeType())
-      .withOptimizeTriangle(b ->
-        b
-          .withTime(scooter.optimizeTriangle().time())
-          .withSlope(scooter.optimizeTriangle().slope())
-          .withSafety(scooter.optimizeTriangle().safety())
-      )
+      .withOptimizeTriangle(scooter.optimizeTriangle())
       .build();
   }
 
@@ -53,23 +63,17 @@ public class StreetSearchRequestMapper {
 
   private static BikeRequest mapBike(BikePreferences preferences) {
     return BikeRequest.of()
-      .withSpeed(preferences.speed())
       .withReluctance(preferences.reluctance())
+      .withSpeed(preferences.speed())
       .withRental(b -> mapRental(preferences.rental()))
-      .withOptimizeType(preferences.optimizeType())
       .withBoardCost(preferences.boardCost())
-      .withWalking(map(preferences.walking()))
+      .withWalking(mapVehicleWalking(preferences.walking()))
       .withOptimizeType(preferences.optimizeType())
-      .withOptimizeTriangle(b ->
-        b
-          .withTime(preferences.optimizeTriangle().time())
-          .withSlope(preferences.optimizeTriangle().slope())
-          .withSafety(preferences.optimizeTriangle().safety())
-      )
+      .withOptimizeTriangle(preferences.optimizeTriangle())
       .build();
   }
 
-  private static VehicleWalkingRequest map(VehicleWalkingPreferences walking) {
+  private static VehicleWalkingRequest mapVehicleWalking(VehicleWalkingPreferences walking) {
     return VehicleWalkingRequest.of()
       .withSpeed(walking.speed())
       .withReluctance(walking.reluctance())
