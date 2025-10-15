@@ -22,10 +22,6 @@ public class DefaultTransitDataProviderFilterBuilder {
 
   private boolean includeRealtimeCancellations = false;
 
-  /**
-   * This is stored as an array, as they are iterated over for each trip when filtering transit
-   * data. Iterator creation is relatively expensive compared to iterating over a short array.
-   */
   private List<TransitFilter> filters = new ArrayList<>();
 
   private Collection<FeedScopedId> bannedTrips = List.of();
@@ -111,10 +107,6 @@ public class DefaultTransitDataProviderFilterBuilder {
   public DefaultTransitDataProviderFilterBuilder addFilter(TransitFilter filter) {
     this.filters.add(filter);
     return this;
-  }
-
-  public boolean hasSubmodeFilters() {
-    return filters.stream().anyMatch(TransitFilter::isSubModePredicate);
   }
 
   public boolean requireBikesAllowed() {
