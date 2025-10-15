@@ -153,14 +153,14 @@ public class LinkingTest {
         assertEquals(v1.getLon(), v2.getLon(), 1e-10);
       }
     }
-    assertEquals(141, unlinkedStopsCounter);
+    assertEquals(153, unlinkedStopsCounter);
   }
 
   /** Build a graph in Columbus, OH with no transit */
   public static TestOtpModel buildGraphNoTransit() {
     var deduplicator = new Deduplicator();
     var siteRepository = new SiteRepository();
-    var graph = new Graph(deduplicator);
+    var graph = new Graph();
     var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
 
     File file = ResourceLoader.of(LinkingTest.class).file("columbus.osm.pbf");

@@ -7,7 +7,10 @@ import io.micrometer.core.instrument.Metrics;
 import jakarta.inject.Singleton;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
+import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.astar.spi.TraverseVisitor;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.interactivelauncher.api.LauncherRequestDecorator;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
@@ -55,7 +58,9 @@ public class ConstructApplicationModule {
     StreetLimitationParametersService streetLimitationParametersService,
     @Nullable TraverseVisitor<?, ?> traverseVisitor,
     @Nullable @EmissionDecorator ItineraryDecorator emissionItineraryDecorator,
-    @Nullable GraphQLSchema schema,
+    @Nullable @GtfsSchema GraphQLSchema gtfsSchema,
+    @Nullable @TransmodelSchema GraphQLSchema transmodelSchema,
+    @Nullable EmpiricalDelayService empiricalDelayService,
     @Nullable SorlandsbanenNorwayService sorlandsbanenService,
     LauncherRequestDecorator launcherRequestDecorator,
     @Nullable LuceneIndex luceneIndex,
@@ -68,6 +73,7 @@ public class ConstructApplicationModule {
     var gtfsApiConfig = routerConfig.gtfsApiParameters();
     var vectorTileConfig = routerConfig.vectorTileConfig();
     var flexParameters = routerConfig.flexParameters();
+    var transmodelAPIParameters = routerConfig.transmodelApi();
 
     return new DefaultServerRequestContext(
       debugUiConfig,
@@ -92,11 +98,14 @@ public class ConstructApplicationModule {
       worldEnvelopeService,
       // Optional Sandbox services
       emissionItineraryDecorator,
+      empiricalDelayService,
       luceneIndex,
-      schema,
+      gtfsSchema,
+      transmodelSchema,
       sorlandsbanenService,
       stopConsolidationService,
-      traverseVisitor
+      traverseVisitor,
+      transmodelAPIParameters
     );
   }
 

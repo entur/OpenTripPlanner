@@ -2,9 +2,9 @@ package org.opentripplanner.standalone.configure;
 
 import jakarta.ws.rs.core.Application;
 import javax.annotation.Nullable;
-import org.opentripplanner.apis.transmodel.TransmodelAPI;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -86,6 +86,7 @@ public class ConstructApplication {
     GraphBuilderDataSources graphBuilderDataSources,
     DataImportIssueSummary issueSummary,
     EmissionRepository emissionRepository,
+    @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     VehicleParkingRepository vehicleParkingRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetLimitationParameters streetLimitationParameters,
@@ -108,6 +109,7 @@ public class ConstructApplication {
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingRepository)
       .emissionRepository(emissionRepository)
+      .empiricalDelayRepository(empiricalDelayRepository)
       .dataImportIssueSummary(issueSummary)
       .stopConsolidationRepository(stopConsolidationRepository)
       .streetLimitationParameters(streetLimitationParameters)
@@ -147,6 +149,7 @@ public class ConstructApplication {
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
       factory.emissionRepository(),
+      factory.empiricalDelayRepository(),
       factory.stopConsolidationRepository(),
       factory.streetLimitationParameters(),
       cli.doLoadStreetGraph(),
@@ -163,6 +166,10 @@ public class ConstructApplication {
   @Nullable
   public DataSource graphOutputDataSource() {
     return graphBuilderDataSources.getOutputGraph();
+  }
+
+  public GraphBuilderDataSources graphBuilderDataSources() {
+    return graphBuilderDataSources;
   }
 
   private Application createApplication() {
@@ -192,16 +199,6 @@ public class ConstructApplication {
     initEllipsoidToGeoidDifference();
 
     initializeTransferCache(routerConfig().transitTuningConfig(), timetableRepository());
-
-    if (OTPFeature.TransmodelGraphQlApi.isOn()) {
-      TransmodelAPI.setUp(
-        routerConfig().transmodelApi(),
-        timetableRepository(),
-        routerConfig().routingRequestDefaults(),
-        routerConfig().server().apiDocumentationProfile(),
-        routerConfig().transitTuningConfig()
-      );
-    }
 
     if (OTPFeature.SandboxAPIGeocoder.isOn()) {
       LOG.info("Initializing geocoder");
@@ -354,6 +351,11 @@ public class ConstructApplication {
 
   public EmissionRepository emissionRepository() {
     return factory.emissionRepository();
+  }
+
+  @Nullable
+  public EmpiricalDelayRepository empiricalDelayRepository() {
+    return factory.empiricalDelayRepository();
   }
 
   public StreetLimitationParameters streetLimitationParameters() {

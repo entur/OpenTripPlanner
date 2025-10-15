@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.common.collect.ImmutableMultimap;
 import java.io.File;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -53,7 +54,7 @@ public class WalkableAreaBuilderTest {
       graph,
       osmdb,
       osmInfoRepository,
-      new VertexGenerator(osmdb, graph, Set.of(), false),
+      new VertexGenerator(osmdb, graph, Set.of(), false, DataImportIssueStore.NOOP),
       new DefaultNamer(),
       new SafetyValueNormalizer(graph, DataImportIssueStore.NOOP),
       DataImportIssueStore.NOOP,
@@ -62,11 +63,14 @@ public class WalkableAreaBuilderTest {
       boardingAreaRefTags
     );
 
-    final Map<OsmArea, OsmLevel> areasLevels = osmdb
+    final Map<OsmArea, Set<OsmLevel>> areasLevels = osmdb
       .getWalkableAreas()
       .stream()
-      .collect(toMap(a -> a, a -> osmdb.getLevelForWay(a.parent)));
-    final List<OsmAreaGroup> areaGroups = OsmAreaGroup.groupAreas(areasLevels);
+      .collect(toMap(a -> a, a -> osmdb.getLevelSetForEntity(a.parent)));
+    final List<OsmAreaGroup> areaGroups = OsmAreaGroup.groupAreas(
+      areasLevels,
+      ImmutableMultimap.of()
+    );
 
     final Consumer<OsmAreaGroup> build = visibility
       ? walkableAreaBuilder::buildWithVisibility
