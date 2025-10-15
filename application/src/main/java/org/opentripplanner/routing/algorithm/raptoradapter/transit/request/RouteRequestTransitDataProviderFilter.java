@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -25,9 +24,9 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
 
   private final boolean requireCarsAllowed;
 
-  private final boolean wheelchairEnabled;
+  private final boolean requireWheelchairAccessibleTrips;
 
-  private final WheelchairPreferences wheelchairPreferences;
+  private final boolean requireWheelchairAccessibleStops;
 
   private final boolean includePlannedCancellations;
 
@@ -44,24 +43,36 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
   private final boolean hasSubModeFilters;
 
   public RouteRequestTransitDataProviderFilter(RouteRequest request) {
-    this(
-      request.journey().transfer().mode() == StreetMode.BIKE,
-      request.journey().transfer().mode() == StreetMode.CAR,
-      request.journey().wheelchair(),
-      request.preferences().wheelchair(),
-      request.preferences().transit().includePlannedCancellations(),
-      request.preferences().transit().includeRealtimeCancellations(),
-      Set.copyOf(request.journey().transit().bannedTrips()),
-      request.journey().transit().filters()
-    );
+    var wheelchairEnabled = request.journey().wheelchair();
+    var wheelchairPreferences = request.preferences().wheelchair();
+
+    this.requireBikesAllowed = request.journey().transfer().mode() == StreetMode.BIKE;
+    this.requireCarsAllowed = request.journey().transfer().mode() == StreetMode.CAR;
+    this.requireWheelchairAccessibleTrips =
+      wheelchairEnabled && wheelchairPreferences.trip().onlyConsiderAccessible();
+    this.requireWheelchairAccessibleStops =
+      wheelchairEnabled && wheelchairPreferences.stop().onlyConsiderAccessible();
+    this.includePlannedCancellations = request
+      .preferences()
+      .transit()
+      .includePlannedCancellations();
+    this.includeRealtimeCancellations = request
+      .preferences()
+      .transit()
+      .includeRealtimeCancellations();
+    this.bannedTrips = Set.copyOf(request.journey().transit().bannedTrips());
+
+    var filters = request.journey().transit().filters();
+    this.filters = filters.toArray(TransitFilter[]::new);
+    this.hasSubModeFilters = filters.stream().anyMatch(TransitFilter::isSubModePredicate);
   }
 
   // This constructor is used only for testing
   public RouteRequestTransitDataProviderFilter(
     boolean requireBikesAllowed,
     boolean requireCarsAllowed,
-    boolean wheelchairEnabled,
-    WheelchairPreferences wheelchairPreferences,
+    boolean requireWheelchairAccessibleTrips,
+    boolean requireWheelchairAccessibleStops,
     boolean includePlannedCancellations,
     boolean includeRealtimeCancellations,
     Set<FeedScopedId> bannedTrips,
@@ -69,8 +80,8 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
   ) {
     this.requireBikesAllowed = requireBikesAllowed;
     this.requireCarsAllowed = requireCarsAllowed;
-    this.wheelchairEnabled = wheelchairEnabled;
-    this.wheelchairPreferences = wheelchairPreferences;
+    this.requireWheelchairAccessibleTrips = requireWheelchairAccessibleTrips;
+    this.requireWheelchairAccessibleStops = requireWheelchairAccessibleStops;
     this.includePlannedCancellations = includePlannedCancellations;
     this.includeRealtimeCancellations = includeRealtimeCancellations;
     this.bannedTrips = bannedTrips;
@@ -109,13 +120,11 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
       return false;
     }
 
-    if (wheelchairEnabled) {
-      if (
-        wheelchairPreferences.trip().onlyConsiderAccessible() &&
-        tripTimes.getWheelchairAccessibility() != Accessibility.POSSIBLE
-      ) {
-        return false;
-      }
+    if (
+      requireWheelchairAccessibleTrips &&
+      tripTimes.getWheelchairAccessibility() != Accessibility.POSSIBLE
+    ) {
+      return false;
     }
 
     if (!includePlannedCancellations) {
@@ -173,10 +182,7 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
       }
     }
 
-    // if the user wants wheelchair-accessible routes and the configuration requires us to only
-    // consider those stops which have the correct accessibility values then use only this for
-    // checking whether to board/alight
-    if (wheelchairEnabled && wheelchairPreferences.stop().onlyConsiderAccessible()) {
+    if (requireWheelchairAccessibleStops) {
       result = (BitSet) result.clone();
       // Use the and bitwise operator to add false flag to all stops that are not accessible by wheelchair
       result.and(tripPattern.getWheelchairAccessible());

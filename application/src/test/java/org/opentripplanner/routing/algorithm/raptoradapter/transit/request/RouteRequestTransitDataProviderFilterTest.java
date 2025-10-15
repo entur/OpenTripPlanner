@@ -18,9 +18,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.apis.transmodel.model.TransmodelTransportSubmode;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.AccessibilityPreferences;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
@@ -103,16 +105,15 @@ class RouteRequestTransitDataProviderFilterTest {
       .build()
       .getRoutingTripPattern();
 
-    var filter = new RouteRequestTransitDataProviderFilter(
-      false,
-      false,
-      true,
-      accessibility,
-      false,
-      false,
-      Set.of(),
-      List.of(AllowAllTransitFilter.of())
-    );
+    var request = RouteRequest.defaultValue()
+      .copyOf()
+      .withFrom(GenericLocation.fromCoordinate(0, 0))
+      .withTo(GenericLocation.fromCoordinate(0, 0))
+      .withPreferences(builder -> builder.withWheelchair(accessibility))
+      .withJourney(builder -> builder.withWheelchair(true))
+      .buildRequest();
+
+    var filter = new RouteRequestTransitDataProviderFilter(request);
 
     var boardingPossible = new BitSet();
 
@@ -157,7 +158,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       includeRealtimeCancellations,
       Set.of(),
@@ -203,7 +204,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -224,7 +225,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -258,7 +259,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(TRIP_ID),
@@ -285,7 +286,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -321,7 +322,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -353,7 +354,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -435,7 +436,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -474,7 +475,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -503,7 +504,7 @@ class RouteRequestTransitDataProviderFilterTest {
       true,
       false,
       true,
-      WheelchairPreferences.DEFAULT,
+      true,
       false,
       false,
       Set.of(),
@@ -532,7 +533,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       true,
       true,
-      WheelchairPreferences.DEFAULT,
+      true,
       false,
       false,
       Set.of(),
@@ -561,7 +562,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       true,
-      WheelchairPreferences.DEFAULT,
+      false,
       false,
       false,
       Set.of(),
@@ -590,7 +591,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       true,
-      WheelchairPreferences.DEFAULT,
+      false,
       false,
       false,
       Set.of(),
@@ -620,7 +621,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       true,
-      WheelchairPreferences.DEFAULT,
+      false,
       false,
       false,
       Set.of(),
@@ -662,7 +663,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      WheelchairPreferences.DEFAULT,
+      false,
       true,
       false,
       Set.of(),
@@ -684,7 +685,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -728,7 +729,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      WheelchairPreferences.DEFAULT,
+      false,
       false,
       true,
       Set.of(),
@@ -750,7 +751,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -843,7 +844,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       true,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -922,7 +923,7 @@ class RouteRequestTransitDataProviderFilterTest {
       true,
       false,
       true,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
@@ -946,7 +947,7 @@ class RouteRequestTransitDataProviderFilterTest {
       false,
       false,
       false,
-      DEFAULT_ACCESSIBILITY,
+      false,
       false,
       false,
       Set.of(),
