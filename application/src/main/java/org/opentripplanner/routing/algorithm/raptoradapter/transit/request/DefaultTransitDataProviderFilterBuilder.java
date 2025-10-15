@@ -8,7 +8,7 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
-public class RouteRequestTransitDataProviderFilterBuilder {
+public class DefaultTransitDataProviderFilterBuilder {
 
   private boolean requireBikesAllowed = false;
 
@@ -30,11 +30,11 @@ public class RouteRequestTransitDataProviderFilterBuilder {
 
   private Collection<FeedScopedId> bannedTrips = List.of();
 
-  public static RouteRequestTransitDataProviderFilterBuilder ofRequest(RouteRequest request) {
+  public static DefaultTransitDataProviderFilterBuilder ofRequest(RouteRequest request) {
     var wheelchairEnabled = request.journey().wheelchair();
     var wheelchair = request.preferences().wheelchair();
 
-    var builder = new RouteRequestTransitDataProviderFilterBuilder()
+    var builder = new DefaultTransitDataProviderFilterBuilder()
       .withRequireBikesAllowed(request.journey().transfer().mode() == StreetMode.BIKE)
       .withRequireCarsAllowed(request.journey().transfer().mode() == StreetMode.CAR)
       .withRequireWheelchairAccessibleTrips(
@@ -54,61 +54,61 @@ public class RouteRequestTransitDataProviderFilterBuilder {
     return builder;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withRequireBikesAllowed(
+  public DefaultTransitDataProviderFilterBuilder withRequireBikesAllowed(
     boolean requireBikesAllowed
   ) {
     this.requireBikesAllowed = requireBikesAllowed;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withRequireCarsAllowed(
+  public DefaultTransitDataProviderFilterBuilder withRequireCarsAllowed(
     boolean requireCarsAllowed
   ) {
     this.requireCarsAllowed = requireCarsAllowed;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withRequireWheelchairAccessibleTrips(
+  public DefaultTransitDataProviderFilterBuilder withRequireWheelchairAccessibleTrips(
     boolean requireWheelchairAccessibleTrips
   ) {
     this.requireWheelchairAccessibleTrips = requireWheelchairAccessibleTrips;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withRequireWheelchairAccessibleStops(
+  public DefaultTransitDataProviderFilterBuilder withRequireWheelchairAccessibleStops(
     boolean requireWheelchairAccessibleStops
   ) {
     this.requireWheelchairAccessibleStops = requireWheelchairAccessibleStops;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withIncludePlannedCancellations(
+  public DefaultTransitDataProviderFilterBuilder withIncludePlannedCancellations(
     boolean includePlannedCancellations
   ) {
     this.includePlannedCancellations = includePlannedCancellations;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withIncludeRealtimeCancellations(
+  public DefaultTransitDataProviderFilterBuilder withIncludeRealtimeCancellations(
     boolean includeRealtimeCancellations
   ) {
     this.includeRealtimeCancellations = includeRealtimeCancellations;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withBannedTrips(
+  public DefaultTransitDataProviderFilterBuilder withBannedTrips(
     Collection<FeedScopedId> bannedTrips
   ) {
     this.bannedTrips = bannedTrips;
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder withFilters(List<TransitFilter> filters) {
+  public DefaultTransitDataProviderFilterBuilder withFilters(List<TransitFilter> filters) {
     this.filters = new ArrayList<>(filters);
     return this;
   }
 
-  public RouteRequestTransitDataProviderFilterBuilder addFilter(TransitFilter filter) {
+  public DefaultTransitDataProviderFilterBuilder addFilter(TransitFilter filter) {
     this.filters.add(filter);
     return this;
   }
@@ -149,7 +149,7 @@ public class RouteRequestTransitDataProviderFilterBuilder {
     return filters;
   }
 
-  public RouteRequestTransitDataProviderFilter build() {
-    return new RouteRequestTransitDataProviderFilter(this);
+  public DefaultTransitDataProviderFilter build() {
+    return new DefaultTransitDataProviderFilter(this);
   }
 }

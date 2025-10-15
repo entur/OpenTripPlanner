@@ -49,7 +49,7 @@ import org.opentripplanner.transit.model.timetable.TripBuilder;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 
-class RouteRequestTransitDataProviderFilterTest {
+class DefaultTransitDataProviderFilterTest {
 
   private static final TimetableRepositoryForTest TEST_MODEL = TimetableRepositoryForTest.of();
 
@@ -112,7 +112,7 @@ class RouteRequestTransitDataProviderFilterTest {
       .withJourney(builder -> builder.withWheelchair(true))
       .buildRequest();
 
-    var filter = RouteRequestTransitDataProviderFilter.ofRequest(request);
+    var filter = DefaultTransitDataProviderFilter.ofRequest(request);
 
     var boardingPossible = new BitSet();
 
@@ -153,7 +153,7 @@ class RouteRequestTransitDataProviderFilterTest {
       .build()
       .getRoutingTripPattern();
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withIncludeRealtimeCancellations(includeRealtimeCancellations)
       .build();
 
@@ -192,7 +192,7 @@ class RouteRequestTransitDataProviderFilterTest {
   void notFilteringExpectedTripPatternForDateTest() {
     TripPatternForDate tripPatternForDate = createTestTripPatternForDate();
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(filterForMode(TransitMode.BUS))
       .build();
 
@@ -206,7 +206,7 @@ class RouteRequestTransitDataProviderFilterTest {
   void bannedRouteFilteringTest() {
     TripPatternForDate tripPatternForDate = createTestTripPatternForDate();
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .addFilter(
         TransitFilterRequest.of()
           .addNot(SelectRequest.of().withRoutes(List.of(ROUTE.getId())).build())
@@ -233,9 +233,7 @@ class RouteRequestTransitDataProviderFilterTest {
       null
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
-      .withBannedTrips(Set.of(TRIP_ID))
-      .build();
+    var filter = DefaultTransitDataProviderFilter.of().withBannedTrips(Set.of(TRIP_ID)).build();
 
     assertFalse(validate(filter, patternAndTimes));
   }
@@ -253,7 +251,7 @@ class RouteRequestTransitDataProviderFilterTest {
       TransmodelTransportSubmode.LOCAL.getValue()
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(
         filterForModesAndFilterForBannedAgencies(
           List.of(
@@ -284,7 +282,7 @@ class RouteRequestTransitDataProviderFilterTest {
       TransmodelTransportSubmode.LOCAL.getValue()
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(
         combinedFilterForModesAndBannedAgencies(
           List.of(
@@ -311,7 +309,7 @@ class RouteRequestTransitDataProviderFilterTest {
       TransmodelTransportSubmode.LOCAL.getValue()
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(
         List.of(
           TransitFilterRequest.of()
@@ -388,7 +386,7 @@ class RouteRequestTransitDataProviderFilterTest {
       )
       .build();
 
-    var filter = RouteRequestTransitDataProviderFilter.of().addFilter(transitFilter).build();
+    var filter = DefaultTransitDataProviderFilter.of().addFilter(transitFilter).build();
 
     var patternTimes = createPatternAndTimes(
       TRIP_ID,
@@ -418,7 +416,7 @@ class RouteRequestTransitDataProviderFilterTest {
       null
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(filterForMode(TransitMode.BUS))
       .build();
 
@@ -440,7 +438,7 @@ class RouteRequestTransitDataProviderFilterTest {
       null
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of().withRequireBikesAllowed(true).build();
+    var filter = DefaultTransitDataProviderFilter.of().withRequireBikesAllowed(true).build();
 
     boolean valid = validate(filter, patternTimes);
 
@@ -460,7 +458,7 @@ class RouteRequestTransitDataProviderFilterTest {
       null
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of().withRequireCarsAllowed(true).build();
+    var filter = DefaultTransitDataProviderFilter.of().withRequireCarsAllowed(true).build();
 
     boolean valid = validate(filter, patternTimes);
 
@@ -480,7 +478,7 @@ class RouteRequestTransitDataProviderFilterTest {
       null
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withRequireWheelchairAccessibleTrips(true)
       .build();
 
@@ -502,7 +500,7 @@ class RouteRequestTransitDataProviderFilterTest {
       TripAlteration.PLANNED
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withRequireWheelchairAccessibleTrips(true)
       .build();
 
@@ -525,7 +523,7 @@ class RouteRequestTransitDataProviderFilterTest {
     );
     var builder = patternAndTimes.tripTimes().createRealTimeFromScheduledTimes();
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withRequireWheelchairAccessibleTrips(true)
       .build();
 
@@ -560,7 +558,7 @@ class RouteRequestTransitDataProviderFilterTest {
     );
 
     // Given
-    var filter1 = RouteRequestTransitDataProviderFilter.of()
+    var filter1 = DefaultTransitDataProviderFilter.of()
       .withIncludePlannedCancellations(true)
       .build();
 
@@ -575,7 +573,7 @@ class RouteRequestTransitDataProviderFilterTest {
     assertTrue(valid2);
 
     // Given
-    var filter2 = RouteRequestTransitDataProviderFilter.of()
+    var filter2 = DefaultTransitDataProviderFilter.of()
       .withIncludePlannedCancellations(false)
       .build();
 
@@ -612,7 +610,7 @@ class RouteRequestTransitDataProviderFilterTest {
     var patternTimesWithCancellation = patternTimes.withTimes(cancelled);
 
     // Given
-    var filter1 = RouteRequestTransitDataProviderFilter.of()
+    var filter1 = DefaultTransitDataProviderFilter.of()
       .withIncludeRealtimeCancellations(true)
       .build();
 
@@ -627,7 +625,7 @@ class RouteRequestTransitDataProviderFilterTest {
     assertTrue(valid2);
 
     // Given
-    var filter2 = RouteRequestTransitDataProviderFilter.of()
+    var filter2 = DefaultTransitDataProviderFilter.of()
       .withIncludeRealtimeCancellations(false)
       .build();
 
@@ -649,32 +647,32 @@ class RouteRequestTransitDataProviderFilterTest {
 
     assertEquals(
       BikeAccess.UNKNOWN,
-      RouteRequestTransitDataProviderFilter.bikeAccessForTrip(trip.build())
+      DefaultTransitDataProviderFilter.bikeAccessForTrip(trip.build())
     );
     trip.withBikesAllowed(BikeAccess.ALLOWED);
     assertEquals(
       BikeAccess.ALLOWED,
-      RouteRequestTransitDataProviderFilter.bikeAccessForTrip(trip.build())
+      DefaultTransitDataProviderFilter.bikeAccessForTrip(trip.build())
     );
     trip.withBikesAllowed(BikeAccess.NOT_ALLOWED);
     assertEquals(
       BikeAccess.NOT_ALLOWED,
-      RouteRequestTransitDataProviderFilter.bikeAccessForTrip(trip.build())
+      DefaultTransitDataProviderFilter.bikeAccessForTrip(trip.build())
     );
     trip.withRoute(routeBuilder.withBikesAllowed(BikeAccess.ALLOWED).build());
     assertEquals(
       BikeAccess.NOT_ALLOWED,
-      RouteRequestTransitDataProviderFilter.bikeAccessForTrip(trip.build())
+      DefaultTransitDataProviderFilter.bikeAccessForTrip(trip.build())
     );
     trip.withBikesAllowed(BikeAccess.UNKNOWN);
     assertEquals(
       BikeAccess.ALLOWED,
-      RouteRequestTransitDataProviderFilter.bikeAccessForTrip(trip.build())
+      DefaultTransitDataProviderFilter.bikeAccessForTrip(trip.build())
     );
     trip.withRoute(routeBuilder.withBikesAllowed(BikeAccess.NOT_ALLOWED).build());
     assertEquals(
       BikeAccess.NOT_ALLOWED,
-      RouteRequestTransitDataProviderFilter.bikeAccessForTrip(trip.build())
+      DefaultTransitDataProviderFilter.bikeAccessForTrip(trip.build())
     );
   }
 
@@ -713,7 +711,7 @@ class RouteRequestTransitDataProviderFilterTest {
       TripAlteration.PLANNED
     );
 
-    RouteRequestTransitDataProviderFilter filter = RouteRequestTransitDataProviderFilter.of()
+    DefaultTransitDataProviderFilter filter = DefaultTransitDataProviderFilter.of()
       .withRequireCarsAllowed(true)
       .build();
 
@@ -785,7 +783,7 @@ class RouteRequestTransitDataProviderFilterTest {
       TripAlteration.CANCELLATION
     );
 
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withRequireBikesAllowed(true)
       .withRequireWheelchairAccessibleTrips(true)
       .withFilters(filterForMode(TransitMode.BUS))
@@ -804,7 +802,7 @@ class RouteRequestTransitDataProviderFilterTest {
     Collection<MainAndSubMode> allowedModes,
     PatternAndTimes patternAndTimes
   ) {
-    var filter = RouteRequestTransitDataProviderFilter.of()
+    var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(filterForModes(allowedModes))
       .build();
 
@@ -982,7 +980,7 @@ class RouteRequestTransitDataProviderFilterTest {
   }
 
   private boolean validate(
-    RouteRequestTransitDataProviderFilter filter,
+    DefaultTransitDataProviderFilter filter,
     PatternAndTimes patternAndTimes
   ) {
     var tripTimesFilter = filter.createTripFilter(patternAndTimes.pattern());

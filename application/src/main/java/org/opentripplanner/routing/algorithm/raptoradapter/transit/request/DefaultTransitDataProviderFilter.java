@@ -18,7 +18,7 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 
-public class RouteRequestTransitDataProviderFilter implements TransitDataProviderFilter {
+public class DefaultTransitDataProviderFilter implements TransitDataProviderFilter {
 
   private final boolean requireBikesAllowed;
 
@@ -42,9 +42,7 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
 
   private final boolean hasSubModeFilters;
 
-  public RouteRequestTransitDataProviderFilter(
-    RouteRequestTransitDataProviderFilterBuilder builder
-  ) {
+  public DefaultTransitDataProviderFilter(DefaultTransitDataProviderFilterBuilder builder) {
     requireBikesAllowed = builder.requireBikesAllowed();
     requireCarsAllowed = builder.requireCarsAllowed();
     requireWheelchairAccessibleTrips = builder.requireWheelchairAccessibleTrips();
@@ -61,12 +59,12 @@ public class RouteRequestTransitDataProviderFilter implements TransitDataProvide
     hasSubModeFilters = filters.stream().anyMatch(TransitFilter::isSubModePredicate);
   }
 
-  public static RouteRequestTransitDataProviderFilterBuilder of() {
-    return new RouteRequestTransitDataProviderFilterBuilder();
+  public static DefaultTransitDataProviderFilterBuilder of() {
+    return new DefaultTransitDataProviderFilterBuilder();
   }
 
-  public static RouteRequestTransitDataProviderFilter ofRequest(RouteRequest request) {
-    return RouteRequestTransitDataProviderFilterBuilder.ofRequest(request).build();
+  public static DefaultTransitDataProviderFilter ofRequest(RouteRequest request) {
+    return DefaultTransitDataProviderFilterBuilder.ofRequest(request).build();
   }
 
   public static BikeAccess bikeAccessForTrip(Trip trip) {
