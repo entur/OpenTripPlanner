@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ext.fares.impl._support.FareTestConstants;
 import org.opentripplanner.ext.fares.model.FareLegRule;
+import org.opentripplanner.ext.fares.model.FareLegRuleBuilder;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.TransitLeg;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -36,14 +37,9 @@ class FareLookupServiceTest implements FareTestConstants {
   );
 
   @Test
-  void presenceOfAreaAndAbsenceOfPriorityLeadsToEmptyResults() {
-    var r1 = FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A))
-      .withNetworkId(NETWORK_A.getId())
-      .build();
-    var r2 = FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B))
-      .withFromAreaId(A_1)
-      .withToAreaId(A_1)
-      .build();
+  void mixedAreaAndNetworkWithoutPriorityLeadsToEmptyResults() {
+    var r1 = rule1().withNetworkId(NETWORK_A.getId()).build();
+    var r2 = rule2().withFromAreaId(A_1).withToAreaId(A_1).build();
     var service = new FareLookupService(List.of(r1, r2), List.of(), stopAreas);
 
     assertThat(service.legRules(leg())).isEmpty();
@@ -51,15 +47,8 @@ class FareLookupServiceTest implements FareTestConstants {
 
   @Test
   void priorityLeadsToResults() {
-    var r1 = FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A))
-      .withNetworkId(NETWORK_A.getId())
-      .withPriority(0)
-      .build();
-    var r2 = FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B))
-      .withFromAreaId(A_1)
-      .withToAreaId(A_1)
-      .withPriority(2)
-      .build();
+    var r1 = rule1().withNetworkId(NETWORK_A.getId()).withPriority(0).build();
+    var r2 = rule2().withFromAreaId(A_1).withToAreaId(A_1).withPriority(2).build();
     var service = new FareLookupService(List.of(r1, r2), List.of(), stopAreas);
 
     assertThat(service.legRules(leg())).containsExactly(r2);
@@ -67,14 +56,8 @@ class FareLookupServiceTest implements FareTestConstants {
 
   @Test
   void networkWildCard() {
-    var r1 = FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A))
-      .withFromAreaId(A_1)
-      .withToAreaId(A_1)
-      .build();
-    var r2 = FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B))
-      .withFromAreaId(A_1)
-      .withToAreaId(A_1)
-      .build();
+    var r1 = rule1().withFromAreaId(A_1).withToAreaId(A_1).build();
+    var r2 = rule2().withFromAreaId(A_1).withToAreaId(A_1).build();
     var service = new FareLookupService(List.of(r1, r2), List.of(), stopAreas);
 
     assertThat(service.legRules(leg())).containsExactly(r1, r2);
@@ -82,42 +65,34 @@ class FareLookupServiceTest implements FareTestConstants {
 
   @Test
   void conflictingRulesResolvedByPriority() {
-    var r1 = FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A))
-      .withNetworkId(NETWORK_A.getId())
-      .withPriority(1)
-      .build();
-    var r2 = FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B))
-      .withNetworkId(NETWORK_A.getId())
-      .withPriority(2)
-      .build();
+    var r1 = rule1().withNetworkId(NETWORK_A.getId()).withPriority(1).build();
+    var r2 = rule2().withNetworkId(NETWORK_A.getId()).withPriority(2).build();
     var service = new FareLookupService(List.of(r1, r2), List.of(), EMPTY_STOP_AREAS);
     assertThat(service.legRules(leg())).containsExactly(r2);
   }
 
   @Test
   void noPriorityReturnsBoth() {
-    var r1 = FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A))
-      .withNetworkId(NETWORK_A.getId())
-      .build();
-    var r2 = FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B))
-      .withNetworkId(NETWORK_A.getId())
-      .build();
+    var r1 = rule1().withNetworkId(NETWORK_A.getId()).build();
+    var r2 = rule2().withNetworkId(NETWORK_A.getId()).build();
     var service = new FareLookupService(List.of(r1, r2), List.of(), EMPTY_STOP_AREAS);
     assertThat(service.legRules(leg())).containsExactly(r1, r2);
   }
 
   @Test
   void multipleRulesWithEqualPriority() {
-    var r1 = FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A))
-      .withNetworkId(NETWORK_A.getId())
-      .withPriority(10)
-      .build();
-    var r2 = FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B))
-      .withNetworkId(NETWORK_A.getId())
-      .withPriority(10)
-      .build();
+    var r1 = rule1().withNetworkId(NETWORK_A.getId()).withPriority(10).build();
+    var r2 = rule2().withNetworkId(NETWORK_A.getId()).withPriority(10).build();
     var service = new FareLookupService(List.of(r1, r2), List.of(), EMPTY_STOP_AREAS);
     assertThat(service.legRules(leg())).containsExactly(r1, r2);
+  }
+
+  private static FareLegRuleBuilder rule1() {
+    return FareLegRule.of(id("r1"), List.of(FARE_PRODUCT_A));
+  }
+
+  private static FareLegRuleBuilder rule2() {
+    return FareLegRule.of(id("r2"), List.of(FARE_PRODUCT_B));
   }
 
   private TransitLeg leg() {
