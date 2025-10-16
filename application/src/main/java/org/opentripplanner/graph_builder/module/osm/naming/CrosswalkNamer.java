@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.framework.i18n.LocalizedString;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
@@ -96,17 +97,22 @@ public class CrosswalkNamer implements EdgeNamer {
     var crossStreetOpt = getIntersectingStreet(way, streetCandidates);
     if (crossStreetOpt.isPresent()) {
       OsmWay crossStreet = crossStreetOpt.get();
-      // TODO: i18n
       if (crossStreet.isNamed()) {
         crosswalk.setName(
-          I18NString.of(String.format("crossing over %s", crossStreet.getAssumedName()))
+          new LocalizedString("name.crosswalk_over_street", crossStreet.getAssumedName())
         );
       } else if (crossStreet.isServiceRoad()) {
-        crosswalk.setName(I18NString.of("crossing over service road"));
+        crosswalk.setName(
+          new LocalizedString("name.crosswalk_over_service_road")
+        );
       } else if (crossStreet.isMotorwayRamp()) {
-        crosswalk.setName(I18NString.of("crossing over freeway ramp"));
+        crosswalk.setName(
+          new LocalizedString("name.crosswalk_over_motorway_ramp")
+        );
       } else if (crossStreet.isTurnLane()) {
-        crosswalk.setName(I18NString.of("crossing over turn lane"));
+        crosswalk.setName(
+          new LocalizedString("name.crosswalk_over_turn_lane")
+        );
       } else {
         // Default on using the OSM way ID, which should not happen.
         crosswalk.setName(I18NString.of(String.format("crossing %s", way.getId())));
