@@ -687,7 +687,12 @@ public class VertexLinker {
     return modes;
   }
 
-  /** Create a slightly shortened line between two coordinates */
+  /**
+   * Create a slightly shortened line between two coordinates.
+   * This is used when testing if a polygon contains a line between two
+   * of its boundary points. Floating point math cannot represent boundaries
+   * precisely, so we need to shrink the line to ensure robust testing.
+   */
   private LineString createShrunkLine(Coordinate from, Coordinate to) {
     var dx = AREA_INTERSECTION_SHRINKING * (to.x - from.x);
     var dy = AREA_INTERSECTION_SHRINKING * (to.y - from.y);
