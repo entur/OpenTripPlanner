@@ -443,27 +443,27 @@ public class TurnRestrictionModuleTest {
 
     assertNull(
       StreetSearchBuilder.of()
-        .setRequest(request)
-        .setStreetRequest(streetRequest)
-        .setFrom(A)
-        .setTo(B)
+        .withRequest(request)
+        .withStreetRequest(streetRequest)
+        .withFrom(A)
+        .withTo(B)
         .getShortestPathTree()
         .getPath(B)
     );
     assertNull(
       StreetSearchBuilder.of()
-        .setRequest(request)
-        .setStreetRequest(streetRequest)
-        .setFrom(A)
-        .setTo(C)
+        .withRequest(request)
+        .withStreetRequest(streetRequest)
+        .withFrom(A)
+        .withTo(C)
         .getShortestPathTree()
         .getPath(C)
     );
     GraphPath<State, Edge, Vertex> path = StreetSearchBuilder.of()
-      .setRequest(request)
-      .setStreetRequest(streetRequest)
-      .setFrom(A)
-      .setTo(E)
+      .withRequest(request)
+      .withStreetRequest(streetRequest)
+      .withFrom(A)
+      .withTo(E)
       .getShortestPathTree()
       .getPath(E);
     assertNotNull(path);
