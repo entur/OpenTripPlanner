@@ -108,4 +108,11 @@ public final class FareTransferRule implements Serializable {
   public static FareTransferRuleBuilder of() {
     return new FareTransferRuleBuilder();
   }
+
+  public boolean withinDuration(Duration duration) {
+    if (timeLimit == null) {
+      return true;
+    }
+    return duration.compareTo(timeLimit) <= 0;
+  }
 }

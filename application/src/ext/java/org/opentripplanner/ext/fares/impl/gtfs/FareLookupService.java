@@ -5,6 +5,7 @@ import static org.opentripplanner.utils.collection.ListUtils.partitionIntoOverla
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -72,10 +73,19 @@ class FareLookupService implements Serializable {
     return this.transferRules.stream()
       .filter(FareTransferRule::unlimitedTransfers)
       .filter(FareTransferRule::isFree)
+      .filter(r -> r.withinDuration(duration(legs)))
       .flatMap(r -> findTransferMatches(r, legs).stream())
       .filter(transferMatch -> appliesToAllLegs(legs, transferMatch))
       .flatMap(transferRule -> transferRule.fromLegRule().fareProducts().stream())
       .collect(Collectors.toUnmodifiableSet());
+  }
+
+  private Duration duration(List<TransitLeg> legs) {
+    if (legs.isEmpty()) {
+      return Duration.ofDays(365);
+    } else {
+      return Duration.between(legs.getFirst().startTime(), legs.getLast().endTime());
+    }
   }
 
   private boolean appliesToAllLegs(List<TransitLeg> legs, TransferMatch transferMatch) {
