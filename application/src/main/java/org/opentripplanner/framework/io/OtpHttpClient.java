@@ -1,8 +1,14 @@
 package org.opentripplanner.framework.io;
 
+import static org.apache.hc.core5.http.HttpStatus.SC_NOT_MODIFIED;
+import static org.apache.hc.core5.http.HttpStatus.SC_NO_CONTENT;
+import static org.apache.hc.core5.http.HttpStatus.SC_OK;
+import static org.apache.hc.core5.http.HttpStatus.SC_REDIRECTION;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -239,7 +245,7 @@ public class OtpHttpClient {
     ResponseMapper<T> contentMapper
   ) {
     return executeAndMapWithResponseHandler(httpRequest, timeout, headers, response -> {
-      if (response.getCode() == 204) {
+      if (response.getCode() == SC_NO_CONTENT) {
         return Optional.empty();
       }
       return Optional.of(mapResponse(response, contentMapper));
@@ -312,15 +318,17 @@ public class OtpHttpClient {
       );
     }
 
-    // There may be other status codes where we expect a body?
-    if (response.getCode() == 200 && response.getEntity() == null) {
+    // A NOT_MODIFIED response does not contain a body.
+    // Other types of valid responses should have one.
+    if (response.getCode() != SC_NOT_MODIFIED && response.getEntity() == null) {
       throw new OtpHttpClientException("HTTP request failed: empty response");
     }
 
-    // Here we handle an empty body that was expected
+    // Handle NOT_MODIFIED response.
     if (response.getEntity() == null) {
       try {
         OtpHttpResponse httpResponse = new OtpHttpResponse(
+          emptyInputStream(),
           response.getHeaders(),
           response.getCode()
         );
@@ -332,7 +340,6 @@ public class OtpHttpClient {
 
     try (InputStream is = response.getEntity().getContent()) {
       if (is == null) {
-        // This is different from empty response I think?
         throw new OtpHttpClientException("HTTP request failed: empty response");
       }
       OtpHttpResponse httpResponse = new OtpHttpResponse(
@@ -344,6 +351,10 @@ public class OtpHttpClient {
     } catch (Exception e) {
       throw new OtpHttpClientException(e);
     }
+  }
+
+  private static ByteArrayInputStream emptyInputStream() {
+    return new ByteArrayInputStream(new byte[0]);
   }
 
   private <T> T sendAndMap(
@@ -365,8 +376,8 @@ public class OtpHttpClient {
     } else {
       // Local file probably, try standard java
       try (InputStream is = downloadUrl.openStream()) {
-        // Create empty headers for local file
-        OtpHttpResponse httpResponse = new OtpHttpResponse(is, new Header[0]);
+        // Create empty headers and status code OK for local file
+        OtpHttpResponse httpResponse = new OtpHttpResponse(is, new Header[0], SC_OK);
         return contentMapper.apply(httpResponse);
       } catch (Exception e) {
         throw new OtpHttpClientException(e);
@@ -387,12 +398,14 @@ public class OtpHttpClient {
   }
 
   /**
-   * Returns true if the HTTP status code is not 200.
+   * Returns true if the HTTP status code is not in the range [200,300[, except for the code
+   * 304 NOT_MODIFIED which is not a failed request.
    */
   private static boolean isFailedRequest(org.apache.hc.core5.http.HttpResponse response) {
-    // Any 2xx or 3xx response is considered successful
-    // We *could* limit this to 2xx and 304?
-    return response.getCode() < 200 || response.getCode() >= 400;
+    return (
+      (response.getCode() < SC_OK || response.getCode() >= SC_REDIRECTION) &&
+      response.getCode() != SC_NOT_MODIFIED
+    );
   }
 
   /**
@@ -423,7 +436,7 @@ public class OtpHttpClient {
   @FunctionalInterface
   public interface ResponseMapper<R> {
     /**
-     * Maps the HTTP response including headers and body.
+     * Maps the HTTP response including body, headers and status code.
      *
      * @param response the HTTP response containing headers and body stream
      * @return the mapping function result

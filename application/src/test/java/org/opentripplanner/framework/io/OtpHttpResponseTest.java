@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import org.apache.hc.core5.http.Header;
+import org.apache.hc.core5.http.HttpStatus;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +22,7 @@ class OtpHttpResponseTest {
     InputStream body = new ByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8));
     Header[] headers = new Header[0];
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     assertNotNull(response.body());
     assertEquals(content, new String(response.body().readAllBytes(), StandardCharsets.UTF_8));
@@ -35,7 +36,7 @@ class OtpHttpResponseTest {
       new BasicHeader("ETag", "\"12345\""),
     };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     Map<String, List<String>> responseHeaders = response.headers();
     assertNotNull(responseHeaders);
@@ -49,7 +50,7 @@ class OtpHttpResponseTest {
     InputStream body = new ByteArrayInputStream("test".getBytes(StandardCharsets.UTF_8));
     Header[] headers = new Header[0];
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     Map<String, List<String>> responseHeaders = response.headers();
     assertNotNull(responseHeaders);
@@ -64,7 +65,7 @@ class OtpHttpResponseTest {
       new BasicHeader("ETag", "\"12345\""),
     };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     assertTrue(response.header("Content-Type").isPresent());
     assertEquals("application/json", response.header("Content-Type").get());
@@ -84,7 +85,7 @@ class OtpHttpResponseTest {
     InputStream body = new ByteArrayInputStream("test".getBytes(StandardCharsets.UTF_8));
     Header[] headers = new Header[] { new BasicHeader("Content-Type", "application/json") };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     assertTrue(response.header("Missing-Header").isEmpty());
   }
@@ -98,7 +99,7 @@ class OtpHttpResponseTest {
       new BasicHeader("Set-Cookie", "cookie3=value3"),
     };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     List<String> cookieValues = response.headerValues("Set-Cookie");
     assertNotNull(cookieValues);
@@ -116,7 +117,7 @@ class OtpHttpResponseTest {
       new BasicHeader("Set-Cookie", "cookie2=value2"),
     };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     assertTrue(response.header("Set-Cookie").isPresent());
     assertEquals("cookie1=value1", response.header("Set-Cookie").get());
@@ -127,7 +128,7 @@ class OtpHttpResponseTest {
     InputStream body = new ByteArrayInputStream("test".getBytes(StandardCharsets.UTF_8));
     Header[] headers = new Header[] { new BasicHeader("Content-Type", "application/json") };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     List<String> values = response.headerValues("Missing-Header");
     assertNotNull(values);
@@ -142,7 +143,7 @@ class OtpHttpResponseTest {
       new BasicHeader("Accept-Encoding", "deflate"),
     };
 
-    OtpHttpResponse response = new OtpHttpResponse(body, headers);
+    OtpHttpResponse response = new OtpHttpResponse(body, headers, HttpStatus.SC_OK);
 
     List<String> values1 = response.headerValues("Accept-Encoding");
     List<String> values2 = response.headerValues("accept-encoding");

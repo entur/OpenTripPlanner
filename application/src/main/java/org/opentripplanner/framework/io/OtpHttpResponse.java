@@ -12,7 +12,7 @@ import java.util.Optional;
 import org.apache.hc.core5.http.Header;
 
 /**
- * Represents an HTTP response containing both headers and body content.
+ * Represents an HTTP response containing the body content, headers and status code.
  * This class provides access to HTTP response headers and the response body as an InputStream.
  * <p>
  * The InputStream lifecycle is managed by OtpHttpClient. Callers must not close the stream.
@@ -21,26 +21,7 @@ public class OtpHttpResponse {
 
   private final InputStream body;
   private final Map<String, List<String>> headers;
-  private final Integer statusCode;
-
-  /**
-   * Creates an HTTP response wrapper.
-   *
-   * @param rawHeaders the HTTP headers from the response
-   */
-  OtpHttpResponse(Header[] rawHeaders, Integer statusCode) {
-    this(null, rawHeaders, statusCode);
-  }
-
-  /**
-   * Creates an HTTP response wrapper.
-   *
-   * @param body the response body as an InputStream
-   * @param rawHeaders the HTTP headers from the response
-   */
-  OtpHttpResponse(InputStream body, Header[] rawHeaders) {
-    this(body, rawHeaders, null);
-  }
+  private final int statusCode;
 
   /**
    * Creates an HTTP response wrapper.
@@ -49,8 +30,8 @@ public class OtpHttpResponse {
    * @param rawHeaders the HTTP headers from the response
    * @param statusCode the HTTP status code from the response
    */
-  OtpHttpResponse(InputStream body, Header[] rawHeaders, Integer statusCode) {
-    this.body = body;
+  OtpHttpResponse(InputStream body, Header[] rawHeaders, int statusCode) {
+    this.body = Objects.requireNonNull(body, "body cannot be null");
     Objects.requireNonNull(rawHeaders, "rawHeaders cannot be null");
     this.headers = convertHeaders(rawHeaders);
     this.statusCode = statusCode;
@@ -66,7 +47,7 @@ public class OtpHttpResponse {
    */
   public InputStream body() {
     return body;
-  } // Maybe desirable to wrap this in Optional
+  }
 
   /**
    * Returns all response headers as an immutable map.
@@ -144,7 +125,6 @@ public class OtpHttpResponse {
 
   /**
    * Normalizes a header name to lowercase for case-insensitive comparison.
-   * Uses English locale to ensure consistent behavior across different system locales.
    */
   private static String normalizeName(String name) {
     return name.toLowerCase(Locale.ROOT);
