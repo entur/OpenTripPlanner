@@ -687,7 +687,7 @@ public class VertexLinker {
     return modes;
   }
 
-  /* Create a slightly shortened line between two coordinates */
+  /** Create a slightly shortened line between two coordinates */
   private LineString createShrunkLine(Coordinate from, Coordinate to) {
     var dx = AREA_INTERSECTION_SHRINKING * (to.x - from.x);
     var dy = AREA_INTERSECTION_SHRINKING * (to.y - from.y);

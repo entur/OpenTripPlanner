@@ -434,7 +434,7 @@ public class LinkStopToPlatformTest {
    * the problem was easy to duplicate.
    */
   @Test
-  void BoundaryTest() {
+  void boundaryTest() {
     Coordinate[] platform = {
       new Coordinate(-0.7360985, 51.9962091), // northwest
       new Coordinate(-0.7360355, 51.9962165), // northeast
