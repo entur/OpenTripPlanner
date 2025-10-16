@@ -455,14 +455,14 @@
     },
     // SIRI-ET MQTT trip updater
     {
-      "type" : "siri-et-mqtt-updater",
+      "type": "siri-et-mqtt-updater",
       "user": "user",
       "password": "pwd",
-      "host" : "localhost",
-      "port" : 1883,
-      "feedId" : "1",
+      "host": "localhost",
+      "port": 1883,
+      "feedId": "1",
       "topic": "trip/updates/#",
-      "qos" : 1,
+      "qos": 1,
       "fuzzyTripMatching": true,
       "numberOfPrimingWorkers": 4,
       "maxPrimingIdleTime": "1s"

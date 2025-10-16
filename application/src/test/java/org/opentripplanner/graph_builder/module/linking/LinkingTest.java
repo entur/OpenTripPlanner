@@ -10,7 +10,6 @@ import static org.opentripplanner.graph_builder.module.linking.TestGraph.link;
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;

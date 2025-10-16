@@ -84,10 +84,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     List<CompletableFuture<Void>> primingFutures = new ArrayList<>();
 
     for (int i = 0; i < parameters.numberOfPrimingWorkers(); i++) {
-      CompletableFuture<Void> f = CompletableFuture.runAsync(
-        new RetainRunner(i),
-        primingExecutor
-      );
+      CompletableFuture<Void> f = CompletableFuture.runAsync(new RetainRunner(i), primingExecutor);
       primingFutures.add(f);
     }
     LOG.info("Started {} priming workers", parameters.numberOfPrimingWorkers());
@@ -99,57 +96,54 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     );
 
     // when all are done, switch to live
-    allPriming.thenRunAsync(() -> {
-      logPrimingSummary();
-      primingExecutor.shutdown();
-      primed = true;
-    }).exceptionally(ex -> {
-      LOG.error("Priming failed", ex);
-      return null;
-    });
-
+    allPriming
+      .thenRunAsync(() -> {
+        logPrimingSummary();
+        primingExecutor.shutdown();
+        primed = true;
+      })
+      .exceptionally(ex -> {
+        LOG.error("Priming failed", ex);
+        return null;
+      });
   }
 
   private void registerMetrics() {
-    FunctionCounter
-      .builder("mqtt_siri_message_size", liveMessageSize, AtomicLong::get)
+    FunctionCounter.builder("mqtt_siri_message_size", liveMessageSize, AtomicLong::get)
       .tags("type", "live", "stage", "received")
       .register(Metrics.globalRegistry);
-    FunctionCounter
-      .builder("mqtt_siri_message_size", primingMessageSize, AtomicLong::get)
+    FunctionCounter.builder("mqtt_siri_message_size", primingMessageSize, AtomicLong::get)
       .tags("type", "priming", "stage", "received")
       .register(Metrics.globalRegistry);
-    FunctionCounter
-      .builder("mqtt_siri_messages", liveMessageCounter, AtomicLong::get)
+    FunctionCounter.builder("mqtt_siri_messages", liveMessageCounter, AtomicLong::get)
       .tags("type", "live", "stage", "received")
       .register(Metrics.globalRegistry);
-    FunctionCounter
-      .builder("mqtt_siri_messages", primingMessageCounter, AtomicLong::get)
+    FunctionCounter.builder("mqtt_siri_messages", primingMessageCounter, AtomicLong::get)
       .tags("type", "priming", "stage", "received")
       .register(Metrics.globalRegistry);
-    FunctionCounter
-      .builder("mqtt_siri_messages", processedLiveMessageCounter, AtomicLong::get)
+    FunctionCounter.builder("mqtt_siri_messages", processedLiveMessageCounter, AtomicLong::get)
       .tags("type", "live", "stage", "processed")
       .register(Metrics.globalRegistry);
-    FunctionCounter
-      .builder("mqtt_siri_messages", processedPrimingMessageCounter, AtomicLong::get)
+    FunctionCounter.builder("mqtt_siri_messages", processedPrimingMessageCounter, AtomicLong::get)
       .tags("type", "priming", "stage", "processed")
       .register(Metrics.globalRegistry);
 
-    Gauge
-      .builder("mqtt_siri_queue_size", primingMessageQueue, Collection::size)
+    Gauge.builder("mqtt_siri_queue_size", primingMessageQueue, Collection::size)
       .tags("type", "priming")
       .register(Metrics.globalRegistry);
-    Gauge
-      .builder("mqtt_siri_queue_size", liveMessageQueue, Collection::size)
+    Gauge.builder("mqtt_siri_queue_size", liveMessageQueue, Collection::size)
       .tags("type", "live")
       .register(Metrics.globalRegistry);
   }
 
   private Mqtt5AsyncClient connectAndSubscribeToClient() {
     Mqtt5SimpleAuth auth;
-    if (parameters.user() == null || parameters.user().isBlank()
-      || parameters.password() == null || parameters.password().isBlank()) {
+    if (
+      parameters.user() == null ||
+      parameters.user().isBlank() ||
+      parameters.password() == null ||
+      parameters.password().isBlank()
+    ) {
       auth = null;
     } else {
       auth = Mqtt5SimpleAuth.builder()
@@ -167,13 +161,10 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
       .addDisconnectedListener(this::onDisconnect)
       .buildAsync();
 
-    client.connectWith()
-      .keepAlive(30)
-      .cleanStart(false)
-      .send()
-      .join();
+    client.connectWith().keepAlive(30).cleanStart(false).send().join();
 
-    client.subscribeWith()
+    client
+      .subscribeWith()
       .topicFilter(parameters.topic())
       .qos(Optional.ofNullable(MqttQos.fromCode(parameters.qos())).orElse(MqttQos.AT_MOST_ONCE))
       .callback(this::onMessage)
@@ -184,13 +175,15 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
   }
 
   private void onDisconnect(MqttClientDisconnectedContext ctx) {
-    LOG.info("Disconnected client from MQTT broker: {}",
-      parameters.url(), ctx.getCause());
+    LOG.info("Disconnected client from MQTT broker: {}", parameters.url(), ctx.getCause());
   }
 
   private void onConnect() {
-    LOG.info("Connected client to MQTT broker: {} with qos: {}",
-      parameters.url(), parameters.qos());
+    LOG.info(
+      "Connected client to MQTT broker: {} with qos: {}",
+      parameters.url(),
+      parameters.qos()
+    );
   }
 
   @Override
@@ -231,9 +224,12 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     }
 
     if (!primed && (primingMessageCounter.get() + liveMessageCounter.get()) % 1000 == 0) {
-      logMessageRates();  // ToDo: Better as metric and not log
-      LOG.info("Retained message queue size: {}, live message queue size: {}",
-        primingMessageQueue.size(), liveMessageQueue.size());
+      logMessageRates(); // ToDo: Better as metric and not log
+      LOG.info(
+        "Retained message queue size: {}, live message queue size: {}",
+        primingMessageQueue.size(),
+        liveMessageQueue.size()
+      );
     }
   }
 
@@ -242,8 +238,8 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
     long receivedLiveMessageCount = liveMessageCounter.get();
     long processedLiveMessageCount = processedLiveMessageCounter.get();
-    double receivedLiveMessageRate = (double) receivedLiveMessageCount / totalMillis * 1000;
-    double processedLiveMessageRate = (double) processedLiveMessageCount / totalMillis * 1000;
+    double receivedLiveMessageRate = ((double) receivedLiveMessageCount / totalMillis) * 1000;
+    double processedLiveMessageRate = ((double) processedLiveMessageCount / totalMillis) * 1000;
     LOG.info(
       "Siri Messages: Processed/Received {}/{} live messages ({} /s received, {} /s processed",
       processedLiveMessageCount,
@@ -254,8 +250,9 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
     long receivedPrimingMessageCount = primingMessageCounter.get();
     long processedPrimingMessageCount = processedPrimingMessageCounter.get();
-    double receivedPrimingMessageRate = (double) receivedPrimingMessageCount / totalMillis * 1000;
-    double processedPrimingMessageRate = (double) processedPrimingMessageCount / totalMillis * 1000;
+    double receivedPrimingMessageRate = ((double) receivedPrimingMessageCount / totalMillis) * 1000;
+    double processedPrimingMessageRate =
+      ((double) processedPrimingMessageCount / totalMillis) * 1000;
     LOG.info(
       "Siri Messages: Processed/Received {}/{} retained messages ({} /s received, {} /s processed",
       processedPrimingMessageCount,
@@ -265,18 +262,20 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     );
   }
 
-
   private void logPrimingSummary() {
-    LOG.info("All priming workers done after {} seconds",
-      connectedAt.until(Instant.now(), ChronoUnit.SECONDS));
+    LOG.info(
+      "All priming workers done after {} seconds",
+      connectedAt.until(Instant.now(), ChronoUnit.SECONDS)
+    );
 
     long messageCount = primingMessageCounter.get();
     long totalMessageSize = primingMessageSize.get();
     double sizeMb = totalMessageSize / 1024. / 1024.;
     double meanMessageSizeKB = totalMessageSize / (double) messageCount / 1024.;
     long totalMillis = connectedAt.until(Instant.now(), ChronoUnit.MILLIS);
-    double messageRate = (double) messageCount / totalMillis * 1000;
-    LOG.info("Processed retained {} messages. Total size: {} MB, mean message size: {} kB, mean message rate: {} per second.",
+    double messageRate = ((double) messageCount / totalMillis) * 1000;
+    LOG.info(
+      "Processed retained {} messages. Total size: {} MB, mean message size: {} kB, mean message rate: {} per second.",
       messageCount,
       String.format("%.2f", sizeMb),
       String.format("%.2f", meanMessageSizeKB),
@@ -298,11 +297,16 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     public void run() {
       try {
         while (!Thread.currentThread().isInterrupted()) {
-          byte[] payload = primingMessageQueue.poll(parameters.maxPrimingIdleTime().toSeconds(), TimeUnit.SECONDS);
+          byte[] payload = primingMessageQueue.poll(
+            parameters.maxPrimingIdleTime().toSeconds(),
+            TimeUnit.SECONDS
+          );
           if (payload == null) {
             LOG.info(
               "RetainRunner-{} was idle for {} seconds and shut down after processing {} messages.",
-              workerId, parameters.maxPrimingIdleTime().toSeconds(), runnerMessageCounter.get()
+              workerId,
+              parameters.maxPrimingIdleTime().toSeconds(),
+              runnerMessageCounter.get()
             );
             break;
           }
@@ -322,6 +326,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
   }
 
   private class LiveRunner implements Runnable {
+
     @Override
     public void run() {
       try {

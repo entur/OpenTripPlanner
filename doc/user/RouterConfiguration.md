@@ -926,6 +926,19 @@ Used to group requests when monitoring OTP.
       "type" : "siri-sx-lite",
       "feedId" : "sta",
       "url" : "https://example.com/siri-lite/situation-exchange/xml"
+    },
+    {
+      "type" : "siri-et-mqtt-updater",
+      "user" : "user",
+      "password" : "pwd",
+      "host" : "localhost",
+      "port" : 1883,
+      "feedId" : "1",
+      "topic" : "trip/updates/#",
+      "qos" : 1,
+      "fuzzyTripMatching" : true,
+      "numberOfPrimingWorkers" : 4,
+      "maxPrimingIdleTime" : "1s"
     }
   ],
   "rideHailingServices" : [
