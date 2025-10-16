@@ -119,7 +119,7 @@ class FareLookupServiceTest implements FareTestConstants {
   void twoRules(TestCase tc) {
     var r1 = tc.rule1Customiser.apply(rule1()).build();
     var r2 = tc.rule2Customiser.apply(rule2()).build();
-    var service = new FareLookupService(List.of(r1, r2), List.of(), STOP_AREAS);
+    var service = new FareLookupService(List.of(r1, r2), List.of(), tc.stopAreas);
 
     assertThat(service.legRules(leg()).stream().map(FareLegRule::id)).containsExactlyElementsIn(
       tc.expectedResults
