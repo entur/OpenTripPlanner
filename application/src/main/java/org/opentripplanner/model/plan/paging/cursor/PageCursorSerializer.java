@@ -53,6 +53,9 @@ final class PageCursorSerializer {
       .withEnum(SORT_ORDER_FIELD, cursor.originalSortOrder());
 
     if (cursor.containsItineraryPageCut()) {
+      // Note! For this to work properly we needt to preserve the same presission for time
+      // and cost, that we use for comparing itnineraries in the filter-chain. This is enforced
+      // when creating a itinerary - cost and times are normilized to seconds resolution.
       var cut = cursor.itineraryPageCut();
       tokenBuilder
         .withBoolean(CUT_ON_STREET_FIELD, cut.isStreetOnly())
