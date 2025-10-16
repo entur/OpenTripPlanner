@@ -12,8 +12,8 @@ class FareTransferRuleTest {
   @Test
   void withinLimit() {
     var rule = FareTransferRule.of().withId(id("1")).withTimeLimit(Duration.ofHours(1)).build();
-    assertFalse(rule.withinDuration(Duration.ofMinutes(61)));
-    assertTrue(rule.withinDuration(Duration.ofMinutes(59)));
-    assertTrue(rule.withinDuration(Duration.ofMinutes(60)));
+    assertFalse(rule.withinTimeLimit(Duration.ofMinutes(61)));
+    assertTrue(rule.withinTimeLimit(Duration.ofMinutes(59)));
+    assertTrue(rule.withinTimeLimit(Duration.ofMinutes(60)));
   }
 }

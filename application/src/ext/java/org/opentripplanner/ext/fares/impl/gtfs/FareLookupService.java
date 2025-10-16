@@ -73,7 +73,7 @@ class FareLookupService implements Serializable {
     return this.transferRules.stream()
       .filter(FareTransferRule::unlimitedTransfers)
       .filter(FareTransferRule::isFree)
-      .filter(r -> r.withinDuration(duration(legs)))
+      .filter(r -> r.withinTimeLimit(duration(legs)))
       .flatMap(r -> findTransferMatches(r, legs).stream())
       .filter(transferMatch -> appliesToAllLegs(legs, transferMatch))
       .flatMap(transferRule -> transferRule.fromLegRule().fareProducts().stream())
@@ -175,6 +175,7 @@ class FareLookupService implements Serializable {
   ) {
     return fromRules
       .stream()
+      .filter(match -> r.withinTimeLimit(Duration.between(from.startTime(), to.endTime())))
       .flatMap(fromRule -> toRules.stream().map(toRule -> new TransferMatch(r, fromRule, toRule)))
       .filter(
         match -> legMatchesRule(from, match.fromLegRule()) && legMatchesRule(to, match.toLegRule())

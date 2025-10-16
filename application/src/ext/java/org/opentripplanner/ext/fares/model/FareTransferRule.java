@@ -55,6 +55,17 @@ public final class FareTransferRule implements Serializable {
     return transferCount == UNLIMITED_TRANSFERS;
   }
 
+  /**
+   * Returns true if the duration is within the time limit.
+   */
+  public boolean withinTimeLimit(Duration duration) {
+    if (timeLimit == null) {
+      return true;
+    } else {
+      return duration.compareTo(timeLimit) <= 0;
+    }
+  }
+
   public FeedScopedId id() {
     return id;
   }
@@ -107,12 +118,5 @@ public final class FareTransferRule implements Serializable {
 
   public static FareTransferRuleBuilder of() {
     return new FareTransferRuleBuilder();
-  }
-
-  public boolean withinDuration(Duration duration) {
-    if (timeLimit == null) {
-      return true;
-    }
-    return duration.compareTo(timeLimit) <= 0;
   }
 }
