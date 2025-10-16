@@ -138,10 +138,10 @@ class CrosswalkNamerTest {
     assertEquals(1, namer.getUnnamedCrosswalks().size());
 
     namer.finalizeNames();
-    assertEquals(String.format("crossing over %s", name), crosswalk.edge.getName().toString());
+    assertEquals(String.format("crosswalk over %s", name), crosswalk.edge.getName().toString());
     assertFalse(crosswalk.edge.nameIsDerived());
     assertEquals(
-      String.format("crossing over %s", name),
+      String.format("crosswalk over %s", name),
       sidewalkToCrosswalk.edge.getName().toString()
     );
     assertFalse(crosswalk.edge.nameIsDerived());

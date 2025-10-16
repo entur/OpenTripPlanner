@@ -24,14 +24,14 @@ import org.slf4j.LoggerFactory;
  * The algorithm works as follows:
  *  - For each crosswalk, we find the intersecting street edge that shares a node.
  *  - Apply a name depending on the type of street:
- *      * For named streets, name the crossing so it reads "crossing over 10th Street".
+ *      * For named streets, name the crossing so it reads "crosswalk over 10th Street".
  *      * For service roads (e.g. car access to commercial complexes, such as
  *        <a href="https://www.openstreetmap.org/way/1024601318">...</a>),
- *        use "crossing over service road".
+ *        use "crosswalk over service road".
  *      * For turn lanes or slip lanes at intersections (shortcuts from a street to another,
  *        to bypass traffic signals, prevalent in North America,
  *        e.g. <a href="https://www.openstreetmap.org/way/1139062913">...</a>),
- *        use "crossing over turn lane".
+ *        use "crosswalk over turn lane".
  */
 public class CrosswalkNamer implements EdgeNamer {
 
@@ -115,7 +115,7 @@ public class CrosswalkNamer implements EdgeNamer {
         );
       } else {
         // Default on using the OSM way ID, which should not happen.
-        crosswalk.setName(I18NString.of(String.format("crossing %s", way.getId())));
+        crosswalk.setName(I18NString.of(String.format("crosswalk %s", way.getId())));
       }
 
       var adjacentSidewalks = sidewalkIndex
