@@ -113,7 +113,6 @@ public class LinkingTest {
    * We do this by building the graphs and then comparing the stop tree caches.
    */
   @Test
-  @Disabled
   public void testStopsLinkedIdentically() {
     // build the graph without the added stops
     TestOtpModel model = buildGraphNoTransit();
