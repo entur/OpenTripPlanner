@@ -1,12 +1,23 @@
 package org.opentripplanner.ext.siri.updater.mqtt;
 
+import com.hivemq.client.mqtt.datatypes.MqttQos;
+import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedContext;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5Client;
+import com.hivemq.client.mqtt.mqtt5.message.auth.Mqtt5SimpleAuth;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
+import io.micrometer.core.instrument.FunctionCounter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Metrics;
 import jakarta.xml.bind.JAXBException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -17,15 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import javax.annotation.Nonnull;
 import javax.xml.stream.XMLStreamException;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.entur.siri21.util.SiriXml;
 import org.opentripplanner.updater.trip.siri.updater.AsyncEstimatedTimetableSource;
 import org.slf4j.Logger;
@@ -33,15 +36,20 @@ import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.ServiceDelivery;
 import uk.org.siri.siri21.Siri;
 
+/**
+ * This is a realtime updater for trip updates in Siri ET format via MQTT. The updater is primed
+ * (ready for routing requests), when all retained messages in the connected MQTT are processed.
+ * If there are no retained messages, the updater is primed immediately. Live messages (messages
+ * without a retained flag) are always processed, even if the updater is not yet primed.
+ */
 public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSource {
 
   private static final Logger LOG = LoggerFactory.getLogger(MqttEstimatedTimetableSource.class);
 
   private final MqttSiriETUpdaterParameters parameters;
 
-  private MqttClient client;
-
-    private Function<ServiceDelivery, Future<?>> serviceDeliveryConsumer;
+  private Mqtt5AsyncClient client;
+  private Function<ServiceDelivery, Future<?>> serviceDeliveryConsumer;
 
   private final BlockingQueue<byte[]> liveMessageQueue = new LinkedBlockingQueue<>();
   private final BlockingQueue<byte[]> primingMessageQueue = new LinkedBlockingQueue<>();
@@ -62,14 +70,15 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     this.parameters = parameters;
     this.primingExecutor = Executors.newFixedThreadPool(parameters.numberOfPrimingWorkers());
     this.liveExecutor = Executors.newSingleThreadExecutor();
+
+    registerMetrics();
   }
 
   @Override
-  public void start(@Nonnull Function<ServiceDelivery, Future<?>> serviceDeliveryConsumer) {
+  public void start(Function<ServiceDelivery, Future<?>> serviceDeliveryConsumer) {
     this.serviceDeliveryConsumer = serviceDeliveryConsumer;
 
-    connectAndSubscribeToClient();
-
+    client = connectAndSubscribeToClient();
     connectedAt = Instant.now();
 
     List<CompletableFuture<Void>> primingFutures = new ArrayList<>();
@@ -98,65 +107,134 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
       LOG.error("Priming failed", ex);
       return null;
     });
+
   }
 
-  private void connectAndSubscribeToClient() {
-    try {
-      String clientId = "OpenTripPlanner-" + MqttClient.generateClientId();
-      MemoryPersistence persistence = new MemoryPersistence();
-      client = new MqttClient("tcp://" + parameters.url(), clientId, persistence);
+  private void registerMetrics() {
+    FunctionCounter
+      .builder("mqtt_siri_message_size", liveMessageSize, AtomicLong::get)
+      .tags("type", "live", "stage", "received")
+      .register(Metrics.globalRegistry);
+    FunctionCounter
+      .builder("mqtt_siri_message_size", primingMessageSize, AtomicLong::get)
+      .tags("type", "priming", "stage", "received")
+      .register(Metrics.globalRegistry);
+    FunctionCounter
+      .builder("mqtt_siri_messages", liveMessageCounter, AtomicLong::get)
+      .tags("type", "live", "stage", "received")
+      .register(Metrics.globalRegistry);
+    FunctionCounter
+      .builder("mqtt_siri_messages", primingMessageCounter, AtomicLong::get)
+      .tags("type", "priming", "stage", "received")
+      .register(Metrics.globalRegistry);
+    FunctionCounter
+      .builder("mqtt_siri_messages", processedLiveMessageCounter, AtomicLong::get)
+      .tags("type", "live", "stage", "processed")
+      .register(Metrics.globalRegistry);
+    FunctionCounter
+      .builder("mqtt_siri_messages", processedPrimingMessageCounter, AtomicLong::get)
+      .tags("type", "priming", "stage", "processed")
+      .register(Metrics.globalRegistry);
 
-      MqttConnectOptions connOpts = new MqttConnectOptions();
-      connOpts.setMaxInflight(100);
-      connOpts.setCleanSession(false);
-      connOpts.setAutomaticReconnect(true);
-      if (parameters.user() != null && parameters.password() != null) {
-        connOpts.setUserName(parameters.user());
-        connOpts.setPassword(parameters.password().toCharArray());
-      }
-      client.setCallback(new Callback());
-
-      LOG.debug("Connecting to broker: {}", parameters.url());
-      client.connect(connOpts);
-    } catch (MqttException e) {
-      LOG.warn("Failed to connect to broker: {}", parameters.url(), e);
-    }
+    Gauge
+      .builder("mqtt_siri_queue_size", primingMessageQueue, Collection::size)
+      .tags("type", "priming")
+      .register(Metrics.globalRegistry);
+    Gauge
+      .builder("mqtt_siri_queue_size", liveMessageQueue, Collection::size)
+      .tags("type", "live")
+      .register(Metrics.globalRegistry);
   }
 
-  @Override
-  public void teardown() {
-    try {
-      client.disconnect();
-    } catch (MqttException e) {
-      LOG.error("Error disconnecting", e);
+  private Mqtt5AsyncClient connectAndSubscribeToClient() {
+    Mqtt5SimpleAuth auth;
+    if (parameters.user() == null || parameters.user().isBlank()
+      || parameters.password() == null || parameters.password().isBlank()) {
+      auth = null;
+    } else {
+      auth = Mqtt5SimpleAuth.builder()
+        .username(parameters.user())
+        .password(parameters.password().getBytes(StandardCharsets.UTF_8))
+        .build();
     }
+    Mqtt5AsyncClient client = Mqtt5Client.builder()
+      .identifier("OpenTripPlanner-" + UUID.randomUUID())
+      .serverHost(parameters.host())
+      .serverPort(parameters.port())
+      .simpleAuth(auth)
+      .automaticReconnectWithDefaultConfig()
+      .addConnectedListener(ctx -> onConnect())
+      .addDisconnectedListener(this::onDisconnect)
+      .buildAsync();
+
+    client.connectWith()
+      .keepAlive(30)
+      .cleanStart(false)
+      .send()
+      .join();
+
+    client.subscribeWith()
+      .topicFilter(parameters.topic())
+      .qos(Optional.ofNullable(MqttQos.fromCode(parameters.qos())).orElse(MqttQos.AT_MOST_ONCE))
+      .callback(this::onMessage)
+      .send()
+      .join();
+
+    return client;
+  }
+
+  private void onDisconnect(MqttClientDisconnectedContext ctx) {
+    LOG.info("Disconnected client from MQTT broker: {}",
+      parameters.url(), ctx.getCause());
+  }
+
+  private void onConnect() {
+    LOG.info("Connected client to MQTT broker: {} with qos: {}",
+      parameters.url(), parameters.qos());
   }
 
   @Override
   public boolean isPrimed() {
-    // return primed;
-    // consumption of initial data is currently too slow, return always true so the application
-    // is still starting.
-    // ToDo: make initial data consumption faster so that prime can be returned here
-    return true;
+    return primed;
   }
 
-  private void logPrimingSummary() {
-    LOG.info("All priming workers done after {} seconds",
-      connectedAt.until(Instant.now(), ChronoUnit.SECONDS));
+  @Override
+  public void teardown() {
+    client.disconnect();
+  }
 
-    long messageCount = primingMessageCounter.get();
-    long totalMessageSize = primingMessageSize.get();
-    double sizeMb = totalMessageSize / 1024. / 1024.;
-    double meanMessageSizeKB = totalMessageSize / (double) messageCount / 1024.;
-    long totalMillis = connectedAt.until(Instant.now(), ChronoUnit.MILLIS);
-    double messageRate = (double) messageCount / totalMillis * 1000;
-    LOG.info("Processed retained {} messages. Total size: {} MB, mean message size: {} kB, mean message rate: {} per second.",
-      messageCount,
-      String.format("%.2f", sizeMb),
-      String.format("%.2f", meanMessageSizeKB),
-      String.format("%.2f", messageRate)
-    );
+  private Optional<ServiceDelivery> serviceDelivery(byte[] payload) {
+    Siri siri;
+    try {
+      siri = SiriXml.parseXml(new String(payload, StandardCharsets.UTF_8));
+    } catch (XMLStreamException | JAXBException e) {
+      LOG.warn("Failed to parse Siri XML", e);
+      return Optional.empty();
+    }
+    return Optional.ofNullable(siri.getServiceDelivery());
+  }
+
+  private void onMessage(Mqtt5Publish message) {
+    boolean offer;
+    if (message.isRetain() && !primed) {
+      offer = primingMessageQueue.offer(message.getPayloadAsBytes());
+      primingMessageCounter.incrementAndGet();
+      primingMessageSize.addAndGet(message.getPayloadAsBytes().length);
+    } else {
+      offer = liveMessageQueue.offer(message.getPayloadAsBytes());
+      liveMessageCounter.incrementAndGet();
+      liveMessageSize.addAndGet(message.getPayloadAsBytes().length);
+    }
+
+    if (!offer) {
+      LOG.warn("Failed to offer to message queue");
+    }
+
+    if (!primed && (primingMessageCounter.get() + liveMessageCounter.get()) % 1000 == 0) {
+      logMessageRates();  // ToDo: Better as metric and not log
+      LOG.info("Retained message queue size: {}, live message queue size: {}",
+        primingMessageQueue.size(), liveMessageQueue.size());
+    }
   }
 
   private void logMessageRates() {
@@ -187,67 +265,25 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     );
   }
 
-  private class Callback implements MqttCallbackExtended {
 
-    public Callback() {
-    }
+  private void logPrimingSummary() {
+    LOG.info("All priming workers done after {} seconds",
+      connectedAt.until(Instant.now(), ChronoUnit.SECONDS));
 
-    @Override
-    public void connectComplete(boolean reconnect, String serverURI) {
-      LOG.info("Connected to MQTT broker: {}", serverURI);
-      connectedAt = Instant.now();
-      try {
-        client.subscribe(parameters.topic(), parameters.qos());
-      } catch (MqttException e) {
-        LOG.warn("Could not subscribe to: {}", parameters.topic());
-      }
-    }
-
-    @Override
-    public void connectionLost(Throwable cause) {
-      LOG.warn("Connection to MQTT broker lost: {}", parameters.url(), cause);
-    }
-
-    @Override
-    public void messageArrived(String topic, MqttMessage message) throws InterruptedException {
-      boolean offer;
-      if (message.isRetained() && !primed) {
-        offer = primingMessageQueue.offer(message.getPayload());
-        primingMessageCounter.incrementAndGet();
-        primingMessageSize.addAndGet(message.getPayload().length);
-      } else {
-        offer = liveMessageQueue.offer(message.getPayload());
-        liveMessageCounter.incrementAndGet();
-        liveMessageSize.addAndGet(message.getPayload().length);
-      }
-
-      if (!offer) {
-        LOG.warn("Failed to offer to message queue");
-      }
-
-      if (!primed && (primingMessageCounter.get() + liveMessageCounter.get()) % 1000 == 0) {
-        logMessageRates();  // ToDo: Better as metric and not log
-        LOG.info("Retained message queue size: {}, live message queue size: {}",
-          primingMessageQueue.size(), liveMessageQueue.size());
-      }
-    }
-
-    @Override
-    public void deliveryComplete(IMqttDeliveryToken token) {
-    }
-
-
+    long messageCount = primingMessageCounter.get();
+    long totalMessageSize = primingMessageSize.get();
+    double sizeMb = totalMessageSize / 1024. / 1024.;
+    double meanMessageSizeKB = totalMessageSize / (double) messageCount / 1024.;
+    long totalMillis = connectedAt.until(Instant.now(), ChronoUnit.MILLIS);
+    double messageRate = (double) messageCount / totalMillis * 1000;
+    LOG.info("Processed retained {} messages. Total size: {} MB, mean message size: {} kB, mean message rate: {} per second.",
+      messageCount,
+      String.format("%.2f", sizeMb),
+      String.format("%.2f", meanMessageSizeKB),
+      String.format("%.2f", messageRate)
+    );
   }
-  private Optional<ServiceDelivery> serviceDelivery(byte[] payload) {
-    Siri siri;
-    try {
-      siri = SiriXml.parseXml(new String(payload, StandardCharsets.UTF_8));
-    } catch (XMLStreamException | JAXBException e) {
-      LOG.warn("Failed to parse Siri XML", e);
-      return Optional.empty();
-    }
-    return Optional.ofNullable(siri.getServiceDelivery());
-  }
+
   private class RetainRunner implements Runnable {
 
     private final int workerId;
