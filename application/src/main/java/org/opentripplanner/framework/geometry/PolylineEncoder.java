@@ -14,7 +14,7 @@ import org.locationtech.jts.geom.Polygon;
  */
 class PolylineEncoder {
 
-  static EncodedPolyline encodeGeometry(Geometry geometry) {
+  static PolylineEncoderResult encodeGeometry(Geometry geometry) {
     if (geometry instanceof LineString string) {
       return encodeCoordinates(string.getCoordinates());
     } else if (geometry instanceof MultiLineString mls) {
@@ -28,7 +28,7 @@ class PolylineEncoder {
     }
   }
 
-  static EncodedPolyline encodeCoordinates(Coordinate[] points) {
+  static PolylineEncoderResult encodeCoordinates(Coordinate[] points) {
     StringBuilder encodedPoints = new StringBuilder();
 
     int plat = 0;
@@ -49,7 +49,7 @@ class PolylineEncoder {
       count++;
     }
 
-    return new EncodedPolyline(encodedPoints.toString(), count);
+    return new PolylineEncoderResult(encodedPoints.toString(), count);
   }
 
   private static String encodeSignedNumber(int num) {
@@ -78,4 +78,6 @@ class PolylineEncoder {
   private static int floor1e5(double coordinate) {
     return (int) Math.floor(coordinate * 1e5);
   }
+
+  record PolylineEncoderResult(String points, int length) {}
 }
