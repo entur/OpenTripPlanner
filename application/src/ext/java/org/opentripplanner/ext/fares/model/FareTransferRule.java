@@ -59,6 +59,9 @@ public final class FareTransferRule implements Serializable {
    * Returns true if the duration is within the time limit.
    */
   public boolean withinTimeLimit(Duration duration) {
+    if (duration.isNegative()) {
+      throw new IllegalArgumentException("Duration cannot be negative.");
+    }
     if (timeLimit == null) {
       return true;
     } else {
