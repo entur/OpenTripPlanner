@@ -23,7 +23,7 @@ import org.opentripplanner.utils.time.TimeUtils;
 public class TripInput {
 
   private final String id;
-  private final List<StopCall> stops = new ArrayList<>();
+  private final List<StopCallInput> stops = new ArrayList<>();
 
   // Null means use the default route
   @Nullable
@@ -65,7 +65,7 @@ public class TripInput {
   }
 
   public List<StopLocation> stopLocations() {
-    return stops.stream().map(StopCall::stopLocation).toList();
+    return stops.stream().map(StopCallInput::stopLocation).toList();
   }
 
   @Nullable
@@ -94,7 +94,7 @@ public class TripInput {
 
   public TripInput addStop(RegularStop stop, String arrivalTime, String departureTime) {
     stops.add(
-      new RegularStopCall(stop, TimeUtils.time(arrivalTime), TimeUtils.time(departureTime))
+      new RegularStopCallInput(stop, TimeUtils.time(arrivalTime), TimeUtils.time(departureTime))
     );
     return this;
   }
@@ -104,7 +104,7 @@ public class TripInput {
   }
 
   public TripInput addStop(AreaStop stop, String windowStart, String windowEnd) {
-    stops.add(new FlexStopCall(stop, TimeUtils.time(windowStart), TimeUtils.time(windowEnd)));
+    stops.add(new FlexStopCallInput(stop, TimeUtils.time(windowStart), TimeUtils.time(windowEnd)));
     return this;
   }
 
@@ -130,13 +130,13 @@ public class TripInput {
     return this;
   }
 
-  private interface StopCall {
+  private interface StopCallInput {
     StopTime toStopTime(Trip trip, int stopSequence);
     StopLocation stopLocation();
   }
 
-  private record RegularStopCall(RegularStop stop, int arrivalTime, int departureTime)
-    implements StopCall {
+  private record RegularStopCallInput(RegularStop stop, int arrivalTime, int departureTime)
+    implements StopCallInput {
     public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
       st.setTrip(trip);
@@ -151,7 +151,8 @@ public class TripInput {
     }
   }
 
-  private record FlexStopCall(AreaStop stop, int windowStart, int windowEnd) implements StopCall {
+  private record FlexStopCallInput(AreaStop stop, int windowStart, int windowEnd)
+    implements StopCallInput {
     public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
       st.setTrip(trip);
