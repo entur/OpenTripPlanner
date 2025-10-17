@@ -3,6 +3,7 @@ package org.opentripplanner.street.model.edge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.params.provider.Arguments.of;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -10,7 +11,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
+import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.street.model._data.StreetModelForTest;
@@ -82,8 +86,13 @@ class VehicleParkingPreferredTagsTest {
     req.withArriveBy(arriveBy);
     req.withBike(p ->
       p.withParking(parkingPreferences -> {
-        parkingPreferences.withUnpreferredVehicleParkingTagCost(EXTRA_COST);
-        parkingPreferences.withPreferredVehicleParkingTags(preferredTags);
+        parkingPreferences.withUnpreferredVehicleParkingTagCost(Cost.costOfSeconds(EXTRA_COST));
+        parkingPreferences.withPreferred(
+          new VehicleParkingFilter(
+            List.of(),
+            List.of(new VehicleParkingSelect.TagsSelect(preferredTags))
+          )
+        );
         parkingPreferences.withCost(0);
       })
     );

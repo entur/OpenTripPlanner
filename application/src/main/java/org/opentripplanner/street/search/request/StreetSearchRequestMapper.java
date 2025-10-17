@@ -6,6 +6,7 @@ import org.opentripplanner.routing.api.request.preference.BikePreferences;
 import org.opentripplanner.routing.api.request.preference.CarPreferences;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.routing.api.request.preference.ScooterPreferences;
+import org.opentripplanner.routing.api.request.preference.VehicleParkingPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleWalkingPreferences;
 import org.opentripplanner.routing.api.request.preference.WalkPreferences;
@@ -57,7 +58,18 @@ public class StreetSearchRequestMapper {
       .withPickupCost(car.pickupCost().toSeconds())
       .withAccelerationSpeed(car.accelerationSpeed())
       .withDecelerationSpeed(car.decelerationSpeed())
-      .withRental(b -> mapRental(car.rental()))
+      .withRental(mapRental(car.rental()))
+      .withParking(mapParking(car.parking()))
+      .build();
+  }
+
+  private static ParkingRequest mapParking(VehicleParkingPreferences pref) {
+    return ParkingRequest.of()
+      .withCost(pref.cost().toSeconds())
+      .withTime(pref.time())
+      .withUnpreferredVehicleParkingTagCost(pref.unpreferredVehicleParkingTagCost())
+      .withFilter(pref.filter())
+      .withPreferred(pref.preferred())
       .build();
   }
 

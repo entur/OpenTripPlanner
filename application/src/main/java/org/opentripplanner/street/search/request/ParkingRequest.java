@@ -1,13 +1,10 @@
 package org.opentripplanner.street.search.request;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
-import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -36,14 +33,8 @@ public final class ParkingRequest {
 
   private ParkingRequest(Builder builder) {
     this.unpreferredVehicleParkingTagCost = builder.unpreferredVehicleParkingTagCost;
-    this.filter = new VehicleParkingFilter(
-      builder.bannedVehicleParkingTags,
-      builder.requiredVehicleParkingTags
-    );
-    this.preferred = new VehicleParkingFilter(
-      builder.notPreferredVehicleParkingTags,
-      builder.preferredVehicleParkingTags
-    );
+    this.filter = builder.filter;
+    this.preferred = builder.preferred;
     this.time = builder.time;
     this.cost = builder.cost;
   }
@@ -129,54 +120,20 @@ public final class ParkingRequest {
 
     private final ParkingRequest original;
     private Cost unpreferredVehicleParkingTagCost;
-    private List<VehicleParkingSelect> bannedVehicleParkingTags;
-    private List<VehicleParkingSelect> requiredVehicleParkingTags;
-    private List<VehicleParkingSelect> preferredVehicleParkingTags;
-    private List<VehicleParkingSelect> notPreferredVehicleParkingTags;
     private Cost cost;
     private Duration time;
+    private VehicleParkingFilter filter;
+    private VehicleParkingFilter preferred;
 
     private Builder(ParkingRequest original) {
       this.original = original;
       this.unpreferredVehicleParkingTagCost = original.unpreferredVehicleParkingTagCost;
-      this.bannedVehicleParkingTags = original.filter.not();
-      this.requiredVehicleParkingTags = original.filter.select();
-      this.preferredVehicleParkingTags = original.preferred.select();
-      this.notPreferredVehicleParkingTags = original.preferred.not();
       this.cost = original.cost;
       this.time = original.time;
     }
 
-    public Builder withUnpreferredVehicleParkingTagCost(int cost) {
-      this.unpreferredVehicleParkingTagCost = Cost.costOfSeconds(cost);
-      return this;
-    }
-
-    public Builder withBannedVehicleParkingTags(Set<String> bannedVehicleParkingTags) {
-      this.bannedVehicleParkingTags = List.of(
-        new VehicleParkingSelect.TagsSelect(bannedVehicleParkingTags)
-      );
-      return this;
-    }
-
-    public Builder withRequiredVehicleParkingTags(Set<String> requiredVehicleParkingTags) {
-      this.requiredVehicleParkingTags = List.of(
-        new VehicleParkingSelect.TagsSelect(requiredVehicleParkingTags)
-      );
-      return this;
-    }
-
-    public Builder withPreferredVehicleParkingTags(Set<String> preferredVehicleParkingTags) {
-      this.preferredVehicleParkingTags = List.of(
-        new VehicleParkingSelect.TagsSelect(preferredVehicleParkingTags)
-      );
-      return this;
-    }
-
-    public Builder withNotPreferredVehicleParkingTags(Set<String> notPreferredVehicleParkingTags) {
-      this.notPreferredVehicleParkingTags = List.of(
-        new VehicleParkingSelect.TagsSelect(notPreferredVehicleParkingTags)
-      );
+    public Builder withUnpreferredVehicleParkingTagCost(Cost cost) {
+      this.unpreferredVehicleParkingTagCost = cost;
       return this;
     }
 
@@ -192,6 +149,16 @@ public final class ParkingRequest {
 
     public Builder withTime(Duration duration) {
       this.time = duration;
+      return this;
+    }
+
+    public Builder withFilter(VehicleParkingFilter filter) {
+      this.filter = filter;
+      return this;
+    }
+
+    public Builder withPreferred(VehicleParkingFilter filter) {
+      this.preferred = filter;
       return this;
     }
 

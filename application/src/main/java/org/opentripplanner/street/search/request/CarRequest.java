@@ -204,6 +204,16 @@ public final class CarRequest {
       return this;
     }
 
+    public Builder withParking(ParkingRequest parking) {
+      this.parking = parking;
+      return this;
+    }
+
+    public Builder withRental(RentalRequest rental) {
+      this.rental = rental;
+      return this;
+    }
+
     public Builder withRental(Consumer<RentalRequest.Builder> body) {
       this.rental = ifNotNull(this.rental, original.rental).copyOf().apply(body).build();
       return this;
