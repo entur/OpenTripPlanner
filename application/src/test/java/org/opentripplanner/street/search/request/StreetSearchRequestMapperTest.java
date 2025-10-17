@@ -1,22 +1,30 @@
 package org.opentripplanner.street.search.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.framework.model.Cost.costOfSeconds;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 
 class StreetSearchRequestMapperTest {
 
   @Test
   void mapVehicleWalking() {
-    var builder = RouteRequest.of();
+    var builder = builder();
 
     Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");
     builder.withDateTime(dateTime);
@@ -43,7 +51,7 @@ class StreetSearchRequestMapperTest {
 
   @Test
   void mapVehicleWalkingToTransferRequest() {
-    var builder = RouteRequest.of();
+    var builder = builder();
 
     Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");
     builder.withDateTime(dateTime);
@@ -62,5 +70,208 @@ class StreetSearchRequestMapperTest {
     assertNull(subject.from());
     assertNull(subject.to());
     assertTrue(subject.wheelchairEnabled());
+  }
+
+  @Test
+  void mapWalkPreferences() {
+    var builder = builder();
+    builder.withPreferences(pref ->
+      pref.withWalk(walk ->
+        walk
+          .withSpeed(1.5)
+          .withReluctance(2.5)
+          .withStairsReluctance(3.5)
+          .withStairsTimeFactor(4.5)
+          .withBoardCost(100)
+          .withSafetyFactor(0.8)
+      )
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var walkRequest = subject.walk();
+    assertEquals(1.5, walkRequest.speed());
+    assertEquals(2.5, walkRequest.reluctance());
+    assertEquals(3.5, walkRequest.stairsReluctance());
+    assertEquals(4.5, walkRequest.stairsTimeFactor());
+    assertEquals(100, walkRequest.boardCost());
+    assertEquals(0.8, walkRequest.safetyFactor());
+  }
+
+  @Test
+  void mapBikePreferences() {
+    var builder = builder()
+      .withPreferences(pref ->
+        pref.withBike(bike ->
+          bike
+            .withSpeed(5.0)
+            .withReluctance(1.5)
+            .withBoardCost(200)
+            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withWalking(walking ->
+              walking
+                .withSpeed(1.2)
+                .withReluctance(2.0)
+                .withStairsReluctance(5.0)
+                .withMountDismountTime(Duration.ofSeconds(30))
+                .withMountDismountCost(60)
+            )
+        )
+      );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var bikeRequest = subject.bike();
+    assertEquals(5.0, bikeRequest.speed());
+    assertEquals(1.5, bikeRequest.reluctance());
+    assertEquals(200, bikeRequest.boardCost());
+    assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
+
+    var walking = bikeRequest.walking();
+    assertEquals(1.2, walking.speed());
+    assertEquals(2.0, walking.reluctance());
+    assertEquals(5.0, walking.stairsReluctance());
+    assertEquals(Duration.ofSeconds(30), walking.mountDismountTime());
+    assertEquals(costOfSeconds(60), walking.mountDismountCost());
+  }
+
+  @Test
+  void mapCarPreferences() {
+    var builder = builder();
+    builder.withPreferences(pref ->
+      pref.withCar(car ->
+        car
+          .withReluctance(1.8)
+          .withPickupTime(Duration.ofMinutes(5))
+          .withPickupCost(10)
+          .withAccelerationSpeed(2.5)
+          .withDecelerationSpeed(3.0)
+      )
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var carRequest = subject.car();
+    assertEquals(1.8, carRequest.reluctance());
+    assertEquals(Duration.ofMinutes(5), carRequest.pickupTime());
+    assertEquals(Cost.costOfSeconds(10), carRequest.pickupCost());
+    assertEquals(2.5, carRequest.accelerationSpeed());
+    assertEquals(3.0, carRequest.decelerationSpeed());
+  }
+
+  @Test
+  void mapScooterPreferences() {
+    var builder = builder()
+      .withPreferences(pref ->
+        pref.withScooter(scooter ->
+          scooter
+            .withSpeed(4.5)
+            .withReluctance(2.0)
+            .withOptimizeType(VehicleRoutingOptimizeType.SAFE_STREETS)
+        )
+      );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var scooterRequest = subject.scooter();
+    assertEquals(4.5, scooterRequest.speed());
+    assertEquals(2.0, scooterRequest.reluctance());
+    assertEquals(VehicleRoutingOptimizeType.SAFE_STREETS, scooterRequest.optimizeType());
+  }
+
+  @Test
+  void mapRentalPreferences() {
+    var request = builder()
+      .withPreferences(pref ->
+        pref.withBike(bike ->
+          bike.withRental(rental ->
+            rental
+              .withPickupTime(Duration.ofSeconds(120))
+              .withPickupCost(180)
+              .withDropOffTime(Duration.ofSeconds(90))
+              .withDropOffCost(150)
+              .withUseAvailabilityInformation(true)
+              .withAllowArrivingInRentedVehicleAtDestination(false)
+              .withArrivingInRentalVehicleAtDestinationCost(30)
+          )
+        )
+      )
+      .buildRequest();
+
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var rentalRequest = subject.bike().rental();
+    assertEquals(Duration.ofSeconds(120), rentalRequest.pickupTime());
+    assertEquals(costOfSeconds(180), rentalRequest.pickupCost());
+    assertEquals(Duration.ofSeconds(90), rentalRequest.dropOffTime());
+    assertEquals(costOfSeconds(150), rentalRequest.dropOffCost());
+    assertTrue(rentalRequest.useAvailabilityInformation());
+    assertFalse(rentalRequest.allowArrivingInRentedVehicleAtDestination());
+    assertEquals(costOfSeconds(30), rentalRequest.arrivingInRentalVehicleAtDestinationCost());
+  }
+
+  @Test
+  void mapParkingPreferences() {
+    var builder = builder();
+    builder.withPreferences(pref ->
+      pref.withCar(car ->
+        car.withParking(parking ->
+          parking
+            .withCost(15)
+            .withTime(Duration.ofMinutes(5))
+            .withUnpreferredVehicleParkingTagCost(20)
+            .withPreferredVehicleParkingTags(Set.of("A"))
+        )
+      )
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var parkingRequest = subject.car().parking();
+    assertEquals(costOfSeconds(15), parkingRequest.cost());
+    assertEquals(Duration.ofMinutes(5), parkingRequest.time());
+    assertEquals(costOfSeconds(20), parkingRequest.unpreferredVehicleParkingTagCost());
+    assertNotNull(parkingRequest.filter());
+  }
+
+  @Test
+  void mapArriveByAndFromTo() {
+    var from = GenericLocation.fromCoordinate(59.0, 10.0);
+    var to = GenericLocation.fromCoordinate(60.0, 11.0);
+
+    var request = builder().withFrom(from).withTo(to).withArriveBy(true).buildRequest();
+
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    assertTrue(subject.arriveBy());
+    assertEquals(from, subject.from());
+    assertEquals(to, subject.to());
+  }
+
+  @Test
+  void mapSystemPreferences() {
+    var builder = builder();
+    builder.withPreferences(pref ->
+      pref
+        .withSystem(system -> system.withGeoidElevation(true))
+        .withStreet(street -> street.withTurnReluctance(1.5))
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    assertTrue(subject.geoidElevation());
+    assertEquals(1.5, subject.turnReluctance());
+  }
+
+  private static RouteRequestBuilder builder() {
+    return RouteRequest.of()
+      .withFrom(GenericLocation.fromCoordinate(0, 0))
+      .withTo(GenericLocation.fromCoordinate(1, 1));
   }
 }
