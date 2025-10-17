@@ -14,13 +14,13 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.apis.transmodel.mapping.GeometryMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
-import org.opentripplanner.framework.geometry.EncodedPolyline;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 

@@ -3,7 +3,7 @@ package org.opentripplanner.apis.transmodel.model.framework;
 import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
-import org.opentripplanner.framework.geometry.EncodedPolyline;
+import org.opentripplanner.api.model.geometry.EncodedPolyline;
 
 public class PointsOnLinkType {
 

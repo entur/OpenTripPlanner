@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.geometry;
+package org.opentripplanner.api.model.geometry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
+import org.opentripplanner.framework.geometry.GeometryUtils;
 
 class EncodedPolylineTest {
 
