@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.onebusaway.gtfs.model.AgencyAndId;
@@ -43,6 +44,19 @@ class FareTransferRuleMapperTest {
     assertEquals(FEED_ID, transferRule.id().getFeedId());
     assertNull(transferRule.fromLegGroup());
     assertNull(transferRule.toLegGroup());
+  }
+
+  @Test
+  void timeLimit() {
+    var fareProduct = fareProduct();
+
+    var rule = new FareTransferRule();
+    rule.setFareProductId(id);
+    rule.setDurationLimit(120 * 60);
+
+    var transferRule = map(fareProduct, rule);
+    assertTrue(transferRule.withinTimeLimit(Duration.ofMinutes(119).plusSeconds(59)));
+    assertFalse(transferRule.withinTimeLimit(Duration.ofMinutes(121)));
   }
 
   @Test
