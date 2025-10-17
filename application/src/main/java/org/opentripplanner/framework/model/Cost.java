@@ -47,8 +47,11 @@ public final class Cost implements Serializable, Comparable<Cost> {
     return costOfSeconds(value.toMillis() / 1000.0);
   }
 
+  /**
+   * Returns the cost in seconds. The value is rounded to the nearest second.
+   */
   public int toSeconds() {
-    return IntUtils.round(value / CENTI_FACTOR);
+    return (value + CENTI_FACTOR / 2) / CENTI_FACTOR;
   }
 
   public int toCentiSeconds() {
@@ -95,6 +98,16 @@ public final class Cost implements Serializable, Comparable<Cost> {
 
   public boolean lessOrEq(Cost other) {
     return this.value <= other.value;
+  }
+
+  /**
+   * This method round the cost to the nearest second, dropping any centi-seconds.
+   */
+  public Cost normalize() {
+    if (value % CENTI_FACTOR == 0) {
+      return this;
+    }
+    return Cost.costOfSeconds(toSeconds());
   }
 
   @Override
