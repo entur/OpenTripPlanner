@@ -12,20 +12,18 @@ class FareTransferRuleTest {
 
   private static final FareTransferRule RULE = FareTransferRule.of()
     .withId(id("1"))
-    .withTimeLimit(Duration.ofHours(1))
+    .withTimeLimit(TimeLimitType.DEPARTURE_TO_ARRIVAL, Duration.ofHours(1))
     .build();
 
   @Test
   void withinLimit() {
-    assertFalse(RULE.withinTimeLimit(Duration.ofMinutes(61)));
-    assertTrue(RULE.withinTimeLimit(Duration.ofMinutes(59)));
-    assertTrue(RULE.withinTimeLimit(Duration.ofMinutes(60)));
+    assertFalse(RULE.belowTimeLimit(Duration.ofMinutes(61)));
+    assertTrue(RULE.belowTimeLimit(Duration.ofMinutes(59)));
+    assertTrue(RULE.belowTimeLimit(Duration.ofMinutes(60)));
   }
 
   @Test
   void negativeDuration() {
-    assertThrows(IllegalArgumentException.class, () ->
-      RULE.withinTimeLimit(Duration.ofMinutes(-1))
-    );
+    assertThrows(IllegalArgumentException.class, () -> RULE.belowTimeLimit(Duration.ofMinutes(-1)));
   }
 }

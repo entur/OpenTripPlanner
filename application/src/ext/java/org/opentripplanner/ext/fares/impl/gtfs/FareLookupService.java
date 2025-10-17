@@ -70,22 +70,17 @@ class FareLookupService implements Serializable {
    * Find those fare products that match all legs through an unlimited transfer.
    */
   Set<FareProduct> findTransfersMatchingAllLegs(List<TransitLeg> legs) {
+    if (legs.size() < 2) {
+      return Set.of();
+    }
     return this.transferRules.stream()
       .filter(FareTransferRule::unlimitedTransfers)
       .filter(FareTransferRule::isFree)
-      .filter(r -> r.withinTimeLimit(duration(legs)))
+      .filter(r -> withinTimeLimit(r, legs.getFirst(), legs.getLast()))
       .flatMap(r -> findTransferMatches(r, legs).stream())
       .filter(transferMatch -> appliesToAllLegs(legs, transferMatch))
       .flatMap(transferRule -> transferRule.fromLegRule().fareProducts().stream())
       .collect(Collectors.toUnmodifiableSet());
-  }
-
-  private Duration duration(List<TransitLeg> legs) {
-    if (legs.isEmpty()) {
-      return Duration.ofDays(365);
-    } else {
-      return Duration.between(legs.getFirst().startTime(), legs.getLast().endTime());
-    }
   }
 
   private boolean appliesToAllLegs(List<TransitLeg> legs, TransferMatch transferMatch) {
@@ -175,11 +170,25 @@ class FareLookupService implements Serializable {
   ) {
     return fromRules
       .stream()
-      .filter(match -> r.withinTimeLimit(Duration.between(from.startTime(), to.endTime())))
+      .filter(match -> withinTimeLimit(r, from, to))
       .flatMap(fromRule -> toRules.stream().map(toRule -> new TransferMatch(r, fromRule, toRule)))
       .filter(
         match -> legMatchesRule(from, match.fromLegRule()) && legMatchesRule(to, match.toLegRule())
       );
+  }
+
+  private static boolean withinTimeLimit(FareTransferRule r, TransitLeg from, TransitLeg to) {
+    return r
+      .timeLimitType()
+      .map(limit -> {
+        var duration =
+          switch (limit) {
+            case DEPARTURE_TO_DEPARTURE -> Duration.between(from.startTime(), to.startTime());
+            case DEPARTURE_TO_ARRIVAL -> Duration.between(from.startTime(), to.endTime());
+          };
+        return r.belowTimeLimit(duration);
+      })
+      .orElse(true);
   }
 
   private List<TransferMatch> findTransferMatches(

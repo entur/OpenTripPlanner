@@ -1,0 +1,20 @@
+package org.opentripplanner.ext.fares.model;
+
+import org.opentripplanner.utils.lang.Sandbox;
+
+/**
+ * How the duration of a set of legs should be computed for fare calculation purposes.
+ */
+@Sandbox
+public enum TimeLimitType {
+  /**
+   * The duration is to be computed from the departure time of the current leg to the arrival time of
+   * the next one.
+   */
+  DEPARTURE_TO_ARRIVAL,
+  /**
+   * The duration is to be computed from the departure time of the current leg to the departure time of
+   * the next one.
+   */
+  DEPARTURE_TO_DEPARTURE,
+}

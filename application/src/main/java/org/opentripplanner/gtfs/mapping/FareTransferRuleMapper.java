@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
+import org.opentripplanner.ext.fares.model.TimeLimitType;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
@@ -32,15 +33,17 @@ class FareTransferRuleMapper {
     final var products = findFareProducts(fareProductId, rhs.getId());
 
     Duration duration = null;
+    TimeLimitType limitType = null;
     if (rhs.getDurationLimit() != MISSING_VALUE) {
       duration = Duration.ofSeconds(rhs.getDurationLimit());
+      limitType = mapLimitType(rhs.getDurationLimitType());
     }
     return FareTransferRule.of()
       .withId(idFactory.createId(rhs.getId(), "fare transfer rule"))
       .withFromLegGroup(idFactory.createNullableId(rhs.getFromLegGroupId()))
       .withToLegGroup(idFactory.createNullableId(rhs.getToLegGroupId()))
       .withTransferCount(rhs.getTransferCount())
-      .withTimeLimit(duration)
+      .withTimeLimit(limitType, duration)
       .withFareProducts(products)
       .build();
   }
@@ -60,5 +63,16 @@ class FareTransferRuleMapper {
       );
     }
     return products;
+  }
+
+  static TimeLimitType mapLimitType(int durationLimitType) {
+    return switch (durationLimitType) {
+      case 0 -> TimeLimitType.DEPARTURE_TO_ARRIVAL;
+      case 1 -> TimeLimitType.DEPARTURE_TO_DEPARTURE;
+      case 2, 3 -> throw new IllegalArgumentException(
+        "Duration limit type %s not implemented.".formatted(durationLimitType)
+      );
+      default -> throw new IllegalArgumentException("Valid duration limit type must be provided.");
+    };
   }
 }

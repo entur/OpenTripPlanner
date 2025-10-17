@@ -5,9 +5,11 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.utils.time.DurationUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 public final class FareTransferRule implements Serializable {
@@ -28,6 +30,8 @@ public final class FareTransferRule implements Serializable {
 
   private final Collection<FareProduct> fareProducts;
 
+  private final TimeLimitType timeLimitType;
+
   FareTransferRule(FareTransferRuleBuilder b) {
     this.id = Objects.requireNonNull(b.id());
     this.fareProducts = List.copyOf(b.fareProducts());
@@ -35,6 +39,11 @@ public final class FareTransferRule implements Serializable {
     this.toLegGroup = b.toLegGroup();
     this.transferCount = b.transferCount();
     this.timeLimit = b.timeLimit();
+    if (timeLimit != null) {
+      DurationUtils.requireNonNegative(timeLimit);
+      Objects.requireNonNull(b.timeLimitType());
+    }
+    this.timeLimitType = b.timeLimitType();
   }
 
   /**
@@ -58,7 +67,7 @@ public final class FareTransferRule implements Serializable {
   /**
    * Returns true if the duration is within the time limit.
    */
-  public boolean withinTimeLimit(Duration duration) {
+  public boolean belowTimeLimit(Duration duration) {
     if (duration.isNegative()) {
       throw new IllegalArgumentException("Duration cannot be negative.");
     }
@@ -85,6 +94,10 @@ public final class FareTransferRule implements Serializable {
 
   public Collection<FareProduct> fareProducts() {
     return fareProducts;
+  }
+
+  public Optional<TimeLimitType> timeLimitType() {
+    return Optional.ofNullable(timeLimitType);
   }
 
   @Override
