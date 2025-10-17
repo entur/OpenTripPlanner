@@ -2,11 +2,12 @@ package org.opentripplanner.api.model.geometry;
 
 import java.util.Objects;
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.PolylineEncoder;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * A list of coordinates encoded as a string and the length (number of coordinates).
+ * A list of coordinates encoded as a string, the length (number of coordinates) and the distance.
  * <p>
  * See <a href="http://code.google.com/apis/maps/documentation/polylinealgorithm.html">Encoded
  * polyline algorithm format</a>
@@ -23,6 +24,7 @@ public final class EncodedPolyline {
 
   private String points = null;
   private int length = NOT_SET;
+  private int distance_m = NOT_SET;
 
   private EncodedPolyline(Geometry geometry) {
     this.geometry = geometry;
@@ -40,6 +42,11 @@ public final class EncodedPolyline {
   public int length() {
     calculateLineString();
     return length;
+  }
+
+  public int distanceInMeters() {
+    calculateDistance();
+    return distance_m;
   }
 
   @Override
@@ -67,6 +74,12 @@ public final class EncodedPolyline {
       var line = PolylineEncoder.encodeGeometry(geometry);
       this.points = line.points();
       this.length = line.length();
+    }
+  }
+
+  private void calculateDistance() {
+    if (distance_m == NOT_SET) {
+      distance_m = (int) GeometryUtils.sumDistances(geometry.getCoordinates());
     }
   }
 }
