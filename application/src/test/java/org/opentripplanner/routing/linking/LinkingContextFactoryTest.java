@@ -1,4 +1,4 @@
-package org.opentripplanner.street.search;
+package org.opentripplanner.routing.linking;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,10 +14,6 @@ import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContextFactory;
-import org.opentripplanner.routing.linking.LinkingContextRequest;
-import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
-import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetStationCentroidLink;
 import org.opentripplanner.street.model.vertex.StationCentroidVertex;
@@ -29,7 +25,7 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.service.SiteRepository;
 
-class TemporaryVerticesContainerTest {
+class LinkingContextFactoryTest {
 
   private static final WgsCoordinate CENTER = new WgsCoordinate(0, 0);
   private static final int DISTANCE = 20;
