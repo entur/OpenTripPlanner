@@ -27,7 +27,7 @@ public final class EncodedPolyline {
     this.geometry = geometry;
   }
 
-  public static EncodedPolyline encode(Geometry geometry) {
+  public static EncodedPolyline of(Geometry geometry) {
     return new EncodedPolyline(geometry);
   }
 

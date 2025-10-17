@@ -209,6 +209,6 @@ public class BarrierRoutingTest {
     Geometry legGeometry = itineraries.get(0).legs().get(0).legGeometry();
     temporaryVertices.close();
 
-    return EncodedPolyline.encode(legGeometry).points();
+    return EncodedPolyline.of(legGeometry).points();
   }
 }

@@ -19,6 +19,6 @@ public class GeometryImpl implements GraphQLDataFetchers.GraphQLGeometry {
   }
 
   private EncodedPolyline getSource(DataFetchingEnvironment environment) {
-    return EncodedPolyline.encode((Geometry) environment.getSource());
+    return EncodedPolyline.of((Geometry) environment.getSource());
   }
 }

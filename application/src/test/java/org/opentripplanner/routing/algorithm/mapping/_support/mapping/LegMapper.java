@@ -123,7 +123,7 @@ class LegMapper {
     if (addIntermediateStops) {
       api.intermediateStops = placeMapper.mapStopArrivals(domain.listIntermediateStops());
     }
-    api.legGeometry = EncodedPolyline.encode(domain.legGeometry());
+    api.legGeometry = EncodedPolyline.of(domain.legGeometry());
     api.legElevation = mapElevation(domain.elevationProfile());
     api.steps = walkStepMapper.mapWalkSteps(domain.listWalkSteps());
 

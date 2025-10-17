@@ -169,6 +169,6 @@ public class CarRoutingTest {
         })
     );
     Geometry legGeometry = itineraries.get(0).legs().get(0).legGeometry();
-    return EncodedPolyline.encode(legGeometry).points();
+    return EncodedPolyline.of(legGeometry).points();
   }
 }

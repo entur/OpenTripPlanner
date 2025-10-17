@@ -12,7 +12,7 @@ class EncodedPolylineTest {
   private static final Geometry GEOMETRY = GeometryUtils.getGeometryFactory()
     .createLineString(new Coordinate[] { new Coordinate(60.0, 9.0), new Coordinate(63.1, 10.3) });
 
-  private EncodedPolyline subject = EncodedPolyline.encode(GEOMETRY);
+  private EncodedPolyline subject = EncodedPolyline.of(GEOMETRY);
 
   @Test
   void points() {
@@ -27,8 +27,8 @@ class EncodedPolylineTest {
   @Test
   void testEqualsAndHashCode() {
     AssertEqualsAndHashCode.verify(subject)
-      .sameAs(EncodedPolyline.encode(GEOMETRY))
-      .differentFrom(EncodedPolyline.encode(GeometryUtils.makeLineString(67, 10, 68, 11)));
+      .sameAs(EncodedPolyline.of(GEOMETRY))
+      .differentFrom(EncodedPolyline.of(GeometryUtils.makeLineString(67, 10, 68, 11)));
   }
 
   @Test
