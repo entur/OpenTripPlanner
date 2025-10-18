@@ -73,7 +73,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapWalkPreferences() {
+  void mapWalkRequest() {
     var builder = builder();
     builder.withPreferences(pref ->
       pref.withWalk(walk ->
@@ -100,7 +100,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapBikePreferences() {
+  void mapBikeRequest() {
     var builder = builder()
       .withPreferences(pref ->
         pref.withBike(bike ->
@@ -138,7 +138,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapCarPreferences() {
+  void mapCarRequest() {
     var builder = builder();
     builder.withPreferences(pref ->
       pref.withCar(car ->
@@ -163,7 +163,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapScooterPreferences() {
+  void mapScooterRequest() {
     var builder = builder()
       .withPreferences(pref ->
         pref.withScooter(scooter ->
@@ -184,7 +184,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapRentalPreferences() {
+  void mapRentalRequest() {
     var request = builder()
       .withPreferences(pref ->
         pref.withBike(bike ->
@@ -215,7 +215,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapParkingPreferences() {
+  void mapParkingRequest() {
     var builder = builder();
     builder.withPreferences(pref ->
       pref.withCar(car ->
@@ -254,7 +254,7 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
-  void mapSystemPreferences() {
+  void mapSystemRequest() {
     var builder = builder();
     builder.withPreferences(pref ->
       pref

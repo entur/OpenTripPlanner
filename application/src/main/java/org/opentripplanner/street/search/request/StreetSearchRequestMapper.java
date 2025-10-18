@@ -73,7 +73,7 @@ public class StreetSearchRequestMapper {
     return ParkingRequest.of()
       .withCost(pref.cost().toSeconds())
       .withTime(pref.time())
-      .withUnpreferredVehicleParkingTagCost(pref.unpreferredVehicleParkingTagCost())
+      .withUnpreferredTagCost(pref.unpreferredVehicleParkingTagCost())
       .withFilter(mapParkingFilter(pref.filter()))
       .withPreferred(mapParkingFilter(pref.preferred()))
       .build();

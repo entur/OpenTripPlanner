@@ -1,6 +1,5 @@
 package org.opentripplanner.street.search.request.filter;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -11,7 +10,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * A filter class that checks if parking facilities match certain conditions for
  * inclusion/exclusion or preference/unpreference.
  */
-public class ParkingFilter implements Serializable {
+public class ParkingFilter {
 
   private final ParkingSelect[] not;
   private final ParkingSelect[] select;
@@ -19,6 +18,10 @@ public class ParkingFilter implements Serializable {
   public ParkingFilter(Collection<ParkingSelect> not, Collection<ParkingSelect> select) {
     this.not = makeFilter(not);
     this.select = makeFilter(select);
+  }
+
+  public ParkingFilter(ParkingSelect not, ParkingSelect select) {
+    this(List.of(not), List.of(select));
   }
 
   public List<ParkingSelect> not() {

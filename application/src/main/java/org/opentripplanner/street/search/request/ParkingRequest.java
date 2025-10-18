@@ -1,5 +1,7 @@
 package org.opentripplanner.street.search.request;
 
+import static java.util.Objects.requireNonNullElse;
+
 import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -33,8 +35,8 @@ public final class ParkingRequest {
 
   private ParkingRequest(Builder builder) {
     this.unpreferredVehicleParkingTagCost = builder.unpreferredVehicleParkingTagCost;
-    this.filter = builder.filter;
-    this.preferred = builder.preferred;
+    this.filter = requireNonNullElse(builder.filter, ParkingFilter.empty());
+    this.preferred = requireNonNullElse(builder.preferred, ParkingFilter.empty());
     this.time = builder.time;
     this.cost = builder.cost;
   }
@@ -130,9 +132,11 @@ public final class ParkingRequest {
       this.unpreferredVehicleParkingTagCost = original.unpreferredVehicleParkingTagCost;
       this.cost = original.cost;
       this.time = original.time;
+      this.filter = original.filter;
+      this.preferred = original.preferred;
     }
 
-    public Builder withUnpreferredVehicleParkingTagCost(Cost cost) {
+    public Builder withUnpreferredTagCost(Cost cost) {
       this.unpreferredVehicleParkingTagCost = cost;
       return this;
     }
@@ -157,8 +161,8 @@ public final class ParkingRequest {
       return this;
     }
 
-    public Builder withPreferred(ParkingFilter filter) {
-      this.preferred = filter;
+    public Builder withPreferred(ParkingFilter preferred) {
+      this.preferred = preferred;
       return this;
     }
 

@@ -86,7 +86,7 @@ class VehicleParkingPreferredTagsTest {
     req.withArriveBy(arriveBy);
     req.withBike(p ->
       p.withParking(parkingPreferences -> {
-        parkingPreferences.withUnpreferredVehicleParkingTagCost(Cost.costOfSeconds(EXTRA_COST));
+        parkingPreferences.withUnpreferredTagCost(Cost.costOfSeconds(EXTRA_COST));
         parkingPreferences.withPreferred(
           new ParkingFilter(List.of(), List.of(new ParkingSelect.TagsSelect(preferredTags)))
         );
