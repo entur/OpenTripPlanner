@@ -1,6 +1,7 @@
 package org.opentripplanner.street.search.request;
 
 import java.time.Instant;
+import java.util.List;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.BikePreferences;
 import org.opentripplanner.routing.api.request.preference.CarPreferences;
@@ -10,6 +11,11 @@ import org.opentripplanner.routing.api.request.preference.VehicleParkingPreferen
 import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleWalkingPreferences;
 import org.opentripplanner.routing.api.request.preference.WalkPreferences;
+import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
+import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
+import org.opentripplanner.street.search.request.filter.ParkingFilter;
+import org.opentripplanner.street.search.request.filter.ParkingSelect;
+import org.opentripplanner.street.search.request.filter.ParkingSelect.TagsSelect;
 
 public class StreetSearchRequestMapper {
 
@@ -68,9 +74,21 @@ public class StreetSearchRequestMapper {
       .withCost(pref.cost().toSeconds())
       .withTime(pref.time())
       .withUnpreferredVehicleParkingTagCost(pref.unpreferredVehicleParkingTagCost())
-      .withFilter(pref.filter())
-      .withPreferred(pref.preferred())
+      .withFilter(mapParkingFilter(pref.filter()))
+      .withPreferred(mapParkingFilter(pref.preferred()))
       .build();
+  }
+
+  private static ParkingFilter mapParkingFilter(VehicleParkingFilter filter) {
+    return new ParkingFilter(mapTagSelect(filter.not()), mapTagSelect(filter.select()));
+  }
+
+  private static List<ParkingSelect> mapTagSelect(List<VehicleParkingSelect> selects) {
+    return selects
+      .stream()
+      .map(s -> new TagsSelect(s.tags()))
+      .map(ParkingSelect.class::cast)
+      .toList();
   }
 
   private static BikeRequest mapBike(BikePreferences preferences) {

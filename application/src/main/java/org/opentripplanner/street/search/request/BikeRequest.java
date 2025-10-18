@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
-import org.opentripplanner.routing.api.request.preference.TransferPreferences;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -78,7 +77,7 @@ public final class BikeRequest {
   /**
    * Separate cost for boarding a vehicle with a bicycle, which is more difficult than on foot. This
    * is in addition to the cost of the transfer(biking) and waiting-time. It is also in addition to
-   * the {@link TransferPreferences#cost()}.
+   * the transfer preferences.
    */
   public int boardCost() {
     return boardCost.toSeconds();

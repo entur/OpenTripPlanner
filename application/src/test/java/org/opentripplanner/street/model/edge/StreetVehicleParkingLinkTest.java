@@ -17,14 +17,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
-import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect.TagsSelect;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.request.filter.ParkingFilter;
+import org.opentripplanner.street.search.request.filter.ParkingSelect.TagsSelect;
 import org.opentripplanner.street.search.state.State;
 
 class StreetVehicleParkingLinkTest {
@@ -57,7 +57,7 @@ class StreetVehicleParkingLinkTest {
     req.withBike(bike ->
       bike.withParking(parkingPreferences -> {
         parkingPreferences.withFilter(
-          new VehicleParkingFilter(List.of(new TagsSelect(not)), List.of(new TagsSelect(select)))
+          new ParkingFilter(List.of(new TagsSelect(not)), List.of(new TagsSelect(select)))
         );
         parkingPreferences.withCost(0);
       })

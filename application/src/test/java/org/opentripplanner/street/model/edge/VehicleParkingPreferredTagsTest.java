@@ -13,14 +13,14 @@ import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
-import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.request.filter.ParkingFilter;
+import org.opentripplanner.street.search.request.filter.ParkingSelect;
 import org.opentripplanner.street.search.state.State;
 
 class VehicleParkingPreferredTagsTest {
@@ -88,10 +88,7 @@ class VehicleParkingPreferredTagsTest {
       p.withParking(parkingPreferences -> {
         parkingPreferences.withUnpreferredVehicleParkingTagCost(Cost.costOfSeconds(EXTRA_COST));
         parkingPreferences.withPreferred(
-          new VehicleParkingFilter(
-            List.of(),
-            List.of(new VehicleParkingSelect.TagsSelect(preferredTags))
-          )
+          new ParkingFilter(List.of(), List.of(new ParkingSelect.TagsSelect(preferredTags)))
         );
         parkingPreferences.withCost(0);
       })

@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.Units;
-import org.opentripplanner.routing.api.request.preference.TransferPreferences;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -86,7 +85,7 @@ public final class WalkRequest {
   /**
    * This prevents unnecessary transfers by adding a cost for boarding a vehicle. This is in
    * addition to the cost of the transfer(walking) and waiting-time. It is also in addition to the
-   * {@link TransferPreferences#cost()}.
+   * transfer preferences.
    */
   public int boardCost() {
     return boardCost.toSeconds();

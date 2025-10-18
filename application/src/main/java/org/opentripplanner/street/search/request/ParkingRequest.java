@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
+import org.opentripplanner.street.search.request.filter.ParkingFilter;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -17,16 +17,16 @@ public final class ParkingRequest {
 
   public static final ParkingRequest DEFAULT = new ParkingRequest();
   private final Cost unpreferredVehicleParkingTagCost;
-  private final VehicleParkingFilter filter;
-  private final VehicleParkingFilter preferred;
+  private final ParkingFilter filter;
+  private final ParkingFilter preferred;
   private final Duration time;
   private final Cost cost;
 
   /** Create a new instance with default values. */
   private ParkingRequest() {
     this.unpreferredVehicleParkingTagCost = Cost.costOfMinutes(5);
-    this.filter = VehicleParkingFilter.empty();
-    this.preferred = VehicleParkingFilter.empty();
+    this.filter = ParkingFilter.empty();
+    this.preferred = ParkingFilter.empty();
     this.time = Duration.ofMinutes(1);
     this.cost = Cost.costOfMinutes(2);
   }
@@ -58,7 +58,7 @@ public final class ParkingRequest {
    * Parking containing select filters must only be usable and parking containing with not filters
    * cannot be used.
    */
-  public VehicleParkingFilter filter() {
+  public ParkingFilter filter() {
     return filter;
   }
 
@@ -68,7 +68,7 @@ public final class ParkingRequest {
    * <p>
    * This is useful if you want to use certain kind of facilities, like lockers for expensive e-bikes.
    */
-  public VehicleParkingFilter preferred() {
+  public ParkingFilter preferred() {
     return preferred;
   }
 
@@ -122,8 +122,8 @@ public final class ParkingRequest {
     private Cost unpreferredVehicleParkingTagCost;
     private Cost cost;
     private Duration time;
-    private VehicleParkingFilter filter;
-    private VehicleParkingFilter preferred;
+    private ParkingFilter filter;
+    private ParkingFilter preferred;
 
     private Builder(ParkingRequest original) {
       this.original = original;
@@ -152,12 +152,12 @@ public final class ParkingRequest {
       return this;
     }
 
-    public Builder withFilter(VehicleParkingFilter filter) {
+    public Builder withFilter(ParkingFilter filter) {
       this.filter = filter;
       return this;
     }
 
-    public Builder withPreferred(VehicleParkingFilter filter) {
+    public Builder withPreferred(ParkingFilter filter) {
       this.preferred = filter;
       return this;
     }
