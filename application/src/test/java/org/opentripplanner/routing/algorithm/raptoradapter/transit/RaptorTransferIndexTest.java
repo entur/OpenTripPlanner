@@ -14,25 +14,25 @@ import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 class RaptorTransferIndexTest {
 
-  private static final Transfer t1 = new Transfer(2, 100, EnumSet.of(StreetMode.WALK));
-  private static final Transfer t2 = new Transfer(
+  private static final Transfer T1 = new Transfer(2, 100, EnumSet.of(StreetMode.WALK));
+  private static final Transfer T2 = new Transfer(
     3,
     200,
     EnumSet.of(StreetMode.WALK, StreetMode.BIKE)
   );
-  private static final Transfer t3 = new Transfer(0, 500, EnumSet.of(StreetMode.WALK));
-  private static final Transfer t4 = new Transfer(0, 1000, EnumSet.of(StreetMode.BIKE));
-  private static final Transfer t5 = new Transfer(
+  private static final Transfer T3 = new Transfer(0, 500, EnumSet.of(StreetMode.WALK));
+  private static final Transfer T4 = new Transfer(0, 1000, EnumSet.of(StreetMode.BIKE));
+  private static final Transfer T5 = new Transfer(
     2,
     200,
     EnumSet.of(StreetMode.WALK, StreetMode.BIKE)
   );
 
-  private static final List<List<Transfer>> data = List.of(
-    List.of(t1, t2, t5),
-    List.of(t3),
+  private static final List<List<Transfer>> DATA = List.of(
+    List.of(T1, T2, T5),
+    List.of(T3),
     List.of(),
-    List.of(t4)
+    List.of(T4)
   );
 
   @Test
@@ -40,10 +40,10 @@ class RaptorTransferIndexTest {
     var streetSearchRequest = StreetSearchRequest.of().withMode(WALK).build();
     performTestOnBothImplementations(streetSearchRequest, index -> {
       assertThat(index.getForwardTransfers(0)).containsExactlyElementsIn(
-        getForwardRaptorTransfers(streetSearchRequest, t1, t2)
+        getForwardRaptorTransfers(streetSearchRequest, T1, T2)
       );
       assertThat(index.getForwardTransfers(1)).containsExactlyElementsIn(
-        getForwardRaptorTransfers(streetSearchRequest, t3)
+        getForwardRaptorTransfers(streetSearchRequest, T3)
       );
       assertThat(index.getForwardTransfers(2)).isEmpty();
       assertThat(index.getForwardTransfers(3)).isEmpty();
@@ -55,12 +55,12 @@ class RaptorTransferIndexTest {
     var streetSearchRequest = StreetSearchRequest.of().withMode(BIKE).build();
     performTestOnBothImplementations(streetSearchRequest, index -> {
       assertThat(index.getForwardTransfers(0)).containsExactlyElementsIn(
-        getForwardRaptorTransfers(streetSearchRequest, t2, t5)
+        getForwardRaptorTransfers(streetSearchRequest, T2, T5)
       );
       assertThat(index.getForwardTransfers(1)).isEmpty();
       assertThat(index.getForwardTransfers(2)).isEmpty();
       assertThat(index.getForwardTransfers(3)).containsExactlyElementsIn(
-        getForwardRaptorTransfers(streetSearchRequest, t4)
+        getForwardRaptorTransfers(streetSearchRequest, T4)
       );
     });
   }
@@ -70,14 +70,14 @@ class RaptorTransferIndexTest {
     var streetSearchRequest = StreetSearchRequest.of().withMode(WALK).build();
     performTestOnBothImplementations(streetSearchRequest, index -> {
       assertThat(index.getReversedTransfers(0)).containsExactlyElementsIn(
-        getReversedRaptorTransfers(streetSearchRequest, 1, t3)
+        getReversedRaptorTransfers(streetSearchRequest, 1, T3)
       );
       assertThat(index.getReversedTransfers(1)).isEmpty();
       assertThat(index.getReversedTransfers(2)).containsExactlyElementsIn(
-        getReversedRaptorTransfers(streetSearchRequest, 0, t1)
+        getReversedRaptorTransfers(streetSearchRequest, 0, T1)
       );
       assertThat(index.getReversedTransfers(3)).containsExactlyElementsIn(
-        getReversedRaptorTransfers(streetSearchRequest, 0, t2)
+        getReversedRaptorTransfers(streetSearchRequest, 0, T2)
       );
     });
   }
@@ -87,14 +87,14 @@ class RaptorTransferIndexTest {
     var streetSearchRequest = StreetSearchRequest.of().withMode(BIKE).build();
     performTestOnBothImplementations(streetSearchRequest, index -> {
       assertThat(index.getReversedTransfers(0)).containsExactlyElementsIn(
-        getReversedRaptorTransfers(streetSearchRequest, 3, t4)
+        getReversedRaptorTransfers(streetSearchRequest, 3, T4)
       );
       assertThat(index.getReversedTransfers(1)).isEmpty();
       assertThat(index.getReversedTransfers(2)).containsExactlyElementsIn(
-        getReversedRaptorTransfers(streetSearchRequest, 0, t5)
+        getReversedRaptorTransfers(streetSearchRequest, 0, T5)
       );
       assertThat(index.getReversedTransfers(3)).containsExactlyElementsIn(
-        getReversedRaptorTransfers(streetSearchRequest, 0, t2)
+        getReversedRaptorTransfers(streetSearchRequest, 0, T2)
       );
     });
   }
@@ -104,8 +104,8 @@ class RaptorTransferIndexTest {
     Consumer<RaptorTransferIndex> verifier
   ) {
     for (var index : List.of(
-      RaptorTransferIndex.createInitialSetup(data, streetSearchRequest),
-      RaptorTransferIndex.createRequestScope(data, streetSearchRequest)
+      RaptorTransferIndex.createInitialSetup(DATA, streetSearchRequest),
+      RaptorTransferIndex.createRequestScope(DATA, streetSearchRequest)
     )) {
       verifier.accept(index);
     }
