@@ -1,13 +1,11 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 
 import java.util.BitSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
@@ -50,13 +48,8 @@ public class DefaultTransitDataProviderFilter implements TransitDataProviderFilt
     includePlannedCancellations = builder.includePlannedCancellations();
     includeRealtimeCancellations = builder.includeRealtimeCancellations();
     bannedTrips = Set.copyOf(builder.bannedTrips());
-
-    var filters = builder.filters();
-    if (filters.isEmpty()) {
-      filters = List.of(AllowAllTransitFilter.of());
-    }
-    this.filters = filters.toArray(TransitFilter[]::new);
-    hasSubModeFilters = filters.stream().anyMatch(TransitFilter::isSubModePredicate);
+    filters = builder.filters().toArray(TransitFilter[]::new);
+    hasSubModeFilters = builder.filters().stream().anyMatch(TransitFilter::isSubModePredicate);
   }
 
   public static DefaultTransitDataProviderFilterBuilder of() {

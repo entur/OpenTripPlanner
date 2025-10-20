@@ -3,8 +3,10 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
@@ -22,7 +24,8 @@ public class DefaultTransitDataProviderFilterBuilder {
 
   private boolean includeRealtimeCancellations = false;
 
-  private List<TransitFilter> filters = new ArrayList<>();
+  @Nullable
+  private List<TransitFilter> filters = null;
 
   private Collection<FeedScopedId> bannedTrips = List.of();
 
@@ -105,6 +108,9 @@ public class DefaultTransitDataProviderFilterBuilder {
   }
 
   public DefaultTransitDataProviderFilterBuilder addFilter(TransitFilter filter) {
+    if (this.filters == null) {
+      this.filters = new ArrayList<>();
+    }
     this.filters.add(filter);
     return this;
   }
@@ -138,6 +144,9 @@ public class DefaultTransitDataProviderFilterBuilder {
   }
 
   public List<TransitFilter> filters() {
+    if (filters == null) {
+      return List.of(AllowAllTransitFilter.of());
+    }
     return filters;
   }
 

@@ -2,6 +2,7 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -186,6 +187,21 @@ class DefaultTransitDataProviderFilterTest {
     assertTrue(filteredAlightingPossible.get(3));
 
     assertEquals(alightingPossibleCopy, alightingPossible, "Method should not modify bitset");
+  }
+
+  @Test
+  void emptyRequestFiltersShouldDiscardEverything() {
+    var request = RouteRequest.defaultValue()
+      .copyOf()
+      .withFrom(GenericLocation.fromCoordinate(0, 0))
+      .withTo(GenericLocation.fromCoordinate(0, 0))
+      .withJourney(journey -> journey.withTransit(transit -> transit.withFilters(List.of())))
+      .buildRequest();
+
+    TripPatternForDate tripPatternForDate = createTestTripPatternForDate();
+    var filter = DefaultTransitDataProviderFilterBuilder.ofRequest(request).build();
+
+    assertNull(filter.createTripFilter(tripPatternForDate.getTripPattern().getPattern()));
   }
 
   @Test
