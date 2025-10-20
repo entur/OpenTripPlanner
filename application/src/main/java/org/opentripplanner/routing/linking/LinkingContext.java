@@ -1,12 +1,10 @@
 package org.opentripplanner.routing.linking;
 
-import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
  * Holds vertices (mainly temporary) that are meant to be used within the scope of a single route
@@ -53,19 +51,5 @@ public class LinkingContext {
    */
   public Set<Vertex> findVertices(GenericLocation location) {
     return verticesByLocation.getOrDefault(location, Set.of());
-  }
-
-  @Override
-  public String toString() {
-    var sortedVerticesByLocation = verticesByLocation
-      .entrySet()
-      .stream()
-      .sorted(Map.Entry.comparingByKey(Comparator.comparing(GenericLocation::toString)))
-      .toList();
-    return ToStringBuilder.of(LinkingContext.class)
-      .addCol("verticesByLocation", sortedVerticesByLocation)
-      .addCol("fromStops", fromStopVertices)
-      .addCol("toStops", toStopVertices)
-      .toString();
   }
 }
