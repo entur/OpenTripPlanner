@@ -1,7 +1,5 @@
 package org.opentripplanner.standalone.configure;
 
-import static org.opentripplanner.routing.linking.VisibilityMode.COMPUTE_AREA_VISIBILITY_LINES;
-
 import jakarta.ws.rs.core.Application;
 import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.DataSource;
@@ -20,7 +18,6 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
@@ -104,20 +101,9 @@ public class ConstructApplication {
     var graphVisualizer = cli.visualize ? new GraphVisualizer(graph) : null;
 
     ConstructApplicationFactory.Builder builder = DaggerConstructApplicationFactory.builder();
-    var vertexLinker = new VertexLinker(
-      graph,
-      COMPUTE_AREA_VISIBILITY_LINES,
-      streetLimitationParameters.maxAreaNodes()
-    );
-    var linkingContextFactory = new LinkingContextFactory(
-      graph,
-      vertexLinker,
-      timetableRepository.getSiteRepository()::findStopOrChildIds
-    );
     this.factory = builder
       .configModel(config)
       .graph(graph)
-      .linkingContextFactory(linkingContextFactory)
       .timetableRepository(timetableRepository)
       .graphVisualizer(graphVisualizer)
       .worldEnvelopeRepository(worldEnvelopeRepository)
@@ -129,7 +115,6 @@ public class ConstructApplication {
       .streetLimitationParameters(streetLimitationParameters)
       .schema(config.routerConfig().routingRequestDefaults())
       .fareServiceFactory(fareServiceFactory)
-      .vertexLinker(vertexLinker)
       .build();
   }
 

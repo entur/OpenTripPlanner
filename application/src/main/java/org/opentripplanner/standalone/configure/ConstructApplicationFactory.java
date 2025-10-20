@@ -29,6 +29,7 @@ import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
+import org.opentripplanner.routing.linking.configure.LinkingServiceModule;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.configure.ViaModule;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
@@ -70,6 +71,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     EmpiricalDelayServiceModule.class,
     GeocoderModule.class,
     InteractiveLauncherModule.class,
+    LinkingServiceModule.class,
     RealtimeVehicleServiceModule.class,
     RealtimeVehicleRepositoryModule.class,
     RideHailingServicesModule.class,
@@ -150,9 +152,6 @@ public interface ConstructApplicationFactory {
     Builder graph(Graph graph);
 
     @BindsInstance
-    Builder linkingContextFactory(LinkingContextFactory linkingContextFactory);
-
-    @BindsInstance
     Builder timetableRepository(TimetableRepository timetableRepository);
 
     @BindsInstance
@@ -186,9 +185,6 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder fareServiceFactory(FareServiceFactory fareService);
-
-    @BindsInstance
-    Builder vertexLinker(VertexLinker vertexLinker);
 
     ConstructApplicationFactory build();
   }
