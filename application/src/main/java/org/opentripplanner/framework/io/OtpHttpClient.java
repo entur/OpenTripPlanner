@@ -167,8 +167,8 @@ public class OtpHttpClient {
    * Executes an HTTP GET request and returns the body mapped according to the provided content
    * mapper. The default timeout is applied.
    */
-  public <T> T getAndMap(URI uri, Map<String, String> headers, ResponseMapper<T> contentMapper) {
-    return getAndMap(uri, null, headers, contentMapper);
+  public <T> T getAndMap(URI uri, Map<String, String> headers, ResponseMapper<T> responseMapper) {
+    return getAndMap(uri, null, headers, responseMapper);
   }
 
   /**
@@ -179,9 +179,9 @@ public class OtpHttpClient {
     URI uri,
     Duration timeout,
     Map<String, String> headers,
-    ResponseMapper<T> contentMapper
+    ResponseMapper<T> responseMapper
   ) {
-    return sendAndMap(new HttpGet(uri), uri, timeout, headers, contentMapper);
+    return sendAndMap(new HttpGet(uri), uri, timeout, headers, responseMapper);
   }
 
   /**
@@ -193,12 +193,12 @@ public class OtpHttpClient {
     JsonNode jsonBody,
     Duration timeout,
     Map<String, String> headers,
-    ResponseMapper<T> contentMapper
+    ResponseMapper<T> responseMapper
   ) {
     var request = new HttpPost(uri);
     request.setEntity(new StringEntity(jsonBody.toString()));
     request.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON);
-    return sendAndMap(request, uri, timeout, headers, contentMapper);
+    return sendAndMap(request, uri, timeout, headers, responseMapper);
   }
 
   /**
@@ -210,14 +210,14 @@ public class OtpHttpClient {
     String xmlData,
     Duration timeout,
     Map<String, String> requestHeaderValues,
-    ResponseMapper<T> contentMapper
+    ResponseMapper<T> responseMapper
   ) {
     HttpPost httppost = new HttpPost(url);
     if (xmlData != null) {
       httppost.setEntity(new StringEntity(xmlData, ContentType.APPLICATION_XML));
     }
 
-    return executeAndMap(httppost, timeout, requestHeaderValues, contentMapper);
+    return executeAndMap(httppost, timeout, requestHeaderValues, responseMapper);
   }
 
   /**
@@ -227,10 +227,10 @@ public class OtpHttpClient {
     HttpUriRequestBase httpRequest,
     Duration timeout,
     Map<String, String> headers,
-    ResponseMapper<T> contentMapper
+    ResponseMapper<T> responseMapper
   ) {
     return executeAndMapWithResponseHandler(httpRequest, timeout, headers, response ->
-      mapResponse(response, contentMapper)
+      mapResponse(response, responseMapper)
     );
   }
 
@@ -242,13 +242,13 @@ public class OtpHttpClient {
     HttpUriRequestBase httpRequest,
     Duration timeout,
     Map<String, String> headers,
-    ResponseMapper<T> contentMapper
+    ResponseMapper<T> responseMapper
   ) {
     return executeAndMapWithResponseHandler(httpRequest, timeout, headers, response -> {
       if (response.getCode() == SC_NO_CONTENT) {
         return Optional.empty();
       }
-      return Optional.of(mapResponse(response, contentMapper));
+      return Optional.of(mapResponse(response, responseMapper));
     });
   }
 
@@ -310,7 +310,7 @@ public class OtpHttpClient {
     }
   }
 
-  private <T> T mapResponse(ClassicHttpResponse response, ResponseMapper<T> contentMapper) {
+  private <T> T mapResponse(ClassicHttpResponse response, ResponseMapper<T> responseMapper) {
     if (isFailedRequest(response)) {
       logResponse(response);
       throw new OtpHttpClientException(
@@ -318,24 +318,23 @@ public class OtpHttpClient {
       );
     }
 
-    // A NOT_MODIFIED response does not contain a body.
-    // Other types of valid responses should have one.
-    if (response.getCode() != SC_NOT_MODIFIED && response.getEntity() == null) {
-      throw new OtpHttpClientException("HTTP request failed: empty response");
-    }
-
     // Handle NOT_MODIFIED response.
-    if (response.getEntity() == null) {
+    if (response.getCode() == SC_NOT_MODIFIED) {
       try {
         OtpHttpResponse httpResponse = new OtpHttpResponse(
           emptyInputStream(),
           response.getHeaders(),
           response.getCode()
         );
-        return contentMapper.apply(httpResponse);
+        return responseMapper.apply(httpResponse);
       } catch (Exception e) {
         throw new OtpHttpClientException(e);
       }
+    }
+
+    // Other types of valid responses should have a body.
+    if (response.getEntity() == null) {
+      throw new OtpHttpClientException("HTTP request failed: empty response");
     }
 
     try (InputStream is = response.getEntity().getContent()) {
@@ -347,7 +346,7 @@ public class OtpHttpClient {
         response.getHeaders(),
         response.getCode()
       );
-      return contentMapper.apply(httpResponse);
+      return responseMapper.apply(httpResponse);
     } catch (Exception e) {
       throw new OtpHttpClientException(e);
     }
@@ -362,7 +361,7 @@ public class OtpHttpClient {
     URI uri,
     Duration timeout,
     Map<String, String> headers,
-    ResponseMapper<T> contentMapper
+    ResponseMapper<T> responseMapper
   ) {
     URL downloadUrl;
     try {
@@ -372,13 +371,13 @@ public class OtpHttpClient {
     }
     String proto = downloadUrl.getProtocol();
     if (proto.equals("http") || proto.equals("https")) {
-      return executeAndMap(request, timeout, headers, contentMapper);
+      return executeAndMap(request, timeout, headers, responseMapper);
     } else {
       // Local file probably, try standard java
       try (InputStream is = downloadUrl.openStream()) {
         // Create empty headers and status code OK for local file
         OtpHttpResponse httpResponse = new OtpHttpResponse(is, new Header[0], SC_OK);
-        return contentMapper.apply(httpResponse);
+        return responseMapper.apply(httpResponse);
       } catch (Exception e) {
         throw new OtpHttpClientException(e);
       }
