@@ -533,6 +533,8 @@ type PlaceAtDistance {
 
 "A list of coordinates encoded as a polyline string (see http://code.google.com/apis/maps/documentation/polylinealgorithm.html)"
 type PointsOnLink {
+  "The distance in meters."
+  distance: Int
   "The number of points in the string"
   length: Int
   "The encoded points of the polyline. Be aware that the string could contain escape characters that need to be accounted for. (https://www.freeformatter.com/javascript-escape.html)"
