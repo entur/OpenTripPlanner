@@ -12,7 +12,7 @@ public class TemporaryVerticesContainer implements AutoCloseable {
 
   private final List<DisposableEdgeCollection> tempEdgeCollections = new ArrayList<>();
 
-  void addEdgeCollection(DisposableEdgeCollection collection) {
+  public void addEdgeCollection(DisposableEdgeCollection collection) {
     if (!collection.isEmpty()) {
       this.tempEdgeCollections.add(collection);
     }

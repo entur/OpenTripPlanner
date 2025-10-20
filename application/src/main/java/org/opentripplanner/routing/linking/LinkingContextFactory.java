@@ -18,9 +18,6 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.LocalizedString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.response.InputField;
@@ -28,18 +25,12 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.street.model.edge.LinkingDirection;
-import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
-import org.opentripplanner.street.model.vertex.StreetVertex;
-import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
+import org.opentripplanner.routing.linking.internal.VertexCreationService.LocationType;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This is a factory that is responsible for linking origin, destination and visit via locations
@@ -50,10 +41,8 @@ import org.slf4j.LoggerFactory;
  */
 public class LinkingContextFactory {
 
-  private static final Logger LOG = LoggerFactory.getLogger(LinkingContextFactory.class);
-
   private final Graph graph;
-  private final VertexLinker vertexLinker;
+  private final VertexCreationService vertexCreationService;
   private final Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds;
 
   /**
@@ -61,19 +50,19 @@ public class LinkingContextFactory {
    */
   public LinkingContextFactory(
     Graph graph,
-    VertexLinker vertexLinker,
+    VertexCreationService vertexCreationService,
     Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds
   ) {
     this.graph = graph;
-    this.vertexLinker = vertexLinker;
+    this.vertexCreationService = vertexCreationService;
     this.resolveSiteIds = resolveSiteIds;
   }
 
   /**
    * Construct a factory when stop locations are not used for locations.
    */
-  public LinkingContextFactory(Graph graph, VertexLinker vertexLinker) {
-    this(graph, vertexLinker, id -> Set.of());
+  public LinkingContextFactory(Graph graph, VertexCreationService vertexCreationService) {
+    this(graph, vertexCreationService, id -> Set.of());
   }
 
   /**
@@ -277,7 +266,7 @@ public class LinkingContextFactory {
     // Differentiate between driving and non-driving, as driving is not available from transit stops
     List<TraverseMode> modes = streetModes
       .stream()
-      .map(streetMode -> getTraverseModeForLinker(streetMode, type))
+      .map(streetMode -> vertexCreationService.getTraverseModeForLinker(streetMode, type))
       .distinct()
       .toList();
 
@@ -294,7 +283,13 @@ public class LinkingContextFactory {
     } else if (location.getCoordinate() != null) {
       // Connect a temporary vertex from coordinate to graph
       results.add(
-        createVertexFromCoordinate(container, location.getCoordinate(), location.label, modes, type)
+        vertexCreationService.createVertexFromCoordinate(
+          container,
+          location.getCoordinate(),
+          location.label,
+          modes,
+          type
+        )
       );
     }
 
@@ -346,7 +341,7 @@ public class LinkingContextFactory {
     }
     return location.getCoordinate() != null
       ? Optional.of(
-        createVertexFromCoordinate(
+        vertexCreationService.createVertexFromCoordinate(
           container,
           location.getCoordinate(),
           location.label,
@@ -355,53 +350,6 @@ public class LinkingContextFactory {
         )
       )
       : Optional.empty();
-  }
-
-  private TraverseMode getTraverseModeForLinker(StreetMode streetMode, LocationType type) {
-    TraverseMode nonTransitMode = TraverseMode.WALK;
-    // for park and ride we will start in car mode and walk to the end vertex
-    boolean parkAndRideDepart = streetMode == StreetMode.CAR_TO_PARK && type == LocationType.FROM;
-    boolean onlyCarAvailable = streetMode == StreetMode.CAR;
-    if (onlyCarAvailable || parkAndRideDepart) {
-      nonTransitMode = TraverseMode.CAR;
-    }
-    return nonTransitMode;
-  }
-
-  private Vertex createVertexFromCoordinate(
-    TemporaryVerticesContainer container,
-    Coordinate coordinate,
-    @Nullable String label,
-    List<TraverseMode> modes,
-    LocationType type
-  ) {
-    LOG.debug("Creating {} vertex for {}", type.description(), coordinate);
-
-    I18NString name = label == null || label.isEmpty()
-      ? new LocalizedString(type.translationKey())
-      : new NonLocalizedString(label);
-
-    var temporaryStreetLocation = new TemporaryStreetLocation(coordinate, name);
-
-    container.addEdgeCollection(
-      vertexLinker.linkVertexForRequest(
-        temporaryStreetLocation,
-        new TraverseModeSet(modes),
-        mapDirection(type),
-        (vertex, streetVertex) -> createEdges((TemporaryStreetLocation) vertex, streetVertex, type)
-      )
-    );
-
-    if (
-      temporaryStreetLocation.getIncoming().isEmpty() &&
-      temporaryStreetLocation.getOutgoing().isEmpty()
-    ) {
-      LOG.warn("Couldn't link {}", coordinate);
-    }
-
-    temporaryStreetLocation.setWheelchairAccessible(true);
-
-    return temporaryStreetLocation;
   }
 
   private void checkIfVerticesFound(
@@ -485,60 +433,11 @@ public class LinkingContextFactory {
       : RoutingErrorCode.LOCATION_NOT_FOUND;
   }
 
-  private LinkingDirection mapDirection(LocationType type) {
-    return switch (type) {
-      case FROM -> LinkingDirection.INCOMING;
-      case TO -> LinkingDirection.OUTGOING;
-      case VISIT_VIA_LOCATION -> LinkingDirection.BIDIRECTIONAL;
-    };
-  }
-
-  private List<Edge> createEdges(
-    TemporaryStreetLocation location,
-    StreetVertex streetVertex,
-    LocationType type
-  ) {
-    return switch (type) {
-      case FROM -> List.of(TemporaryFreeEdge.createTemporaryFreeEdge(location, streetVertex));
-      case TO -> List.of(TemporaryFreeEdge.createTemporaryFreeEdge(streetVertex, location));
-      case VISIT_VIA_LOCATION -> List.of(
-        TemporaryFreeEdge.createTemporaryFreeEdge(location, streetVertex),
-        TemporaryFreeEdge.createTemporaryFreeEdge(streetVertex, location)
-      );
-    };
-  }
-
   private Set<TransitStopVertex> findStopOrChildStopVertices(FeedScopedId stopId) {
     return resolveSiteIds
       .apply(stopId)
       .stream()
       .flatMap(id -> graph.findStopVertex(id).stream())
       .collect(Collectors.toUnmodifiableSet());
-  }
-
-  private enum LocationType {
-    FROM("origin"),
-    TO("destination"),
-    VISIT_VIA_LOCATION("visit via location", "via_location");
-
-    private final String description;
-    private final String translationKey;
-
-    LocationType(String description) {
-      this(description, description);
-    }
-
-    LocationType(String description, String translationKey) {
-      this.description = description;
-      this.translationKey = translationKey;
-    }
-
-    public String description() {
-      return description;
-    }
-
-    public String translationKey() {
-      return translationKey;
-    }
   }
 }

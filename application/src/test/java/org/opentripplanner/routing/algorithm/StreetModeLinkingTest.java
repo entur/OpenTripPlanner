@@ -29,6 +29,7 @@ import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
@@ -226,7 +227,8 @@ public class StreetModeLinkingTest extends GraphRoutingTest {
     var linker = VertexLinkerTestFactory.of(graph);
     for (final StreetMode streetMode : streetModes) {
       try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-        var linkingContextFactory = new LinkingContextFactory(graph, linker);
+        var vertexCreationService = new VertexCreationService(linker);
+        var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
         var request = LinkingContextRequest.of()
           .withFrom(location)
           .withTo(ANY_PLACE)

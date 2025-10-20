@@ -7,6 +7,7 @@ import dagger.Provides;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.model.StreetLimitationParameters;
 import org.opentripplanner.transit.service.SiteRepository;
 
@@ -26,11 +27,20 @@ public class LinkingServiceModule {
   }
 
   @Provides
+  static VertexCreationService provideVertexCreationService(VertexLinker vertexLinker) {
+    return new VertexCreationService(vertexLinker);
+  }
+
+  @Provides
   static LinkingContextFactory provideLinkingContextFactory(
     Graph graph,
     SiteRepository siteRepository,
-    VertexLinker vertexLinker
+    VertexCreationService vertexCreationService
   ) {
-    return new LinkingContextFactory(graph, vertexLinker, siteRepository::findStopOrChildIds);
+    return new LinkingContextFactory(
+      graph,
+      vertexCreationService,
+      siteRepository::findStopOrChildIds
+    );
   }
 }

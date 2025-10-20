@@ -72,6 +72,7 @@ import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.VisibilityMode;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.edge.Edge;
@@ -518,10 +519,12 @@ public class GraphVisualizer extends JFrame implements VertexSelectionListener {
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
       var linkingContextFactory = new LinkingContextFactory(
         graph,
-        new VertexLinker(
-          graph,
-          VisibilityMode.TRAVERSE_AREA_EDGES,
-          StreetConstants.DEFAULT_MAX_AREA_NODES
+        new VertexCreationService(
+          new VertexLinker(
+            graph,
+            VisibilityMode.TRAVERSE_AREA_EDGES,
+            StreetConstants.DEFAULT_MAX_AREA_NODES
+          )
         )
       );
       var linkingRequest = LinkingContextRequestMapper.map(request);

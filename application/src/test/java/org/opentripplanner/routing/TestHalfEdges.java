@@ -29,6 +29,7 @@ import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.SameEdgeAdjuster;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
 import org.opentripplanner.street.model.StreetTraversalPermission;
@@ -564,10 +565,9 @@ public class TestHalfEdges {
     RouteRequest walking = RouteRequest.of().withFrom(from).withTo(to).buildRequest();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContextFactory = new LinkingContextFactory(
-        graph,
-        VertexLinkerTestFactory.of(graph)
-      );
+      var vertexLinker = VertexLinkerTestFactory.of(graph);
+      var vertexCreationService = new VertexCreationService(vertexLinker);
+      var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
       var linkingRequest = LinkingContextRequestMapper.map(walking);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       var fromVertices = linkingContext.findVertices(from);

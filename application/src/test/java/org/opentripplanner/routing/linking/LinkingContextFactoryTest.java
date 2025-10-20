@@ -22,6 +22,7 @@ import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.Edge;
@@ -73,9 +74,12 @@ class LinkingContextFactoryTest {
     .withCoordinate(CENTER.moveNorthMeters(DISTANCE))
     .build();
   private final Graph graph = buildGraph(stationAlpha, stopA, stopB, stopC, stopD);
+  private final VertexCreationService vertexCreationService = new VertexCreationService(
+    VertexLinkerTestFactory.of(graph)
+  );
   private final LinkingContextFactory linkingContextFactory = new LinkingContextFactory(
     graph,
-    VertexLinkerTestFactory.of(graph)
+    vertexCreationService
   );
 
   private final SiteRepository siteRepository = testModel
@@ -102,7 +106,7 @@ class LinkingContextFactoryTest {
   void stopId() {
     var stopLinkingContextFactory = new LinkingContextFactory(
       graph,
-      VertexLinkerTestFactory.of(graph),
+      new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       Set::of
     );
     var container = new TemporaryVerticesContainer();
@@ -125,7 +129,7 @@ class LinkingContextFactoryTest {
       .build();
     var stopLinkingContextFactory = new LinkingContextFactory(
       graph,
-      VertexLinkerTestFactory.of(graph),
+      new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       mapping::get
     );
     var container = new TemporaryVerticesContainer();

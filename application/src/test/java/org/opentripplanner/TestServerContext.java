@@ -19,6 +19,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.service.DefaultViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
@@ -180,6 +181,10 @@ public class TestServerContext {
     VertexLinker vertexLinker,
     TransitService transitService
   ) {
-    return new LinkingContextFactory(graph, vertexLinker, transitService::findStopOrChildIds);
+    return new LinkingContextFactory(
+      graph,
+      new VertexCreationService(vertexLinker),
+      transitService::findStopOrChildIds
+    );
   }
 }

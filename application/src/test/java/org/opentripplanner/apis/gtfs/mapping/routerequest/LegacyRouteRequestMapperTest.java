@@ -39,6 +39,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.GraphFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -64,9 +65,10 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     final DefaultTransitService transitService = new DefaultTransitService(timetableRepository);
     var routeRequest = RouteRequest.defaultValue();
     var vertexLinker = VertexLinkerTestFactory.of(graph);
+    var vertexCreationService = new VertexCreationService(vertexLinker);
     var linkingContextFactory = new LinkingContextFactory(
       graph,
-      vertexLinker,
+      vertexCreationService,
       transitService::findStopOrChildIds
     );
     context = new GraphQLRequestContext(
