@@ -244,9 +244,9 @@ type EstimatedCall {
   destinationDisplay: DestinationDisplay
   "The typical delay for this trip on this day for this stop based on historical data."
   empiricalDelay: EmpiricalDelay
-  "Expected time of arrival at quay. Updated with real time information if available. Will be null if an actualArrivalTime exists"
+  "Expected time of arrival at quay. Updated with real time information if available."
   expectedArrivalTime: DateTime!
-  "Expected time of departure from quay. Updated with real time information if available. Will be null if an actualDepartureTime exists"
+  "Expected time of departure from quay. Updated with real time information if available."
   expectedDepartureTime: DateTime!
   "Whether vehicle may be alighted at quay."
   forAlighting: Boolean!
