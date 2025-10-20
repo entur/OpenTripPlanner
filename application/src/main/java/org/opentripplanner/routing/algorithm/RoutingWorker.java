@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import javax.annotation.Nullable;
@@ -69,6 +70,10 @@ public class RoutingWorker {
   private SearchParams raptorSearchParamsUsed = null;
   private PageCursorInput pageCursorInput = null;
 
+  /// Lazy-init linkingContext, use {@link #linkingContext()} to access
+  @Nullable
+  private LinkingContext currentLinkingContext = null;
+
   public RoutingWorker(
     OtpServerRequestContext serverContext,
     RouteRequest orginalRequest,
@@ -95,32 +100,26 @@ public class RoutingWorker {
 
   public RoutingResponse route() {
     OTPRequestTimeoutException.checkForTimeout();
-
     this.debugTimingAggregator.finishedPrecalculating();
-
     var result = RoutingResult.empty();
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var linkingContext = createLinkingContext(temporaryVerticesContainer);
+      this.currentLinkingContext = createLinkingContext(temporaryVerticesContainer);
 
       if (OTPFeature.ParallelRouting.isOn()) {
         // TODO: This is not using {@link OtpRequestThreadFactory} which means we do not get
         //       log-trace-parameters-propagation and graceful timeout handling here.
         try {
-          var r1 = CompletableFuture.supplyAsync(() -> routeDirectStreet(linkingContext));
-          var r2 = CompletableFuture.supplyAsync(() -> routeDirectFlex(linkingContext));
-          var r3 = CompletableFuture.supplyAsync(() -> routeTransit(linkingContext));
+          var r1 = CompletableFuture.supplyAsync(() -> routeDirectStreet());
+          var r2 = CompletableFuture.supplyAsync(() -> routeDirectFlex());
+          var r3 = CompletableFuture.supplyAsync(() -> routeTransit());
 
           result.merge(r1.join(), r2.join(), r3.join());
         } catch (CompletionException e) {
           RoutingValidationException.unwrapAndRethrowCompletionException(e);
         }
       } else {
-        result.merge(
-          routeDirectStreet(linkingContext),
-          routeDirectFlex(linkingContext),
-          routeTransit(linkingContext)
-        );
+        result.merge(routeDirectStreet(), routeDirectFlex(), routeTransit());
       }
     } catch (RoutingValidationException e) {
       result.merge(RoutingResult.failed(e.getRoutingErrors()));
@@ -221,7 +220,7 @@ public class RoutingWorker {
       : Duration.ofSeconds(raptorSearchParamsUsed.searchWindowInSeconds());
   }
 
-  private RoutingResult routeDirectStreet(LinkingContext linkingContext) {
+  private RoutingResult routeDirectStreet() {
     // TODO: Add support for via search to the direct-street search and remove this.
     //       The direct search is used to prune away silly transit results and it
     //       would be nice to also support via as a feature in the direct-street
@@ -245,7 +244,7 @@ public class RoutingWorker {
     debugTimingAggregator.startedDirectStreetRouter();
     try {
       return RoutingResult.ok(
-        DirectStreetRouter.route(serverContext, directBuilder.buildRequest(), linkingContext),
+        DirectStreetRouter.route(serverContext, directBuilder.buildRequest(), linkingContext()),
         emptyDirectModeHandler.removeWalkAllTheWayResults()
       );
     } finally {
@@ -253,21 +252,21 @@ public class RoutingWorker {
     }
   }
 
-  private RoutingResult routeDirectFlex(LinkingContext linkingContext) {
+  private RoutingResult routeDirectFlex() {
     if (!OTPFeature.FlexRouting.isOn()) {
       return RoutingResult.ok(List.of());
     }
     debugTimingAggregator.startedDirectFlexRouter();
     try {
       return RoutingResult.ok(
-        DirectFlexRouter.route(serverContext, request, additionalSearchDays, linkingContext)
+        DirectFlexRouter.route(serverContext, request, additionalSearchDays, linkingContext())
       );
     } finally {
       debugTimingAggregator.finishedDirectFlexRouter();
     }
   }
 
-  private RoutingResult routeTransit(LinkingContext linkingContext) {
+  private RoutingResult routeTransit() {
     debugTimingAggregator.startedTransitRouting();
     try {
       var transitResults = TransitRouter.route(
@@ -277,7 +276,7 @@ public class RoutingWorker {
         transitSearchTimeZero,
         additionalSearchDays,
         debugTimingAggregator,
-        linkingContext
+        linkingContext()
       );
       raptorSearchParamsUsed = transitResults.getSearchParams();
       return RoutingResult.ok(transitResults.getItineraries());
@@ -300,6 +299,10 @@ public class RoutingWorker {
       pageCursorInput,
       itineraries
     );
+  }
+
+  private LinkingContext linkingContext() {
+    return Objects.requireNonNull(currentLinkingContext);
   }
 
   private LinkingContext createLinkingContext(TemporaryVerticesContainer container) {
