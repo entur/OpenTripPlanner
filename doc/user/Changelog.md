@@ -25,6 +25,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Allow refetching legs for trips with changed calling pattern [#6902](https://github.com/opentripplanner/OpenTripPlanner/pull/6902)
 - Use GBFS 3 manifest for feed discovery in rental service directory [#6900](https://github.com/opentripplanner/OpenTripPlanner/pull/6900)
 - Gracefully handle exceptions during GBFS updater setup [#6954](https://github.com/opentripplanner/OpenTripPlanner/pull/6954)
+- Fix RAPTOR data generation for additional search days in the past [#6958](https://github.com/opentripplanner/OpenTripPlanner/pull/6958)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
