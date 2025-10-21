@@ -3,8 +3,8 @@ package org.opentripplanner.model.plan;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -94,14 +94,16 @@ public class Itinerary implements ItinerarySortKey {
   Itinerary(ItineraryBuilder builder) {
     this.legs = List.copyOf(builder.legs);
 
-    this.generalizedCost = Objects.requireNonNull(builder.calculateGeneralizedCostWithoutPenalty());
+    // Normalize (round to seconds) to make sure insignificant small diffrenses does not
+    // have an efect when comparing itineraries in the filter-chain and in paging
+    this.generalizedCost = builder.calculateGeneralizedCostWithoutPenalty().normalize();
     this.generalizedCost2 = builder.generalizedCost2;
 
     this.searchWindowAware = builder.searchWindowAware;
     this.transferPriorityCost = builder.transferPriorityCost;
     this.waitTimeOptimizedCost = builder.waitTimeOptimizedCost;
-    this.accessPenalty = Objects.requireNonNull(builder.accessPenalty);
-    this.egressPenalty = Objects.requireNonNull(builder.egressPenalty);
+    this.accessPenalty = builder.accessPenalty.normalize();
+    this.egressPenalty = builder.egressPenalty.normalize();
     this.tooSloped = builder.tooSloped;
     this.maxSlope = builder.maxSlope;
     this.elevationGained_edges_m = builder.elevationGained_m;
@@ -149,31 +151,38 @@ public class Itinerary implements ItinerarySortKey {
   }
 
   /**
-   * Time that the trip departs.
+   * Time that the trip departs. The time is normalized(rounded to closest second).
+   * @see #endTime() for details no the normalization.
    */
   public ZonedDateTime startTime() {
-    return legs().getFirst().startTime();
+    return legs().getFirst().startTime().truncatedTo(ChronoUnit.SECONDS);
   }
 
   /**
-   * Time that the trip departs as a Java Instant type.
+   * Time that the trip departs as a Java Instant type. The same normalization as in
+   * {@link #startTime()} applies.
    */
+  @Override
   public Instant startTimeAsInstant() {
-    return legs().getFirst().startTime().toInstant();
+    return startTime().toInstant();
   }
 
   /**
-   * Time that the trip arrives.
+   * Time that the trip arrives. The value is normalized (rounded to seconds) is requiered for the
+   * paging to work properly. We serialize the times in the paging-token with a resolution of
+   * seconds. When filtering the page-cut, any millis part could cause duplicates.
    */
   public ZonedDateTime endTime() {
-    return legs().getLast().endTime();
+    return legs().getLast().endTime().truncatedTo(ChronoUnit.SECONDS);
   }
 
   /**
-   * Time that the trip arrives as a Java Instant type.
+   * Time that the trip arrives as a Java Instant type. The same normalization as in
+   * {@link #startTime()} applies.
    */
+  @Override
   public Instant endTimeAsInstant() {
-    return legs().getLast().endTime().toInstant();
+    return endTime().toInstant();
   }
 
   /**
