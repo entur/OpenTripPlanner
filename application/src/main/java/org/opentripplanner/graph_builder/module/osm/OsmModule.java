@@ -26,7 +26,6 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToWay;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
 import org.opentripplanner.osm.OsmProvider;
@@ -41,19 +40,14 @@ import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.model.Platform;
 import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
-import org.opentripplanner.service.streetdecorator.model.Level;
-import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.model.StreetLimitationParameters;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
-import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.utils.logging.ProgressTracker;
 import org.slf4j.Logger;
@@ -327,6 +321,11 @@ public class OsmModule implements GraphBuilderModule {
     ProgressTracker progress = ProgressTracker.track("Build street graph", 5_000, wayCount);
     LOG.info(progress.startMessage());
     var escalatorProcessor = new EscalatorProcessor(issueStore);
+    var edgeLevelInfoProcessor = new EdgeLevelInfoProcessor(
+      issueStore,
+      params.includeEdgeLevelInfo(),
+      osmStreetDecoratorRepository
+    );
 
     WAY: for (OsmWay way : osmdb.getWays()) {
       WayPropertiesPair wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
@@ -388,7 +387,7 @@ public class OsmModule implements GraphBuilderModule {
       OsmNode osmStartNode = null;
 
       var platformOptional = getPlatform(osmdb, way);
-      var edgeLevelInfoOptional = getEdgeLevelInfo(osmdb, way);
+      var edgeLevelInfoOptional = edgeLevelInfoProcessor.getEdgeLevelInfo(osmdb, way);
 
       for (int i = 0; i < nodes.size() - 1; i++) {
         OsmNode segmentStartOsmNode = osmdb.getNode(nodes.get(i));
@@ -467,7 +466,7 @@ public class OsmModule implements GraphBuilderModule {
             fromVertex,
             toVertex
           );
-          storeLevelInfoForEdge(
+          edgeLevelInfoProcessor.storeLevelInfoForEdge(
             escalatorEdgePair.main(),
             escalatorEdgePair.back(),
             edgeLevelInfoOptional,
@@ -503,7 +502,12 @@ public class OsmModule implements GraphBuilderModule {
           });
 
           if (way.isStairs()) {
-            storeLevelInfoForEdge(street, backStreet, edgeLevelInfoOptional, way);
+            edgeLevelInfoProcessor.storeLevelInfoForEdge(
+              street,
+              backStreet,
+              edgeLevelInfoOptional,
+              way
+            );
           }
 
           applyEdgesToTurnRestrictions(osmdb, way, startNode, endNode, street, backStreet);
@@ -567,91 +571,6 @@ public class OsmModule implements GraphBuilderModule {
       );
     } else {
       return Optional.empty();
-    }
-  }
-
-  private Optional<EdgeLevelInfo> getEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
-    List<OsmLevel> levels = osmdb.getLevelsForEntity(way);
-    var nodeRefs = way.getNodeRefs();
-    if (nodeRefs.size() > 1) {
-      long firstNodeRef = nodeRefs.get(0);
-      long lastNodeRef = nodeRefs.get(nodeRefs.size() - 1);
-      if (levels.size() == 2) {
-        OsmLevel firstVertexOsmLevel = levels.get(0);
-        OsmLevel lastVertexOsmLevel = levels.get(1);
-        if (firstVertexOsmLevel.level() < lastVertexOsmLevel.level()) {
-          return Optional.of(
-            new EdgeLevelInfo(
-              new VertexLevelInfo(
-                new Level(firstVertexOsmLevel.level(), firstVertexOsmLevel.name()),
-                firstNodeRef
-              ),
-              new VertexLevelInfo(
-                new Level(lastVertexOsmLevel.level(), lastVertexOsmLevel.name()),
-                lastNodeRef
-              )
-            )
-          );
-        } else if (firstVertexOsmLevel.level() > lastVertexOsmLevel.level()) {
-          return Optional.of(
-            new EdgeLevelInfo(
-              new VertexLevelInfo(
-                new Level(lastVertexOsmLevel.level(), lastVertexOsmLevel.name()),
-                lastNodeRef
-              ),
-              new VertexLevelInfo(
-                new Level(firstVertexOsmLevel.level(), firstVertexOsmLevel.name()),
-                firstNodeRef
-              )
-            )
-          );
-        }
-      }
-      if (way.hasTag("incline")) {
-        if (way.isInclineUp()) {
-          return Optional.of(
-            new EdgeLevelInfo(
-              new VertexLevelInfo(null, firstNodeRef),
-              new VertexLevelInfo(null, lastNodeRef)
-            )
-          );
-        } else if (way.isInclineDown()) {
-          return Optional.of(
-            new EdgeLevelInfo(
-              new VertexLevelInfo(null, lastNodeRef),
-              new VertexLevelInfo(null, firstNodeRef)
-            )
-          );
-        }
-      }
-    }
-    return Optional.empty();
-  }
-
-  private void storeLevelInfoForEdge(
-    @Nullable Edge forwardEdge,
-    @Nullable Edge backwardEdge,
-    Optional<EdgeLevelInfo> edgeLevelInfoOptional,
-    OsmWay way
-  ) {
-    if (params.includeEdgeLevelInfo() && edgeLevelInfoOptional.isPresent()) {
-      EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
-      Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
-      if (
-        edge != null &&
-        edge.getToVertex() instanceof OsmVertex toVertex &&
-        edge.getFromVertex() instanceof OsmVertex fromVertex &&
-        edgeLevelInfo.matchesNodes(fromVertex.nodeId, toVertex.nodeId)
-      ) {
-        if (forwardEdge != null) {
-          osmStreetDecoratorRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
-        }
-        if (backwardEdge != null) {
-          osmStreetDecoratorRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
-        }
-      } else {
-        issueStore.add(new CouldNotApplyMultiLevelInfoToWay(way, way.getNodeRefs().size()));
-      }
     }
   }
 
