@@ -22,8 +22,6 @@ public class DefaultOsmStreetDecoratorRepository
   @Override
   public void addEdgeLevelInformation(Edge edge, EdgeLevelInfo edgeLevelInfo) {
     Objects.requireNonNull(edge);
-    Objects.requireNonNull(edgeLevelInfo.lowerVertexInfo());
-    Objects.requireNonNull(edgeLevelInfo.upperVertexInfo());
     this.edgeInformation.put(edge, edgeLevelInfo);
   }
 
