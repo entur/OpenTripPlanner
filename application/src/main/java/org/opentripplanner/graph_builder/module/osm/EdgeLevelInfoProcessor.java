@@ -101,24 +101,26 @@ class EdgeLevelInfoProcessor {
     Optional<EdgeLevelInfo> edgeLevelInfoOptional,
     OsmWay way
   ) {
-    if (edgeLevelInfoOptional.isPresent()) {
-      EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
-      Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
-      if (
-        edge != null &&
-        edge.getToVertex() instanceof OsmVertex toVertex &&
-        edge.getFromVertex() instanceof OsmVertex fromVertex &&
-        edgeLevelInfo.matchesNodes(fromVertex.nodeId, toVertex.nodeId)
-      ) {
-        if (forwardEdge != null) {
-          osmStreetDecoratorRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
-        }
-        if (backwardEdge != null) {
-          osmStreetDecoratorRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
-        }
-      } else {
-        issueStore.add(new CouldNotApplyMultiLevelInfoToWay(way, way.getNodeRefs().size()));
+    if (edgeLevelInfoOptional.isEmpty()) {
+      return;
+    }
+
+    EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
+    Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
+    if (
+      edge != null &&
+      edge.getToVertex() instanceof OsmVertex toVertex &&
+      edge.getFromVertex() instanceof OsmVertex fromVertex &&
+      edgeLevelInfo.matchesNodes(fromVertex.nodeId, toVertex.nodeId)
+    ) {
+      if (forwardEdge != null) {
+        osmStreetDecoratorRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
       }
+      if (backwardEdge != null) {
+        osmStreetDecoratorRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
+      }
+    } else {
+      issueStore.add(new CouldNotApplyMultiLevelInfoToWay(way, way.getNodeRefs().size()));
     }
   }
 }
