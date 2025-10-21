@@ -75,22 +75,21 @@ class EdgeLevelInfoProcessor {
           );
         }
       }
-      if (way.hasTag("incline")) {
-        if (way.isInclineUp()) {
-          return Optional.of(
-            new EdgeLevelInfo(
-              new VertexLevelInfo(null, firstNodeRef),
-              new VertexLevelInfo(null, lastNodeRef)
-            )
-          );
-        } else if (way.isInclineDown()) {
-          return Optional.of(
-            new EdgeLevelInfo(
-              new VertexLevelInfo(null, lastNodeRef),
-              new VertexLevelInfo(null, firstNodeRef)
-            )
-          );
-        }
+
+      if (way.isInclineUp()) {
+        return Optional.of(
+          new EdgeLevelInfo(
+            new VertexLevelInfo(null, firstNodeRef),
+            new VertexLevelInfo(null, lastNodeRef)
+          )
+        );
+      } else if (way.isInclineDown()) {
+        return Optional.of(
+          new EdgeLevelInfo(
+            new VertexLevelInfo(null, lastNodeRef),
+            new VertexLevelInfo(null, firstNodeRef)
+          )
+        );
       }
     }
     return Optional.empty();
