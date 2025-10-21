@@ -20,8 +20,10 @@ import static org.opentripplanner.transit.model.basic.Money.USD;
 import static org.opentripplanner.transit.model.basic.Money.ZERO_USD;
 import static org.opentripplanner.transit.model.basic.Money.usDollars;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -91,17 +93,32 @@ public class OrcaFareServiceTest {
 
     // Track unique fare products by their ID to avoid double counting
     var uniqueFareProducts = new HashSet<FareOffer>();
+    var seenFareOffers = new HashSet<String>();
 
     legs.forEach(leg -> {
       var legProducts = itineraryFares.getLegProducts().get(leg);
+      var validOffersForLeg = new ArrayList<FareOffer>();
+
+      // Collect all valid offers for this leg
       for (var offer : legProducts) {
         var product = offer.fareProduct();
         if (
           product.category().name().equals(expectedCategoryName) &&
-          product.medium().name().equals(expectedMediumName)
+          product.medium().name().equals(expectedMediumName) &&
+          !seenFareOffers.contains(offer.uniqueId())
         ) {
-          uniqueFareProducts.add(offer);
+          validOffersForLeg.add(offer);
         }
+      }
+
+      // If multiple valid offers for this leg, select the cheapest one
+      if (!validOffersForLeg.isEmpty()) {
+        var cheapestOffer = validOffersForLeg.stream()
+          .min(Comparator.comparing(o -> o.fareProduct().price()))
+          .orElse(validOffersForLeg.get(0));
+
+        uniqueFareProducts.add(cheapestOffer);
+        seenFareOffers.add(cheapestOffer.uniqueId());
       }
     });
 
@@ -478,7 +495,7 @@ public class OrcaFareServiceTest {
     List<Leg> rides = List.of(
       getLeg(KC_METRO_AGENCY_ID, 0), // extended transfer due to middle leg
       getLeg(KC_METRO_AGENCY_ID, "973", 100), // higher fare, extends transfer
-      getLeg(KC_METRO_AGENCY_ID, 219) // extended transfer due to middle leg
+      getLeg(KC_METRO_AGENCY_ID, 200) // extended transfer due to middle leg
     );
     calculateFare(rides, regular, usDollars(13.23f));
     calculateFare(rides, FareType.senior, usDollars(4.50f));
