@@ -191,10 +191,10 @@ public class TransitRouter {
     RaptorPathToItineraryMapper<TripSchedule> itineraryMapper = new RaptorPathToItineraryMapper<>(
       serverContext.graph(),
       serverContext.transitService(),
+      serverContext.osmStreetDecoratorService(),
       raptorTransitData,
       transitSearchTimeZero,
-      request,
-      serverContext.osmStreetDecoratorService()
+      request
     );
 
     List<Itinerary> itineraries = paths.stream().map(itineraryMapper::createItinerary).toList();

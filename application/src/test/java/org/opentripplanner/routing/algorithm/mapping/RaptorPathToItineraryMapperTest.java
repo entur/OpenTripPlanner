@@ -304,10 +304,10 @@ public class RaptorPathToItineraryMapperTest {
     return new RaptorPathToItineraryMapper<>(
       new Graph(),
       new DefaultTransitService(timetableRepository),
+      new DefaultOsmStreetDecoratorService(new DefaultOsmStreetDecoratorRepository()),
       getRaptorTransitData(),
       dateTime.atZone(ZoneIds.CET),
-      RouteRequest.defaultValue(),
-      new DefaultOsmStreetDecoratorService(new DefaultOsmStreetDecoratorRepository())
+      RouteRequest.defaultValue()
     );
   }
 
