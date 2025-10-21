@@ -31,22 +31,25 @@ public class TransmodelGraphQLPlanner {
   }
 
   public DataFetcherResult<PlanResponse> plan(DataFetchingEnvironment environment) {
-    PlanResponse response = new PlanResponse();
+    PlanResponse response;
     TransmodelRequestContext ctx = environment.getContext();
     RouteRequest request = null;
     try {
       request = tripRequestMapper.createRequest(environment);
       RoutingResponse res = ctx.getRoutingService().route(request);
-
-      response.plan = res.getTripPlan();
-      response.metadata = res.getMetadata();
-      response.messages = res.getRoutingErrors();
-      response.debugOutput = res.getDebugTimingAggregator().finishedRendering();
-      response.previousPageCursor = res.getPreviousPageCursor();
-      response.nextPageCursor = res.getNextPageCursor();
+      response = PlanResponse.builder()
+        .withPlan(res.getTripPlan())
+        .withMetadata(res.getMetadata())
+        .withMessages(res.getRoutingErrors())
+        .withDebugOutput(res.getDebugTimingAggregator().finishedRendering())
+        .withPreviousPageCursor(res.getPreviousPageCursor())
+        .withNextPageCursor(res.getNextPageCursor())
+        .build();
     } catch (RoutingValidationException e) {
-      response.plan = TripPlanMapper.mapTripPlan(request, List.of());
-      response.messages.addAll(e.getRoutingErrors());
+      response = PlanResponse.builder()
+        .withPlan(TripPlanMapper.mapTripPlan(request, List.of()))
+        .withMessages(e.getRoutingErrors())
+        .build();
     }
 
     return DataFetcherResult.<PlanResponse>newResult()
