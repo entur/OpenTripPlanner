@@ -70,11 +70,11 @@ config:
     Feed: String
     FeedPublisher: org.opentripplanner.apis.gtfs.model.FeedPublisher#FeedPublisher
     Geometry: org.locationtech.jts.geom.Geometry#Geometry
-    InclineType: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInclineType#GraphQLInclineType
     InputField: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInputField#GraphQLInputField
     Itinerary: org.opentripplanner.model.plan.Itinerary#Itinerary
     Leg: org.opentripplanner.model.plan.Leg#Leg
     LegTime: org.opentripplanner.model.plan.leg.LegCallTime#LegCallTime
+    Level: org.opentripplanner.service.streetdecorator.model.Level#Level
     Mode: String
     OccupancyStatus: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLOccupancyStatus#GraphQLOccupancyStatus
     TransitMode: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLTransitMode#GraphQLTransitMode
@@ -113,6 +113,7 @@ config:
     VehicleParkingSpaces: org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces#VehicleParkingSpaces
     VehicleParkingState: org.opentripplanner.service.vehicleparking.model.VehicleParkingState#VehicleParkingState
     VertexType: String
+    VerticalDirection: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLVerticalDirection#GraphQLVerticalDirection
     SystemNotice: org.opentripplanner.model.SystemNotice#SystemNotice
     VehiclePosition: org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle#RealtimeVehicle
     StopRelationship: org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle.StopRelationship#StopRelationship

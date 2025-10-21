@@ -16,7 +16,6 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertCauseTyp
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertEffectType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertSeverityLevelType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLBikesAllowed;
-import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInclineType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInputField;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLOccupancyStatus;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLPickupDropoffType;
@@ -24,6 +23,7 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRealtimeState
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRelativeDirection;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRoutingErrorCode;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLTransitMode;
+import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLVerticalDirection;
 import org.opentripplanner.apis.gtfs.model.CallRealTime;
 import org.opentripplanner.apis.gtfs.model.CallSchedule;
 import org.opentripplanner.apis.gtfs.model.CallScheduledTime;
@@ -55,6 +55,7 @@ import org.opentripplanner.routing.graphfinder.PatternAtStop;
 import org.opentripplanner.routing.graphfinder.PlaceAtDistance;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle.StopRelationship;
+import org.opentripplanner.service.streetdecorator.model.Level;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
@@ -435,15 +436,11 @@ public class GraphQLDataFetchers {
 
   /** A single use of an escalator. */
   public interface GraphQLEscalatorUse {
-    public DataFetcher<Double> fromLevel();
+    public DataFetcher<Level> from();
 
-    public DataFetcher<String> fromLevelName();
+    public DataFetcher<Level> to();
 
-    public DataFetcher<GraphQLInclineType> inclineType();
-
-    public DataFetcher<Double> toLevel();
-
-    public DataFetcher<String> toLevelName();
+    public DataFetcher<GraphQLVerticalDirection> verticalDirection();
   }
 
   /** Real-time estimates for an arrival or departure at a certain place. */
@@ -638,6 +635,13 @@ public class GraphQLDataFetchers {
     public DataFetcher<LegRealTimeEstimate> estimated();
 
     public DataFetcher<java.time.OffsetDateTime> scheduledTime();
+  }
+
+  /** A level with a name and comparable number. Levels can sometimes contain half levels, e.g. '1.5'. */
+  public interface GraphQLLevel {
+    public DataFetcher<Double> level();
+
+    public DataFetcher<String> name();
   }
 
   /** A span of time. */
@@ -1127,15 +1131,11 @@ public class GraphQLDataFetchers {
 
   /** A single use of a set of stairs. */
   public interface GraphQLStairsUse {
-    public DataFetcher<Double> fromLevel();
+    public DataFetcher<Level> from();
 
-    public DataFetcher<String> fromLevelName();
+    public DataFetcher<Level> to();
 
-    public DataFetcher<GraphQLInclineType> inclineType();
-
-    public DataFetcher<Double> toLevel();
-
-    public DataFetcher<String> toLevelName();
+    public DataFetcher<GraphQLVerticalDirection> verticalDirection();
   }
 
   /** A feature for a step */

@@ -2,49 +2,34 @@ package org.opentripplanner.apis.gtfs.datafetchers;
 
 import graphql.schema.DataFetcher;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
-import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInclineType;
-import org.opentripplanner.apis.gtfs.mapping.InclineTypeMapper;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.StairsUse;
+import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLVerticalDirection;
+import org.opentripplanner.apis.gtfs.mapping.VerticalDirectionMapper;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
+import org.opentripplanner.service.streetdecorator.model.Level;
 
 public class StairsUseImpl implements GraphQLDataFetchers.GraphQLStairsUse {
 
   @Override
-  public DataFetcher<Double> fromLevel() {
+  public DataFetcher<Level> from() {
     return environment -> {
       StairsUse stairsUse = environment.getSource();
-      return stairsUse.fromLevel();
+      return stairsUse.from();
     };
   }
 
   @Override
-  public DataFetcher<String> fromLevelName() {
+  public DataFetcher<GraphQLVerticalDirection> verticalDirection() {
     return environment -> {
       StairsUse stairsUse = environment.getSource();
-      return stairsUse.fromLevelName();
+      return VerticalDirectionMapper.map(stairsUse.verticalDirection());
     };
   }
 
   @Override
-  public DataFetcher<GraphQLInclineType> inclineType() {
+  public DataFetcher<Level> to() {
     return environment -> {
       StairsUse stairsUse = environment.getSource();
-      return InclineTypeMapper.map(stairsUse.inclineType());
-    };
-  }
-
-  @Override
-  public DataFetcher<Double> toLevel() {
-    return environment -> {
-      StairsUse stairsUse = environment.getSource();
-      return stairsUse.toLevel();
-    };
-  }
-
-  @Override
-  public DataFetcher<String> toLevelName() {
-    return environment -> {
-      StairsUse stairsUse = environment.getSource();
-      return stairsUse.toLevelName();
+      return stairsUse.to();
     };
   }
 }

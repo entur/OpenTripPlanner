@@ -4,9 +4,9 @@ import graphql.TypeResolutionEnvironment;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.TypeResolver;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.ElevatorUse;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.EscalatorUse;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.StairsUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.transit.model.site.Entrance;
 
 public class StepFeatureTypeResolver implements TypeResolver {

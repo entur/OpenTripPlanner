@@ -47,6 +47,7 @@ import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.service.streetdecorator.internal.DefaultOsmStreetDecoratorRepository;
 import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdecorator.model.Level;
 import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
@@ -641,9 +642,15 @@ public class OsmModuleTest {
     osmModule.buildGraph();
 
     var edgeLevelInfoSet = Set.of(
-      new EdgeLevelInfo(new VertexLevelInfo(1.0, "1", 1), new VertexLevelInfo(2.0, "2", 2)),
-      new EdgeLevelInfo(new VertexLevelInfo(null, null, 1), new VertexLevelInfo(null, null, 2)),
-      new EdgeLevelInfo(new VertexLevelInfo(-1.0, "P1", 2), new VertexLevelInfo(1.0, "1", 1))
+      new EdgeLevelInfo(
+        new VertexLevelInfo(new Level(1.0, "1"), 1),
+        new VertexLevelInfo(new Level(2.0, "2"), 2)
+      ),
+      new EdgeLevelInfo(new VertexLevelInfo(null, 1), new VertexLevelInfo(null, 2)),
+      new EdgeLevelInfo(
+        new VertexLevelInfo(new Level(-1.0, "P1"), 2),
+        new VertexLevelInfo(new Level(1.0, "1"), 1)
+      )
     );
     assertEquals(
       edgeLevelInfoSet,

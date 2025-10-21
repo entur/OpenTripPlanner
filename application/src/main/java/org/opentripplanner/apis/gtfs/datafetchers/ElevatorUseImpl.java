@@ -2,7 +2,7 @@ package org.opentripplanner.apis.gtfs.datafetchers;
 
 import graphql.schema.DataFetcher;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.ElevatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
 
 public class ElevatorUseImpl implements GraphQLDataFetchers.GraphQLElevatorUse {
 

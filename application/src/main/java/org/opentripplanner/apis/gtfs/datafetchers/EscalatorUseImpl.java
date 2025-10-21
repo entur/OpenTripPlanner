@@ -2,49 +2,34 @@ package org.opentripplanner.apis.gtfs.datafetchers;
 
 import graphql.schema.DataFetcher;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
-import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInclineType;
-import org.opentripplanner.apis.gtfs.mapping.InclineTypeMapper;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.EscalatorUse;
+import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLVerticalDirection;
+import org.opentripplanner.apis.gtfs.mapping.VerticalDirectionMapper;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
+import org.opentripplanner.service.streetdecorator.model.Level;
 
 public class EscalatorUseImpl implements GraphQLDataFetchers.GraphQLEscalatorUse {
 
   @Override
-  public DataFetcher<Double> fromLevel() {
+  public DataFetcher<Level> from() {
     return environment -> {
       EscalatorUse escalatorUse = environment.getSource();
-      return escalatorUse.fromLevel();
+      return escalatorUse.from();
     };
   }
 
   @Override
-  public DataFetcher<String> fromLevelName() {
+  public DataFetcher<GraphQLVerticalDirection> verticalDirection() {
     return environment -> {
       EscalatorUse escalatorUse = environment.getSource();
-      return escalatorUse.fromLevelName();
+      return VerticalDirectionMapper.map(escalatorUse.verticalDirection());
     };
   }
 
   @Override
-  public DataFetcher<GraphQLInclineType> inclineType() {
+  public DataFetcher<Level> to() {
     return environment -> {
       EscalatorUse escalatorUse = environment.getSource();
-      return InclineTypeMapper.map(escalatorUse.inclineType());
-    };
-  }
-
-  @Override
-  public DataFetcher<Double> toLevel() {
-    return environment -> {
-      EscalatorUse escalatorUse = environment.getSource();
-      return escalatorUse.toLevel();
-    };
-  }
-
-  @Override
-  public DataFetcher<String> toLevelName() {
-    return environment -> {
-      EscalatorUse escalatorUse = environment.getSource();
-      return escalatorUse.toLevelName();
+      return escalatorUse.to();
     };
   }
 }

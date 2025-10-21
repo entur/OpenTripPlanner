@@ -42,6 +42,7 @@ import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.model.Platform;
 import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
 import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdecorator.model.Level;
 import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
@@ -582,13 +583,11 @@ public class OsmModule implements GraphBuilderModule {
           return Optional.of(
             new EdgeLevelInfo(
               new VertexLevelInfo(
-                firstVertexOsmLevel.level(),
-                firstVertexOsmLevel.name(),
+                new Level(firstVertexOsmLevel.level(), firstVertexOsmLevel.name()),
                 firstNodeRef
               ),
               new VertexLevelInfo(
-                lastVertexOsmLevel.level(),
-                lastVertexOsmLevel.name(),
+                new Level(lastVertexOsmLevel.level(), lastVertexOsmLevel.name()),
                 lastNodeRef
               )
             )
@@ -597,13 +596,11 @@ public class OsmModule implements GraphBuilderModule {
           return Optional.of(
             new EdgeLevelInfo(
               new VertexLevelInfo(
-                lastVertexOsmLevel.level(),
-                lastVertexOsmLevel.name(),
+                new Level(lastVertexOsmLevel.level(), lastVertexOsmLevel.name()),
                 lastNodeRef
               ),
               new VertexLevelInfo(
-                firstVertexOsmLevel.level(),
-                firstVertexOsmLevel.name(),
+                new Level(firstVertexOsmLevel.level(), firstVertexOsmLevel.name()),
                 firstNodeRef
               )
             )
@@ -614,15 +611,15 @@ public class OsmModule implements GraphBuilderModule {
         if (way.isInclineUp()) {
           return Optional.of(
             new EdgeLevelInfo(
-              new VertexLevelInfo(null, null, firstNodeRef),
-              new VertexLevelInfo(null, null, lastNodeRef)
+              new VertexLevelInfo(null, firstNodeRef),
+              new VertexLevelInfo(null, lastNodeRef)
             )
           );
         } else if (way.isInclineDown()) {
           return Optional.of(
             new EdgeLevelInfo(
-              new VertexLevelInfo(null, null, lastNodeRef),
-              new VertexLevelInfo(null, null, firstNodeRef)
+              new VertexLevelInfo(null, lastNodeRef),
+              new VertexLevelInfo(null, firstNodeRef)
             )
           );
         }

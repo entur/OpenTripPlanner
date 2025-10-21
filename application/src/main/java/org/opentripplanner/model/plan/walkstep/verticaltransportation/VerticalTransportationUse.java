@@ -1,4 +1,4 @@
-package org.opentripplanner.model.plan.walkstep.verticaltransportationuse;
+package org.opentripplanner.model.plan.walkstep.verticaltransportation;
 
 /**
  * Represents information about vertical transportation equipment stored in

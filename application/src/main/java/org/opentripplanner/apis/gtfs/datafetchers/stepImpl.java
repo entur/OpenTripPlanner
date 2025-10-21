@@ -10,10 +10,10 @@ import org.opentripplanner.apis.gtfs.mapping.DirectionMapper;
 import org.opentripplanner.apis.gtfs.mapping.StreetNoteMapper;
 import org.opentripplanner.model.plan.leg.ElevationProfile.Step;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.ElevatorUse;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.EscalatorUse;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.StairsUse;
-import org.opentripplanner.model.plan.walkstep.verticaltransportationuse.VerticalTransportationUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUse;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 
 public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
