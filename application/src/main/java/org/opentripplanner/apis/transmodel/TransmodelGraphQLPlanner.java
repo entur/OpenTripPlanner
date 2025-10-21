@@ -11,6 +11,7 @@ import org.opentripplanner.apis.transmodel.mapping.ViaRequestMapper;
 import org.opentripplanner.apis.transmodel.model.PlanResponse;
 import org.opentripplanner.routing.algorithm.mapping.TripPlanMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.RouteViaRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.api.response.ViaRoutingResponse;
@@ -31,11 +32,12 @@ public class TransmodelGraphQLPlanner {
   }
 
   public DataFetcherResult<PlanResponse> plan(DataFetchingEnvironment environment) {
-    PlanResponse response;
     TransmodelRequestContext ctx = environment.getContext();
     RouteRequest request = null;
+    PlanResponse response;
+    RouteRequestBuilder requestBuilder = tripRequestMapper.createRequestBuilder(environment);
     try {
-      request = tripRequestMapper.createRequest(environment);
+      request = requestBuilder.buildRequest();
       RoutingResponse res = ctx.getRoutingService().route(request);
       response = PlanResponse.builder()
         .withPlan(res.getTripPlan())
@@ -47,14 +49,15 @@ public class TransmodelGraphQLPlanner {
         .build();
     } catch (RoutingValidationException e) {
       response = PlanResponse.builder()
-        .withPlan(TripPlanMapper.mapTripPlan(request, List.of()))
+        .withPlan(TripPlanMapper.mapEmptyTripPlan(requestBuilder))
         .withMessages(e.getRoutingErrors())
         .build();
     }
-
+    // The request can be null if the request builder encounters a RoutingValidationException.
+    Locale locale = request == null ? defaultLocale(ctx) : request.preferences().locale();
     return DataFetcherResult.<PlanResponse>newResult()
       .data(response)
-      .localContext(Map.of("locale", request.preferences().locale()))
+      .localContext(Map.of("locale", locale))
       .build();
   }
 
@@ -69,12 +72,15 @@ public class TransmodelGraphQLPlanner {
       response = new ViaRoutingResponse(Map.of(), List.of(), e.getRoutingErrors());
     }
 
-    Locale defaultLocale = ctx.getServerContext().defaultRouteRequest().preferences().locale();
-    // This is strange, the `request` can not be null here ?
-    Locale locale = request == null ? defaultLocale : request.locale();
+    // The request can be null if the request mapper encounters a RoutingValidationException.
+    Locale locale = request == null ? defaultLocale(ctx) : request.locale();
     return DataFetcherResult.<ViaRoutingResponse>newResult()
       .data(response)
       .localContext(Map.of("locale", locale))
       .build();
+  }
+
+  private static Locale defaultLocale(TransmodelRequestContext ctx) {
+    return ctx.getServerContext().defaultRouteRequest().preferences().locale();
   }
 }
