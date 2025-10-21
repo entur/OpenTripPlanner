@@ -467,7 +467,7 @@ public class OsmModule implements GraphBuilderModule {
             fromVertex,
             toVertex
           );
-          decorateEdgeWithLevelInfo(
+          storeLevelInfoForEdge(
             escalatorEdgePair.main(),
             escalatorEdgePair.back(),
             edgeLevelInfoOptional,
@@ -503,7 +503,7 @@ public class OsmModule implements GraphBuilderModule {
           });
 
           if (way.isStairs()) {
-            decorateEdgeWithLevelInfo(street, backStreet, edgeLevelInfoOptional, way);
+            storeLevelInfoForEdge(street, backStreet, edgeLevelInfoOptional, way);
           }
 
           applyEdgesToTurnRestrictions(osmdb, way, startNode, endNode, street, backStreet);
@@ -628,7 +628,7 @@ public class OsmModule implements GraphBuilderModule {
     return Optional.empty();
   }
 
-  private void decorateEdgeWithLevelInfo(
+  private void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,
     Optional<EdgeLevelInfo> edgeLevelInfoOptional,

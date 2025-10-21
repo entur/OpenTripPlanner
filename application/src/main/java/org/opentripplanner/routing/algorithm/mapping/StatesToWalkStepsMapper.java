@@ -298,15 +298,11 @@ public class StatesToWalkStepsMapper {
         boolean isOnSameStreet = lastStep
           .directionTextNoParens()
           .equals(threeBack.directionTextNoParens());
-        if (
-          twoBack.distance() < MAX_ZAG_DISTANCE &&
-          isOnSameStreet &&
-          checkStepForValidZagRemoval(twoBack)
-        ) {
+        if (twoBack.distance() < MAX_ZAG_DISTANCE && isOnSameStreet && canZagBeRemoved(twoBack)) {
           if (isUTurn(twoBack, lastStep)) {
             steps.remove(lastIndex - 1);
             processUTurn(lastStep, twoBack);
-          } else if (checkStepForValidZagRemoval(lastStep)) {
+          } else if (canZagBeRemoved(lastStep)) {
             // total hack to remove zags.
             steps.remove(lastIndex);
             steps.remove(lastIndex - 1);
@@ -377,7 +373,7 @@ public class StatesToWalkStepsMapper {
     }
   }
 
-  private boolean checkStepForValidZagRemoval(WalkStepBuilder walkStepBuilder) {
+  private boolean canZagBeRemoved(WalkStepBuilder walkStepBuilder) {
     return (
       !walkStepBuilder.hasEntrance() &&
       walkStepBuilder.relativeDirection() != RelativeDirection.ESCALATOR &&
@@ -602,7 +598,7 @@ public class StatesToWalkStepsMapper {
       VerticalDirection verticalDirection = VerticalDirection.DOWN;
       if (
         backState.getVertex() instanceof OsmVertex fromVertex &&
-        fromVertex.nodeId == edgeLevelInfo.lowerVertexInfo().osmVertexId()
+        fromVertex.nodeId == edgeLevelInfo.lowerVertexInfo().osmNodeId()
       ) {
         verticalDirection = VerticalDirection.UP;
         fromVertexInfo = edgeLevelInfo.lowerVertexInfo();
