@@ -25,7 +25,6 @@ import org.opentripplanner.apis.gtfs.datafetchers.CurrencyImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.DefaultFareProductImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.DepartureRowImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.DependentFareProductImpl;
-import org.opentripplanner.apis.gtfs.datafetchers.ElevatorUseImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.EntranceImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.EscalatorUseImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.EstimatedTimeImpl;
@@ -211,7 +210,6 @@ public class SchemaFactory {
         .type(typeWiring.build(EstimatedTimeImpl.class))
         .type(typeWiring.build(EntranceImpl.class))
         .type(typeWiring.build(RentalVehicleFuelImpl.class))
-        .type(typeWiring.build(ElevatorUseImpl.class))
         .type(typeWiring.build(EscalatorUseImpl.class))
         .type(typeWiring.build(StairsUseImpl.class))
         .build();

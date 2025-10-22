@@ -10,7 +10,6 @@ import org.opentripplanner.apis.gtfs.mapping.DirectionMapper;
 import org.opentripplanner.apis.gtfs.mapping.StreetNoteMapper;
 import org.opentripplanner.model.plan.leg.ElevationProfile.Step;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
-import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUse;
@@ -69,9 +68,7 @@ public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
         VerticalTransportationUse verticalTransportationUse = walkStep
           .verticalTransportationUse()
           .get();
-        if (verticalTransportationUse instanceof ElevatorUse elevatorUse) {
-          return elevatorUse;
-        } else if (verticalTransportationUse instanceof EscalatorUse escalatorUse) {
+        if (verticalTransportationUse instanceof EscalatorUse escalatorUse) {
           return escalatorUse;
         } else if (verticalTransportationUse instanceof StairsUse stairsUse) {
           return stairsUse;

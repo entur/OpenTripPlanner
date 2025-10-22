@@ -18,7 +18,6 @@ import org.opentripplanner.model.plan.leg.ElevationProfile;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
-import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalDirection;
@@ -548,8 +547,7 @@ public class StatesToWalkStepsMapper {
       // the floor name is the AlightEdge name
       // reset to avoid confusion with 'Elevator on floor 1 to floor 1'
       .withDirectionText(edge.getName())
-      .withRelativeDirection(RelativeDirection.ELEVATOR)
-      .withVerticalTransportationUse(new ElevatorUse(edge.getName().toString()));
+      .withRelativeDirection(RelativeDirection.ELEVATOR);
   }
 
   private WalkStepBuilder createStairsWalkStep(
