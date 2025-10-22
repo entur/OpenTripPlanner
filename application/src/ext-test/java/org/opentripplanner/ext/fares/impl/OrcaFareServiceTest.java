@@ -8,6 +8,7 @@ import static org.opentripplanner.ext.fares.impl.OrcaFareService.COMM_TRANS_AGEN
 import static org.opentripplanner.ext.fares.impl.OrcaFareService.COMM_TRANS_FLEX_AGENCY_ID;
 import static org.opentripplanner.ext.fares.impl.OrcaFareService.KC_METRO_AGENCY_ID;
 import static org.opentripplanner.ext.fares.impl.OrcaFareService.KITSAP_TRANSIT_AGENCY_ID;
+import static org.opentripplanner.ext.fares.impl.OrcaFareService.MONORAIL_AGENCY_ID;
 import static org.opentripplanner.ext.fares.impl.OrcaFareService.PIERCE_COUNTY_TRANSIT_AGENCY_ID;
 import static org.opentripplanner.ext.fares.impl.OrcaFareService.SKAGIT_TRANSIT_AGENCY_ID;
 import static org.opentripplanner.ext.fares.impl.OrcaFareService.SOUND_TRANSIT_AGENCY_ID;
@@ -113,7 +114,8 @@ public class OrcaFareServiceTest {
 
       // If multiple valid offers for this leg, select the cheapest one
       if (!validOffersForLeg.isEmpty()) {
-        var cheapestOffer = validOffersForLeg.stream()
+        var cheapestOffer = validOffersForLeg
+          .stream()
           .min(Comparator.comparing(o -> o.fareProduct().price()))
           .orElse(validOffersForLeg.get(0));
 
@@ -522,6 +524,43 @@ public class OrcaFareServiceTest {
     calculateFare(rides, FareType.youth, ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, ZERO_USD);
     calculateFare(rides, FareType.electronicRegular, ZERO_USD);
+  }
+
+  /**
+   * Test monorail fares to ensure correct fare amounts are applied for all fare types.
+   * Monorail has unique fare structure where youth are not free (unlike other agencies).
+   */
+  @Test
+  void calculateMonorailFares() {
+    List<Leg> rides = List.of(getLeg(MONORAIL_AGENCY_ID, 0));
+
+    calculateFare(rides, regular, usDollars(4.00f));
+    calculateFare(rides, FareType.senior, usDollars(2.00f));
+    calculateFare(rides, FareType.youth, usDollars(2.00f));
+    calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
+    calculateFare(rides, FareType.electronicRegular, usDollars(4.00f));
+    calculateFare(rides, FareType.electronicSenior, usDollars(2.00f));
+    calculateFare(rides, FareType.electronicYouth, usDollars(0.00f));
+  }
+
+  /**
+   * Test monorail fares with transfers to ensure transfer logic works correctly
+   * with monorail's unique fare structure.
+   */
+  @Test
+  void calculateMonorailFaresWithTransfers() {
+    List<Leg> rides = List.of(
+      getLeg(MONORAIL_AGENCY_ID, 0),
+      getLeg(KC_METRO_AGENCY_ID, 30),
+      getLeg(COMM_TRANS_AGENCY_ID, 60)
+    );
+
+    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE.times(2).plus(usDollars(4.00f)));
+    calculateFare(rides, FareType.youth, usDollars(2.00f));
+    calculateFare(rides, FareType.electronicRegular, usDollars(4.00f));
+    calculateFare(rides, FareType.electronicSenior, usDollars(2.00f));
+    calculateFare(rides, FareType.electronicYouth, usDollars(0.00f));
+    calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
   }
 
   static Stream<Arguments> allTypes() {
