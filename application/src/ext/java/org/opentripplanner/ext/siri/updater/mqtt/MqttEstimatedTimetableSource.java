@@ -1,5 +1,8 @@
 package org.opentripplanner.ext.siri.updater.mqtt;
 
+import static org.opentripplanner.utils.lang.StringUtils.hasNoValue;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import com.hivemq.client.mqtt.lifecycle.MqttClientDisconnectedContext;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
@@ -20,10 +23,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -50,6 +55,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
   private Mqtt5AsyncClient client;
   private Function<ServiceDelivery, Future<?>> serviceDeliveryConsumer;
+  private final List<Future<?>> graphUpdates = new ArrayList<>();
 
   private final BlockingQueue<byte[]> liveMessageQueue = new LinkedBlockingQueue<>();
   private final BlockingQueue<byte[]> primingMessageQueue = new LinkedBlockingQueue<>();
@@ -68,8 +74,18 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
   public MqttEstimatedTimetableSource(MqttSiriETUpdaterParameters parameters) {
     this.parameters = parameters;
-    this.primingExecutor = Executors.newFixedThreadPool(parameters.numberOfPrimingWorkers());
-    this.liveExecutor = Executors.newSingleThreadExecutor();
+
+    ThreadFactory primingThreadFactory = new ThreadFactoryBuilder()
+      .setNameFormat("primingSiriMqttUpdater-%d")
+      .build();
+    this.primingExecutor = Executors.newFixedThreadPool(
+      parameters.numberOfPrimingWorkers(), primingThreadFactory
+    );
+
+    ThreadFactory liveThreadFactory = new ThreadFactoryBuilder()
+      .setNameFormat("liveSiriMqttUpdater-%d")
+      .build();
+    this.liveExecutor = Executors.newSingleThreadExecutor(liveThreadFactory);
 
     registerMetrics();
   }
@@ -88,7 +104,6 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
       primingFutures.add(f);
     }
     LOG.info("Started {} priming workers", parameters.numberOfPrimingWorkers());
-    liveExecutor.submit(new LiveRunner());
 
     // Wait for priming workers to finish
     CompletableFuture<Void> allPriming = CompletableFuture.allOf(
@@ -98,6 +113,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
     // when all are done, switch to live
     allPriming
       .thenRunAsync(() -> {
+        waitForGraphUpdates();
         logPrimingSummary();
         primingExecutor.shutdown();
         primed = true;
@@ -106,6 +122,22 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
         LOG.error("Priming failed", ex);
         return null;
       });
+
+    liveExecutor.submit(new LiveRunner());
+  }
+
+  private void waitForGraphUpdates() {
+    for (Future<?> f : graphUpdates) {
+      try {
+        f.get();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException(e);
+      } catch (ExecutionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    graphUpdates.clear();
   }
 
   private void registerMetrics() {
@@ -138,12 +170,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
   private Mqtt5AsyncClient connectAndSubscribeToClient() {
     Mqtt5SimpleAuth auth;
-    if (
-      parameters.user() == null ||
-      parameters.user().isBlank() ||
-      parameters.password() == null ||
-      parameters.password().isBlank()
-    ) {
+    if (hasNoValue(parameters.user()) || hasNoValue(parameters.password())) {
       auth = null;
     } else {
       auth = Mqtt5SimpleAuth.builder()
@@ -193,6 +220,8 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
   @Override
   public void teardown() {
+    liveExecutor.shutdownNow();
+    primingExecutor.shutdownNow();
     client.disconnect();
   }
 
@@ -317,7 +346,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
             continue;
           }
           var serviceDelivery = optionalServiceDelivery.get();
-          serviceDeliveryConsumer.apply(serviceDelivery);
+          graphUpdates.add(serviceDeliveryConsumer.apply(serviceDelivery));
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
