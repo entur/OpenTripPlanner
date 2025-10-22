@@ -591,27 +591,28 @@ public class StatesToWalkStepsMapper {
     Optional<EdgeLevelInfo> edgeLevelInfoOptional = osmStreetDecoratorService.findEdgeInformation(
       edge
     );
-    if (edgeLevelInfoOptional.isPresent()) {
-      EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
-      VertexLevelInfo fromVertexInfo = edgeLevelInfo.upperVertexInfo();
-      VertexLevelInfo toVertexInfo = edgeLevelInfo.lowerVertexInfo();
-      VerticalDirection verticalDirection = VerticalDirection.DOWN;
-      if (
-        backState.getVertex() instanceof OsmVertex fromVertex &&
-        fromVertex.nodeId == edgeLevelInfo.lowerVertexInfo().osmNodeId()
-      ) {
-        verticalDirection = VerticalDirection.UP;
-        fromVertexInfo = edgeLevelInfo.lowerVertexInfo();
-        toVertexInfo = edgeLevelInfo.upperVertexInfo();
-      }
-
-      if (edge instanceof EscalatorEdge) {
-        return new EscalatorUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
-      } else {
-        return new StairsUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
-      }
+    if (edgeLevelInfoOptional.isEmpty()) {
+      return null;
     }
-    return null;
+
+    EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
+    VertexLevelInfo fromVertexInfo = edgeLevelInfo.upperVertexInfo();
+    VertexLevelInfo toVertexInfo = edgeLevelInfo.lowerVertexInfo();
+    VerticalDirection verticalDirection = VerticalDirection.DOWN;
+    if (
+      backState.getVertex() instanceof OsmVertex fromVertex &&
+      fromVertex.nodeId == edgeLevelInfo.lowerVertexInfo().osmNodeId()
+    ) {
+      verticalDirection = VerticalDirection.UP;
+      fromVertexInfo = edgeLevelInfo.lowerVertexInfo();
+      toVertexInfo = edgeLevelInfo.upperVertexInfo();
+    }
+
+    if (edge instanceof EscalatorEdge) {
+      return new EscalatorUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
+    } else {
+      return new StairsUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
+    }
   }
 
   private WalkStepBuilder createStationEntranceWalkStep(
