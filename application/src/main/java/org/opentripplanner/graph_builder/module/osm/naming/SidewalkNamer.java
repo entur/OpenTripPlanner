@@ -32,6 +32,7 @@ import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmLevel;
+import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.utils.lang.DoubleUtils;
 import org.opentripplanner.utils.logging.ProgressTracker;
@@ -67,12 +68,12 @@ public class SidewalkNamer implements EdgeNamer {
   private PreciseBuffer preciseBuffer;
 
   @Override
-  public I18NString name(OsmEntity way) {
-    return way.getAssumedName();
+  public I18NString name(OsmEntity entity) {
+    return entity.getAssumedName();
   }
 
   @Override
-  public void recordEdges(OsmEntity way, StreetEdgePair pair, OsmDatabase osmdb) {
+  public void recordEdges(OsmWay way, StreetEdgePair pair, OsmDatabase osmdb) {
     Set<OsmLevel> levelSet = osmdb.getLevelSetForEntity(way);
     // This way is a sidewalk and hasn't been named yet (and is not explicitly unnamed)
     if (way.isSidewalk() && way.hasNoName() && !way.isExplicitlyUnnamed()) {
