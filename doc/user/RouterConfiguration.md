@@ -928,7 +928,7 @@ Used to group requests when monitoring OTP.
       "url" : "https://example.com/siri-lite/situation-exchange/xml"
     },
     {
-      "type" : "siri-et-mqtt-updater",
+      "type" : "siri-et-mqtt",
       "user" : "user",
       "password" : "pwd",
       "host" : "localhost",

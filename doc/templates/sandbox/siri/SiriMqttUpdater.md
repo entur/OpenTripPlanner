@@ -24,5 +24,5 @@ of the `router-config.json`.
 
 ### SIRI-ET via MQTT
 
-<!-- INSERT: siri-et-mqtt-updater -->
+<!-- INSERT: siri-et-mqtt -->
 

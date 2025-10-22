@@ -27,7 +27,7 @@ public class SiriMqttConfigurationDocTest implements DocsTestConstants {
   private static final File TEMPLATE = new File(TEMPLATE_PATH, "sandbox/siri/SiriMqttUpdater.md");
   private static final File OUT_FILE = new File(SANDBOX_USER_DOC_PATH, "siri/SiriMqttUpdater.md");
   private static final String ROUTER_CONFIG_PATH = "standalone/config/" + ROUTER_CONFIG_FILENAME;
-  private static final Set<String> INCLUDE_UPDATERS = Set.of("siri-et-mqtt-updater");
+  private static final Set<String> INCLUDE_UPDATERS = Set.of("siri-et-mqtt");
   private static final SkipNodes SKIP_NODES = SkipNodes.of().build();
   public static final ObjectMapper mapper = new ObjectMapper();
 

@@ -24,12 +24,12 @@ of the `router-config.json`.
 
 ### SIRI-ET via MQTT
 
-<!-- siri-et-mqtt-updater BEGIN -->
+<!-- siri-et-mqtt BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
 | Config Parameter                                         |    Type    | Summary                                                |  Req./Opt. | Default Value | Since |
 |----------------------------------------------------------|:----------:|--------------------------------------------------------|:----------:|---------------|:-----:|
-| type = "siri-et-mqtt-updater"                            |   `enum`   | The type of the updater.                               | *Required* |               |  1.5  |
+| type = "siri-et-mqtt"                                    |   `enum`   | The type of the updater.                               | *Required* |               |  1.5  |
 | feedId                                                   |  `string`  | The feed ID this updater should be applied to          | *Required* |               |  2.9  |
 | fuzzyTripMatching                                        |  `boolean` | Whether or not the fuzzy trip matcher should be used   | *Required* |               |  2.9  |
 | host                                                     |  `string`  | The host of the MQTT broker                            | *Required* |               |  2.9  |
@@ -99,7 +99,7 @@ If no authorization is required, the user does not need to be supplied.
 {
   "updaters" : [
     {
-      "type" : "siri-et-mqtt-updater",
+      "type" : "siri-et-mqtt",
       "user" : "user",
       "password" : "pwd",
       "host" : "localhost",
@@ -115,5 +115,5 @@ If no authorization is required, the user does not need to be supplied.
 }
 ```
 
-<!-- siri-et-mqtt-updater END -->
+<!-- siri-et-mqtt END -->
 

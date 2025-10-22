@@ -9,7 +9,7 @@ import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.
 import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_AZURE_SX_UPDATER;
 import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_ET_GOOGLE_PUBSUB_UPDATER;
 import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_ET_LITE;
-import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_ET_MQTT_UPDATER;
+import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_ET_MQTT;
 import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_ET_UPDATER;
 import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_SX_LITE;
 import static org.opentripplanner.standalone.config.routerconfig.UpdatersConfig.Type.SIRI_SX_UPDATER;
@@ -222,7 +222,7 @@ public class UpdatersConfig implements UpdatersParameters {
 
   @Override
   public List<MqttSiriETUpdaterParameters> getMqttSiriETUpdaterParameters() {
-    return getParameters(SIRI_ET_MQTT_UPDATER);
+    return getParameters(SIRI_ET_MQTT);
   }
 
   private <T> List<T> getParameters(Type key) {
@@ -247,7 +247,7 @@ public class UpdatersConfig implements UpdatersParameters {
     SIRI_SX_LITE(SiriSXLiteUpdaterConfig::create),
     SIRI_AZURE_ET_UPDATER(SiriAzureETUpdaterConfig::create),
     SIRI_AZURE_SX_UPDATER(SiriAzureSXUpdaterConfig::create),
-    SIRI_ET_MQTT_UPDATER(SiriETMqttUpdaterConfig::create);
+    SIRI_ET_MQTT(SiriETMqttUpdaterConfig::create);
 
     private final BiFunction<String, NodeAdapter, ?> factory;
 

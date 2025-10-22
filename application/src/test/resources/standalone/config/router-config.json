@@ -455,7 +455,7 @@
     },
     // SIRI-ET MQTT trip updater
     {
-      "type": "siri-et-mqtt-updater",
+      "type": "siri-et-mqtt",
       "user": "user",
       "password": "pwd",
       "host": "localhost",
