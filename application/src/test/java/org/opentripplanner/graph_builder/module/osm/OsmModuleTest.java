@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.framework.i18n.LocalizedString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.BarrierIntersectingHighway;
 import org.opentripplanner.graph_builder.module.osm.moduletests._support.TestOsmProvider;
@@ -45,6 +46,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
+import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
 import org.opentripplanner.service.streetdecorator.internal.DefaultOsmStreetDecoratorRepository;
 import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
 import org.opentripplanner.service.streetdecorator.model.Level;
@@ -618,13 +620,12 @@ public class OsmModuleTest {
     escalator.addNodeRef(1);
     escalator.addNodeRef(2);
 
-    var issueStore = new DefaultDataImportIssueStore();
     var osmProvider = new TestOsmProvider(
       List.of(),
       List.of(levelStairs, inclineStairs, escalator),
       List.of(n1, n2)
     );
-    var osmDb = new OsmDatabase(issueStore);
+    var osmDb = new OsmDatabase(DataImportIssueStore.NOOP);
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var osmStreetDecoratorRepository = new DefaultOsmStreetDecoratorRepository();
@@ -637,7 +638,6 @@ public class OsmModuleTest {
       .withOsmStreetDecoratorRepository(osmStreetDecoratorRepository)
       // The build config field that needs to bet set for street info to be stored.
       .withIncludeEdgeLevelInfo(true)
-      .withIssueStore(issueStore)
       .build();
     osmModule.buildGraph();
 
@@ -652,14 +652,57 @@ public class OsmModuleTest {
         new VertexLevelInfo(new Level(1.0, "1"), 1)
       )
     );
-    assertEquals(
-      edgeLevelInfoSet,
-      graph
-        .getEdges()
-        .stream()
-        .map(edge -> osmStreetDecoratorRepository.findEdgeInformation(edge).get())
-        .collect(Collectors.toSet())
-    );
+    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, osmStreetDecoratorRepository));
+  }
+
+  @Test
+  void testEdgeLevelInfoNotStoredWithoutIncludeEdgeLevelInfo() {
+    var n1 = new OsmNode(0, 0);
+    n1.setId(1);
+    var n2 = new OsmNode(0, 1);
+    n2.setId(2);
+
+    var inclineStairs = new OsmWay();
+    inclineStairs.setId(2);
+    inclineStairs.addTag("highway", "steps");
+    inclineStairs.addTag("incline", "up");
+    inclineStairs.addNodeRef(1);
+    inclineStairs.addNodeRef(2);
+
+    var osmProvider = new TestOsmProvider(List.of(), List.of(inclineStairs), List.of(n1, n2));
+    var osmDb = new OsmDatabase(DataImportIssueStore.NOOP);
+    osmProvider.readOsm(osmDb);
+    var graph = new Graph();
+    var osmStreetDecoratorRepository = new DefaultOsmStreetDecoratorRepository();
+    var osmModule = OsmModule.of(
+      osmProvider,
+      graph,
+      new DefaultOsmInfoGraphBuildRepository(),
+      new DefaultVehicleParkingRepository()
+    )
+      .withOsmStreetDecoratorRepository(osmStreetDecoratorRepository)
+      // The build config field that needs to bet set for street info to be stored.
+      .withIncludeEdgeLevelInfo(false)
+      .build();
+    osmModule.buildGraph();
+
+    assertEquals(Set.of(), getAllEdgeLevelInfoObjects(graph, osmStreetDecoratorRepository));
+  }
+
+  private Set<EdgeLevelInfo> getAllEdgeLevelInfoObjects(
+    Graph graph,
+    OsmStreetDecoratorRepository osmStreetDecoratorRepository
+  ) {
+    return graph
+      .getEdges()
+      .stream()
+      .flatMap(edge ->
+        osmStreetDecoratorRepository
+          .findEdgeInformation(edge)
+          .map(Stream::of)
+          .orElseGet(Stream::empty)
+      )
+      .collect(Collectors.toSet());
   }
 
   private BuildResult buildParkingLots() {
