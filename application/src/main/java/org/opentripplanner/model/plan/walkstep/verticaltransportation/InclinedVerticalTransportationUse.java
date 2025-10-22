@@ -5,7 +5,7 @@ import org.opentripplanner.service.streetdecorator.model.Level;
 
 /**
  * Represents information about inclined vertical transportation equipment stored in
- * {@WalkStep}.
+ * {@link org.opentripplanner.model.plan.walkstep.WalkStep}.
  */
 public abstract class InclinedVerticalTransportationUse implements VerticalTransportationUse {
 

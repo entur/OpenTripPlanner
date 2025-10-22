@@ -4,6 +4,6 @@ import javax.annotation.Nullable;
 
 /**
  * Represents information about an elevator stored in
- * {@WalkStep}.
+ * {@link org.opentripplanner.model.plan.walkstep.WalkStep}.
  */
 public record ElevatorUse(@Nullable String toLevelName) implements VerticalTransportationUse {}
