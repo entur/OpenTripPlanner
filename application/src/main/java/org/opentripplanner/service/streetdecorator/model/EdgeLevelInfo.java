@@ -1,5 +1,10 @@
 package org.opentripplanner.service.streetdecorator.model;
 
+/**
+ * Represents level information for an edge. The information is represented as two
+ * {@link VertexLevelInfo} objects for the first and last vertices of an edge. The lower vertex
+ * is represented by lowerVertexInfo and the higher one by upperVertexInfo.
+ */
 public record EdgeLevelInfo(VertexLevelInfo lowerVertexInfo, VertexLevelInfo upperVertexInfo) {
   public EdgeLevelInfo {
     if (lowerVertexInfo == null) {
