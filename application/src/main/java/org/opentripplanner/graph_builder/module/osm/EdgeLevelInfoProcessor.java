@@ -12,7 +12,6 @@ import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
 import org.opentripplanner.service.streetdecorator.model.Level;
 import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.street.model.vertex.OsmVertex;
 
 /**
  * Contains logic for storing edge level info in the
@@ -107,12 +106,7 @@ class EdgeLevelInfoProcessor {
 
     EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
     Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
-    if (
-      edge != null &&
-      edge.getToVertex() instanceof OsmVertex toVertex &&
-      edge.getFromVertex() instanceof OsmVertex fromVertex &&
-      edgeLevelInfo.matchesNodes(fromVertex.nodeId(), toVertex.nodeId())
-    ) {
+    if (edge != null && edgeLevelInfo.canBeAppliedToEdge(edge)) {
       if (forwardEdge != null) {
         osmStreetDecoratorRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
       }
