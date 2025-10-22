@@ -5,14 +5,19 @@ package org.opentripplanner.street.model.vertex;
  */
 public class BarrierPassThroughVertex extends OsmVertex {
 
-  public final long wayId;
+  private final long wayId;
 
   public BarrierPassThroughVertex(double x, double y, long nodeId, long wayId) {
     super(x, y, nodeId);
     this.wayId = wayId;
   }
 
+  public long wayId() {
+    return this.wayId;
+  }
+
+  @Override
   public VertexLabel getLabel() {
-    return new VertexLabel.NodeOnWayLabel(nodeId, wayId);
+    return new VertexLabel.NodeOnWayLabel(nodeId(), wayId);
   }
 }

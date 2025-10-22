@@ -111,7 +111,7 @@ class EdgeLevelInfoProcessor {
       edge != null &&
       edge.getToVertex() instanceof OsmVertex toVertex &&
       edge.getFromVertex() instanceof OsmVertex fromVertex &&
-      edgeLevelInfo.matchesNodes(fromVertex.nodeId, toVertex.nodeId)
+      edgeLevelInfo.matchesNodes(fromVertex.nodeId(), toVertex.nodeId())
     ) {
       if (forwardEdge != null) {
         osmStreetDecoratorRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);

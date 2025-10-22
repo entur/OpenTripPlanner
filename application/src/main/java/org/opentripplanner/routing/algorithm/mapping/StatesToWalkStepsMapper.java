@@ -601,7 +601,7 @@ public class StatesToWalkStepsMapper {
     VerticalDirection verticalDirection = VerticalDirection.DOWN;
     if (
       backState.getVertex() instanceof OsmVertex fromVertex &&
-      fromVertex.nodeId == edgeLevelInfo.lowerVertexInfo().osmNodeId()
+      fromVertex.nodeId() == edgeLevelInfo.lowerVertexInfo().osmNodeId()
     ) {
       verticalDirection = VerticalDirection.UP;
       fromVertexInfo = edgeLevelInfo.lowerVertexInfo();

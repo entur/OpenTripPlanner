@@ -19,6 +19,6 @@ public class OsmVertexOnLevel extends OsmVertex {
 
   @Override
   public VertexLabel getLabel() {
-    return VertexLabel.osm(nodeId, level);
+    return VertexLabel.osm(nodeId(), level);
   }
 }
