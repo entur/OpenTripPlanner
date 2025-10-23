@@ -52,6 +52,11 @@ class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
 
   @Override
   public Collection<DefaultRaptorTransfer> getForwardTransfers(int stopIndex) {
+    // This block is not fully thread safe as there may be a race condition between the check
+    // and the assignment. However, the assignment is an atomic operation and the assigned value
+    // should always be the same, so we don't think that it will be a major problem.
+    // We don't think that the overhead of locking is worthwhile for the occasional chance of two
+    // threads generating the transfers at the same time.
     if (forwardRaptorTransfers[stopIndex] == null) {
       forwardRaptorTransfers[stopIndex] = RaptorTransferIndex.getRaptorTransfers(
         request,
