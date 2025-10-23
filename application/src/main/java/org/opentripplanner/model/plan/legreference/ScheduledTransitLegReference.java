@@ -316,7 +316,10 @@ public record ScheduledTransitLegReference(
       var stopPositionBefore = stopPosition - diff;
       beforeInRange = stopPositionBefore >= 0;
       if (
-        diff != 0 && beforeInRange && matcher.apply(tripPattern.getStops().get(stopPositionBefore))
+        diff != 0 &&
+        beforeInRange &&
+        stopPositionBefore < tripPattern.numberOfStops() &&
+        matcher.apply(tripPattern.getStops().get(stopPositionBefore))
       ) {
         return OptionalInt.of(stopPositionBefore);
       }
