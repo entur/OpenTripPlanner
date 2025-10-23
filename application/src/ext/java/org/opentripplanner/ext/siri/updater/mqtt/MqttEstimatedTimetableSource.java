@@ -79,7 +79,8 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
       .setNameFormat("primingSiriMqttUpdater-%d")
       .build();
     this.primingExecutor = Executors.newFixedThreadPool(
-      parameters.numberOfPrimingWorkers(), primingThreadFactory
+      parameters.numberOfPrimingWorkers(),
+      primingThreadFactory
     );
 
     ThreadFactory liveThreadFactory = new ThreadFactoryBuilder()
@@ -350,6 +351,8 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        LOG.error("Error while processing Siri ET update during priming.", e);
       }
     }
   }
@@ -366,6 +369,8 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
+      } catch (Exception e) {
+        LOG.error("Error while processing Siri ET update.", e);
       }
     }
   }
