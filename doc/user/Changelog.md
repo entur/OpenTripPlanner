@@ -27,6 +27,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Gracefully handle exceptions during GBFS updater setup [#6954](https://github.com/opentripplanner/OpenTripPlanner/pull/6954)
 - Fix RAPTOR data generation for additional search days in the past [#6958](https://github.com/opentripplanner/OpenTripPlanner/pull/6958)
 - Fix strange detours when street leg starts from the boundary of an area [#6970](https://github.com/opentripplanner/OpenTripPlanner/pull/6970)
+- Add `bikesAllowedStopMaxTransferDuration` to build config to limit bike transfers [#6787](https://github.com/opentripplanner/OpenTripPlanner/pull/6787)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
