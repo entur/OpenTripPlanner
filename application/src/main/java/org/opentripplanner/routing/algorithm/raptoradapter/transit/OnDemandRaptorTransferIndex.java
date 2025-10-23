@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 
@@ -37,10 +36,10 @@ class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
 
   private synchronized void initializeReversedTransfers() {
     if (reversedTransfers == null) {
-reversedTransfers = new ArrayList<>(forwardTransfers.size());
-  for (int i = 0; i < forwardTransfers.size(); i++) {
-    reversedTransfers.add(new ArrayList<>());
-  }
+      reversedTransfers = new ArrayList<>(forwardTransfers.size());
+      for (int i = 0; i < forwardTransfers.size(); i++) {
+        reversedTransfers.add(new ArrayList<>());
+      }
 
       for (var i = 0; i < forwardTransfers.size(); ++i) {
         var transfers = forwardTransfers.get(i);
