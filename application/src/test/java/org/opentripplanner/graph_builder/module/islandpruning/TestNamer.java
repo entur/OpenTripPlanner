@@ -18,5 +18,5 @@ class TestNamer implements EdgeNamer {
   public void recordEdges(OsmEntity way, StreetEdgePair edge, OsmDatabase osmdb) {}
 
   @Override
-  public void postprocess() {}
+  public void finalizeNames() {}
 }
