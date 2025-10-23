@@ -37,11 +37,10 @@ class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
 
   private synchronized void initializeReversedTransfers() {
     if (reversedTransfers == null) {
-      reversedTransfers = Stream.generate(() ->
-        (List<TransferWithSource>) new ArrayList<TransferWithSource>()
-      )
-        .limit(forwardTransfers.size())
-        .toList();
+reversedTransfers = new ArrayList<>(forwardTransfers.size());
+  for (int i = 0; i < forwardTransfers.size(); i++) {
+    reversedTransfers.add(new ArrayList<>());
+  }
 
       for (var i = 0; i < forwardTransfers.size(); ++i) {
         var transfers = forwardTransfers.get(i);
