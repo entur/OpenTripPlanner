@@ -46,11 +46,11 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.internal.DefaultOsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
-import org.opentripplanner.service.streetdecorator.model.Level;
-import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
+import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -628,14 +628,14 @@ public class OsmModuleTest {
     var osmDb = new OsmDatabase(DataImportIssueStore.NOOP);
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
-    var osmStreetDecoratorRepository = new DefaultOsmStreetDecoratorRepository();
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
     var osmModule = OsmModule.of(
       osmProvider,
       graph,
       new DefaultOsmInfoGraphBuildRepository(),
       new DefaultVehicleParkingRepository()
     )
-      .withOsmStreetDecoratorRepository(osmStreetDecoratorRepository)
+      .withStreetDetailsRepository(streetDetailsRepository)
       // The build config field that needs to bet set for street info to be stored.
       .withIncludeEdgeLevelInfo(true)
       .build();
@@ -652,7 +652,7 @@ public class OsmModuleTest {
         new VertexLevelInfo(new Level(1.0, "1"), 1)
       )
     );
-    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, osmStreetDecoratorRepository));
+    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
   }
 
   @Test
@@ -673,34 +673,31 @@ public class OsmModuleTest {
     var osmDb = new OsmDatabase(DataImportIssueStore.NOOP);
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
-    var osmStreetDecoratorRepository = new DefaultOsmStreetDecoratorRepository();
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
     var osmModule = OsmModule.of(
       osmProvider,
       graph,
       new DefaultOsmInfoGraphBuildRepository(),
       new DefaultVehicleParkingRepository()
     )
-      .withOsmStreetDecoratorRepository(osmStreetDecoratorRepository)
+      .withStreetDetailsRepository(streetDetailsRepository)
       // The build config field that needs to bet set for street info to be stored.
       .withIncludeEdgeLevelInfo(false)
       .build();
     osmModule.buildGraph();
 
-    assertEquals(Set.of(), getAllEdgeLevelInfoObjects(graph, osmStreetDecoratorRepository));
+    assertEquals(Set.of(), getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
   }
 
   private Set<EdgeLevelInfo> getAllEdgeLevelInfoObjects(
     Graph graph,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository
+    StreetDetailsRepository streetDetailsRepository
   ) {
     return graph
       .getEdges()
       .stream()
       .flatMap(edge ->
-        osmStreetDecoratorRepository
-          .findEdgeInformation(edge)
-          .map(Stream::of)
-          .orElseGet(Stream::empty)
+        streetDetailsRepository.findEdgeInformation(edge).map(Stream::of).orElseGet(Stream::empty)
       )
       .collect(Collectors.toSet());
   }

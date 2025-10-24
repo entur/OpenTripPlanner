@@ -9,8 +9,8 @@ import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.internal.DefaultOsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.StreetLimitationParameters;
@@ -24,8 +24,7 @@ public class OsmModuleBuilder {
   private final Graph graph;
   private final VehicleParkingRepository parkingRepository;
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
-  private OsmStreetDecoratorRepository osmStreetDecoratorRepository =
-    new DefaultOsmStreetDecoratorRepository();
+  private StreetDetailsRepository streetDetailsRepository = new DefaultStreetDetailsRepository();
 
   private Set<String> boardingAreaRefTags = Set.of();
   private DataImportIssueStore issueStore = DataImportIssueStore.NOOP;
@@ -106,10 +105,10 @@ public class OsmModuleBuilder {
     return this;
   }
 
-  public OsmModuleBuilder withOsmStreetDecoratorRepository(
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository
+  public OsmModuleBuilder withStreetDetailsRepository(
+    StreetDetailsRepository streetDetailsRepository
   ) {
-    this.osmStreetDecoratorRepository = osmStreetDecoratorRepository;
+    this.streetDetailsRepository = streetDetailsRepository;
     return this;
   }
 
@@ -118,7 +117,7 @@ public class OsmModuleBuilder {
       providers,
       graph,
       osmInfoGraphBuildRepository,
-      osmStreetDecoratorRepository,
+      streetDetailsRepository,
       parkingRepository,
       issueStore,
       streetLimitationParameters,

@@ -57,8 +57,8 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.DefaultC
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.service.streetdecorator.internal.DefaultOsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.internal.DefaultOsmStreetDecoratorService;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -304,7 +304,7 @@ public class RaptorPathToItineraryMapperTest {
     return new RaptorPathToItineraryMapper<>(
       new Graph(),
       new DefaultTransitService(timetableRepository),
-      new DefaultOsmStreetDecoratorService(new DefaultOsmStreetDecoratorRepository()),
+      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       getRaptorTransitData(),
       dateTime.atZone(ZoneIds.CET),
       RouteRequest.defaultValue()

@@ -19,8 +19,8 @@ import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.configure.OsmInfoGraphBuildRepositoryModule;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.configure.OsmStreetDecoratorRepositoryModule;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.configure.StreetDetailsRepositoryModule;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.configure.VehicleParkingRepositoryModule;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
@@ -41,7 +41,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
     DataStoreModule.class,
     GsDataSourceModule.class,
     OsmInfoGraphBuildRepositoryModule.class,
-    OsmStreetDecoratorRepositoryModule.class,
+    StreetDetailsRepositoryModule.class,
     WorldEnvelopeRepositoryModule.class,
     EmissionRepositoryModule.class,
     EmpiricalDelayRepositoryModule.class,
@@ -62,7 +62,7 @@ public interface LoadApplicationFactory {
   OsmInfoGraphBuildRepository emptyOsmInfoGraphBuildRepository();
 
   @Singleton
-  OsmStreetDecoratorRepository emptyOsmStreetDecoratorRepository();
+  StreetDetailsRepository emptyStreetDetailsRepository();
 
   @Singleton
   TimetableRepository emptyTimetableRepository();

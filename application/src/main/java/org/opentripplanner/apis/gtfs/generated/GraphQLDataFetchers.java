@@ -55,7 +55,7 @@ import org.opentripplanner.routing.graphfinder.PatternAtStop;
 import org.opentripplanner.routing.graphfinder.PlaceAtDistance;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle.StopRelationship;
-import org.opentripplanner.service.streetdecorator.model.Level;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;

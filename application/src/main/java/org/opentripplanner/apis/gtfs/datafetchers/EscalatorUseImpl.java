@@ -5,7 +5,7 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLVerticalDirection;
 import org.opentripplanner.apis.gtfs.mapping.VerticalDirectionMapper;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
-import org.opentripplanner.service.streetdecorator.model.Level;
+import org.opentripplanner.service.streetdetails.model.Level;
 
 public class EscalatorUseImpl implements GraphQLDataFetchers.GraphQLEscalatorUse {
 

@@ -1,7 +1,7 @@
 package org.opentripplanner.model.plan.walkstep.verticaltransportation;
 
 import javax.annotation.Nullable;
-import org.opentripplanner.service.streetdecorator.model.Level;
+import org.opentripplanner.service.streetdetails.model.Level;
 
 /**
  * Represents information about an escalator stored in

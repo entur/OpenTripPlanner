@@ -30,7 +30,7 @@ import org.opentripplanner.model.plan.leg.StreetLegBuilder;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.routing.graphfinder.StopResolver;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.edge.BoardingLocationToStopLink;
@@ -58,7 +58,7 @@ public class GraphPathToItineraryMapper {
   private final ZoneId timeZone;
   private final StreetNotesService streetNotesService;
 
-  private final OsmStreetDecoratorService osmStreetDecoratorService;
+  private final StreetDetailsService streetDetailsService;
 
   private final double ellipsoidToGeoidDifference;
 
@@ -66,13 +66,13 @@ public class GraphPathToItineraryMapper {
     StopResolver stopResolver,
     ZoneId timeZone,
     StreetNotesService streetNotesService,
-    OsmStreetDecoratorService osmStreetDecoratorService,
+    StreetDetailsService streetDetailsService,
     double ellipsoidToGeoidDifference
   ) {
     this.stopResolver = stopResolver;
     this.timeZone = ZoneIdFallback.zoneId(timeZone);
     this.streetNotesService = streetNotesService;
-    this.osmStreetDecoratorService = osmStreetDecoratorService;
+    this.streetDetailsService = streetDetailsService;
     this.ellipsoidToGeoidDifference = ellipsoidToGeoidDifference;
   }
 
@@ -380,7 +380,7 @@ public class GraphPathToItineraryMapper {
       states,
       previousStep,
       streetNotesService,
-      osmStreetDecoratorService,
+      streetDetailsService,
       ellipsoidToGeoidDifference
     );
     List<WalkStep> walkSteps = statesToWalkStepsMapper.generateWalkSteps();

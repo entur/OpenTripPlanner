@@ -21,7 +21,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
@@ -81,7 +81,7 @@ public class ConstructApplication {
     CommandLineParameters cli,
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository,
+    StreetDetailsRepository streetDetailsRepository,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     ConfigModel config,
@@ -106,7 +106,7 @@ public class ConstructApplication {
     this.factory = builder
       .configModel(config)
       .graph(graph)
-      .osmStreetDecoratorRepository(osmStreetDecoratorRepository)
+      .streetDetailsRepository(streetDetailsRepository)
       .timetableRepository(timetableRepository)
       .graphVisualizer(graphVisualizer)
       .worldEnvelopeRepository(worldEnvelopeRepository)
@@ -147,7 +147,7 @@ public class ConstructApplication {
       graphBuilderDataSources,
       graph(),
       osmInfoGraphBuildRepository,
-      factory.osmStreetDecoratorRepository(),
+      factory.streetDetailsRepository(),
       fareServiceFactory(),
       factory.timetableRepository(),
       factory.worldEnvelopeRepository(),
@@ -357,8 +357,8 @@ public class ConstructApplication {
     return factory.emissionRepository();
   }
 
-  public OsmStreetDecoratorRepository osmStreetDecoratorRepository() {
-    return factory.osmStreetDecoratorRepository();
+  public StreetDetailsRepository streetDetailsRepository() {
+    return factory.streetDetailsRepository();
   }
 
   @Nullable

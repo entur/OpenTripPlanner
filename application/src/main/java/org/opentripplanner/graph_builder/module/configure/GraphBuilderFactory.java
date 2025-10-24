@@ -41,7 +41,7 @@ import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.configure.VertexLinkerGraphBuildingModule;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.configure.OsmInfoGraphBuildServiceModule;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -113,7 +113,7 @@ public interface GraphBuilderFactory {
     Builder osmInfoGraphBuildRepository(OsmInfoGraphBuildRepository osmInfoGraphBuildRepository);
 
     @BindsInstance
-    Builder osmStreetDecoratorRepository(OsmStreetDecoratorRepository osmStreetDecoratorRepository);
+    Builder streetDetailsRepository(StreetDetailsRepository streetDetailsRepository);
 
     @BindsInstance
     Builder worldEnvelopeRepository(WorldEnvelopeRepository worldEnvelopeRepository);

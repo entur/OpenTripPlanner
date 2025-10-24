@@ -24,7 +24,7 @@ import org.opentripplanner.graph_builder.module.configure.GraphBuilderFactory;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -76,7 +76,7 @@ public class GraphBuilder implements Runnable {
     GraphBuilderDataSources dataSources,
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository,
+    StreetDetailsRepository streetDetailsRepository,
     FareServiceFactory fareServiceFactory,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
@@ -100,7 +100,7 @@ public class GraphBuilder implements Runnable {
       .config(config)
       .graph(graph)
       .osmInfoGraphBuildRepository(osmInfoGraphBuildRepository)
-      .osmStreetDecoratorRepository(osmStreetDecoratorRepository)
+      .streetDetailsRepository(streetDetailsRepository)
       .timetableRepository(timetableRepository)
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingService)

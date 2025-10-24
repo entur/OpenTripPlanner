@@ -70,7 +70,7 @@ public class FlexAccessEgressRouter {
       searchDays.additionalSearchDaysInFuture(),
       accessStops,
       egressStops,
-      serverContext.osmStreetDecoratorService()
+      serverContext.streetDetailsService()
     );
 
     return accessOrEgress.isEgress()

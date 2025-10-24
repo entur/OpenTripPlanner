@@ -1,4 +1,4 @@
-package org.opentripplanner.service.streetdecorator.model;
+package org.opentripplanner.service.streetdetails.model;
 
 /**
  * Represents a level with a comparable 0-based number and name.

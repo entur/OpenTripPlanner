@@ -28,7 +28,7 @@ import org.opentripplanner.model.projectinfo.OtpProjectInfo;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.kryosupport.KryoBuilder;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -64,7 +64,7 @@ public class SerializedGraphObject implements Serializable {
   @Nullable
   public final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
 
-  public final OsmStreetDecoratorRepository osmStreetDecoratorRepository;
+  public final StreetDetailsRepository streetDetailsRepository;
 
   public final TimetableRepository timetableRepository;
   public final WorldEnvelopeRepository worldEnvelopeRepository;
@@ -97,7 +97,7 @@ public class SerializedGraphObject implements Serializable {
   public SerializedGraphObject(
     Graph graph,
     @Nullable OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository,
+    StreetDetailsRepository streetDetailsRepository,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository parkingRepository,
@@ -113,7 +113,7 @@ public class SerializedGraphObject implements Serializable {
     this.graph = graph;
     this.edges = graph.getEdges();
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
-    this.osmStreetDecoratorRepository = osmStreetDecoratorRepository;
+    this.streetDetailsRepository = streetDetailsRepository;
     this.timetableRepository = timetableRepository;
     this.worldEnvelopeRepository = worldEnvelopeRepository;
     this.parkingRepository = parkingRepository;

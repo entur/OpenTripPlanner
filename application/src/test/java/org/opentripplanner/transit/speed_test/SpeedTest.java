@@ -135,7 +135,7 @@ public class SpeedTest {
       TestServerContext.createViaTransferResolver(graph, transitService),
       TestServerContext.createWorldEnvelopeService(),
       null,
-      TestServerContext.createOsmStreetDecoratorService(),
+      TestServerContext.createStreetDetailsService(),
       null,
       null,
       null,

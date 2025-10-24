@@ -23,9 +23,9 @@ import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalDirection;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUse;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorService;
-import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
-import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
+import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
@@ -56,7 +56,7 @@ public class StatesToWalkStepsMapper {
   private final double ellipsoidToGeoidDifference;
   private final StreetNotesService streetNotesService;
 
-  private final OsmStreetDecoratorService osmStreetDecoratorService;
+  private final StreetDetailsService streetDetailsService;
 
   private final List<State> states;
   private final WalkStep previous;
@@ -86,13 +86,13 @@ public class StatesToWalkStepsMapper {
     List<State> states,
     WalkStep previousStep,
     StreetNotesService streetNotesService,
-    OsmStreetDecoratorService osmStreetDecoratorService,
+    StreetDetailsService streetDetailsService,
     double ellipsoidToGeoidDifference
   ) {
     this.states = states;
     this.previous = previousStep;
     this.streetNotesService = streetNotesService;
-    this.osmStreetDecoratorService = osmStreetDecoratorService;
+    this.streetDetailsService = streetDetailsService;
     this.ellipsoidToGeoidDifference = ellipsoidToGeoidDifference;
   }
 
@@ -586,9 +586,7 @@ public class StatesToWalkStepsMapper {
     State backState,
     Edge edge
   ) {
-    Optional<EdgeLevelInfo> edgeLevelInfoOptional = osmStreetDecoratorService.findEdgeInformation(
-      edge
-    );
+    Optional<EdgeLevelInfo> edgeLevelInfoOptional = streetDetailsService.findEdgeInformation(edge);
     if (edgeLevelInfoOptional.isEmpty()) {
       return null;
     }

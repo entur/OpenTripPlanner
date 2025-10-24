@@ -26,7 +26,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
@@ -59,7 +59,7 @@ public class ConstructApplicationModule {
     StreetLimitationParametersService streetLimitationParametersService,
     @Nullable TraverseVisitor<?, ?> traverseVisitor,
     @Nullable @EmissionDecorator ItineraryDecorator emissionItineraryDecorator,
-    OsmStreetDecoratorService osmStreetDecoratorService,
+    StreetDetailsService streetDetailsService,
     @Nullable @GtfsSchema GraphQLSchema gtfsSchema,
     @Nullable @TransmodelSchema GraphQLSchema transmodelSchema,
     @Nullable EmpiricalDelayService empiricalDelayService,
@@ -100,7 +100,7 @@ public class ConstructApplicationModule {
       worldEnvelopeService,
       // Optional Sandbox services
       emissionItineraryDecorator,
-      osmStreetDecoratorService,
+      streetDetailsService,
       empiricalDelayService,
       luceneIndex,
       gtfsSchema,

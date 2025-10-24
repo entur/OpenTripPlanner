@@ -39,7 +39,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.model.Platform;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.model.StreetLimitationParameters;
@@ -69,7 +69,7 @@ public class OsmModule implements GraphBuilderModule {
   private final Graph graph;
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
 
-  private final OsmStreetDecoratorRepository osmStreetDecoratorRepository;
+  private final StreetDetailsRepository streetDetailsRepository;
 
   private final VehicleParkingRepository parkingRepository;
 
@@ -82,7 +82,7 @@ public class OsmModule implements GraphBuilderModule {
     Collection<OsmProvider> providers,
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository,
+    StreetDetailsRepository streetDetailsRepository,
     VehicleParkingRepository parkingRepository,
     DataImportIssueStore issueStore,
     StreetLimitationParameters streetLimitationParameters,
@@ -91,7 +91,7 @@ public class OsmModule implements GraphBuilderModule {
     this.providers = List.copyOf(providers);
     this.graph = graph;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
-    this.osmStreetDecoratorRepository = osmStreetDecoratorRepository;
+    this.streetDetailsRepository = streetDetailsRepository;
     this.parkingRepository = parkingRepository;
     this.issueStore = issueStore;
     this.params = params;
@@ -324,7 +324,7 @@ public class OsmModule implements GraphBuilderModule {
     var edgeLevelInfoProcessor = new EdgeLevelInfoProcessor(
       issueStore,
       params.includeEdgeLevelInfo(),
-      osmStreetDecoratorRepository
+      streetDetailsRepository
     );
 
     WAY: for (OsmWay way : osmdb.getWays()) {

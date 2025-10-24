@@ -7,30 +7,30 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToWay;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
-import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
-import org.opentripplanner.service.streetdecorator.model.Level;
-import org.opentripplanner.service.streetdecorator.model.VertexLevelInfo;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
+import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
  * Contains logic for storing edge level info in the
- * {@link OsmStreetDecoratorRepository}.
+ * {@link StreetDetailsRepository}.
  */
 class EdgeLevelInfoProcessor {
 
   private final DataImportIssueStore issueStore;
-  private final OsmStreetDecoratorRepository osmStreetDecoratorRepository;
+  private final StreetDetailsRepository streetDetailsRepository;
   private final boolean includeEdgeLevelInfo;
 
   public EdgeLevelInfoProcessor(
     DataImportIssueStore issueStore,
     boolean includeEdgeLevelInfo,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository
+    StreetDetailsRepository streetDetailsRepository
   ) {
     this.issueStore = issueStore;
     this.includeEdgeLevelInfo = includeEdgeLevelInfo;
-    this.osmStreetDecoratorRepository = osmStreetDecoratorRepository;
+    this.streetDetailsRepository = streetDetailsRepository;
   }
 
   public Optional<EdgeLevelInfo> getEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
@@ -108,10 +108,10 @@ class EdgeLevelInfoProcessor {
     Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
     if (edge != null && edgeLevelInfo.canBeAppliedToEdge(edge)) {
       if (forwardEdge != null) {
-        osmStreetDecoratorRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
+        streetDetailsRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
       }
       if (backwardEdge != null) {
-        osmStreetDecoratorRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
+        streetDetailsRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
       }
     } else {
       issueStore.add(new CouldNotApplyMultiLevelInfoToWay(way, way.getNodeRefs().size()));

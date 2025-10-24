@@ -72,7 +72,7 @@ public class DirectFlexRouter {
         additionalSearchDays.additionalSearchDaysInFuture(),
         accessStops,
         egressStops,
-        serverContext.osmStreetDecoratorService()
+        serverContext.streetDetailsService()
       );
 
       return new ArrayList<>(flexRouter.createFlexOnlyItineraries(request.arriveBy()));

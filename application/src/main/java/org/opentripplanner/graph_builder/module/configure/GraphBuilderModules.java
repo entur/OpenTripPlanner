@@ -45,7 +45,7 @@ import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.street.model.StreetLimitationParameters;
@@ -66,7 +66,7 @@ public class GraphBuilderModules {
     BuildConfig config,
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository,
+    StreetDetailsRepository streetDetailsRepository,
     VehicleParkingRepository vehicleParkingRepository,
     DataImportIssueStore issueStore,
     StreetLimitationParameters streetLimitationParameters
@@ -93,7 +93,7 @@ public class GraphBuilderModules {
       .withStaticParkAndRide(config.staticParkAndRide)
       .withStaticBikeParkAndRide(config.staticBikeParkAndRide)
       .withIncludeEdgeLevelInfo(config.includeEdgeLevelInfo)
-      .withOsmStreetDecoratorRepository(osmStreetDecoratorRepository)
+      .withStreetDetailsRepository(streetDetailsRepository)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
       .withIncludeOsmSubwayEntrances(config.osmDefaults.includeOsmSubwayEntrances())

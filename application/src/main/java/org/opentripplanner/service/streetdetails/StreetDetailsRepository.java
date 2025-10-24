@@ -1,16 +1,16 @@
-package org.opentripplanner.service.streetdecorator;
+package org.opentripplanner.service.streetdetails;
 
 import java.io.Serializable;
 import java.util.Optional;
-import org.opentripplanner.service.streetdecorator.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
  * Store OSM level and incline data used for returning responses to requests.
  * <p>
- * This is a repository to support the {@link OsmStreetDecoratorService}.
+ * This is a repository to support the {@link StreetDetailsService}.
  */
-public interface OsmStreetDecoratorRepository extends Serializable {
+public interface StreetDetailsRepository extends Serializable {
   /**
    * Associate the edge with level information.
    */

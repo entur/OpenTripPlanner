@@ -11,7 +11,7 @@ import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.CommandLineParameters;
@@ -60,7 +60,7 @@ public class LoadApplication {
     return createAppConstruction(
       obj.graph,
       obj.osmInfoGraphBuildRepository,
-      obj.osmStreetDecoratorRepository,
+      obj.streetDetailsRepository,
       obj.timetableRepository,
       obj.worldEnvelopeRepository,
       obj.parkingRepository,
@@ -78,7 +78,7 @@ public class LoadApplication {
     return createAppConstruction(
       factory.emptyGraph(),
       factory.emptyOsmInfoGraphBuildRepository(),
-      factory.emptyOsmStreetDecoratorRepository(),
+      factory.emptyStreetDetailsRepository(),
       factory.emptyTimetableRepository(),
       factory.emptyWorldEnvelopeRepository(),
       factory.emptyVehicleParkingRepository(),
@@ -105,7 +105,7 @@ public class LoadApplication {
   private ConstructApplication createAppConstruction(
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    OsmStreetDecoratorRepository osmStreetDecoratorRepository,
+    StreetDetailsRepository streetDetailsRepository,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository parkingRepository,
@@ -120,7 +120,7 @@ public class LoadApplication {
       cli,
       graph,
       osmInfoGraphBuildRepository,
-      osmStreetDecoratorRepository,
+      streetDetailsRepository,
       timetableRepository,
       worldEnvelopeRepository,
       config(),

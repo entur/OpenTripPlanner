@@ -1,4 +1,4 @@
-package org.opentripplanner.service.streetdecorator.model;
+package org.opentripplanner.service.streetdetails.model;
 
 import java.util.Objects;
 import org.opentripplanner.street.model.edge.Edge;

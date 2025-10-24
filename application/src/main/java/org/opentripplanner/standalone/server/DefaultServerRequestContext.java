@@ -29,7 +29,7 @@ import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.service.DefaultRoutingService;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
-import org.opentripplanner.service.streetdecorator.OsmStreetDecoratorService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
@@ -70,7 +70,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Nullable
   private final ItineraryDecorator emissionItineraryDecorator;
 
-  private final OsmStreetDecoratorService osmStreetDecoratorService;
+  private final StreetDetailsService streetDetailsService;
 
   @Nullable
   private final EmpiricalDelayService empiricalDelayService;
@@ -132,7 +132,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     ViaCoordinateTransferFactory viaTransferResolver,
     WorldEnvelopeService worldEnvelopeService,
     @Nullable ItineraryDecorator emissionItineraryDecorator,
-    OsmStreetDecoratorService osmStreetDecoratorService,
+    StreetDetailsService streetDetailsService,
     @Nullable EmpiricalDelayService empiricalDelayService,
     @Nullable LuceneIndex luceneIndex,
     @Nullable @GtfsSchema GraphQLSchema gtfsSchema,
@@ -166,7 +166,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
 
     // Optional fields
     this.emissionItineraryDecorator = emissionItineraryDecorator;
-    this.osmStreetDecoratorService = osmStreetDecoratorService;
+    this.streetDetailsService = streetDetailsService;
     this.empiricalDelayService = empiricalDelayService;
     this.luceneIndex = luceneIndex;
     this.gtfsSchema = gtfsSchema;
@@ -315,8 +315,8 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   }
 
   @Override
-  public OsmStreetDecoratorService osmStreetDecoratorService() {
-    return osmStreetDecoratorService;
+  public StreetDetailsService streetDetailsService() {
+    return streetDetailsService;
   }
 
   @Override

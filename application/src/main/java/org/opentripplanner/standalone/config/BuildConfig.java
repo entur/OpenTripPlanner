@@ -360,7 +360,7 @@ public class BuildConfig implements OtpDataStoreConfig {
     includeEdgeLevelInfo = root
       .of("includeEdgeLevelInfo")
       .since(V2_9)
-      .summary("Whether level info for edges should be stored in the OsmStreetDecoratorService.")
+      .summary("Whether level info for edges should be stored in the StreetDetailsService.")
       .asBoolean(false);
     subwayAccessTime = root
       .of("subwayAccessTime")
