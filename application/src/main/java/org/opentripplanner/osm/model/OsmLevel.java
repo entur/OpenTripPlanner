@@ -25,14 +25,10 @@ public class OsmLevel implements Comparable<OsmLevel> {
 
   @Override
   public boolean equals(Object object) {
-    if (object instanceof OsmLevel other) {
-      // Levels should be equal if their 0-based number representations are equal.
-      // There should be no need to compare names.
-      // For example, comparing the default level and a ground level with a name should be equal.
-      return this.level == other.level;
-    } else {
-      return false;
-    }
+    // Levels should be equal if their 0-based number representations are equal.
+    // There should be no need to compare names.
+    // For example, comparing the default level and a ground level with a name should be equal.
+    return object instanceof OsmLevel other && this.level == other.level;
   }
 
   /**
