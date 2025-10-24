@@ -151,7 +151,7 @@ public class RaptorRoutingRequestTransitDataCreatorTest {
     var result = subject.createTripPatterns(
       2,
       0,
-      new RouteRequestTransitDataProviderFilter(RouteRequest.defaultValue()),
+      DefaultTransitDataProviderFilter.ofRequest(RouteRequest.defaultValue()),
       TransitGroupPriorityService.empty()
     );
     var expectedDates = List.of(
