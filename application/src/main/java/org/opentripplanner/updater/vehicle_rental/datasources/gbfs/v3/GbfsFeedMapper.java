@@ -169,7 +169,7 @@ public class GbfsFeedMapper
 
     return TranslatedString.getI18NString(
       name.stream().collect(toMap(language, text)),
-      true,
+      false,
       false
     );
   }
