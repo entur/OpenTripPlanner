@@ -171,6 +171,7 @@ public class TimeUtils {
   }
 
   /// Round the given `value` to the closest second value.
+  /// Throws [NullPointerException] if `value` is `null`
   public static ZonedDateTime normalize(ZonedDateTime value) {
     return value.plusNanos(NANOS_IN_SECOND / 2).truncatedTo(ChronoUnit.SECONDS);
   }

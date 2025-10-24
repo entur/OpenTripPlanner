@@ -3,7 +3,6 @@ package org.opentripplanner.model.plan;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -156,7 +155,7 @@ public class Itinerary implements ItinerarySortKey {
    * @see #endTime() for details no the normalization.
    */
   public ZonedDateTime startTime() {
-    return legs().getFirst().startTime().truncatedTo(ChronoUnit.SECONDS);
+    return legs().getFirst().startTime();
   }
 
   /**
@@ -169,12 +168,14 @@ public class Itinerary implements ItinerarySortKey {
   }
 
   /**
-   * Time that the trip arrives. The value is normalized (rounded to seconds) is requiered for the
-   * paging to work properly. We serialize the times in the paging-token with a resolution of
-   * seconds. When filtering the page-cut, any millis part could cause duplicates.
+   * Time that the trip arrives. The time is normalized(rounded to closest second). The value is
+   * normalized (rounded to seconds) is required for the paging to work properly. We serialize the
+   * times in the paging-token with a resolution of seconds. When filtering the page-cut, any
+   * millis part could cause duplicates. This also have an effect when sorting itineraries in the
+   * itinerary-filter-chain.
    */
   public ZonedDateTime endTime() {
-    return legs().getLast().endTime().truncatedTo(ChronoUnit.SECONDS);
+    return legs().getLast().endTime();
   }
 
   /**
