@@ -39,7 +39,7 @@ public class PlanResponse {
     this.nextPageCursor = nextPageCursor;
   }
 
-  public static PlanResponseBuilder builder() {
+  public static PlanResponseBuilder of() {
     return new PlanResponseBuilder();
   }
 

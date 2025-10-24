@@ -39,7 +39,7 @@ class PlanResponseBuilderTest {
   void buildWithMinimalData() {
     TripPlan tripPlan = createTripPlan(List.of());
 
-    PlanResponse response = PlanResponse.builder().withPlan(tripPlan).build();
+    PlanResponse response = PlanResponse.of().withPlan(tripPlan).build();
 
     assertNotNull(response);
     assertEquals(TEST_DATE, response.date());
@@ -67,7 +67,7 @@ class PlanResponseBuilderTest {
     PageCursor previousCursor = createPageCursor(PageType.PREVIOUS_PAGE);
     PageCursor nextCursor = createPageCursor(PageType.NEXT_PAGE);
 
-    PlanResponse response = PlanResponse.builder()
+    PlanResponse response = PlanResponse.of()
       .withPlan(tripPlan)
       .withMetadata(metadata)
       .withMessages(messages)

@@ -39,7 +39,7 @@ public class TransmodelGraphQLPlanner {
     try {
       request = requestBuilder.buildRequest();
       RoutingResponse res = ctx.getRoutingService().route(request);
-      response = PlanResponse.builder()
+      response = PlanResponse.of()
         .withPlan(res.getTripPlan())
         .withMetadata(res.getMetadata())
         .withMessages(res.getRoutingErrors())
@@ -48,7 +48,7 @@ public class TransmodelGraphQLPlanner {
         .withNextPageCursor(res.getNextPageCursor())
         .build();
     } catch (RoutingValidationException e) {
-      response = PlanResponse.builder()
+      response = PlanResponse.of()
         .withPlan(TripPlanMapper.mapEmptyTripPlan(requestBuilder))
         .withMessages(e.getRoutingErrors())
         .build();
