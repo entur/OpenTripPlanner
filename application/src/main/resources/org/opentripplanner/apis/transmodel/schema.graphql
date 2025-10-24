@@ -1179,7 +1179,7 @@ type ServerInfo {
   """
   internalTransitModelTimeZone: String
   "Number of CPU cores on the OTP server"
-  nCores: Int
+  numberOfCores: Int
   "The 'configVersion' of the otp-config.json file."
   otpConfigVersion: String
   "The otp-serialization-version-id used to check graphs for compatibility with current version of OTP."

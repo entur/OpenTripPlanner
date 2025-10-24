@@ -113,7 +113,7 @@ public class ServerInfoType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("nCores")
+          .name("numberOfCores")
           .description("Number of CPU cores on the OTP server")
           .type(Scalars.GraphQLInt)
           .dataFetcher(e -> Runtime.getRuntime().availableProcessors())
