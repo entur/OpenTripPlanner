@@ -1187,9 +1187,9 @@ type ServerInfo {
   "The 'configVersion' of the router-config.json file."
   routerConfigVersion: String
   "End date of the transit data validity period"
-  transitServiceValidityEnd: String
+  transitServiceValidityEnd: Date
   "Start date of the transit data validity period"
-  transitServiceValidityStart: String
+  transitServiceValidityStart: Date
   "Maven version"
   version: String
 }

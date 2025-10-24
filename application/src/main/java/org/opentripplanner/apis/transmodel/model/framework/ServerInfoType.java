@@ -9,30 +9,9 @@ import graphql.Scalars;
 import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLObjectType;
 import graphql.schema.GraphQLOutputType;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
 
 public class ServerInfoType {
-
-  private static int getCpuCores() {
-    int nCores = 0;
-    try {
-      InputStream fis = new FileInputStream("/proc/cpuinfo");
-      BufferedReader br = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
-      String line;
-      while ((line = br.readLine()) != null) {
-        if (line.startsWith("model name")) {
-          nCores += 1;
-        }
-      }
-      fis.close();
-    } catch (Exception ignore) {}
-    return nCores;
-  }
 
   public static GraphQLOutputType create() {
     return GraphQLObjectType.newObject()
@@ -137,17 +116,17 @@ public class ServerInfoType {
           .name("nCores")
           .description("Number of CPU cores on the OTP server")
           .type(Scalars.GraphQLInt)
-          .dataFetcher(e -> getCpuCores())
+          .dataFetcher(e -> Runtime.getRuntime().availableProcessors())
           .build()
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("transitServiceValidityEnd")
           .description("End date of the transit data validity period")
-          .type(Scalars.GraphQLString)
+          .type(TransmodelScalars.DATE_SCALAR)
           .dataFetcher(e -> {
             var zonedDateTime = GqlUtil.getTransitService(e).getTransitServiceEnds();
-            return zonedDateTime != null ? zonedDateTime.toLocalDate().toString() : null;
+            return zonedDateTime != null ? zonedDateTime.toLocalDate() : null;
           })
           .build()
       )
@@ -155,10 +134,10 @@ public class ServerInfoType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("transitServiceValidityStart")
           .description("Start date of the transit data validity period")
-          .type(Scalars.GraphQLString)
+          .type(TransmodelScalars.DATE_SCALAR)
           .dataFetcher(e -> {
             var zonedDateTime = GqlUtil.getTransitService(e).getTransitServiceStarts();
-            return zonedDateTime != null ? zonedDateTime.toLocalDate().toString() : null;
+            return zonedDateTime != null ? zonedDateTime.toLocalDate() : null;
           })
           .build()
       )
