@@ -3,7 +3,6 @@ package org.opentripplanner.framework.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.framework.model.Cost.ONE_HOUR_WITH_TRANSIT;
 
@@ -11,11 +10,12 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
 
 class CostTest {
 
-  private static final int VALUE_SECONDS = 10;
-  private final Cost subject = Cost.costOfSeconds(VALUE_SECONDS);
+  private static final int VALUE_CENTI_SECONDS = 1001;
+  private final Cost subject = Cost.costOfCentiSeconds(VALUE_CENTI_SECONDS);
 
   @Test
   void oneHourWithTransit() {
@@ -66,7 +66,7 @@ class CostTest {
 
   @Test
   void testToCentiSeconds() {
-    assertEquals(100 * VALUE_SECONDS, subject.toCentiSeconds());
+    assertEquals(VALUE_CENTI_SECONDS, subject.toCentiSeconds());
   }
 
   @Test
@@ -77,24 +77,24 @@ class CostTest {
 
   @Test
   void asDuration() {
-    assertEquals(Duration.ofSeconds(VALUE_SECONDS), subject.asDuration());
+    assertEquals(Duration.ofMillis(10 * VALUE_CENTI_SECONDS), subject.asDuration());
   }
 
   @Test
   void plus() {
-    assertEquals("$13", subject.plus(Cost.costOfSeconds(3)).toString());
+    assertEquals("$13.01", subject.plus(Cost.costOfSeconds(3)).toString());
   }
 
   @Test
   void minus() {
-    assertEquals("$7", subject.minus(Cost.costOfSeconds(3)).toString());
+    assertEquals("$7.01", subject.minus(Cost.costOfSeconds(3)).toString());
   }
 
   @Test
   void testMultiply() {
-    assertEquals("$30", subject.multiply(3).toString());
-    assertEquals("$12.50", subject.multiply(1.25).toString());
-    assertEquals("$13.40", subject.multiply(1.34).toString());
+    assertEquals("$30.03", subject.multiply(3).toString());
+    assertEquals("$12.51", subject.multiply(1.25).toString());
+    assertEquals("$13.41", subject.multiply(1.34).toString());
   }
 
   @Test
@@ -121,10 +121,11 @@ class CostTest {
   }
 
   @Test
-  void test() {
+  void normalize() {
     Cost c2 = Cost.costOfSeconds(2);
 
-    assertSame(c2, c2.normalize());
+    var n = c2.normalize();
+    assertEquals(n, n.normalize());
     assertEquals(c2, Cost.costOfCentiSeconds(150).normalize());
     assertEquals(c2, Cost.costOfCentiSeconds(200).normalize());
     assertEquals(c2, Cost.costOfCentiSeconds(249).normalize());
@@ -132,25 +133,27 @@ class CostTest {
 
   @Test
   void testToString() {
-    assertEquals("$10", subject.toString());
+    assertEquals("$10.01", subject.toString());
+    assertEquals("$10", subject.normalize().toString());
   }
 
   @Test
   void testHashCodeAndEquals() {
-    var same = Cost.costOfSeconds(VALUE_SECONDS);
-    assertEquals(subject, same);
-    assertEquals(subject.hashCode(), same.hashCode());
-
+    var same = Cost.costOfCentiSeconds(VALUE_CENTI_SECONDS);
     var other = subject.multiply(1.1);
-    assertNotEquals(subject, other);
-    assertNotEquals(subject.hashCode(), other.hashCode());
+
+    AssertEqualsAndHashCode.verify(subject).sameAs(same).differentFrom(other);
+
+    AssertEqualsAndHashCode.verify(subject.normalize())
+      .sameAs(same.normalize())
+      .differentFrom(other.normalize());
   }
 
   @Test
   void testCompareTo() {
-    var c3 = Cost.costOfSeconds(3);
-    var c7 = Cost.costOfSeconds(7);
-    var c8 = Cost.costOfSeconds(8);
+    var c3 = Cost.costOfCentiSeconds(3);
+    var c7 = Cost.costOfCentiSeconds(7);
+    var c8 = Cost.costOfCentiSeconds(8);
 
     assertEquals(List.of(c3, c7), Stream.of(c7, c3).sorted().toList());
     assertEquals(List.of(c3, c7, c8), Stream.of(c8, c3, c7).sorted().toList());

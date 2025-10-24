@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.framework.model.NormalizedCost;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.SystemNotice;
 import org.opentripplanner.model.fare.ItineraryFare;
@@ -39,7 +40,7 @@ public class Itinerary implements ItinerarySortKey {
   /* COST AND PENALTY */
   private final TimeAndCost accessPenalty;
   private final TimeAndCost egressPenalty;
-  private final Cost generalizedCost;
+  private final NormalizedCost generalizedCost;
 
   @Nullable
   private final Integer generalizedCost2;

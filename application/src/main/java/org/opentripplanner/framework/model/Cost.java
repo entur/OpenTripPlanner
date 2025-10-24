@@ -12,7 +12,7 @@ import org.opentripplanner.utils.lang.OtpNumberFormat;
  * <p>
  * This is an immutable, thread-safe value-object.
  */
-public final class Cost implements Serializable, Comparable<Cost> {
+public sealed class Cost implements Serializable, Comparable<Cost> permits NormalizedCost {
 
   private static final int CENTI_FACTOR = 100;
 
@@ -23,12 +23,12 @@ public final class Cost implements Serializable, Comparable<Cost> {
   /** The unit is centi-seconds (1/100 of a second) */
   private final int value;
 
-  private Cost(int value) {
+  Cost(int value) {
     this.value = IntUtils.requireNotNegative(value);
   }
 
   public static Cost costOfSeconds(int valueInTransitSeconds) {
-    return new Cost(valueInTransitSeconds * CENTI_FACTOR);
+    return new Cost(toCentiSeconds(valueInTransitSeconds));
   }
 
   public static Cost costOfSeconds(double valueInTransitSeconds) {
@@ -51,7 +51,7 @@ public final class Cost implements Serializable, Comparable<Cost> {
    * Returns the cost in seconds. The value is rounded to the nearest second.
    */
   public int toSeconds() {
-    return (value + CENTI_FACTOR / 2) / CENTI_FACTOR;
+    return roundToSeconds(value);
   }
 
   public int toCentiSeconds() {
@@ -103,11 +103,8 @@ public final class Cost implements Serializable, Comparable<Cost> {
   /**
    * This method round the cost to the nearest second, dropping any centi-seconds.
    */
-  public Cost normalize() {
-    if (value % CENTI_FACTOR == 0) {
-      return this;
-    }
-    return Cost.costOfSeconds(toSeconds());
+  public NormalizedCost normalize() {
+    return new NormalizedCost(value);
   }
 
   @Override
@@ -120,11 +117,10 @@ public final class Cost implements Serializable, Comparable<Cost> {
     if (this == o) {
       return true;
     }
-    if (o == null || getClass() != o.getClass()) {
+    if (o == null) {
       return false;
     }
-    var that = (Cost) o;
-    return value == that.value;
+    return (o instanceof Cost c) ? value == c.value : false;
   }
 
   @Override
@@ -135,5 +131,13 @@ public final class Cost implements Serializable, Comparable<Cost> {
   @Override
   public int compareTo(Cost o) {
     return value - o.value;
+  }
+
+  static int roundToSeconds(int centiSeconds) {
+    return (centiSeconds + CENTI_FACTOR / 2) / CENTI_FACTOR;
+  }
+
+  static int toCentiSeconds(int seconds) {
+    return seconds * CENTI_FACTOR;
   }
 }

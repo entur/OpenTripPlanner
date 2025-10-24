@@ -222,13 +222,13 @@ public interface Leg {
   LegCallTime end();
 
   /**
-   * The date and time this leg begins.
+   * The date and time this leg begins. This is normalized/rounded to the closest second.
    * TODO Does the start-time incorporate slack and/or wait-time? - This should be documented!
    */
   ZonedDateTime startTime();
 
   /**
-   * The date and time this leg ends.
+   * The date and time this leg ends. This is normalized/rounded to the closest second.
    * TODO Does the end-time incorporate slack and/or wait-time? - This should be documented!
    */
   ZonedDateTime endTime();
