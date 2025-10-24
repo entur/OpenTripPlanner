@@ -4,7 +4,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.service.streetdetails.model.Level;
 
 /**
- * Represents information about an escalator stored in
+ * Represents information about a single use of an escalator related to
  * {@link org.opentripplanner.model.plan.walkstep.WalkStep}.
  */
 public class EscalatorUse extends InclinedVerticalTransportationUse {
