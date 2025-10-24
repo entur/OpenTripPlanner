@@ -233,7 +233,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 731,
+      "generalizedCost" : 732,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -428,7 +428,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 731,
+      "generalizedCost" : 732,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -623,7 +623,7 @@ org.opentripplanner.routing.algorithm.mapping.CarSnapshotTest.directCarPickupWit
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 60,
+      "generalizedCost" : 61,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
