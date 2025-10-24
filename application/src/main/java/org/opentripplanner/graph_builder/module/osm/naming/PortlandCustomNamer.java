@@ -98,7 +98,7 @@ public class PortlandCustomNamer implements EdgeNamer {
   }
 
   @Override
-  public void postprocess() {
+  public void finalizeNames() {
     for (StreetEdge e : nameByOrigin) {
       nameAccordingToOrigin(e, 15);
     }

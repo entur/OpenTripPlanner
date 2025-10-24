@@ -225,7 +225,7 @@ public class OsmModule implements GraphBuilderModule {
 
     TurnRestrictionUnifier.unifyTurnRestrictions(osmdb, issueStore, osmInfoGraphBuildRepository);
 
-    params.edgeNamer().postprocess();
+    params.edgeNamer().finalizeNames();
 
     normalizer.applySafetyFactors();
   }
@@ -678,6 +678,7 @@ public class OsmModule implements GraphBuilderModule {
       .withCarSpeed(carSpeed)
       .withLink(way.isLink())
       .withRoundabout(way.isRoundabout())
+      .withCrossing(way.isCrossing())
       .withSlopeOverride(way.getOsmProvider().getWayPropertySet().getSlopeOverride(way))
       .withStairs(way.isSteps())
       .withWheelchairAccessible(way.isWheelchairAccessible())
