@@ -31,7 +31,7 @@ public interface EdgeNamer {
 
   /**
    * Called after each edge has been named to build a more complex name out of the relationships
-   * tracked in {@link EdgeNamer#recordEdges(OsmEntity, StreetEdgePair)}.
+   * tracked in {@link EdgeNamer#recordEdges(OsmWay, StreetEdgePair)}.
    */
   void finalizeNames();
 

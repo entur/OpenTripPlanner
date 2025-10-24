@@ -188,12 +188,12 @@ public class PortlandCustomNamer implements EdgeNamer {
     return null;
   }
 
-  private static boolean isHighwayLink(OsmEntity way) {
+  private static boolean isHighwayLink(OsmWay way) {
     String highway = way.getTag("highway");
     return "motorway_link".equals(highway) || "trunk_link".equals(highway);
   }
 
-  private static boolean isLowerLink(OsmEntity way) {
+  private static boolean isLowerLink(OsmWay way) {
     String highway = way.getTag("highway");
     return (
       "secondary_link".equals(highway) ||
