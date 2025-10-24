@@ -1,5 +1,6 @@
 package org.opentripplanner.service.streetdecorator.model;
 
+import java.util.Objects;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 
@@ -8,14 +9,14 @@ import org.opentripplanner.street.model.vertex.OsmVertex;
  * {@link VertexLevelInfo} objects for the first and last vertices of an edge. The lower vertex
  * is represented by lowerVertexInfo and the higher one by upperVertexInfo.
  */
-public record EdgeLevelInfo(VertexLevelInfo lowerVertexInfo, VertexLevelInfo upperVertexInfo) {
-  public EdgeLevelInfo {
-    if (lowerVertexInfo == null) {
-      throw new IllegalArgumentException("lowerVertexInfo can not be null");
-    }
-    if (upperVertexInfo == null) {
-      throw new IllegalArgumentException("upperVertexInfo can not be null");
-    }
+public class EdgeLevelInfo {
+
+  private final VertexLevelInfo lowerVertexInfo;
+  private final VertexLevelInfo upperVertexInfo;
+
+  public EdgeLevelInfo(VertexLevelInfo lowerVertexInfo, VertexLevelInfo upperVertexInfo) {
+    this.lowerVertexInfo = Objects.requireNonNull(lowerVertexInfo);
+    this.upperVertexInfo = Objects.requireNonNull(upperVertexInfo);
   }
 
   /**
@@ -31,6 +32,28 @@ public record EdgeLevelInfo(VertexLevelInfo lowerVertexInfo, VertexLevelInfo upp
           upperVertexInfo.osmNodeId() == toVertex.nodeId()) ||
         (lowerVertexInfo.osmNodeId() == toVertex.nodeId() &&
           upperVertexInfo.osmNodeId() == fromVertex.nodeId()))
+    );
+  }
+
+  public VertexLevelInfo lowerVertexInfo() {
+    return lowerVertexInfo;
+  }
+
+  public VertexLevelInfo upperVertexInfo() {
+    return upperVertexInfo;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(lowerVertexInfo, upperVertexInfo);
+  }
+
+  @Override
+  public boolean equals(Object object) {
+    return (
+      object instanceof EdgeLevelInfo other &&
+      Objects.equals(lowerVertexInfo, other.lowerVertexInfo) &&
+      Objects.equals(upperVertexInfo, other.upperVertexInfo)
     );
   }
 }
