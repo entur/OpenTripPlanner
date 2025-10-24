@@ -1,5 +1,6 @@
 package org.opentripplanner.service.streetdetails.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.OsmVertex;
@@ -9,7 +10,7 @@ import org.opentripplanner.street.model.vertex.OsmVertex;
  * {@link VertexLevelInfo} objects for the first and last vertices of an edge. The lower vertex
  * is represented by lowerVertexInfo and the higher one by upperVertexInfo.
  */
-public class EdgeLevelInfo {
+public class EdgeLevelInfo implements Serializable {
 
   private final VertexLevelInfo lowerVertexInfo;
   private final VertexLevelInfo upperVertexInfo;
