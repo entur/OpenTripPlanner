@@ -59,16 +59,16 @@ class EscalatorProcessor {
         EscalatorEdge.createEscalatorEdge(fromVertex, toVertex, length, duration.orElse(null)),
         null
       );
-    } else if (escalatorWay.isBackwardEscalator()) {
+    }
+    if (escalatorWay.isBackwardEscalator()) {
       return new EscalatorEdgePair(
         null,
         EscalatorEdge.createEscalatorEdge(toVertex, fromVertex, length, duration.orElse(null))
       );
-    } else {
-      return new EscalatorEdgePair(
-        EscalatorEdge.createEscalatorEdge(fromVertex, toVertex, length, duration.orElse(null)),
-        EscalatorEdge.createEscalatorEdge(toVertex, fromVertex, length, duration.orElse(null))
-      );
     }
+    return new EscalatorEdgePair(
+      EscalatorEdge.createEscalatorEdge(fromVertex, toVertex, length, duration.orElse(null)),
+      EscalatorEdge.createEscalatorEdge(toVertex, fromVertex, length, duration.orElse(null))
+    );
   }
 }
