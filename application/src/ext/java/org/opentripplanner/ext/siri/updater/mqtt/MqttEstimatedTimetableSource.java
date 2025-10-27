@@ -18,6 +18,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,7 +56,7 @@ public class MqttEstimatedTimetableSource implements AsyncEstimatedTimetableSour
 
   private Mqtt5AsyncClient client;
   private Function<ServiceDelivery, Future<?>> serviceDeliveryConsumer;
-  private final List<Future<?>> graphUpdates = new ArrayList<>();
+  private final List<Future<?>> graphUpdates = Collections.synchronizedList(new ArrayList<>());
 
   private final BlockingQueue<byte[]> liveMessageQueue = new LinkedBlockingQueue<>();
   private final BlockingQueue<byte[]> primingMessageQueue = new LinkedBlockingQueue<>();
