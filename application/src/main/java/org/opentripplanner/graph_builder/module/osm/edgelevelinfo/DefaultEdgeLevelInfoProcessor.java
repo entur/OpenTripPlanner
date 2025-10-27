@@ -1,10 +1,11 @@
-package org.opentripplanner.graph_builder.module.osm;
+package org.opentripplanner.graph_builder.module.osm.edgelevelinfo;
 
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToWay;
+import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
@@ -13,31 +14,21 @@ import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 
-/**
- * Contains logic for storing edge level info in the
- * {@link StreetDetailsRepository}.
- */
-class EdgeLevelInfoProcessor {
+public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
 
   private final DataImportIssueStore issueStore;
   private final StreetDetailsRepository streetDetailsRepository;
-  private final boolean includeEdgeLevelInfo;
 
-  public EdgeLevelInfoProcessor(
+  public DefaultEdgeLevelInfoProcessor(
     DataImportIssueStore issueStore,
-    boolean includeEdgeLevelInfo,
     StreetDetailsRepository streetDetailsRepository
   ) {
     this.issueStore = issueStore;
-    this.includeEdgeLevelInfo = includeEdgeLevelInfo;
     this.streetDetailsRepository = streetDetailsRepository;
   }
 
+  @Override
   public Optional<EdgeLevelInfo> getEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
-    if (!includeEdgeLevelInfo) {
-      return Optional.empty();
-    }
-
     List<OsmLevel> levels = osmdb.getLevelsForEntity(way);
     var nodeRefs = way.getNodeRefs();
     long firstNodeRef = nodeRefs.get(0);
@@ -92,6 +83,7 @@ class EdgeLevelInfoProcessor {
     return Optional.empty();
   }
 
+  @Override
   public void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,

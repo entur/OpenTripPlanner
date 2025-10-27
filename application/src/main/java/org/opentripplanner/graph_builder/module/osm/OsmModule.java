@@ -27,6 +27,8 @@ import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
+import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.DefaultEdgeLevelInfoProcessor;
+import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.NoopEdgeLevelInfoProcessor;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.model.OsmEntity;
@@ -321,11 +323,9 @@ public class OsmModule implements GraphBuilderModule {
     ProgressTracker progress = ProgressTracker.track("Build street graph", 5_000, wayCount);
     LOG.info(progress.startMessage());
     var escalatorProcessor = new EscalatorProcessor(issueStore);
-    var edgeLevelInfoProcessor = new EdgeLevelInfoProcessor(
-      issueStore,
-      params.includeEdgeLevelInfo(),
-      streetDetailsRepository
-    );
+    var edgeLevelInfoProcessor = params.includeEdgeLevelInfo()
+      ? new DefaultEdgeLevelInfoProcessor(issueStore, streetDetailsRepository)
+      : new NoopEdgeLevelInfoProcessor();
 
     WAY: for (OsmWay way : osmdb.getWays()) {
       WayPropertiesPair wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
