@@ -197,7 +197,7 @@ public interface CallWrapper {
 
     @Override
     public List<NaturalLanguageStringStructure> getDestinationDisplaies() {
-      return List.of();
+      return call.getDestinationDisplaies();
     }
 
     @Override
