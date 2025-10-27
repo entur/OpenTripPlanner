@@ -910,7 +910,7 @@ type LegTime {
 
 "A level with a name and comparable number. Levels can sometimes contain half levels, e.g. '1.5'."
 type Level {
-  "0-based comparable number."
+  "0-based comparable number where 0 is the ground level."
   level: Float!
   "Name if it exists, e.g. 'M' or 'P1'."
   name: String!
