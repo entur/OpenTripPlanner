@@ -48,29 +48,25 @@ public class CrosswalkNamer implements EdgeNamer {
   }
 
   @Override
-  public I18NString name(OsmEntity way) {
-    return way.getAssumedName();
+  public I18NString name(OsmEntity entity) {
+    return entity.getAssumedName();
   }
 
   @Override
-  public void recordEdges(OsmEntity way, StreetEdgePair pair, OsmDatabase osmdb) {
-    if (way instanceof OsmWay osmWay) {
-      // Record unnamed crossings to a list.
-      if (osmWay.isCrossing() && way.hasNoName() && !way.isExplicitlyUnnamed()) {
-        pair
-          .asIterable()
-          .forEach(edge -> unnamedCrosswalks.add(new EdgeOnLevel(osmWay, edge, Set.of())));
-      }
-      // Record (short) sidewalks to a geometric index
-      else if (way.isSidewalk()) {
-        sidewalkIndex.add(way, pair, Set.of(), BUFFER_METERS);
-      }
-      // Record named streets, service roads, and slip/turn lanes to a geometric index.
-      else if (
-        !osmWay.isFootway() && (way.isNamed() || osmWay.isServiceRoad() || osmWay.isTurnLane())
-      ) {
-        streetIndex.add(way, pair, Set.of());
-      }
+  public void recordEdges(OsmWay way, StreetEdgePair pair, OsmDatabase osmdb) {
+    // Record unnamed crossings to a list.
+    if (way.isCrossing() && way.hasNoName() && !way.isExplicitlyUnnamed()) {
+      pair
+        .asIterable()
+        .forEach(edge -> unnamedCrosswalks.add(new EdgeOnLevel(way, edge, Set.of())));
+    }
+    // Record (short) sidewalks to a geometric index
+    else if (way.isSidewalk()) {
+      sidewalkIndex.add(way, pair, Set.of(), BUFFER_METERS);
+    }
+    // Record named streets, service roads, and slip/turn lanes to a geometric index.
+    else if (!way.isFootway() && (way.isNamed() || way.isServiceRoad() || way.isTurnLane())) {
+      streetIndex.add(way, pair, Set.of());
     }
   }
 
