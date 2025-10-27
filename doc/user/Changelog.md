@@ -29,6 +29,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Fix strange detours when street leg starts from the boundary of an area [#6970](https://github.com/opentripplanner/OpenTripPlanner/pull/6970)
 - Add `bikesAllowedStopMaxTransferDuration` to build config to limit bike transfers [#6787](https://github.com/opentripplanner/OpenTripPlanner/pull/6787)
 - Crosswalk naming [#6918](https://github.com/opentripplanner/OpenTripPlanner/pull/6918)
+- Add distance for stop-to-stop shapes, PointsOnLink in Transmodel API [#6982](https://github.com/opentripplanner/OpenTripPlanner/pull/6982)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
