@@ -4,6 +4,7 @@ import static org.opentripplanner.framework.graphql.GraphQLUtils.getLocale;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
+import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.mapping.DirectionMapper;
@@ -15,7 +16,6 @@ import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 
 public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
 
@@ -70,16 +70,18 @@ public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
         VerticalTransportationUse verticalTransportationUse =
           VerticalTransportationUseFactory.getInclinedVerticalTransportationUse(
             walkStep.getEdges().getFirst(),
-            environment.<OtpServerRequestContext>getContext().streetDetailsService()
+            environment.<GraphQLRequestContext>getContext().streetDetailsService()
           );
-        switch (verticalTransportationUse) {
-          case EscalatorUse escalatorUse -> {
-            return escalatorUse;
+        if (verticalTransportationUse != null) {
+          switch (verticalTransportationUse) {
+            case EscalatorUse escalatorUse -> {
+              return escalatorUse;
+            }
+            case StairsUse stairsUse -> {
+              return stairsUse;
+            }
+            default -> {}
           }
-          case StairsUse stairsUse -> {
-            return stairsUse;
-          }
-          default -> {}
         }
       }
       return null;

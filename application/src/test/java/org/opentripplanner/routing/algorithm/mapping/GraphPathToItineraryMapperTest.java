@@ -9,8 +9,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 
@@ -37,7 +35,6 @@ class GraphPathToItineraryMapperTest {
       id -> null,
       ZoneIds.UTC,
       new StreetNotesService(),
-      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       1
     );
     var itin = mapper.generateItinerary(new GraphPath<>(state));

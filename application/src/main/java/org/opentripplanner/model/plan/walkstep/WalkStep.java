@@ -189,9 +189,8 @@ public final class WalkStep {
   }
 
   /**
-   * The street edges that make up this walkStep. Can be empty, for example, for entrances.
-   * For example, used in generating the streetEdges array in StreetSegment and for adding
-   * edge level info to steps. Not serialized.
+   * The street edges that make up this walkStep. For example, used in generating the streetEdges
+   * array in StreetSegment and for adding edge level info to steps. Not serialized.
    */
   public List<Edge> getEdges() {
     return edges;

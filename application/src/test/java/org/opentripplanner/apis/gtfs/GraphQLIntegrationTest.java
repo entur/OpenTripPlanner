@@ -81,6 +81,8 @@ import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -447,6 +449,7 @@ class GraphQLIntegrationTest {
       defaultVehicleRentalService,
       new DefaultVehicleParkingService(parkingRepository),
       realtimeVehicleService,
+      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       finder,
       routeRequest

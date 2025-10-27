@@ -18,7 +18,6 @@ import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
-import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
@@ -48,8 +47,6 @@ public class StatesToWalkStepsMapper {
   private final double ellipsoidToGeoidDifference;
   private final StreetNotesService streetNotesService;
 
-  private final StreetDetailsService streetDetailsService;
-
   private final List<State> states;
   private final WalkStep previous;
   private final List<WalkStepBuilder> steps = new ArrayList<>();
@@ -78,13 +75,11 @@ public class StatesToWalkStepsMapper {
     List<State> states,
     WalkStep previousStep,
     StreetNotesService streetNotesService,
-    StreetDetailsService streetDetailsService,
     double ellipsoidToGeoidDifference
   ) {
     this.states = states;
     this.previous = previousStep;
     this.streetNotesService = streetNotesService;
-    this.streetDetailsService = streetDetailsService;
     this.ellipsoidToGeoidDifference = ellipsoidToGeoidDifference;
   }
 
@@ -187,13 +182,8 @@ public class StatesToWalkStepsMapper {
       createAndSaveStairsWalkStep(backState, forwardState, edge, geom);
       return;
     } else if (backState.getVertex() instanceof StationEntranceVertex stationEntranceVertex) {
-      createAndSaveStationEntranceWalkStep(
-        backState,
-        forwardState,
-        edge,
-        stationEntranceVertex,
-        geom
-      );
+      createAndSaveStationEntranceWalkStep(backState, forwardState, stationEntranceVertex);
+      return;
     } else if (edge instanceof PathwayEdge pwe && pwe.signpostedAs().isPresent()) {
       createAndSaveStep(
         backState,
@@ -586,9 +576,7 @@ public class StatesToWalkStepsMapper {
   private void createAndSaveStationEntranceWalkStep(
     State backState,
     State forwardState,
-    Edge edge,
-    StationEntranceVertex vertex,
-    Geometry geom
+    StationEntranceVertex vertex
   ) {
     // don't care what came before or comes after
     addStep(

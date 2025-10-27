@@ -69,8 +69,7 @@ public class FlexAccessEgressRouter {
       searchDays.additionalSearchDaysInPast(),
       searchDays.additionalSearchDaysInFuture(),
       accessStops,
-      egressStops,
-      serverContext.streetDetailsService()
+      egressStops
     );
 
     return accessOrEgress.isEgress()

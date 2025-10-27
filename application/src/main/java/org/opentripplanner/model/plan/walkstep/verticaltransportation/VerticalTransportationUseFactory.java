@@ -6,6 +6,7 @@ import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.EscalatorEdge;
+import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 
 /**
@@ -38,8 +39,9 @@ public class VerticalTransportationUseFactory {
 
     if (edge instanceof EscalatorEdge) {
       return new EscalatorUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
-    } else {
+    } else if (edge instanceof StreetEdge streetEdge && streetEdge.isStairs()) {
       return new StairsUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
     }
+    return null;
   }
 }

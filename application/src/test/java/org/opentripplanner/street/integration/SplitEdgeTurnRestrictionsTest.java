@@ -22,8 +22,6 @@ import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.search.TemporaryVerticesContainer;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
@@ -185,7 +183,6 @@ public class SplitEdgeTurnRestrictionsTest {
       id -> null,
       ZoneIds.BERLIN,
       graph.streetNotesService,
-      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       graph.ellipsoidToGeoidDifference
     );
 

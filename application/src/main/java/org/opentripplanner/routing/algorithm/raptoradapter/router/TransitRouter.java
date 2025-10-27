@@ -191,7 +191,6 @@ public class TransitRouter {
     RaptorPathToItineraryMapper<TripSchedule> itineraryMapper = new RaptorPathToItineraryMapper<>(
       serverContext.graph(),
       serverContext.transitService(),
-      serverContext.streetDetailsService(),
       raptorTransitData,
       transitSearchTimeZero,
       request
