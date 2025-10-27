@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
-import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.NormalizedCost;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.SystemNotice;
@@ -40,6 +39,7 @@ public class Itinerary implements ItinerarySortKey {
   private final TimeAndCost accessPenalty;
   private final TimeAndCost egressPenalty;
   private final NormalizedCost generalizedCost;
+  private final NormalizedCost generalizedCostIncludingPenalty;
 
   @Nullable
   private final Integer generalizedCost2;
@@ -115,6 +115,11 @@ public class Itinerary implements ItinerarySortKey {
     this.fare = builder.fare;
 
     // Set aggregated data
+    this.generalizedCostIncludingPenalty = generalizedCost
+      .plus(accessPenalty.cost())
+      .plus(egressPenalty.cost())
+      .normalize();
+
     ItinerariesCalculateLegTotals totals = new ItinerariesCalculateLegTotals(legs);
 
     this.totalDuration = totals.totalDuration;
@@ -465,8 +470,8 @@ public class Itinerary implements ItinerarySortKey {
    * @see org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressPenaltyDecorator
    */
   @Override
-  public Cost generalizedCostIncludingPenalty() {
-    return generalizedCost.plus(accessPenalty.cost().plus(egressPenalty.cost()));
+  public NormalizedCost generalizedCostIncludingPenalty() {
+    return generalizedCostIncludingPenalty;
   }
 
   /**

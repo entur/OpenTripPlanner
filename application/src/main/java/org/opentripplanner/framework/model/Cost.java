@@ -39,6 +39,10 @@ public sealed class Cost implements Serializable, Comparable<Cost> permits Norma
     return new Cost(valueInTransitCentiSeconds);
   }
 
+  public static NormalizedCost normalizedCost(int valueInTransitSeconds) {
+    return costOfSeconds(valueInTransitSeconds).normalize();
+  }
+
   public static Cost costOfMinutes(int value) {
     return costOfSeconds(value * 60);
   }

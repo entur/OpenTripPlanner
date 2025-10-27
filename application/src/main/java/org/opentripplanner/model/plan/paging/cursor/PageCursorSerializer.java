@@ -98,7 +98,7 @@ final class PageCursorSerializer {
         itineraryPageCut = new DeduplicationPageCut(
           cutDepartureTime.get(),
           token.getTimeInstant(CUT_ARRIVAL_TIME_FIELD).orElseThrow(),
-          Cost.costOfSeconds(token.getInt(CUT_COST_FIELD).orElseThrow()),
+          Cost.normalizedCost(token.getInt(CUT_COST_FIELD).orElseThrow()),
           token.getInt(CUT_N_TRANSFERS_FIELD).orElseThrow(),
           token.getBoolean(CUT_ON_STREET_FIELD).orElseThrow()
         );

@@ -122,13 +122,14 @@ class CostTest {
 
   @Test
   void normalize() {
-    Cost c2 = Cost.costOfSeconds(2);
+    var c2 = Cost.normalizedCost(2);
 
-    var n = c2.normalize();
-    assertEquals(n, n.normalize());
+    assertEquals(c2, Cost.costOfSeconds(2).normalize());
     assertEquals(c2, Cost.costOfCentiSeconds(150).normalize());
-    assertEquals(c2, Cost.costOfCentiSeconds(200).normalize());
     assertEquals(c2, Cost.costOfCentiSeconds(249).normalize());
+
+    assertNotEquals(c2, Cost.costOfCentiSeconds(149).normalize());
+    assertNotEquals(c2, Cost.costOfCentiSeconds(250).normalize());
   }
 
   @Test
