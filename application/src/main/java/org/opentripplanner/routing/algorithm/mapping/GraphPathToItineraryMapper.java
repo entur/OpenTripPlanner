@@ -56,7 +56,6 @@ public class GraphPathToItineraryMapper {
   private final StopResolver stopResolver;
   private final ZoneId timeZone;
   private final StreetNotesService streetNotesService;
-
   private final double ellipsoidToGeoidDifference;
 
   public GraphPathToItineraryMapper(
