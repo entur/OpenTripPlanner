@@ -457,8 +457,12 @@
                 <version>3.0.3</version>
             </dependency>
 
-            <!-- GEOTOOLS AND JTS TOPOLOGY: geometry, rasters and projections. -->
-            <!-- GEOTOOLS includes JTS as a transitive dependency. -->
+            <!--
+             GEOTOOLS AND JTS TOPOLOGY: geometry, rasters and projections.
+             GEOTOOLS includes JTS as a transitive dependency. It also includes Eclipse ImageN as a
+             transitive dependency, but its use should be limited to input/output for geotools
+             usage.
+            -->
             <dependency>
                 <groupId>org.geotools</groupId>
                 <artifactId>gt-coverage</artifactId>
