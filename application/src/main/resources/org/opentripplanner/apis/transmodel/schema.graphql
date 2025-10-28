@@ -356,7 +356,11 @@ type Leg {
   fromPlace: Place!
   "Generalized cost or weight of the leg. Used for debugging."
   generalizedCost: Int
-  "An identifier for the leg, which can be used to re-fetch transit leg information."
+  """
+  An identifier for the leg, which can be used to re-fetch transit leg information. The
+  identifier is valid for a maximum of 2 years, but sometimes it will fail after a few hours.
+  We do not recommend storing IDs for a long time.
+  """
   id: ID
   interchangeFrom: Interchange
   interchangeTo: Interchange
@@ -533,6 +537,8 @@ type PlaceAtDistance {
 
 "A list of coordinates encoded as a polyline string (see http://code.google.com/apis/maps/documentation/polylinealgorithm.html)"
 type PointsOnLink {
+  "The distance in meters."
+  distance: Int
   "The number of points in the string"
   length: Int
   "The encoded points of the polyline. Be aware that the string could contain escape characters that need to be accounted for. (https://www.freeformatter.com/javascript-escape.html)"

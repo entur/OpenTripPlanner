@@ -67,7 +67,7 @@ public class RaptorRoutingRequestTransitDataCreatorTest {
     tripPatternsForDates.add(new TripPatternForDate(tripPattern1, tripTimes, List.of(), third));
     tripPatternsForDates.add(new TripPatternForDate(tripPattern3, tripTimes, List.of(), third));
 
-    var noOpFilter = new RouteRequestTransitDataProviderFilter(RouteRequest.defaultValue());
+    var noOpFilter = DefaultTransitDataProviderFilter.ofRequest(RouteRequest.defaultValue());
 
     // Patterns containing trip schedules for all 3 days. Trip schedules for later days are offset
     // in time when requested.
@@ -151,7 +151,7 @@ public class RaptorRoutingRequestTransitDataCreatorTest {
     var result = subject.createTripPatterns(
       2,
       0,
-      new RouteRequestTransitDataProviderFilter(RouteRequest.defaultValue()),
+      DefaultTransitDataProviderFilter.ofRequest(RouteRequest.defaultValue()),
       TransitGroupPriorityService.empty()
     );
     var expectedDates = List.of(
