@@ -7,9 +7,9 @@ import org.opentripplanner.service.streetdetails.model.Level;
  * Represents information about a single use of a set of stairs related to
  * {@link org.opentripplanner.model.plan.walkstep.WalkStep}.
  */
-public class StairsUse extends InclinedVerticalTransportationUse {
+public final class StairsUse extends VerticalTransportationUse {
 
-  public StairsUse(@Nullable Level from, VerticalDirection verticalDirection, @Nullable Level to) {
-    super(from, verticalDirection, to);
+  public StairsUse(@Nullable Level from, @Nullable Level to, VerticalDirection verticalDirection) {
+    super(from, to, verticalDirection);
   }
 }

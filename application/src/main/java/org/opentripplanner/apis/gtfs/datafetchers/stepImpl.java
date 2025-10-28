@@ -14,7 +14,6 @@ import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUse;
-import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 
 public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
@@ -67,11 +66,10 @@ public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
       if (walkStep.entrance().isPresent()) {
         return walkStep.entrance().get();
       } else if (walkStep.getEdges().size() == 1) {
-        VerticalTransportationUse verticalTransportationUse =
-          VerticalTransportationUseFactory.getInclinedVerticalTransportationUse(
-            walkStep.getEdges().getFirst(),
-            environment.<GraphQLRequestContext>getContext().streetDetailsService()
-          );
+        VerticalTransportationUse verticalTransportationUse = environment
+          .<GraphQLRequestContext>getContext()
+          .verticalTransportationUseFactory()
+          .createInclinedVerticalTransportationUse(walkStep.getEdges().getFirst());
         if (verticalTransportationUse != null) {
           switch (verticalTransportationUse) {
             case EscalatorUse escalatorUse -> {
@@ -80,7 +78,6 @@ public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
             case StairsUse stairsUse -> {
               return stairsUse;
             }
-            default -> {}
           }
         }
       }

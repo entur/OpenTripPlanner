@@ -18,6 +18,7 @@ import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.SchemaFactory;
 import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.GraphFinder;
@@ -67,7 +68,6 @@ class _RouteRequestTestContext {
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingService(new DefaultVehicleParkingRepository()),
       new DefaultRealtimeVehicleService(transitService),
-      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       GraphFinder.getInstance(
         graph,
@@ -75,7 +75,10 @@ class _RouteRequestTestContext {
         transitService::getRegularStop,
         transitService::findRegularStopsByBoundingBox
       ),
-      routeRequest
+      routeRequest,
+      new VerticalTransportationUseFactory(
+        new DefaultStreetDetailsService(new DefaultStreetDetailsRepository())
+      )
     );
   }
 

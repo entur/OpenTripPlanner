@@ -66,6 +66,7 @@ import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.alertpatch.AlertCause;
 import org.opentripplanner.routing.alertpatch.AlertEffect;
 import org.opentripplanner.routing.alertpatch.AlertSeverity;
@@ -449,10 +450,12 @@ class GraphQLIntegrationTest {
       defaultVehicleRentalService,
       new DefaultVehicleParkingService(parkingRepository),
       realtimeVehicleService,
-      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       finder,
-      routeRequest
+      routeRequest,
+      new VerticalTransportationUseFactory(
+        new DefaultStreetDetailsService(new DefaultStreetDetailsRepository())
+      )
     );
   }
 

@@ -18,18 +18,18 @@ public class StairsUseImpl implements GraphQLDataFetchers.GraphQLStairsUse {
   }
 
   @Override
-  public DataFetcher<GraphQLVerticalDirection> verticalDirection() {
-    return environment -> {
-      StairsUse stairsUse = environment.getSource();
-      return VerticalDirectionMapper.map(stairsUse.verticalDirection());
-    };
-  }
-
-  @Override
   public DataFetcher<Level> to() {
     return environment -> {
       StairsUse stairsUse = environment.getSource();
       return stairsUse.to();
+    };
+  }
+
+  @Override
+  public DataFetcher<GraphQLVerticalDirection> verticalDirection() {
+    return environment -> {
+      StairsUse stairsUse = environment.getSource();
+      return VerticalDirectionMapper.map(stairsUse.verticalDirection());
     };
   }
 }

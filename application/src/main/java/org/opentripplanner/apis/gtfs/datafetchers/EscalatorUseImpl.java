@@ -18,18 +18,18 @@ public class EscalatorUseImpl implements GraphQLDataFetchers.GraphQLEscalatorUse
   }
 
   @Override
-  public DataFetcher<GraphQLVerticalDirection> verticalDirection() {
-    return environment -> {
-      EscalatorUse escalatorUse = environment.getSource();
-      return VerticalDirectionMapper.map(escalatorUse.verticalDirection());
-    };
-  }
-
-  @Override
   public DataFetcher<Level> to() {
     return environment -> {
       EscalatorUse escalatorUse = environment.getSource();
       return escalatorUse.to();
+    };
+  }
+
+  @Override
+  public DataFetcher<GraphQLVerticalDirection> verticalDirection() {
+    return environment -> {
+      EscalatorUse escalatorUse = environment.getSource();
+      return VerticalDirectionMapper.map(escalatorUse.verticalDirection());
     };
   }
 }

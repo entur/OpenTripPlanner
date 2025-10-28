@@ -31,6 +31,7 @@ import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.model.plan.PlanTestConstants;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
 import org.opentripplanner.routing.api.request.preference.TransferPreferences;
@@ -71,7 +72,6 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingService(new DefaultVehicleParkingRepository()),
       new DefaultRealtimeVehicleService(transitService),
-      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       GraphFinder.getInstance(
         graph,
@@ -79,7 +79,10 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
         transitService::getRegularStop,
         transitService::findRegularStopsByBoundingBox
       ),
-      routeRequest
+      routeRequest,
+      new VerticalTransportationUseFactory(
+        new DefaultStreetDetailsService(new DefaultStreetDetailsRepository())
+      )
     );
   }
 

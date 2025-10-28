@@ -15,32 +15,35 @@ import org.opentripplanner.street.model.vertex.OsmVertex;
  */
 public class VerticalTransportationUseFactory {
 
-  public static VerticalTransportationUse getInclinedVerticalTransportationUse(
-    Edge edge,
-    StreetDetailsService streetDetailsService
-  ) {
+  private final StreetDetailsService streetDetailsService;
+
+  public VerticalTransportationUseFactory(StreetDetailsService streetDetailsService) {
+    this.streetDetailsService = streetDetailsService;
+  }
+
+  public VerticalTransportationUse createInclinedVerticalTransportationUse(Edge edge) {
     Optional<EdgeLevelInfo> edgeLevelInfoOptional = streetDetailsService.findEdgeInformation(edge);
     if (edgeLevelInfoOptional.isEmpty()) {
       return null;
     }
-
     EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
-    VertexLevelInfo fromVertexInfo = edgeLevelInfo.upperVertexInfo();
-    VertexLevelInfo toVertexInfo = edgeLevelInfo.lowerVertexInfo();
-    VerticalDirection verticalDirection = VerticalDirection.DOWN;
-    if (
-      edge.getFromVertex() instanceof OsmVertex fromVertex &&
+
+    VerticalDirection verticalDirection = edge.getFromVertex() instanceof OsmVertex fromVertex &&
       fromVertex.nodeId() == edgeLevelInfo.lowerVertexInfo().osmNodeId()
-    ) {
-      verticalDirection = VerticalDirection.UP;
-      fromVertexInfo = edgeLevelInfo.lowerVertexInfo();
-      toVertexInfo = edgeLevelInfo.upperVertexInfo();
-    }
+      ? VerticalDirection.UP
+      : VerticalDirection.DOWN;
+    VertexLevelInfo fromVertexInfo = verticalDirection == VerticalDirection.UP
+      ? edgeLevelInfo.lowerVertexInfo()
+      : edgeLevelInfo.upperVertexInfo();
+    VertexLevelInfo toVertexInfo = verticalDirection == VerticalDirection.UP
+      ? edgeLevelInfo.upperVertexInfo()
+      : edgeLevelInfo.lowerVertexInfo();
 
     if (edge instanceof EscalatorEdge) {
-      return new EscalatorUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
-    } else if (edge instanceof StreetEdge streetEdge && streetEdge.isStairs()) {
-      return new StairsUse(fromVertexInfo.level(), verticalDirection, toVertexInfo.level());
+      return new EscalatorUse(fromVertexInfo.level(), toVertexInfo.level(), verticalDirection);
+    }
+    if (edge instanceof StreetEdge streetEdge && streetEdge.isStairs()) {
+      return new StairsUse(fromVertexInfo.level(), toVertexInfo.level(), verticalDirection);
     }
     return null;
   }
