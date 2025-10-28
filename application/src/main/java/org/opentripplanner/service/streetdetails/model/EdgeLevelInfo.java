@@ -50,11 +50,13 @@ public class EdgeLevelInfo implements Serializable {
   }
 
   @Override
-  public boolean equals(Object object) {
+  public boolean equals(Object o) {
+    if (o == this) return true;
+    if (o == null || o.getClass() != getClass()) return false;
+    EdgeLevelInfo that = (EdgeLevelInfo) o;
     return (
-      object instanceof EdgeLevelInfo other &&
-      Objects.equals(lowerVertexInfo, other.lowerVertexInfo) &&
-      Objects.equals(upperVertexInfo, other.upperVertexInfo)
+      Objects.equals(lowerVertexInfo, that.lowerVertexInfo) &&
+      Objects.equals(upperVertexInfo, that.upperVertexInfo)
     );
   }
 }
