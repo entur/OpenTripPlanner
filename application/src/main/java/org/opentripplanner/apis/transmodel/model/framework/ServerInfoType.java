@@ -119,28 +119,6 @@ public class ServerInfoType {
           .dataFetcher(e -> Runtime.getRuntime().availableProcessors())
           .build()
       )
-      .field(
-        GraphQLFieldDefinition.newFieldDefinition()
-          .name("transitServiceValidityEnd")
-          .description("End date of the transit data validity period")
-          .type(TransmodelScalars.DATE_SCALAR)
-          .dataFetcher(e -> {
-            var zonedDateTime = GqlUtil.getTransitService(e).getTransitServiceEnds();
-            return zonedDateTime != null ? zonedDateTime.toLocalDate() : null;
-          })
-          .build()
-      )
-      .field(
-        GraphQLFieldDefinition.newFieldDefinition()
-          .name("transitServiceValidityStart")
-          .description("Start date of the transit data validity period")
-          .type(TransmodelScalars.DATE_SCALAR)
-          .dataFetcher(e -> {
-            var zonedDateTime = GqlUtil.getTransitService(e).getTransitServiceStarts();
-            return zonedDateTime != null ? zonedDateTime.toLocalDate() : null;
-          })
-          .build()
-      )
       .build();
   }
 }
