@@ -54,7 +54,7 @@ runs OpenRewrite and Prettier, but not checkstyle:
 There are two ways to format the code before checking it in. You may run a normal build with
 Maven; it takes a bit of time, but it reformats the entire codebase. Only code you have changed
 should be formatted, since the existing code is already formatted. The second way is to set up
-Prettier and run it manually or hick it into your IDE, so it runs every time a file is changed.
+Prettier and run it manually or hook it into your IDE, so it runs every time a file is changed.
 
 Prettier will automatically format all code in the Maven "validate" phase, which runs before the
 test, package, and install phases. So formatting will happen for example when you run:

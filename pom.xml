@@ -556,8 +556,7 @@
                 <property>
                     <!--
                       This works as a short alias to enable this from the command line. To skip
-                      prettier, set the 'ps' system property with the '-D cs' parameter:
-                      # mvn test -D cs
+                      prettier, set the 'ps' system property with the '-D cs' parameter.
                     -->
                     <name>cs</name>
                     <value/>
@@ -580,8 +579,7 @@
                 <property>
                     <!--
                       This works as a short alias to enable this from the command line. To skip
-                      prettier, set the 'ps' system property with the '-D ps' parameter:
-                      # mvn test -D ps
+                      prettier, set the 'ps' system property with the '-D ps' parameter.
                     -->
                     <name>ps</name>
                     <value/>
@@ -597,8 +595,7 @@
                 <property>
                     <!--
                       This works as a short alias to enable this from the command line. To skip
-                      rewrite, set the 'rw' system property with the '-D rw' parameter:
-                      # mvn test -D rw
+                      rewrite, set the 'rw' system property with the '-D rw' parameter.
                     -->
                     <name>rw</name>
                     <value/>
