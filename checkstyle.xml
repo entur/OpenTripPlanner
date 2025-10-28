@@ -5,14 +5,8 @@
   "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <module name="TreeWalker">
-        <module name="AvoidStarImport">
-            <property name="severity" value="error" />
-        </module>
-        <module name="RedundantImport">
-            <property name="severity" value="error" />
-        </module>
-        <module name="UnusedImports">
-            <property name="severity" value="error" />
-        </module>
+        <module name="AvoidStarImport"/>
+        <module name="RedundantImport"/>
+        <module name="UnusedImports"/>
     </module>
 </module>
