@@ -94,8 +94,8 @@ public class Itinerary implements ItinerarySortKey {
   Itinerary(ItineraryBuilder builder) {
     this.legs = List.copyOf(builder.legs);
 
-    // Normalize (round to seconds) to make sure insignificant small diffrenses does not
-    // have an efect when comparing itineraries in the filter-chain and in paging
+    // Normalize (round to seconds) to make sure insignificant small differences do not
+    // have an effect when comparing itineraries in the filter-chain and in paging
     this.generalizedCost = builder.calculateGeneralizedCostWithoutPenalty().normalize();
     this.generalizedCost2 = builder.generalizedCost2;
 
