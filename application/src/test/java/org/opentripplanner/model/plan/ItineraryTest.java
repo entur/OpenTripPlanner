@@ -201,7 +201,7 @@ public class ItineraryTest implements PlanTestConstants {
 
   @Test
   void normalization() {
-    var zoneId = ZoneId.of("UTC");
+    var zoneId = ZoneId.of("Europe/Oslo");
     var model = TimetableRepositoryForTest.of();
     var stopA = model.stop("A").build();
     var stopB = model.stop("B").build();
@@ -212,8 +212,8 @@ public class ItineraryTest implements PlanTestConstants {
       .build();
 
     var tripTimes = ScheduledTripTimes.of().withArrivalTimes("13:00 14:00").withTrip(trip).build();
-    var startTime = ZonedDateTime.of(2025, 10, 20, 13, 0, 0, 300, zoneId);
-    var endTime = ZonedDateTime.of(2025, 10, 20, 13, 59, 59, 750, zoneId);
+    var startTime = ZonedDateTime.of(2025, 10, 20, 13, 0, 0, 499_000_000, zoneId);
+    var endTime = ZonedDateTime.of(2025, 10, 20, 13, 59, 59, 500_000_000, zoneId);
     var c = Cost.costOfCentiSeconds(120074);
 
     var subject = Itinerary.ofDirect(
@@ -242,12 +242,12 @@ public class ItineraryTest implements PlanTestConstants {
     assertEquals(1191, subject.generalizedCost());
 
     // Normaized start-time
-    assertEquals("2025-10-20T13:00Z[UTC]", subject.startTime().toString());
-    assertEquals("2025-10-20T13:00:00Z", subject.startTimeAsInstant().toString());
+    assertEquals("2025-10-20T13:00+02:00[Europe/Oslo]", subject.startTime().toString());
+    assertEquals("2025-10-20T11:00:00Z", subject.startTimeAsInstant().toString());
 
     // Normaized end-time
-    assertEquals("2025-10-20T13:59:59Z[UTC]", subject.endTime().toString());
-    assertEquals("2025-10-20T13:59:59Z", subject.endTimeAsInstant().toString());
+    assertEquals("2025-10-20T14:00+02:00[Europe/Oslo]", subject.endTime().toString());
+    assertEquals("2025-10-20T12:00:00Z", subject.endTimeAsInstant().toString());
   }
 
   @Nested
