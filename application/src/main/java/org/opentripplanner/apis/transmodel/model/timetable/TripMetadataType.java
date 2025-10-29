@@ -22,17 +22,24 @@ public class TripMetadataType {
             """
             The start-time of the search-window/page for trip departure times.
 
-            The search-window/page start and end time describe the time-window the search is performed
-            in. All results in the window is expected to be inside the given window. When navigating
-            to the next/previous window the new window might overlap.
+            The search-window/page start and end time describe the time-window the search is
+            performed in. All results in the window is expected to be inside the given window. When
+            navigating to the next/previous window the new window might overlap.
 
-            **Merging in other trips**
+            **Merging results from multiple searches**
 
-            Other trips(separate search) can be merged in if:
-            - The trip departure time is between `pageDepartureTimeStart` and `pageDepartureTimeEnd`.
-            - The result set is empty, or
-            - the trip sorts before the last trip returned. If the trip sorts after the last trip it
-              should be merged into the next page.
+            Trips from separate searches (multiple OTP calls or other search engines) can be merged
+            into the current page/result set if all of the following conditions are met:
+            - The candidate trip departure time is between `pageDepartureTimeStart` and
+              `pageDepartureTimeEnd`
+            - Either the current page is empty
+            - The candidate trip sorts before the last trip in the current page(if trips exists).
+
+            If the trip sorts after the last trip, it should be merged into the next page instead.
+
+            **Special case for arrive-by searches:** For the first request (no paging cursor used)
+            with `arriveBy=true`, the `pageDepartureTimeEnd` can be ignored - trips departing after
+            this time can still be merged into the current page.
             """
           )
           .type(dateTimeScalar)

@@ -1145,7 +1145,7 @@ type Plan {
     
   The unit is seconds.
   """
-  searchWindowUsed: Long @deprecated(reason : "This is not needed for debugging, and is missleading if the window is cropped.")
+  searchWindowUsed: Long @deprecated(reason : "This is not needed for debugging, and is misleading if the window is cropped.")
   "The destination"
   to: Place!
 }
