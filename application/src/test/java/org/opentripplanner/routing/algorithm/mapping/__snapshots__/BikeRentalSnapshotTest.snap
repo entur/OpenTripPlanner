@@ -464,7 +464,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.accessBikeR
           }
         ]
       },
-      "generalizedCost" : 2560,
+      "generalizedCost" : 2561,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -867,7 +867,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.accessBikeR
           }
         ]
       },
-      "generalizedCost" : 1807,
+      "generalizedCost" : 1808,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -2044,7 +2044,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.accessBikeR
           }
         ]
       },
-      "generalizedCost" : 1807,
+      "generalizedCost" : 1808,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -2588,7 +2588,7 @@ org.opentripplanner.routing.algorithm.mapping.BikeRentalSnapshotTest.directBikeR
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 868,
+      "generalizedCost" : 869,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,

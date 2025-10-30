@@ -10,7 +10,7 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.directBike=[
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 1704,
+      "generalizedCost" : 1705,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -538,7 +538,7 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.transit=[
           }
         ]
       },
-      "generalizedCost" : 2318,
+      "generalizedCost" : 2319,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -891,7 +891,7 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.transit=[
           }
         ]
       },
-      "generalizedCost" : 2482,
+      "generalizedCost" : 2483,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -2054,7 +2054,7 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.transit=[
           }
         ]
       },
-      "generalizedCost" : 2318,
+      "generalizedCost" : 2319,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
@@ -2407,7 +2407,7 @@ org.opentripplanner.routing.algorithm.mapping.ElevationSnapshotTest.transit=[
           }
         ]
       },
-      "generalizedCost" : 2542,
+      "generalizedCost" : 2543,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -25200000,
