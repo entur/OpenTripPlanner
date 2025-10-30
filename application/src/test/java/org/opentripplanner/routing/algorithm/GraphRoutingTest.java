@@ -1,5 +1,8 @@
 package org.opentripplanner.routing.algorithm;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.routing.linking.TransitStopVertexBuilderFactory.ofStop;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +86,7 @@ public abstract class GraphRoutingTest {
 
     protected Builder() {
       var deduplicator = new Deduplicator();
-      graph = new Graph(deduplicator);
+      graph = new Graph();
       timetableRepository = new TimetableRepository(new SiteRepository(), deduplicator);
       vertexFactory = new VertexFactory(graph);
       vehicleParkingHelper = new VehicleParkingHelper(graph);
@@ -238,7 +241,8 @@ public abstract class GraphRoutingTest {
       String id,
       double latitude,
       double longitude,
-      @Nullable Station parentStation
+      @Nullable Station parentStation,
+      @Nullable TransitMode vehicleType
     ) {
       var siteRepositoryBuilder = timetableRepository.getSiteRepository().withContext();
       var testModel = new TimetableRepositoryForTest(siteRepositoryBuilder);
@@ -246,6 +250,9 @@ public abstract class GraphRoutingTest {
       var stopBuilder = testModel.stop(id).withCoordinate(latitude, longitude);
       if (parentStation != null) {
         stopBuilder.withParentStation(parentStation);
+      }
+      if (vehicleType != null) {
+        stopBuilder.withVehicleType(vehicleType);
       }
 
       var stop = stopBuilder.build();
@@ -285,9 +292,18 @@ public abstract class GraphRoutingTest {
       double longitude,
       @Nullable Station parentStation
     ) {
-      return vertexFactory.transitStop(
-        TransitStopVertex.of().withStop(stopEntity(id, latitude, longitude, parentStation))
-      );
+      return stop(id, latitude, longitude, parentStation, null);
+    }
+
+    public TransitStopVertex stop(
+      String id,
+      double latitude,
+      double longitude,
+      @Nullable Station parentStation,
+      @Nullable TransitMode vehicleType
+    ) {
+      var stop = stopEntity(id, latitude, longitude, parentStation, vehicleType);
+      return vertexFactory.transitStop(ofStop(stop));
     }
 
     public TransitEntranceVertex entrance(String id, double latitude, double longitude) {
@@ -295,7 +311,8 @@ public abstract class GraphRoutingTest {
     }
 
     public StationCentroidVertex stationCentroid(Station station) {
-      return vertexFactory.stationCentroid(station);
+      assertTrue(station.shouldRouteToCentroid());
+      return vertexFactory.stationCentroid(station.getId(), station.getCoordinate());
     }
 
     public StreetTransitEntranceLink link(StreetVertex from, TransitEntranceVertex to) {
@@ -501,13 +518,15 @@ public abstract class GraphRoutingTest {
 
     public StopTime st(TransitStopVertex s1) {
       var st = new StopTime();
-      st.setStop(s1.getStop());
+      var stop = timetableRepository.getSiteRepository().getRegularStop(s1.getId());
+      st.setStop(stop);
       return st;
     }
 
     public StopTime st(TransitStopVertex s1, boolean board, boolean alight) {
       var st = new StopTime();
-      st.setStop(s1.getStop());
+      var stop = timetableRepository.getSiteRepository().getRegularStop(s1.getId());
+      st.setStop(stop);
       st.setPickupType(board ? PickDrop.SCHEDULED : PickDrop.NONE);
       st.setDropOffType(alight ? PickDrop.SCHEDULED : PickDrop.NONE);
       return st;

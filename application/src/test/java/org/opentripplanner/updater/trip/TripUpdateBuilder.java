@@ -489,4 +489,14 @@ public class TripUpdateBuilder {
 
     return this;
   }
+
+  public TripUpdateBuilder withTripProperties(String tripHeadsign, String tripShortName) {
+    tripUpdateBuilder.setTripProperties(
+      GtfsRealtime.TripUpdate.TripProperties.newBuilder()
+        .setTripHeadsign(tripHeadsign)
+        .setTripShortName(tripShortName)
+        .build()
+    );
+    return this;
+  }
 }

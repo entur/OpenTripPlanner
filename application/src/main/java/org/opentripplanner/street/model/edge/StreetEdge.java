@@ -61,6 +61,7 @@ public class StreetEdge
   static final int BICYCLE_NOTHRUTRAFFIC = 7;
   static final int WALK_NOTHRUTRAFFIC = 8;
   static final int CLASS_LINK = 9;
+  static final int CROSSING_FLAG_INDEX = 10;
 
   private StreetEdgeCostExtension costExtension;
 
@@ -301,6 +302,10 @@ public class StreetEdge
 
   public boolean isRoundabout() {
     return BitSetUtils.get(flags, ROUNDABOUT_FLAG_INDEX);
+  }
+
+  public boolean isCrossing() {
+    return BitSetUtils.get(flags, CROSSING_FLAG_INDEX);
   }
 
   @Override
@@ -1021,6 +1026,8 @@ public class StreetEdge
        * that during reverse traversal, we must also use the speed for the mode of
        * the backEdge, rather than of the current edge.
        */
+      var intersectionMode = arriveBy ? backMode : traverseMode;
+      boolean walkingBikeThroughIntersection = arriveBy ? s0.isBackWalkingBike() : walkingBike;
       if (arriveBy && tov instanceof IntersectionVertex traversedVertex) { // arrive-by search
         turnDuration = s0
           .intersectionTraversalCalculator()
@@ -1028,7 +1035,7 @@ public class StreetEdge
             traversedVertex,
             this,
             backPSE,
-            backMode,
+            intersectionMode,
             (float) speed,
             (float) backSpeed
           );
@@ -1039,7 +1046,7 @@ public class StreetEdge
             traversedVertex,
             backPSE,
             this,
-            traverseMode,
+            intersectionMode,
             (float) backSpeed,
             (float) speed
           );
@@ -1049,8 +1056,18 @@ public class StreetEdge
         turnDuration = 0;
       }
 
+      var modeReluctance =
+        switch (intersectionMode) {
+          case WALK -> walkingBikeThroughIntersection
+            ? preferences.bike().walking().reluctance()
+            : preferences.walk().reluctance();
+          case BICYCLE -> preferences.bike().reluctance();
+          case SCOOTER -> preferences.scooter().reluctance();
+          case CAR -> preferences.car().reluctance();
+          case FLEX -> 1;
+        };
       time_ms += (long) Math.ceil(1000.0 * turnDuration);
-      weight += preferences.street().turnReluctance() * turnDuration;
+      weight += modeReluctance * preferences.street().turnReluctance() * turnDuration;
     }
 
     if (!traverseMode.isInCar()) {
@@ -1152,10 +1169,6 @@ public class StreetEdge
       if (walkingBike) {
         // take slopes into account when walking bikes
         time = weight = (getEffectiveBikeDistance() / speed);
-        if (isStairs()) {
-          // we do allow walking the bike across a stairs but there is a very high default penalty
-          weight *= preferences.bike().walking().stairsReluctance();
-        }
       } else {
         // take slopes into account when walking
         time = getEffectiveWalkDistance() / speed;
