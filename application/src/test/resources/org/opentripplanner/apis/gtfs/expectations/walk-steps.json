@@ -32,6 +32,42 @@
                       "entranceId": "osm:123",
                       "wheelchairAccessible": "POSSIBLE"
                     }
+                  },
+                  {
+                    "streetName": "stairs",
+                    "area": false,
+                    "relativeDirection": "STAIRS",
+                    "absoluteDirection": null,
+                    "feature": {
+                      "__typename": "StairsUse",
+                      "from": {
+                        "level": 2.0,
+                        "name": "2"
+                      },
+                      "verticalDirection": "DOWN",
+                      "to": {
+                        "level": 1.0,
+                        "name": "1"
+                      }
+                    }
+                  },
+                  {
+                    "streetName": "escalators",
+                    "area": false,
+                    "relativeDirection": "ESCALATOR",
+                    "absoluteDirection": null,
+                    "feature": {
+                      "__typename": "EscalatorUse",
+                      "from": {
+                        "level": 2.0,
+                        "name": "2"
+                      },
+                      "verticalDirection": "DOWN",
+                      "to": {
+                        "level": 1.0,
+                        "name": "1"
+                      }
+                    }
                   }
                 ]
               },

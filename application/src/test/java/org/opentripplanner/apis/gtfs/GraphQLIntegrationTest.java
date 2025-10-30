@@ -84,6 +84,9 @@ import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehi
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
+import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
+import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -94,6 +97,10 @@ import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationB
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.standalone.config.framework.json.JsonSupport;
+import org.opentripplanner.street.model.StreetTraversalPermission;
+import org.opentripplanner.street.model.edge.EscalatorEdge;
+import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
+import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.test.support.FilePatternSource;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -353,6 +360,35 @@ class GraphQLIntegrationTest {
       .withEntrance(entrance)
       .build();
 
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
+    var streetDetailsService = new DefaultStreetDetailsService(streetDetailsRepository);
+    OsmVertex from = new OsmVertex(10, 10, 0);
+    OsmVertex to = new OsmVertex(10.001, 10.001, 1);
+    var stairsEdge = new StreetEdgeBuilder<>()
+      .withFromVertex(from)
+      .withToVertex(to)
+      .withName("stairs")
+      .withMeterLength(1000)
+      .withPermission(StreetTraversalPermission.ALL)
+      .withBack(false)
+      .withStairs(true)
+      .buildAndConnect();
+    var escalatorEdge = EscalatorEdge.createEscalatorEdge(from, to, 45, null);
+    var edgeLevelInfo = new EdgeLevelInfo(
+      new VertexLevelInfo(new Level(1.0, "1"), 1),
+      new VertexLevelInfo(new Level(2.0, "2"), 2)
+    );
+    streetDetailsRepository.addEdgeLevelInformation(stairsEdge, edgeLevelInfo);
+    streetDetailsRepository.addEdgeLevelInformation(escalatorEdge, edgeLevelInfo);
+    var step4 = walkStep("stairs")
+      .withRelativeDirection(RelativeDirection.STAIRS)
+      .addEdge(stairsEdge)
+      .build();
+    var step5 = walkStep("escalators")
+      .withRelativeDirection(RelativeDirection.ESCALATOR)
+      .addEdge(escalatorEdge)
+      .build();
+
     var entitySelector = new EntitySelector.Stop(A.stop.getId());
     var stationEntitySelector = new EntitySelector.Stop(OMEGA.getId());
     var alert = TransitAlert.of(id("an-alert"))
@@ -378,7 +414,7 @@ class GraphQLIntegrationTest {
     //        the ItineraryBuilder and not going back and forth between the Itinerary and the
     //        builder.
     var i1 = newItinerary(A, T11_00)
-      .walk(20, B, List.of(step1, step2, step3))
+      .walk(20, B, List.of(step1, step2, step3, step4, step5))
       .bus(busRoute, 122, T11_01, T11_15, C)
       .rail(439, T11_30, T11_50, D)
       .carHail(D10m, E)
@@ -453,9 +489,7 @@ class GraphQLIntegrationTest {
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       finder,
       routeRequest,
-      new VerticalTransportationUseFactory(
-        new DefaultStreetDetailsService(new DefaultStreetDetailsRepository())
-      )
+      new VerticalTransportationUseFactory(streetDetailsService)
     );
   }
 
