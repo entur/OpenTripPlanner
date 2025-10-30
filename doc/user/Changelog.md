@@ -32,6 +32,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add distance for stop-to-stop shapes, PointsOnLink in Transmodel API [#6982](https://github.com/opentripplanner/OpenTripPlanner/pull/6982)
 - Support DestinationDisplay for SIRI RecordedCall [#7007](https://github.com/opentripplanner/OpenTripPlanner/pull/7007)
 - Fix duplicates in paging due to cost truncation in token [#6973](https://github.com/opentripplanner/OpenTripPlanner/pull/6973)
+- Added transit service validity dates and CPU cores to GraphQL ServerInfo and transitInfo [#6996](https://github.com/opentripplanner/OpenTripPlanner/pull/6996)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
