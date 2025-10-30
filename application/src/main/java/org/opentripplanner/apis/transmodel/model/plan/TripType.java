@@ -31,7 +31,7 @@ public class TripType {
           .name("dateTime")
           .description("The time and date of travel")
           .type(dateTimeScalar)
-          .dataFetcher(env -> ((PlanResponse) env.getSource()).plan.date.toEpochMilli())
+          .dataFetcher(env -> ((PlanResponse) env.getSource()).plan.date)
           .build()
       )
       .field(
