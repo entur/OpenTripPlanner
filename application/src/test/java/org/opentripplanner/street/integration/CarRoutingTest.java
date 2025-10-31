@@ -23,7 +23,6 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
-import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
@@ -140,7 +139,7 @@ public class CarRoutingTest {
 
     var temporaryVerticesContainer = new TemporaryVerticesContainer();
     var vertexLinker = VertexLinkerTestFactory.of(graph);
-    var  vertexCreationService = new VertexCreationService(vertexLinker);
+    var vertexCreationService = new VertexCreationService(vertexLinker);
     var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
     var linkingRequest = LinkingContextRequestMapper.map(request);
     var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);

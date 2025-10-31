@@ -21,7 +21,7 @@ import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
 import org.opentripplanner.graph_builder.module.TurnRestrictionModule;
 import org.opentripplanner.graph_builder.module.ned.ElevationModule;
 import org.opentripplanner.graph_builder.module.ned.GeotiffGridCoverageFactoryImpl;
-import org.opentripplanner.graph_builder.module.osm.OsmModule;
+import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
@@ -147,15 +147,9 @@ public class ConstantsForTests {
       var fareFactory = new DefaultFareServiceFactory();
       // Add street data from OSM
       {
-        var osmProvider = new DefaultOsmProvider(PORTLAND_CENTRAL_OSM, false);
-        var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
-        var vehicleParkingRepository = new DefaultVehicleParkingRepository();
-        var osmModule = OsmModule.of(
-          osmProvider,
-          graph,
-          osmInfoRepository,
-          vehicleParkingRepository
-        )
+        var osmModule = OsmModuleTestFactory.of(new DefaultOsmProvider(PORTLAND_CENTRAL_OSM, false))
+          .withGraph(graph)
+          .builder()
           .withStaticParkAndRide(true)
           .withStaticBikeParkAndRide(true)
           .build();
@@ -207,12 +201,13 @@ public class ConstantsForTests {
       var osmProvider = new DefaultOsmProvider(osmFile, true);
       var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
       var vehicleParkingRepository = new DefaultVehicleParkingRepository();
-      var osmModule = OsmModule.of(
-        osmProvider,
-        graph,
-        osmInfoRepository,
-        vehicleParkingRepository
-      ).build();
+
+      var osmModule = OsmModuleTestFactory.of(osmProvider)
+        .withGraph(graph)
+        .withOsmInfoGraphBuildRepository(osmInfoRepository)
+        .withVehicleParkingRepository(vehicleParkingRepository)
+        .builder()
+        .build();
       osmModule.buildGraph();
       TurnRestrictionModule turnRestrictionModule = new TurnRestrictionModule(
         graph,
@@ -259,14 +254,17 @@ public class ConstantsForTests {
     try {
       var deduplicator = new Deduplicator();
       var siteRepository = new SiteRepository();
-      var parkingService = new DefaultVehicleParkingRepository();
+      var parkingRepository = new DefaultVehicleParkingRepository();
       var graph = new Graph();
       var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
       // Add street data from OSM
       {
         var osmProvider = new DefaultOsmProvider(OSLO_EAST_OSM, false);
-        var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
-        var osmModule = OsmModule.of(osmProvider, graph, osmInfoRepository, parkingService).build();
+        var osmModule = OsmModuleTestFactory.of(osmProvider)
+          .withGraph(graph)
+          .withVehicleParkingRepository(parkingRepository)
+          .builder()
+          .build();
         osmModule.buildGraph();
       }
       // Add transit data from Netex
@@ -284,7 +282,7 @@ public class ConstantsForTests {
           .createNetexModule(
             sources,
             timetableRepository,
-            parkingService,
+            parkingRepository,
             graph,
             deduplicator,
             DataImportIssueStore.NOOP
