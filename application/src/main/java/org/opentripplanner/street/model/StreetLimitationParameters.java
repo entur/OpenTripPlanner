@@ -1,6 +1,5 @@
 package org.opentripplanner.street.model;
 
-import jakarta.inject.Inject;
 import java.io.Serializable;
 
 /**
@@ -10,17 +9,17 @@ import java.io.Serializable;
  */
 public class StreetLimitationParameters implements Serializable {
 
-  private float maxCarSpeed = StreetConstants.DEFAULT_MAX_CAR_SPEED;
-  private int maxAreaNodes = StreetConstants.DEFAULT_MAX_AREA_NODES;
+  private final Float maxCarSpeed;
+  private final Integer maxAreaNodes;
 
-  @Inject
-  public StreetLimitationParameters() {}
+  public static final StreetLimitationParameters DEFAULT = new StreetLimitationParameters(
+    StreetConstants.DEFAULT_MAX_CAR_SPEED,
+    StreetConstants.DEFAULT_MAX_AREA_NODES
+  );
 
-  /**
-   * Initiliaze the maximum speed limit in m/s.
-   */
-  public void initMaxCarSpeed(float maxCarSpeed) {
+  public StreetLimitationParameters(Float maxCarSpeed, Integer maxAreaNodes) {
     this.maxCarSpeed = maxCarSpeed;
+    this.maxAreaNodes = maxAreaNodes;
   }
 
   /**
@@ -29,13 +28,6 @@ public class StreetLimitationParameters implements Serializable {
    */
   public float maxCarSpeed() {
     return maxCarSpeed;
-  }
-
-  /**
-   * Initialize limit for area linking
-   */
-  public void initMaxAreaNodes(int maxAreaNodes) {
-    this.maxAreaNodes = maxAreaNodes;
   }
 
   /**

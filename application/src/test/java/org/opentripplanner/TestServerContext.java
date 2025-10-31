@@ -38,7 +38,7 @@ import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.config.routerconfig.RaptorEnvironmentFactory;
 import org.opentripplanner.standalone.server.DefaultServerRequestContext;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.internal.DefaultStreetRepository;
 import org.opentripplanner.street.service.DefaultStreetLimitationParametersService;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -166,7 +166,7 @@ public class TestServerContext {
   }
 
   public static StreetLimitationParametersService createStreetLimitationParametersService() {
-    return new DefaultStreetLimitationParametersService(new StreetLimitationParameters());
+    return new DefaultStreetLimitationParametersService(new DefaultStreetRepository());
   }
 
   public static ViaCoordinateTransferFactory createViaTransferResolver(

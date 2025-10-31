@@ -8,7 +8,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.SiteRepository;
 
 @Module
@@ -17,12 +17,12 @@ public class LinkingServiceModule {
   @Provides
   static VertexLinker provideVertexLinker(
     Graph graph,
-    StreetLimitationParameters streetLimitationParameters
+    StreetLimitationParametersService streetLimitationParametersService
   ) {
     return new VertexLinker(
       graph,
       COMPUTE_AREA_VISIBILITY_LINES,
-      streetLimitationParameters.maxAreaNodes()
+      streetLimitationParametersService.maxAreaNodes()
     );
   }
 

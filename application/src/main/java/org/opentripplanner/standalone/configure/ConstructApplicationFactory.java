@@ -50,7 +50,7 @@ import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.configure.ConfigModule;
 import org.opentripplanner.standalone.server.MetricsLogging;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.service.StreetLimitationParametersServiceModule;
 import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -125,7 +125,7 @@ public interface ConstructApplicationFactory {
   @Nullable
   StopConsolidationRepository stopConsolidationRepository();
 
-  StreetLimitationParameters streetLimitationParameters();
+  StreetRepository streetRepository();
 
   @Nullable
   SorlandsbanenNorwayService enturSorlandsbanenService();
@@ -181,7 +181,7 @@ public interface ConstructApplicationFactory {
     Builder schema(RouteRequest defaultRouteRequest);
 
     @BindsInstance
-    Builder streetLimitationParameters(StreetLimitationParameters streetLimitationParameters);
+    Builder streetStreetRepository(StreetRepository streetRepository);
 
     @BindsInstance
     Builder fareServiceFactory(FareServiceFactory fareService);

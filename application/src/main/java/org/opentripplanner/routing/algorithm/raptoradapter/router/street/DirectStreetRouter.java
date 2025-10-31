@@ -36,7 +36,7 @@ public class DirectStreetRouter {
     }
     OTPRequestTimeoutException.checkForTimeout();
     try {
-      var maxCarSpeed = serverContext.streetLimitationParametersService().getMaxCarSpeed();
+      var maxCarSpeed = serverContext.streetLimitationParametersService().maxCarSpeed();
       if (!straightLineDistanceIsWithinLimit(request, maxCarSpeed, linkingContext)) {
         return Collections.emptyList();
       }

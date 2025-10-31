@@ -43,6 +43,7 @@ import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.OtpConfigLoader;
+import org.opentripplanner.street.internal.DefaultStreetRepository;
 import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
@@ -200,11 +201,13 @@ public class ConstantsForTests {
       // Add street data from OSM
       var osmProvider = new DefaultOsmProvider(osmFile, true);
       var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
+      var streetRepository = new DefaultStreetRepository();
       var vehicleParkingRepository = new DefaultVehicleParkingRepository();
 
       var osmModule = OsmModuleTestFactory.of(osmProvider)
         .withGraph(graph)
         .withOsmInfoGraphBuildRepository(osmInfoRepository)
+        .withStreetRepository(streetRepository)
         .withVehicleParkingRepository(vehicleParkingRepository)
         .builder()
         .build();

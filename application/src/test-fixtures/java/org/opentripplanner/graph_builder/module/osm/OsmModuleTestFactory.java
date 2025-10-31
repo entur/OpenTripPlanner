@@ -7,11 +7,13 @@ import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
+import org.opentripplanner.street.internal.DefaultStreetRepository;
 
 public class OsmModuleTestFactory {
 
   private Graph graph;
   private DefaultOsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
+  private DefaultStreetRepository streetRepository;
   private DefaultVehicleParkingRepository vehicleParkingRepository;
   private List<OsmProvider> providers;
 
@@ -39,6 +41,11 @@ public class OsmModuleTestFactory {
     return this;
   }
 
+  public OsmModuleTestFactory withStreetRepository(DefaultStreetRepository streetRepository) {
+    this.streetRepository = streetRepository;
+    return this;
+  }
+
   public OsmModuleTestFactory withVehicleParkingRepository(
     DefaultVehicleParkingRepository vehicleParkingRepository
   ) {
@@ -51,6 +58,7 @@ public class OsmModuleTestFactory {
       providers,
       getOrElse(graph, Graph::new),
       getOrElse(osmInfoGraphBuildRepository, DefaultOsmInfoGraphBuildRepository::new),
+      getOrElse(streetRepository, DefaultStreetRepository::new),
       getOrElse(vehicleParkingRepository, DefaultVehicleParkingRepository::new)
     );
   }
