@@ -3,24 +3,23 @@ package org.opentripplanner.street.internal;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import org.opentripplanner.street.StreetRepository;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.model.StreetModelDetails;
 
 @Singleton
 public class DefaultStreetRepository implements StreetRepository {
 
-  private StreetLimitationParameters streetLimitationParameters =
-    StreetLimitationParameters.DEFAULT;
+  private StreetModelDetails streetLimitationParameters = StreetModelDetails.DEFAULT;
 
   @Inject
   public DefaultStreetRepository() {}
 
   @Override
-  public StreetLimitationParameters streetLimitationParameters() {
+  public StreetModelDetails streetLimitationParameters() {
     return streetLimitationParameters;
   }
 
   @Override
-  public void setStreetLimitationParameters(StreetLimitationParameters streetLimitationParameters) {
+  public void setStreetLimitationParameters(StreetModelDetails streetLimitationParameters) {
     this.streetLimitationParameters = streetLimitationParameters;
   }
 }

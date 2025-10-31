@@ -48,7 +48,7 @@ import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.internal.DefaultStreetRepository;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.model.StreetModelDetails;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -111,7 +111,7 @@ public class GraphSerializationTest {
 
   private static @NotNull DefaultStreetRepository createStreetRepository() {
     var streetRepository = new DefaultStreetRepository();
-    streetRepository.setStreetLimitationParameters(new StreetLimitationParameters(33f, 17));
+    streetRepository.setStreetLimitationParameters(new StreetModelDetails(33f, 17));
     return streetRepository;
   }
 

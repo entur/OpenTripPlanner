@@ -3,21 +3,21 @@ package org.opentripplanner.street.model;
 import java.io.Serializable;
 
 /**
- * Holds limits of the street graph.
+ * Container for street model information calculated during graph build.
  * <p>
  * TODO this can be expanded to include some fields from the {@link org.opentripplanner.routing.graph.Graph}.
  */
-public class StreetLimitationParameters implements Serializable {
+public class StreetModelDetails implements Serializable {
 
   private final Float maxCarSpeed;
   private final Integer maxAreaNodes;
 
-  public static final StreetLimitationParameters DEFAULT = new StreetLimitationParameters(
+  public static final StreetModelDetails DEFAULT = new StreetModelDetails(
     StreetConstants.DEFAULT_MAX_CAR_SPEED,
     StreetConstants.DEFAULT_MAX_AREA_NODES
   );
 
-  public StreetLimitationParameters(Float maxCarSpeed, Integer maxAreaNodes) {
+  public StreetModelDetails(Float maxCarSpeed, Integer maxAreaNodes) {
     this.maxCarSpeed = maxCarSpeed;
     this.maxAreaNodes = maxAreaNodes;
   }

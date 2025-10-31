@@ -40,7 +40,7 @@ import org.opentripplanner.service.osminfo.model.Platform;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.StreetRepository;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.model.StreetModelDetails;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
@@ -151,7 +151,7 @@ public class OsmModule implements GraphBuilderModule {
     build(osmdb, vertexGenerator);
     graph.hasStreets = true;
     streetRepository.setStreetLimitationParameters(
-      new StreetLimitationParameters(getMaxCarSpeed(), params.maxAreaNodes())
+      new StreetModelDetails(getMaxCarSpeed(), params.maxAreaNodes())
     );
   }
 

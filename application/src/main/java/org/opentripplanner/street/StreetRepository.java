@@ -1,13 +1,13 @@
 package org.opentripplanner.street;
 
 import java.io.Serializable;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.model.StreetModelDetails;
 
 /**
  *
  */
 public interface StreetRepository extends Serializable {
-  StreetLimitationParameters streetLimitationParameters();
+  StreetModelDetails streetLimitationParameters();
 
-  void setStreetLimitationParameters(StreetLimitationParameters streetLimitationParameters);
+  void setStreetLimitationParameters(StreetModelDetails streetLimitationParameters);
 }
