@@ -3,7 +3,7 @@ package org.opentripplanner.ext.fares.model;
 import org.opentripplanner.utils.lang.Sandbox;
 
 /**
- * How the duration of a set of legs should be computed for fare calculation purposes.
+ * How fare validity durations should be computed across a set of legs for fare calculation purposes.
  */
 @Sandbox
 public enum TimeLimitType {
