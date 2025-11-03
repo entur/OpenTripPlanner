@@ -145,6 +145,7 @@ public class ConstructApplication {
       graph(),
       osmInfoGraphBuildRepository,
       fareServiceFactory(),
+      factory.streetRepository(),
       factory.timetableRepository(),
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
