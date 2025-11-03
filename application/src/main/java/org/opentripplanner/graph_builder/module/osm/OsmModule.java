@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -153,6 +154,7 @@ public class OsmModule implements GraphBuilderModule {
     streetRepository.setStreetLimitationParameters(
       new StreetModelDetails(getMaxCarSpeed(), params.maxAreaNodes())
     );
+    vertexGenerator.createDifferentLevelsSharingBarrierIssues();
   }
 
   @Override
@@ -192,7 +194,7 @@ public class OsmModule implements GraphBuilderModule {
       osmdb.getWalkableAreas(),
       osmdb.getParkAndRideAreas(),
       osmdb.getBikeParkingAreas()
-    )) setWayName(area.parent);
+    )) setEntityName(area.parent);
 
     // figure out which nodes that are actually intersections
     vertexGenerator.initIntersectionNodes();
@@ -233,7 +235,7 @@ public class OsmModule implements GraphBuilderModule {
 
     TurnRestrictionUnifier.unifyTurnRestrictions(osmdb, issueStore, osmInfoGraphBuildRepository);
 
-    params.edgeNamer().postprocess();
+    params.edgeNamer().finalizeNames();
 
     normalizer.applySafetyFactors();
   }
@@ -255,9 +257,9 @@ public class OsmModule implements GraphBuilderModule {
     Collection<OsmArea> areas,
     Multimap<OsmNode, OsmWay> barriers
   ) {
-    Map<OsmArea, OsmLevel> areasLevels = new HashMap<>(areas.size());
+    Map<OsmArea, Set<OsmLevel>> areasLevels = new HashMap<>(areas.size());
     for (OsmArea area : areas) {
-      areasLevels.put(area, osmdb.getLevelForWay(area.parent));
+      areasLevels.put(area, osmdb.getLevelSetForEntity(area.parent));
     }
     return OsmAreaGroup.groupAreas(areasLevels, barriers);
   }
@@ -329,7 +331,7 @@ public class OsmModule implements GraphBuilderModule {
 
     WAY: for (OsmWay way : osmdb.getWays()) {
       WayPropertiesPair wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
-      setWayName(way);
+      setEntityName(way);
 
       var forwardPermission = wayData.forward().getPermission();
       var backwardPermission = wayData.backward().getPermission();
@@ -471,7 +473,7 @@ public class OsmModule implements GraphBuilderModule {
             geometry
           );
 
-          params.edgeNamer().recordEdges(way, streets);
+          params.edgeNamer().recordEdges(way, streets, osmdb);
 
           StreetEdge street = streets.main();
           StreetEdge backStreet = streets.back();
@@ -543,7 +545,7 @@ public class OsmModule implements GraphBuilderModule {
 
       return Optional.of(
         new Platform(
-          params.edgeNamer().getNameForWay(way, "platform " + way.getId()),
+          params.edgeNamer().getName(way, "platform " + way.getId()),
           geometry,
           references
         )
@@ -558,11 +560,11 @@ public class OsmModule implements GraphBuilderModule {
     vertices.forEach(bv -> bv.makeBarrierAtEndReachable());
   }
 
-  private void setWayName(OsmEntity way) {
-    if (!way.hasTag("name")) {
-      I18NString creativeName = way.getOsmProvider().getWayPropertySet().getCreativeNameForWay(way);
+  private void setEntityName(OsmEntity entity) {
+    if (!entity.hasTag("name")) {
+      I18NString creativeName = entity.getOsmProvider().getWayPropertySet().getCreativeName(entity);
       if (creativeName != null) {
-        way.setCreativeName(creativeName);
+        entity.setCreativeName(creativeName);
       }
     }
   }
@@ -672,7 +674,7 @@ public class OsmModule implements GraphBuilderModule {
 
     String label = "way " + way.getId() + " from " + index;
     label = label.intern();
-    I18NString name = params.edgeNamer().getNameForWay(way, label);
+    I18NString name = params.edgeNamer().getName(way, label);
     float carSpeed = way.getOsmProvider().getOsmTagMapper().getCarSpeedForWay(way, direction);
 
     StreetEdgeBuilder<?> seb = new StreetEdgeBuilder<>()
@@ -686,6 +688,7 @@ public class OsmModule implements GraphBuilderModule {
       .withCarSpeed(carSpeed)
       .withLink(way.isLink())
       .withRoundabout(way.isRoundabout())
+      .withCrossing(way.isCrossing())
       .withSlopeOverride(way.getOsmProvider().getWayPropertySet().getSlopeOverride(way))
       .withStairs(way.isSteps())
       .withWheelchairAccessible(way.isWheelchairAccessible())
