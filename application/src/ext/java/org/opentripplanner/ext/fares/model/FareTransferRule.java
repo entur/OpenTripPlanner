@@ -9,7 +9,6 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.utils.time.DurationUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 public final class FareTransferRule implements Serializable {
@@ -25,12 +24,10 @@ public final class FareTransferRule implements Serializable {
 
   private final int transferCount;
 
-  @Nullable
-  private final Duration timeLimit;
-
   private final Collection<FareProduct> fareProducts;
 
-  private final TimeLimitType timeLimitType;
+  @Nullable
+  private final TimeLimit timeLimit;
 
   FareTransferRule(FareTransferRuleBuilder b) {
     this.id = Objects.requireNonNull(b.id());
@@ -38,12 +35,11 @@ public final class FareTransferRule implements Serializable {
     this.fromLegGroup = b.fromLegGroup();
     this.toLegGroup = b.toLegGroup();
     this.transferCount = b.transferCount();
-    this.timeLimit = b.timeLimit();
-    if (timeLimit != null) {
-      DurationUtils.requireNonNegative(timeLimit);
-      Objects.requireNonNull(b.timeLimitType());
+    if (b.timeLimitType() != null) {
+      this.timeLimit = new TimeLimit(b.timeLimitType(), b.timeLimit());
+    } else {
+      this.timeLimit = null;
     }
-    this.timeLimitType = b.timeLimitType();
   }
 
   /**
@@ -74,7 +70,7 @@ public final class FareTransferRule implements Serializable {
     if (timeLimit == null) {
       return true;
     } else {
-      return duration.compareTo(timeLimit) <= 0;
+      return duration.compareTo(timeLimit.duration()) <= 0;
     }
   }
 
@@ -96,8 +92,8 @@ public final class FareTransferRule implements Serializable {
     return fareProducts;
   }
 
-  public Optional<TimeLimitType> timeLimitType() {
-    return Optional.ofNullable(timeLimitType);
+  public Optional<TimeLimit> timeLimit() {
+    return Optional.ofNullable(timeLimit);
   }
 
   @Override
@@ -127,7 +123,7 @@ public final class FareTransferRule implements Serializable {
       .addObj("fromLegGroup", fromLegGroup)
       .addObj("toLegGroup", toLegGroup)
       .addNum("transferCount", transferCount)
-      .addDuration("timeLimit", timeLimit)
+      .addObj("timeLimit", timeLimit)
       .addCol("fareProducts", fareProducts)
       .toString();
   }

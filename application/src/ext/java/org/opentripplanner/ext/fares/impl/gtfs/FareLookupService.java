@@ -5,7 +5,6 @@ import static org.opentripplanner.utils.collection.ListUtils.partitionIntoOverla
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +41,10 @@ class FareLookupService implements Serializable {
     this.networkMatcher = new NetworkMatcher(rulePriorityMatcher, legRules);
   }
 
+  public boolean hasFreeTransfers(List<TransitLeg> legs) {
+    return !findTransfersMatchingAllLegs(legs).isEmpty();
+  }
+
   /**
    * Returns true if the service contains no data at all.
    */
@@ -76,7 +79,7 @@ class FareLookupService implements Serializable {
     return this.transferRules.stream()
       .filter(FareTransferRule::unlimitedTransfers)
       .filter(FareTransferRule::isFree)
-      .filter(r -> withinTimeLimit(r, legs.getFirst(), legs.getLast()))
+      .filter(r -> TimeLimitEvaluator.withinTimeLimit(r, legs.getFirst(), legs.getLast()))
       .flatMap(r -> findTransferMatches(r, legs).stream())
       .filter(transferMatch -> appliesToAllLegs(legs, transferMatch))
       .flatMap(transferRule -> transferRule.fromLegRule().fareProducts().stream())
@@ -96,7 +99,7 @@ class FareLookupService implements Serializable {
   /**
    * Find fare offers for a specific pair of legs.
    */
-  Set<FareOffer> findTransferOffersForSubLegs(TransitLeg head, List<TransitLeg> tail) {
+  Set<LegOffer> findTransferOffersForSubLegs(TransitLeg head, List<TransitLeg> tail) {
     Set<TransferMatch> transfers =
       this.transferRules.stream()
         .flatMap(r -> {
@@ -120,18 +123,31 @@ class FareLookupService implements Serializable {
         .forEach(p -> dependencies.putAll(p, transfer.fromLegRule().fareProducts()))
     );
 
-    var dependentOffers = dependencies
+    Set<LegOffer> dependentOffers = dependencies
       .keySet()
       .stream()
-      .map(product -> FareOffer.of(head.startTime(), product, dependencies.get(product)))
+      .map(product ->
+        LegOffer.of(FareOffer.of(head.startTime(), product, dependencies.get(product)))
+      )
       .collect(Collectors.toSet());
 
-    var freeTransferOffers = transfers
+    Set<LegOffer> freeTransferOffers = transfers
       .stream()
       .filter(TransferMatch::isFree)
-      .flatMap(t -> t.fromLegRule().fareProducts().stream())
-      .map(product -> FareOffer.of(head.startTime(), product, dependencies.get(product)))
-      .collect(Collectors.toSet());
+      .flatMap(t ->
+        t
+          .fromLegRule()
+          .fareProducts()
+          .stream()
+          .map(product ->
+            LegOffer.of(
+              FareOffer.of(head.startTime(), product, dependencies.get(product)),
+              head,
+              t.transferRule().timeLimit().orElse(null)
+            )
+          )
+      )
+      .collect(Collectors.toUnmodifiableSet());
 
     return SetUtils.combine(dependentOffers, freeTransferOffers);
   }
@@ -160,7 +176,7 @@ class FareLookupService implements Serializable {
   ) {
     return fromRules
       .stream()
-      .filter(match -> withinTimeLimit(r, from, to))
+      .filter(match -> TimeLimitEvaluator.withinTimeLimit(r, from, to))
       .flatMap(fromRule -> toRules.stream().map(toRule -> new TransferMatch(r, fromRule, toRule)))
       .filter(
         match -> legMatchesRule(from, match.fromLegRule()) && legMatchesRule(to, match.toLegRule())
@@ -195,20 +211,6 @@ class FareLookupService implements Serializable {
         })
         .toList();
     }
-  }
-
-  private static boolean withinTimeLimit(FareTransferRule r, TransitLeg from, TransitLeg to) {
-    return r
-      .timeLimitType()
-      .map(limit -> {
-        var duration =
-          switch (limit) {
-            case DEPARTURE_TO_DEPARTURE -> Duration.between(from.startTime(), to.startTime());
-            case DEPARTURE_TO_ARRIVAL -> Duration.between(from.startTime(), to.endTime());
-          };
-        return r.belowTimeLimit(duration);
-      })
-      .orElse(true);
   }
 
   private boolean legMatchesRule(TransitLeg leg, FareLegRule rule) {

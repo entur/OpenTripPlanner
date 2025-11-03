@@ -1,11 +1,8 @@
 package org.opentripplanner.ext.fares.model;
 
-import org.opentripplanner.utils.lang.Sandbox;
-
 /**
  * How fare validity durations should be computed across a set of legs for fare calculation purposes.
  */
-@Sandbox
 public enum TimeLimitType {
   /**
    * The duration is to be computed from the departure time of the current leg to the arrival time of
