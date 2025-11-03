@@ -20,13 +20,20 @@ import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 
-class TimeLimitWithFreeTransferTest implements PlanTestConstants, FareTestConstants {
+class FreeTransferTimeLimitTest implements PlanTestConstants, FareTestConstants {
 
   private static final FeedScopedId LEG_GROUP = id("leg-group-a");
-  private static final Route R1 = TimetableRepositoryForTest.route("r1").withGroupOfRoutes(List.of(NETWORK_A)).build();
+  private static final Route R1 = TimetableRepositoryForTest.route("r1")
+    .withGroupOfRoutes(List.of(NETWORK_A))
+    .build();
 
   private static final GtfsFaresV2Service SERVICE = new GtfsFaresV2Service(
-    List.of(FareLegRule.of(id("r1"), FARE_PRODUCT_A).withLegGroupId(LEG_GROUP).withNetworkId(NETWORK_A.getId()).build()),
+    List.of(
+      FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+        .withLegGroupId(LEG_GROUP)
+        .withNetworkId(NETWORK_A.getId())
+        .build()
+    ),
     List.of(
       FareTransferRule.of()
         .withId(id("transfer"))
@@ -40,11 +47,11 @@ class TimeLimitWithFreeTransferTest implements PlanTestConstants, FareTestConsta
   );
 
   @Test
-  void twoLegsAboveLimit() {
+  void twoLegsWithinLimit() {
     var i1 = newItinerary(A, time("10:00"))
       .bus(R1, 1, time("10:00"), time("10:03"), B)
-      .bus(R1, 2, time("10:04"), time("10:08"), B)
-      .bus(R1, 3, time("10:12"), time("10:22"), C)
+      .bus(R1, 2, time("10:04"), time("10:08"), C)
+      .bus(R1, 3, time("10:12"), time("10:22"), D)
       .build();
 
     var result = SERVICE.calculateFares(i1);
@@ -52,13 +59,16 @@ class TimeLimitWithFreeTransferTest implements PlanTestConstants, FareTestConsta
     assertThat(result.itineraryProducts()).isEmpty();
 
     var first = i1.legs().getFirst();
+    var second = i1.legs().get(1);
     var last = i1.legs().getLast();
     assertThat(result.offersForLeg(first)).containsExactly(
       FareOffer.of(first.startTime(), FARE_PRODUCT_A)
     );
+    assertThat(result.offersForLeg(second)).containsExactly(
+      FareOffer.of(first.startTime(), FARE_PRODUCT_A)
+    );
     assertThat(result.offersForLeg(last)).containsExactly(
-      FareOffer.of(last.startTime(), FARE_PRODUCT_A)
+      FareOffer.of(second.startTime(), FARE_PRODUCT_A)
     );
   }
-
 }

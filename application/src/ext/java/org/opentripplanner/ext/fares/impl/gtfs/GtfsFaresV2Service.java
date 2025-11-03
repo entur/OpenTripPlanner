@@ -49,10 +49,6 @@ public final class GtfsFaresV2Service implements Serializable {
           .forEach(legs -> {
             var offers = lookup.findTransferOffersForSubLegs(split.head(), legs);
             legs.forEach(leg -> legOffers.addToLeg(leg, offers));
-            var hasFreeTransfer = lookup.hasFreeTransfer(split.head(), legs);
-            if (hasFreeTransfer) {
-              legOffers.transferProducts(split.head(), legs);
-            }
           })
       );
     }

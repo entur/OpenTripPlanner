@@ -4,7 +4,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
 import java.util.Collection;
-import java.util.List;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.TransitLeg;
@@ -17,14 +16,6 @@ import org.opentripplanner.model.plan.TransitLeg;
 class LegOfferContainer {
 
   private final SetMultimap<Leg, FareOffer> multimap = HashMultimap.create();
-
-  /**
-   * Take all offers from {@code from} and apply them to {@code targets}.
-   */
-  public void transferProducts(TransitLeg from, List<TransitLeg> targets) {
-    var previousLegsProducts = multimap.get(from);
-    targets.forEach(leg -> addToLeg(leg, previousLegsProducts));
-  }
 
   void addToLeg(TransitLeg leg, Collection<FareOffer> products) {
     products.forEach(p -> addToLeg(leg, p));
