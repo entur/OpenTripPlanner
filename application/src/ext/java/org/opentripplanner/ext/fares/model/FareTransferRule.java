@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.fares.model;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -58,20 +57,6 @@ public final class FareTransferRule implements Serializable {
    */
   public boolean unlimitedTransfers() {
     return transferCount == UNLIMITED_TRANSFERS;
-  }
-
-  /**
-   * Returns true if the duration is within the time limit.
-   */
-  public boolean belowTimeLimit(Duration duration) {
-    if (duration.isNegative()) {
-      throw new IllegalArgumentException("Duration cannot be negative.");
-    }
-    if (timeLimit == null) {
-      return true;
-    } else {
-      return duration.compareTo(timeLimit.duration()) <= 0;
-    }
   }
 
   public FeedScopedId id() {

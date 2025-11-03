@@ -62,8 +62,6 @@ class FareTransferRuleMapperTest {
     assertThat(transferRule.timeLimit()).hasValue(
       new TimeLimit(TimeLimitType.DEPARTURE_TO_ARRIVAL, Duration.ofMinutes(120))
     );
-    assertTrue(transferRule.belowTimeLimit(Duration.ofMinutes(119).plusSeconds(59)));
-    assertFalse(transferRule.belowTimeLimit(Duration.ofMinutes(121)));
   }
 
   @Test
