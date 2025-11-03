@@ -130,8 +130,8 @@ class FareLookupService implements Serializable {
       .stream()
       .filter(TransferMatch::isFree)
       .flatMap(t -> t.fromLegRule().fareProducts().stream())
-      .map(t -> FareOffer.of(head.startTime(), t))
-      .collect(Collectors.toUnmodifiableSet());
+      .map(product -> FareOffer.of(head.startTime(), product, dependencies.get(product)))
+      .collect(Collectors.toSet());
 
     return SetUtils.combine(dependentOffers, freeTransferOffers);
   }
@@ -167,20 +167,6 @@ class FareLookupService implements Serializable {
       );
   }
 
-  private static boolean withinTimeLimit(FareTransferRule r, TransitLeg from, TransitLeg to) {
-    return r
-      .timeLimitType()
-      .map(limit -> {
-        var duration =
-          switch (limit) {
-            case DEPARTURE_TO_DEPARTURE -> Duration.between(from.startTime(), to.startTime());
-            case DEPARTURE_TO_ARRIVAL -> Duration.between(from.startTime(), to.endTime());
-          };
-        return r.belowTimeLimit(duration);
-      })
-      .orElse(true);
-  }
-
   private List<TransferMatch> findTransferMatches(
     FareTransferRule transferRule,
     List<TransitLeg> transitLegs
@@ -209,6 +195,20 @@ class FareLookupService implements Serializable {
         })
         .toList();
     }
+  }
+
+  private static boolean withinTimeLimit(FareTransferRule r, TransitLeg from, TransitLeg to) {
+    return r
+      .timeLimitType()
+      .map(limit -> {
+        var duration =
+          switch (limit) {
+            case DEPARTURE_TO_DEPARTURE -> Duration.between(from.startTime(), to.startTime());
+            case DEPARTURE_TO_ARRIVAL -> Duration.between(from.startTime(), to.endTime());
+          };
+        return r.belowTimeLimit(duration);
+      })
+      .orElse(true);
   }
 
   private boolean legMatchesRule(TransitLeg leg, FareLegRule rule) {
