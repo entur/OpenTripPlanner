@@ -9,7 +9,7 @@ import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
-import org.opentripplanner.transit.service.SiteRepository;
+import org.opentripplanner.transit.service.TransitService;
 
 @Module
 public class LinkingServiceModule {
@@ -34,13 +34,13 @@ public class LinkingServiceModule {
   @Provides
   static LinkingContextFactory provideLinkingContextFactory(
     Graph graph,
-    SiteRepository siteRepository,
+    TransitService transitService,
     VertexCreationService vertexCreationService
   ) {
     return new LinkingContextFactory(
       graph,
       vertexCreationService,
-      siteRepository::findStopOrChildIds
+      transitService::findStopOrChildIds
     );
   }
 }
