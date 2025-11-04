@@ -14,11 +14,11 @@ public class DefaultStreetLimitationParametersService implements StreetLimitatio
 
   @Override
   public float maxCarSpeed() {
-    return streetRepository.streetLimitationParameters().maxCarSpeed();
+    return streetRepository.streetModelDetails().maxCarSpeed();
   }
 
   @Override
   public int maxAreaNodes() {
-    return streetRepository.streetLimitationParameters().maxAreaNodes();
+    return streetRepository.streetModelDetails().maxAreaNodes();
   }
 }

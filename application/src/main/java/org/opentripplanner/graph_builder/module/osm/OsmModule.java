@@ -151,7 +151,7 @@ public class OsmModule implements GraphBuilderModule {
     LOG.info("Building street graph from OSM");
     build(osmdb, vertexGenerator);
     graph.hasStreets = true;
-    streetRepository.setStreetLimitationParameters(
+    streetRepository.setStreetModelDetails(
       new StreetModelDetails(getMaxCarSpeed(), params.maxAreaNodes())
     );
     vertexGenerator.createDifferentLevelsSharingBarrierIssues();

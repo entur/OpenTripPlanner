@@ -7,7 +7,7 @@ import org.opentripplanner.street.model.StreetModelDetails;
  *
  */
 public interface StreetRepository extends Serializable {
-  StreetModelDetails streetLimitationParameters();
+  StreetModelDetails streetModelDetails();
 
-  void setStreetLimitationParameters(StreetModelDetails streetLimitationParameters);
+  void setStreetModelDetails(StreetModelDetails streetModelDetails);
 }

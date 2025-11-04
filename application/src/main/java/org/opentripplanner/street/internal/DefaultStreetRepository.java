@@ -8,18 +8,18 @@ import org.opentripplanner.street.model.StreetModelDetails;
 @Singleton
 public class DefaultStreetRepository implements StreetRepository {
 
-  private StreetModelDetails streetLimitationParameters = StreetModelDetails.DEFAULT;
+  private StreetModelDetails streetModelDetails = StreetModelDetails.DEFAULT;
 
   @Inject
   public DefaultStreetRepository() {}
 
   @Override
-  public StreetModelDetails streetLimitationParameters() {
-    return streetLimitationParameters;
+  public StreetModelDetails streetModelDetails() {
+    return streetModelDetails;
   }
 
   @Override
-  public void setStreetLimitationParameters(StreetModelDetails streetLimitationParameters) {
-    this.streetLimitationParameters = streetLimitationParameters;
+  public void setStreetModelDetails(StreetModelDetails streetModelDetails) {
+    this.streetModelDetails = streetModelDetails;
   }
 }
