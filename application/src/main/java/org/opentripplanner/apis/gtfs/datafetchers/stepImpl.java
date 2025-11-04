@@ -71,14 +71,10 @@ public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
           .verticalTransportationUseFactory()
           .createInclinedVerticalTransportationUse(walkStep.getEdges().getFirst());
         if (verticalTransportationUse != null) {
-          switch (verticalTransportationUse) {
-            case EscalatorUse escalatorUse -> {
-              return escalatorUse;
-            }
-            case StairsUse stairsUse -> {
-              return stairsUse;
-            }
-          }
+          return switch (verticalTransportationUse) {
+            case EscalatorUse escalatorUse -> escalatorUse;
+            case StairsUse stairsUse -> stairsUse;
+          };
         }
       }
       return null;

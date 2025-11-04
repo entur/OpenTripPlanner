@@ -387,7 +387,7 @@ public class OsmModule implements GraphBuilderModule {
       OsmNode osmStartNode = null;
 
       var platformOptional = getPlatform(osmdb, way);
-      var edgeLevelInfoOptional = edgeLevelInfoProcessor.getEdgeLevelInfo(osmdb, way);
+      var edgeLevelInfoOptional = edgeLevelInfoProcessor.findEdgeLevelInfo(osmdb, way);
 
       for (int i = 0; i < nodes.size() - 1; i++) {
         OsmNode segmentStartOsmNode = osmdb.getNode(nodes.get(i));

@@ -10,7 +10,7 @@ import org.opentripplanner.street.model.edge.Edge;
 public class NoopEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
 
   @Override
-  public Optional<EdgeLevelInfo> getEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
+  public Optional<EdgeLevelInfo> findEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
     return Optional.empty();
   }
 

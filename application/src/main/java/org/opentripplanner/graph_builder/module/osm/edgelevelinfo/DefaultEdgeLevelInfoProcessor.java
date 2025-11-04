@@ -28,7 +28,7 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
   }
 
   @Override
-  public Optional<EdgeLevelInfo> getEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
+  public Optional<EdgeLevelInfo> findEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
     List<OsmLevel> levels = osmdb.getLevelsForEntity(way);
     var nodeRefs = way.getNodeRefs();
     long firstNodeRef = nodeRefs.get(0);
