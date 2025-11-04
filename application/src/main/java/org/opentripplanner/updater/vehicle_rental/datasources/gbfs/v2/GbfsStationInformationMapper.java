@@ -69,6 +69,9 @@ class GbfsStationInformationMapper {
           .getAdditionalProperties()
           .entrySet()
           .stream()
+          .filter(e ->
+            filterUnknownVehicleType(e.getKey(), station.getStationId(), "vehicle_capacity")
+          )
           .collect(
             Collectors.toMap(e -> vehicleTypes.get(e.getKey()), e -> e.getValue().intValue())
           )
@@ -82,6 +85,9 @@ class GbfsStationInformationMapper {
           .getAdditionalProperties()
           .entrySet()
           .stream()
+          .filter(e ->
+            filterUnknownVehicleType(e.getKey(), station.getStationId(), "vehicle_type_capacity")
+          )
           .collect(
             Collectors.toMap(e -> vehicleTypes.get(e.getKey()), e -> e.getValue().intValue())
           )
@@ -103,5 +109,21 @@ class GbfsStationInformationMapper {
     }
 
     return builder.build();
+  }
+
+  /**
+   * Filter to check if a vehicle type exists in the vehicle types map.
+   */
+  private boolean filterUnknownVehicleType(String vehicleTypeId, String stationId, String field) {
+    if (!vehicleTypes.containsKey(vehicleTypeId)) {
+      LOG.debug(
+        "Station {} references unknown vehicle type '{}' in {}, skipping",
+        stationId,
+        vehicleTypeId,
+        field
+      );
+      return false;
+    }
+    return true;
   }
 }
