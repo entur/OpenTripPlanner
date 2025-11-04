@@ -41,7 +41,10 @@ class FareLookupService implements Serializable {
     this.networkMatcher = new NetworkMatcher(rulePriorityMatcher, legRules);
   }
 
-  public boolean hasFreeTransfers(List<TransitLeg> legs) {
+  /**
+   * Are there free transfers between the legs?
+   */
+  boolean hasFreeTransfers(List<TransitLeg> legs) {
     return !findTransfersMatchingAllLegs(legs).isEmpty();
   }
 

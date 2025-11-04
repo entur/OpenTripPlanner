@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.fares.model;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -10,7 +11,7 @@ import org.opentripplanner.utils.time.DurationUtils;
  * <p>
  * Instances of this class are immutable.
  */
-public class TimeLimit {
+public class TimeLimit implements Serializable {
 
   private final TimeLimitType type;
   private final Duration duration;

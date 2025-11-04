@@ -32,20 +32,18 @@ class FareTransferRuleMapper {
     var fareProductId = idFactory.createNullableId(rhs.getFareProductId());
     final var products = findFareProducts(fareProductId, rhs.getId());
 
-    Duration duration = null;
-    TimeLimitType limitType = null;
-    if (rhs.getDurationLimit() != MISSING_VALUE) {
-      duration = Duration.ofSeconds(rhs.getDurationLimit());
-      limitType = mapLimitType(rhs.getDurationLimitType());
-    }
-    return FareTransferRule.of()
+    var builder = FareTransferRule.of()
       .withId(idFactory.createId(rhs.getId(), "fare transfer rule"))
       .withFromLegGroup(idFactory.createNullableId(rhs.getFromLegGroupId()))
       .withToLegGroup(idFactory.createNullableId(rhs.getToLegGroupId()))
       .withTransferCount(rhs.getTransferCount())
-      .withTimeLimit(limitType, duration)
-      .withFareProducts(products)
-      .build();
+      .withFareProducts(products);
+    if (rhs.getDurationLimit() != MISSING_VALUE) {
+      var duration = Duration.ofSeconds(rhs.getDurationLimit());
+      var type = mapLimitType(rhs.getDurationLimitType());
+      builder.withTimeLimit(type, duration);
+    }
+    return builder.build();
   }
 
   private Collection<FareProduct> findFareProducts(

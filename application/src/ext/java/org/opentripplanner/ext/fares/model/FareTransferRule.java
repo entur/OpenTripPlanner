@@ -34,11 +34,7 @@ public final class FareTransferRule implements Serializable {
     this.fromLegGroup = b.fromLegGroup();
     this.toLegGroup = b.toLegGroup();
     this.transferCount = b.transferCount();
-    if (b.timeLimitType() != null) {
-      this.timeLimit = new TimeLimit(b.timeLimitType(), b.timeLimit());
-    } else {
-      this.timeLimit = null;
-    }
+    this.timeLimit = b.timeLimit();
   }
 
   /**

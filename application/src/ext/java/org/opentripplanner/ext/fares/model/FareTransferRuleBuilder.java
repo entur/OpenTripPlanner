@@ -13,9 +13,8 @@ public class FareTransferRuleBuilder {
   private FeedScopedId fromLegGroup;
   private FeedScopedId toLegGroup;
   private int transferCount = FareTransferRule.UNLIMITED_TRANSFERS;
-  private Duration timeLimit;
+  private TimeLimit timeLimit;
   private Collection<FareProduct> fareProducts = List.of();
-  private TimeLimitType timeLimitType;
 
   FareTransferRuleBuilder() {}
 
@@ -40,8 +39,7 @@ public class FareTransferRuleBuilder {
   }
 
   public FareTransferRuleBuilder withTimeLimit(TimeLimitType type, Duration timeLimit) {
-    this.timeLimitType = type;
-    this.timeLimit = timeLimit;
+    this.timeLimit = new TimeLimit(type, timeLimit);
     return this;
   }
 
@@ -66,13 +64,9 @@ public class FareTransferRuleBuilder {
     return transferCount;
   }
 
-  public Duration timeLimit() {
-    return timeLimit;
-  }
-
   @Nullable
-  public TimeLimitType timeLimitType() {
-    return timeLimitType;
+  public TimeLimit timeLimit() {
+    return timeLimit;
   }
 
   public Collection<FareProduct> fareProducts() {
