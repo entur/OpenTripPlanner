@@ -54,7 +54,7 @@ public class TranslatedString implements I18NString, Serializable {
 
   /**
    * Gets a deduplicated I18NString. If the translations only have a single value, return a
-   * NonTranslatedString, otherwise a TranslatedString. The resulting I18NString is interned for
+   * NonLocalizedString, otherwise a TranslatedString. The resulting I18NString is interned for
    * memory efficiency.
    * <p>
    * This should be used when calling this method during graph building. This should not be called
@@ -75,7 +75,7 @@ public class TranslatedString implements I18NString, Serializable {
 
   /**
    * Gets a non-deduplicated I18NString. If the translations only have a single value, return a
-   * NonTranslatedString, otherwise a TranslatedString. The resulting I18NString is NOT interned.
+   * NonLocalizedString, otherwise a TranslatedString. The resulting I18NString is NOT interned.
    * <p>
    * This should be used from real-time updaters to avoid memory leaks. For graph building, use
    * {@link #getDeduplicatedI18NString(Map, boolean)} instead.
@@ -94,7 +94,7 @@ public class TranslatedString implements I18NString, Serializable {
   }
 
   /**
-   * Gets an I18NString. If the translations only have a single value, return a NonTranslatedString,
+   * Gets an I18NString. If the translations only have a single value, return a NonLocalizedString,
    * otherwise a TranslatedString
    *
    * @param translations A Map of languages and translations, a null language is the default
