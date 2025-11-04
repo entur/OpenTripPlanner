@@ -16,7 +16,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarFile;
 import org.geotools.util.WeakValueHashMap;
-import org.jetbrains.annotations.NotNull;
 import org.jets3t.service.io.TempFile;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.LineString;
@@ -109,7 +108,7 @@ public class GraphSerializationTest {
     );
   }
 
-  private static @NotNull DefaultStreetRepository createStreetRepository() {
+  private static DefaultStreetRepository createStreetRepository() {
     var streetRepository = new DefaultStreetRepository();
     streetRepository.setStreetLimitationParameters(new StreetModelDetails(33f, 17));
     return streetRepository;
