@@ -47,7 +47,7 @@ public class LinkingContext {
   /**
    * Vertices that are used for either origin, destination or for via locations. Only the visit via
    * locations that have a coordinate specified will have vertices available. Stop vertices are not
-   * included via locations.
+   * included from via locations.
    */
   public Set<Vertex> findVertices(GenericLocation location) {
     return verticesByLocation.getOrDefault(location, Set.of());
