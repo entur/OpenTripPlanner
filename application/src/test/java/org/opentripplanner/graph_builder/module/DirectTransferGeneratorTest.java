@@ -37,6 +37,7 @@ import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -631,7 +632,12 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
             builder.withTransfersNotAllowed(withNoTransfersOnStations)
           );
 
-          S0 = stop("S0", 47.495, 19.001, station, TransitMode.RAIL);
+          S0 = stop("S0", b ->
+            b
+              .withCoordinate(47.495, 19.001)
+              .withParentStation(station)
+              .withVehicleType(TransitMode.RAIL)
+          );
           S11 = stop("S11", 47.500, 19.001, station);
           S12 = stop("S12", 47.520, 19.001, station);
           S13 = stop("S13", 47.540, 19.001, station);
@@ -759,6 +765,10 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
                 .build()
             );
           }
+        }
+
+        private TransitStopVertex stop(String id, double lat, double lon, Station parentStation) {
+          return stop(id, b -> b.withCoordinate(lat, lon).withParentStation(parentStation));
         }
       }
     );
