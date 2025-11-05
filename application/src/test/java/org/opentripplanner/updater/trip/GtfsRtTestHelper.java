@@ -55,6 +55,10 @@ public class GtfsRtTestHelper {
     return applyTripUpdates(List.of(update), incrementality);
   }
 
+  public UpdateResult applyTripUpdates(List<GtfsRealtime.TripUpdate> updates) {
+    return applyTripUpdates(updates, FULL_DATASET);
+  }
+
   public UpdateResult applyTripUpdates(
     List<GtfsRealtime.TripUpdate> updates,
     UpdateIncrementality incrementality
