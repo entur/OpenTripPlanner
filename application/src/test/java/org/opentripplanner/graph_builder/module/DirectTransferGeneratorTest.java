@@ -274,7 +274,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
 
   @Test
   public void testBikeRequestWithBikesAllowedTransfersWithIncludeEmptyRailStopsInTransfersOn() {
-    OTPFeature.IncludeEmptyRailStopsInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
       var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
 
       TestOtpModel model = model(true, false, false);

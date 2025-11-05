@@ -1,6 +1,5 @@
 package org.opentripplanner.graph_builder.module.nearbystops;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,23 +60,16 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
       StopLocation ts1 = nearbyStop.stop;
 
       if (ts1 instanceof RegularStop regularStop) {
-        /* Consider this destination stop as a candidate for every trip pattern passing through it. */
-        Collection<TripPattern> patternsForStop = transitService.findPatterns(ts1);
+        var patternsForStop = findPatternsForStop(regularStop, reverseDirection);
 
-        if (OTPFeature.IncludeEmptyRailStopsInTransfers.isOn()) {
-          if (patternsForStop.isEmpty() && regularStop.isRailStop()) {
+        if (OTPFeature.IncludeStopsUsedRealtimeInTransfers.isOn()) {
+          if (patternsForStop.isEmpty() && regularStop.isSometimesUsedRealtime()) {
             uniqueStopsResult.add(nearbyStop);
           }
         }
 
-        for (TripPattern pattern : patternsForStop) {
-          if (
-            reverseDirection
-              ? pattern.canAlight(nearbyStop.stop)
-              : pattern.canBoard(nearbyStop.stop)
-          ) {
-            closestStopForPattern.putMin(pattern, nearbyStop);
-          }
+        for (var pattern : patternsForStop) {
+          closestStopForPattern.putMin(pattern, nearbyStop);
         }
       }
 
@@ -99,5 +91,17 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
     uniqueStopsResult.addAll(closestStopForPattern.values());
     // TODO: don't convert to list
     return uniqueStopsResult.stream().toList();
+  }
+
+  /**
+   * Find all candidate patterns for the given destination {@code stop}. Only return patterns
+   * where we can board(forward direction) or alight(reverse direction) at the given stop.
+   */
+  private List<TripPattern> findPatternsForStop(RegularStop stop, boolean reverseDirection) {
+    return transitService
+      .findPatterns(stop)
+      .stream()
+      .filter(reverseDirection ? p -> p.canAlight(stop) : p -> p.canBoard(stop))
+      .toList();
   }
 }
