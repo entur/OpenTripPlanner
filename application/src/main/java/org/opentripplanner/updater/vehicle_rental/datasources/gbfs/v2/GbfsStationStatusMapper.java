@@ -91,12 +91,31 @@ class GbfsStationStatusMapper {
           available
             .getVehicleTypeIds()
             .stream()
+            .filter(t ->
+              filterUnknownVehicleType(t, status.getStationId(), "vehicle_docks_available")
+            )
             .map(t -> new VehicleTypeCount(vehicleTypes.get(t), available.getCount()))
         )
         .collect(TYPE_MAP_COLLECTOR);
     } else {
       return Map.of();
     }
+  }
+
+  /**
+   * Filter to check if a vehicle type exists in the vehicle types map.
+   */
+  private boolean filterUnknownVehicleType(String vehicleTypeId, String stationId, String field) {
+    if (!vehicleTypes.containsKey(vehicleTypeId)) {
+      LOG.debug(
+        "Station {} references unknown vehicle type '{}' in {}, skipping",
+        stationId,
+        vehicleTypeId,
+        field
+      );
+      return false;
+    }
+    return true;
   }
 
   private static ReturnPolicy returnPolicy(GBFSStation station) {
