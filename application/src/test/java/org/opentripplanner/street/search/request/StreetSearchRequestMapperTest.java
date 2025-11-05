@@ -254,6 +254,29 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
+  void mapAccessibilityRequest() {
+    var builder = builder();
+    builder.withPreferences(pref ->
+      pref.withWheelchair(wheelchair -> {
+        wheelchair
+          .withMaxSlope(0.08)
+          .withInaccessibleStreetReluctance(10.0)
+          .withStairsReluctance(25.0)
+          .withElevator(e -> e.withAccessibleOnly());
+      })
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var accessRequest = subject.wheelchair();
+    assertEquals(0.08, accessRequest.maxSlope());
+    assertEquals(10.0, accessRequest.inaccessibleStreetReluctance());
+    assertEquals(25.0, accessRequest.stairsReluctance());
+    assertTrue(accessRequest.elevator().onlyConsiderAccessible());
+  }
+
+  @Test
   void mapSystemRequest() {
     var builder = builder();
     builder.withPreferences(pref ->

@@ -10,7 +10,7 @@ public class StreetSearchRequestBuilder {
   Instant startTime;
   StreetMode mode;
   boolean arriveBy;
-  boolean wheelchair;
+  boolean wheelchairEnabled;
   GenericLocation from;
   GenericLocation to;
   boolean geoidElevation;
@@ -18,7 +18,7 @@ public class StreetSearchRequestBuilder {
   WalkRequest walk;
   BikeRequest bike;
   CarRequest car;
-  WheelchairRequest wheelchairRequest;
+  WheelchairRequest wheelchair;
   ScooterRequest scooter;
   ElevatorRequest elevator;
 
@@ -26,7 +26,7 @@ public class StreetSearchRequestBuilder {
     this.startTime = original.startTime();
     this.mode = original.mode();
     this.arriveBy = original.arriveBy();
-    this.wheelchair = original.wheelchairEnabled();
+    this.wheelchairEnabled = original.wheelchairEnabled();
     this.from = original.from();
     this.to = original.to();
     this.geoidElevation = original.geoidElevation();
@@ -35,7 +35,7 @@ public class StreetSearchRequestBuilder {
     this.bike = original.bike();
     this.car = original.car();
     this.scooter = original.scooter();
-    this.wheelchairRequest = original.wheelchair();
+    this.wheelchair = original.wheelchair();
     this.elevator = original.elevator();
   }
 
@@ -54,13 +54,13 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
-  public StreetSearchRequestBuilder withWheelchair(boolean wheelchair) {
-    this.wheelchair = wheelchair;
+  public StreetSearchRequestBuilder withWheelchairEnabled(boolean wheelchair) {
+    this.wheelchairEnabled = wheelchair;
     return this;
   }
 
-  public StreetSearchRequestBuilder withWheelchairRequest(WheelchairRequest request) {
-    this.wheelchairRequest = request;
+  public StreetSearchRequestBuilder withWheelchair(WheelchairRequest request) {
+    this.wheelchair = request;
     return this;
   }
 

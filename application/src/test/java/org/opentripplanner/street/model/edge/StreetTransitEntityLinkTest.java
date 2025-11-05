@@ -100,8 +100,8 @@ class StreetTransitEntityLinkTest {
       } else {
         feature = AccessibilityRequest.ofCost(100, 100);
       }
-      req.withWheelchair(true);
-      req.withWheelchairRequest(
+      req.withWheelchairEnabled(true);
+      req.withWheelchair(
         WheelchairRequest.of()
           .withTrip(feature)
           .withStop(feature)

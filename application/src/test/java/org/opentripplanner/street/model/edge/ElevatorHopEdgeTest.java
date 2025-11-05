@@ -34,8 +34,8 @@ class ElevatorHopEdgeTest {
     var req = StreetSearchRequest.of();
     var feature = AccessibilityRequest.ofOnlyAccessible();
     req
-      .withWheelchair(true)
-      .withWheelchairRequest(
+      .withWheelchairEnabled(true)
+      .withWheelchair(
         WheelchairRequest.of()
           .withStop(feature)
           .withElevator(feature)
@@ -69,7 +69,7 @@ class ElevatorHopEdgeTest {
     assertNotNull(result);
     assertTrue(result.weight > 1);
 
-    req = StreetSearchRequest.copyOf(req).withWheelchair(true).build();
+    req = StreetSearchRequest.copyOf(req).withWheelchairEnabled(true).build();
     var wheelchairResult = traverse(wheelchair, req)[0];
     assertNotNull(wheelchairResult);
     assertEquals(expectedCost, wheelchairResult.weight);

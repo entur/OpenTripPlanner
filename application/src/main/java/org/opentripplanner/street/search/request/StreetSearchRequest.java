@@ -88,7 +88,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.startTime = RouteRequest.normalizeDateTime(builder.startTimeOrNow());
     this.mode = builder.mode;
     this.arriveBy = builder.arriveBy;
-    this.wheelchair = builder.wheelchair;
+    this.wheelchair = builder.wheelchairEnabled;
     this.from = builder.from;
     this.fromEnvelope = createEnvelope(from);
     this.to = builder.to;
@@ -99,7 +99,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.bike = requireNonNull(builder.bike);
     this.scooter = requireNonNull(builder.scooter);
     this.car = requireNonNull(builder.car);
-    this.wheelchairRequest = requireNonNull(builder.wheelchairRequest);
+    this.wheelchairRequest = requireNonNull(builder.wheelchair);
     this.elevator = requireNonNull(builder.elevator);
   }
 

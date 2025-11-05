@@ -85,8 +85,8 @@ class StreetEdgeWheelchairCostTest {
     assertEquals(slope, edge.getMaxSlope(), 0.0001);
 
     var req = StreetSearchRequest.of();
-    req.withWheelchair(true);
-    req.withWheelchairRequest(
+    req.withWheelchairEnabled(true);
+    req.withWheelchair(
       WheelchairRequest.of()
         .withStopOnlyAccessible()
         .withElevatorOnlyAccessible()
@@ -122,8 +122,8 @@ class StreetEdgeWheelchairCostTest {
       .buildAndConnect();
 
     var req = StreetSearchRequest.of();
-    req.withWheelchair(true);
-    req.withWheelchairRequest(
+    req.withWheelchairEnabled(true);
+    req.withWheelchair(
       WheelchairRequest.of()
         .withStopOnlyAccessible()
         .withElevatorOnlyAccessible()
@@ -165,8 +165,8 @@ class StreetEdgeWheelchairCostTest {
       .buildAndConnect();
 
     var req = StreetSearchRequest.of();
-    req.withWheelchair(true);
-    req.withWheelchairRequest(
+    req.withWheelchairEnabled(true);
+    req.withWheelchair(
       WheelchairRequest.of()
         .withStopOnlyAccessible()
         .withElevatorOnlyAccessible()
@@ -212,7 +212,7 @@ class StreetEdgeWheelchairCostTest {
 
     var req = StreetSearchRequest.of();
     req.withWalk(w -> w.withReluctance(walkReluctance));
-    req.withWheelchair(true);
+    req.withWheelchairEnabled(true);
 
     var result = traverse(edge, req.build());
     assertEquals(expectedCost, (long) result.weight);

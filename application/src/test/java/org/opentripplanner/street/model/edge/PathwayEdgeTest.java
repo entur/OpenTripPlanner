@@ -191,10 +191,10 @@ class PathwayEdgeTest {
 
   private State assertThatEdgeIsTraversable(PathwayEdge edge, boolean wheelchair) {
     var req = StreetSearchRequest.of()
-      .withWheelchair(wheelchair)
+      .withWheelchairEnabled(wheelchair)
       .withWalk(WalkRequest.of().withSpeed(10).build())
       .withMode(StreetMode.WALK)
-      .withWheelchairRequest(
+      .withWheelchair(
         WheelchairRequest.of()
           .withStopOnlyAccessible()
           .withElevatorOnlyAccessible()
