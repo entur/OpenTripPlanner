@@ -295,17 +295,6 @@ public abstract class GraphRoutingTest {
       return vertexFactory.transitStop(ofStop(stop));
     }
 
-    public TransitStopVertex xstop(
-      String id,
-      double latitude,
-      double longitude,
-      @Nullable Station parentStation,
-      @Nullable TransitMode vehicleType
-    ) {
-      var stop = stopEntity(id, latitude, longitude, parentStation, vehicleType);
-      return vertexFactory.transitStop(ofStop(stop));
-    }
-
     public TransitEntranceVertex entrance(String id, double latitude, double longitude) {
       return new TransitEntranceVertex(entranceEntity(id, latitude, longitude));
     }
