@@ -1,7 +1,5 @@
 package org.opentripplanner.updater.vehicle_rental.datasources.gbfs;
 
-import static org.apache.hc.core5.http.HttpStatus.SC_NOT_MODIFIED;
-
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.lang.reflect.InvocationTargetException;
@@ -10,7 +8,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import javax.annotation.Nullable;
 import org.opentripplanner.framework.io.OtpHttpClient;
 import org.opentripplanner.framework.io.OtpHttpClientException;
 import org.opentripplanner.updater.spi.HttpHeaders;
@@ -27,6 +25,8 @@ public abstract class GbfsFeedLoaderImpl<N, F extends GbfsFeedDetails<N>>
 
   private static final Logger LOG = LoggerFactory.getLogger(GbfsFeedLoaderImpl.class);
   private static final ObjectMapper objectMapper = new ObjectMapper();
+  public static final String HEADER_ETAG = "ETag";
+  public static final String HEADER_IF_NONE_MATCH = "If-None-Match";
 
   /** One updater per feed type(?) */
   private final Map<N, GBFSFeedUpdater<?>> feedUpdaters = new HashMap<>();
@@ -99,8 +99,6 @@ public abstract class GbfsFeedLoaderImpl<N, F extends GbfsFeedDetails<N>>
 
   protected abstract <T> Class<T> classForName(N name);
 
-  /* protected static methods */
-
   protected static <T> T fetchFeed(
     URI uri,
     HttpHeaders httpHeaders,
@@ -119,28 +117,22 @@ public abstract class GbfsFeedLoaderImpl<N, F extends GbfsFeedDetails<N>>
    * Fetches a feed with conditional request support (ETag/If-None-Match).
    * Returns the response including status code and headers.
    */
-  protected static <T> T fetchFeedWithResponse(
+  private <T> T fetchFeedWithResponse(
     URI uri,
     HttpHeaders httpHeaders,
     String etag,
-    OtpHttpClient otpHttpClient,
     OtpHttpClient.ResponseMapper<T> contentMapper
   ) {
-    try {
-      // Build headers with If-None-Match if ETag is available
-      Map<String, String> headers = new HashMap<>(httpHeaders.asMap());
-      if (etag != null && !etag.isEmpty()) {
-        headers.put("If-None-Match", etag);
-      }
-
-      return otpHttpClient.getAndMap(uri, null, headers, contentMapper);
-    } catch (OtpHttpClientException e) {
-      LOG.warn("Error parsing vehicle rental feed from {}. Details: {}.", uri, e.getMessage(), e);
-      return null;
+    // Build headers with If-None-Match if ETag is available
+    Map<String, String> headers = new HashMap<>(httpHeaders.asMap());
+    if (etag != null && !etag.isEmpty()) {
+      headers.put(HEADER_IF_NONE_MATCH, etag);
     }
+
+    return otpHttpClient.getAndMap(uri, null, headers, contentMapper);
   }
 
-  public record GBFSFeedResponse<T>(T body, Optional<String> etag, int statusCode) {}
+  public record GBFSFeedResponse<T>(T body, @Nullable String etag, boolean statusNotModified) {}
 
   private class GBFSFeedUpdater<T> {
 
@@ -169,30 +161,29 @@ public abstract class GbfsFeedLoaderImpl<N, F extends GbfsFeedDetails<N>>
           url,
           httpHeaders,
           etag,
-          otpHttpClient,
           otpHttpResponse ->
             new GBFSFeedResponse<>(
-              otpHttpResponse.statusCode() == 200
+              otpHttpResponse.statusOk()
                 ? objectMapper.readValue(otpHttpResponse.body(), implementingClass)
                 : null,
-              otpHttpResponse.header("ETag"),
-              otpHttpResponse.statusCode()
+              otpHttpResponse.header(HEADER_ETAG).orElse(null),
+              otpHttpResponse.statusNotModified()
             )
         );
 
-        assert response != null;
-
         // Handle 304 Not Modified - data hasn't changed
-        if (response.statusCode == SC_NOT_MODIFIED) {
+        if (response.statusNotModified) {
           LOG.debug("GBFS feed {} not modified (304), reusing cached data", url);
           nextUpdate = getCurrentTimeSeconds();
           return true;
         }
 
-        assert response.body != null;
+        if (response.body == null) {
+          throw new IllegalStateException("Unexpected null body");
+        }
 
         data = response.body;
-        etag = response.etag.orElse(null);
+        etag = response.etag;
         if (etag != null) {
           LOG.debug("Stored ETag {} for GBFS feed {}", etag, url);
         }
@@ -203,15 +194,14 @@ public abstract class GbfsFeedLoaderImpl<N, F extends GbfsFeedDetails<N>>
         LOG.warn("Could not fetch GBFS data for {}", url, e);
         nextUpdate = getCurrentTimeSeconds();
         return false;
+      } catch (Exception e) {
+        LOG.warn("Exception while processing GBFS data for {}", url, e);
+        nextUpdate = getCurrentTimeSeconds();
+        return false;
       }
     }
 
     private void updateNextFetchTime(T feedData) {
-      if (feedData == null) {
-        nextUpdate = getCurrentTimeSeconds();
-        return;
-      }
-
       try {
         // Fetch lastUpdated and ttl from the resulting class. Due to type erasure we don't know the actual
         // class, and have to use introspection to get the method references, as they do not share a supertype.
