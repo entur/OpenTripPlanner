@@ -136,9 +136,9 @@ class StreetSearchRequestMapperTest {
     assertEquals(5.0, walking.stairsReluctance());
     assertEquals(Duration.ofSeconds(30), walking.mountDismountTime());
     assertEquals(costOfSeconds(60), walking.mountDismountCost());
-    assertEquals(0.1,bikeRequest.optimizeTriangle().slope());
-    assertEquals(0.1,bikeRequest.optimizeTriangle().safety());
-    assertEquals(0.8,bikeRequest.optimizeTriangle().time());
+    assertEquals(0.1, bikeRequest.optimizeTriangle().slope());
+    assertEquals(0.1, bikeRequest.optimizeTriangle().safety());
+    assertEquals(0.8, bikeRequest.optimizeTriangle().time());
   }
 
   @Test
@@ -271,7 +271,7 @@ class StreetSearchRequestMapperTest {
           .withInaccessibleStreetReluctance(3)
           .withStairsReluctance(52.0)
           .withElevator(e -> e.withAccessibleOnly())
-        .withStop(b -> b.withUnknownCost(100).withInaccessibleCost(200));
+          .withStop(b -> b.withUnknownCost(100).withInaccessibleCost(200));
       })
     );
 
