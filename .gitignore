@@ -36,6 +36,7 @@ gen-java/
 gen-javabean/
 gen-py/
 node_modules/
+raptor/
 target/
 /graphs
 
