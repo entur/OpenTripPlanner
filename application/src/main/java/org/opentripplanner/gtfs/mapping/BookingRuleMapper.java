@@ -76,12 +76,22 @@ class BookingRuleMapper {
     return new BookingTime(LocalTime.ofSecondOfDay(timeSeconds), day);
   }
 
+  @Nullable
   private Duration minimumBookingNotice(BookingRule rule) {
-    return Duration.ofMinutes(rule.getPriorNoticeDurationMin());
+    int minutes = rule.getPriorNoticeDurationMin();
+    if (minutes == BookingRule.NO_VALUE) {
+      return null;
+    }
+    return Duration.ofMinutes(minutes);
   }
 
+  @Nullable
   private Duration maximumBookingNotice(BookingRule rule) {
-    return Duration.ofMinutes(rule.getPriorNoticeDurationMax());
+    int minutes = rule.getPriorNoticeDurationMax();
+    if (minutes == BookingRule.NO_VALUE) {
+      return null;
+    }
+    return Duration.ofMinutes(minutes);
   }
 
   private String message(BookingRule rule) {

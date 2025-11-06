@@ -1,5 +1,6 @@
 package org.opentripplanner.gtfs.mapping;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.onebusaway.gtfs.model.BookingRule.NO_VALUE;
 
@@ -38,6 +39,11 @@ class BookingRuleMapperTest {
     assertEquals("msg", mapped.getMessage());
     assertEquals("pmsg", mapped.getPickupMessage());
     assertEquals("dmsg", mapped.getDropOffMessage());
+
+    assertNull(mapped.getLatestBookingTime());
+    assertNull(mapped.getLatestBookingTime());
+    assertThat(mapped.getMinimumBookingNotice()).isEmpty();
+    assertThat(mapped.getMaximumBookingNotice()).isEmpty();
   }
 
   @Test
