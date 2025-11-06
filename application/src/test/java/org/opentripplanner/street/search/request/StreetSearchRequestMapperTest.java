@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.framework.model.Cost.costOfSeconds;
+import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -18,7 +19,6 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 
 class StreetSearchRequestMapperTest {
 
@@ -28,7 +28,7 @@ class StreetSearchRequestMapperTest {
 
     Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");
     builder.withDateTime(dateTime);
-    var from = new GenericLocation(null, TimetableRepositoryForTest.id("STOP"), null, null);
+    var from = new GenericLocation(null, id("STOP"), null, null);
     builder.withFrom(from);
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
     builder.withTo(to);
@@ -55,7 +55,7 @@ class StreetSearchRequestMapperTest {
 
     Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");
     builder.withDateTime(dateTime);
-    var from = new GenericLocation(null, TimetableRepositoryForTest.id("STOP"), null, null);
+    var from = new GenericLocation(null, id("STOP"), null, null);
     builder.withFrom(from);
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
     builder.withTo(to);
@@ -109,6 +109,7 @@ class StreetSearchRequestMapperTest {
             .withReluctance(1.5)
             .withBoardCost(200)
             .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withOptimizeTriangle(it -> it.withTime(0.8).withSafety(0.1).withSlope(0.1))
             .withWalking(walking ->
               walking
                 .withSpeed(1.2)
@@ -135,6 +136,9 @@ class StreetSearchRequestMapperTest {
     assertEquals(5.0, walking.stairsReluctance());
     assertEquals(Duration.ofSeconds(30), walking.mountDismountTime());
     assertEquals(costOfSeconds(60), walking.mountDismountCost());
+    assertEquals(0.1,bikeRequest.optimizeTriangle().slope());
+    assertEquals(0.1,bikeRequest.optimizeTriangle().safety());
+    assertEquals(0.8,bikeRequest.optimizeTriangle().time());
   }
 
   @Test
@@ -171,6 +175,7 @@ class StreetSearchRequestMapperTest {
             .withSpeed(4.5)
             .withReluctance(2.0)
             .withOptimizeType(VehicleRoutingOptimizeType.SAFE_STREETS)
+            .withOptimizeTriangle(b -> b.withSafety(0.2).withSlope(0.2).withTime(0.6))
         )
       );
 
@@ -181,6 +186,9 @@ class StreetSearchRequestMapperTest {
     assertEquals(4.5, scooterRequest.speed());
     assertEquals(2.0, scooterRequest.reluctance());
     assertEquals(VehicleRoutingOptimizeType.SAFE_STREETS, scooterRequest.optimizeType());
+    assertEquals(0.6, scooterRequest.optimizeTriangle().time());
+    assertEquals(0.2, scooterRequest.optimizeTriangle().slope());
+    assertEquals(0.2, scooterRequest.optimizeTriangle().safety());
   }
 
   @Test
@@ -259,21 +267,25 @@ class StreetSearchRequestMapperTest {
     builder.withPreferences(pref ->
       pref.withWheelchair(wheelchair -> {
         wheelchair
-          .withMaxSlope(0.08)
-          .withInaccessibleStreetReluctance(10.0)
-          .withStairsReluctance(25.0)
-          .withElevator(e -> e.withAccessibleOnly());
+          .withMaxSlope(0.9)
+          .withInaccessibleStreetReluctance(3)
+          .withStairsReluctance(52.0)
+          .withElevator(e -> e.withAccessibleOnly())
+        .withStop(b -> b.withUnknownCost(100).withInaccessibleCost(200));
       })
     );
 
     var request = builder.buildRequest();
     var subject = StreetSearchRequestMapper.mapInternal(request).build();
 
-    var accessRequest = subject.wheelchair();
-    assertEquals(0.08, accessRequest.maxSlope());
-    assertEquals(10.0, accessRequest.inaccessibleStreetReluctance());
-    assertEquals(25.0, accessRequest.stairsReluctance());
-    assertTrue(accessRequest.elevator().onlyConsiderAccessible());
+    var req = subject.wheelchair();
+    assertEquals(0.9, req.maxSlope());
+    assertEquals(3, req.inaccessibleStreetReluctance());
+    assertEquals(52.0, req.stairsReluctance());
+    assertTrue(req.elevator().onlyConsiderAccessible());
+    assertEquals(100, req.stop().unknownCost());
+    assertEquals(200, req.stop().inaccessibleCost());
+    assertFalse(req.stop().onlyConsiderAccessible());
   }
 
   @Test
@@ -282,14 +294,14 @@ class StreetSearchRequestMapperTest {
     builder.withPreferences(pref ->
       pref
         .withSystem(system -> system.withGeoidElevation(true))
-        .withStreet(street -> street.withTurnReluctance(1.5))
+        .withStreet(street -> street.withTurnReluctance(3.5))
     );
 
     var request = builder.buildRequest();
     var subject = StreetSearchRequestMapper.mapInternal(request).build();
 
     assertTrue(subject.geoidElevation());
-    assertEquals(1.5, subject.turnReluctance());
+    assertEquals(3.5, subject.turnReluctance());
   }
 
   private static RouteRequestBuilder builder() {
