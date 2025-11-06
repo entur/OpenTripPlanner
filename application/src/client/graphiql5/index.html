@@ -189,10 +189,26 @@ query TransmodelExampleQuery {
             }
         }
 
-
-        const fetcher = createGraphiQLFetcher({
-            url: urls[apiFlavor],
-        });
+        function fetcher(query, { headers }) {
+            const defaultHeaders = {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            }
+            const mergedHeaders = Object.assign({}, defaultHeaders, headers);
+            return fetch(
+                urls[apiFlavor],
+                {
+                    method: 'post',
+                    headers: mergedHeaders,
+                    body: JSON.stringify(query),
+                    credentials: 'omit',
+                },
+            ).then(function (response) {
+                return response.json().catch(function () {
+                    return response.text();
+                });
+            });
+        }
         const plugins = [HISTORY_PLUGIN];
 
         const header = React.createElement("a", { className: "graphiql-logo-link" }, "OTP GraphQL Explorer ");
