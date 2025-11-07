@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.plan.leg.ElevationProfile;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUse;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.note.StreetNote;
 import org.opentripplanner.transit.model.site.Entrance;
@@ -51,6 +52,9 @@ public final class WalkStep {
   @Nullable
   private final Entrance entrance;
 
+  @Nullable
+  private final VerticalTransportationUse verticalTransportationUse;
+
   private final ElevationProfile elevationProfile;
   private final boolean stayOn;
 
@@ -64,6 +68,7 @@ public final class WalkStep {
     Set<StreetNote> streetNotes,
     String highwayExit,
     @Nullable Entrance entrance,
+    @Nullable VerticalTransportationUse verticalTransportationUse,
     ElevationProfile elevationProfile,
     boolean nameIsDerived,
     boolean walkingBike,
@@ -85,6 +90,7 @@ public final class WalkStep {
     this.area = area;
     this.highwayExit = highwayExit;
     this.entrance = entrance;
+    this.verticalTransportationUse = verticalTransportationUse;
     this.elevationProfile = elevationProfile;
     this.stayOn = stayOn;
     this.edges = List.copyOf(Objects.requireNonNull(edges));
@@ -147,6 +153,13 @@ public final class WalkStep {
   }
 
   /**
+   * Get information about vertical transportation equipment used.
+   */
+  public Optional<VerticalTransportationUse> verticalTransportationUse() {
+    return Optional.ofNullable(verticalTransportationUse);
+  }
+
+  /**
    * Indicates whether a street changes direction at an intersection.
    */
   public boolean isStayOn() {
@@ -189,8 +202,8 @@ public final class WalkStep {
   }
 
   /**
-   * The street edges that make up this walkStep. For example, used in generating the streetEdges
-   * array in StreetSegment and for adding edge level info to steps. Not serialized.
+   * The street edges that make up this walkStep. Used only in generating the streetEdges array in
+   * StreetSegment; not serialized.
    */
   public List<Edge> getEdges() {
     return edges;

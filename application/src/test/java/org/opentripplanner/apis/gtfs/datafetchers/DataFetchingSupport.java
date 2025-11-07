@@ -42,9 +42,7 @@ class DataFetchingSupport {
     return DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
       .source(source)
       .arguments(arguments)
-      .context(
-        new GraphQLRequestContext(null, service, null, null, null, null, null, null, null, null)
-      )
+      .context(new GraphQLRequestContext(null, service, null, null, null, null, null, null, null))
       .build();
   }
 }

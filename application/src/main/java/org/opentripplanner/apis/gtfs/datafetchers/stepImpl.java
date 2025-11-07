@@ -4,7 +4,6 @@ import static org.opentripplanner.framework.graphql.GraphQLUtils.getLocale;
 
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
-import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.mapping.DirectionMapper;
@@ -65,16 +64,14 @@ public class stepImpl implements GraphQLDataFetchers.GraphQLStep {
       WalkStep walkStep = getSource(environment);
       if (walkStep.entrance().isPresent()) {
         return walkStep.entrance().get();
-      } else if (walkStep.getEdges().size() == 1) {
-        VerticalTransportationUse verticalTransportationUse = environment
-          .<GraphQLRequestContext>getContext()
-          .verticalTransportationUseFactory()
-          .createInclinedVerticalTransportationUse(walkStep.getEdges().getFirst());
-        if (verticalTransportationUse != null) {
-          return switch (verticalTransportationUse) {
-            case EscalatorUse escalatorUse -> escalatorUse;
-            case StairsUse stairsUse -> stairsUse;
-          };
+      } else if (walkStep.verticalTransportationUse().isPresent()) {
+        VerticalTransportationUse verticalTransportationUse = walkStep
+          .verticalTransportationUse()
+          .get();
+        if (verticalTransportationUse instanceof EscalatorUse escalatorUse) {
+          return escalatorUse;
+        } else if (verticalTransportationUse instanceof StairsUse stairsUse) {
+          return stairsUse;
         }
       }
       return null;

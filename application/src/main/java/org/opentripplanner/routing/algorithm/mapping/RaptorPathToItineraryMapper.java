@@ -40,6 +40,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.via.model.ViaCoordinateTransfer;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
@@ -80,6 +81,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
   public RaptorPathToItineraryMapper(
     Graph graph,
     TransitService transitService,
+    StreetDetailsService streetDetailsService,
     RaptorTransitData raptorTransitData,
     ZonedDateTime transitSearchTimeZero,
     RouteRequest request
@@ -93,6 +95,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       transitService::getRegularStop,
       transitService.getTimeZone(),
       graph.streetNotesService,
+      streetDetailsService,
       graph.ellipsoidToGeoidDifference
     );
     this.transitService = transitService;

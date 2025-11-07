@@ -17,7 +17,9 @@ import org.opentripplanner.model.plan.leg.ElevationProfile;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
@@ -46,6 +48,7 @@ public class StatesToWalkStepsMapper {
 
   private final double ellipsoidToGeoidDifference;
   private final StreetNotesService streetNotesService;
+  private final VerticalTransportationUseFactory verticalTransportationUseFactory;
 
   private final List<State> states;
   private final WalkStep previous;
@@ -75,12 +78,16 @@ public class StatesToWalkStepsMapper {
     List<State> states,
     WalkStep previousStep,
     StreetNotesService streetNotesService,
+    StreetDetailsService streetDetailsService,
     double ellipsoidToGeoidDifference
   ) {
     this.states = states;
     this.previous = previousStep;
     this.streetNotesService = streetNotesService;
     this.ellipsoidToGeoidDifference = ellipsoidToGeoidDifference;
+    this.verticalTransportationUseFactory = new VerticalTransportationUseFactory(
+      streetDetailsService
+    );
   }
 
   public static String getNormalizedName(String streetName) {
@@ -570,6 +577,9 @@ public class StatesToWalkStepsMapper {
         .withRelativeDirection(RelativeDirection.STAIRS)
         .withAbsoluteDirection(DirectionUtils.getFirstAngle(geom))
         .addDistance(edge.getDistanceMeters())
+        .withVerticalTransportationUse(
+          verticalTransportationUseFactory.createInclinedVerticalTransportationUse(edge)
+        )
     );
 
     lastAngle = DirectionUtils.getLastAngle(geom);
@@ -588,6 +598,9 @@ public class StatesToWalkStepsMapper {
         .withRelativeDirection(RelativeDirection.ESCALATOR)
         .withAbsoluteDirection(DirectionUtils.getFirstAngle(geom))
         .addDistance(edge.getDistanceMeters())
+        .withVerticalTransportationUse(
+          verticalTransportationUseFactory.createInclinedVerticalTransportationUse(edge)
+        )
     );
 
     lastAngle = DirectionUtils.getLastAngle(geom);

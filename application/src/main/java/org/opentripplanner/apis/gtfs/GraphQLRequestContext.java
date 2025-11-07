@@ -1,7 +1,6 @@
 package org.opentripplanner.apis.gtfs;
 
 import graphql.schema.GraphQLSchema;
-import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareService;
@@ -21,8 +20,7 @@ public record GraphQLRequestContext(
   RealtimeVehicleService realTimeVehicleService,
   GraphQLSchema schema,
   GraphFinder graphFinder,
-  RouteRequest defaultRouteRequest,
-  VerticalTransportationUseFactory verticalTransportationUseFactory
+  RouteRequest defaultRouteRequest
 ) {
   public static GraphQLRequestContext ofServerContext(OtpServerRequestContext context) {
     return new GraphQLRequestContext(
@@ -34,8 +32,7 @@ public record GraphQLRequestContext(
       context.realtimeVehicleService(),
       context.gtfsSchema(),
       context.graphFinder(),
-      context.defaultRouteRequest(),
-      new VerticalTransportationUseFactory(context.streetDetailsService())
+      context.defaultRouteRequest()
     );
   }
 

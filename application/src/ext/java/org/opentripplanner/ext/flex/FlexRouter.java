@@ -25,6 +25,7 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
@@ -61,6 +62,7 @@ public class FlexRouter {
   public FlexRouter(
     Graph graph,
     TransitService transitService,
+    StreetDetailsService streetDetailsService,
     FlexParameters flexParameters,
     TripRequest filterRequest,
     Instant requestedTime,
@@ -85,6 +87,7 @@ public class FlexRouter {
       transitService::getRegularStop,
       transitService.getTimeZone(),
       graph.streetNotesService,
+      streetDetailsService,
       graph.ellipsoidToGeoidDifference
     );
 

@@ -361,7 +361,6 @@ class GraphQLIntegrationTest {
       .build();
 
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var streetDetailsService = new DefaultStreetDetailsService(streetDetailsRepository);
     OsmVertex from = new OsmVertex(10, 10, 0);
     OsmVertex to = new OsmVertex(10.001, 10.001, 1);
     var stairsEdge = new StreetEdgeBuilder<>()
@@ -380,12 +379,22 @@ class GraphQLIntegrationTest {
     );
     streetDetailsRepository.addEdgeLevelInformation(stairsEdge, edgeLevelInfo);
     streetDetailsRepository.addEdgeLevelInformation(escalatorEdge, edgeLevelInfo);
+    VerticalTransportationUseFactory verticalTransportationUseFactory =
+      new VerticalTransportationUseFactory(
+        new DefaultStreetDetailsService(streetDetailsRepository)
+      );
     var step4 = walkStep("stairs")
       .withRelativeDirection(RelativeDirection.STAIRS)
+      .withVerticalTransportationUse(
+        verticalTransportationUseFactory.createInclinedVerticalTransportationUse(stairsEdge)
+      )
       .addEdge(stairsEdge)
       .build();
     var step5 = walkStep("escalators")
       .withRelativeDirection(RelativeDirection.ESCALATOR)
+      .withVerticalTransportationUse(
+        verticalTransportationUseFactory.createInclinedVerticalTransportationUse(escalatorEdge)
+      )
       .addEdge(escalatorEdge)
       .build();
 
@@ -488,8 +497,7 @@ class GraphQLIntegrationTest {
       realtimeVehicleService,
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       finder,
-      routeRequest,
-      new VerticalTransportationUseFactory(streetDetailsService)
+      routeRequest
     );
   }
 
