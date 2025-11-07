@@ -78,16 +78,16 @@ class BookingRuleMapper {
 
   @Nullable
   private Duration minimumBookingNotice(BookingRule rule) {
-    int minutes = rule.getPriorNoticeDurationMin();
-    if (minutes == BookingRule.NO_VALUE) {
-      return null;
-    }
-    return Duration.ofMinutes(minutes);
+    return resolveNoticePeriod(rule.getPriorNoticeDurationMin());
   }
 
   @Nullable
   private Duration maximumBookingNotice(BookingRule rule) {
-    int minutes = rule.getPriorNoticeDurationMax();
+    return resolveNoticePeriod(rule.getPriorNoticeDurationMax());
+  }
+
+  @Nullable
+  private static Duration resolveNoticePeriod(int minutes) {
     if (minutes == BookingRule.NO_VALUE) {
       return null;
     }
