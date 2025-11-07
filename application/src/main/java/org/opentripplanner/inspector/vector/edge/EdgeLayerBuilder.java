@@ -25,9 +25,9 @@ public class EdgeLayerBuilder extends LayerBuilder<Edge> {
     return graph
       .findEdges(query)
       .stream()
-      .filter(e -> e.getGeometry() != null)
+      .filter(e -> e.getGeometryForDebugUi() != null)
       .map(edge -> {
-        Geometry geometry = edge.getGeometry();
+        Geometry geometry = edge.getGeometryForDebugUi();
         geometry.setUserData(edge);
         return geometry;
       })

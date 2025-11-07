@@ -104,7 +104,13 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
   }
 
   @Override
-  public LineString getGeometry() {
+  public LineString getGeometryForDebugUi() {
+    // If coordinates are equal, move the other one slightly to make the edge visible
+    if (fromv.getCoordinate().equals(tov.getCoordinate())) {
+      Coordinate newTo = tov.getCoordinate().copy();
+      newTo.setX(tov.getX() + 0.000001);
+      return GeometryUtils.makeLineString(Arrays.asList(fromv.getCoordinate(), newTo));
+    }
     List<Coordinate> segmentCoordinates = Arrays.asList(fromv.getCoordinate(), tov.getCoordinate());
     return GeometryUtils.makeLineString(segmentCoordinates);
   }

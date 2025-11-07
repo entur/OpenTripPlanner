@@ -271,7 +271,7 @@ public class DebugStyleSpec {
         .vectorSourceLayer(edges)
         .edgeFilter(ElevatorHopEdge.class)
         .lineColor(ORANGE)
-        .lineWidth(LINE_HALF_WIDTH)
+        .lineWidth(LINE_WIDTH)
         .lineOffset(LINE_OFFSET)
         .minZoom(6)
         .maxZoom(MAX_ZOOM)
