@@ -554,15 +554,7 @@ public class StatesToWalkStepsMapper {
   private void createAndSaveElevatorWalkStep(State backState, State forwardState, Edge edge) {
     // don't care what came before or comes after
     addStep(
-      createWalkStep(forwardState, backState)
-        // tell the user where to get off the elevator using the exit notation, so the
-        // i18n interface will say 'Elevator to <exit>'
-        // what happens is that the webapp sees name == null and ignores that, and it sees
-        // exit != null and uses to <exit>
-        // the floor name is the AlightEdge name
-        // reset to avoid confusion with 'Elevator on floor 1 to floor 1'
-        .withDirectionText(edge.getName())
-        .withRelativeDirection(RelativeDirection.ELEVATOR)
+      createWalkStep(forwardState, backState).withRelativeDirection(RelativeDirection.ELEVATOR)
     );
   }
 
@@ -616,8 +608,8 @@ public class StatesToWalkStepsMapper {
     // don't care what came before or comes after
     addStep(
       createWalkStep(forwardState, backState)
-        // There is not a way to definitively determine if a user is entering or exiting the station,
-        // since the doors might be between or inside stations.
+        // There is not a way to definitively determine if a user is entering or exiting the
+        // station, since the doors might be between or inside stations.
         .withRelativeDirection(RelativeDirection.ENTER_OR_EXIT_STATION)
         .withEntrance(getEntrance(vertex))
     );
