@@ -564,7 +564,7 @@ public class OsmModule implements GraphBuilderModule {
 
       return Optional.of(
         new Platform(
-          params.edgeNamer().getNameForWay(way, "platform " + way.getId()),
+          params.edgeNamer().getName(way, "platform " + way.getId()),
           geometry,
           references
         )
@@ -693,7 +693,7 @@ public class OsmModule implements GraphBuilderModule {
 
     String label = "way " + way.getId() + " from " + index;
     label = label.intern();
-    I18NString name = params.edgeNamer().getNameForWay(way, label);
+    I18NString name = params.edgeNamer().getName(way, label);
     float carSpeed = way.getOsmProvider().getOsmTagMapper().getCarSpeedForWay(way, direction);
 
     StreetEdgeBuilder<?> seb = new StreetEdgeBuilder<>()

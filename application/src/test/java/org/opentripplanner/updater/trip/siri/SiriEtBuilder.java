@@ -18,6 +18,7 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.EstimatedVersionFrameStructure;
 import uk.org.siri.siri21.FramedVehicleJourneyRefStructure;
 import uk.org.siri.siri21.LineRef;
+import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.OperatorRefStructure;
 import uk.org.siri.siri21.QuayRefStructure;
 import uk.org.siri.siri21.RecordedCall;
@@ -225,6 +226,13 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder addDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
     public List<RecordedCall> build() {
       return calls;
     }
@@ -316,6 +324,13 @@ public class SiriEtBuilder {
 
       var call = calls.getLast();
       call.getArrivalStopAssignments().add(stopAssignmentStructure);
+      return this;
+    }
+
+    public EstimatedCallsBuilder addDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
       return this;
     }
 

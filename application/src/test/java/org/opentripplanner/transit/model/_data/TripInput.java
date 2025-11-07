@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.site.AreaStop;
@@ -93,14 +94,28 @@ public class TripInput {
   }
 
   public TripInput addStop(RegularStop stop, String arrivalTime, String departureTime) {
-    stops.add(
-      new RegularStopCallInput(stop, TimeUtils.time(arrivalTime), TimeUtils.time(departureTime))
-    );
-    return this;
+    return addStopWithHeadsign(stop, arrivalTime, departureTime, null);
   }
 
   public TripInput addStop(RegularStop stopId, String arrivalAndDeparture) {
     return addStop(stopId, arrivalAndDeparture, arrivalAndDeparture);
+  }
+
+  public TripInput addStopWithHeadsign(
+    RegularStop stop,
+    String arrivalTime,
+    String departureTime,
+    String headsign
+  ) {
+    stops.add(
+      new RegularStopCallInput(
+        stop,
+        TimeUtils.time(arrivalTime),
+        TimeUtils.time(departureTime),
+        headsign
+      )
+    );
+    return this;
   }
 
   public TripInput addStop(AreaStop stop, String windowStart, String windowEnd) {
@@ -135,7 +150,12 @@ public class TripInput {
     StopLocation stopLocation();
   }
 
-  private record RegularStopCallInput(RegularStop stop, int arrivalTime, int departureTime)
+  private record RegularStopCallInput(
+    RegularStop stop,
+    int arrivalTime,
+    int departureTime,
+    @Nullable String headsign
+  )
     implements StopCallInput {
     public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
@@ -144,6 +164,9 @@ public class TripInput {
       st.setStop(stop);
       st.setArrivalTime(arrivalTime);
       st.setDepartureTime(departureTime);
+      if (headsign != null) {
+        st.setStopHeadsign(new NonLocalizedString(headsign));
+      }
       return st;
     }
     public StopLocation stopLocation() {
