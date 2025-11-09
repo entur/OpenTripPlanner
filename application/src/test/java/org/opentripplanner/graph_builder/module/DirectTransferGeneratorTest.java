@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
@@ -39,7 +40,6 @@ import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
-import org.rutebanken.netex.model.BusSubmodeEnumeration;
 
 /**
  * This creates a graph with trip patterns
@@ -80,7 +80,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    assertTransfers(timetableRepository.getAllPathTransfers());
+    assertEquals("<Empty>", toString(timetableRepository.getAllPathTransfers()));
   }
 
   @Test
@@ -99,20 +99,19 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 556, S11),
-      tr(resolver, S0, 935, S21),
-      tr(resolver, S11, 751, S21),
-      tr(resolver, S12, 751, S22),
-      tr(resolver, S13, 2224, S12),
-      tr(resolver, S13, 2347, S22),
-      tr(resolver, S21, 751, S11),
-      tr(resolver, S22, 751, S12),
-      tr(resolver, S23, 2347, S12),
-      tr(resolver, S23, 2224, S22)
+    assertEquals(
+      """
+       S0 - S11, 556m
+       S0 - S21, 935m
+      S11 - S21, 751m
+      S12 - S22, 751m
+      S13 - S12, 2224m
+      S13 - S22, 2347m
+      S21 - S11, 751m
+      S22 - S12, 751m
+      S23 - S12, 2347m
+      S23 - S22, 2224m""",
+      toString(timetableRepository.getAllPathTransfers())
     );
   }
 
@@ -132,20 +131,20 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 2780, S12),
-      tr(resolver, S0, 935, S21),
-      tr(resolver, S11, 2224, S12),
-      tr(resolver, S11, 751, S21),
-      tr(resolver, S12, 751, S22),
-      tr(resolver, S13, 2224, S12),
-      tr(resolver, S13, 2347, S22),
-      tr(resolver, S21, 2347, S12),
-      tr(resolver, S22, 751, S12),
-      tr(resolver, S23, 2347, S12),
-      tr(resolver, S23, 2224, S22)
+    assertEquals(
+      """
+       S0 - S12, 2780m
+       S0 - S21, 935m
+      S11 - S12, 2224m
+      S11 - S21, 751m
+      S12 - S22, 751m
+      S13 - S12, 2224m
+      S13 - S22, 2347m
+      S21 - S12, 2347m
+      S22 - S12, 751m
+      S23 - S12, 2347m
+      S23 - S22, 2224m""",
+      toString(timetableRepository.getAllPathTransfers())
     );
   }
 
@@ -166,7 +165,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    assertTransfers(timetableRepository.getAllPathTransfers());
+    assertEquals("<Empty>", toString(timetableRepository.getAllPathTransfers()));
   }
 
   @Test
@@ -186,12 +185,12 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 100, List.of(V11, V21), S21)
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+      S11 - S21, 100m""",
+      toString(timetableRepository.getAllPathTransfers())
     );
   }
 
@@ -212,7 +211,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    assertTransfers(timetableRepository.getAllPathTransfers());
+    assertEquals("<Empty>", toString(timetableRepository.getAllPathTransfers()));
   }
 
   @Test
@@ -236,20 +235,21 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
     var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
     var carTransfers = timetableRepository.findTransfers(StreetMode.CAR);
 
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      walkTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 100, List.of(V11, V21), S21)
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+      S11 - S21, 100m""",
+      toString(walkTransfers)
     );
-    assertTransfers(
-      bikeTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 110, List.of(V11, V22), S22)
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+      S11 - S22, 110m""",
+      toString(bikeTransfers)
     );
-    assertTransfers(carTransfers);
+    assertEquals("<Empty>", toString(carTransfers));
   }
 
   @Test
@@ -269,7 +269,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       transferRequests
     ).buildGraph();
 
-    assertTrue(timetableRepository.getAllPathTransfers().isEmpty());
+    assertEquals("<Empty>", toString(timetableRepository.getAllPathTransfers()));
   }
 
   @Test
@@ -292,10 +292,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       ).buildGraph();
 
       var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
-      assertTransfers(
-        bikeTransfers,
-        tr(timetableRepository.getSiteRepository()::getRegularStop, S0, 100, List.of(V0, V21), S21)
-      );
+      assertEquals(" S0 - S21, 100m", toString(bikeTransfers));
     });
   }
 
@@ -319,16 +316,16 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
       ).buildGraph();
 
       var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
-      StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-      assertTransfers(
-        bikeTransfers,
-        // no transfers involving S11, S12 and S13
-        tr(resolver, S0, 100, List.of(V0, V21), S21),
-        tr(resolver, S0, 200, List.of(V0, V22), S22),
-        tr(resolver, S0, 300, List.of(V0, V22, V23), S23),
-        tr(resolver, S21, 100, List.of(V21, V22), S22),
-        tr(resolver, S21, 200, List.of(V21, V22, V23), S23),
-        tr(resolver, S22, 100, List.of(V22, V23), S23)
+      // no transfers involving S11, S12 and S13
+      assertEquals(
+        """
+         S0 - S21, 100m
+         S0 - S22, 200m
+         S0 - S23, 300m
+        S21 - S22, 100m
+        S21 - S23, 200m
+        S22 - S23, 100m""",
+        toString(bikeTransfers)
       );
     });
   }
@@ -361,7 +358,7 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
               .withCoordinate(47.520, 19.011)
               .withParentStation(station)
               .withVehicleType(TransitMode.BUS)
-              .withNetexVehicleSubmode(BusSubmodeEnumeration.RAIL_REPLACEMENT_BUS.value())
+              .withSometimesUsedRealtime(true)
           );
           S23 = stop("S23", 47.540, 19.011, station);
 
@@ -431,6 +428,23 @@ class DirectTransferGeneratorTest extends GraphRoutingTest {
         }
       }
     );
+  }
+
+  private String toString(Collection<PathTransfer> transfers) {
+    if (transfers.isEmpty()) {
+      return "<Empty>";
+    }
+    return transfers
+      .stream()
+      .map(tx ->
+        "%3s - %3s, %dm".formatted(
+            tx.from.getName(),
+            tx.to.getName(),
+            Math.round(tx.getDistanceMeters())
+          )
+      )
+      .sorted()
+      .collect(Collectors.joining("\n"));
   }
 
   private void assertTransfers(
