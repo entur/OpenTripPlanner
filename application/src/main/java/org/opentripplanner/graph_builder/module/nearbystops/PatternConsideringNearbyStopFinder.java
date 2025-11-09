@@ -57,9 +57,9 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
       streetRequest,
       reverseDirection
     )) {
-      StopLocation ts1 = nearbyStop.stop;
+      StopLocation stop = nearbyStop.stop;
 
-      if (ts1 instanceof RegularStop regularStop) {
+      if (stop instanceof RegularStop regularStop) {
         var patternsForStop = findPatternsForStop(regularStop, reverseDirection);
 
         if (OTPFeature.IncludeStopsUsedRealtimeInTransfers.isOn()) {
@@ -74,12 +74,8 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
       }
 
       if (OTPFeature.FlexRouting.isOn()) {
-        for (FlexTrip<?, ?> trip : transitService.getFlexIndex().getFlexTripsByStop(ts1)) {
-          if (
-            reverseDirection
-              ? trip.isAlightingPossible(nearbyStop.stop)
-              : trip.isBoardingPossible(nearbyStop.stop)
-          ) {
+        for (FlexTrip<?, ?> trip : transitService.getFlexIndex().getFlexTripsByStop(stop)) {
+          if (reverseDirection ? trip.isAlightingPossible(stop) : trip.isBoardingPossible(stop)) {
             closestStopForFlexTrip.putMin(trip, nearbyStop);
           }
         }
