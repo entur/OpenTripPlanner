@@ -1,7 +1,9 @@
 package org.opentripplanner.street.model.edge;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
@@ -103,8 +105,13 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
     return permission;
   }
 
+  /**
+   * Returns a Debug UI specific geometry which allows visualization
+   * of these edges on the map layer
+   * @return
+   */
   @Override
-  public LineString getGeometryForDebugUi() {
+  public LineString getDebugGeometry() {
     // If coordinates are equal, move the other one slightly to make the edge visible
     if (fromv.getCoordinate().equals(tov.getCoordinate())) {
       Coordinate newTo = tov.getCoordinate().copy();
@@ -122,8 +129,12 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
     return levels;
   }
 
-  public int getTravelTime() {
-    return travelTime;
+  /**
+   * Returns the travel time of the elevator.
+   * If travelTime is 0, returns an empty Optional.
+   */
+  public Optional<Duration> getTravelTime() {
+    return travelTime > 0 ? Optional.of(Duration.ofSeconds(travelTime)) : Optional.empty();
   }
 
   @Override

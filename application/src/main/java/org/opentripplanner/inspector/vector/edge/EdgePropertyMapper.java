@@ -32,7 +32,7 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
           kv("permission", e.getPermission()),
           kv("levels", e.getLevels()),
           kv("wheelchairAccessible", e.isWheelchairAccessible()),
-          kv("travelTime", e.getTravelTime())
+          kv("travelTime", e.getTravelTime().map(Duration::toString).orElse(null))
         );
         default -> List.of();
       };
