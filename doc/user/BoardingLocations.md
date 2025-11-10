@@ -61,8 +61,11 @@ add the following to `build-config.json`:
 
 ## Multiple stops on the same platform
 
-Some stations have a middle platform with a stop on either side of it. In such a case, you can 
-simply add two or more references separated by a semicolon, as seen in [this example](https://www.openstreetmap.org/way/27558650).
+Some stations have a middle platform with a stop on either side of it. In such a case, you have two
+possibilities:
+
+- Add two or more references separated by a semicolon, as seen in [this example](https://www.openstreetmap.org/way/27558650). 
+- Use several ways tagged with `railway=platform_edge` as seen [here](https://www.openstreetmap.org/way/1420108957).
 
 ## Related chat threads
 
