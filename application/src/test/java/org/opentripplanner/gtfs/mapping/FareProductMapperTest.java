@@ -1,13 +1,13 @@
 package org.opentripplanner.gtfs.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FareProduct;
 import org.onebusaway.gtfs.model.RiderCategory;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.transit.model.basic.Money;
 
 class FareProductMapperTest {
@@ -50,21 +50,38 @@ class FareProductMapperTest {
   @Test
   void riderCategory() {
     var gtfs = fareProduct();
-    var category = new RiderCategory();
-    category.setId(new AgencyAndId("1", "cat1"));
-    category.setName(CAT_NAME);
+    gtfs.setRiderCategory(category());
+
+    var mapper = new FareProductMapper(ID_FACTORY);
+    var mapped = mapper.map(gtfs).category();
+
+    assertEquals(CAT_NAME, mapped.name());
+    assertEquals("1:cat1", mapped.id().toString());
+    assertFalse(mapped.isDefault());
+  }
+
+  @Test
+  void defaultCategory() {
+    var gtfs = fareProduct();
+    var category = category();
+    category.setIsDefaultFareCategory(1);
     gtfs.setRiderCategory(category);
 
     var mapper = new FareProductMapper(ID_FACTORY);
-    var internal = mapper.map(gtfs);
 
-    var mapped = internal.category();
+    var mapped = mapper.map(gtfs).category();
 
-    assertEquals(I18NString.of(CAT_NAME), mapped.name());
-    assertEquals("", mapped.id().toString());
+    assertTrue(mapped.isDefault());
   }
 
-  private static @NotNull FareProduct fareProduct() {
+  private static RiderCategory category() {
+    var category = new RiderCategory();
+    category.setId(new AgencyAndId("1", "cat1"));
+    category.setName(CAT_NAME);
+    return category;
+  }
+
+  private static FareProduct fareProduct() {
     var gtfs = new FareProduct();
     gtfs.setFareProductId(new AgencyAndId("1", "1"));
     gtfs.setAmount(1);
