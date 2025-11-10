@@ -39,6 +39,16 @@ public class StreetSearchRequestMapper {
       .withScooter(mapScooter(preferences.scooter()));
   }
 
+  public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
+    return mapInternal(request)
+      .withFrom(null)
+      .withTo(null)
+      .withStartTime(Instant.ofEpochSecond(0))
+      .withMode(request.journey().transfer().mode());
+  }
+
+  // private methods
+
   private static WheelchairRequest mapWheelchair(WheelchairPreferences wheelchair) {
     return WheelchairRequest.of()
       .withStop(mapAccessibility(wheelchair.stop()))
@@ -155,12 +165,5 @@ public class StreetSearchRequestMapper {
       .map(s -> new TagsSelect(s.tags()))
       .map(ParkingSelect.class::cast)
       .toList();
-  }
-
-  public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
-    return StreetSearchRequest.of()
-      .withStartTime(Instant.ofEpochSecond(0))
-      .withWheelchairEnabled(request.journey().wheelchair())
-      .withMode(request.journey().transfer().mode());
   }
 }

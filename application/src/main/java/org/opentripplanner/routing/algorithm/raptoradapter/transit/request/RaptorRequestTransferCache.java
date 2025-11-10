@@ -108,20 +108,20 @@ public class RaptorRequestTransferCache {
   private static class StreetRelevantOptions {
 
     private final StreetMode transferMode;
-    private final boolean wheelchair;
+    private final boolean wheelchairEnabled;
     private final WalkRequest walk;
     private final BikeRequest bike;
-    private final WheelchairRequest wheelchairPreferences;
+    private final WheelchairRequest wheelchair;
     private final double turnReluctance;
 
     public StreetRelevantOptions(StreetSearchRequest request) {
       this.transferMode = request.mode();
-      this.wheelchair = request.wheelchairEnabled();
+      this.wheelchairEnabled = request.wheelchairEnabled();
 
       this.walk = request.walk();
       this.bike = transferMode.includesBiking() ? request.bike() : BikeRequest.DEFAULT;
       this.turnReluctance = request.turnReluctance();
-      this.wheelchairPreferences = request.wheelchairEnabled()
+      this.wheelchair = request.wheelchairEnabled()
         ? request.wheelchair()
         : WheelchairRequest.DEFAULT;
     }
@@ -130,24 +130,17 @@ public class RaptorRequestTransferCache {
     public String toString() {
       return ToStringBuilder.of(StreetRelevantOptions.class)
         .addEnum("transferMode", transferMode)
-        .addBoolIfTrue("wheelchair", wheelchair)
+        .addBoolIfTrue("wheelchair", wheelchairEnabled)
         .addObj("walk", walk, WalkRequest.DEFAULT)
         .addObj("bike", bike, BikeRequest.DEFAULT)
         .addNum("turnReluctance", turnReluctance)
-        .addObj("wheelchairPreferences", wheelchairPreferences, WheelchairRequest.DEFAULT)
+        .addObj("wheelchair", wheelchair, WheelchairRequest.DEFAULT)
         .toString();
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(
-        transferMode,
-        wheelchair,
-        walk,
-        bike,
-        turnReluctance,
-        wheelchairPreferences
-      );
+      return Objects.hash(transferMode, wheelchairEnabled, walk, bike, turnReluctance, wheelchair);
     }
 
     @Override
@@ -160,11 +153,11 @@ public class RaptorRequestTransferCache {
       }
       return (
         transferMode == that.transferMode &&
-        wheelchair == that.wheelchair &&
+        wheelchairEnabled == that.wheelchairEnabled &&
         Objects.equals(that.walk, walk) &&
         Objects.equals(that.bike, bike) &&
         Objects.equals(that.turnReluctance, turnReluctance) &&
-        Objects.equals(that.wheelchairPreferences, wheelchairPreferences)
+        Objects.equals(that.wheelchair, wheelchair)
       );
     }
   }
