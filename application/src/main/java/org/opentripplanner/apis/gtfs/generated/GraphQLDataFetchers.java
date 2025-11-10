@@ -16,6 +16,7 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertCauseTyp
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertEffectType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertSeverityLevelType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLBikesAllowed;
+import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLDefaultStatus;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInputField;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLOccupancyStatus;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLPickupDropoffType;
@@ -389,6 +390,13 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<TripTimeOnDate>> stoptimes();
   }
 
+  /**
+   * A (possibly discounted) fare product that requires another fare product to be purchased previously
+   * in order to be valid.
+   *
+   * For example, when taking the train into a city, you might get a discounted "transfer fare" when
+   * switching to the bus for the second leg.
+   */
   public interface GraphQLDependentFareProduct {
     public DataFetcher<Iterable<FareOffer>> dependencies();
 
@@ -642,7 +650,7 @@ public class GraphQLDataFetchers {
   }
 
   /**
-   * A group of fixed stops that are visited in an arbitrary order.
+   * A group of fixed stops that is visited in an arbitrary order.
    *
    * This is mostly used by demand-responsive services.
    */
@@ -1030,6 +1038,8 @@ public class GraphQLDataFetchers {
 
   /** Category of riders a fare product applies to, for example students or pensioners. */
   public interface GraphQLRiderCategory {
+    public DataFetcher<GraphQLDefaultStatus> defaultStatus();
+
     public DataFetcher<String> id();
 
     public DataFetcher<String> name();
@@ -1281,7 +1291,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<String>> zones();
   }
 
-  /** A time window when a vehicle visit a stop, area or group of stops. */
+  /** A time window when a vehicle visits a stop, area or group of stops. */
   public interface GraphQLTimeWindow {
     public DataFetcher<java.time.OffsetDateTime> end();
 
