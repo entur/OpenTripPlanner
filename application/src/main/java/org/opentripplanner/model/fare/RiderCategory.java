@@ -13,10 +13,12 @@ public final class RiderCategory {
 
   private final FeedScopedId id;
   private final String name;
+  private final boolean isDefault;
 
   RiderCategory(RiderCategoryBuilder builder) {
     this.id = Objects.requireNonNull(builder.id);
     this.name = Objects.requireNonNull(builder.name);
+    this.isDefault = builder.isDefault;
   }
 
   public static RiderCategoryBuilder of(FeedScopedId id) {
@@ -29,6 +31,14 @@ public final class RiderCategory {
 
   public String name() {
     return name;
+  }
+
+  /**
+   * Returns true if this is the default category, for example "Adult" or "Regular". What is considered
+   * the default varies from location to location.
+   */
+  public boolean isDefault() {
+    return isDefault;
   }
 
   @Override

@@ -6,6 +6,7 @@ public class RiderCategoryBuilder {
 
   final FeedScopedId id;
   String name;
+  boolean isDefault = false;
 
   RiderCategoryBuilder(FeedScopedId id) {
     this.id = id;
@@ -13,6 +14,11 @@ public class RiderCategoryBuilder {
 
   public RiderCategoryBuilder withName(String name) {
     this.name = name;
+    return this;
+  }
+
+  public RiderCategoryBuilder withIsDefault(boolean isDefault) {
+    this.isDefault = isDefault;
     return this;
   }
 

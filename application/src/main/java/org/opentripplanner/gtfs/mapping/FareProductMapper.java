@@ -63,8 +63,15 @@ class FareProductMapper {
     } else {
       return RiderCategory.of(idFactory.createId(riderCategory.getId(), "rider category"))
         .withName(riderCategory.getName())
+        .withIsDefault(mapIsDefaultCategory(riderCategory))
         .build();
     }
+  }
+
+  private static boolean mapIsDefaultCategory(
+    org.onebusaway.gtfs.model.RiderCategory riderCategory
+  ) {
+    return riderCategory.getIsDefaultFareCategory() == 1;
   }
 
   private static Duration toDuration(int unit, int amount) {
