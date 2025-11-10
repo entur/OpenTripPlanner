@@ -108,7 +108,6 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
   /**
    * Returns a Debug UI specific geometry which allows visualization
    * of these edges on the map layer
-   * @return
    */
   @Override
   public LineString getDebugGeometry() {
