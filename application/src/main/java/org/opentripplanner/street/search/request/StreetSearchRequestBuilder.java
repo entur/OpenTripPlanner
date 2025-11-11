@@ -91,6 +91,9 @@ public class StreetSearchRequestBuilder {
   }
 
   public StreetSearchRequestBuilder withUseRentalAvailability(boolean b) {
+    withCar(c -> c.withRental(r -> r.withUseAvailabilityInformation(b)));
+    withBike(c -> c.withRental(r -> r.withUseAvailabilityInformation(b)));
+    withScooter(c -> c.withRental(r -> r.withUseAvailabilityInformation(b)));
     return this;
   }
 
