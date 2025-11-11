@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import org.opentripplanner.model.PathTransfer;
 
 public class PathTransferToString {
+
   static String pathToString(Collection<PathTransfer> transfers) {
     if (transfers.isEmpty()) {
       return "<Empty>";

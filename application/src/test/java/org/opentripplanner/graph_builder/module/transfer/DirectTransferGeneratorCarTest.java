@@ -222,9 +222,9 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
     );
     assertEquals(
       """
-         S0 - S11, 100m
-         S0 - S21, 100m
-        S11 - S21, 100m""",
+       S0 - S11, 100m
+       S0 - S21, 100m
+      S11 - S21, 100m""",
       pathToString(repository.findTransfers(StreetMode.BIKE))
     );
     assertEquals("<Empty>", pathToString(repository.findTransfers(StreetMode.CAR)));

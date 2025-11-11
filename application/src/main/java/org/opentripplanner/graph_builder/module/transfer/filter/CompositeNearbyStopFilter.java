@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Set;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 
-class CompositNearbyStopFilter implements NearbyStopFilter {
+class CompositeNearbyStopFilter implements NearbyStopFilter {
 
   private final List<NearbyStopFilter> filters;
 
-  private CompositNearbyStopFilter(List<NearbyStopFilter> filters) {
+  private CompositeNearbyStopFilter(List<NearbyStopFilter> filters) {
     this.filters = filters;
   }
 
@@ -45,7 +45,7 @@ class CompositNearbyStopFilter implements NearbyStopFilter {
       if (filters.size() == 1) {
         return filters.getFirst();
       }
-      return new CompositNearbyStopFilter(filters);
+      return new CompositeNearbyStopFilter(filters);
     }
   }
 }

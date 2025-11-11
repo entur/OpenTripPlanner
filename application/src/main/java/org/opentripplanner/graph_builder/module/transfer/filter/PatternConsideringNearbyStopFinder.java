@@ -20,7 +20,7 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
     TransitService transitService,
     NearbyStopFinder delegateNearbyStopFinder
   ) {
-    var builder = CompositNearbyStopFilter.of().add(new PatternNearbyStopFilter(transitService));
+    var builder = CompositeNearbyStopFilter.of().add(new PatternNearbyStopFilter(transitService));
 
     if (OTPFeature.FlexRouting.isOn()) {
       builder.add(new FlexTripNearbyStopFilter(transitService));
