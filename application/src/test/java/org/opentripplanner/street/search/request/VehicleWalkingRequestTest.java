@@ -69,7 +69,7 @@ class VehicleWalkingRequestTest {
       .withSpeed(SPEED)
       .withReluctance(RELUCTANCE)
       .withMountDismountTime(MOUNT_DISMOUNT_TIME)
-      .withMountDismountCost(MOUNT_DISMOUNT_COST.toSeconds())
+      .withMountDismountCost(MOUNT_DISMOUNT_COST)
       .withStairsReluctance(STAIRS_RELUCTANCE)
       .build();
   }

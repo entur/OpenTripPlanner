@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.opentripplanner.street.search.request.ImmutableRequestAsserts.assertEqualsAndHashCode;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
@@ -23,7 +24,7 @@ class ScooterRequestTest {
     .withSpeed(SPEED)
     .withReluctance(RELUCTANCE)
     .withOptimizeType(OPTIMIZE_TYPE)
-    .withRental(rental -> rental.withPickupTime(RENTAL_PICKUP_TIME).build())
+    .withRental(rental -> rental.withPickupTime(Duration.ofSeconds(RENTAL_PICKUP_TIME)).build())
     .withOptimizeTriangle(it -> it.withSlope(1).build())
     .build();
 
@@ -49,7 +50,8 @@ class ScooterRequestTest {
 
   @Test
   void rental() {
-    var vehicleRental = RentalRequest.of().withPickupTime(RENTAL_PICKUP_TIME).build();
+    RentalRequest.Builder builder = RentalRequest.of();
+    var vehicleRental = builder.withPickupTime(Duration.ofSeconds(RENTAL_PICKUP_TIME)).build();
     assertEquals(vehicleRental, subject.rental());
   }
 

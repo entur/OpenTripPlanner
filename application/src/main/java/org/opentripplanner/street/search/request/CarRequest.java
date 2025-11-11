@@ -181,17 +181,9 @@ public final class CarRequest {
       this.decelerationSpeed = original.decelerationSpeed;
     }
 
-    public CarRequest original() {
-      return original;
-    }
-
     public Builder withReluctance(double reluctance) {
       this.reluctance = reluctance;
       return this;
-    }
-
-    public Cost boardCost() {
-      return boardCost;
     }
 
     public Builder withBoardCost(int boardCost) {
@@ -201,16 +193,6 @@ public final class CarRequest {
 
     public Builder withParking(Consumer<ParkingRequest.Builder> body) {
       this.parking = ifNotNull(this.parking, original.parking).copyOf().apply(body).build();
-      return this;
-    }
-
-    public Builder withParking(ParkingRequest parking) {
-      this.parking = parking;
-      return this;
-    }
-
-    public Builder withRental(RentalRequest rental) {
-      this.rental = rental;
       return this;
     }
 

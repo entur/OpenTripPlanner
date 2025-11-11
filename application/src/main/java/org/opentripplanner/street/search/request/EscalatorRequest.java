@@ -77,21 +77,9 @@ public class EscalatorRequest {
       this.speed = original.speed;
     }
 
-    public EscalatorRequest original() {
-      return original;
-    }
-
-    public double speed() {
-      return speed;
-    }
-
     public Builder withSpeed(double speed) {
       this.speed = speed;
       return this;
-    }
-
-    public double reluctance() {
-      return reluctance;
     }
 
     public Builder withReluctance(double reluctance) {

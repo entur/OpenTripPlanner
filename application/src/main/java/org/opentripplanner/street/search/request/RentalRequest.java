@@ -206,15 +206,6 @@ public final class RentalRequest {
       this.bannedNetworks = original.bannedNetworks;
     }
 
-    public RentalRequest original() {
-      return original;
-    }
-
-    public Builder withPickupTime(int pickupTime) {
-      this.pickupTime = pickupTime;
-      return this;
-    }
-
     public Builder withPickupTime(Duration pickupTime) {
       this.pickupTime = (int) pickupTime.toSeconds();
       return this;
@@ -222,11 +213,6 @@ public final class RentalRequest {
 
     public Builder withPickupCost(int pickupCost) {
       this.pickupCost = Cost.costOfSeconds(pickupCost);
-      return this;
-    }
-
-    public Builder withDropOffTime(int dropOffTime) {
-      this.dropOffTime = dropOffTime;
       return this;
     }
 

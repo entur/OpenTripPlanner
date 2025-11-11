@@ -13,7 +13,6 @@ import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.street.search.state.State;
 
 class StreetEdgeWheelchairCostTest {

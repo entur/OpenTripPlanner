@@ -131,21 +131,9 @@ public final class ScooterRequest {
       this.optimizeTriangle = original.optimizeTriangle;
     }
 
-    public ScooterRequest original() {
-      return original;
-    }
-
-    public double speed() {
-      return speed;
-    }
-
     public Builder withSpeed(double speed) {
       this.speed = speed;
       return this;
-    }
-
-    public double reluctance() {
-      return reluctance;
     }
 
     public Builder withReluctance(double reluctance) {
@@ -155,11 +143,6 @@ public final class ScooterRequest {
 
     public Builder withRental(Consumer<RentalRequest.Builder> body) {
       this.rental = ifNotNull(this.rental, original.rental).copyOf().apply(body).build();
-      return this;
-    }
-
-    public Builder withRental(RentalRequest req) {
-      this.rental = req;
       return this;
     }
 

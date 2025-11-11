@@ -15,7 +15,6 @@ import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.AccessibilityRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.transit.model.basic.Accessibility;
 

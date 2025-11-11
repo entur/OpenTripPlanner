@@ -215,11 +215,6 @@ public final class BikeRequest {
       return this;
     }
 
-    public Builder withParking(ParkingRequest req) {
-      this.parking = req;
-      return this;
-    }
-
     public Builder withRental(Consumer<RentalRequest.Builder> body) {
       this.rental = ifNotNull(this.rental, original.rental).copyOf().apply(body).build();
       return this;

@@ -27,7 +27,7 @@ class CarRequestTest {
     .withPickupCost(PICKUP_COST)
     .withAccelerationSpeed(ACCELERATION_SPEED)
     .withDecelerationSpeed(DECELERATION_SPEED)
-    .withRental(rental -> rental.withPickupTime(RENTAL_PICKUP_TIME).build())
+    .withRental(rental -> rental.withPickupTime(Duration.ofSeconds(RENTAL_PICKUP_TIME)).build())
     .withParking(parking -> parking.withCost(PARK_COST).build())
     .build();
 
@@ -63,7 +63,8 @@ class CarRequestTest {
 
   @Test
   void rental() {
-    var vehicleRental = RentalRequest.of().withPickupTime(RENTAL_PICKUP_TIME).build();
+    RentalRequest.Builder builder = RentalRequest.of();
+    var vehicleRental = builder.withPickupTime(Duration.ofSeconds(RENTAL_PICKUP_TIME)).build();
     assertEquals(vehicleRental, subject.rental());
   }
 

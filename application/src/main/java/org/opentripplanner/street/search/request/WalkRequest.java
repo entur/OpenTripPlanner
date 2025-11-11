@@ -202,17 +202,9 @@ public final class WalkRequest {
       return this;
     }
 
-    public Cost boardCost() {
-      return boardCost;
-    }
-
     public Builder withBoardCost(int boardCost) {
       this.boardCost = Cost.costOfSeconds(boardCost);
       return this;
-    }
-
-    public double stairsReluctance() {
-      return stairsReluctance;
     }
 
     public Builder withStairsReluctance(double stairsReluctance) {
@@ -220,17 +212,9 @@ public final class WalkRequest {
       return this;
     }
 
-    public double stairsTimeFactor() {
-      return stairsTimeFactor;
-    }
-
     public Builder withStairsTimeFactor(double stairsTimeFactor) {
       this.stairsTimeFactor = stairsTimeFactor;
       return this;
-    }
-
-    public double safetyFactor() {
-      return safetyFactor;
     }
 
     public Builder withSafetyFactor(double safetyFactor) {
@@ -242,10 +226,6 @@ public final class WalkRequest {
         this.safetyFactor = safetyFactor;
       }
       return this;
-    }
-
-    public EscalatorRequest escalator() {
-      return escalator;
     }
 
     public Builder withEscalator(Consumer<EscalatorRequest.Builder> body) {

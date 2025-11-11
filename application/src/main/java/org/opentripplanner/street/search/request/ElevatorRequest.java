@@ -114,10 +114,6 @@ public final class ElevatorRequest implements Serializable {
       this.hopTime = original.hopTime;
     }
 
-    public ElevatorRequest original() {
-      return original;
-    }
-
     public Builder withBoardCost(int boardCost) {
       this.boardCost = Cost.costOfSeconds(boardCost);
       return this;

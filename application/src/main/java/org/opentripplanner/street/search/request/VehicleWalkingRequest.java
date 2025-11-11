@@ -38,8 +38,8 @@ public class VehicleWalkingRequest {
   private VehicleWalkingRequest(Builder builder) {
     this.speed = Units.speed(builder.speed);
     this.reluctance = Units.reluctance(builder.reluctance);
-    this.mountDismountTime = Duration.ofSeconds(Units.duration(builder.mountDismountTime));
-    this.mountDismountCost = Cost.costOfSeconds(builder.mountDismountCost);
+    this.mountDismountTime = builder.mountDismountTime;
+    this.mountDismountCost = builder.mountDismountCost;
     this.stairsReluctance = Units.reluctance(builder.stairsReluctance);
   }
 
@@ -121,16 +121,16 @@ public class VehicleWalkingRequest {
     private final VehicleWalkingRequest original;
     private double speed;
     private double reluctance;
-    private int mountDismountTime;
-    private int mountDismountCost;
+    private Duration mountDismountTime;
+    private Cost mountDismountCost;
     private double stairsReluctance;
 
     private Builder(VehicleWalkingRequest original) {
       this.original = original;
       this.speed = original.speed;
       this.reluctance = original.reluctance;
-      this.mountDismountTime = (int) original.mountDismountTime.toSeconds();
-      this.mountDismountCost = original.mountDismountCost.toSeconds();
+      this.mountDismountTime = original.mountDismountTime;
+      this.mountDismountCost = original.mountDismountCost;
       this.stairsReluctance = original.stairsReluctance;
     }
 
@@ -145,27 +145,18 @@ public class VehicleWalkingRequest {
     }
 
     public Builder withMountDismountTime(Duration mountDismountTime) {
-      this.mountDismountTime = (int) mountDismountTime.toSeconds();
-      return this;
-    }
-
-    public Builder withMountDismountTime(int mountDismountTime) {
       this.mountDismountTime = mountDismountTime;
       return this;
     }
 
-    public Builder withMountDismountCost(int mountDismountCost) {
-      this.mountDismountCost = mountDismountCost;
+    public Builder withMountDismountCost(Cost cost) {
+      this.mountDismountCost = cost;
       return this;
     }
 
     public Builder withStairsReluctance(double stairsReluctance) {
       this.stairsReluctance = stairsReluctance;
       return this;
-    }
-
-    public VehicleWalkingRequest original() {
-      return original;
     }
 
     public Builder apply(Consumer<Builder> body) {

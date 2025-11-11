@@ -10,6 +10,7 @@ import static org.opentripplanner.street.model._data.StreetModelForTest.intersec
 import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdge;
 import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdgeBuilder;
 
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,6 +21,7 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.routing.util.ElevationUtils;
@@ -229,7 +231,9 @@ public class StreetEdgeTest {
 
     StreetSearchRequestBuilder noPenalty = StreetSearchRequest.copyOf(proto);
     noPenalty.withBike(it ->
-      it.withWalking(w -> w.withMountDismountTime(0).withMountDismountCost(0))
+      it.withWalking(w -> {
+        w.withMountDismountTime(Duration.ofSeconds(0)).withMountDismountTime(Duration.ofSeconds(0));
+      })
     );
 
     State s0 = new State(v0, noPenalty.withMode(StreetMode.BIKE).build());
@@ -239,7 +243,11 @@ public class StreetEdgeTest {
 
     StreetSearchRequestBuilder withPenalty = StreetSearchRequest.copyOf(proto);
     withPenalty.withBike(it ->
-      it.withWalking(w -> w.withMountDismountTime(42).withMountDismountCost(23))
+      it.withWalking(w ->
+        w
+          .withMountDismountTime(Duration.ofSeconds(42))
+          .withMountDismountCost(Cost.costOfSeconds(23))
+      )
     );
 
     State s4 = new State(v0, withPenalty.withMode(StreetMode.BIKE).build());

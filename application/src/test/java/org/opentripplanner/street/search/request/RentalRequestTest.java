@@ -21,17 +21,22 @@ class RentalRequestTest {
   public static final Set<String> ALLOWED_NETWORKS = Set.of("foo");
   public static final Set<String> BANNED_NETWORKS = Set.of("bar");
 
-  private final RentalRequest subject = RentalRequest.of()
-    .withPickupTime(PICKUP_TIME)
-    .withPickupCost(PICKUP_COST)
-    .withDropOffTime(DROPOFF_TIME)
-    .withDropOffCost(DROPOFF_COST)
-    .withArrivingInRentalVehicleAtDestinationCost(ARRIVE_IN_RENTAL_COST)
-    .withUseAvailabilityInformation(USE_AVAILABILITY_INFORMATION)
-    .withAllowArrivingInRentedVehicleAtDestination(ALLOW_ARRIVING_IN_RENTED_VEHICLE)
-    .withAllowedNetworks(ALLOWED_NETWORKS)
-    .withBannedNetworks(BANNED_NETWORKS)
-    .build();
+  private final RentalRequest subject;
+
+  {
+    RentalRequest.Builder builder = RentalRequest.of();
+    subject = builder
+      .withPickupTime(Duration.ofSeconds(PICKUP_TIME))
+      .withPickupCost(PICKUP_COST)
+      .withDropOffTime(Duration.ofSeconds(DROPOFF_TIME))
+      .withDropOffCost(DROPOFF_COST)
+      .withArrivingInRentalVehicleAtDestinationCost(ARRIVE_IN_RENTAL_COST)
+      .withUseAvailabilityInformation(USE_AVAILABILITY_INFORMATION)
+      .withAllowArrivingInRentedVehicleAtDestination(ALLOW_ARRIVING_IN_RENTED_VEHICLE)
+      .withAllowedNetworks(ALLOWED_NETWORKS)
+      .withBannedNetworks(BANNED_NETWORKS)
+      .build();
+  }
 
   @Test
   void pickupTime() {
@@ -94,8 +99,10 @@ class RentalRequestTest {
   @Test
   void testEqualsAndHashCode() {
     // Create a copy, make a change and set it back again to force creating a new object
-    var other = subject.copyOf().withPickupTime(450).build();
-    var copy = other.copyOf().withPickupTime(PICKUP_TIME).build();
+    RentalRequest.Builder builder1 = subject.copyOf();
+    var other = builder1.withPickupTime(Duration.ofSeconds(450)).build();
+    RentalRequest.Builder builder = other.copyOf();
+    var copy = builder.withPickupTime(Duration.ofSeconds(PICKUP_TIME)).build();
     assertEqualsAndHashCode(subject, other, copy);
   }
 

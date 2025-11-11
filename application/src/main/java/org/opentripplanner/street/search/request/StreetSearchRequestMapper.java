@@ -92,7 +92,7 @@ public class StreetSearchRequestMapper {
       .withReluctance(preferences.reluctance())
       .withSpeed(preferences.speed())
       .withBoardCost(preferences.boardCost())
-      .withParking(mapParking(preferences.parking()))
+      .withParking(b2 -> mapParking(b2, preferences.parking()))
       .withRental(b2 -> mapRental(b2, preferences.rental()))
       .withOptimizeType(preferences.optimizeType())
       .withOptimizeTriangle(preferences.optimizeTriangle())
@@ -103,7 +103,7 @@ public class StreetSearchRequestMapper {
     b
       .withReluctance(car.reluctance())
       .withBoardCost(car.boardCost())
-      .withParking(mapParking(car.parking()))
+      .withParking(b2 -> mapParking(b2, car.parking()))
       .withRental(b2 -> mapRental(b2, car.rental()))
       .withPickupTime(car.pickupTime())
       .withPickupCost(car.pickupCost().toSeconds())
@@ -129,8 +129,8 @@ public class StreetSearchRequestMapper {
       .withSpeed(walking.speed())
       .withReluctance(walking.reluctance())
       .withStairsReluctance(walking.stairsReluctance())
-      .withMountDismountTime(walking.mountDismountTime())
-      .withMountDismountCost(walking.mountDismountCost().toSeconds());
+      .withMountDismountCost(walking.mountDismountCost())
+      .withMountDismountTime(walking.mountDismountTime());
   }
 
   private static void mapRental(RentalRequest.Builder b, VehicleRentalPreferences rental) {
@@ -150,14 +150,13 @@ public class StreetSearchRequestMapper {
       .withAllowedNetworks(rental.allowedNetworks());
   }
 
-  private static ParkingRequest mapParking(VehicleParkingPreferences pref) {
-    return ParkingRequest.of()
+  private static void mapParking(ParkingRequest.Builder b, VehicleParkingPreferences pref) {
+    b
       .withUnpreferredTagCost(pref.unpreferredVehicleParkingTagCost())
       .withFilter(mapParkingFilter(pref.filter()))
       .withPreferred(mapParkingFilter(pref.preferred()))
       .withTime(pref.time())
-      .withCost(pref.cost().toSeconds())
-      .build();
+      .withCost(pref.cost().toSeconds());
   }
 
   private static ParkingFilter mapParkingFilter(VehicleParkingFilter filter) {

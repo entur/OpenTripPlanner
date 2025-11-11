@@ -17,8 +17,6 @@ import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.opentripplanner.street.search.request.WalkRequest;
-import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.transit.model.site.PathwayMode;
 

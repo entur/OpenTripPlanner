@@ -146,11 +146,6 @@ public final class ParkingRequest {
       return this;
     }
 
-    public Builder withTime(int seconds) {
-      this.time = Duration.ofSeconds(seconds);
-      return this;
-    }
-
     public Builder withTime(Duration duration) {
       this.time = duration;
       return this;
