@@ -1,7 +1,6 @@
 package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.graph_builder.module.osm.moduletests._support.NodeBuilder.node;
 
 import java.time.Duration;
@@ -34,7 +33,7 @@ class ElevatorTest {
     var edges = graph.getEdgesOfType(ElevatorHopEdge.class);
     assertThat(edges).hasSize(2);
     for (var edge : edges) {
-      assertEquals(Duration.ofSeconds(62), edge.getTravelTime().orElse(null));
+      assertThat(edge.getTravelTime()).hasValue(Duration.ofSeconds(62));
     }
   }
 
@@ -61,7 +60,7 @@ class ElevatorTest {
     var edges = graph.getEdgesOfType(ElevatorHopEdge.class);
     assertThat(edges).hasSize(2);
     for (var edge : edges) {
-      assertEquals(Duration.ofSeconds(62), edge.getTravelTime().orElse(null));
+      assertThat(edge.getTravelTime()).hasValue(Duration.ofSeconds(62));
     }
   }
 }
