@@ -389,10 +389,6 @@ public class DirectTransferGenerator implements GraphBuilderModule {
         if (sd.stop == stop) {
           continue;
         }
-        // TODO FIX THIS - This is wrong! This will prune other options, because the test is done too late.
-        if (sd.stop.transfersNotAllowed()) {
-          continue;
-        }
         createPathTransfer(stop, sd.stop, sd, distinctTransfers, mode);
       }
     }

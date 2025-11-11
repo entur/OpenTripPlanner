@@ -1,5 +1,6 @@
 package org.opentripplanner.graph_builder.module.transfer.filter;
 
+import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.nearbystops.NearbyStopFinder;
@@ -42,7 +43,19 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
       streetRequest,
       reverseDirection
     );
+
+    // Remove transfersNotAllowed stops BEFORE we filter in Pattern and Flex Trips
+    nearbyStops = removeTransferNotAllowedStops(nearbyStops);
+
+    // Run TripPattern and FlexTrip filters
     var result = filter.filterToStops(nearbyStops, reverseDirection);
+
     return List.copyOf(result);
+  }
+
+  private static Collection<NearbyStop> removeTransferNotAllowedStops(
+    Collection<NearbyStop> nearbyStops
+  ) {
+    return nearbyStops.stream().filter(s -> !s.stop.transfersNotAllowed()).toList();
   }
 }

@@ -296,8 +296,8 @@ class DirectTransferGeneratorTest {
       .build();
 
     assertEquals(
-      // TODO Fix: "S0 - S22, 200m" is missing, it is the best transfer after S11 - S21 is droped.
       """
+       S0 - S22, 200m
       S12 - S22, 110m
       S13 - S22, 210m""",
       toString(repository.getAllPathTransfers())
