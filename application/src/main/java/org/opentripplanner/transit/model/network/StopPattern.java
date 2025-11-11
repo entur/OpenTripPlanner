@@ -202,12 +202,22 @@ public final class StopPattern implements Serializable {
   }
 
   /**
-   * Returns whether passengers can alight at a given stop. This is an inefficient method iterating
-   * over the stops, do not use it in routing.
+   * Returns whether passengers can alight at a given stop.
+   * <p>
+   * WARNING! This is an inefficient method iterating over the stops, do not use it in routing.
+   * <p>
+   * WARNING! This does not support ring patterns.
+   * <p>
+   * WARNING! This does not produce the same result as the {@link #canAlight(int)},
+   *          this method ALWAYS returns {@code false} for the first stop, while the
+   *          other method returns whatever is in the data. This method is probably the
+   *          correct way - but this is not a clear decision.
+   * @deprecated Avoid using this method!
    */
+  @Deprecated
   boolean canAlight(StopLocation stop) {
-    // We skip the last stop, not allowed for boarding
-    for (int i = 0; i < stops.length - 1; ++i) {
+    // We skip the first stop, not allowed for alighting
+    for (int i = 1; i < stops.length; ++i) {
       if (stop == stops[i] && canAlight(i)) {
         return true;
       }
@@ -221,9 +231,19 @@ public final class StopPattern implements Serializable {
   }
 
   /**
-   * Returns whether passengers can board at a given stop. This is an inefficient method iterating
-   * over the stops, do not use it in routing.
+   * Returns whether passengers can board at a given stop.
+   * <p>
+   * WARNING! This is an inefficient method iterating over the stops, do not use it in routing.
+   * <p>
+   * WARNING! This does not support ring patterns.
+   * <p>
+   * WARNING! This does not produce the same result as the {@link #canBoard(int)},
+   *          this method ALWAYS returns {@code false} for the last stop, while the
+   *          other method returns whatever is in the data. This method is probably the
+   *          correct way - but this is not a clear decision.
+   * @deprecated Avoid using this method!
    */
+  @Deprecated
   boolean canBoard(StopLocation stop) {
     // We skip the last stop, not allowed for boarding
     for (int i = 0; i < stops.length - 1; ++i) {
