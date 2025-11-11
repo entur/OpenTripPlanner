@@ -3185,9 +3185,9 @@ enum FilterPlaceType {
   "Old value for VEHICLE_RENT"
   BICYCLE_RENT @deprecated(reason : "Use VEHICLE_RENT instead as it's clearer that it also returns rental scooters, cars...")
   "Parking lots (not rental stations) that contain spaces for bicycles"
-  BIKE_PARK
+  BIKE_PARK @deprecated(reason : "Not supported.")
   "Parking lots that contain spaces for cars"
-  CAR_PARK
+  CAR_PARK @deprecated(reason : "Not supported.")
   "Departure rows"
   DEPARTURE_ROW
   """
@@ -3227,6 +3227,7 @@ enum InputField {
   DATE_TIME
   FROM
   TO
+  VIA
 }
 
 """
