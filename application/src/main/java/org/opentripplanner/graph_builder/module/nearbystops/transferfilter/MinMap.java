@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.nearbystops;
+package org.opentripplanner.graph_builder.module.nearbystops.transferfilter;
 
 import java.util.HashMap;
 

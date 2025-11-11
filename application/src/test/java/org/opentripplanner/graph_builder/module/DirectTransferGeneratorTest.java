@@ -248,7 +248,6 @@ class DirectTransferGeneratorTest {
     });
   }
 
-
   @Test
   public void testStreetTransfersWithMultipleRequestsWithPatterns() {
     var repository = testData()
