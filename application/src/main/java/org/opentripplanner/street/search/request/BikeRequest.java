@@ -225,11 +225,6 @@ public final class BikeRequest {
       return this;
     }
 
-    public Builder withRental(RentalRequest req) {
-      this.rental = req;
-      return this;
-    }
-
     public VehicleRoutingOptimizeType optimizeType() {
       return optimizeType;
     }
@@ -268,11 +263,6 @@ public final class BikeRequest {
 
     public Builder withWalking(Consumer<VehicleWalkingRequest.Builder> body) {
       this.walking = ifNotNull(this.walking, original.walking).copyOf().apply(body).build();
-      return this;
-    }
-
-    public Builder withWalking(VehicleWalkingRequest req) {
-      this.walking = req;
       return this;
     }
 

@@ -32,11 +32,7 @@ class EscalatorEdgeTest {
   void testWalking(double escalatorReluctance, double expectedWeight) {
     var edge = EscalatorEdge.createEscalatorEdge(from, to, 45, null);
     var req = StreetSearchRequest.of()
-      .withWalk(
-        WalkRequest.of()
-          .withEscalator(EscalatorRequest.of().withReluctance(escalatorReluctance).build())
-          .build()
-      )
+      .withWalk(b -> b.withEscalator(b2 -> b2.withReluctance(escalatorReluctance).build()).build())
       .withMode(StreetMode.WALK);
 
     var res = edge.traverse(new State(from, req.build()))[0];

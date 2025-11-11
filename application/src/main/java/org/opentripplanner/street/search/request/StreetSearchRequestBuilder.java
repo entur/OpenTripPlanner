@@ -65,8 +65,8 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
-  public StreetSearchRequestBuilder withWheelchair(WheelchairRequest request) {
-    this.wheelchair = request;
+  public StreetSearchRequestBuilder withWheelchair(Consumer<WheelchairRequest.Builder> request) {
+    this.wheelchair = this.wheelchair.copyOf().apply(request).build();
     return this;
   }
 
@@ -97,18 +97,8 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
-  public StreetSearchRequestBuilder withWalk(WalkRequest request) {
-    this.walk = request;
-    return this;
-  }
-
   public StreetSearchRequestBuilder withWalk(Consumer<WalkRequest.Builder> body) {
     this.walk = this.walk.copyOf().apply(body).build();
-    return this;
-  }
-
-  public StreetSearchRequestBuilder withBike(BikeRequest bike) {
-    this.bike = bike;
     return this;
   }
 
@@ -127,18 +117,8 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
-  public StreetSearchRequestBuilder withScooter(ScooterRequest request) {
-    this.scooter = request;
-    return this;
-  }
-
-  public StreetSearchRequestBuilder withCar(CarRequest carRequest) {
-    this.car = carRequest;
-    return this;
-  }
-
-  public StreetSearchRequestBuilder withElevator(ElevatorRequest elevatorRequest) {
-    this.elevator = elevatorRequest;
+  public StreetSearchRequestBuilder withElevator(Consumer<ElevatorRequest.Builder> body) {
+    this.elevator = this.elevator.copyOf().apply(body).build();
     return this;
   }
 

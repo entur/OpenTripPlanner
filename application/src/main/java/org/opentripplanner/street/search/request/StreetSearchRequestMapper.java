@@ -34,12 +34,12 @@ public class StreetSearchRequestMapper {
       .withWheelchairEnabled(request.journey().wheelchair())
       .withGeoidElevation(preferences.system().geoidElevation())
       .withTurnReluctance(preferences.street().turnReluctance())
-      .withWheelchair(mapWheelchair(request.preferences().wheelchair()))
-      .withWalk(mapWalk(preferences.walk()))
-      .withBike(mapBike(preferences.bike()))
-      .withCar(mapCar(preferences.car()))
-      .withScooter(mapScooter(preferences.scooter()))
-      .withElevator(mapElevator(preferences.street().elevator()));
+      .withWheelchair(b -> mapWheelchair(b, request.preferences().wheelchair()))
+      .withWalk(b -> mapWalk(b, preferences.walk()))
+      .withBike(b -> mapBike(b, preferences.bike()))
+      .withCar(b -> mapCar(b, preferences.car()))
+      .withScooter(b -> mapScooter(b, preferences.scooter()))
+      .withElevator(b -> mapElevator(b, preferences.street().elevator()));
   }
 
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
@@ -52,15 +52,14 @@ public class StreetSearchRequestMapper {
 
   // private methods
 
-  private static WheelchairRequest mapWheelchair(WheelchairPreferences wheelchair) {
-    return WheelchairRequest.of()
+  private static void mapWheelchair(WheelchairRequest.Builder b, WheelchairPreferences wheelchair) {
+    b
       .withStop(mapAccessibility(wheelchair.stop()))
       .withElevator(mapAccessibility(wheelchair.elevator()))
       .withMaxSlope(wheelchair.maxSlope())
       .withSlopeExceededReluctance(wheelchair.slopeExceededReluctance())
       .withStairsReluctance(wheelchair.stairsReluctance())
-      .withInaccessibleStreetReluctance(wheelchair.inaccessibleStreetReluctance())
-      .build();
+      .withInaccessibleStreetReluctance(wheelchair.inaccessibleStreetReluctance());
   }
 
   private static AccessibilityRequest mapAccessibility(AccessibilityPreferences stop) {
@@ -73,73 +72,69 @@ public class StreetSearchRequestMapper {
     return b.build();
   }
 
-  private static WalkRequest mapWalk(WalkPreferences pref) {
-    return WalkRequest.of()
+  private static void mapWalk(WalkRequest.Builder b, WalkPreferences pref) {
+    b
       .withSpeed(pref.speed())
       .withReluctance(pref.reluctance())
       .withBoardCost(pref.boardCost())
       .withStairsReluctance(pref.stairsReluctance())
       .withStairsTimeFactor(pref.stairsTimeFactor())
       .withSafetyFactor(pref.safetyFactor())
-      .withEscalator(mapEscalator(pref.escalator()))
-      .build();
+      .withEscalator(b2 -> mapEscalator(b2, pref.escalator()));
   }
 
-  private static EscalatorRequest mapEscalator(EscalatorPreferences escalator) {
-    return EscalatorRequest.of()
-      .withReluctance(escalator.reluctance())
-      .withSpeed(escalator.speed())
-      .build();
+  private static void mapEscalator(EscalatorRequest.Builder b, EscalatorPreferences escalator) {
+    b.withReluctance(escalator.reluctance()).withSpeed(escalator.speed());
   }
 
-  private static BikeRequest mapBike(BikePreferences preferences) {
-    return BikeRequest.of()
+  private static void mapBike(BikeRequest.Builder b, BikePreferences preferences) {
+    b
       .withReluctance(preferences.reluctance())
       .withSpeed(preferences.speed())
       .withBoardCost(preferences.boardCost())
       .withParking(mapParking(preferences.parking()))
-      .withRental(mapRental(preferences.rental()))
+      .withRental(b2 -> mapRental(b2, preferences.rental()))
       .withOptimizeType(preferences.optimizeType())
       .withOptimizeTriangle(preferences.optimizeTriangle())
-      .withWalking(mapVehicleWalking(preferences.walking()))
-      .build();
+      .withWalking(b2 -> mapVehicleWalking(b2, preferences.walking()));
   }
 
-  private static CarRequest mapCar(CarPreferences car) {
-    return CarRequest.of()
+  private static void mapCar(CarRequest.Builder b, CarPreferences car) {
+    b
       .withReluctance(car.reluctance())
       .withBoardCost(car.boardCost())
       .withParking(mapParking(car.parking()))
-      .withRental(mapRental(car.rental()))
+      .withRental(b2 -> mapRental(b2, car.rental()))
       .withPickupTime(car.pickupTime())
       .withPickupCost(car.pickupCost().toSeconds())
       .withAccelerationSpeed(car.accelerationSpeed())
-      .withDecelerationSpeed(car.decelerationSpeed())
-      .build();
+      .withDecelerationSpeed(car.decelerationSpeed());
   }
 
-  private static ScooterRequest mapScooter(ScooterPreferences scooter) {
-    return ScooterRequest.of()
+  private static void mapScooter(ScooterRequest.Builder b, ScooterPreferences scooter) {
+    b
       .withSpeed(scooter.speed())
       .withReluctance(scooter.reluctance())
-      .withRental(mapRental(scooter.rental()))
+      .withRental(b2 -> mapRental(b2, scooter.rental()))
       .withOptimizeType(scooter.optimizeType())
       .withOptimizeTriangle(scooter.optimizeTriangle())
       .build();
   }
 
-  private static VehicleWalkingRequest mapVehicleWalking(VehicleWalkingPreferences walking) {
-    return VehicleWalkingRequest.of()
+  private static void mapVehicleWalking(
+    VehicleWalkingRequest.Builder b,
+    VehicleWalkingPreferences walking
+  ) {
+    b
       .withSpeed(walking.speed())
       .withReluctance(walking.reluctance())
       .withStairsReluctance(walking.stairsReluctance())
       .withMountDismountTime(walking.mountDismountTime())
-      .withMountDismountCost(walking.mountDismountCost().toSeconds())
-      .build();
+      .withMountDismountCost(walking.mountDismountCost().toSeconds());
   }
 
-  private static RentalRequest mapRental(VehicleRentalPreferences rental) {
-    return RentalRequest.of()
+  private static void mapRental(RentalRequest.Builder b, VehicleRentalPreferences rental) {
+    b
       .withPickupTime(rental.pickupTime())
       .withPickupCost(rental.pickupCost().toSeconds())
       .withDropOffTime(rental.dropOffTime())
@@ -152,8 +147,7 @@ public class StreetSearchRequestMapper {
         rental.arrivingInRentalVehicleAtDestinationCost().toSeconds()
       )
       .withBannedNetworks(rental.bannedNetworks())
-      .withAllowedNetworks(rental.allowedNetworks())
-      .build();
+      .withAllowedNetworks(rental.allowedNetworks());
   }
 
   private static ParkingRequest mapParking(VehicleParkingPreferences pref) {
@@ -178,8 +172,8 @@ public class StreetSearchRequestMapper {
       .toList();
   }
 
-  private static ElevatorRequest mapElevator(ElevatorPreferences elevator) {
-    return ElevatorRequest.of()
+  private static void mapElevator(ElevatorRequest.Builder b, ElevatorPreferences elevator) {
+    b
       .withBoardCost(elevator.boardCost())
       .withBoardTime(elevator.boardTime())
       .withHopCost(elevator.hopCost())

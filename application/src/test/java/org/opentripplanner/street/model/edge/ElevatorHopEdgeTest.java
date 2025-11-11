@@ -35,8 +35,8 @@ class ElevatorHopEdgeTest {
     var feature = AccessibilityRequest.ofOnlyAccessible();
     req
       .withWheelchairEnabled(true)
-      .withWheelchair(
-        WheelchairRequest.of()
+      .withWheelchair(b ->
+        b
           .withStop(feature)
           .withElevator(feature)
           .withInaccessibleStreetReluctance(25)

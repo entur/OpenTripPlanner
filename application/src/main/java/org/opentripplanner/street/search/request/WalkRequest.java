@@ -253,11 +253,6 @@ public final class WalkRequest {
       return this;
     }
 
-    public Builder withEscalator(EscalatorRequest req) {
-      this.escalator = req;
-      return this;
-    }
-
     public Builder apply(Consumer<Builder> body) {
       body.accept(this);
       return this;

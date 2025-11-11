@@ -86,8 +86,8 @@ class StreetEdgeWheelchairCostTest {
 
     var req = StreetSearchRequest.of();
     req.withWheelchairEnabled(true);
-    req.withWheelchair(
-      WheelchairRequest.of()
+    req.withWheelchair(b ->
+      b
         .withStopOnlyAccessible()
         .withElevatorOnlyAccessible()
         .withInaccessibleStreetReluctance(25)
@@ -123,8 +123,8 @@ class StreetEdgeWheelchairCostTest {
 
     var req = StreetSearchRequest.of();
     req.withWheelchairEnabled(true);
-    req.withWheelchair(
-      WheelchairRequest.of()
+    req.withWheelchair(b ->
+      b
         .withStopOnlyAccessible()
         .withElevatorOnlyAccessible()
         .withInaccessibleStreetReluctance(25)
@@ -166,8 +166,8 @@ class StreetEdgeWheelchairCostTest {
 
     var req = StreetSearchRequest.of();
     req.withWheelchairEnabled(true);
-    req.withWheelchair(
-      WheelchairRequest.of()
+    req.withWheelchair(b ->
+      b
         .withStopOnlyAccessible()
         .withElevatorOnlyAccessible()
         .withInaccessibleStreetReluctance(inaccessibleStreetReluctance)

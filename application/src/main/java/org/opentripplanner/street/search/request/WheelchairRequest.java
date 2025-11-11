@@ -244,6 +244,11 @@ public class WheelchairRequest {
       return this;
     }
 
+    public Builder apply(Consumer<Builder> body) {
+      body.accept(this);
+      return this;
+    }
+
     public WheelchairRequest build() {
       var value = new WheelchairRequest(this);
       return original.equals(value) ? original : value;
