@@ -6,6 +6,8 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.AccessibilityPreferences;
 import org.opentripplanner.routing.api.request.preference.BikePreferences;
 import org.opentripplanner.routing.api.request.preference.CarPreferences;
+import org.opentripplanner.routing.api.request.preference.ElevatorPreferences;
+import org.opentripplanner.routing.api.request.preference.EscalatorPreferences;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.routing.api.request.preference.ScooterPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleParkingPreferences;
@@ -36,7 +38,8 @@ public class StreetSearchRequestMapper {
       .withWalk(mapWalk(preferences.walk()))
       .withBike(mapBike(preferences.bike()))
       .withCar(mapCar(preferences.car()))
-      .withScooter(mapScooter(preferences.scooter()));
+      .withScooter(mapScooter(preferences.scooter()))
+      .withElevator(mapElevator(preferences.street().elevator()));
   }
 
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
@@ -78,6 +81,14 @@ public class StreetSearchRequestMapper {
       .withStairsReluctance(pref.stairsReluctance())
       .withStairsTimeFactor(pref.stairsTimeFactor())
       .withSafetyFactor(pref.safetyFactor())
+      .withEscalator(mapEscalator(pref.escalator()))
+      .build();
+  }
+
+  private static EscalatorRequest mapEscalator(EscalatorPreferences escalator) {
+    return EscalatorRequest.of()
+      .withReluctance(escalator.reluctance())
+      .withSpeed(escalator.speed())
       .build();
   }
 
@@ -165,5 +176,14 @@ public class StreetSearchRequestMapper {
       .map(s -> new TagsSelect(s.tags()))
       .map(ParkingSelect.class::cast)
       .toList();
+  }
+
+  private static ElevatorRequest mapElevator(ElevatorPreferences elevator) {
+    return ElevatorRequest.of()
+      .withBoardCost(elevator.boardCost())
+      .withBoardTime(elevator.boardTime())
+      .withHopCost(elevator.hopCost())
+      .withHopTime(elevator.hopTime())
+      .build();
   }
 }

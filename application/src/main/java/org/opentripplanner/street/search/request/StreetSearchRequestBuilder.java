@@ -128,6 +128,11 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
+  public StreetSearchRequestBuilder withElevator(ElevatorRequest elevatorRequest) {
+    this.elevator = elevatorRequest;
+    return this;
+  }
+
   Instant startTimeOrNow() {
     return startTime == null ? Instant.now() : startTime;
   }
