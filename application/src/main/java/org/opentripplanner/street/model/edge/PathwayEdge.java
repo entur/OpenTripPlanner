@@ -107,17 +107,17 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
       return State.empty();
     }
 
-    var preferences = s0.getRequest();
+    var request = s0.getRequest();
 
     /* TODO: Consider mode, so that passing through multiple fare gates is not possible */
     long time_ms = 1000L * traversalTime;
 
     if (time_ms == 0) {
       if (distance > 0) {
-        time_ms = (long) ((1000.0 * distance) / preferences.walk().speed());
+        time_ms = (long) ((1000.0 * distance) / request.walk().speed());
       } else if (isStairs()) {
         // 1 step corresponds to 20cm, doubling that to compensate for elevation;
-        time_ms = (long) ((1000.0 * 0.4 * Math.abs(steps)) / preferences.walk().speed());
+        time_ms = (long) ((1000.0 * 0.4 * Math.abs(steps)) / request.walk().speed());
       }
     }
 
@@ -125,14 +125,14 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
       double weight = time_ms / 1000.0;
       if (s0.getRequest().wheelchairEnabled()) {
         weight *= StreetEdgeReluctanceCalculator.computeWheelchairReluctance(
-          preferences,
+          request,
           slope,
           wheelchairAccessible,
           isStairs()
         );
       } else {
         weight *= StreetEdgeReluctanceCalculator.computeReluctance(
-          preferences,
+          request,
           TraverseMode.WALK,
           s0.currentMode() == TraverseMode.BICYCLE,
           isStairs()
