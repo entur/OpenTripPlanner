@@ -3227,6 +3227,7 @@ enum InputField {
   DATE_TIME
   FROM
   TO
+  VIA
 }
 
 """
