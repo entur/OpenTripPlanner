@@ -44,8 +44,6 @@ class StreetSearchRequestMapperTest {
     var subject = StreetSearchRequestMapper.mapInternal(request).build();
 
     assertEquals(dateTime, subject.startTime());
-    assertEquals(from, subject.from());
-    assertEquals(to, subject.to());
     assertTrue(subject.wheelchairEnabled());
   }
 
@@ -67,8 +65,8 @@ class StreetSearchRequestMapperTest {
     var subject = StreetSearchRequestMapper.mapToTransferRequest(request).build();
 
     assertEquals(Instant.EPOCH, subject.startTime());
-    assertNull(subject.from());
-    assertNull(subject.to());
+    assertNull(subject.fromEnvelope());
+    assertNull(subject.toEnvelope());
     assertTrue(subject.wheelchairEnabled());
   }
 
@@ -271,8 +269,6 @@ class StreetSearchRequestMapperTest {
     var subject = StreetSearchRequestMapper.mapInternal(request).build();
 
     assertTrue(subject.arriveBy());
-    assertEquals(from, subject.from());
-    assertEquals(to, subject.to());
   }
 
   @Test

@@ -6,12 +6,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.astar.spi.AStarRequest;
-import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
@@ -34,7 +30,7 @@ public class StreetSearchRequest implements AStarRequest {
    * @see StreetSearchRequest#isCloseToStartOrEnd(Vertex)
    * @see DominanceFunctions#betterOrEqualAndComparable(State, State)
    */
-  private static final int MAX_CLOSENESS_METERS = 500;
+  public static final int MAX_CLOSENESS_METERS = 500;
 
   // the time at which the search started
   private final Instant startTime;
@@ -42,9 +38,7 @@ public class StreetSearchRequest implements AStarRequest {
   private final boolean arriveBy;
   private final boolean wheelchair;
 
-  private final GenericLocation from;
   private final Envelope fromEnvelope;
-  private final GenericLocation to;
   private final Envelope toEnvelope;
 
   private final boolean geoidElevation;
@@ -70,9 +64,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.mode = StreetMode.WALK;
     this.arriveBy = false;
     this.wheelchair = false;
-    this.from = null;
     this.fromEnvelope = null;
-    this.to = null;
     this.toEnvelope = null;
     this.geoidElevation = false;
     this.turnReluctance = 1.0;
@@ -89,10 +81,8 @@ public class StreetSearchRequest implements AStarRequest {
     this.mode = builder.mode;
     this.arriveBy = builder.arriveBy;
     this.wheelchair = builder.wheelchairEnabled;
-    this.from = builder.from;
-    this.fromEnvelope = createEnvelope(from);
-    this.to = builder.to;
-    this.toEnvelope = createEnvelope(to);
+    this.fromEnvelope = builder.fromEnvelope;
+    this.toEnvelope = builder.toEnvelope;
     this.geoidElevation = builder.geoidElevation;
     this.turnReluctance = builder.turnReluctance;
     this.walk = requireNonNull(builder.walk);
@@ -138,20 +128,20 @@ public class StreetSearchRequest implements AStarRequest {
     return mode;
   }
 
+  public Envelope fromEnvelope() {
+    return fromEnvelope;
+  }
+
+  public Envelope toEnvelope() {
+    return toEnvelope;
+  }
+
   public boolean arriveBy() {
     return arriveBy;
   }
 
   public boolean wheelchairEnabled() {
     return wheelchair;
-  }
-
-  public GenericLocation from() {
-    return from;
-  }
-
-  public GenericLocation to() {
-    return to;
   }
 
   public IntersectionTraversalCalculator intersectionTraversalCalculator() {
@@ -252,25 +242,5 @@ public class StreetSearchRequest implements AStarRequest {
    */
   public ParkingRequest parking(TraverseMode mode) {
     return mode == TraverseMode.CAR ? car.parking() : bike.parking();
-  }
-
-  @Nullable
-  private static Envelope createEnvelope(GenericLocation location) {
-    if (location == null) {
-      return null;
-    }
-
-    Coordinate coordinate = location.getCoordinate();
-    if (coordinate == null) {
-      return null;
-    }
-
-    double lat = SphericalDistanceLibrary.metersToDegrees(MAX_CLOSENESS_METERS);
-    double lon = SphericalDistanceLibrary.metersToLonDegrees(MAX_CLOSENESS_METERS, coordinate.y);
-
-    Envelope env = new Envelope(coordinate);
-    env.expandBy(lon, lat);
-
-    return env;
   }
 }

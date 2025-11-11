@@ -1,7 +1,13 @@
 package org.opentripplanner.street.search.request;
 
+import static org.opentripplanner.street.search.request.StreetSearchRequest.MAX_CLOSENESS_METERS;
+
 import java.time.Instant;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
+import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
 
@@ -11,8 +17,8 @@ public class StreetSearchRequestBuilder {
   StreetMode mode;
   boolean arriveBy;
   boolean wheelchairEnabled;
-  GenericLocation from;
-  GenericLocation to;
+  Envelope fromEnvelope;
+  Envelope toEnvelope;
   boolean geoidElevation;
   double turnReluctance;
   WalkRequest walk;
@@ -27,8 +33,8 @@ public class StreetSearchRequestBuilder {
     this.mode = original.mode();
     this.arriveBy = original.arriveBy();
     this.wheelchairEnabled = original.wheelchairEnabled();
-    this.from = original.from();
-    this.to = original.to();
+    this.fromEnvelope = original.fromEnvelope();
+    this.toEnvelope = original.toEnvelope();
     this.geoidElevation = original.geoidElevation();
     this.turnReluctance = original.turnReluctance();
     this.walk = original.walk();
@@ -65,12 +71,12 @@ public class StreetSearchRequestBuilder {
   }
 
   public StreetSearchRequestBuilder withFrom(GenericLocation from) {
-    this.from = from;
+    this.fromEnvelope = createEnvelope(from);
     return this;
   }
 
   public StreetSearchRequestBuilder withTo(GenericLocation to) {
-    this.to = to;
+    this.toEnvelope = createEnvelope(to);
     return this;
   }
 
@@ -139,5 +145,25 @@ public class StreetSearchRequestBuilder {
 
   public StreetSearchRequest build() {
     return new StreetSearchRequest(this);
+  }
+
+  @Nullable
+  private static Envelope createEnvelope(GenericLocation location) {
+    if (location == null) {
+      return null;
+    }
+
+    Coordinate coordinate = location.getCoordinate();
+    if (coordinate == null) {
+      return null;
+    }
+
+    double lat = SphericalDistanceLibrary.metersToDegrees(MAX_CLOSENESS_METERS);
+    double lon = SphericalDistanceLibrary.metersToLonDegrees(MAX_CLOSENESS_METERS, coordinate.y);
+
+    Envelope env = new Envelope(coordinate);
+    env.expandBy(lon, lat);
+
+    return env;
   }
 }
