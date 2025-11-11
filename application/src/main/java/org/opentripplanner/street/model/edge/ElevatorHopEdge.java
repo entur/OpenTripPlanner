@@ -1,12 +1,7 @@
 package org.opentripplanner.street.model.edge;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.model.StreetTraversalPermission;
@@ -103,22 +98,6 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
 
   public StreetTraversalPermission getPermission() {
     return permission;
-  }
-
-  /**
-   * Returns a Debug UI specific geometry which allows visualization
-   * of these edges on the map layer
-   */
-  @Override
-  public LineString getDebugGeometry() {
-    // If coordinates are equal, move the other one slightly to make the edge visible
-    if (fromv.getCoordinate().equals(tov.getCoordinate())) {
-      Coordinate newTo = tov.getCoordinate().copy();
-      newTo.setX(tov.getX() + 0.000001);
-      return GeometryUtils.makeLineString(Arrays.asList(fromv.getCoordinate(), newTo));
-    }
-    List<Coordinate> segmentCoordinates = Arrays.asList(fromv.getCoordinate(), tov.getCoordinate());
-    return GeometryUtils.makeLineString(segmentCoordinates);
   }
 
   /**
