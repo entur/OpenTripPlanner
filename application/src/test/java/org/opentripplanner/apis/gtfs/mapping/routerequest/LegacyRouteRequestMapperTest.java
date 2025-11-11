@@ -10,6 +10,7 @@ import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.SAFE_S
 import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.TRIANGLE;
 
 import graphql.ExecutionInput;
+import graphql.GraphQLContext;
 import graphql.execution.ExecutionId;
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingEnvironmentImpl;
@@ -323,6 +324,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var executionContext = newExecutionContextBuilder()
       .executionInput(executionInput)
+      .graphQLContext(GraphQLContext.getDefault())
       .executionId(ExecutionId.from(this.getClass().getName()))
       .build();
     return DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
