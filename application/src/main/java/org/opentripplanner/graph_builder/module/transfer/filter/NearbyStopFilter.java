@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.nearbystops.transferfilter;
+package org.opentripplanner.graph_builder.module.transfer.filter;
 
 import java.util.Collection;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
