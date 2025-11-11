@@ -41,22 +41,24 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
     StreetRequest streetRequest,
     boolean reverseDirection
   ) {
-    /* Track the closest stop on each pattern passing nearby. */
+    // Track the closest stop on each pattern passing nearby.
     MinMap<TripPattern, NearbyStop> closestStopForPattern = new MinMap<>();
 
-    /* Track the closest stop on each flex trip nearby. */
+    // Track the closest stop on each flex trip nearby.
     MinMap<FlexTrip<?, ?>, NearbyStop> closestStopForFlexTrip = new MinMap<>();
 
-    /* The end result */
+    // The end result
     Set<NearbyStop> uniqueStopsResult = new HashSet<>();
 
-    /* Iterate over nearby stops via the street network or using straight-line distance. */
-    for (NearbyStop nearbyStop : delegateNearbyStopFinder.findNearbyStops(
+    // fetch nearby stops via the street network or using straight-line distance.
+    var nearbyStops = delegateNearbyStopFinder.findNearbyStops(
       vertex,
       routingRequest,
       streetRequest,
       reverseDirection
-    )) {
+    );
+
+    for (NearbyStop nearbyStop : nearbyStops) {
       StopLocation stop = nearbyStop.stop;
 
       if (stop instanceof RegularStop regularStop) {

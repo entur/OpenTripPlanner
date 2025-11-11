@@ -31,16 +31,11 @@ import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 /**
- * This creates a graph with trip patterns
- <pre>
-  S0 -  V0 ------------
-        |     \       |
- S11 - V11 --------> V21 - S21
-        |      \      |
- S12 - V12 --------> V22 - V22
-        |             |
- S13 - V13 --------> V23 - V23
- </pre>
+ * This test uses the following graph/network for testing the DirectTransfer generation. The
+ * fokus is on the filtering of the transfers, not on testing that the NearBySearch return the
+ * correct set of nearby stops.
+ * <p>
+ * <img src=DirectTransferGeneratorTest.drawio.png />
  */
 class DirectTransferGeneratorTest {
 
@@ -57,63 +52,121 @@ class DirectTransferGeneratorTest {
   );
 
   @Test
-  public void testDirectTransfersWithoutPatterns() {
+  public void testStraightLineTransfersWithNoPatterns() {
+    // There is no trip-patterns to transfer between; Hence empty.
     var repository = testData().withTransferRequests(REQUEST_WITH_WALK_TRANSFER).build();
     assertEquals("<Empty>", toString(repository.getAllPathTransfers()));
   }
 
   @Test
-  public void testDirectTransfersWithPatterns() {
+  public void testStraightLineTransfersWithoutPatternsPruning() {
+    OTPFeature.ConsiderPatternsForDirectTransfers.testOff(() -> {
+      var repository = testData().withTransferRequests(REQUEST_WITH_WALK_TRANSFER).build();
+      // S0 <-> S23 is too fare, not found in neardby search
+      assertEquals(
+        """
+         S0 - S11, 1668m
+         S0 - S12, 3892m
+         S0 - S21, 1829m
+         S0 - S22, 3964m
+        S11 -  S0, 1668m
+        S11 - S12, 2224m
+        S11 - S13, 4448m
+        S11 - S21, 751m
+        S11 - S22, 2347m
+        S11 - S23, 4511m
+        S12 -  S0, 3892m
+        S12 - S11, 2224m
+        S12 - S13, 2224m
+        S12 - S21, 2347m
+        S12 - S22, 751m
+        S12 - S23, 2347m
+        S13 - S11, 4448m
+        S13 - S12, 2224m
+        S13 - S21, 4511m
+        S13 - S22, 2347m
+        S13 - S23, 751m
+        S21 -  S0, 1829m
+        S21 - S11, 751m
+        S21 - S12, 2347m
+        S21 - S13, 4511m
+        S21 - S22, 2224m
+        S21 - S23, 4448m
+        S22 -  S0, 3964m
+        S22 - S11, 2347m
+        S22 - S12, 751m
+        S22 - S13, 2347m
+        S22 - S21, 2224m
+        S22 - S23, 2224m
+        S23 - S11, 4511m
+        S23 - S12, 2347m
+        S23 - S13, 751m
+        S23 - S21, 4448m
+        S23 - S22, 2224m""",
+        toString(repository.getAllPathTransfers())
+      );
+    });
+  }
+
+  @Test
+  public void testStraightLineTransfersWithPatternsPruning() {
     var repository = testData()
       .withPatterns()
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
       .build();
 
+    // Exactly one transfer is expected from each stop to the closest place to board all
+    // patterns, including the same pattern used by the stop (E.g. S12 - S11).
     assertEquals(
       """
-       S0 - S11, 556m
-       S0 - S21, 935m
+       S0 - S11, 1668m
+       S0 - S21, 1829m
+      S11 -  S0, 1668m
       S11 - S21, 751m
+      S12 -  S0, 3892m
+      S12 - S11, 2224m
       S12 - S22, 751m
-      S13 - S12, 2224m
+      S13 - S11, 4448m
       S13 - S22, 2347m
+      S21 -  S0, 1829m
       S21 - S11, 751m
-      S22 - S12, 751m
-      S23 - S12, 2347m
+      S22 -  S0, 3964m
+      S22 - S11, 2347m
+      S23 - S11, 4511m
       S23 - S22, 2224m""",
       toString(repository.getAllPathTransfers())
     );
   }
 
   @Test
-  public void testDirectTransfersWithRestrictedPatterns() {
+  public void testStraightLineTransfersWithBoardingRestrictions() {
     var repository = testData()
       .withPatterns()
-      .withBoardingConstraint()
+      .withNoBoardingForR1AtStop11()
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
       .build();
 
     assertEquals(
+      // * - S11 is not allowed, because of boarding constraints
       """
-       S0 - S12, 2780m
-       S0 - S21, 935m
-      S11 - S12, 2224m
+       S0 - S21, 1829m
+      S11 -  S0, 1668m
       S11 - S21, 751m
+      S12 -  S0, 3892m
       S12 - S22, 751m
-      S13 - S12, 2224m
       S13 - S22, 2347m
-      S21 - S12, 2347m
-      S22 - S12, 751m
-      S23 - S12, 2347m
+      S21 -  S0, 1829m
+      S22 -  S0, 3964m
       S23 - S22, 2224m""",
       toString(repository.getAllPathTransfers())
     );
   }
 
   @Test
-  public void testSingleRequestWithoutPatterns() {
+  public void testStreetTransfersWithNoPatterns() {
+    // There is no trip-patterns to transfer between; Hence empty.
     var repository = testData()
-      .withgraphHasStreets()
+      .withStreetGraph()
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
       .build();
 
@@ -121,10 +174,40 @@ class DirectTransferGeneratorTest {
   }
 
   @Test
-  public void testSingleRequestWithPatterns() {
+  public void testStreetTransfersWithoutPatternsPruning() {
+    OTPFeature.ConsiderPatternsForDirectTransfers.testOff(() -> {
+      var repository = testData()
+        .withStreetGraph()
+        .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
+        .build();
+
+      assertEquals(
+        """
+         S0 - S11, 100m
+         S0 - S12, 200m
+         S0 - S21, 100m
+         S0 - S22, 200m
+         S0 - S23, 300m
+        S11 - S12, 100m
+        S11 - S21, 100m
+        S11 - S22, 110m
+        S11 - S23, 210m
+        S12 - S22, 110m
+        S12 - S23, 210m
+        S13 - S12, 100m
+        S13 - S22, 210m
+        S13 - S23, 310m
+        S22 - S23, 100m""",
+        toString(repository.getAllPathTransfers())
+      );
+    });
+  }
+
+  @Test
+  public void testStreetTransfersWithPatterns() {
     var repository = testData()
       .withPatterns()
-      .withgraphHasStreets()
+      .withStreetGraph()
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
       .build();
 
@@ -132,26 +215,45 @@ class DirectTransferGeneratorTest {
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S21, 100m""",
+      S11 - S21, 100m
+      S12 - S22, 110m
+      S13 - S22, 210m""",
       toString(repository.getAllPathTransfers())
     );
   }
 
   @Test
-  public void testMultipleRequestsWithoutPatterns() {
-    var repository = testData()
-      .withgraphHasStreets()
-      .withTransferRequests(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER)
-      .build();
+  public void testStreetTransfersWithPatternsIncludeRealTimeUsedStops() {
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+      var repository = testData()
+        .withPatterns()
+        .withStreetGraph()
+        .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
+        .build();
 
-    assertEquals("<Empty>", toString(repository.getAllPathTransfers()));
+      assertEquals(
+        """
+         S0 - S11, 100m
+         S0 - S21, 100m
+         S0 - S23, 300m
+        S11 - S21, 100m
+        S11 - S23, 210m
+        S12 - S22, 110m
+        S12 - S23, 210m
+        S13 - S22, 210m
+        S13 - S23, 310m
+        S22 - S23, 100m""",
+        toString(repository.getAllPathTransfers())
+      );
+    });
   }
 
+
   @Test
-  public void testMultipleRequestsWithPatterns() {
+  public void testStreetTransfersWithMultipleRequestsWithPatterns() {
     var repository = testData()
       .withPatterns()
-      .withgraphHasStreets()
+      .withStreetGraph()
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER)
       .build();
 
@@ -163,28 +265,43 @@ class DirectTransferGeneratorTest {
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S21, 100m""",
+      S11 - S21, 100m
+      S12 - S22, 110m
+      S13 - S22, 210m""",
       toString(walkTransfers)
     );
+
+    // Transfer S11-S21 is dominated by the S11-S22 with lower cost; Hence missing. Some of the
+    // edges used are not allowed for bicycles, but you can walk the bike so they are included here
+    // with a higher cost.
     assertEquals(
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S22, 110m""",
+      S11 - S22, 110m
+      S12 - S22, 110m
+      S13 - S22, 210m""",
       toString(bikeTransfers)
     );
     assertEquals("<Empty>", toString(carTransfers));
   }
 
   @Test
-  public void testTransferOnIsolatedStations() {
+  public void testStreetTransfersWithStationWithTransfersNotAllowed() {
     var repository = testData()
       .withPatterns()
-      .withNoTransfersOnStations()
+      .withStreetGraph()
+      .withNoTransfersOnStationA()
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
       .build();
 
-    assertEquals("<Empty>", toString(repository.getAllPathTransfers()));
+    assertEquals(
+      // TODO Fix: "S0 - S22, 200m" is missing, it is the best transfer after S11 - S21 is droped.
+      """
+      S12 - S22, 110m
+      S13 - S22, 210m""",
+      toString(repository.getAllPathTransfers())
+    );
   }
 
   @Test
@@ -192,13 +309,19 @@ class DirectTransferGeneratorTest {
     OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
       var repository = testData()
         .withPatterns()
-        .withgraphHasStreets()
+        .withStreetGraph()
         .withTransferRequests(REQUEST_WITH_BIKE_TRANSFER)
         .addTransferParameters(StreetMode.BIKE, TX_BIKES_ALLOWED_1H)
         .build();
 
       var bikeTransfers = repository.findTransfers(StreetMode.BIKE);
-      assertEquals(" S0 - S21, 100m", toString(bikeTransfers));
+      assertEquals(
+        """
+        S13 - S22, 210m
+        S13 - S23, 310m
+        S22 - S23, 100m""",
+        toString(bikeTransfers)
+      );
     });
   }
 
@@ -207,20 +330,16 @@ class DirectTransferGeneratorTest {
     OTPFeature.ConsiderPatternsForDirectTransfers.testOff(() -> {
       var repository = testData()
         .withPatterns()
-        .withgraphHasStreets()
+        .withStreetGraph()
         .withTransferRequests(REQUEST_WITH_BIKE_TRANSFER)
         .addTransferParameters(StreetMode.BIKE, TX_BIKES_ALLOWED_1H)
         .build();
 
       var bikeTransfers = repository.findTransfers(StreetMode.BIKE);
-      // no transfers involving S11, S12 and S13
       assertEquals(
         """
-         S0 - S21, 100m
-         S0 - S22, 200m
-         S0 - S23, 300m
-        S21 - S22, 100m
-        S21 - S23, 200m
+        S13 - S22, 210m
+        S13 - S23, 310m
         S22 - S23, 100m""",
         toString(bikeTransfers)
       );
@@ -252,7 +371,7 @@ class DirectTransferGeneratorTest {
 
     private boolean addPatterns = false;
     private boolean withBoardingConstraint = false;
-    private boolean withNoTransfersOnStations = false;
+    private boolean noTransfersOnStationA = false;
     private boolean graphHasStreets = false;
     private final List<RouteRequest> transferRequests = new ArrayList<>();
     private final Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
@@ -262,17 +381,17 @@ class DirectTransferGeneratorTest {
       return this;
     }
 
-    public TestData withBoardingConstraint() {
+    public TestData withNoBoardingForR1AtStop11() {
       this.withBoardingConstraint = true;
       return this;
     }
 
-    public TestData withNoTransfersOnStations() {
-      this.withNoTransfersOnStations = true;
+    public TestData withNoTransfersOnStationA() {
+      this.noTransfersOnStationA = true;
       return this;
     }
 
-    public TestData withgraphHasStreets() {
+    public TestData withStreetGraph() {
       this.graphHasStreets = true;
       return this;
     }
@@ -307,36 +426,31 @@ class DirectTransferGeneratorTest {
 
       @Override
       public void build() {
-        var station = stationEntity("1", s -> s.withTransfersNotAllowed(withNoTransfersOnStations));
-        TransitStopVertex S0, S11, S12, S13, S21, S22, S23;
+        var stationA = stationEntity("1", s -> s.withTransfersNotAllowed(noTransfersOnStationA));
+        TransitStopVertex S0, S_FAR_AWAY, S11, S12, S13, S21, S22, S23;
         StreetVertex V0, V11, V12, V13, V21, V22, V23;
 
-        S0 = stop("S0", b ->
-          b
-            .withCoordinate(47.495, 19.001)
-            .withParentStation(station)
-            .withVehicleType(TransitMode.RAIL)
-        );
-        S11 = stop("S11", 47.500, 19.001, station);
-        S12 = stop("S12", 47.520, 19.001, station);
-        S13 = stop("S13", 47.540, 19.001, station);
-        S21 = stop("S21", 47.500, 19.011, station);
+        S0 = stop("S0", b -> b.withCoordinate(47.485, 19.001).withVehicleType(TransitMode.RAIL));
+        S_FAR_AWAY = stop("FarAway", 55.0, 30.0);
+        S11 = stop("S11", 47.500, 19.001, stationA);
+        S12 = stop("S12", 47.520, 19.001);
+        S13 = stop("S13", b -> b.withCoordinate(47.540, 19.001).withSometimesUsedRealtime(true));
+        S21 = stop("S21", 47.500, 19.011, stationA);
         S22 = stop("S22", b ->
           b
             .withCoordinate(47.520, 19.011)
-            .withParentStation(station)
             .withVehicleType(TransitMode.BUS)
             .withSometimesUsedRealtime(true)
         );
-        S23 = stop("S23", 47.540, 19.011, station);
+        S23 = stop("S23", b -> b.withCoordinate(47.540, 19.011).withSometimesUsedRealtime(true));
 
-        V0 = intersection("V0", 47.495, 19.000);
+        V0 = intersection("V0", 47.485, 19.000);
         V11 = intersection("V11", 47.500, 19.000);
-        V12 = intersection("V12", 47.510, 19.000);
-        V13 = intersection("V13", 47.520, 19.000);
+        V12 = intersection("V12", 47.520, 19.000);
+        V13 = intersection("V13", 47.540, 19.000);
         V21 = intersection("V21", 47.500, 19.010);
-        V22 = intersection("V22", 47.510, 19.010);
-        V23 = intersection("V23", 47.520, 19.010);
+        V22 = intersection("V22", 47.520, 19.010);
+        V23 = intersection("V23", 47.540, 19.010);
 
         biLink(V0, S0);
         biLink(V11, S11);
@@ -347,33 +461,37 @@ class DirectTransferGeneratorTest {
         biLink(V23, S23);
 
         street(V0, V11, 100, StreetTraversalPermission.ALL);
-        street(V0, V12, 200, StreetTraversalPermission.ALL);
         street(V0, V21, 100, StreetTraversalPermission.ALL);
         street(V0, V22, 200, StreetTraversalPermission.ALL);
 
         street(V11, V12, 100, StreetTraversalPermission.PEDESTRIAN);
-        street(V12, V13, 100, StreetTraversalPermission.PEDESTRIAN);
-        street(V21, V22, 100, StreetTraversalPermission.PEDESTRIAN);
-        street(V22, V23, 100, StreetTraversalPermission.PEDESTRIAN);
         street(V11, V21, 100, StreetTraversalPermission.PEDESTRIAN);
         street(V11, V22, 110, StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE);
+        street(V12, V22, 110, StreetTraversalPermission.PEDESTRIAN);
+        street(V13, V12, 100, StreetTraversalPermission.PEDESTRIAN);
+        street(V22, V23, 100, StreetTraversalPermission.PEDESTRIAN);
 
         if (addPatterns) {
           var agency = TimetableRepositoryForTest.agency("Agency");
 
           tripPattern(
+            TripPattern.of(TimetableRepositoryForTest.id("TP0"))
+              .withRoute(route("R0", TransitMode.RAIL, agency))
+              .withStopPattern(new StopPattern(List.of(st(S0), st(S_FAR_AWAY))))
+              .build()
+          );
+          tripPattern(
             TripPattern.of(TimetableRepositoryForTest.id("TP1"))
               .withRoute(route("R1", TransitMode.BUS, agency))
               .withStopPattern(
-                new StopPattern(List.of(st(S11, !withBoardingConstraint, true), st(S12), st(S13)))
+                new StopPattern(List.of(st(S11, !withBoardingConstraint, true), st(S12)))
               )
               .build()
           );
-
           tripPattern(
             TripPattern.of(TimetableRepositoryForTest.id("TP2"))
               .withRoute(route("R2", TransitMode.BUS, agency))
-              .withStopPattern(new StopPattern(List.of(st(S21), st(S22), st(S23))))
+              .withStopPattern(new StopPattern(List.of(st(S21), st(S22), st(S_FAR_AWAY))))
               .withScheduledTimeTableBuilder(builder ->
                 builder.addTripTimes(
                   ScheduledTripTimes.of()
