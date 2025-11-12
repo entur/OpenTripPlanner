@@ -97,10 +97,9 @@ import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationB
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.standalone.config.framework.json.JsonSupport;
-import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model.edge.EscalatorEdge;
-import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
-import org.opentripplanner.street.model.vertex.OsmVertex;
+import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
+import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
+import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.test.support.FilePatternSource;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -343,12 +342,35 @@ class GraphQLIntegrationTest {
         return routes;
       }
     };
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
+    VerticalTransportationUseFactory verticalTransportationUseFactory =
+      new VerticalTransportationUseFactory(
+        new DefaultStreetDetailsService(streetDetailsRepository)
+      );
 
     var step1 = walkStep("street")
       .withRelativeDirection(RelativeDirection.DEPART)
       .withAbsoluteDirection(20)
       .build();
-    var step2 = walkStep("elevator").withRelativeDirection(RelativeDirection.ELEVATOR).build();
+
+    var elevatorState = TestStateBuilder.ofWalking().elevator().build();
+    ElevatorBoardEdge elevatorBoardEdge = (ElevatorBoardEdge) elevatorState
+      .getBackState()
+      .getBackState()
+      .getBackEdge();
+    ElevatorAlightEdge elevatorAlightEdge = (ElevatorAlightEdge) elevatorState.getBackEdge();
+    streetDetailsRepository.addEdgeLevelInfo(elevatorBoardEdge, new Level(-2.0, "-2"));
+    streetDetailsRepository.addEdgeLevelInfo(elevatorAlightEdge, new Level(-1.0, "-1"));
+    var step2 = walkStep("elevator")
+      .withRelativeDirection(RelativeDirection.ELEVATOR)
+      .withVerticalTransportationUse(
+        verticalTransportationUseFactory.createElevatorUse(
+          elevatorState.getBackState(),
+          elevatorAlightEdge
+        )
+      )
+      .build();
+
     FeedScopedId entranceId = new FeedScopedId("osm", "123");
     Entrance entrance = Entrance.of(entranceId)
       .withCoordinate(new WgsCoordinate(60, 80))
@@ -360,29 +382,13 @@ class GraphQLIntegrationTest {
       .withEntrance(entrance)
       .build();
 
-    var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    OsmVertex from = new OsmVertex(10, 10, 0);
-    OsmVertex to = new OsmVertex(10.001, 10.001, 1);
-    var stairsEdge = new StreetEdgeBuilder<>()
-      .withFromVertex(from)
-      .withToVertex(to)
-      .withName("stairs")
-      .withMeterLength(1000)
-      .withPermission(StreetTraversalPermission.ALL)
-      .withBack(false)
-      .withStairs(true)
-      .buildAndConnect();
-    var escalatorEdge = EscalatorEdge.createEscalatorEdge(from, to, 45, null);
+    var stairsState = TestStateBuilder.ofWalking().stairsEdge().build();
+    var stairsEdge = stairsState.getBackEdge();
     var inclinedEdgeLevelInfo = new InclinedEdgeLevelInfo(
       new VertexLevelInfo(new Level(1.0, "1"), 1),
       new VertexLevelInfo(new Level(2.0, "2"), 2)
     );
     streetDetailsRepository.addInclinedEdgeLevelInfo(stairsEdge, inclinedEdgeLevelInfo);
-    streetDetailsRepository.addInclinedEdgeLevelInfo(escalatorEdge, inclinedEdgeLevelInfo);
-    VerticalTransportationUseFactory verticalTransportationUseFactory =
-      new VerticalTransportationUseFactory(
-        new DefaultStreetDetailsService(streetDetailsRepository)
-      );
     var step4 = walkStep("stairs")
       .withRelativeDirection(RelativeDirection.STAIRS)
       .withVerticalTransportationUse(
@@ -390,7 +396,11 @@ class GraphQLIntegrationTest {
       )
       .addEdge(stairsEdge)
       .build();
-    var step5 = walkStep("escalators")
+
+    var escalatorState = TestStateBuilder.ofWalking().escalatorEdge().build();
+    var escalatorEdge = escalatorState.getBackEdge();
+    streetDetailsRepository.addInclinedEdgeLevelInfo(escalatorEdge, inclinedEdgeLevelInfo);
+    var step5 = walkStep("escalator")
       .withRelativeDirection(RelativeDirection.ESCALATOR)
       .withVerticalTransportationUse(
         verticalTransportationUseFactory.createInclinedVerticalTransportationUse(escalatorEdge)

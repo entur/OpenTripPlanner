@@ -19,7 +19,18 @@
                     "area": false,
                     "relativeDirection": "ELEVATOR",
                     "absoluteDirection": null,
-                    "feature": null
+                    "feature": {
+                      "__typename": "ElevatorUse",
+                      "from": {
+                        "level": -2.0,
+                        "name": "-2"
+                      },
+                      "verticalDirection": "UP",
+                      "to": {
+                        "level": -1.0,
+                        "name": "-1"
+                      }
+                    }
                   },
                   {
                     "streetName": "entrance",
@@ -52,7 +63,7 @@
                     }
                   },
                   {
-                    "streetName": "escalators",
+                    "streetName": "escalator",
                     "area": false,
                     "relativeDirection": "ESCALATOR",
                     "absoluteDirection": null,
