@@ -2,7 +2,8 @@ package org.opentripplanner.service.streetdetails;
 
 import java.io.Serializable;
 import java.util.Optional;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
@@ -12,12 +13,22 @@ import org.opentripplanner.street.model.edge.Edge;
  */
 public interface StreetDetailsRepository extends Serializable {
   /**
-   * Associate the edge with level information.
+   * Associate the inclined edge with level information.
    */
-  void addEdgeLevelInformation(Edge edge, EdgeLevelInfo edgeLevelInfo);
+  void addInclinedEdgeLevelInfo(Edge edge, InclinedEdgeLevelInfo edgeLevelInfo);
 
   /**
-   * Find level or incline information for a given edge.
+   * Find level or incline information for a given inclined edge.
    */
-  Optional<EdgeLevelInfo> findEdgeInformation(Edge edge);
+  Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(Edge edge);
+
+  /**
+   * Associate the edge with level information.
+   */
+  void addEdgeLevelInfo(Edge edge, Level level);
+
+  /**
+   * Find level information for a given edge.
+   */
+  Optional<Level> findEdgeLevelInfo(Edge edge);
 }

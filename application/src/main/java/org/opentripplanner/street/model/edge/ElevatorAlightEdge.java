@@ -4,6 +4,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.street.model.vertex.ElevatorVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -19,11 +20,6 @@ import org.opentripplanner.street.search.state.StateEditor;
 public class ElevatorAlightEdge extends Edge implements BikeWalkableEdge, ElevatorEdge {
 
   /**
-   * This is the level of this elevator exit, used in narrative generation.
-   */
-  private final I18NString level;
-
-  /**
    * The polyline geometry of this edge. It's generally a polyline with two coincident points, but
    * some elevators have horizontal dimension, e.g. the ones on the Eiffel Tower.
    */
@@ -32,12 +28,9 @@ public class ElevatorAlightEdge extends Edge implements BikeWalkableEdge, Elevat
   /**
    * @param from the vertex inside the elevator
    * @param to the vertex on the street network
-   * @param level a human-readable label of the alighting level
    */
-  private ElevatorAlightEdge(ElevatorVertex from, Vertex to, I18NString level) {
+  private ElevatorAlightEdge(ElevatorVertex from, Vertex to) {
     super(from, to);
-    this.level = level;
-
     // set up the geometry
     Coordinate[] coords = new Coordinate[2];
     coords[0] = new Coordinate(from.getX(), from.getY());
@@ -45,12 +38,8 @@ public class ElevatorAlightEdge extends Edge implements BikeWalkableEdge, Elevat
     the_geom = GeometryUtils.getGeometryFactory().createLineString(coords);
   }
 
-  public static ElevatorAlightEdge createElevatorAlightEdge(
-    ElevatorVertex from,
-    Vertex to,
-    I18NString level
-  ) {
-    return connectToGraph(new ElevatorAlightEdge(from, to, level));
+  public static ElevatorAlightEdge createElevatorAlightEdge(ElevatorVertex from, Vertex to) {
+    return connectToGraph(new ElevatorAlightEdge(from, to));
   }
 
   @Override
@@ -65,17 +54,17 @@ public class ElevatorAlightEdge extends Edge implements BikeWalkableEdge, Elevat
    */
   @Override
   public I18NString getName() {
-    return level;
+    // TODO: i18n
+    return new NonLocalizedString("ElevatorAlightEdge");
   }
 
   /**
-   * The name is not bogus; it's level n from OSM.
-   *
-   * @author mattwigway
+   * Since alight edges are always called ElevatorAlightEdge, the name is complete bogus but is
+   * never included in plans.
    */
   @Override
   public boolean nameIsDerived() {
-    return false;
+    return true;
   }
 
   @Override

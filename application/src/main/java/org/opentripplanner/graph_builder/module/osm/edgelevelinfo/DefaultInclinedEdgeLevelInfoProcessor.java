@@ -10,17 +10,17 @@ import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 
-public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
+public class DefaultInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelInfoProcessor {
 
   private final DataImportIssueStore issueStore;
   private final StreetDetailsRepository streetDetailsRepository;
 
-  public DefaultEdgeLevelInfoProcessor(
+  public DefaultInclinedEdgeLevelInfoProcessor(
     DataImportIssueStore issueStore,
     StreetDetailsRepository streetDetailsRepository
   ) {
@@ -29,13 +29,13 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
   }
 
   @Override
-  public Optional<EdgeLevelInfo> findEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
+  public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
     var nodeRefs = way.getNodeRefs();
     long firstNodeRef = nodeRefs.get(0);
     long lastNodeRef = nodeRefs.get(nodeRefs.size() - 1);
 
-    EdgeLevelInfo levelInfo = findLevelInfo(osmdb, way, firstNodeRef, lastNodeRef);
-    EdgeLevelInfo inclineInfo = findInclineInfo(osmdb, way, firstNodeRef, lastNodeRef);
+    InclinedEdgeLevelInfo levelInfo = findLevelInfo(osmdb, way, firstNodeRef, lastNodeRef);
+    InclinedEdgeLevelInfo inclineInfo = findInclineInfo(osmdb, way, firstNodeRef, lastNodeRef);
 
     if (
       levelInfo != null &&
@@ -54,7 +54,7 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
     return Optional.empty();
   }
 
-  private EdgeLevelInfo findLevelInfo(
+  private InclinedEdgeLevelInfo findLevelInfo(
     OsmDatabase osmdb,
     OsmWay way,
     long firstNodeRef,
@@ -65,7 +65,7 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
       OsmLevel firstVertexOsmLevel = levels.get(0);
       OsmLevel lastVertexOsmLevel = levels.get(1);
       if (firstVertexOsmLevel.level() < lastVertexOsmLevel.level()) {
-        return new EdgeLevelInfo(
+        return new InclinedEdgeLevelInfo(
           new VertexLevelInfo(
             new Level(firstVertexOsmLevel.level(), firstVertexOsmLevel.name()),
             firstNodeRef
@@ -76,7 +76,7 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
           )
         );
       } else if (firstVertexOsmLevel.level() > lastVertexOsmLevel.level()) {
-        return new EdgeLevelInfo(
+        return new InclinedEdgeLevelInfo(
           new VertexLevelInfo(
             new Level(lastVertexOsmLevel.level(), lastVertexOsmLevel.name()),
             lastNodeRef
@@ -91,19 +91,19 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
     return null;
   }
 
-  private EdgeLevelInfo findInclineInfo(
+  private InclinedEdgeLevelInfo findInclineInfo(
     OsmDatabase osmdb,
     OsmWay way,
     long firstNodeRef,
     long lastNodeRef
   ) {
     if (way.isInclineUp()) {
-      return new EdgeLevelInfo(
+      return new InclinedEdgeLevelInfo(
         new VertexLevelInfo(null, firstNodeRef),
         new VertexLevelInfo(null, lastNodeRef)
       );
     } else if (way.isInclineDown()) {
-      return new EdgeLevelInfo(
+      return new InclinedEdgeLevelInfo(
         new VertexLevelInfo(null, lastNodeRef),
         new VertexLevelInfo(null, firstNodeRef)
       );
@@ -115,21 +115,21 @@ public class DefaultEdgeLevelInfoProcessor implements EdgeLevelInfoProcessor {
   public void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,
-    Optional<EdgeLevelInfo> edgeLevelInfoOptional,
+    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional,
     OsmWay way
   ) {
-    if (edgeLevelInfoOptional.isEmpty()) {
+    if (inclinedEdgeLevelInfoOptional.isEmpty()) {
       return;
     }
 
-    EdgeLevelInfo edgeLevelInfo = edgeLevelInfoOptional.get();
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo = inclinedEdgeLevelInfoOptional.get();
     Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
-    if (edge != null && edgeLevelInfo.canBeAppliedToEdge(edge)) {
+    if (edge != null && inclinedEdgeLevelInfo.canBeAppliedToEdge(edge)) {
       if (forwardEdge != null) {
-        streetDetailsRepository.addEdgeLevelInformation(forwardEdge, edgeLevelInfo);
+        streetDetailsRepository.addInclinedEdgeLevelInfo(forwardEdge, inclinedEdgeLevelInfo);
       }
       if (backwardEdge != null) {
-        streetDetailsRepository.addEdgeLevelInformation(backwardEdge, edgeLevelInfo);
+        streetDetailsRepository.addInclinedEdgeLevelInfo(backwardEdge, inclinedEdgeLevelInfo);
       }
     } else {
       issueStore.add(new CouldNotApplyMultiLevelInfoToWay(way, way.getNodeRefs().size()));

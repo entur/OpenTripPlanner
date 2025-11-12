@@ -9,6 +9,7 @@ public class VerticalDirectionMapper {
     return switch (verticalDirection) {
       case DOWN -> GraphQLVerticalDirection.DOWN;
       case UP -> GraphQLVerticalDirection.UP;
+      case UNKNOWN -> GraphQLVerticalDirection.UNKNOWN;
     };
   }
 }

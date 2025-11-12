@@ -412,6 +412,15 @@ public class GraphQLDataFetchers {
     public DataFetcher<RiderCategory> riderCategory();
   }
 
+  /** A single use of an elevator. */
+  public interface GraphQLElevatorUse {
+    public DataFetcher<Level> from();
+
+    public DataFetcher<Level> to();
+
+    public DataFetcher<GraphQLVerticalDirection> verticalDirection();
+  }
+
   public interface GraphQLEmissions {
     public DataFetcher<org.opentripplanner.framework.model.Gram> co2();
   }

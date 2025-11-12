@@ -97,7 +97,7 @@ union CallStopLocation = Location | LocationGroup | Stop
 union RentalPlace = RentalVehicle | VehicleRentalStation
 
 "A feature for a step"
-union StepFeature = Entrance | EscalatorUse | StairsUse
+union StepFeature = ElevatorUse | Entrance | EscalatorUse | StairsUse
 
 union StopPosition = PositionAtStop | PositionBetweenStops
 
@@ -523,6 +523,15 @@ type DependentFareProduct implements FareProduct {
   price: Money!
   "The category of riders this product applies to, for example students or pensioners."
   riderCategory: RiderCategory
+}
+
+"A single use of an elevator."
+type ElevatorUse {
+  "The level the use begins at."
+  from: Level
+  "The level the use ends at."
+  to: Level
+  verticalDirection: VerticalDirection!
 }
 
 type Emissions {
@@ -3955,6 +3964,7 @@ enum VertexType {
 "The vertical direction e.g. for a set of stairs."
 enum VerticalDirection {
   DOWN
+  UNKNOWN
   UP
 }
 

@@ -27,8 +27,8 @@ import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
-import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.DefaultEdgeLevelInfoProcessor;
-import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.NoopEdgeLevelInfoProcessor;
+import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.DefaultInclinedEdgeLevelInfoProcessor;
+import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.NoopInclinedEdgeLevelInfoProcessor;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.model.OsmEntity;
@@ -229,7 +229,7 @@ public class OsmModule implements GraphBuilderModule {
     }
 
     var elevatorProcessor = new ElevatorProcessor(issueStore, osmdb, vertexGenerator);
-    elevatorProcessor.buildElevatorEdges(graph);
+    elevatorProcessor.buildElevatorEdges(graph, streetDetailsRepository);
 
     TurnRestrictionUnifier.unifyTurnRestrictions(osmdb, issueStore, osmInfoGraphBuildRepository);
 
@@ -323,9 +323,9 @@ public class OsmModule implements GraphBuilderModule {
     ProgressTracker progress = ProgressTracker.track("Build street graph", 5_000, wayCount);
     LOG.info(progress.startMessage());
     var escalatorProcessor = new EscalatorProcessor(issueStore);
-    var edgeLevelInfoProcessor = params.includeEdgeLevelInfo()
-      ? new DefaultEdgeLevelInfoProcessor(issueStore, streetDetailsRepository)
-      : new NoopEdgeLevelInfoProcessor();
+    var inclinedEdgeLevelInfoProcessor = params.includeInclinedEdgeLevelInfo()
+      ? new DefaultInclinedEdgeLevelInfoProcessor(issueStore, streetDetailsRepository)
+      : new NoopInclinedEdgeLevelInfoProcessor();
 
     WAY: for (OsmWay way : osmdb.getWays()) {
       WayPropertiesPair wayData = way.getOsmProvider().getWayPropertySet().getDataForWay(way);
@@ -387,7 +387,10 @@ public class OsmModule implements GraphBuilderModule {
       OsmNode osmStartNode = null;
 
       var platformOptional = getPlatform(osmdb, way);
-      var edgeLevelInfoOptional = edgeLevelInfoProcessor.findEdgeLevelInfo(osmdb, way);
+      var inclinedEdgeLevelInfoOptional = inclinedEdgeLevelInfoProcessor.findInclinedEdgeLevelInfo(
+        osmdb,
+        way
+      );
 
       for (int i = 0; i < nodes.size() - 1; i++) {
         OsmNode segmentStartOsmNode = osmdb.getNode(nodes.get(i));
@@ -466,10 +469,10 @@ public class OsmModule implements GraphBuilderModule {
             fromVertex,
             toVertex
           );
-          edgeLevelInfoProcessor.storeLevelInfoForEdge(
+          inclinedEdgeLevelInfoProcessor.storeLevelInfoForEdge(
             escalatorEdgePair.main(),
             escalatorEdgePair.back(),
-            edgeLevelInfoOptional,
+            inclinedEdgeLevelInfoOptional,
             way
           );
         } else {
@@ -502,10 +505,10 @@ public class OsmModule implements GraphBuilderModule {
           });
 
           if (way.isStairs()) {
-            edgeLevelInfoProcessor.storeLevelInfoForEdge(
+            inclinedEdgeLevelInfoProcessor.storeLevelInfoForEdge(
               street,
               backStreet,
-              edgeLevelInfoOptional,
+              inclinedEdgeLevelInfoOptional,
               way
             );
           }

@@ -1,7 +1,8 @@
 package org.opentripplanner.service.streetdetails;
 
 import java.util.Optional;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
@@ -13,7 +14,12 @@ import org.opentripplanner.street.model.edge.Edge;
  */
 public interface StreetDetailsService {
   /**
-   * Find level or incline information for a given edge.
+   * Find level or incline information for a given inclined edge.
    */
-  Optional<EdgeLevelInfo> findEdgeInformation(Edge edge);
+  Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(Edge edge);
+
+  /**
+   * Find level information for a given edge.
+   */
+  Optional<Level> findEdgeLevelInfo(Edge edge);
 }

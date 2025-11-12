@@ -9,7 +9,6 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehiclerental.model.TestFreeFloatingRentalVehicleBuilder;
@@ -266,11 +265,7 @@ public class TestStateBuilder {
       Accessibility.POSSIBLE
     );
 
-    var alightEdge = ElevatorAlightEdge.createElevatorAlightEdge(
-      onboard2,
-      offboard2,
-      new NonLocalizedString("1")
-    );
+    var alightEdge = ElevatorAlightEdge.createElevatorAlightEdge(onboard2, offboard2);
 
     currentState = EdgeTraverser.traverseEdges(
       currentState,

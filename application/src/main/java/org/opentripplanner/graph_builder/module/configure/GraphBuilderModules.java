@@ -92,7 +92,7 @@ public class GraphBuilderModules {
       .withPlatformEntriesLinking(config.platformEntriesLinking)
       .withStaticParkAndRide(config.staticParkAndRide)
       .withStaticBikeParkAndRide(config.staticBikeParkAndRide)
-      .withIncludeEdgeLevelInfo(config.includeEdgeLevelInfo)
+      .withIncludeInclinedEdgeLevelInfo(config.includeInclinedEdgeLevelInfo)
       .withStreetDetailsRepository(streetDetailsRepository)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
@@ -110,6 +110,7 @@ public class GraphBuilderModules {
     Graph graph,
     DeduplicatorService deduplicator,
     TimetableRepository timetableRepository,
+    StreetDetailsRepository streetDetailsRepository,
     DataImportIssueStore issueStore,
     FareServiceFactory fareServiceFactory
   ) {
@@ -120,6 +121,7 @@ public class GraphBuilderModules {
     return new GtfsModule(
       gtfsBundles,
       timetableRepository,
+      streetDetailsRepository,
       graph,
       deduplicator,
       issueStore,
@@ -138,13 +140,15 @@ public class GraphBuilderModules {
     Graph graph,
     DeduplicatorService deduplicator,
     TimetableRepository timetableRepository,
-    VehicleParkingRepository parkingService,
+    StreetDetailsRepository streetDetailsRepository,
+    VehicleParkingRepository parkingRepository,
     DataImportIssueStore issueStore
   ) {
     return new NetexConfigure(config).createNetexModule(
       dataSources.getNetexConfiguredDataSource(),
       timetableRepository,
-      parkingService,
+      parkingRepository,
+      streetDetailsRepository,
       graph,
       deduplicator,
       issueStore

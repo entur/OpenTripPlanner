@@ -10,12 +10,12 @@ import org.opentripplanner.street.model.vertex.OsmVertex;
  * {@link VertexLevelInfo} objects for the first and last vertices of an edge. The lower vertex
  * is represented by lowerVertexInfo and the higher one by upperVertexInfo.
  */
-public class EdgeLevelInfo implements Serializable {
+public class InclinedEdgeLevelInfo implements Serializable {
 
   private final VertexLevelInfo lowerVertexInfo;
   private final VertexLevelInfo upperVertexInfo;
 
-  public EdgeLevelInfo(VertexLevelInfo lowerVertexInfo, VertexLevelInfo upperVertexInfo) {
+  public InclinedEdgeLevelInfo(VertexLevelInfo lowerVertexInfo, VertexLevelInfo upperVertexInfo) {
     this.lowerVertexInfo = Objects.requireNonNull(lowerVertexInfo);
     this.upperVertexInfo = Objects.requireNonNull(upperVertexInfo);
   }
@@ -53,7 +53,7 @@ public class EdgeLevelInfo implements Serializable {
   public boolean equals(Object o) {
     if (o == this) return true;
     if (o == null || o.getClass() != getClass()) return false;
-    EdgeLevelInfo that = (EdgeLevelInfo) o;
+    InclinedEdgeLevelInfo that = (InclinedEdgeLevelInfo) o;
     return (
       Objects.equals(lowerVertexInfo, that.lowerVertexInfo) &&
       Objects.equals(upperVertexInfo, that.upperVertexInfo)

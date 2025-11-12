@@ -179,8 +179,8 @@ public class StatesToWalkStepsMapper {
 
     // generate a step for getting off an elevator (all elevator narrative generation occurs
     // when alighting). We don't need to know what came before or will come after
-    if (edge instanceof ElevatorAlightEdge) {
-      createAndSaveElevatorWalkStep(backState, forwardState, edge);
+    if (edge instanceof ElevatorAlightEdge elevatorAlightEdge) {
+      createAndSaveElevatorWalkStep(backState, forwardState, elevatorAlightEdge);
       return;
     } else if (edge instanceof EscalatorEdge) {
       createAndSaveEscalatorWalkStep(backState, forwardState, edge, geom);
@@ -551,10 +551,18 @@ public class StatesToWalkStepsMapper {
     steps.add(current);
   }
 
-  private void createAndSaveElevatorWalkStep(State backState, State forwardState, Edge edge) {
+  private void createAndSaveElevatorWalkStep(
+    State backState,
+    State forwardState,
+    ElevatorAlightEdge elevatorAlightEdge
+  ) {
     // don't care what came before or comes after
     addStep(
-      createWalkStep(forwardState, backState).withRelativeDirection(RelativeDirection.ELEVATOR)
+      createWalkStep(forwardState, backState)
+        .withRelativeDirection(RelativeDirection.ELEVATOR)
+        .withVerticalTransportationUse(
+          verticalTransportationUseFactory.createElevatorUse(backState, elevatorAlightEdge)
+        )
     );
   }
 

@@ -34,6 +34,8 @@ import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
@@ -65,6 +67,7 @@ public class GtfsModule implements GraphBuilderModule {
   private final FareServiceFactory fareServiceFactory;
 
   private final TimetableRepository timetableRepository;
+  private final StreetDetailsRepository streetDetailsRepository;
   private final Graph graph;
   private final DataImportIssueStore issueStore;
   private final DeduplicatorService deduplicator;
@@ -75,6 +78,7 @@ public class GtfsModule implements GraphBuilderModule {
   public GtfsModule(
     List<GtfsBundle> bundles,
     TimetableRepository timetableRepository,
+    StreetDetailsRepository streetDetailsRepository,
     Graph graph,
     DeduplicatorService deduplicator,
     DataImportIssueStore issueStore,
@@ -85,6 +89,7 @@ public class GtfsModule implements GraphBuilderModule {
   ) {
     this.gtfsBundles = bundles;
     this.timetableRepository = timetableRepository;
+    this.streetDetailsRepository = streetDetailsRepository;
     this.graph = graph;
     this.deduplicator = deduplicator;
     this.issueStore = issueStore;
@@ -106,6 +111,7 @@ public class GtfsModule implements GraphBuilderModule {
     return new GtfsModule(
       bundles,
       timetableRepository,
+      new DefaultStreetDetailsRepository(),
       graph,
       new Deduplicator(),
       DataImportIssueStore.NOOP,
@@ -179,7 +185,12 @@ public class GtfsModule implements GraphBuilderModule {
         // if this or previously processed gtfs bundle has transit that has not been filtered out
         hasTransit = hasTransit || otpTransitService.hasActiveTransit();
 
-        addTimetableRepositoryToGraph(graph, timetableRepository, otpTransitService);
+        addTimetableRepositoryToGraph(
+          graph,
+          timetableRepository,
+          streetDetailsRepository,
+          otpTransitService
+        );
 
         if (gtfsBundle.parameters().blockBasedInterlining()) {
           new InterlineProcessor(
@@ -277,13 +288,15 @@ public class GtfsModule implements GraphBuilderModule {
   private void addTimetableRepositoryToGraph(
     Graph graph,
     TimetableRepository timetableRepository,
+    StreetDetailsRepository streetDetailsRepository,
     OtpTransitService otpTransitService
   ) {
     AddTransitEntitiesToGraph.addToGraph(
       otpTransitService,
       subwayAccessTime_s,
       graph,
-      timetableRepository
+      timetableRepository,
+      streetDetailsRepository
     );
   }
 

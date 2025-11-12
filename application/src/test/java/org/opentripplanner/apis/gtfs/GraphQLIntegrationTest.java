@@ -84,7 +84,7 @@ import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehi
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
@@ -373,12 +373,12 @@ class GraphQLIntegrationTest {
       .withStairs(true)
       .buildAndConnect();
     var escalatorEdge = EscalatorEdge.createEscalatorEdge(from, to, 45, null);
-    var edgeLevelInfo = new EdgeLevelInfo(
+    var inclinedEdgeLevelInfo = new InclinedEdgeLevelInfo(
       new VertexLevelInfo(new Level(1.0, "1"), 1),
       new VertexLevelInfo(new Level(2.0, "2"), 2)
     );
-    streetDetailsRepository.addEdgeLevelInformation(stairsEdge, edgeLevelInfo);
-    streetDetailsRepository.addEdgeLevelInformation(escalatorEdge, edgeLevelInfo);
+    streetDetailsRepository.addInclinedEdgeLevelInfo(stairsEdge, inclinedEdgeLevelInfo);
+    streetDetailsRepository.addInclinedEdgeLevelInfo(escalatorEdge, inclinedEdgeLevelInfo);
     VerticalTransportationUseFactory verticalTransportationUseFactory =
       new VerticalTransportationUseFactory(
         new DefaultStreetDetailsService(streetDetailsRepository)

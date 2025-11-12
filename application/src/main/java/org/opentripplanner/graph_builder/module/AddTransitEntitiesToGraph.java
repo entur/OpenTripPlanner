@@ -16,6 +16,8 @@ import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.FeedInfo;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
@@ -52,6 +54,8 @@ public class AddTransitEntitiesToGraph {
 
   private final OtpTransitService otpTransitService;
 
+  private final StreetDetailsRepository streetDetailsRepository;
+
   // Map of all station elements and their vertices in the graph
   private final Map<StationElement<?, ?>, StationElementVertex> stationElementNodes =
     new HashMap<>();
@@ -66,22 +70,28 @@ public class AddTransitEntitiesToGraph {
   private AddTransitEntitiesToGraph(
     OtpTransitService otpTransitService,
     int subwayAccessTime,
-    Graph graph
+    Graph graph,
+    StreetDetailsRepository streetDetailsRepository
   ) {
     this.otpTransitService = otpTransitService;
     this.subwayAccessTime = Math.max(subwayAccessTime, 0);
     this.vertexFactory = new VertexFactory(graph);
+    this.streetDetailsRepository = streetDetailsRepository;
   }
 
   public static void addToGraph(
     OtpTransitService otpTransitService,
     int subwayAccessTime,
     Graph graph,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    StreetDetailsRepository streetDetailsRepository
   ) {
-    new AddTransitEntitiesToGraph(otpTransitService, subwayAccessTime, graph).applyToGraph(
-      timetableRepository
-    );
+    new AddTransitEntitiesToGraph(
+      otpTransitService,
+      subwayAccessTime,
+      graph,
+      streetDetailsRepository
+    ).applyToGraph(timetableRepository);
   }
 
   private void applyToGraph(TimetableRepository timetableRepository) {
@@ -275,8 +285,14 @@ public class AddTransitEntitiesToGraph {
       toLevel.name().toString()
     );
 
-    ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex);
-    ElevatorAlightEdge.createElevatorAlightEdge(toOnboardVertex, toVertex, toLevel.name());
+    streetDetailsRepository.addEdgeLevelInfo(
+      ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex),
+      new Level(fromLevel.index, fromLevel.name.toString())
+    );
+    streetDetailsRepository.addEdgeLevelInfo(
+      ElevatorAlightEdge.createElevatorAlightEdge(toOnboardVertex, toVertex),
+      new Level(toLevel.index, toLevel.name.toString())
+    );
 
     StreetTraversalPermission permission = StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
     ElevatorHopEdge.createElevatorHopEdge(
@@ -289,8 +305,14 @@ public class AddTransitEntitiesToGraph {
     );
 
     if (pathway.isBidirectional()) {
-      ElevatorBoardEdge.createElevatorBoardEdge(toVertex, toOnboardVertex);
-      ElevatorAlightEdge.createElevatorAlightEdge(fromOnboardVertex, fromVertex, fromLevel.name());
+      streetDetailsRepository.addEdgeLevelInfo(
+        ElevatorBoardEdge.createElevatorBoardEdge(toVertex, toOnboardVertex),
+        new Level(toLevel.index, toLevel.name.toString())
+      );
+      streetDetailsRepository.addEdgeLevelInfo(
+        ElevatorAlightEdge.createElevatorAlightEdge(fromOnboardVertex, fromVertex),
+        new Level(fromLevel.index, fromLevel.name.toString())
+      );
       ElevatorHopEdge.createElevatorHopEdge(
         toOnboardVertex,
         fromOnboardVertex,

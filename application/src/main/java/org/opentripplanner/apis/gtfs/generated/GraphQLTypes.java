@@ -5697,6 +5697,7 @@ public class GraphQLTypes {
   /** The vertical direction e.g. for a set of stairs. */
   public enum GraphQLVerticalDirection {
     DOWN,
+    UNKNOWN,
     UP,
   }
 

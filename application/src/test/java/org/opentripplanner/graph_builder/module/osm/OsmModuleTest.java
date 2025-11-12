@@ -48,7 +48,7 @@ import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
@@ -590,7 +590,7 @@ public class OsmModuleTest {
   }
 
   @Test
-  void testEdgeLevelInfo() {
+  void testInclinedEdgeLevelInfo() {
     var n1 = new OsmNode(0, 0);
     n1.setId(1);
     var n2 = new OsmNode(0, 1);
@@ -637,22 +637,25 @@ public class OsmModuleTest {
     )
       .withStreetDetailsRepository(streetDetailsRepository)
       // The build config field that needs to bet set for street info to be stored.
-      .withIncludeEdgeLevelInfo(true)
+      .withIncludeInclinedEdgeLevelInfo(true)
       .build();
     osmModule.buildGraph();
 
     var edgeLevelInfoSet = Set.of(
-      new EdgeLevelInfo(
+      new InclinedEdgeLevelInfo(
         new VertexLevelInfo(new Level(1.0, "1"), 1),
         new VertexLevelInfo(new Level(2.0, "2"), 2)
       ),
-      new EdgeLevelInfo(new VertexLevelInfo(null, 1), new VertexLevelInfo(null, 2)),
-      new EdgeLevelInfo(
+      new InclinedEdgeLevelInfo(new VertexLevelInfo(null, 1), new VertexLevelInfo(null, 2)),
+      new InclinedEdgeLevelInfo(
         new VertexLevelInfo(new Level(-1.0, "P1"), 2),
         new VertexLevelInfo(new Level(1.0, "1"), 1)
       )
     );
-    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
+    assertEquals(
+      edgeLevelInfoSet,
+      getAllInclinedEdgeLevelInfoObjects(graph, streetDetailsRepository)
+    );
   }
 
   @Test
@@ -682,14 +685,14 @@ public class OsmModuleTest {
     )
       .withStreetDetailsRepository(streetDetailsRepository)
       // The build config field that needs to bet set for street info to be stored.
-      .withIncludeEdgeLevelInfo(false)
+      .withIncludeInclinedEdgeLevelInfo(false)
       .build();
     osmModule.buildGraph();
 
-    assertEquals(Set.of(), getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
+    assertEquals(Set.of(), getAllInclinedEdgeLevelInfoObjects(graph, streetDetailsRepository));
   }
 
-  private Set<EdgeLevelInfo> getAllEdgeLevelInfoObjects(
+  private Set<InclinedEdgeLevelInfo> getAllInclinedEdgeLevelInfoObjects(
     Graph graph,
     StreetDetailsRepository streetDetailsRepository
   ) {
@@ -697,7 +700,10 @@ public class OsmModuleTest {
       .getEdges()
       .stream()
       .flatMap(edge ->
-        streetDetailsRepository.findEdgeInformation(edge).map(Stream::of).orElseGet(Stream::empty)
+        streetDetailsRepository
+          .findInclinedEdgeLevelInfo(edge)
+          .map(Stream::of)
+          .orElseGet(Stream::empty)
       )
       .collect(Collectors.toSet());
   }

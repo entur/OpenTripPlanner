@@ -33,7 +33,7 @@ public class OsmModuleBuilder {
   private boolean platformEntriesLinking = false;
   private boolean staticParkAndRide = false;
   private boolean staticBikeParkAndRide = false;
-  private boolean includeEdgeLevelInfo = false;
+  private boolean includeInclinedEdgeLevelInfo = false;
   private boolean includeOsmSubwayEntrances = false;
   private int maxAreaNodes = StreetConstants.DEFAULT_MAX_AREA_NODES;
   private StreetLimitationParameters streetLimitationParameters = new StreetLimitationParameters();
@@ -85,8 +85,8 @@ public class OsmModuleBuilder {
     return this;
   }
 
-  public OsmModuleBuilder withIncludeEdgeLevelInfo(boolean includeEdgeLevelInfo) {
-    this.includeEdgeLevelInfo = includeEdgeLevelInfo;
+  public OsmModuleBuilder withIncludeInclinedEdgeLevelInfo(boolean includeInclinedEdgeLevelInfo) {
+    this.includeInclinedEdgeLevelInfo = includeInclinedEdgeLevelInfo;
     return this;
   }
 
@@ -129,7 +129,7 @@ public class OsmModuleBuilder {
         platformEntriesLinking,
         staticParkAndRide,
         staticBikeParkAndRide,
-        includeEdgeLevelInfo,
+        includeInclinedEdgeLevelInfo,
         includeOsmSubwayEntrances
       )
     );

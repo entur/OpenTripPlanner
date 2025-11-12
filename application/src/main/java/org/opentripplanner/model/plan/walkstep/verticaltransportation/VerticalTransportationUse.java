@@ -7,7 +7,8 @@ import org.opentripplanner.service.streetdetails.model.Level;
  * Represents information about a single use of vertical transportation equipment stored in
  * {@link org.opentripplanner.model.plan.walkstep.WalkStep}.
  */
-public abstract sealed class VerticalTransportationUse permits EscalatorUse, StairsUse {
+public abstract sealed class VerticalTransportationUse
+  permits ElevatorUse, EscalatorUse, StairsUse {
 
   @Nullable
   private final Level from;

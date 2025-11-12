@@ -7,32 +7,48 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 public class DefaultStreetDetailsRepository implements StreetDetailsRepository, Serializable {
 
-  private final Map<Edge, EdgeLevelInfo> edgeInformation = new HashMap<>();
+  private final Map<Edge, InclinedEdgeLevelInfo> inclinedLevelInformation = new HashMap<>();
+  private final Map<Edge, Level> levelInformation = new HashMap<>();
 
   @Inject
   public DefaultStreetDetailsRepository() {}
 
   @Override
-  public void addEdgeLevelInformation(Edge edge, EdgeLevelInfo edgeLevelInfo) {
+  public void addInclinedEdgeLevelInfo(Edge edge, InclinedEdgeLevelInfo inclinedEdgeLevelInfo) {
     Objects.requireNonNull(edge);
-    this.edgeInformation.put(edge, edgeLevelInfo);
+    Objects.requireNonNull(inclinedEdgeLevelInfo);
+    this.inclinedLevelInformation.put(edge, inclinedEdgeLevelInfo);
   }
 
   @Override
-  public Optional<EdgeLevelInfo> findEdgeInformation(Edge edge) {
-    return Optional.ofNullable(edgeInformation.get(edge));
+  public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(Edge edge) {
+    return Optional.ofNullable(inclinedLevelInformation.get(edge));
+  }
+
+  @Override
+  public void addEdgeLevelInfo(Edge edge, Level level) {
+    Objects.requireNonNull(edge);
+    Objects.requireNonNull(level);
+    this.levelInformation.put(edge, level);
+  }
+
+  @Override
+  public Optional<Level> findEdgeLevelInfo(Edge edge) {
+    return Optional.ofNullable(levelInformation.get(edge));
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.of(DefaultStreetDetailsRepository.class)
-      .addNum("Edges with level information", edgeInformation.size())
+      .addNum("Inclined edges with level info", inclinedLevelInformation.size())
+      .addNum("Edges with a single associated level", levelInformation.size())
       .toString();
   }
 }

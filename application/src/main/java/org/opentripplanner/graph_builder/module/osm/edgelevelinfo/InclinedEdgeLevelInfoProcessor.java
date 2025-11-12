@@ -5,22 +5,22 @@ import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.model.EdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
  * Contains logic for storing edge level info in the
  * {@link StreetDetailsRepository}.
  */
-public interface EdgeLevelInfoProcessor {
-  EdgeLevelInfoProcessor NOOP = new NoopEdgeLevelInfoProcessor();
+public interface InclinedEdgeLevelInfoProcessor {
+  InclinedEdgeLevelInfoProcessor NOOP = new NoopInclinedEdgeLevelInfoProcessor();
 
-  public Optional<EdgeLevelInfo> findEdgeLevelInfo(OsmDatabase osmdb, OsmWay way);
+  public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmDatabase osmdb, OsmWay way);
 
   public void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,
-    Optional<EdgeLevelInfo> edgeLevelInfoOptional,
+    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional,
     OsmWay way
   );
 }
