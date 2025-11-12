@@ -12,6 +12,7 @@ import com.google.common.collect.ImmutableMultimap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -218,6 +219,58 @@ class LinkingContextFactoryTest {
       assertTrue(outgoingEdgeIsTraversableWith(viaOutgoing, TraverseMode.WALK));
       assertTrue(outgoingEdgeIsTraversableWith(viaOutgoing, TraverseMode.CAR));
       assertFalse(outgoingEdgeIsTraversableWith(viaOutgoing, TraverseMode.BICYCLE));
+    }
+  }
+
+  @Test
+  void verticesShouldInheritNamesFromLocations() {
+    try (var container = new TemporaryVerticesContainer();) {
+      var from = new GenericLocation("First", null, 0.5, 0.5);
+      var via = new GenericLocation("Second", null, 0.4, 0.6);
+      var to = new GenericLocation("Third", null, 0.6, 0.4);
+      var request = LinkingContextRequest.of()
+        .withFrom(from)
+        .withTo(to)
+        .withViaLocationsWithCoordinates(List.of(via))
+        .withDirectMode(StreetMode.WALK)
+        .build();
+      var locale = Locale.ENGLISH;
+      var subject = linkingContextFactory.create(container, request);
+
+      var fromVertex = subject.findVertices(from).iterator().next();
+      assertEquals("First", fromVertex.getName().toString(locale));
+
+      var viaVertex = subject.findVertices(via).iterator().next();
+      assertEquals("Second", viaVertex.getName().toString(locale));
+
+      var toVertex = subject.findVertices(to).iterator().next();
+      assertEquals("Third", toVertex.getName().toString(locale));
+    }
+  }
+
+  @Test
+  void verticesShouldHaveDefaultNames() {
+    try (var container = new TemporaryVerticesContainer();) {
+      var from = GenericLocation.fromCoordinate(0.5, 0.5);
+      var to = GenericLocation.fromCoordinate(0.6, 0.4);
+      var via = GenericLocation.fromCoordinate(0.4, 0.6);
+      var request = LinkingContextRequest.of()
+        .withFrom(from)
+        .withTo(to)
+        .withViaLocationsWithCoordinates(List.of(via))
+        .withDirectMode(StreetMode.WALK)
+        .build();
+      var locale = Locale.ENGLISH;
+      var subject = linkingContextFactory.create(container, request);
+
+      var fromVertex = subject.findVertices(from).iterator().next();
+      assertEquals("Origin", fromVertex.getName().toString(locale));
+
+      var toVertex = subject.findVertices(to).iterator().next();
+      assertEquals("Destination", toVertex.getName().toString(locale));
+
+      var viaVertex = subject.findVertices(via).iterator().next();
+      assertEquals("Via location", viaVertex.getName().toString(locale));
     }
   }
 
