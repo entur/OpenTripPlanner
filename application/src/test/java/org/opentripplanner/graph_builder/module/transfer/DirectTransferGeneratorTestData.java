@@ -160,7 +160,7 @@ class DirectTransferGeneratorTestData extends GraphRoutingTest {
         tripPattern(
           TripPattern.of(TimetableRepositoryForTest.id("TP0"))
             .withRoute(route("R0", TransitMode.RAIL, agency))
-            .withStopPattern(new StopPattern(List.of(st(S0), st(S_FAR_AWAY))))
+            .withStopPattern(new StopPattern(List.of(st(S_FAR_AWAY), st(S0))))
             .build()
         );
         tripPattern(

@@ -3,6 +3,7 @@ package org.opentripplanner.graph_builder.module.transfer.filter;
 import java.util.Collection;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.TransitService;
 
 class FlexTripNearbyStopFilter implements NearbyStopFilter {
@@ -11,6 +12,12 @@ class FlexTripNearbyStopFilter implements NearbyStopFilter {
 
   FlexTripNearbyStopFilter(TransitService transitService) {
     this.transitService = transitService;
+  }
+
+  @Override
+  public boolean includeFromStop(FeedScopedId id, boolean reverseDirection) {
+    var stop = transitService.getStopLocation(id);
+    return !transitService.getFlexIndex().getFlexTripsByStop(stop).isEmpty();
   }
 
   @Override

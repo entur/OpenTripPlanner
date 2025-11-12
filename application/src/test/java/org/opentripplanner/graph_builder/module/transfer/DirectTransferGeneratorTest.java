@@ -101,23 +101,15 @@ class DirectTransferGeneratorTest {
 
     // Exactly one transfer is expected from each stop to the closest place to board all
     // patterns, including the same pattern used by the stop (E.g. S12 - S11).
+    // S11, S13, S21, S23 -> *   No patterns alight here
+    // * -> S0, S12, S13, S23    No patterns board here
     assertEquals(
       """
        S0 - S11, 1668m
        S0 - S21, 1829m
-      S11 -  S0, 1668m
-      S11 - S21, 751m
-      S12 -  S0, 3892m
       S12 - S11, 2224m
       S12 - S22, 751m
-      S13 - S11, 4448m
-      S13 - S22, 2347m
-      S21 -  S0, 1829m
-      S21 - S11, 751m
-      S22 -  S0, 3964m
-      S22 - S11, 2347m
-      S23 - S11, 4511m
-      S23 - S22, 2224m""",
+      S22 - S11, 2347m""",
       pathToString(repository.getAllPathTransfers())
     );
   }
@@ -131,17 +123,12 @@ class DirectTransferGeneratorTest {
       .build();
 
     assertEquals(
-      // * - S11 is not allowed, because of boarding constraints
+      // * -> S11 is not allowed, because of boarding constraints
+      // S11, S13, S21 -> *   No patterns alight here
+      // * -> S0, S12, S23    No patterns board here
       """
        S0 - S21, 1829m
-      S11 -  S0, 1668m
-      S11 - S21, 751m
-      S12 -  S0, 3892m
-      S12 - S22, 751m
-      S13 - S22, 2347m
-      S21 -  S0, 1829m
-      S22 -  S0, 3964m
-      S23 - S22, 2224m""",
+      S12 - S22, 751m""",
       pathToString(repository.getAllPathTransfers())
     );
   }
@@ -165,6 +152,7 @@ class DirectTransferGeneratorTest {
         .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
         .build();
 
+      // All transfers reachable in the street graph is included.
       assertEquals(
         """
          S0 - S11, 100m
@@ -195,13 +183,14 @@ class DirectTransferGeneratorTest {
       .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
       .build();
 
+    // Best transfers between patterns; Hence S0 - S22 removed
+    // S11, S13, S21 -> *   No patterns alight here
+    // * -> S0, S12, S23    No patterns board here
     assertEquals(
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S21, 100m
-      S12 - S22, 110m
-      S13 - S22, 210m""",
+      S12 - S22, 110m""",
       pathToString(repository.getAllPathTransfers())
     );
   }
@@ -215,13 +204,15 @@ class DirectTransferGeneratorTest {
         .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
         .build();
 
+      // Best transfers between patterns; Hence S0 - S22 removed
+      // S11, S21 -> *   No patterns alight here
+      // * -> S0, S12    No patterns board here
+      // S13, S23        Included, used real-time
       assertEquals(
         """
          S0 - S11, 100m
          S0 - S21, 100m
          S0 - S23, 300m
-        S11 - S21, 100m
-        S11 - S23, 210m
         S12 - S22, 110m
         S12 - S23, 210m
         S13 - S22, 210m
@@ -244,34 +235,46 @@ class DirectTransferGeneratorTest {
     var bikeTransfers = repository.findTransfers(StreetMode.BIKE);
     var carTransfers = repository.findTransfers(StreetMode.CAR);
 
-    String expected =
+    // Best transfers between patterns; Hence S0 - S22 removed
+    // S11, S13, S21 -> *   No patterns alight here
+    // * -> S0, S12, S23    No patterns board here
+    String expectedWalkAndBike =
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S21, 100m
-      S12 - S22, 110m
-      S13 - S22, 210m""";
-    assertEquals(expected, pathToString(walkTransfers));
-    assertEquals(expected, pathToString(bikeTransfers));
+      S12 - S22, 110m""";
+    assertEquals(expectedWalkAndBike, pathToString(walkTransfers));
+    assertEquals(expectedWalkAndBike, pathToString(bikeTransfers));
     assertEquals("<Empty>", pathToString(carTransfers));
   }
 
   @Test
   public void testStreetTransfersWithStationWithTransfersNotAllowed() {
-    var repository = DirectTransferGeneratorTestData.of()
-      .withPatterns()
-      .withStreetGraph()
-      .withNoTransfersOnStationA()
-      .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
-      .build();
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+      var repository = DirectTransferGeneratorTestData.of()
+        .withPatterns()
+        .withStreetGraph()
+        .withNoTransfersOnStationA()
+        .withTransferRequests(REQUEST_WITH_WALK_TRANSFER)
+        .build();
 
-    assertEquals(
-      """
-       S0 - S22, 200m
-      S12 - S22, 110m
-      S13 - S22, 210m""",
-      pathToString(repository.getAllPathTransfers())
-    );
+      // Best transfers between patterns; Hence S0 - S22 removed
+      // S11, S13, S21 -> *   No patterns alight here
+      // * -> S0, S12, S23    No patterns board here
+      // Not:   S11, S21      Transfers NOT_ALLOWED for station
+      // Allow: S13, S23      Included, used real-time
+      assertEquals(
+        """
+         S0 - S22, 200m
+         S0 - S23, 300m
+        S12 - S22, 110m
+        S12 - S23, 210m
+        S13 - S22, 210m
+        S13 - S23, 310m
+        S22 - S23, 100m""",
+        pathToString(repository.getAllPathTransfers())
+      );
+    });
   }
 
   @Test

@@ -7,6 +7,7 @@ import org.opentripplanner.graph_builder.module.nearbystops.NearbyStopFinder;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.service.TransitService;
 
@@ -36,6 +37,17 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
     StreetRequest streetRequest,
     boolean reverseDirection
   ) {
+    if (!(vertex instanceof TransitStopVertex stopVertex)) {
+      throw new IllegalArgumentException(
+        "Transfers can only be created between stops. Vertex: " + vertex
+      );
+    }
+
+    // Check if the from stop can be used in a transfer
+    if (!filter.includeFromStop(stopVertex.getId(), reverseDirection)) {
+      return List.of();
+    }
+
     // fetch nearby stops via the street network or using straight-line distance.
     var nearbyStops = delegateNearbyStopFinder.findNearbyStops(
       vertex,

@@ -91,10 +91,7 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
        S0 - S11, 100m
        S0 - S21, 100m
        S0 - S22, 200m
-      S11 - S21, 100m
-      S11 - S22, 110m
-      S12 - S22, 110m
-      S13 - S22, 210m""";
+      S12 - S22, 110m""";
     assertEquals(
       expected_walk_bike_results,
       pathToString(repository.findTransfers(StreetMode.WALK))
@@ -128,10 +125,7 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
        S0 - S11, 100m
        S0 - S21, 100m
        S0 - S22, 200m
-      S11 - S21, 100m
-      S11 - S22, 110m
-      S12 - S22, 110m
-      S13 - S22, 210m""",
+      S12 - S22, 110m""",
       pathToString(repository.getAllPathTransfers())
     );
   }
@@ -148,8 +142,6 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S21, 100m
-      S11 - S22, 110m
       S12 - S22, 110m""",
       pathToString(repository.getAllPathTransfers())
     );
@@ -181,10 +173,7 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
        S0 - S11, 100m
        S0 - S21, 100m
        S0 - S22, 200m
-      S11 - S21, 100m
-      S11 - S22, 110m
-      S12 - S22, 110m
-      S13 - S22, 210m""",
+      S12 - S22, 110m""",
       pathToString(repository.findTransfers(StreetMode.WALK))
     );
 
@@ -215,16 +204,13 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
       """
        S0 - S11, 100m
        S0 - S21, 100m
-      S11 - S21, 100m
-      S11 - S22, 110m
       S12 - S22, 110m""",
       pathToString(repository.findTransfers(StreetMode.WALK))
     );
     assertEquals(
       """
-       S0 - S11, 100m
-       S0 - S21, 100m
-      S11 - S21, 100m""",
+      S0 - S11, 100m
+      S0 - S21, 100m""".indent(1).stripTrailing(),
       pathToString(repository.findTransfers(StreetMode.BIKE))
     );
     assertEquals("<Empty>", pathToString(repository.findTransfers(StreetMode.CAR)));

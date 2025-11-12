@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class CompositeNearbyStopFilter implements NearbyStopFilter {
 
@@ -17,6 +18,16 @@ class CompositeNearbyStopFilter implements NearbyStopFilter {
 
   static Builder of() {
     return new Builder();
+  }
+
+  @Override
+  public boolean includeFromStop(FeedScopedId id, boolean reverseDirection) {
+    for (NearbyStopFilter filter : filters) {
+      if (filter.includeFromStop(id, reverseDirection)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override

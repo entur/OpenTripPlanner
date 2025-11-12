@@ -21,6 +21,13 @@ class PatternNearbyStopFilter implements NearbyStopFilter {
   }
 
   @Override
+  public boolean includeFromStop(FeedScopedId id, boolean reverseDirection) {
+    var stop = transitService.getRegularStop(id);
+    boolean hasPatterns = !findPatternsForStop(stop, !reverseDirection).isEmpty();
+    return hasPatterns || includeStopUsedRealtime(stop);
+  }
+
+  @Override
   public Collection<NearbyStop> filterToStops(
     Collection<NearbyStop> nearbyStops,
     boolean reverseDirection
