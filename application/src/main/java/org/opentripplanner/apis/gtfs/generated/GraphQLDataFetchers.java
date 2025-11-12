@@ -650,7 +650,7 @@ public class GraphQLDataFetchers {
   }
 
   /**
-   * A group of fixed stops that is visited in an arbitrary order.
+   * A group of fixed stops that are visited in an arbitrary order.
    *
    * This is mostly used by demand-responsive services.
    */
