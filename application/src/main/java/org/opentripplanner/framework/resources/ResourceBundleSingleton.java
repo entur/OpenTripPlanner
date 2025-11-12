@@ -20,6 +20,7 @@ public enum ResourceBundleSingleton {
     "unnamedStreet",
     "origin",
     "destination",
+    "via_location",
     "partOf",
     "price.free",
     "price.startMain",
