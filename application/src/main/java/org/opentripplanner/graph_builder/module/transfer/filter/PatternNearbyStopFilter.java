@@ -66,7 +66,7 @@ class PatternNearbyStopFilter implements NearbyStopFilter {
     return transitService
       .findPatterns(stop)
       .stream()
-      .filter(reverseDirection ? p -> p.canAlight(stop) : p -> p.canBoard(stop))
+      .filter(reverseDirection ? p -> p.alightingExist(stop) : p -> p.boardingExist(stop))
       .map(TripPattern::getId)
       .toList();
   }

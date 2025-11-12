@@ -66,13 +66,13 @@ class StopPatternTest {
       )
     );
 
-    assertFalse(stopPattern.canAlight(s1), "Alight is not allowed on the first stop!");
-    assertTrue(stopPattern.canAlight(s2));
-    assertTrue(stopPattern.canAlight(s3));
+    assertFalse(stopPattern.alightingExist(s1), "Alight is not allowed on the first stop!");
+    assertTrue(stopPattern.alightingExist(s2));
+    assertTrue(stopPattern.alightingExist(s3));
 
-    assertTrue(stopPattern.canBoard(s1));
-    assertTrue(stopPattern.canBoard(s2));
-    assertFalse(stopPattern.canBoard(s3), "Boarding is not allowed on the last stop!");
+    assertTrue(stopPattern.boardingExist(s1));
+    assertTrue(stopPattern.boardingExist(s2));
+    assertFalse(stopPattern.boardingExist(s3), "Boarding is not allowed on the last stop!");
   }
 
   @Test
