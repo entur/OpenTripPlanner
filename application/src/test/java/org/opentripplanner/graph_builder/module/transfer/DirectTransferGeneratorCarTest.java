@@ -1,65 +1,19 @@
 package org.opentripplanner.graph_builder.module.transfer;
 
-import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.opentripplanner.graph_builder.module.transfer.PathTransferToString.pathToString;
 
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
-import org.opentripplanner.TestOtpModel;
-import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.TransferParameters;
-import org.opentripplanner.model.PathTransfer;
-import org.opentripplanner.model.StopTime;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.graphfinder.StopResolver;
-import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.street.model.vertex.StreetVertex;
-import org.opentripplanner.street.model.vertex.TransitStopVertex;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.network.BikeAccess;
-import org.opentripplanner.transit.model.network.CarAccess;
-import org.opentripplanner.transit.model.network.Route;
-import org.opentripplanner.transit.model.network.StopPattern;
-import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.site.Station;
-import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
-import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-/**
- * This creates a graph with trip patterns
- <pre>
-  S0 -  V0 ------------
-        |     \       |
- S11 - V11 --------> V21 - S21
-        |      \      |
- S12 - V12 --------> V22 - V22
-        |             |
- S13 - V13 --------> V23 - V23
- </pre>
- */
 class DirectTransferGeneratorCarTest extends GraphRoutingTest {
 
-  private static final Duration MAX_TRANSFER_DURATION = Duration.ofHours(1);
   private static final RouteRequest REQUEST_WITH_WALK_TRANSFER = RouteRequest.defaultValue();
   private static final RouteRequest REQUEST_WITH_BIKE_TRANSFER = RouteRequest.of()
     .withJourney(jb -> jb.withTransfer(new StreetRequest(StreetMode.BIKE)))
@@ -68,542 +22,220 @@ class DirectTransferGeneratorCarTest extends GraphRoutingTest {
     .withJourney(jb -> jb.withTransfer(new StreetRequest(StreetMode.CAR)))
     .buildDefault();
 
-  private TransitStopVertex S0, S11, S12, S13, S21, S22, S23;
-  private StreetVertex V0, V11, V12, V13, V21, V22, V23;
-
   @Test
   public void testRequestWithCarsAllowedPatterns() {
-    var transferRequests = List.of(REQUEST_WITH_CAR_TRANSFER);
+    OTPFeature.ConsiderPatternsForDirectTransfers.testOff(() -> {
+      var transferParameters = new TransferParameters.Builder()
+        .withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(60))
+        .withDisableDefaultTransfers(true)
+        .build();
 
-    var otpModel = model(false);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
+      var repository = testDataWithStreetFraphAndPatterns()
+        .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+        .withTransferRequests(REQUEST_WITH_CAR_TRANSFER)
+        .addTransferParameters(StreetMode.CAR, transferParameters)
+        .build();
 
-    var transferParametersBuilder = new TransferParameters.Builder();
-    transferParametersBuilder.withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(60));
-    transferParametersBuilder.withDisableDefaultTransfers(true);
-    Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
-    transferParametersForMode.put(StreetMode.CAR, transferParametersBuilder.build());
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      MAX_TRANSFER_DURATION,
-      transferRequests,
-      transferParametersForMode
-    ).buildGraph();
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 200, List.of(V0, V12), S12)
-    );
+      assertEquals(
+        """
+         S0 - S12, 200m
+         S0 - S22, 200m
+         S0 - S23, 300m
+        S12 - S22, 110m
+        S12 - S23, 210m
+        S22 - S23, 100m""",
+        pathToString(repository.getAllPathTransfers())
+      );
+    });
   }
 
   @Test
   public void testRequestWithCarsAllowedPatternsWithDurationLimit() {
-    var transferRequests = List.of(REQUEST_WITH_CAR_TRANSFER);
+    var transferParameters = new TransferParameters.Builder()
+      .withCarsAllowedStopMaxTransferDuration(Duration.ofSeconds(10))
+      .withDisableDefaultTransfers(true)
+      .build();
 
-    var otpModel = model(false);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
+    var repository = testDataWithStreetFraphAndPatterns()
+      .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+      .withTransferRequests(REQUEST_WITH_CAR_TRANSFER)
+      .addTransferParameters(StreetMode.CAR, transferParameters)
+      .build();
 
-    TransferParameters.Builder transferParametersBuilder = new TransferParameters.Builder();
-    transferParametersBuilder.withCarsAllowedStopMaxTransferDuration(Duration.ofSeconds(10));
-    transferParametersBuilder.withDisableDefaultTransfers(true);
-    Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
-    transferParametersForMode.put(StreetMode.CAR, transferParametersBuilder.build());
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      MAX_TRANSFER_DURATION,
-      transferRequests,
-      transferParametersForMode
-    ).buildGraph();
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 100, List.of(V0, V11), S11)
+    assertEquals(
+      """
+      S12 - S22, 110m""",
+      pathToString(repository.getAllPathTransfers())
     );
   }
 
   @Test
   public void testMultipleRequestsWithPatternsAndWithCarsAllowedPatterns() {
-    var transferRequests = List.of(
-      REQUEST_WITH_WALK_TRANSFER,
-      REQUEST_WITH_BIKE_TRANSFER,
-      REQUEST_WITH_CAR_TRANSFER
+    var transferParameters = new TransferParameters.Builder()
+      .withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(60))
+      .withDisableDefaultTransfers(true)
+      .build();
+
+    var repository = testDataWithStreetFraphAndPatterns()
+      .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+      .withTransferRequests(
+        REQUEST_WITH_WALK_TRANSFER,
+        REQUEST_WITH_BIKE_TRANSFER,
+        REQUEST_WITH_CAR_TRANSFER
+      )
+      .addTransferParameters(StreetMode.CAR, transferParameters)
+      .build();
+
+    String expected_walk_bike_results =
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+       S0 - S22, 200m
+      S11 - S21, 100m
+      S11 - S22, 110m
+      S12 - S22, 110m
+      S13 - S22, 210m""";
+    assertEquals(
+      expected_walk_bike_results,
+      pathToString(repository.findTransfers(StreetMode.WALK))
     );
-
-    var otpModel = model(true);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
-
-    TransferParameters.Builder transferParametersBuilder = new TransferParameters.Builder();
-    transferParametersBuilder.withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(60));
-    transferParametersBuilder.withDisableDefaultTransfers(true);
-    Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
-    transferParametersForMode.put(StreetMode.CAR, transferParametersBuilder.build());
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      MAX_TRANSFER_DURATION,
-      transferRequests,
-      transferParametersForMode
-    ).buildGraph();
-
-    var walkTransfers = timetableRepository.findTransfers(StreetMode.WALK);
-    var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
-    var carTransfers = timetableRepository.findTransfers(StreetMode.CAR);
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      walkTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 100, List.of(V11, V21), S21),
-      tr(resolver, S0, 200, List.of(V0, V12), S12),
-      tr(resolver, S11, 100, List.of(V11, V12), S12)
+    assertEquals(
+      expected_walk_bike_results,
+      pathToString(repository.findTransfers(StreetMode.BIKE))
     );
-    assertTransfers(
-      bikeTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 110, List.of(V11, V22), S22),
-      tr(resolver, S0, 200, List.of(V0, V12), S12),
-      tr(resolver, S11, 100, List.of(V11, V12), S12)
-    );
-    assertTransfers(
-      carTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 200, List.of(V0, V12), S12),
-      tr(resolver, S0, 100, List.of(V0, V21), S21)
+    assertEquals(
+      """
+       S0 - S22, 200m
+      S12 - S22, 110m""",
+      pathToString(repository.findTransfers(StreetMode.CAR))
     );
   }
 
   @Test
   public void testBikeRequestWithPatternsAndWithCarsAllowedPatterns() {
-    var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
+    var transferParameters = new TransferParameters.Builder()
+      .withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(120))
+      .build();
 
-    var otpModel = model(true);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
+    var repository = testDataWithStreetFraphAndPatterns()
+      .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+      .withTransferRequests(REQUEST_WITH_BIKE_TRANSFER)
+      .addTransferParameters(StreetMode.BIKE, transferParameters)
+      .build();
 
-    TransferParameters.Builder transferParametersBuilder = new TransferParameters.Builder();
-    transferParametersBuilder.withCarsAllowedStopMaxTransferDuration(Duration.ofMinutes(120));
-    Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
-    transferParametersForMode.put(StreetMode.BIKE, transferParametersBuilder.build());
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      Duration.ofSeconds(30),
-      transferRequests,
-      transferParametersForMode
-    ).buildGraph();
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S0, 200, List.of(V0, V12), S12),
-      tr(resolver, S11, 110, List.of(V11, V22), S22),
-      tr(resolver, S11, 100, List.of(V11, V12), S12)
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+       S0 - S22, 200m
+      S11 - S21, 100m
+      S11 - S22, 110m
+      S12 - S22, 110m
+      S13 - S22, 210m""",
+      pathToString(repository.getAllPathTransfers())
     );
   }
 
   @Test
   public void testBikeRequestWithPatternsAndWithCarsAllowedPatternsWithoutCarInTransferRequests() {
-    var transferRequests = List.of(REQUEST_WITH_BIKE_TRANSFER);
+    var repository = testDataWithStreetFraphAndPatterns()
+      .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+      .withMaxTransferDuration(Duration.ofSeconds(30))
+      .withTransferRequests(REQUEST_WITH_BIKE_TRANSFER)
+      .build();
 
-    var otpModel = model(true);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      Duration.ofSeconds(30),
-      transferRequests
-    ).buildGraph();
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      timetableRepository.getAllPathTransfers(),
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 110, List.of(V11, V22), S22)
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+      S11 - S21, 100m
+      S11 - S22, 110m
+      S12 - S22, 110m""",
+      pathToString(repository.getAllPathTransfers())
     );
   }
 
   @Test
   public void testDisableDefaultTransfersForMode() {
-    var transferRequests = List.of(
-      REQUEST_WITH_WALK_TRANSFER,
-      REQUEST_WITH_BIKE_TRANSFER,
-      REQUEST_WITH_CAR_TRANSFER
+    var transferParametersBuilderBike = new TransferParameters.Builder()
+      .withDisableDefaultTransfers(true)
+      .build();
+
+    var transferParametersBuilderCar = new TransferParameters.Builder()
+      .withDisableDefaultTransfers(true)
+      .build();
+
+    var repository = testDataWithStreetFraphAndPatterns()
+      .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+      .withTransferRequests(
+        REQUEST_WITH_WALK_TRANSFER,
+        REQUEST_WITH_BIKE_TRANSFER,
+        REQUEST_WITH_CAR_TRANSFER
+      )
+      .addTransferParameters(StreetMode.BIKE, transferParametersBuilderBike)
+      .addTransferParameters(StreetMode.CAR, transferParametersBuilderCar)
+      .build();
+
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+       S0 - S22, 200m
+      S11 - S21, 100m
+      S11 - S22, 110m
+      S12 - S22, 110m
+      S13 - S22, 210m""",
+      pathToString(repository.findTransfers(StreetMode.WALK))
     );
 
-    var otpModel = model(true);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
+    assertEquals("<Empty>", pathToString(repository.findTransfers(StreetMode.BIKE)));
 
-    TransferParameters.Builder transferParametersBuilderBike = new TransferParameters.Builder();
-    transferParametersBuilderBike.withDisableDefaultTransfers(true);
-    TransferParameters.Builder transferParametersBuilderCar = new TransferParameters.Builder();
-    transferParametersBuilderCar.withDisableDefaultTransfers(true);
-    Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
-    transferParametersForMode.put(StreetMode.BIKE, transferParametersBuilderBike.build());
-    transferParametersForMode.put(StreetMode.CAR, transferParametersBuilderCar.build());
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      MAX_TRANSFER_DURATION,
-      transferRequests,
-      transferParametersForMode
-    ).buildGraph();
-
-    var walkTransfers = timetableRepository.findTransfers(StreetMode.WALK);
-    var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
-    var carTransfers = timetableRepository.findTransfers(StreetMode.CAR);
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      walkTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 100, List.of(V11, V21), S21),
-      tr(resolver, S0, 200, List.of(V0, V12), S12),
-      tr(resolver, S11, 100, List.of(V11, V12), S12)
-    );
-    assertTransfers(bikeTransfers);
-    assertTransfers(carTransfers);
+    assertEquals("<Empty>", pathToString(repository.findTransfers(StreetMode.CAR)));
   }
 
   @Test
   public void testMaxTransferDurationForMode() {
-    var transferRequests = List.of(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER);
-
-    var otpModel = model(true);
-    var graph = otpModel.graph();
-    graph.hasStreets = true;
-    var timetableRepository = otpModel.timetableRepository();
-
-    TransferParameters.Builder transferParametersBuilderWalk = new TransferParameters.Builder();
-    transferParametersBuilderWalk.withMaxTransferDuration(Duration.ofSeconds(100));
-    TransferParameters.Builder transferParametersBuilderBike = new TransferParameters.Builder();
-    transferParametersBuilderBike.withMaxTransferDuration(Duration.ofSeconds(21));
-    Map<StreetMode, TransferParameters> transferParametersForMode = new HashMap<>();
-    transferParametersForMode.put(StreetMode.WALK, transferParametersBuilderWalk.build());
-    transferParametersForMode.put(StreetMode.BIKE, transferParametersBuilderBike.build());
-
-    new DirectTransferGenerator(
-      graph,
-      timetableRepository,
-      DataImportIssueStore.NOOP,
-      MAX_TRANSFER_DURATION,
-      transferRequests,
-      transferParametersForMode
-    ).buildGraph();
-
-    var walkTransfers = timetableRepository.findTransfers(StreetMode.WALK);
-    var bikeTransfers = timetableRepository.findTransfers(StreetMode.BIKE);
-    var carTransfers = timetableRepository.findTransfers(StreetMode.CAR);
-
-    StopResolver resolver = timetableRepository.getSiteRepository()::getRegularStop;
-    assertTransfers(
-      walkTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21),
-      tr(resolver, S11, 100, List.of(V11, V21), S21),
-      tr(resolver, S11, 100, List.of(V11, V12), S12)
-    );
-    assertTransfers(
-      bikeTransfers,
-      tr(resolver, S0, 100, List.of(V0, V11), S11),
-      tr(resolver, S0, 100, List.of(V0, V21), S21)
-    );
-    assertTransfers(carTransfers);
-  }
-
-  private TestOtpModel model(boolean addPatterns) {
-    return modelOf(
-      new Builder() {
-        @Override
-        public void build() {
-          var station = stationEntity("1", s -> {});
-
-          S0 = stop("S0", b ->
-            b
-              .withCoordinate(47.495, 19.001)
-              .withParentStation(station)
-              .withVehicleType(TransitMode.RAIL)
-          );
-          S11 = stop("S11", 47.500, 19.001, station);
-          S12 = stop("S12", 47.520, 19.001, station);
-          S13 = stop("S13", 47.540, 19.001, station);
-          S21 = stop("S21", 47.500, 19.011, station);
-          S22 = stop("S22", 47.520, 19.011, station);
-          S23 = stop("S23", 47.540, 19.011, station);
-
-          V0 = intersection("V0", 47.495, 19.000);
-          V11 = intersection("V11", 47.500, 19.000);
-          V12 = intersection("V12", 47.510, 19.000);
-          V13 = intersection("V13", 47.520, 19.000);
-          V21 = intersection("V21", 47.500, 19.010);
-          V22 = intersection("V22", 47.510, 19.010);
-          V23 = intersection("V23", 47.520, 19.010);
-
-          biLink(V0, S0);
-          biLink(V11, S11);
-          biLink(V12, S12);
-          biLink(V13, S13);
-          biLink(V21, S21);
-          biLink(V22, S22);
-          biLink(V23, S23);
-
-          street(V0, V11, 100, StreetTraversalPermission.ALL);
-          street(V0, V12, 200, StreetTraversalPermission.ALL);
-          street(V0, V21, 100, StreetTraversalPermission.ALL);
-          street(V0, V22, 200, StreetTraversalPermission.ALL);
-
-          street(V11, V12, 100, StreetTraversalPermission.PEDESTRIAN);
-          street(V12, V13, 100, StreetTraversalPermission.PEDESTRIAN);
-          street(V21, V22, 100, StreetTraversalPermission.PEDESTRIAN);
-          street(V22, V23, 100, StreetTraversalPermission.PEDESTRIAN);
-          street(V11, V21, 100, StreetTraversalPermission.PEDESTRIAN);
-          street(V11, V22, 110, StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE);
-
-          if (addPatterns) {
-            var agency = TimetableRepositoryForTest.agency("Agency");
-
-            tripPattern(
-              TripPattern.of(TimetableRepositoryForTest.id("TP1"))
-                .withRoute(route("R1", TransitMode.BUS, agency))
-                .withStopPattern(new StopPattern(List.of(st(S11, true, true), st(S12), st(S13))))
-                .build()
-            );
-
-            tripPattern(
-              createTripPattern(
-                "TP2",
-                route("R2", TransitMode.BUS, agency),
-                List.of(st(S21), st(S22), st(S23)),
-                createBikesAllowedTrip(),
-                "00:00 01:00 02:00"
-              )
-            );
-          }
-
-          var agency = TimetableRepositoryForTest.agency("FerryAgency");
-
-          tripPattern(
-            createTripPattern(
-              "TP3",
-              route("R3", TransitMode.FERRY, agency),
-              List.of(st(S11), st(S21)),
-              createCarsAllowedTrip(),
-              "00:00 01:00"
-            )
-          );
-
-          tripPattern(
-            createTripPattern(
-              "TP4",
-              route("R4", TransitMode.FERRY, agency),
-              List.of(st(S0), st(S13)),
-              createCarsAllowedTrip(),
-              "00:00 01:00"
-            )
-          );
-
-          tripPattern(
-            createTripPattern(
-              "TP5",
-              route("R5", TransitMode.FERRY, agency),
-              List.of(st(S12), st(S22)),
-              createCarsAllowedTrip(),
-              "00:00 01:00"
-            )
-          );
-        }
-
-        private TransitStopVertex stop(String id, double lat, double lon, Station parentStation) {
-          return stop(id, b -> b.withCoordinate(lat, lon).withParentStation(parentStation));
-        }
-      }
-    );
-  }
-
-  private static TripPattern createTripPattern(
-    String id,
-    Route route,
-    List<StopTime> times,
-    Trip trip,
-    String schedule
-  ) {
-    return TripPattern.of(TimetableRepositoryForTest.id(id))
-      .withRoute(route)
-      .withStopPattern(new StopPattern(times))
-      .withScheduledTimeTableBuilder(builder ->
-        builder.addTripTimes(
-          ScheduledTripTimes.of().withTrip(trip).withDepartureTimes(schedule).build()
-        )
-      )
+    var transferParametersBuilderWalk = new TransferParameters.Builder()
+      .withMaxTransferDuration(Duration.ofSeconds(100))
       .build();
-  }
-
-  private static Trip createBikesAllowedTrip() {
-    return TimetableRepositoryForTest.trip("bikesAllowedTrip")
-      .withBikesAllowed(BikeAccess.ALLOWED)
+    var transferParametersBuilderBike = new TransferParameters.Builder()
+      .withMaxTransferDuration(Duration.ofSeconds(21))
       .build();
-  }
 
-  private static Trip createCarsAllowedTrip() {
-    return TimetableRepositoryForTest.trip("carsAllowedTrip")
-      .withCarsAllowed(CarAccess.ALLOWED)
+    var repository = DirectTransferGeneratorTestData.of()
+      .withPatterns()
+      .withStreetGraph()
+      .withCarFerrys_FARAWAY_S0_S12_and_S22_S23()
+      .withTransferRequests(REQUEST_WITH_WALK_TRANSFER, REQUEST_WITH_BIKE_TRANSFER)
+      .addTransferParameters(StreetMode.WALK, transferParametersBuilderWalk)
+      .addTransferParameters(StreetMode.BIKE, transferParametersBuilderBike)
       .build();
-  }
 
-  private void assertTransfers(
-    Collection<PathTransfer> allPathTransfers,
-    TransferDescriptor... transfers
-  ) {
-    var matchedTransfers = new HashSet<PathTransfer>();
-    var assertions = Stream.concat(
-      Arrays.stream(transfers).map(td -> td.matcher(allPathTransfers, matchedTransfers)),
-      Stream.of(allTransfersMatched(allPathTransfers, matchedTransfers))
+    assertEquals(
+      """
+       S0 - S11, 100m
+       S0 - S21, 100m
+      S11 - S21, 100m
+      S11 - S22, 110m
+      S12 - S22, 110m""",
+      pathToString(repository.findTransfers(StreetMode.WALK))
     );
-
-    assertAll(assertions);
-  }
-
-  private Executable allTransfersMatched(
-    Collection<PathTransfer> transfersByStop,
-    Set<PathTransfer> matchedTransfers
-  ) {
-    return () -> {
-      var missingTransfers = new HashSet<>(transfersByStop);
-      missingTransfers.removeAll(matchedTransfers);
-
-      assertEquals(Set.of(), missingTransfers, "All transfers matched");
-    };
-  }
-
-  private TransferDescriptor tr(
-    StopResolver resolver,
-    TransitStopVertex from,
-    double distance,
-    TransitStopVertex to
-  ) {
-    return new TransferDescriptor(
-      resolver.getStop(from.getId()),
-      distance,
-      resolver.getStop(to.getId())
+    assertEquals(
+      """
+         S0 - S11, 100m
+         S0 - S21, 100m
+        S11 - S21, 100m""",
+      pathToString(repository.findTransfers(StreetMode.BIKE))
     );
+    assertEquals("<Empty>", pathToString(repository.findTransfers(StreetMode.CAR)));
   }
 
-  private TransferDescriptor tr(
-    StopResolver resolver,
-    TransitStopVertex from,
-    double distance,
-    List<StreetVertex> vertices,
-    TransitStopVertex to
-  ) {
-    return new TransferDescriptor(resolver, from, distance, vertices, to);
-  }
-
-  private static class TransferDescriptor {
-
-    private final StopLocation from;
-    private final StopLocation to;
-    private final Double distanceMeters;
-    private final List<StreetVertex> vertices;
-
-    public TransferDescriptor(RegularStop from, Double distanceMeters, RegularStop to) {
-      this.from = from;
-      this.distanceMeters = distanceMeters;
-      this.vertices = null;
-      this.to = to;
-    }
-
-    public TransferDescriptor(
-      StopResolver resolver,
-      TransitStopVertex from,
-      Double distanceMeters,
-      List<StreetVertex> vertices,
-      TransitStopVertex to
-    ) {
-      this.from = resolver.getStop(from.getId());
-      this.distanceMeters = distanceMeters;
-      this.vertices = vertices;
-      this.to = resolver.getStop(to.getId());
-    }
-
-    @Override
-    public String toString() {
-      return ToStringBuilder.of(getClass())
-        .addObj("from", from)
-        .addObj("to", to)
-        .addNum("distanceMeters", distanceMeters)
-        .addCol("vertices", vertices)
-        .toString();
-    }
-
-    boolean matches(PathTransfer transfer) {
-      if (!Objects.equals(from, transfer.from) || !Objects.equals(to, transfer.to)) {
-        return false;
-      }
-
-      if (vertices == null) {
-        return distanceMeters == transfer.getDistanceMeters() && transfer.getEdges() == null;
-      } else {
-        var transferVertices = transfer
-          .getEdges()
-          .stream()
-          .map(Edge::getToVertex)
-          .filter(StreetVertex.class::isInstance)
-          .toList();
-
-        return (
-          distanceMeters == transfer.getDistanceMeters() &&
-          Objects.equals(vertices, transferVertices)
-        );
-      }
-    }
-
-    private Executable matcher(
-      Collection<PathTransfer> transfersByStop,
-      Set<PathTransfer> matchedTransfers
-    ) {
-      return () -> {
-        var matched = transfersByStop.stream().filter(this::matches).findFirst();
-
-        if (matched.isPresent()) {
-          assertTrue(true, "Found transfer for " + this);
-          matchedTransfers.add(matched.get());
-        } else {
-          fail("Missing transfer for " + this);
-        }
-      };
-    }
+  /**
+   * Testing Car Transfer Generation should be done with the street-graph and using the patterns
+   * for "tagging" stops with CAR_ALLOWED. Using "line-of-sight" street routing does not add much
+   * to this test. It is covered by the {@link DirectTransferGeneratorTest}.
+   */
+  private static DirectTransferGeneratorTestData testDataWithStreetFraphAndPatterns() {
+    return DirectTransferGeneratorTestData.of().withPatterns().withStreetGraph();
   }
 }
