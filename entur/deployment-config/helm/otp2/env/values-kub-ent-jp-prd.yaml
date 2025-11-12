@@ -55,7 +55,7 @@ configuration:
   empiricalDelay: false
   flexRouting: true
   floatingBike: true
-  gtfsGraphQlApi: true
+  gtfsGraphQlApi: false
   sorlandsbanen: true
   optimizeTransfers: true
   parallelRouting: false
