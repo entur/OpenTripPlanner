@@ -1,5 +1,6 @@
 package org.opentripplanner.model.fare;
 
+import java.io.Serializable;
 import java.util.Objects;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.utils.lang.Sandbox;
@@ -9,7 +10,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * Fare category like "Adult", "Student" or "Senior citizen".
  */
 @Sandbox
-public final class RiderCategory {
+public final class RiderCategory implements Serializable {
 
   private final FeedScopedId id;
   private final String name;
