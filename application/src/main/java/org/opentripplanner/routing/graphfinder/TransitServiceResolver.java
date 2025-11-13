@@ -6,6 +6,9 @@ import org.opentripplanner.transit.model.site.Entrance;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.TransitService;
 
+/**
+ * A small adapter for resolving site entities by ID from a {@link TransitService}.
+ */
 public class TransitServiceResolver implements SiteResolver {
 
   private final TransitService transitService;
