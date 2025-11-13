@@ -78,7 +78,7 @@ class FlexStopsMapper {
 
       Geometry flexibleAreaGeometry = mapGeometry(flexibleArea);
       if (flexibleAreaGeometry == null) {
-        // ignore invalid geometries
+        // ignore invalid geometries, issue already created
         continue;
       }
       areaGeometries.add(flexibleAreaGeometry);
