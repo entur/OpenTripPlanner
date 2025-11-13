@@ -695,11 +695,6 @@ public class GraphQLTypes {
     SHORTEST_DURATION,
   }
 
-  public enum GraphQLDefaultStatus {
-    DEFAULT,
-    NOT_DEFAULT,
-  }
-
   public static class GraphQLDepartureRowStoptimesArgs {
 
     private Integer numberOfDepartures;

@@ -2043,15 +2043,15 @@ type RideHailingProvider {
 
 "Category of riders a fare product applies to, for example students or pensioners."
 type RiderCategory {
+  "ID of the category"
+  id: String!
   """
   If this category is considered the "default" one. In most places this means "Adult" or
   "Regular".
   Frontends can use this property to display this category more prominently or pre-select this
   in a UI.
   """
-  defaultStatus: DefaultStatus!
-  "ID of the category"
-  id: String!
+  isDefault: Boolean!
   "Human readable name of the category."
   name: String
 }
@@ -3158,11 +3158,6 @@ enum CyclingOptimizationType {
   `QUICK`.
   """
   SHORTEST_DURATION
-}
-
-enum DefaultStatus {
-  DEFAULT
-  NOT_DEFAULT
 }
 
 """

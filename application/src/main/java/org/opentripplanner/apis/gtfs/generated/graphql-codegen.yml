@@ -136,5 +136,4 @@ config:
     CallSchedule: org.opentripplanner.apis.gtfs.model.CallSchedule#CallSchedule
     CallScheduledTime: org.opentripplanner.apis.gtfs.model.CallScheduledTime#CallScheduledTime
     RentalVehicleFuel: org.opentripplanner.service.vehiclerental.model.RentalVehicleFuel#RentalVehicleFuel
-    DefaultStatus: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLDefaultStatus#GraphQLDefaultStatus
 
