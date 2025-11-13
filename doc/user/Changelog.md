@@ -35,6 +35,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Added transit service validity dates and CPU cores to GraphQL ServerInfo and transitInfo [#6996](https://github.com/opentripplanner/OpenTripPlanner/pull/6996)
 - SIRI-ET updater via MQTT [#6851](https://github.com/opentripplanner/OpenTripPlanner/pull/6851)
 - Support for ETag and If-Not-Modified in GBFS updater [#6963](https://github.com/opentripplanner/OpenTripPlanner/pull/6963)
+- Visualize elevator edges and vertices in Debug UI [#6885](https://github.com/opentripplanner/OpenTripPlanner/pull/6885)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)

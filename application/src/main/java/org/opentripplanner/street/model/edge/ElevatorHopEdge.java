@@ -1,5 +1,7 @@
 package org.opentripplanner.street.model.edge;
 
+import java.time.Duration;
+import java.util.Optional;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -97,8 +99,19 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
     return permission;
   }
 
-  public int getTravelTime() {
-    return travelTime;
+  /**
+   * The number of levels that the elevator travels
+   */
+  public double getLevels() {
+    return levels;
+  }
+
+  /**
+   * Returns the travel time of the elevator.
+   * If travelTime is 0, returns an empty Optional.
+   */
+  public Optional<Duration> getTravelTime() {
+    return travelTime > 0 ? Optional.of(Duration.ofSeconds(travelTime)) : Optional.empty();
   }
 
   @Override

@@ -1,9 +1,9 @@
 package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.graph_builder.module.osm.moduletests._support.NodeBuilder.node;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
@@ -28,7 +28,7 @@ class ElevatorTest {
     var edges = graph.getEdgesOfType(ElevatorHopEdge.class);
     assertThat(edges).hasSize(2);
     for (var edge : edges) {
-      assertEquals(62, edge.getTravelTime());
+      assertThat(edge.getTravelTime()).hasValue(Duration.ofSeconds(62));
     }
   }
 
@@ -51,7 +51,7 @@ class ElevatorTest {
     var edges = graph.getEdgesOfType(ElevatorHopEdge.class);
     assertThat(edges).hasSize(2);
     for (var edge : edges) {
-      assertEquals(62, edge.getTravelTime());
+      assertThat(edge.getTravelTime()).hasValue(Duration.ofSeconds(62));
     }
   }
 }
