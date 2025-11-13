@@ -1501,13 +1501,16 @@ type TripSearchData {
   **Merging results from multiple searches**
   
   Trips from separate searches (multiple OTP calls or other search engines) can be merged
-  into the current page/result set if all of the following conditions are met:
-  - The candidate trip departure time is between `pageDepartureTimeStart` and
-    `pageDepartureTimeEnd`
-  - Either the current page is empty
+  into the current page/result set if the following conditions are met:
+  - The page is empty and the candidate trip departure time is between
+    `pageDepartureTimeStart` and `pageDepartureTimeEnd`, or
   - The candidate trip sorts before the last trip in the current page(if trips exists).
   
   If the trip sorts after the last trip, it should be merged into the next page instead.
+  Note that the sort order is diffrent for arrive-by and depart-after search. The sort
+  vector is:
+  - Depart-after: _departure-time_ → _generalized-cost_ → _number-of-transfers_ → _arrival-time_
+  - Arrive-by: _arrival-time_ → _generalized-cost_ → _number-of-transfers_ → _departure-time_
   
   **Special case for arrive-by searches:** For the first request (no paging cursor used)
   with `arriveBy=true`, the `pageDepartureTimeEnd` can be ignored - trips departing after
