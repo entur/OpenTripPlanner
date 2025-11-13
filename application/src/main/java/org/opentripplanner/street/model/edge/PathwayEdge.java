@@ -29,7 +29,6 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
   private final double distance;
   private final int steps;
   private final double slope;
-  private final PathwayMode mode;
 
   private final boolean wheelchairAccessible;
 
@@ -41,8 +40,7 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
     double distance,
     int steps,
     double slope,
-    boolean wheelchairAccessible,
-    PathwayMode mode
+    boolean wheelchairAccessible
   ) {
     super(fromv, tov);
     this.signpostedAs = signpostedAs;
@@ -51,7 +49,6 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
     this.slope = slope;
     this.wheelchairAccessible = wheelchairAccessible;
     this.distance = distance;
-    this.mode = mode;
   }
 
   /**
@@ -95,8 +92,7 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
         distance,
         steps,
         slope,
-        wheelchairAccessible,
-        mode
+        wheelchairAccessible
       )
     );
   }
@@ -197,10 +193,6 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
   @Override
   public boolean isWheelchairAccessible() {
     return wheelchairAccessible;
-  }
-
-  public PathwayMode getMode() {
-    return mode;
   }
 
   private boolean isStairs() {
