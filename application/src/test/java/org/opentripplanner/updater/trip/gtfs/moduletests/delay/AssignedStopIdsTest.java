@@ -1,6 +1,5 @@
 package org.opentripplanner.updater.trip.gtfs.moduletests.delay;
 
-import static com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,7 +20,6 @@ import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
-import org.opentripplanner.updater.trip.TripUpdateBuilder;
 
 /**
  * Tests updating and reverting the stops/platforms for existing trips.
@@ -61,7 +59,8 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertEquals(List.of("F:Pattern1"), routingTripPatternIdsForDate(env));
 
     var rt = GtfsRtTestHelper.of(env);
-    var tripUpdate1 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate1 = rt
+      .tripUpdateScheduled(TRIP_1_ID)
       .addAssignedStopTime(0, "09:50:00", STOP_D_ID)
       .addStopTime(1, "10:01:00")
       .addStopTime(2, "10:02:00")
@@ -75,7 +74,8 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertTrue(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertEquals(List.of("F:Route1::rt#1"), routingTripPatternIdsForDate(env));
 
-    var tripUpdate2 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate2 = rt
+      .tripUpdateScheduled(TRIP_1_ID)
       .addAssignedStopTime(0, "09:55:00", STOP_E_ID)
       .addStopTime(1, "10:01:00")
       .addStopTime(2, "10:02:00")
@@ -89,7 +89,8 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertTrue(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertEquals(List.of("F:Route1::rt#2"), routingTripPatternIdsForDate(env));
 
-    var tripUpdate3 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate3 = rt
+      .tripUpdateScheduled(TRIP_1_ID)
       .addAssignedStopTime(0, "10:01:00", STOP_A_ID)
       .addStopTime(1, "10:02:00")
       .addStopTime(2, "10:03:00")
@@ -115,11 +116,13 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertEquals(List.of("F:Pattern1"), routingTripPatternIdsForDate(env));
 
     var rt = GtfsRtTestHelper.of(env);
-    var tripUpdate1 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate1 = rt
+      .tripUpdateScheduled(TRIP_1_ID)
       .addAssignedStopTime(0, "10:01", STOP_E_ID)
       .build();
 
-    var tripUpdate2 = new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate2 = rt
+      .tripUpdateScheduled(TRIP_2_ID)
       .addAssignedStopTime(0, "11:01", STOP_E_ID)
       .build();
 
@@ -165,12 +168,8 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertSuccess(
       rt.applyTripUpdates(
         List.of(
-          new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
-            .addDelayedStopTime(0, 0)
-            .build(),
-          new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
-            .addDelayedStopTime(0, 0)
-            .build()
+          rt.tripUpdateScheduled(TRIP_1_ID).addDelayedStopTime(0, 0).build(),
+          rt.tripUpdateScheduled(TRIP_2_ID).addDelayedStopTime(0, 0).build()
         )
       )
     );
@@ -196,17 +195,21 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertEquals(List.of("F:Pattern1"), routingTripPatternIdsForDate(env, SERVICE_DATE_PLUS));
 
     var rt = GtfsRtTestHelper.of(env);
-    var tripUpdate11 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate11 = rt
+      .tripUpdateScheduled(TRIP_1_ID, SERVICE_DATE)
       .addAssignedStopTime(0, "10:01", STOP_E_ID)
       .build();
-    var tripUpdate12 = new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate12 = rt
+      .tripUpdateScheduled(TRIP_2_ID, SERVICE_DATE)
       .addAssignedStopTime(0, "11:01", STOP_E_ID)
       .build();
 
-    var tripUpdate21 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE_PLUS, SCHEDULED, TIME_ZONE)
+    var tripUpdate21 = rt
+      .tripUpdateScheduled(TRIP_1_ID, SERVICE_DATE_PLUS)
       .addAssignedStopTime(0, "10:01", STOP_E_ID)
       .build();
-    var tripUpdate22 = new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE_PLUS, SCHEDULED, TIME_ZONE)
+    var tripUpdate22 = rt
+      .tripUpdateScheduled(TRIP_2_ID, SERVICE_DATE_PLUS)
       .addAssignedStopTime(0, "11:01", STOP_E_ID)
       .build();
 
@@ -299,18 +302,10 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertSuccess(
       rt.applyTripUpdates(
         List.of(
-          new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
-            .addDelayedStopTime(0, 0)
-            .build(),
-          new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
-            .addDelayedStopTime(0, 0)
-            .build(),
-          new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE_PLUS, SCHEDULED, TIME_ZONE)
-            .addDelayedStopTime(0, 0)
-            .build(),
-          new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE_PLUS, SCHEDULED, TIME_ZONE)
-            .addDelayedStopTime(0, 0)
-            .build()
+          rt.tripUpdateScheduled(TRIP_1_ID, SERVICE_DATE).addDelayedStopTime(0, 0).build(),
+          rt.tripUpdateScheduled(TRIP_2_ID, SERVICE_DATE).addDelayedStopTime(0, 0).build(),
+          rt.tripUpdateScheduled(TRIP_1_ID, SERVICE_DATE_PLUS).addDelayedStopTime(0, 0).build(),
+          rt.tripUpdateScheduled(TRIP_2_ID, SERVICE_DATE_PLUS).addDelayedStopTime(0, 0).build()
         )
       )
     );
@@ -335,13 +330,9 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertEquals(List.of("F:Pattern1"), routingTripPatternIdsForDate(env));
 
     var rt = GtfsRtTestHelper.of(env);
-    var tripUpdate1 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
-      .addDelayedStopTime(0, 60)
-      .build();
+    var tripUpdate1 = rt.tripUpdateScheduled(TRIP_1_ID).addDelayedStopTime(0, 60).build();
 
-    var tripUpdate2 = new TripUpdateBuilder(TRIP_2_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
-      .addDelayedStopTime(0, 60)
-      .build();
+    var tripUpdate2 = rt.tripUpdateScheduled(TRIP_2_ID).addDelayedStopTime(0, 60).build();
 
     assertSuccess(rt.applyTripUpdate(tripUpdate1));
     assertEquals(
@@ -389,11 +380,13 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertEquals(List.of("F:Pattern1"), routingTripPatternIdsForDate(env, SERVICE_DATE_PLUS));
 
     var rt = GtfsRtTestHelper.of(env);
-    var tripUpdate1 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE, SCHEDULED, TIME_ZONE)
+    var tripUpdate1 = rt
+      .tripUpdateScheduled(TRIP_1_ID, SERVICE_DATE)
       .addDelayedStopTime(0, 60)
       .build();
 
-    var tripUpdate2 = new TripUpdateBuilder(TRIP_1_ID, SERVICE_DATE_PLUS, SCHEDULED, TIME_ZONE)
+    var tripUpdate2 = rt
+      .tripUpdateScheduled(TRIP_1_ID, SERVICE_DATE_PLUS)
       .addDelayedStopTime(0, 60)
       .build();
 
