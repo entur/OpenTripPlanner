@@ -59,6 +59,10 @@ public final class RiderCategory implements Serializable {
 
   @Override
   public String toString() {
-    return ToStringBuilder.of(this.getClass()).addObj("id", id).addStr("name", name).toString();
+    return ToStringBuilder.of(this.getClass())
+      .addObj("id", id)
+      .addStr("name", name)
+      .addBoolIfTrue("isDefault", isDefault)
+      .toString();
   }
 }

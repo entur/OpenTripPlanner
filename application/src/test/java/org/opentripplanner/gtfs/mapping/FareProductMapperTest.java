@@ -13,7 +13,7 @@ import org.opentripplanner.transit.model.basic.Money;
 class FareProductMapperTest {
 
   public static final IdFactory ID_FACTORY = new IdFactory("1");
-  public static final String CAT_NAME = "Cat 1";
+  public static final String CATEGORY_NAME = "Category 1";
 
   @Test
   void map() {
@@ -55,7 +55,7 @@ class FareProductMapperTest {
     var mapper = new FareProductMapper(ID_FACTORY);
     var mapped = mapper.map(gtfs).category();
 
-    assertEquals(CAT_NAME, mapped.name());
+    assertEquals(CATEGORY_NAME, mapped.name());
     assertEquals("1:cat1", mapped.id().toString());
     assertFalse(mapped.isDefault());
   }
@@ -77,7 +77,7 @@ class FareProductMapperTest {
   private static RiderCategory category() {
     var category = new RiderCategory();
     category.setId(new AgencyAndId("1", "cat1"));
-    category.setName(CAT_NAME);
+    category.setName(CATEGORY_NAME);
     return category;
   }
 
