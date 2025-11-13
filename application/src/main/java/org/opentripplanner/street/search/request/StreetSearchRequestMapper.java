@@ -76,7 +76,6 @@ public class StreetSearchRequestMapper {
     b
       .withSpeed(pref.speed())
       .withReluctance(pref.reluctance())
-      .withBoardCost(pref.boardCost())
       .withStairsReluctance(pref.stairsReluctance())
       .withStairsTimeFactor(pref.stairsTimeFactor())
       .withSafetyFactor(pref.safetyFactor())
@@ -106,7 +105,7 @@ public class StreetSearchRequestMapper {
       .withParking(b2 -> mapParking(b2, car.parking()))
       .withRental(b2 -> mapRental(b2, car.rental()))
       .withPickupTime(car.pickupTime())
-      .withPickupCost(car.pickupCost().toSeconds())
+      .withPickupCost(car.pickupCost())
       .withAccelerationSpeed(car.accelerationSpeed())
       .withDecelerationSpeed(car.decelerationSpeed());
   }
@@ -136,15 +135,15 @@ public class StreetSearchRequestMapper {
   private static void mapRental(RentalRequest.Builder b, VehicleRentalPreferences rental) {
     b
       .withPickupTime(rental.pickupTime())
-      .withPickupCost(rental.pickupCost().toSeconds())
+      .withPickupCost(rental.pickupCost())
       .withDropOffTime(rental.dropOffTime())
-      .withDropOffCost(rental.dropOffCost().toSeconds())
+      .withDropOffCost(rental.dropOffCost())
       .withUseAvailabilityInformation(rental.useAvailabilityInformation())
       .withAllowArrivingInRentedVehicleAtDestination(
         rental.allowArrivingInRentedVehicleAtDestination()
       )
       .withArrivingInRentalVehicleAtDestinationCost(
-        rental.arrivingInRentalVehicleAtDestinationCost().toSeconds()
+        rental.arrivingInRentalVehicleAtDestinationCost()
       )
       .withBannedNetworks(rental.bannedNetworks())
       .withAllowedNetworks(rental.allowedNetworks());
@@ -156,7 +155,7 @@ public class StreetSearchRequestMapper {
       .withFilter(mapParkingFilter(pref.filter()))
       .withPreferred(mapParkingFilter(pref.preferred()))
       .withTime(pref.time())
-      .withCost(pref.cost().toSeconds());
+      .withCost(pref.cost());
   }
 
   private static ParkingFilter mapParkingFilter(VehicleParkingFilter filter) {

@@ -53,8 +53,8 @@ class ParkingRequestTest {
   @Test
   void testCopyOfEqualsAndHashCode() {
     // Create a copy, make a change and set it back again to force creating a new object
-    var other = subject.copyOf().withCost(10).build();
-    var same = other.copyOf().withCost(PARKING_COST.toSeconds()).build();
+    var other = subject.copyOf().withCost(Cost.costOfSeconds(10)).build();
+    var same = other.copyOf().withCost(PARKING_COST).build();
     assertEqualsAndHashCode(subject, other, same);
   }
 
@@ -82,7 +82,7 @@ class ParkingRequestTest {
         new ParkingFilter(new TagsSelect(NOT_PREFERRED_TAGS), new TagsSelect(PREFERRED_TAGS))
       )
       .withFilter(new ParkingFilter(new TagsSelect(BANNED_TAGS), new TagsSelect(REQUIRED_TAGS)))
-      .withCost(PARKING_COST.toSeconds())
+      .withCost(PARKING_COST)
       .withUnpreferredTagCost(costOfSeconds(UNPREFERRED_COST))
       .withTime(PARKING_TIME)
       .build();

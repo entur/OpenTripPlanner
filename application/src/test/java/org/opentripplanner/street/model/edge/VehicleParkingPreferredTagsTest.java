@@ -90,7 +90,7 @@ class VehicleParkingPreferredTagsTest {
         parkingPreferences.withPreferred(
           new ParkingFilter(List.of(), List.of(new ParkingSelect.TagsSelect(preferredTags)))
         );
-        parkingPreferences.withCost(0);
+        parkingPreferences.withCost(Cost.ZERO);
       })
     );
 

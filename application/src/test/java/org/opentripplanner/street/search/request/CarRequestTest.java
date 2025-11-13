@@ -14,11 +14,11 @@ class CarRequestTest {
   public static final int BOARD_COST = 550;
   private static final double EXPECTED_RELUCTANCE = 5.1;
   private static final int PICKUP_TIME = 600;
-  private static final int PICKUP_COST = 500;
+  private static final Cost PICKUP_COST = Cost.costOfSeconds(500);
   private static final double ACCELERATION_SPEED = 3.1;
   private static final double DECELERATION_SPEED = 3.5;
   public static final int RENTAL_PICKUP_TIME = 30;
-  public static final int PARK_COST = 30;
+  public static final Cost PARK_COST = Cost.costOfSeconds(30);
 
   private final CarRequest subject = CarRequest.of()
     .withReluctance(RELUCTANCE)
@@ -48,7 +48,7 @@ class CarRequestTest {
 
   @Test
   void pickupCost() {
-    assertEquals(Cost.costOfSeconds(PICKUP_COST), subject.pickupCost());
+    assertEquals(PICKUP_COST, subject.pickupCost());
   }
 
   @Test

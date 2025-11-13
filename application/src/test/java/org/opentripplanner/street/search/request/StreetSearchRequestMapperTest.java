@@ -93,7 +93,6 @@ class StreetSearchRequestMapperTest {
     assertEquals(2.5, walkRequest.reluctance());
     assertEquals(3.5, walkRequest.stairsReluctance());
     assertEquals(4.5, walkRequest.stairsTimeFactor());
-    assertEquals(100, walkRequest.boardCost());
     assertEquals(0.8, walkRequest.safetyFactor());
   }
 

@@ -5,7 +5,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -41,9 +40,9 @@ public final class RentalRequest {
   }
 
   private RentalRequest(Builder builder) {
-    this.pickupTime = Duration.ofSeconds(Units.duration(builder.pickupTime));
+    this.pickupTime = builder.pickupTime;
     this.pickupCost = builder.pickupCost;
-    this.dropOffTime = Duration.ofSeconds(Units.duration(builder.dropOffTime));
+    this.dropOffTime = builder.dropOffTime;
     this.dropOffCost = builder.dropOffCost;
     this.useAvailabilityInformation = builder.useAvailabilityInformation;
     this.arrivingInRentalVehicleAtDestinationCost =
@@ -181,9 +180,9 @@ public final class RentalRequest {
   public static class Builder {
 
     private final RentalRequest original;
-    private int pickupTime;
+    private Duration pickupTime;
     private Cost pickupCost;
-    private int dropOffTime;
+    private Duration dropOffTime;
     private Cost dropOffCost;
     private boolean useAvailabilityInformation;
     private Cost arrivingInRentalVehicleAtDestinationCost;
@@ -193,9 +192,9 @@ public final class RentalRequest {
 
     private Builder(RentalRequest original) {
       this.original = original;
-      this.pickupTime = (int) original.pickupTime.toSeconds();
+      this.pickupTime = original.pickupTime;
       this.pickupCost = original.pickupCost;
-      this.dropOffTime = (int) original.dropOffTime.toSeconds();
+      this.dropOffTime = original.dropOffTime;
       this.dropOffCost = original.dropOffCost;
       this.useAvailabilityInformation = original.useAvailabilityInformation;
       this.arrivingInRentalVehicleAtDestinationCost =
@@ -207,22 +206,22 @@ public final class RentalRequest {
     }
 
     public Builder withPickupTime(Duration pickupTime) {
-      this.pickupTime = (int) pickupTime.toSeconds();
+      this.pickupTime = pickupTime;
       return this;
     }
 
-    public Builder withPickupCost(int pickupCost) {
-      this.pickupCost = Cost.costOfSeconds(pickupCost);
+    public Builder withPickupCost(Cost pickupCost) {
+      this.pickupCost = pickupCost;
       return this;
     }
 
     public Builder withDropOffTime(Duration dropOffTime) {
-      this.dropOffTime = (int) dropOffTime.toSeconds();
+      this.dropOffTime = dropOffTime;
       return this;
     }
 
-    public Builder withDropOffCost(int dropOffCost) {
-      this.dropOffCost = Cost.costOfSeconds(dropOffCost);
+    public Builder withDropOffCost(Cost dropOffCost) {
+      this.dropOffCost = dropOffCost;
       return this;
     }
 
@@ -232,11 +231,9 @@ public final class RentalRequest {
     }
 
     public Builder withArrivingInRentalVehicleAtDestinationCost(
-      int arrivingInRentalVehicleAtDestinationCost
+      Cost arrivingInRentalVehicleAtDestinationCost
     ) {
-      this.arrivingInRentalVehicleAtDestinationCost = Cost.costOfSeconds(
-        arrivingInRentalVehicleAtDestinationCost
-      );
+      this.arrivingInRentalVehicleAtDestinationCost = arrivingInRentalVehicleAtDestinationCost;
       return this;
     }
 

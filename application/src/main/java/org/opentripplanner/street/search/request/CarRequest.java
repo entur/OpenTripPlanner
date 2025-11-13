@@ -206,8 +206,8 @@ public final class CarRequest {
       return this;
     }
 
-    public Builder withPickupCost(int pickupCost) {
-      this.pickupCost = Cost.costOfSeconds(pickupCost);
+    public Builder withPickupCost(Cost pickupCost) {
+      this.pickupCost = pickupCost;
       return this;
     }
 

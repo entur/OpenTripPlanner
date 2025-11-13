@@ -141,8 +141,8 @@ public final class ParkingRequest {
       return this;
     }
 
-    public Builder withCost(int cost) {
-      this.cost = Cost.costOfSeconds(cost);
+    public Builder withCost(Cost cost) {
+      this.cost = cost;
       return this;
     }
 

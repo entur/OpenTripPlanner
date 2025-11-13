@@ -13,7 +13,6 @@ class WalkRequestTest {
   private static final double EXPECTED_SPEED = 1.71;
   private static final double RELUCTANCE = 2.51;
   private static final double EXPECTED_RELUCTANCE = 2.5;
-  private static final int BOARD_COST = 301;
   private static final double STAIRS_RELUCTANCE = 3.011;
   private static final double EXPECTED_STAIRS_RELUCTANCE = 3.0;
   private static final double STAIRS_TIME_FACTOR = 1.3111;
@@ -24,7 +23,6 @@ class WalkRequestTest {
   private final WalkRequest subject = WalkRequest.of()
     .withSpeed(SPEED)
     .withReluctance(RELUCTANCE)
-    .withBoardCost(BOARD_COST)
     .withStairsReluctance(STAIRS_RELUCTANCE)
     .withStairsTimeFactor(STAIRS_TIME_FACTOR)
     .withSafetyFactor(SAFETY_FACTOR)
@@ -38,11 +36,6 @@ class WalkRequestTest {
   @Test
   void reluctance() {
     assertEquals(EXPECTED_RELUCTANCE, subject.reluctance());
-  }
-
-  @Test
-  void boardCost() {
-    assertEquals(BOARD_COST, subject.boardCost());
   }
 
   @Test
@@ -79,14 +72,12 @@ class WalkRequestTest {
     var sameStairsReluctance = 3.2;
     var sameSafetyFactor = 0.5;
     var sameEscalatorReluctance = 2.45;
-    var sameBoardCost = 60;
     var firstEqual = WalkRequest.of()
       .withSpeed(sameSpeed)
       .withReluctance(sameReluctance)
       .withStairsReluctance(sameStairsReluctance)
       .withSafetyFactor(sameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     var secondEqual = WalkRequest.of()
       .withSpeed(sameSpeed)
@@ -94,7 +85,6 @@ class WalkRequestTest {
       .withStairsReluctance(sameStairsReluctance)
       .withSafetyFactor(sameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     assertEqualsAndHashCode(firstEqual, secondEqual);
 
@@ -106,7 +96,6 @@ class WalkRequestTest {
       .withStairsReluctance(sameStairsReluctance)
       .withSafetyFactor(sameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     assertNotEqualsAndHashCode(firstEqual, differentSpeedRequest);
 
@@ -118,7 +107,6 @@ class WalkRequestTest {
       .withStairsReluctance(sameStairsReluctance)
       .withSafetyFactor(sameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     assertNotEqualsAndHashCode(firstEqual, differentReluctanceRequest);
 
@@ -130,7 +118,6 @@ class WalkRequestTest {
       .withStairsReluctance(notSameStairsReluctance)
       .withSafetyFactor(sameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     assertNotEqualsAndHashCode(firstEqual, differentStairsReluctanceRequest);
 
@@ -142,7 +129,6 @@ class WalkRequestTest {
       .withStairsReluctance(sameStairsReluctance)
       .withSafetyFactor(notSameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     assertNotEqualsAndHashCode(firstEqual, differentSafetyFactorRequest);
 
@@ -154,28 +140,15 @@ class WalkRequestTest {
       .withStairsReluctance(sameStairsReluctance)
       .withSafetyFactor(sameSafetyFactor)
       .withEscalator(escalator -> escalator.withReluctance(notSameEscalatorReluctance))
-      .withBoardCost(sameBoardCost)
       .build();
     assertNotEqualsAndHashCode(firstEqual, differentEscalatorReluctanceRequest);
-
-    // Test that changing board cost means Request are not equal
-    var notSameBoardCost = sameBoardCost + 1;
-    var differentBoardCostRequest = WalkRequest.of()
-      .withSpeed(sameSpeed)
-      .withReluctance(sameReluctance)
-      .withStairsReluctance(sameStairsReluctance)
-      .withSafetyFactor(sameSafetyFactor)
-      .withEscalator(escalator -> escalator.withReluctance(sameEscalatorReluctance))
-      .withBoardCost(notSameBoardCost)
-      .build();
-    assertNotEqualsAndHashCode(firstEqual, differentBoardCostRequest);
   }
 
   @Test
   void testToString() {
     assertEquals("WalkRequest{}", WalkRequest.DEFAULT.toString());
     assertEquals(
-      "WalkRequest{speed: 1.71, reluctance: 2.5, boardCost: $301, stairsReluctance: 3.0, stairsTimeFactor: 1.31, safetyFactor: 0.51}",
+      "WalkRequest{speed: 1.71, reluctance: 2.5, stairsReluctance: 3.0, stairsTimeFactor: 1.31, safetyFactor: 0.51}",
       subject.toString()
     );
   }

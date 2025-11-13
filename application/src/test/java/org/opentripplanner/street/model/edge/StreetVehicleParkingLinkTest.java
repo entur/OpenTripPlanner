@@ -16,6 +16,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
@@ -59,7 +60,7 @@ class StreetVehicleParkingLinkTest {
         parkingPreferences.withFilter(
           new ParkingFilter(List.of(new TagsSelect(not)), List.of(new TagsSelect(select)))
         );
-        parkingPreferences.withCost(0);
+        parkingPreferences.withCost(Cost.ZERO);
       })
     );
 

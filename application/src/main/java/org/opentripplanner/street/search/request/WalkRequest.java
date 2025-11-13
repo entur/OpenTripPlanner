@@ -5,7 +5,6 @@ import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -24,7 +23,6 @@ public final class WalkRequest {
 
   private final double speed;
   private final double reluctance;
-  private final Cost boardCost;
   private final double stairsReluctance;
   private final double stairsTimeFactor;
   private final double safetyFactor;
@@ -34,7 +32,6 @@ public final class WalkRequest {
   private WalkRequest() {
     this.speed = 1.33;
     this.reluctance = 2.0;
-    this.boardCost = Cost.costOfMinutes(10);
     this.stairsReluctance = 2.0;
     this.stairsTimeFactor = 3.0;
     this.safetyFactor = 1.0;
@@ -44,7 +41,6 @@ public final class WalkRequest {
   private WalkRequest(Builder builder) {
     this.speed = Units.speed(builder.speed);
     this.reluctance = Units.reluctance(builder.reluctance);
-    this.boardCost = builder.boardCost;
     this.stairsReluctance = Units.reluctance(builder.stairsReluctance);
     this.stairsTimeFactor = Units.reluctance(builder.stairsTimeFactor);
     this.safetyFactor = Units.reluctance(builder.safetyFactor);
@@ -83,15 +79,6 @@ public final class WalkRequest {
   }
 
   /**
-   * This prevents unnecessary transfers by adding a cost for boarding a vehicle. This is in
-   * addition to the cost of the transfer(walking) and waiting-time. It is also in addition to the
-   * transfer preferences.
-   */
-  public int boardCost() {
-    return boardCost.toSeconds();
-  }
-
-  /**
    * Used on top of {@link #reluctance()} for stairs. If the value is set to 1, walking on stairs is
    * treated the same as walking on flat ground.
    */
@@ -123,7 +110,6 @@ public final class WalkRequest {
     return (
       doubleEquals(that.speed, speed) &&
       doubleEquals(that.reluctance, reluctance) &&
-      boardCost.equals(that.boardCost) &&
       doubleEquals(that.stairsReluctance, stairsReluctance) &&
       doubleEquals(that.stairsTimeFactor, stairsTimeFactor) &&
       doubleEquals(that.safetyFactor, safetyFactor) &&
@@ -136,7 +122,6 @@ public final class WalkRequest {
     return Objects.hash(
       speed,
       reluctance,
-      boardCost,
       stairsReluctance,
       stairsTimeFactor,
       safetyFactor,
@@ -149,7 +134,6 @@ public final class WalkRequest {
     return ToStringBuilder.of(WalkRequest.class)
       .addNum("speed", speed, DEFAULT.speed)
       .addNum("reluctance", reluctance, DEFAULT.reluctance)
-      .addObj("boardCost", boardCost, DEFAULT.boardCost)
       .addNum("stairsReluctance", stairsReluctance, DEFAULT.stairsReluctance)
       .addNum("stairsTimeFactor", stairsTimeFactor, DEFAULT.stairsTimeFactor)
       .addNum("safetyFactor", safetyFactor, DEFAULT.safetyFactor)
@@ -162,7 +146,6 @@ public final class WalkRequest {
     private final WalkRequest original;
     private double speed;
     private double reluctance;
-    private Cost boardCost;
     private double stairsReluctance;
     private double stairsTimeFactor;
     private double safetyFactor;
@@ -173,7 +156,6 @@ public final class WalkRequest {
       this.original = original;
       this.speed = original.speed;
       this.reluctance = original.reluctance;
-      this.boardCost = original.boardCost;
       this.stairsReluctance = original.stairsReluctance;
       this.stairsTimeFactor = original.stairsTimeFactor;
       this.safetyFactor = original.safetyFactor;
@@ -199,11 +181,6 @@ public final class WalkRequest {
 
     public Builder withReluctance(double reluctance) {
       this.reluctance = reluctance;
-      return this;
-    }
-
-    public Builder withBoardCost(int boardCost) {
-      this.boardCost = Cost.costOfSeconds(boardCost);
       return this;
     }
 

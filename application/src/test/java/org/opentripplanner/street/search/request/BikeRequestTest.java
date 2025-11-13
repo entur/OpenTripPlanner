@@ -6,6 +6,7 @@ import static org.opentripplanner.street.search.request.ImmutableRequestAsserts.
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 
@@ -20,7 +21,7 @@ class BikeRequestTest {
   public static final VehicleRoutingOptimizeType OPTIMIZE_TYPE =
     VehicleRoutingOptimizeType.TRIANGLE;
   public static final int RENTAL_PICKUP_TIME = 30;
-  public static final int PARK_COST = 30;
+  public static final Cost PARK_COST = Cost.costOfSeconds(30);
 
   private final BikeRequest subject = BikeRequest.of()
     .withSpeed(SPEED)

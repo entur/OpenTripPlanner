@@ -2,6 +2,7 @@ package org.opentripplanner.street.search.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.opentripplanner.framework.model.Cost.costOfSeconds;
 import static org.opentripplanner.street.search.request.ImmutableRequestAsserts.assertEqualsAndHashCode;
 
 import java.time.Duration;
@@ -15,7 +16,7 @@ class RentalRequestTest {
   public static final int PICKUP_COST = 250;
   public static final int DROPOFF_TIME = 45;
   public static final int DROPOFF_COST = 450;
-  public static final int ARRIVE_IN_RENTAL_COST = 500;
+  public static final Cost ARRIVE_IN_RENTAL_COST = costOfSeconds(500);
   public static final boolean USE_AVAILABILITY_INFORMATION = true;
   public static final boolean ALLOW_ARRIVING_IN_RENTED_VEHICLE = true;
   public static final Set<String> ALLOWED_NETWORKS = Set.of("foo");
@@ -27,9 +28,9 @@ class RentalRequestTest {
     RentalRequest.Builder builder = RentalRequest.of();
     subject = builder
       .withPickupTime(Duration.ofSeconds(PICKUP_TIME))
-      .withPickupCost(PICKUP_COST)
+      .withPickupCost(costOfSeconds(PICKUP_COST))
       .withDropOffTime(Duration.ofSeconds(DROPOFF_TIME))
-      .withDropOffCost(DROPOFF_COST)
+      .withDropOffCost(costOfSeconds(DROPOFF_COST))
       .withArrivingInRentalVehicleAtDestinationCost(ARRIVE_IN_RENTAL_COST)
       .withUseAvailabilityInformation(USE_AVAILABILITY_INFORMATION)
       .withAllowArrivingInRentedVehicleAtDestination(ALLOW_ARRIVING_IN_RENTED_VEHICLE)
@@ -45,7 +46,7 @@ class RentalRequestTest {
 
   @Test
   void pickupCost() {
-    assertEquals(Cost.costOfSeconds(PICKUP_COST), subject.pickupCost());
+    assertEquals(costOfSeconds(PICKUP_COST), subject.pickupCost());
   }
 
   @Test
@@ -55,7 +56,7 @@ class RentalRequestTest {
 
   @Test
   void dropoffCost() {
-    assertEquals(Cost.costOfSeconds(DROPOFF_COST), subject.dropOffCost());
+    assertEquals(costOfSeconds(DROPOFF_COST), subject.dropOffCost());
   }
 
   @Test
@@ -65,10 +66,7 @@ class RentalRequestTest {
 
   @Test
   void arrivingInRentalVehicleAtDestinationCost() {
-    assertEquals(
-      Cost.costOfSeconds(ARRIVE_IN_RENTAL_COST),
-      subject.arrivingInRentalVehicleAtDestinationCost()
-    );
+    assertEquals(ARRIVE_IN_RENTAL_COST, subject.arrivingInRentalVehicleAtDestinationCost());
   }
 
   @Test
