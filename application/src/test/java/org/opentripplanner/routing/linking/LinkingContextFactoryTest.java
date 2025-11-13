@@ -288,6 +288,53 @@ class LinkingContextFactoryTest {
     assertEquals(RoutingErrorCode.WALKING_BETTER_THAN_TRANSIT, fromError.code);
   }
 
+  /**
+   * Regression test for issue where a location with both a non-existing place ID and valid
+   * coordinates would fail to route instead of falling back to using the coordinates.
+   * <p>
+   * This test verifies that when a GenericLocation contains both a stopId that doesn't exist in
+   * the graph and valid coordinates, the linking should fall back to using the coordinates to
+   * create a temporary vertex, rather than throwing a RoutingValidationException.
+   * <p>
+   * Previously, the system would accept such queries and use the coordinates as a fallback.
+   * After the temporary-vertex-refactor (PR #6972), the if/else if logic prevents the coordinate
+   * fallback when a stopId is present, even if the stopId is not found in the graph.
+   */
+  @Test
+  void nonExistingPlaceIdWithCoordinatesShouldFallbackToCoordinates() {
+    var container = new TemporaryVerticesContainer();
+    var nonExistingStopId = new FeedScopedId("F", "NonExistingStop");
+
+    // Create locations with both a non-existing stop ID and valid coordinates
+    var from = new GenericLocation("From", nonExistingStopId, stopA.getLat(), stopA.getLon());
+    var to = new GenericLocation(
+      "To",
+      new FeedScopedId("F", "AnotherNonExisting"),
+      stopD.getLat(),
+      stopD.getLon()
+    );
+
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(to)
+      .withDirectMode(StreetMode.WALK)
+      .build();
+
+    // This should NOT throw an exception - it should fall back to using coordinates
+    var linkingContext = linkingContextFactory.create(container, request);
+
+    // Verify that vertices were created from the coordinates
+    var fromVertices = linkingContext.findVertices(from);
+    assertThat(fromVertices).hasSize(1);
+    assertThat(fromVertices).isNotEmpty();
+
+    var toVertices = linkingContext.findVertices(to);
+    assertThat(toVertices).hasSize(1);
+    assertThat(toVertices).isNotEmpty();
+
+    container.close();
+  }
+
   private static Graph buildGraph(Station station, RegularStop... stops) {
     var graph = new Graph();
     var left = StreetModelForTest.intersectionVertex(CENTER.asJtsCoordinate());
