@@ -245,12 +245,12 @@ public class AddTransitEntitiesToGraph {
     ElevatorVertex fromOnboardVertex = vertexFactory.elevator(
       fromVertex,
       elevatorLabel(fromVertex, pathway),
-      fromLevel.name().toString()
+      fromLevel.index()
     );
     ElevatorVertex toOnboardVertex = vertexFactory.elevator(
       toVertex,
       elevatorLabel(toVertex, pathway),
-      toLevel.name().toString()
+      toLevel.index()
     );
 
     ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex);
