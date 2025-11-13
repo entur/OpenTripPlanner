@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.extrajourney;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 
@@ -78,6 +79,20 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       numPatternForRoute + 1,
       transitService.findPatterns(route).size(),
       "The added trip should use a new pattern for this route"
+    );
+
+    // Verify ExtraJourney appears in departure board (#7008)
+    var expectedPattern = transitService.findPattern(trip);
+    var patternsAtStopC = transitService.findPatterns(STOP_C, true);
+    assertTrue(
+      patternsAtStopC.contains(expectedPattern),
+      "ExtraJourney pattern should appear in patterns for stop C (departure board)"
+    );
+
+    var patternsAtStopD = transitService.findPatterns(STOP_D, true);
+    assertTrue(
+      patternsAtStopD.contains(expectedPattern),
+      "ExtraJourney pattern should appear in patterns for stop D (arrival board)"
     );
   }
 

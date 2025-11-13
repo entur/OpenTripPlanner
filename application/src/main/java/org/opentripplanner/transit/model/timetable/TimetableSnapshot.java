@@ -593,12 +593,12 @@ public class TimetableSnapshot {
   }
 
   /**
-   * Add the patterns to the stop index, only if they come from a modified pattern
+   * Add patterns to the stop index for patterns created by realtime updaters.
+   * This ensures that realtime-added trips (like SIRI ET ExtraJourneys) appear in
+   * departure board queries at stops.
    */
   private void addPatternToIndex(TripPattern tripPattern) {
     if (tripPattern.isCreatedByRealtimeUpdater()) {
-      //TODO - SIRI: Add pattern to index?
-
       for (var stop : tripPattern.getStops()) {
         patternsForStop.put(stop, tripPattern);
       }
