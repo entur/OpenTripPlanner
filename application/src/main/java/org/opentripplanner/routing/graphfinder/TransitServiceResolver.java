@@ -9,7 +9,7 @@ import org.opentripplanner.transit.service.TransitService;
 /**
  * A small adapter for resolving site entities by ID from a {@link TransitService}.
  */
-public class TransitServiceResolver implements SiteResolver {
+public class TransitServiceResolver implements SiteResolver, StopResolver {
 
   private final TransitService transitService;
 

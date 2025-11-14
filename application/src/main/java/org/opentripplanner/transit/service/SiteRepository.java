@@ -123,6 +123,9 @@ public class SiteRepository implements Serializable {
     return regularStopById.get(id);
   }
 
+  /**
+   * Return an entrance if found and an exception if not.
+   */
   public Entrance getEntrance(FeedScopedId id) {
     return Objects.requireNonNull(entrancesById.get(id));
   }
