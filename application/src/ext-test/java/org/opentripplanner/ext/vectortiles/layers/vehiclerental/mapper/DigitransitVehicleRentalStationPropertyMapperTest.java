@@ -2,6 +2,7 @@ package org.opentripplanner.ext.vectortiles.layers.vehiclerental.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.opentripplanner.service.vehiclerental.model.RentalVehicleTypeFactory.vehicleType;
 import static org.opentripplanner.street.model.RentalFormFactor.BICYCLE;
 import static org.opentripplanner.street.model.RentalFormFactor.SCOOTER;
 
@@ -94,15 +95,5 @@ class DigitransitVehicleRentalStationPropertyMapperTest {
     assertEquals(false, map.get("operative"));
     assertEquals(8, map.get("vehiclesAvailable"));
     assertEquals(3, map.get("spacesAvailable"));
-  }
-
-  private static RentalVehicleType vehicleType(RentalFormFactor formFactor) {
-    return RentalVehicleType.of()
-      .withId(new FeedScopedId("1", formFactor.name()))
-      .withName(I18NString.of("bicycle"))
-      .withFormFactor(formFactor)
-      .withPropulsionType(RentalVehicleType.PropulsionType.HUMAN)
-      .withMaxRangeMeters(1000d)
-      .build();
   }
 }

@@ -6,12 +6,8 @@ import static org.opentripplanner.inspector.vector.KeyValue.kv;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.opentripplanner.apis.support.mapping.PropertyMapper;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.inspector.vector.KeyValue;
-import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
-import org.opentripplanner.street.model.RentalFormFactor;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public class DigitransitRentalVehiclePropertyMapper extends PropertyMapper<VehicleRentalVehicle> {
 
@@ -28,15 +24,5 @@ public class DigitransitRentalVehiclePropertyMapper extends PropertyMapper<Vehic
     }
     items.add(kv("pickupAllowed", vehicle.isAllowPickup()));
     return items;
-  }
-
-  private static RentalVehicleType vehicleType(RentalFormFactor formFactor) {
-    return RentalVehicleType.of()
-      .withId(new FeedScopedId("1", formFactor.name()))
-      .withName(I18NString.of("bicycle"))
-      .withFormFactor(formFactor)
-      .withPropulsionType(RentalVehicleType.PropulsionType.HUMAN)
-      .withMaxRangeMeters(1000d)
-      .build();
   }
 }
