@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.dataoverlay.EdgeUpdaterModule;
 import org.opentripplanner.ext.dataoverlay.configure.DataOverlayFactory;
-import org.opentripplanner.ext.edgenaming.EdgeNamerFactory;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.ext.transferanalyzer.DirectTransferAnalyzer;
