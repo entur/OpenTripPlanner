@@ -933,7 +933,7 @@ type Location {
 }
 
 """
-A group of fixed stops that is visited in an arbitrary order.
+A group of fixed stops that are visited in an arbitrary order.
 
 This is mostly used by demand-responsive services.
 """
@@ -2045,6 +2045,13 @@ type RideHailingProvider {
 type RiderCategory {
   "ID of the category"
   id: String!
+  """
+  If this category is considered the "default" one. In most places this means "Adult" or
+  "Regular".
+  Frontends can use this property to display this category more prominently or pre-select this
+  in a UI.
+  """
+  isDefault: Boolean!
   "Human readable name of the category."
   name: String
 }
