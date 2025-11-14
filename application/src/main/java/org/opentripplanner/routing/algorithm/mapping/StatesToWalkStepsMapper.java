@@ -316,7 +316,9 @@ public class StatesToWalkStepsMapper {
     String lastStepName = lastStep.directionTextNoParens();
     String twoBackStepName = twoBack.directionTextNoParens();
     String threeBackStepName = threeBack.directionTextNoParens();
-    if (lastStepName == null || twoBackStepName == null || threeBackStepName == null) return false;
+    if (lastStepName == null || twoBackStepName == null || threeBackStepName == null) {
+      return false;
+    }
 
     return (
       (!lastStep.isCrossing() || lastStep.nameIsDerived()) &&
