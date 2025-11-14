@@ -17,6 +17,7 @@ import org.opentripplanner.model.plan.leg.ElevationProfile;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
+import org.opentripplanner.routing.graphfinder.EntranceResolver;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.Edge;
