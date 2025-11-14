@@ -3,6 +3,7 @@ package org.opentripplanner.ext.fares.impl.gtfs;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
@@ -27,38 +28,38 @@ public final class GtfsFaresV2Service implements Serializable {
   }
 
   public FareResult calculateFares(Itinerary itinerary) {
-    var legOffers = new LegOfferContainer();
-    var scheduledTransitLegs = itinerary.listScheduledTransitLegs();
+    var offerContainer = new LegOfferContainer();
+    var transitLegs = itinerary.listTransitLegs();
     // individual legs
-    scheduledTransitLegs.forEach(leg -> {
-      var products = lookup
+    transitLegs.forEach(leg -> {
+      Set<LegOffer> legOffers = lookup
         .legRules(leg)
         .stream()
         .flatMap(r -> r.fareProducts().stream())
-        .map(fp -> FareOffer.of(leg.startTime(), fp))
+        .map(fp -> LegOffer.of(FareOffer.of(leg.startTime(), fp)))
         .collect(Collectors.toUnmodifiableSet());
-      legOffers.addToLeg(leg, products);
+      offerContainer.addToLeg(leg, legOffers);
     });
 
     // add transfers for subsections of the itinerary
-    if (scheduledTransitLegs.size() > 1) {
-      var splits = ListUtils.partitionIntoSplits(scheduledTransitLegs);
+    if (transitLegs.size() > 1) {
+      var splits = ListUtils.partitionIntoSplits(transitLegs);
       splits.forEach(split ->
         split
           .subTails()
           .forEach(legs -> {
             var offers = lookup.findTransferOffersForSubLegs(split.head(), legs);
-            legs.forEach(leg -> legOffers.addToLeg(leg, offers));
-            var hasFreeTransfer = lookup.hasFreeTransfer(split.head(), legs);
+            legs.forEach(leg -> offerContainer.addToLeg(leg, offers));
+            var hasFreeTransfer = lookup.hasFreeTransfers(legs);
             if (hasFreeTransfer) {
-              legOffers.transferProducts(split.head(), legs);
+              offerContainer.transferProducts(legs.getFirst(), legs);
             }
           })
       );
     }
 
-    var itinProducts = lookup.findTransfersMatchingAllLegs(scheduledTransitLegs);
-    return new FareResult(itinProducts, legOffers.toMultimap());
+    var itinProducts = lookup.findTransfersMatchingAllLegs(transitLegs);
+    return new FareResult(itinProducts, offerContainer.toMultimap());
   }
 
   /**

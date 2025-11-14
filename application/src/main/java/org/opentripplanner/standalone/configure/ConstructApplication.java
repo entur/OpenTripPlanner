@@ -4,6 +4,7 @@ import jakarta.ws.rs.core.Application;
 import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -33,7 +34,7 @@ import org.opentripplanner.standalone.config.OtpConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.server.GrizzlyServer;
 import org.opentripplanner.standalone.server.OTPWebApplication;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.model.elevation.ElevationUtils;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
@@ -85,9 +86,10 @@ public class ConstructApplication {
     GraphBuilderDataSources graphBuilderDataSources,
     DataImportIssueSummary issueSummary,
     EmissionRepository emissionRepository,
+    @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     VehicleParkingRepository vehicleParkingRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
-    StreetLimitationParameters streetLimitationParameters,
+    StreetRepository streetRepository,
     FareServiceFactory fareServiceFactory
   ) {
     this.cli = cli;
@@ -107,9 +109,10 @@ public class ConstructApplication {
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingRepository)
       .emissionRepository(emissionRepository)
+      .empiricalDelayRepository(empiricalDelayRepository)
       .dataImportIssueSummary(issueSummary)
       .stopConsolidationRepository(stopConsolidationRepository)
-      .streetLimitationParameters(streetLimitationParameters)
+      .streetStreetRepository(streetRepository)
       .schema(config.routerConfig().routingRequestDefaults())
       .fareServiceFactory(fareServiceFactory)
       .build();
@@ -142,12 +145,13 @@ public class ConstructApplication {
       graph(),
       osmInfoGraphBuildRepository,
       fareServiceFactory(),
+      factory.streetRepository(),
       factory.timetableRepository(),
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
       factory.emissionRepository(),
+      factory.empiricalDelayRepository(),
       factory.stopConsolidationRepository(),
-      factory.streetLimitationParameters(),
       cli.doLoadStreetGraph(),
       cli.doSaveStreetGraph()
     );
@@ -275,6 +279,10 @@ public class ConstructApplication {
     return factory.stopConsolidationRepository();
   }
 
+  public StreetRepository streetRepository() {
+    return factory.streetRepository();
+  }
+
   public RealtimeVehicleRepository realtimeVehicleRepository() {
     return factory.realtimeVehicleRepository();
   }
@@ -349,8 +357,9 @@ public class ConstructApplication {
     return factory.emissionRepository();
   }
 
-  public StreetLimitationParameters streetLimitationParameters() {
-    return factory.streetLimitationParameters();
+  @Nullable
+  public EmpiricalDelayRepository empiricalDelayRepository() {
+    return factory.empiricalDelayRepository();
   }
 
   public FareServiceFactory fareServiceFactory() {

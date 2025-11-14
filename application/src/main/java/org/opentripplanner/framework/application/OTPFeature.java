@@ -70,6 +70,18 @@ public enum OTPFeature {
     "from OSM data."
   ),
 
+  OnDemandRaptorTransfer(
+    false,
+    false,
+    """
+    Calculate transfers only when accessed by Raptor, instead of calculating and caching all transfers for the whole graph,
+    for runtime requests which are not pre-cached in `transferCacheRequests` in router-config.json.
+    This may help performance when doing local journey planning in a large graph.
+
+    Requests which are specified in `transferCacheRequests` in router-config.json are not affected and are always pre-cached for the whole graph.
+    """
+  ),
+
   OptimizeTransfers(
     true,
     false,
@@ -103,6 +115,7 @@ public enum OTPFeature {
     "If this is not enabled, the updaters will finish after submitting the task to update the graph."
   ),
   Emission(false, true, "Enable the emission sandbox module."),
+  EmpiricalDelay(false, true, "Enable empirical delay sandbox module."),
   DataOverlay(
     false,
     true,

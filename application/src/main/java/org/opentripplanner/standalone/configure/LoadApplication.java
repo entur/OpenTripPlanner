@@ -3,6 +3,7 @@ package org.opentripplanner.standalone.configure;
 import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.graph_builder.GraphBuilderDataSources;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
@@ -14,7 +15,7 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 /**
@@ -38,7 +39,9 @@ public class LoadApplication {
    */
   public LoadApplication(CommandLineParameters commandLineParameters) {
     this.cli = commandLineParameters;
-    this.factory = DaggerLoadApplicationFactory.builder().commandLineParameters(cli).build();
+    this.factory = org.opentripplanner.standalone.configure.DaggerLoadApplicationFactory.builder()
+      .commandLineParameters(cli)
+      .build();
   }
 
   public void validateConfigAndDataSources() {
@@ -63,8 +66,9 @@ public class LoadApplication {
       obj.parkingRepository,
       obj.issueSummary,
       obj.emissionRepository,
+      obj.empiricalDelayRepository,
       obj.stopConsolidationRepository,
-      obj.streetLimitationParameters,
+      obj.streetRepository,
       obj.fareServiceFactory
     );
   }
@@ -79,8 +83,9 @@ public class LoadApplication {
       factory.emptyVehicleParkingRepository(),
       DataImportIssueSummary.empty(),
       factory.emptyEmissionsDataModel(),
+      factory.emptyEmpiricalDelayRepository(),
       factory.emptyStopConsolidationRepository(),
-      factory.emptyStreetLimitationParameters(),
+      factory.emptyStreetRepository(),
       factory.emptyFareServiceFactory()
     );
   }
@@ -104,8 +109,9 @@ public class LoadApplication {
     VehicleParkingRepository parkingRepository,
     DataImportIssueSummary issueSummary,
     @Nullable EmissionRepository emissionRepository,
+    @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
-    StreetLimitationParameters streetLimitationParameters,
+    StreetRepository streetRepository,
     FareServiceFactory fareServiceFactory
   ) {
     return new ConstructApplication(
@@ -118,9 +124,10 @@ public class LoadApplication {
       graphBuilderDataSources(),
       issueSummary,
       emissionRepository,
+      empiricalDelayRepository,
       parkingRepository,
       stopConsolidationRepository,
-      streetLimitationParameters,
+      streetRepository,
       fareServiceFactory
     );
   }

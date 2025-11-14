@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.fares.impl.gtfs;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.FEED_ID;
@@ -84,13 +85,10 @@ class GtfsFaresV2ServiceTest implements PlanTestConstants {
     Itinerary i1 = newItinerary(A, 0).walk(20, B).bus(ID, 0, 50, C).build();
 
     var result = SERVICE.calculateFares(i1);
-    var startTime = i1.listScheduledTransitLegs().getFirst().startTime();
-    assertEquals(
-      Set.of(
-        FareOffer.of(startTime, ALL_NETWORKS_DAY_PASS),
-        FareOffer.of(startTime, ALL_NETWORKS_SINGLE)
-      ),
-      result.offersForLeg(i1.legs().get(1))
+    var startTime = i1.listTransitLegs().getFirst().startTime();
+    assertThat(result.offersForLeg(i1.legs().get(1))).containsExactly(
+      FareOffer.of(startTime, ALL_NETWORKS_DAY_PASS),
+      FareOffer.of(startTime, ALL_NETWORKS_SINGLE)
     );
   }
 
@@ -99,13 +97,10 @@ class GtfsFaresV2ServiceTest implements PlanTestConstants {
     Itinerary i1 = newItinerary(A, 0).walk(20, B).bus(ID, 0, 50, C).bus(ID, 55, 70, D).build();
 
     var result = SERVICE.calculateFares(i1);
-    var startTime = i1.listScheduledTransitLegs().getFirst().startTime();
-    assertEquals(
-      Set.of(
-        FareOffer.of(startTime, ALL_NETWORKS_DAY_PASS),
-        FareOffer.of(startTime, ALL_NETWORKS_SINGLE)
-      ),
-      result.offersForLeg(i1.legs().get(1))
+    var startTime = i1.listTransitLegs().getFirst().startTime();
+    assertThat(result.offersForLeg(i1.legs().get(1))).containsExactly(
+      FareOffer.of(startTime, ALL_NETWORKS_DAY_PASS),
+      FareOffer.of(startTime, ALL_NETWORKS_SINGLE)
     );
   }
 
@@ -114,7 +109,7 @@ class GtfsFaresV2ServiceTest implements PlanTestConstants {
     Itinerary i1 = newItinerary(A, 0).walk(20, B).faresV2Rail(ID, 0, 50, C, expressNetwork).build();
 
     var result = SERVICE.calculateFares(i1);
-    var startTime = i1.listScheduledTransitLegs().getFirst().startTime();
+    var startTime = i1.listTransitLegs().getFirst().startTime();
     assertEquals(
       Set.of(FareOffer.of(startTime, EXPRESS_DAY_PASS)),
       result.offersForLeg(i1.legs().get(1))

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OtpAppException;
@@ -26,7 +27,7 @@ import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.utils.lang.OtpNumberFormat;
@@ -75,12 +76,13 @@ public class GraphBuilder implements Runnable {
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     FareServiceFactory fareServiceFactory,
+    StreetRepository streetRepository,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository vehicleParkingService,
     @Nullable EmissionRepository emissionRepository,
+    @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
-    StreetLimitationParameters streetLimitationParameters,
     boolean loadStreetGraph,
     boolean saveStreetGraph
   ) {
@@ -96,12 +98,13 @@ public class GraphBuilder implements Runnable {
       .config(config)
       .graph(graph)
       .osmInfoGraphBuildRepository(osmInfoGraphBuildRepository)
+      .streetRepository(streetRepository)
       .timetableRepository(timetableRepository)
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingService)
       .stopConsolidationRepository(stopConsolidationRepository)
       .emissionRepository(emissionRepository)
-      .streetLimitationParameters(streetLimitationParameters)
+      .empiricalDelayRepository(empiricalDelayRepository)
       .fareServiceFactory(fareServiceFactory)
       .dataSources(dataSources)
       .timeZoneId(timetableRepository.getTimeZone());
@@ -171,6 +174,11 @@ public class GraphBuilder implements Runnable {
       graphBuilder.addModuleOptional(factory.directTransferAnalyzer(), OTPFeature.TransferAnalyzer);
 
       graphBuilder.addModuleOptional(factory.emissionGraphBuilder(), OTPFeature.Emission);
+
+      graphBuilder.addModuleOptional(
+        factory.empiricalDelayGraphBuilder(),
+        OTPFeature.EmpiricalDelay
+      );
     }
 
     if (loadStreetGraph || hasOsm) {

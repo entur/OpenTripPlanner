@@ -90,6 +90,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
     this.request = request;
     this.transferStreetRequest = StreetSearchRequestMapper.mapToTransferRequest(request).build();
     this.graphPathToItineraryMapper = new GraphPathToItineraryMapper(
+      transitService::getRegularStop,
       transitService.getTimeZone(),
       graph.streetNotesService,
       graph.ellipsoidToGeoidDifference
@@ -146,7 +147,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
     Itinerary mapped = mapEgressLeg(egressPathLeg);
     legs.addAll(mapped == null ? List.of() : mapped.legs());
 
-    var generalizedCost = Cost.costOfCentiSeconds(path.c1());
+    var generalizedCost = Cost.costOfCentiSeconds(path.c1()).normalize();
     var accessPenalty = mapAccessEgressPenalty(accessPathLeg.access());
     var egressPenalty = mapAccessEgressPenalty(egressPathLeg.egress());
 

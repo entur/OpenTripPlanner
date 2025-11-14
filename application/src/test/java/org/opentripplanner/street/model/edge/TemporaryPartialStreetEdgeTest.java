@@ -27,8 +27,14 @@ import org.opentripplanner.street.search.state.State;
 public class TemporaryPartialStreetEdgeTest {
 
   private Graph graph;
-  private IntersectionVertex v1, v2, v3, v4;
-  private StreetEdge e1, e1Reverse, e2, e3;
+  private IntersectionVertex v1;
+  private IntersectionVertex v2;
+  private IntersectionVertex v3;
+  private IntersectionVertex v4;
+  private StreetEdge e1;
+  private StreetEdge e1Reverse;
+  private StreetEdge e2;
+  private StreetEdge e3;
 
   @BeforeEach
   public void setUp() throws Exception {
@@ -163,7 +169,7 @@ public class TemporaryPartialStreetEdgeTest {
 
     StreetSearchRequest request = StreetSearchRequest.of()
       .withMode(StreetMode.CAR)
-      .withPreferences(p -> p.withStreet(s -> s.withTurnReluctance(1.0)))
+      .withPreferences(p -> p.withStreet(s -> s.withTurnReluctance(0.5)))
       .build();
 
     // All intersections take 10 minutes - we'll notice if one isn't counted.
@@ -225,7 +231,7 @@ public class TemporaryPartialStreetEdgeTest {
     assertTrue(Math.abs(durationDiff - expectedDifference) <= 1);
     assertTrue(Math.abs(partialDurationDiff - expectedDifference) <= 1);
 
-    // Turn reluctance is 1.0, so weight == duration.
+    // Turn reluctance is 0.5 and car reluctance is 2.0, so weight == duration.
     double weightDiff = s3.getWeight() - s3NoCost.getWeight();
     double partialWeightDiff = partialS3.getWeight() - partialS3NoCost.getWeight();
     assertTrue(Math.abs(weightDiff - expectedDifference) <= 1);

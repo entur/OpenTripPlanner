@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.astar.spi.TraverseVisitor;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.interactivelauncher.api.LauncherRequestDecorator;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
@@ -22,6 +23,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
@@ -45,6 +47,7 @@ public class ConstructApplicationModule {
     DebugUiConfig debugUiConfig,
     RaptorConfig<TripSchedule> raptorConfig,
     Graph graph,
+    LinkingContextFactory linkingContextFactory,
     VertexLinker vertexLinker,
     TransitService transitService,
     WorldEnvelopeService worldEnvelopeService,
@@ -59,6 +62,7 @@ public class ConstructApplicationModule {
     @Nullable @EmissionDecorator ItineraryDecorator emissionItineraryDecorator,
     @Nullable @GtfsSchema GraphQLSchema gtfsSchema,
     @Nullable @TransmodelSchema GraphQLSchema transmodelSchema,
+    @Nullable EmpiricalDelayService empiricalDelayService,
     @Nullable SorlandsbanenNorwayService sorlandsbanenService,
     LauncherRequestDecorator launcherRequestDecorator,
     @Nullable LuceneIndex luceneIndex,
@@ -78,6 +82,7 @@ public class ConstructApplicationModule {
       fareService,
       flexParameters,
       graph,
+      linkingContextFactory,
       Metrics.globalRegistry,
       raptorConfig,
       realtimeVehicleService,
@@ -96,6 +101,7 @@ public class ConstructApplicationModule {
       worldEnvelopeService,
       // Optional Sandbox services
       emissionItineraryDecorator,
+      empiricalDelayService,
       luceneIndex,
       gtfsSchema,
       transmodelSchema,

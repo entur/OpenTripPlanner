@@ -10,6 +10,9 @@ import org.opentripplanner.ext.dataoverlay.EdgeUpdaterModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionGraphBuilderModule;
 import org.opentripplanner.ext.emission.internal.graphbuilder.EmissionGraphBuilder;
+import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayGraphBuilderModule;
+import org.opentripplanner.ext.empiricaldelay.internal.graphbuilder.EmpiricalDelayGraphBuilder;
 import org.opentripplanner.ext.flex.AreaStopsToVerticesMapper;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
@@ -41,7 +44,7 @@ import org.opentripplanner.service.osminfo.configure.OsmInfoGraphBuildServiceMod
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 @Singleton
@@ -52,6 +55,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
     OsmInfoGraphBuildServiceModule.class,
     EmissionGraphBuilderModule.class,
     VertexLinkerGraphBuildingModule.class,
+    EmpiricalDelayGraphBuilderModule.class,
   }
 )
 public interface GraphBuilderFactory {
@@ -79,6 +83,9 @@ public interface GraphBuilderFactory {
 
   @Nullable
   EmissionGraphBuilder emissionGraphBuilder();
+
+  @Nullable
+  EmpiricalDelayGraphBuilder empiricalDelayGraphBuilder();
 
   @Nullable
   RouteToCentroidStationIdsValidator routeToCentroidStationIdValidator();
@@ -119,7 +126,7 @@ public interface GraphBuilderFactory {
     Builder fareServiceFactory(FareServiceFactory fareServiceFactory);
 
     @BindsInstance
-    Builder streetLimitationParameters(StreetLimitationParameters streetLimitationParameters);
+    Builder streetRepository(StreetRepository streetRepository);
 
     @BindsInstance
     Builder dataSources(GraphBuilderDataSources graphBuilderDataSources);
@@ -131,5 +138,8 @@ public interface GraphBuilderFactory {
 
     @BindsInstance
     Builder emissionRepository(@Nullable EmissionRepository emissionRepository);
+
+    @BindsInstance
+    Builder empiricalDelayRepository(@Nullable EmpiricalDelayRepository empiricalDelayRepository);
   }
 }

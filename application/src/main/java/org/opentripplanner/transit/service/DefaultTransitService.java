@@ -7,7 +7,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -216,6 +215,11 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public RegularStop getRegularStop(FeedScopedId id) {
     return this.timetableRepository.getSiteRepository().getRegularStop(id);
+  }
+
+  @Override
+  public AreaStop getAreaStop(FeedScopedId id) {
+    return Objects.requireNonNull(this.timetableRepository.getSiteRepository().getAreaStop(id));
   }
 
   @Override
@@ -652,12 +656,12 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
-  public ZonedDateTime getTransitServiceEnds() {
+  public Instant getTransitServiceEnds() {
     return timetableRepository.getTransitServiceEnds();
   }
 
   @Override
-  public ZonedDateTime getTransitServiceStarts() {
+  public Instant getTransitServiceStarts() {
     return timetableRepository.getTransitServiceStarts();
   }
 

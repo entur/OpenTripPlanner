@@ -14,9 +14,9 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.TestServerContext;
 import org.opentripplanner._support.time.ZoneIds;
+import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.ext.flex.FlexIntegrationTestData;
-import org.opentripplanner.framework.geometry.EncodedPolyline;
 import org.opentripplanner.graph_builder.module.ValidateAndInterpolateStopTimesForEachTrip;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.StopTime;
@@ -26,6 +26,8 @@ import org.opentripplanner.routing.algorithm.raptoradapter.router.TransitRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
@@ -116,7 +118,7 @@ class ScheduledDeviatedTripIntegrationTest {
     assertEquals(2, intermediateStops.size());
     assertEquals("zone_1", intermediateStops.get(0).place.stop.getId().getId());
 
-    EncodedPolyline legGeometry = EncodedPolyline.encode(leg.legGeometry());
+    EncodedPolyline legGeometry = EncodedPolyline.of(leg.legGeometry());
     assertThatPolylinesAreEqual(
       legGeometry.points(),
       "kfsmEjojcOa@eBRKfBfHR|ALjBBhVArMG|OCrEGx@OhAKj@a@tAe@hA]l@MPgAnAgw@nr@cDxCm@t@c@t@c@x@_@~@]pAyAdIoAhG}@lE{AzHWhAtt@t~Aj@tAb@~AXdBHn@FlBC`CKnA_@nC{CjOa@dCOlAEz@E|BRtUCbCQ~CWjD??????qBvXBl@kBvWOzAc@dDOx@sHv]aIG?q@@c@ZaB\\mA"
@@ -167,16 +169,24 @@ class ScheduledDeviatedTripIntegrationTest {
 
     var transitStartOfTime = ServiceDateUtils.asStartOfService(request.dateTime(), zoneId);
     var additionalSearchDays = AdditionalSearchDays.defaults(dateTime);
-    var result = TransitRouter.route(
-      request,
-      serverContext,
-      TransitGroupPriorityService.empty(),
-      transitStartOfTime,
-      additionalSearchDays,
-      new DebugTimingAggregator()
-    );
 
-    return result.getItineraries();
+    try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
+      var linkingRequest = LinkingContextRequestMapper.map(request);
+      var linkingContext = serverContext
+        .linkingContextFactory()
+        .create(temporaryVerticesContainer, linkingRequest);
+      var result = TransitRouter.route(
+        request,
+        serverContext,
+        TransitGroupPriorityService.empty(),
+        transitStartOfTime,
+        additionalSearchDays,
+        new DebugTimingAggregator(),
+        linkingContext
+      );
+
+      return result.getItineraries();
+    }
   }
 
   private static FlexTrip<?, ?> getFlexTrip() {

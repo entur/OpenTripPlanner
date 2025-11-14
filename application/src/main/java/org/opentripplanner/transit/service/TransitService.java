@@ -5,7 +5,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -145,6 +144,11 @@ public interface TransitService {
 
   @Nullable
   RegularStop getRegularStop(FeedScopedId id);
+
+  /**
+   * Gets the area stop with the given id and throws an exception if it was not found.
+   */
+  AreaStop getAreaStop(FeedScopedId id);
 
   Collection<StopLocation> listStopLocations();
 
@@ -342,9 +346,9 @@ public interface TransitService {
 
   FlexIndex getFlexIndex();
 
-  ZonedDateTime getTransitServiceEnds();
+  Instant getTransitServiceEnds();
 
-  ZonedDateTime getTransitServiceStarts();
+  Instant getTransitServiceStarts();
 
   TransferService getTransferService();
 

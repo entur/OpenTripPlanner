@@ -8,10 +8,12 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.mobilitydata.gbfs.v2_3.vehicle_types.GBFSVehicleType;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
+import org.opentripplanner.framework.io.TestHttpClientFactory;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.updater.spi.HttpHeaders;
+import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.gbfs.GbfsVehicleRentalDataSource;
 import org.opentripplanner.updater.vehicle_rental.datasources.params.GbfsVehicleRentalDataSourceParameters;
 import org.opentripplanner.updater.vehicle_rental.datasources.params.RentalPickupType;
@@ -117,6 +119,25 @@ class GbfsFeedMapperTest {
   }
 
   @Test
+  void testClientExceptionRethrowsAsUpdaterConstructionException() {
+    var dataSource = new GbfsVehicleRentalDataSource(
+      new GbfsVehicleRentalDataSourceParameters(
+        "file:src/test/resources/gbfs/tieroslo/gbfs.json",
+        "en",
+        false,
+        HttpHeaders.empty(),
+        null,
+        true,
+        false,
+        RentalPickupType.ALL
+      ),
+      TestHttpClientFactory.failingHttpFactory()
+    );
+
+    assertThrows(UpdaterConstructionException.class, dataSource::setup);
+  }
+
+  @Test
   void geofencing() {
     var dataSource = new GbfsVehicleRentalDataSource(
       new GbfsVehicleRentalDataSourceParameters(
@@ -219,6 +240,74 @@ class GbfsFeedMapperTest {
     assertTrue(
       stations.stream().allMatch(vehicleRentalStation -> vehicleRentalStation.overloadingAllowed())
     );
+  }
+
+  @Test
+  void duplicatedStationsDoNotThrowException() {
+    var params = new GbfsVehicleRentalDataSourceParameters(
+      "file:src/test/resources/gbfs/duplicate-stations-v2/gbfs.json",
+      "en",
+      false,
+      HttpHeaders.empty(),
+      null,
+      false,
+      false,
+      RentalPickupType.ALL
+    );
+    var otpHttpClient = new OtpHttpClientFactory()
+      .create(LoggerFactory.getLogger(GbfsFeedMapperTest.class));
+    var loader = new GbfsFeedLoader(
+      params.url(),
+      params.httpHeaders(),
+      params.language(),
+      otpHttpClient
+    );
+    var mapper = new GbfsFeedMapper(loader, params);
+
+    assertTrue(loader.update());
+
+    assertDoesNotThrow(() -> {
+      mapper.getUpdates();
+    });
+  }
+
+  @Test
+  void duplicatedStationsKeepFirstOccurrence() {
+    var params = new GbfsVehicleRentalDataSourceParameters(
+      "file:src/test/resources/gbfs/duplicate-stations-v2/gbfs.json",
+      "en",
+      false,
+      HttpHeaders.empty(),
+      null,
+      false,
+      false,
+      RentalPickupType.ALL
+    );
+    var otpHttpClient = new OtpHttpClientFactory()
+      .create(LoggerFactory.getLogger(GbfsFeedMapperTest.class));
+    var loader = new GbfsFeedLoader(
+      params.url(),
+      params.httpHeaders(),
+      params.language(),
+      otpHttpClient
+    );
+    var mapper = new GbfsFeedMapper(loader, params);
+
+    assertTrue(loader.update());
+
+    List<VehicleRentalPlace> stations = mapper.getUpdates();
+
+    // Should have 3 stations (station_1, station_duplicate, station_3)
+    // even though station_status has 4 entries (with duplicate station_duplicate)
+    assertEquals(3, stations.size());
+
+    // Verify the duplicate station uses the first occurrence data (10 bikes available)
+    var duplicateStation = stations
+      .stream()
+      .filter(s -> s.id().getId().contains("station_duplicate"))
+      .findFirst()
+      .orElseThrow();
+    assertEquals(10, duplicateStation.vehiclesAvailable());
   }
 
   private static List<GBFSVehicleType> getDuplicatedGbfsVehicleTypes() {

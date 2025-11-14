@@ -19,8 +19,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.framework.geometry.EncodedPolyline;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
+import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.leg.StreetLeg;
@@ -32,7 +31,11 @@ import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
-import org.opentripplanner.street.search.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
+import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
+import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
 
@@ -183,19 +186,18 @@ public class BarrierRoutingTest {
 
     options.accept(builder);
 
-    var temporaryVertices = new TemporaryVerticesContainer(
-      graph,
-      TestVertexLinker.of(graph),
-      id -> List.of(),
-      from,
-      to,
-      streetMode,
-      streetMode
-    );
+    var temporaryVerticesContainer = new TemporaryVerticesContainer();
+    var request = builder.buildRequest();
+    var vertexLinker = VertexLinkerTestFactory.of(graph);
+    var vertexCreationService = new VertexCreationService(vertexLinker);
+    var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
+    var linkingRequest = LinkingContextRequestMapper.map(request);
+    var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
     var gpf = new GraphPathFinder(null);
-    var paths = gpf.graphPathFinderEntryPoint(builder.buildRequest(), temporaryVertices);
+    var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
 
     GraphPathToItineraryMapper graphPathToItineraryMapper = new GraphPathToItineraryMapper(
+      id -> null,
       ZoneIds.BERLIN,
       graph.streetNotesService,
       graph.ellipsoidToGeoidDifference
@@ -206,8 +208,8 @@ public class BarrierRoutingTest {
     assertAll(assertions.apply(itineraries));
 
     Geometry legGeometry = itineraries.get(0).legs().get(0).legGeometry();
-    temporaryVertices.close();
+    temporaryVerticesContainer.close();
 
-    return EncodedPolyline.encode(legGeometry).points();
+    return EncodedPolyline.of(legGeometry).points();
   }
 }
