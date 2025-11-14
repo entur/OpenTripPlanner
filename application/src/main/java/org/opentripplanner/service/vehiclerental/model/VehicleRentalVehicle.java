@@ -196,10 +196,6 @@ public final class VehicleRentalVehicle implements VehicleRentalPlace {
     return system;
   }
 
-  public RentalVehicleFuel getFuel() {
-    return fuel;
-  }
-
   public OffsetDateTime availableUntil() {
     return availableUntil;
   }
