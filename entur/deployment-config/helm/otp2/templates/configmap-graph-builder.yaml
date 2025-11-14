@@ -12,6 +12,7 @@ data:
         "configVersion" : "{{ .Values.build.number }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
+            "Emission": {{ .Values.otpFeatures.emission }},
             "EmpiricalDelay": {{ .Values.otpFeatures.empiricalDelay }},
             "FlexRouting" : true,
             "GoogleCloudStorage" : true,
@@ -85,6 +86,14 @@ data:
             "ignoreFareFrame": {{ .Values.cronjobRedeployGraphBuilder.ignoreFareFrame }}
           }
         ],
+        "emission": {
+          "feeds": [
+            {
+              "feedId": "RB",
+              "source": "gs://emissions-to-otp/emissions-to-otp.csv"
+            }
+          ]
+        },
         "empiricalDelay": {
           "feeds": [
             {

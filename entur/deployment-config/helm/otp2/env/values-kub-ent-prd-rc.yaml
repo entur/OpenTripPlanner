@@ -1,4 +1,5 @@
 otpFeatures:
+  emission: false
   empiricalDelay: false
 journeyPlanner:
   enabled: false
