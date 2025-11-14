@@ -1,9 +1,8 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.graph_builder.services.osm;
 
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
-import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmWay;
 

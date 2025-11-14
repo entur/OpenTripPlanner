@@ -34,6 +34,7 @@ import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParamete
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParameters;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParametersList;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
+import org.opentripplanner.ext.edgenaming.EdgeNamerFactory;
 import org.opentripplanner.gtfs.config.GtfsDefaultParameters;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.netex.config.NetexFeedParameters;
@@ -609,7 +610,7 @@ public class BuildConfig implements OtpDataStoreConfig {
 
     // List of complex parameters
     fareConfig = FaresConfiguration.fromConfig(root, "fares");
-    edgeNamer = EdgeNamer.EdgeNamerFactory.fromConfig(root, "osmNaming");
+    edgeNamer = EdgeNamerFactory.fromConfig(root, "osmNaming");
     dataOverlay = DataOverlayConfigMapper.map(root, "dataOverlay");
 
     transferRequests = TransferRequestConfig.map(root, "transferRequests");

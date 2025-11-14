@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;

@@ -12,7 +12,7 @@ import static org.opentripplanner.street.search.TraverseMode.WALK;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.graph_builder.module.osm.naming.DefaultNamer;
+import org.opentripplanner.graph_builder.services.osm.DefaultNamer;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
