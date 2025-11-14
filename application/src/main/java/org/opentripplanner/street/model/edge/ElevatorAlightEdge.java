@@ -4,7 +4,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.framework.i18n.LocalizedString;
 import org.opentripplanner.street.model.vertex.ElevatorVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -18,6 +18,8 @@ import org.opentripplanner.street.search.state.StateEditor;
  * @author mattwigway
  */
 public class ElevatorAlightEdge extends Edge implements BikeWalkableEdge, ElevatorEdge {
+
+  private static final LocalizedString NAME = new LocalizedString("name.elevator");
 
   /**
    * The polyline geometry of this edge. It's generally a polyline with two coincident points, but
@@ -49,22 +51,9 @@ public class ElevatorAlightEdge extends Edge implements BikeWalkableEdge, Elevat
     return s1.makeStateArray();
   }
 
-  /**
-   * The level from OSM is the name
-   */
   @Override
   public I18NString getName() {
-    // TODO: i18n
-    return new NonLocalizedString("ElevatorAlightEdge");
-  }
-
-  /**
-   * Since alight edges are always called ElevatorAlightEdge, the name is complete bogus but is
-   * never included in plans.
-   */
-  @Override
-  public boolean nameIsDerived() {
-    return true;
+    return NAME;
   }
 
   @Override
