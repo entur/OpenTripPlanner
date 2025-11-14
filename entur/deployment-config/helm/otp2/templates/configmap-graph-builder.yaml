@@ -15,7 +15,11 @@ data:
             "EmpiricalDelay": {{ .Values.otpFeatures.empiricalDelay }},
             "FlexRouting" : true,
             "GoogleCloudStorage" : true,
-            "IncludeEmptyRailStopsInTransfers" : true
+            // TODO Remove "IncludeEmptyRailStopsInTransfers", when 
+            // "IncludeStopsUsedRealtimeInTransfers" has been is production for a week
+            "IncludeEmptyRailStopsInTransfers" : true,
+            // Will be used when PR 7042 Missing transfers is merged
+            "IncludeStopsUsedRealtimeInTransfers" : true
         }
       }
   build-config.json: |+
