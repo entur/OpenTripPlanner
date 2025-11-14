@@ -35,6 +35,7 @@ import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParamete
 import org.opentripplanner.graph_builder.module.osm.OsmModule;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParameters;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
+import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundle;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.netex.NetexModule;
@@ -68,6 +69,7 @@ public class GraphBuilderModules {
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     StreetRepository streetRepository,
     VehicleParkingRepository vehicleParkingRepository,
+    EdgeNamer edgeNamer,
     DataImportIssueStore issueStore
   ) {
     List<OsmProvider> providers = new ArrayList<>();
@@ -92,7 +94,7 @@ public class GraphBuilderModules {
       streetRepository,
       vehicleParkingRepository
     )
-      .withEdgeNamer(EdgeNamerFactory.fromConfig(config.edgeNamer))
+      .withEdgeNamer(edgeNamer)
       .withAreaVisibility(config.areaVisibility)
       .withPlatformEntriesLinking(config.platformEntriesLinking)
       .withStaticParkAndRide(config.staticParkAndRide)
