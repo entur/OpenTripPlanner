@@ -151,8 +151,7 @@ class ElevatorProcessor {
           onboardVertices,
           sourceVertex,
           elevatorWay.getId() + "_" + sourceVertexLabel,
-          // TODO use nodeLevels.get(i) after figuring out unique level logic
-          new OsmLevel(i, String.valueOf(i))
+          nodeLevels.get(i)
         );
       }
 

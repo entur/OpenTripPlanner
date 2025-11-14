@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.framework.i18n.LocalizedString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.BarrierIntersectingHighway;
 import org.opentripplanner.graph_builder.module.osm.moduletests._support.TestOsmProvider;
@@ -560,6 +561,45 @@ public class OsmModuleTest {
     assertEquals(2, issues.length);
     assertEquals(1, issues[0].node().getId());
     assertEquals(4, issues[1].node().getId());
+  }
+
+  @Test
+  void testOsmElevatorNodeWithWaysOnSameLevel() {
+    var n1 = new OsmNode(0, 0);
+    n1.setId(1);
+    var n2 = new OsmNode(0, 1);
+    n2.addTag("highway", "elevator");
+    n2.setId(2);
+    var n3 = new OsmNode(0, 2);
+    n3.setId(3);
+
+    var way1 = new OsmWay();
+    way1.setId(1);
+    way1.addTag("highway", "corridor");
+    way1.addTag("level", "1");
+    way1.addTag("level:ref", "1");
+    way1.addNodeRef(1);
+    way1.addNodeRef(2);
+
+    var way2 = new OsmWay();
+    way2.setId(2);
+    way2.addTag("highway", "corridor");
+    way2.addTag("level", "1");
+    way2.addTag("level:ref", "1");
+    way2.addNodeRef(2);
+    way2.addNodeRef(3);
+
+    var osmProvider = new TestOsmProvider(List.of(), List.of(way1, way2), List.of(n1, n2, n3));
+    var osmDb = new OsmDatabase(DataImportIssueStore.NOOP);
+    osmProvider.readOsm(osmDb);
+    var graph = new Graph();
+    var osmModule = OsmModuleTestFactory.of(osmProvider).withGraph(graph).builder().build();
+    osmModule.buildGraph();
+
+    assertEquals(
+      graph.getVertices().size(),
+      graph.getVertices().stream().map(vertex -> vertex.getLabel()).distinct().count()
+    );
   }
 
   private BuildResult buildParkingLots() {
