@@ -26,7 +26,7 @@ import org.opentripplanner.transit.model.site.Entrance;
 
 class StatesToWalkStepsMapperTest {
 
-  public static final FeedScopedId ENTRANCE_ID = new FeedScopedId("F", "Lichterfelde-Ost");
+  private static final FeedScopedId ENTRANCE_ID = new FeedScopedId("F", "Lichterfelde-Ost");
 
   @Test
   void absoluteDirection() {
