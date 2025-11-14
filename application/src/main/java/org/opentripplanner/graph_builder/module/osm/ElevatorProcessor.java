@@ -150,7 +150,7 @@ class ElevatorProcessor {
           graph,
           onboardVertices,
           sourceVertex,
-          elevatorWay.getId() + "_" + sourceVertexLabel,
+          elevatorWay.getId() + "_" + sourceVertexLabel + "_" + i,
           nodeLevels.get(i)
         );
       }
