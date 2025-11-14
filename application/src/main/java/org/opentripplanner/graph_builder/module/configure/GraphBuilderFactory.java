@@ -51,13 +51,13 @@ import org.opentripplanner.transit.service.TimetableRepository;
 @Singleton
 @Component(
   modules = {
+    EdgeNamerModule.class,
+    EmissionGraphBuilderModule.class,
+    EmpiricalDelayGraphBuilderModule.class,
     GraphBuilderModule.class,
     GraphBuilderModules.class,
     OsmInfoGraphBuildServiceModule.class,
-    EmissionGraphBuilderModule.class,
     VertexLinkerGraphBuildingModule.class,
-    EmpiricalDelayGraphBuilderModule.class,
-    EdgeNamerModule.class
   }
 )
 public interface GraphBuilderFactory {

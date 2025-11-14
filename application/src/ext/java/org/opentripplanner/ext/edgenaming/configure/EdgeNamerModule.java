@@ -14,5 +14,5 @@ public class EdgeNamerModule {
   @Singleton
   public static EdgeNamer provideNamer(BuildConfig config) {
     return EdgeNamerFactory.fromConfig(config.edgeNamer);
-  };
+  }
 }
