@@ -38,6 +38,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Visualize elevator edges and vertices in Debug UI [#6885](https://github.com/opentripplanner/OpenTripPlanner/pull/6885)
 - Check for NO_VALUE when mapping GTFS booking rules [#7029](https://github.com/opentripplanner/OpenTripPlanner/pull/7029)
 - Make `railway=platform_edge` a boarding location [#7037](https://github.com/opentripplanner/OpenTripPlanner/pull/7037)
+- Upgrade to GraphiQL 5 [#7025](https://github.com/opentripplanner/OpenTripPlanner/pull/7025)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
