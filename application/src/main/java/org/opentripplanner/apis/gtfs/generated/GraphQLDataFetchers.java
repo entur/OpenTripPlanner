@@ -1066,6 +1066,8 @@ public class GraphQLDataFetchers {
   public interface GraphQLRiderCategory {
     public DataFetcher<String> id();
 
+    public DataFetcher<Boolean> isDefault();
+
     public DataFetcher<String> name();
   }
 

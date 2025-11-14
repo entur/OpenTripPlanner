@@ -53,6 +53,7 @@ import org.opentripplanner.apis.gtfs.datafetchers.RentalVehicleFuelImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RentalVehicleImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RentalVehicleTypeImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RideHailingEstimateImpl;
+import org.opentripplanner.apis.gtfs.datafetchers.RiderCategoryImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RouteImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RouteTypeImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RoutingErrorImpl;
@@ -214,6 +215,7 @@ public class SchemaFactory {
         .type(typeWiring.build(EscalatorUseImpl.class))
         .type(typeWiring.build(StairsUseImpl.class))
         .type(typeWiring.build(ElevatorUseImpl.class))
+        .type(typeWiring.build(RiderCategoryImpl.class))
         .build();
 
       SchemaGenerator schemaGenerator = new SchemaGenerator();

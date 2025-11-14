@@ -47,7 +47,9 @@ import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
+import org.opentripplanner.street.internal.DefaultStreetRepository;
+import org.opentripplanner.street.model.StreetModelDetails;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -90,6 +92,7 @@ public class GraphSerializationTest {
   @Test
   public void testRoundTripSerializationForGTFSGraph() throws Exception {
     TestOtpModel model = ConstantsForTests.buildNewPortlandGraph(true);
+    var streetRepository = createStreetRepository();
     var osmGraphBuildRepository = new DefaultOsmInfoGraphBuildRepository();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     var weRepo = new DefaultWorldEnvelopeRepository();
@@ -100,6 +103,7 @@ public class GraphSerializationTest {
       model.graph(),
       osmGraphBuildRepository,
       streetDetailsRepository,
+      streetRepository,
       model.timetableRepository(),
       weRepo,
       parkingRepository,
@@ -108,12 +112,19 @@ public class GraphSerializationTest {
     );
   }
 
+  private static DefaultStreetRepository createStreetRepository() {
+    var streetRepository = new DefaultStreetRepository();
+    streetRepository.setStreetModelDetails(new StreetModelDetails(33f, 17));
+    return streetRepository;
+  }
+
   /**
    * Tests Netex based graph serialization to file.
    */
   @Test
   public void testRoundTripSerializationForNetexGraph() throws Exception {
     TestOtpModel model = ConstantsForTests.buildNewMinimalNetexGraph();
+    var streetRepository = createStreetRepository();
     var osmGraphBuildRepository = new DefaultOsmInfoGraphBuildRepository();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     var worldEnvelopeRepository = new DefaultWorldEnvelopeRepository();
@@ -124,6 +135,7 @@ public class GraphSerializationTest {
       model.graph(),
       osmGraphBuildRepository,
       streetDetailsRepository,
+      streetRepository,
       model.timetableRepository(),
       worldEnvelopeRepository,
       parkingRepository,
@@ -230,6 +242,7 @@ public class GraphSerializationTest {
     Graph originalGraph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     StreetDetailsRepository streetDetailsRepository,
+    StreetRepository streetRepository,
     TimetableRepository originalTimetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository vehicleParkingRepository,
@@ -238,12 +251,12 @@ public class GraphSerializationTest {
   ) throws Exception {
     // Now round-trip the graph through serialization.
     File tempFile = TempFile.createTempFile("graph", "pdx");
-    var streetLimitationParameters = new StreetLimitationParameters();
-    streetLimitationParameters.initMaxCarSpeed(40);
+
     SerializedGraphObject serializedObj = new SerializedGraphObject(
       originalGraph,
       osmInfoGraphBuildRepository,
       streetDetailsRepository,
+      streetRepository,
       originalTimetableRepository,
       worldEnvelopeRepository,
       vehicleParkingRepository,
@@ -253,7 +266,6 @@ public class GraphSerializationTest {
       emissionRepository,
       empiricalDelayRepository,
       null,
-      streetLimitationParameters,
       new DefaultFareServiceFactory()
     );
     serializedObj.save(new FileDataSource(tempFile, FileType.GRAPH));

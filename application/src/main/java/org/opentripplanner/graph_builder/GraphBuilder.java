@@ -28,7 +28,7 @@ import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
-import org.opentripplanner.street.model.StreetLimitationParameters;
+import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.utils.lang.OtpNumberFormat;
@@ -78,13 +78,13 @@ public class GraphBuilder implements Runnable {
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     StreetDetailsRepository streetDetailsRepository,
     FareServiceFactory fareServiceFactory,
+    StreetRepository streetRepository,
     TimetableRepository timetableRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository vehicleParkingService,
     @Nullable EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
-    StreetLimitationParameters streetLimitationParameters,
     boolean loadStreetGraph,
     boolean saveStreetGraph
   ) {
@@ -101,13 +101,13 @@ public class GraphBuilder implements Runnable {
       .graph(graph)
       .osmInfoGraphBuildRepository(osmInfoGraphBuildRepository)
       .streetDetailsRepository(streetDetailsRepository)
+      .streetRepository(streetRepository)
       .timetableRepository(timetableRepository)
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingService)
       .stopConsolidationRepository(stopConsolidationRepository)
       .emissionRepository(emissionRepository)
       .empiricalDelayRepository(empiricalDelayRepository)
-      .streetLimitationParameters(streetLimitationParameters)
       .fareServiceFactory(fareServiceFactory)
       .dataSources(dataSources)
       .timeZoneId(timetableRepository.getTimeZone());

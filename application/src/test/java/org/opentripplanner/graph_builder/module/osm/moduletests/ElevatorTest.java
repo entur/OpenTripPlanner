@@ -1,17 +1,15 @@
 package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.graph_builder.module.osm.moduletests._support.NodeBuilder.node;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.graph_builder.module.osm.OsmModule;
+import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.graph_builder.module.osm.moduletests._support.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
-import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
 
 class ElevatorTest {
@@ -23,17 +21,14 @@ class ElevatorTest {
     way.addTag("highway", "elevator");
     var provider = TestOsmProvider.of().addWay(way).build();
     var graph = new Graph();
-    var osmModule = OsmModule.of(
-      provider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    ).build();
+    var osmModule = OsmModuleTestFactory.of(provider).withGraph(graph).builder().build();
+
     osmModule.buildGraph();
+
     var edges = graph.getEdgesOfType(ElevatorHopEdge.class);
     assertThat(edges).hasSize(2);
     for (var edge : edges) {
-      assertEquals(62, edge.getTravelTime());
+      assertThat(edge.getTravelTime()).hasValue(Duration.ofSeconds(62));
     }
   }
 
@@ -50,17 +45,13 @@ class ElevatorTest {
       .addWayFromNodes(way -> way.addTag("level", "2"), node1, node)
       .build();
     var graph = new Graph();
-    var osmModule = OsmModule.of(
-      provider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    ).build();
-    osmModule.buildGraph();
+
+    OsmModuleTestFactory.of(provider).withGraph(graph).builder().build().buildGraph();
+
     var edges = graph.getEdgesOfType(ElevatorHopEdge.class);
     assertThat(edges).hasSize(2);
     for (var edge : edges) {
-      assertEquals(62, edge.getTravelTime());
+      assertThat(edge.getTravelTime()).hasValue(Duration.ofSeconds(62));
     }
   }
 }

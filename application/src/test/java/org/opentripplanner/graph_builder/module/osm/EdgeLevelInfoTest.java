@@ -12,13 +12,11 @@ import org.opentripplanner.graph_builder.module.osm.moduletests._support.TestOsm
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
-import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 
 public class EdgeLevelInfoTest {
 
@@ -62,14 +60,11 @@ public class EdgeLevelInfoTest {
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var osmModule = OsmModule.of(
-      osmProvider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var osmModule = OsmModuleTestFactory.of(osmProvider)
+      .withGraph(graph)
+      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
-      // The build config field that needs to bet set for street info to be stored.
+      // The build config field that needs to bet set for inclined edge level info to be stored.
       .withIncludeInclinedEdgeLevelInfo(true)
       .build();
     osmModule.buildGraph();
@@ -110,14 +105,11 @@ public class EdgeLevelInfoTest {
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var osmModule = OsmModule.of(
-      osmProvider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var osmModule = OsmModuleTestFactory.of(osmProvider)
+      .withGraph(graph)
+      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
-      // The build config field that needs to bet set for street info to be stored.
+      // The build config field that needs to bet set for inclined edge level info to be stored.
       .withIncludeInclinedEdgeLevelInfo(false)
       .build();
     osmModule.buildGraph();
@@ -154,15 +146,10 @@ public class EdgeLevelInfoTest {
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var osmModule = OsmModule.of(
-      osmProvider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var osmModule = OsmModuleTestFactory.of(osmProvider)
+      .withGraph(graph)
+      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
-      // The build config field that needs to bet set for street info to be stored.
-      .withIncludeInclinedEdgeLevelInfo(true)
       .build();
     osmModule.buildGraph();
 
@@ -197,15 +184,10 @@ public class EdgeLevelInfoTest {
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var osmModule = OsmModule.of(
-      osmProvider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var osmModule = OsmModuleTestFactory.of(osmProvider)
+      .withGraph(graph)
+      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
-      // The build config field that needs to bet set for street info to be stored.
-      .withIncludeInclinedEdgeLevelInfo(true)
       .build();
     osmModule.buildGraph();
 
@@ -232,15 +214,10 @@ public class EdgeLevelInfoTest {
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var osmModule = OsmModule.of(
-      osmProvider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var osmModule = OsmModuleTestFactory.of(osmProvider)
+      .withGraph(graph)
+      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
-      // The build config field that needs to bet set for street info to be stored.
-      .withIncludeInclinedEdgeLevelInfo(true)
       .build();
     osmModule.buildGraph();
 
@@ -266,15 +243,10 @@ public class EdgeLevelInfoTest {
     osmProvider.readOsm(osmDb);
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
-    var osmModule = OsmModule.of(
-      osmProvider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var osmModule = OsmModuleTestFactory.of(osmProvider)
+      .withGraph(graph)
+      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
-      // The build config field that needs to bet set for street info to be stored.
-      .withIncludeInclinedEdgeLevelInfo(true)
       .build();
     osmModule.buildGraph();
 

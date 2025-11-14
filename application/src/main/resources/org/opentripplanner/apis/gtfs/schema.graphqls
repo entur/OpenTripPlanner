@@ -959,7 +959,7 @@ type Location {
 }
 
 """
-A group of fixed stops that is visited in an arbitrary order.
+A group of fixed stops that are visited in an arbitrary order.
 
 This is mostly used by demand-responsive services.
 """
@@ -2071,6 +2071,13 @@ type RideHailingProvider {
 type RiderCategory {
   "ID of the category"
   id: String!
+  """
+  If this category is considered the "default" one. In most places this means "Adult" or
+  "Regular".
+  Frontends can use this property to display this category more prominently or pre-select this
+  in a UI.
+  """
+  isDefault: Boolean!
   "Human readable name of the category."
   name: String
 }
@@ -3220,9 +3227,9 @@ enum FilterPlaceType {
   "Old value for VEHICLE_RENT"
   BICYCLE_RENT @deprecated(reason : "Use VEHICLE_RENT instead as it's clearer that it also returns rental scooters, cars...")
   "Parking lots (not rental stations) that contain spaces for bicycles"
-  BIKE_PARK
+  BIKE_PARK @deprecated(reason : "Not supported.")
   "Parking lots that contain spaces for cars"
-  CAR_PARK
+  CAR_PARK @deprecated(reason : "Not supported.")
   "Departure rows"
   DEPARTURE_ROW
   """
@@ -3262,6 +3269,7 @@ enum InputField {
   DATE_TIME
   FROM
   TO
+  VIA
 }
 
 """

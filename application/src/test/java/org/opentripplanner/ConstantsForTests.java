@@ -11,7 +11,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.FileType;
 import org.opentripplanner.datastore.file.DirectoryDataSource;
-import org.opentripplanner.datastore.file.ZipFileDataSource;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareServiceFactory;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -21,7 +20,7 @@ import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
 import org.opentripplanner.graph_builder.module.TurnRestrictionModule;
 import org.opentripplanner.graph_builder.module.ned.ElevationModule;
 import org.opentripplanner.graph_builder.module.ned.GeotiffGridCoverageFactoryImpl;
-import org.opentripplanner.graph_builder.module.osm.OsmModule;
+import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
@@ -44,6 +43,7 @@ import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.OtpConfigLoader;
+import org.opentripplanner.street.internal.DefaultStreetRepository;
 import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
@@ -80,12 +80,12 @@ public class ConstantsForTests {
 
   private static final String NETEX_NORDIC_DIR = "src/test/resources/netex/nordic";
 
-  private static final String NETEX_NORDIC_FILENAME = "netex_minimal.zip";
+  private static final String NETEX_NORDIC_DIR_NAME = "netex_minimal/";
   private static final String NETEX_EPIP_DIR = "src/test/resources/netex/epip/";
   private static final String NETEX_EPIP_DATA_DIR = NETEX_EPIP_DIR + "netex_epip_minimal/";
 
-  private static final CompositeDataSource NETEX_MINIMAL_DATA_SOURCE = new ZipFileDataSource(
-    new File(NETEX_NORDIC_DIR, NETEX_NORDIC_FILENAME),
+  private static final CompositeDataSource NETEX_MINIMAL_DATA_SOURCE = new DirectoryDataSource(
+    new File(NETEX_NORDIC_DIR, NETEX_NORDIC_DIR_NAME),
     FileType.NETEX
   );
 
@@ -104,9 +104,9 @@ public class ConstantsForTests {
 
   public static NetexBundle createMinimalNetexNordicBundle() {
     var buildConfig = createNetexNordicBuilderParameters();
-    var netexZipFile = new File(NETEX_NORDIC_DIR, NETEX_NORDIC_FILENAME);
+    var netexZipFile = new File(NETEX_NORDIC_DIR, NETEX_NORDIC_DIR_NAME);
 
-    var dataSource = new ZipFileDataSource(netexZipFile, FileType.NETEX);
+    var dataSource = new DirectoryDataSource(netexZipFile, FileType.NETEX);
     var configuredDataSource = new ConfiguredCompositeDataSource<>(
       dataSource,
       buildConfig.netexDefaults
@@ -148,15 +148,9 @@ public class ConstantsForTests {
       var fareFactory = new DefaultFareServiceFactory();
       // Add street data from OSM
       {
-        var osmProvider = new DefaultOsmProvider(PORTLAND_CENTRAL_OSM, false);
-        var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
-        var vehicleParkingRepository = new DefaultVehicleParkingRepository();
-        var osmModule = OsmModule.of(
-          osmProvider,
-          graph,
-          osmInfoRepository,
-          vehicleParkingRepository
-        )
+        var osmModule = OsmModuleTestFactory.of(new DefaultOsmProvider(PORTLAND_CENTRAL_OSM, false))
+          .withGraph(graph)
+          .builder()
           .withStaticParkAndRide(true)
           .withStaticBikeParkAndRide(true)
           .build();
@@ -207,13 +201,16 @@ public class ConstantsForTests {
       // Add street data from OSM
       var osmProvider = new DefaultOsmProvider(osmFile, true);
       var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
+      var streetRepository = new DefaultStreetRepository();
       var vehicleParkingRepository = new DefaultVehicleParkingRepository();
-      var osmModule = OsmModule.of(
-        osmProvider,
-        graph,
-        osmInfoRepository,
-        vehicleParkingRepository
-      ).build();
+
+      var osmModule = OsmModuleTestFactory.of(osmProvider)
+        .withGraph(graph)
+        .withOsmInfoGraphBuildRepository(osmInfoRepository)
+        .withStreetRepository(streetRepository)
+        .withVehicleParkingRepository(vehicleParkingRepository)
+        .builder()
+        .build();
       osmModule.buildGraph();
       TurnRestrictionModule turnRestrictionModule = new TurnRestrictionModule(
         graph,
@@ -267,13 +264,11 @@ public class ConstantsForTests {
       // Add street data from OSM
       {
         var osmProvider = new DefaultOsmProvider(OSLO_EAST_OSM, false);
-        var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
-        var osmModule = OsmModule.of(
-          osmProvider,
-          graph,
-          osmInfoRepository,
-          parkingRepository
-        ).build();
+        var osmModule = OsmModuleTestFactory.of(osmProvider)
+          .withGraph(graph)
+          .withVehicleParkingRepository(parkingRepository)
+          .builder()
+          .build();
         osmModule.buildGraph();
       }
       // Add transit data from Netex

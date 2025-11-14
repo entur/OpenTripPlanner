@@ -148,6 +148,7 @@ public class OTPMain {
         app.graph(),
         app.osmInfoGraphBuildRepository(),
         app.streetDetailsRepository(),
+        app.streetRepository(),
         app.timetableRepository(),
         app.worldEnvelopeRepository(),
         app.vehicleParkingRepository(),
@@ -157,7 +158,6 @@ public class OTPMain {
         app.emissionRepository(),
         app.empiricalDelayRepository(),
         app.stopConsolidationRepository(),
-        app.streetLimitationParameters(),
         app.fareServiceFactory()
       ).save(app.graphOutputDataSource());
     }
