@@ -288,6 +288,41 @@ class LinkingContextFactoryTest {
     assertEquals(RoutingErrorCode.WALKING_BETTER_THAN_TRANSIT, fromError.code);
   }
 
+  @Test
+  void nonExistingPlaceIdWithCoordinatesShouldFallbackToCoordinates() {
+    var container = new TemporaryVerticesContainer();
+    var nonExistingStopId = new FeedScopedId("F", "NonExistingStop");
+
+    // Create locations with both a non-existing stop ID and valid coordinates
+    var from = new GenericLocation("From", nonExistingStopId, stopA.getLat(), stopA.getLon());
+    var to = new GenericLocation(
+      "To",
+      new FeedScopedId("F", "AnotherNonExisting"),
+      stopD.getLat(),
+      stopD.getLon()
+    );
+
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(to)
+      .withDirectMode(StreetMode.WALK)
+      .build();
+
+    // This should NOT throw an exception - it should fall back to using coordinates
+    var linkingContext = linkingContextFactory.create(container, request);
+
+    // Verify that vertices were created from the coordinates
+    var fromVertices = linkingContext.findVertices(from);
+    assertThat(fromVertices).hasSize(1);
+    assertThat(fromVertices).isNotEmpty();
+
+    var toVertices = linkingContext.findVertices(to);
+    assertThat(toVertices).hasSize(1);
+    assertThat(toVertices).isNotEmpty();
+
+    container.close();
+  }
+
   private static Graph buildGraph(Station station, RegularStop... stops) {
     var graph = new Graph();
     var left = StreetModelForTest.intersectionVertex(CENTER.asJtsCoordinate());
