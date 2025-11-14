@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
  *        e.g. <a href="https://www.openstreetmap.org/way/1139062913">...</a>),
  *        use "crosswalk over turn lane".
  */
-public class CrosswalkNamer implements EdgeNamer {
+class CrosswalkNamer implements EdgeNamer {
 
   private static final Logger LOG = LoggerFactory.getLogger(CrosswalkNamer.class);
   private static final int BUFFER_METERS = 25;

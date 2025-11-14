@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
 import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayConfig;
 import org.opentripplanner.ext.datastore.gs.config.GsConfig;
+import org.opentripplanner.ext.edgenaming.EdgeNamerFactory;
 import org.opentripplanner.ext.emission.config.EmissionConfig;
 import org.opentripplanner.ext.emission.parameters.EmissionParameters;
 import org.opentripplanner.ext.empiricaldelay.config.EmpiricalDelayConfig;
@@ -34,7 +35,6 @@ import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParamete
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParameters;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParametersList;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
-import org.opentripplanner.ext.edgenaming.EdgeNamerFactory;
 import org.opentripplanner.gtfs.config.GtfsDefaultParameters;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.netex.config.NetexFeedParameters;
@@ -150,7 +150,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   /**
    * A custom OSM namer to use.
    */
-  public final EdgeNamer edgeNamer;
+  public final EdgeNamer.EdgeNamerType edgeNamer;
 
   public final boolean osmCacheDataInMem;
 

@@ -17,7 +17,7 @@ import org.opentripplanner.street.model.edge.StreetEdge;
  *
  * @author novalis
  */
-public class PortlandCustomNamer implements EdgeNamer {
+class PortlandCustomNamer implements EdgeNamer {
 
   public static String[] STREET_SUFFIXES = {
     "Avenue",

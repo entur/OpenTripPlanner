@@ -10,7 +10,7 @@ import org.opentripplanner.osm.model.OsmWay;
 /**
  * Combines the sidewalk and crosswalk namer.
  */
-public class SidewalkCrosswalkNamer implements EdgeNamer {
+class SidewalkCrosswalkNamer implements EdgeNamer {
 
   private final SidewalkNamer sidewalkNamer = new SidewalkNamer();
   private final CrosswalkNamer crosswalkNamer = new CrosswalkNamer();
