@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.osm.model.OsmEntityType;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
@@ -117,8 +118,15 @@ public class VertexFactory {
     );
   }
 
-  public OsmVertex osmOnLinearBarrier(Coordinate coordinate, long nid, long routableWayId) {
-    return addToGraph(new BarrierPassThroughVertex(coordinate.x, coordinate.y, nid, routableWayId));
+  public OsmVertex osmOnLinearBarrier(
+    Coordinate coordinate,
+    long nid,
+    OsmEntityType osmEntityType,
+    long entityId
+  ) {
+    return addToGraph(
+      new BarrierPassThroughVertex(coordinate.x, coordinate.y, nid, osmEntityType, entityId)
+    );
   }
 
   public TransitStopVertex transitStop(TransitStopVertexBuilder builder) {
@@ -161,9 +169,9 @@ public class VertexFactory {
     );
   }
 
-  public OsmVertex levelledOsm(OsmNode node, double level) {
+  public OsmVertex levelledOsm(OsmNode node, OsmEntityType osmEntityType, long entityId) {
     return addToGraph(
-      new OsmVertexOnLevel(node.getId(), new WgsCoordinate(node.getCoordinate()), level)
+      new OsmElevatorVertex(node.getId(), new WgsCoordinate(node.getCoordinate()), osmEntityType, entityId)
     );
   }
 

@@ -1,5 +1,6 @@
 package org.opentripplanner.street.model.vertex;
 
+import org.opentripplanner.osm.model.OsmEntityType;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
@@ -11,10 +12,6 @@ import org.opentripplanner.transit.model.framework.FeedScopedId;
 public sealed interface VertexLabel {
   static VertexLabel string(String label) {
     return new StringLabel(label);
-  }
-
-  static VertexLabel osm(long nodeId, double level) {
-    return new OsmNodeOnLevelLabel(nodeId, level);
   }
 
   static VertexLabel osm(long nodeId) {
@@ -60,29 +57,18 @@ public sealed interface VertexLabel {
   }
 
   /**
-   * A vertex label for a split vertex generated for a node on a way.
-   * Must be similar to the parent vertex label so that tests can
-   * be written sensibly.
+   * A vertex label for a vertex with an entity. Must be similar to the parent vertex label so that
+   * tests can be written sensibly.
+   * <p>
+   * Used for elevator vertices and split vertices.
    */
-  record NodeOnWayLabel(long nodeId, long wayId) implements VertexLabel {
-    private static final String TEMPLATE = "osm:node:%s:way:%s";
+  record VertexWithEntityLabel(long nodeId, OsmEntityType osmEntityType, long entityId)
+    implements VertexLabel {
+    private static final String TEMPLATE = "osm:node:%s:%s:%s";
 
     @Override
     public String toString() {
-      return TEMPLATE.formatted(nodeId, wayId);
-    }
-  }
-
-  /**
-   * A vertex label for an OSM node that also has a level, for example the upper and lower
-   * vertices of an elevator edge.
-   */
-  record OsmNodeOnLevelLabel(long nodeId, double level) implements VertexLabel {
-    private static final String TEMPLATE = "osm:node:%s/%s";
-
-    @Override
-    public String toString() {
-      return TEMPLATE.formatted(nodeId, level);
+      return TEMPLATE.formatted(nodeId, osmEntityType, entityId);
     }
   }
 
