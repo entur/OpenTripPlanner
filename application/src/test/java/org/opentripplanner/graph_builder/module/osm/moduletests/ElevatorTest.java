@@ -7,6 +7,8 @@ import static org.opentripplanner.graph_builder.module.osm.moduletests._support.
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
@@ -60,8 +62,14 @@ class ElevatorTest {
     }
   }
 
-  @Test
-  void testOsmElevatorNodeWithWaysOnSameLevel() {
+  @ParameterizedTest
+  @CsvSource(
+    value = {
+      "1, 2, 3, 4", "1, 1, 1, 1", "0, 1, 1, null", "null, null, 1, null", "null, null, null, null",
+    },
+    nullValues = "null"
+  )
+  void testOsmElevatorNodeWithLevels(String level1, String ref1, String level2, String ref2) {
     var n1 = new OsmNode(0, 0);
     n1.setId(1);
     var n2 = new OsmNode(0, 1);
@@ -73,16 +81,16 @@ class ElevatorTest {
     var way1 = new OsmWay();
     way1.setId(1);
     way1.addTag("highway", "corridor");
-    way1.addTag("level", "1");
-    way1.addTag("level:ref", "1");
+    way1.addTag("level", level1);
+    way1.addTag("level:ref", ref1);
     way1.addNodeRef(1);
     way1.addNodeRef(2);
 
     var way2 = new OsmWay();
     way2.setId(2);
     way2.addTag("highway", "corridor");
-    way2.addTag("level", "1");
-    way2.addTag("level:ref", "1");
+    way2.addTag("level", level2);
+    way2.addTag("level:ref", ref2);
     way2.addNodeRef(2);
     way2.addNodeRef(3);
 
