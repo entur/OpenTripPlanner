@@ -14,4 +14,6 @@ public enum TimeLimitType {
    * the next one.
    */
   DEPARTURE_TO_DEPARTURE,
+  ARRIVAL_TO_ARRIVAL,
+  ARRIVAL_TO_DEPARTURE
 }
