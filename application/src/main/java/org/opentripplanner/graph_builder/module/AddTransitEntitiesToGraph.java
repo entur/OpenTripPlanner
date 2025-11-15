@@ -229,13 +229,11 @@ public class AddTransitEntitiesToGraph {
 
     ElevatorVertex fromOnboardVertex = vertexFactory.elevator(
       fromVertex,
-      getElevatorLabel(fromVertex, pathway),
-      fromLevel.index()
+      getElevatorLabel(fromVertex, pathway)
     );
     ElevatorVertex toOnboardVertex = vertexFactory.elevator(
       toVertex,
-      getElevatorLabel(toVertex, pathway),
-      toLevel.index()
+      getElevatorLabel(toVertex, pathway)
     );
 
     ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex);

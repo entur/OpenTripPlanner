@@ -46,8 +46,12 @@ public class VertexFactory {
     );
   }
 
-  public ElevatorVertex elevator(Vertex sourceVertex, String label, double level) {
-    return addToGraph(new ElevatorVertex(sourceVertex, label, level));
+  public ElevatorVertex elevator(Vertex sourceVertex, String label) {
+    return addToGraph(new ElevatorVertex(sourceVertex, label));
+  }
+
+  public OsmElevatorVertex osmElevator(OsmNode node, OsmEntityType osmEntityType, long entityId) {
+    return addToGraph(new OsmElevatorVertex(node.getId(), new WgsCoordinate(node.getCoordinate()), osmEntityType, entityId));
   }
 
   public IntersectionVertex intersection(Coordinate edgeCoordinate) {
@@ -166,12 +170,6 @@ public class VertexFactory {
         entrance.getName(),
         entrance.getWheelchairAccessibility()
       )
-    );
-  }
-
-  public OsmVertex levelledOsm(OsmNode node, OsmEntityType osmEntityType, long entityId) {
-    return addToGraph(
-      new OsmElevatorVertex(node.getId(), new WgsCoordinate(node.getCoordinate()), osmEntityType, entityId)
     );
   }
 

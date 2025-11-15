@@ -204,7 +204,7 @@ public abstract class GraphRoutingTest {
       for (int i = 0; i < vertices.length; i++) {
         Vertex v = vertices[i];
 
-        var onboard = vertexFactory.elevator(v, v.getLabelString(), i);
+        var onboard = vertexFactory.elevator(v, v.getLabelString() + "_" + i);
 
         edges.add(ElevatorBoardEdge.createElevatorBoardEdge(v, onboard));
         edges.add(

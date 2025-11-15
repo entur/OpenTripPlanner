@@ -325,7 +325,7 @@ class VertexGenerator {
     Multimap<OsmLevel, OsmElevatorVertex> verticesOnLevel = getVerticesOnLevel(node);
     // An OsmElevatorVertex requires one level to be defined.
     OsmLevel level = osmdb.findSingleLevelForEntity(entity);
-    OsmElevatorVertex vertex = vertexFactory.osmElevatorVertex(
+    OsmElevatorVertex vertex = vertexFactory.osmElevator(
       node,
       getOsmEntityType(entity),
       entity.getId()

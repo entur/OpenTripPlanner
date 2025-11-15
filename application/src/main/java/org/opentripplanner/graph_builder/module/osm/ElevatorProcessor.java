@@ -124,7 +124,7 @@ class ElevatorProcessor {
             graph,
             onboardVertices,
             sourceVertex,
-            sourceVertex.getLabelString(),
+            sourceVertex.getLabelString() + "_" + level.name(),
             level
           );
         }
@@ -180,13 +180,19 @@ class ElevatorProcessor {
         for (int i = 0; i < nodes.size(); i++) {
           Long node = nodes.get(i);
           var sourceVertex = vertexGenerator.intersectionNodes().get(node);
-          String sourceVertexLabel = sourceVertex.getLabelString();
+          OsmLevel level = nodeLevels.get(i);
           createElevatorVertices(
             graph,
             onboardVertices,
             sourceVertex,
-            elevatorWay.getId() + "_" + sourceVertexLabel + "_" + i,
-            nodeLevels.get(i)
+            elevatorWay.getId() +
+            "_" +
+            sourceVertex.getLabelString() +
+            "_" +
+            i +
+            "_" +
+            level.name(),
+            level
           );
         }
 
@@ -215,7 +221,7 @@ class ElevatorProcessor {
     OsmLevel level
   ) {
     var factory = new VertexFactory(graph);
-    ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label, level.level());
+    ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label);
 
     ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex);
     ElevatorAlightEdge.createElevatorAlightEdge(
