@@ -6,9 +6,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.graph.Graph;
@@ -35,6 +35,7 @@ import org.opentripplanner.transit.model.site.PathwayNode;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StationElement;
+import org.opentripplanner.transit.model.site.StopLevel;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -230,31 +231,31 @@ public class AddTransitEntitiesToGraph {
     StationElementVertex fromVertex,
     StationElementVertex toVertex
   ) {
-    StopLevel fromLevel = getStopLevel(fromVertex);
-    StopLevel toLevel = getStopLevel(toVertex);
+    StopLevel fromLevel = findStopLevel(fromVertex);
+    StopLevel toLevel = findStopLevel(toVertex);
 
     double levels = 1;
-    if (
-      fromLevel.index() != null &&
-      toLevel.index() != null &&
-      !fromLevel.index().equals(toLevel.index())
-    ) {
+    if (fromLevel.index() != toLevel.index()) {
       levels = Math.abs(fromLevel.index() - toLevel.index());
     }
 
     ElevatorVertex fromOnboardVertex = vertexFactory.elevator(
       fromVertex,
-      elevatorLabel(fromVertex, pathway),
+      getElevatorLabel(fromVertex, pathway),
       fromLevel.index()
     );
     ElevatorVertex toOnboardVertex = vertexFactory.elevator(
       toVertex,
-      elevatorLabel(toVertex, pathway),
+      getElevatorLabel(toVertex, pathway),
       toLevel.index()
     );
 
     ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex);
-    ElevatorAlightEdge.createElevatorAlightEdge(toOnboardVertex, toVertex, toLevel.name());
+    ElevatorAlightEdge.createElevatorAlightEdge(
+      toOnboardVertex,
+      toVertex,
+      new NonLocalizedString(toLevel.name())
+    );
 
     StreetTraversalPermission permission = StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
     ElevatorHopEdge.createElevatorHopEdge(
@@ -268,7 +269,11 @@ public class AddTransitEntitiesToGraph {
 
     if (pathway.isBidirectional()) {
       ElevatorBoardEdge.createElevatorBoardEdge(toVertex, toOnboardVertex);
-      ElevatorAlightEdge.createElevatorAlightEdge(fromOnboardVertex, fromVertex, fromLevel.name());
+      ElevatorAlightEdge.createElevatorAlightEdge(
+        fromOnboardVertex,
+        fromVertex,
+        new NonLocalizedString(fromLevel.name())
+      );
       ElevatorHopEdge.createElevatorHopEdge(
         toOnboardVertex,
         fromOnboardVertex,
@@ -280,25 +285,26 @@ public class AddTransitEntitiesToGraph {
     }
   }
 
-  private static String elevatorLabel(StationElementVertex fromVertex, Pathway pathway) {
-    return "%s_%s".formatted(fromVertex.getLabel(), pathway.getId());
+  private static String getElevatorLabel(StationElementVertex vertex, Pathway pathway) {
+    return "%s_%s".formatted(vertex.getLabel(), pathway.getId());
   }
 
-  private StopLevel getStopLevel(StationElementVertex vertex) {
-    var dfltLevel = new StopLevel(vertex.getName(), null);
+  /**
+   * Try to find a stop level. If one can not be found, return the default level.
+   * If a name is not present, default to the index as the name.
+   *
+   * @return StopLevel that can not be null without any null fields
+   */
+  public StopLevel findStopLevel(StationElementVertex vertex) {
     var stop = otpTransitService.siteRepository().getRegularStop(vertex.getId());
-    if (stop == null) {
-      return dfltLevel;
-    } else if (stop.level() == null) {
-      return dfltLevel;
+    if (stop == null || stop.level() == null) {
+      return StationElement.DEFAULT_LEVEL;
     } else {
       var level = stop.level();
       return new StopLevel(
-        NonLocalizedString.ofNullableOrElse(level.name(), stop.getName()),
+        Objects.requireNonNullElse(level.name(), String.valueOf(level.index())),
         level.index()
       );
     }
   }
-
-  private record StopLevel(I18NString name, Double index) {}
 }
