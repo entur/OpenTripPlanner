@@ -96,7 +96,6 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
 
     RoutingPreferences preferences = s0.getPreferences();
 
-    /* TODO: Consider mode, so that passing through multiple fare gates is not possible */
     long time_ms = 1000L * traversalTime;
 
     if (time_ms == 0) {
