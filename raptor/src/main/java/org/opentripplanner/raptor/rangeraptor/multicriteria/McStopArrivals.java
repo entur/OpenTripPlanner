@@ -5,7 +5,6 @@ import static org.opentripplanner.raptor.api.model.PathLegType.TRANSIT;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -50,15 +49,6 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     ArrivalParetoSetComparatorFactory<McStopArrival<T>> comparatorFactory,
     DebugHandlerFactory<T> debugHandlerFactory
   ) {
-    // Assert only-one-of next or egressPaths is set
-    if (viaConnectionListeners.isEmpty()) {
-      Objects.requireNonNull(egressPaths);
-    } else if (egressPaths != null) {
-      throw new IllegalArgumentException(
-        "Can not delegate to next-leg and at the same have egress paths."
-      );
-    }
-
     //noinspection unchecked
     this.arrivals = (StopArrivalParetoSet<T>[]) new StopArrivalParetoSet[nStops];
     this.touchedStops = new BitSet(nStops);

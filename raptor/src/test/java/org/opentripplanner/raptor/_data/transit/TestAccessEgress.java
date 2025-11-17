@@ -373,10 +373,12 @@ public class TestAccessEgress implements RaptorAccessEgress {
           case C1 -> withCost(field.value());
           case RIDES -> withNRides(field.value());
           case TIME_PENALTY -> withTimePenalty(field.value());
+          case VIAS -> withViaLocationsVisited(field.value());
           case C2,
             TRANSFERS,
             TRANSFER_PRIORITY,
             WAIT_TIME_COST -> throw new IllegalArgumentException(field.toString());
+          default -> throw new IllegalArgumentException(field.type().toString());
         }
       }
       if (!RaptorConstants.isSet(c1)) {

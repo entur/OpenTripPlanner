@@ -70,12 +70,16 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
 
   @Override
   public void findAccessOnStreetForRound() {
-    head().findAccessOnStreetForRound();
+    for (RangeRaptorWorker<T> child : children) {
+      child.findAccessOnStreetForRound();
+    }
   }
 
   @Override
   public void findAccessOnBoardForRound() {
-    head().findAccessOnBoardForRound();
+    for (RangeRaptorWorker<T> child : children) {
+      child.findAccessOnBoardForRound();
+    }
   }
 
   private RangeRaptorWorker<T> head() {
