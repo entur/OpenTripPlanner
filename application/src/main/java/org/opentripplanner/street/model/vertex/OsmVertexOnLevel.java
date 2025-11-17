@@ -10,9 +10,9 @@ import org.opentripplanner.framework.geometry.WgsCoordinate;
  */
 public class OsmVertexOnLevel extends OsmVertex {
 
-  private final String level;
+  private final double level;
 
-  public OsmVertexOnLevel(long id, WgsCoordinate coordinate, String level) {
+  public OsmVertexOnLevel(long id, WgsCoordinate coordinate, double level) {
     super(coordinate.longitude(), coordinate.latitude(), id);
     this.level = level;
   }

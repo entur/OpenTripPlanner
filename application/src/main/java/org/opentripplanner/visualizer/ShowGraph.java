@@ -111,7 +111,8 @@ public class ShowGraph extends PApplet implements MouseWheelListener {
   protected double mouseModelX;
   protected double mouseModelY;
   private Point startDrag = null;
-  private int dragX, dragY;
+  private int dragX;
+  private int dragY;
   private boolean ctrlPressed = false;
   boolean drawFast = false;
   boolean drawStreetEdges = true;
@@ -382,7 +383,8 @@ public class ShowGraph extends PApplet implements MouseWheelListener {
   }
 
   public void highlightCoordinate(Coordinate c) {
-    double xd = 0, yd = 0;
+    double xd = 0;
+    double yd = 0;
     while (!modelBounds.contains(c)) {
       xd = modelBounds.getWidth() / 100;
       yd = modelBounds.getHeight() / 100;

@@ -45,8 +45,8 @@ public class VertexFactory {
     );
   }
 
-  public ElevatorVertex elevator(Vertex sourceVertex, String label, String levelName) {
-    return addToGraph(new ElevatorVertex(sourceVertex, label, levelName));
+  public ElevatorVertex elevator(Vertex sourceVertex, String label, double level) {
+    return addToGraph(new ElevatorVertex(sourceVertex, label, level));
   }
 
   public IntersectionVertex intersection(Coordinate edgeCoordinate) {
@@ -159,7 +159,7 @@ public class VertexFactory {
     );
   }
 
-  public OsmVertex levelledOsm(OsmNode node, String level) {
+  public OsmVertex levelledOsm(OsmNode node, double level) {
     return addToGraph(
       new OsmVertexOnLevel(node.getId(), new WgsCoordinate(node.getCoordinate()), level)
     );
