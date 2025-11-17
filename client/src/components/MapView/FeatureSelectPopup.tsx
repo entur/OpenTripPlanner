@@ -12,10 +12,9 @@ export function FeatureSelectPopup({
   onClose: () => void;
   setShowPropsPopup: ({ coordinates, feature }: { coordinates: LngLat; feature: MapGeoJSONFeature }) => void;
 }) {
-  console.log(features);
   return (
     <Popup maxWidth="600px" latitude={coordinates.lat} longitude={coordinates.lng} onClose={onClose}>
-      <p style={{ fontWeight: 'bold' }}>Overlapping features</p>
+      <strong>Overlapping features</strong>
       <Table bordered>
         <thead>
           <tr>
