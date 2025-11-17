@@ -13,7 +13,6 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
-import org.opentripplanner.transit.model.site.PathwayMode;
 
 /**
  * A walking pathway as described in GTFS
@@ -52,13 +51,6 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
   }
 
   /**
-   * {@link #createLowCostPathwayEdge(Vertex, Vertex, boolean, PathwayMode)}
-   */
-  public static PathwayEdge createLowCostPathwayEdge(Vertex fromV, Vertex toV, PathwayMode mode) {
-    return PathwayEdge.createLowCostPathwayEdge(fromV, toV, true, mode);
-  }
-
-  /**
    * Create a PathwayEdge that doesn't have a traversal time, distance or steps.
    * <p>
    * These are for edges which have an implied cost of almost zero just like a FreeEdge has.
@@ -66,10 +58,9 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
   public static PathwayEdge createLowCostPathwayEdge(
     Vertex fromV,
     Vertex toV,
-    boolean wheelchairAccessible,
-    PathwayMode mode
+    boolean wheelchairAccessible
   ) {
-    return createPathwayEdge(fromV, toV, null, 0, 0, 0, 0, wheelchairAccessible, mode);
+    return createPathwayEdge(fromV, toV, null, 0, 0, 0, 0, wheelchairAccessible);
   }
 
   public static PathwayEdge createPathwayEdge(
@@ -80,8 +71,7 @@ public class PathwayEdge extends Edge implements BikeWalkableEdge, WheelchairTra
     double distance,
     int steps,
     double slope,
-    boolean wheelchairAccessible,
-    PathwayMode mode
+    boolean wheelchairAccessible
   ) {
     return connectToGraph(
       new PathwayEdge(

@@ -60,7 +60,6 @@ import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
-import org.opentripplanner.transit.model.site.PathwayMode;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StationBuilder;
@@ -365,8 +364,7 @@ public abstract class GraphRoutingTest {
         length,
         0,
         0,
-        false,
-        PathwayMode.WALKWAY
+        false
       );
     }
 
