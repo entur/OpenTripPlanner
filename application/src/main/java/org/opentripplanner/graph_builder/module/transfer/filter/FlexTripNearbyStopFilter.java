@@ -6,6 +6,13 @@ import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.TransitService;
 
+/**
+ * Filters nearby stops based on flex trip availability.
+ * <p>
+ * This filter ensures that transfers are generated for stops used by flex trips. For each flex
+ * trip, it keeps only the closest stop where the flex trip can board or alight (depending on
+ * direction).
+ */
 class FlexTripNearbyStopFilter implements NearbyStopFilter {
 
   private final TransitService transitService;

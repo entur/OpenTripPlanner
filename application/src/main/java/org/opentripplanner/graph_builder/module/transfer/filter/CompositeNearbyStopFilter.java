@@ -8,6 +8,13 @@ import java.util.Set;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
+/**
+ * Combines multiple {@link NearbyStopFilter}s into a single filter.
+ * <p>
+ * This filter applies all configured filters and returns the union of their results. A stop is
+ * included if ANY of the component filters include it (OR logic for from-stops, union for
+ * to-stops).
+ */
 class CompositeNearbyStopFilter implements NearbyStopFilter {
 
   private final List<NearbyStopFilter> filters;

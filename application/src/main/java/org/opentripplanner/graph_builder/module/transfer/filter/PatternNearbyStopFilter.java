@@ -12,6 +12,16 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.TransitService;
 
+/**
+ * Filters nearby stops based on trip pattern availability.
+ * <p>
+ * This filter ensures that transfers are only generated between stops that are served by trip
+ * patterns. For each trip pattern passing nearby, it keeps only the closest stop where boarding
+ * or alighting is possible (depending on direction).
+ * <p>
+ * Stops without patterns may still be included if they are marked as sometimes-used by real-time
+ * updates (when the IncludeStopsUsedRealTimeInTransfers feature is enabled).
+ */
 class PatternNearbyStopFilter implements NearbyStopFilter {
 
   private final TransitService transitService;

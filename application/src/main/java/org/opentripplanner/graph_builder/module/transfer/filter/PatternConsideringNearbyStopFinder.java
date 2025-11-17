@@ -11,6 +11,21 @@ import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.service.TransitService;
 
+/**
+ * A {@link NearbyStopFinder} that filters nearby stops based on trip patterns and flex trips.
+ * <p>
+ * This finder delegates to another NearbyStopFinder to find physically nearby stops, then filters
+ * them to include only stops that:
+ * <ul>
+ *   <li>Are served by trip patterns where boarding/alighting is possible, OR</li>
+ *   <li>Are served by flex trips (if FlexRouting is enabled), OR</li>
+ *   <li>Are sometimes used by real-time trips (if IncludeStopsUsedRealTimeInTransfers is enabled)</li>
+ * </ul>
+ * <p>
+ * For each trip pattern, only the closest stop is included to reduce the number of transfers
+ * generated. This significantly improves transfer generation performance by limiting transfers to
+ * the most relevant stops.
+ */
 public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
 
   private final NearbyStopFilter filter;

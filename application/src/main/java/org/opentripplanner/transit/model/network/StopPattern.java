@@ -234,7 +234,7 @@ public final class StopPattern implements Serializable {
   /**
    * Use {@link #canBoard(int)} if you want to check if a stop can be boarded at a given
    * stop position, ONLY use this method if you would like to search the stop-pattern for a
-   * bording.
+   * boarding.
    * <p>
    * Returns whether passengers can board at a given stop SOMEWHERE in the pattern,
    * considering all stops in case the pattern visit the same stop twice.
