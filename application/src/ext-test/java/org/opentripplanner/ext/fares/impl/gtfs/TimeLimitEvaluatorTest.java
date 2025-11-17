@@ -51,10 +51,10 @@ class TimeLimitEvaluatorTest {
 
   private static List<Arguments> belowLimitCases() {
     return List.of(
-      Arguments.of(DEPARTURE_TO_ARRIVAL, ofMinutes(19)),
+      Arguments.of(DEPARTURE_TO_ARRIVAL, ofMinutes(20).minusSeconds(20)),
       Arguments.of(DEPARTURE_TO_DEPARTURE, ofMinutes(10).minusSeconds(1)),
       Arguments.of(ARRIVAL_TO_ARRIVAL, ofMinutes(15).minusSeconds(1)),
-      Arguments.of(ARRIVAL_TO_DEPARTURE, ofMinutes(4))
+      Arguments.of(ARRIVAL_TO_DEPARTURE, ofMinutes(5).minusSeconds(1))
     );
   }
 
