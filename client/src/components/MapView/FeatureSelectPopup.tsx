@@ -12,22 +12,31 @@ export function FeatureSelectPopup({
   onClose: () => void;
   setShowPropsPopup: ({ coordinates, feature }: { coordinates: LngLat; feature: MapGeoJSONFeature }) => void;
 }) {
+  console.log(features);
   return (
-    <Popup latitude={coordinates.lat} longitude={coordinates.lng} onClose={onClose}>
+    <Popup maxWidth="600px" latitude={coordinates.lat} longitude={coordinates.lng} onClose={onClose}>
       <p style={{ fontWeight: 'bold' }}>Overlapping features</p>
-      <Table>
+      <Table bordered>
+        <thead>
+          <tr>
+            <th scope="col">layer id</th>
+            <th scope="col">class</th>
+            <th scope="col">name/label</th>
+          </tr>
+        </thead>
         <tbody>
           {features.map((feature, index) => (
-            <tr className="feature-select-item" key={index}>
-              <th scope="row">{index}</th>
-              <td
-                onClick={() => {
-                  onClose();
-                  setShowPropsPopup({ coordinates, feature });
-                }}
-              >
-                {feature.properties.name || feature.properties.class}
-              </td>
+            <tr
+              onClick={() => {
+                onClose();
+                setShowPropsPopup({ coordinates, feature });
+              }}
+              className="feature-select-item"
+              key={index}
+            > 
+              <td>{feature.layer.id}</td>
+              <td>{feature.properties.class}</td>
+              <td>{feature.properties.name || feature.properties.label || 'n/a'}</td>
             </tr>
           ))}
         </tbody>

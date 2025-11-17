@@ -212,7 +212,7 @@
 
 /* feature select popup */
 
-.feature-select-item td:hover {
+.feature-select-item:hover td {
   background-color: #d5d5d5;
   cursor: pointer;
 }
