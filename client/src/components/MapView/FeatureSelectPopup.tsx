@@ -33,7 +33,7 @@ export function FeatureSelectPopup({
               }}
               className="feature-select-item"
               key={index}
-            > 
+            >
               <td>{feature.layer.id}</td>
               <td>{feature.properties.class}</td>
               <td>{feature.properties.name || feature.properties.label || 'n/a'}</td>
