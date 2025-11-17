@@ -42,7 +42,7 @@ class VertexGenerator {
 
   private final Map<Long, IntersectionVertex> intersectionNodes = new HashMap<>();
 
-  private final HashMap<Long, Multimap<OsmLevel, OsmElevatorVertex>> multiLevelNodes =
+  private final HashMap<Long, Map<OsmElevatorKey, OsmElevatorVertex>> elevatorNodes =
     new HashMap<>();
 
   /**
@@ -242,8 +242,8 @@ class VertexGenerator {
    * Tracks OSM nodes which are decomposed into multiple graph vertices because they are
    * elevators. They can then be iterated over to build {@link ElevatorEdge} between them.
    */
-  Map<Long, Multimap<OsmLevel, OsmElevatorVertex>> multiLevelNodes() {
-    return multiLevelNodes;
+  Map<Long, Map<OsmElevatorKey, OsmElevatorVertex>> elevatorNodes() {
+    return elevatorNodes;
   }
 
   void initIntersectionNodes() {
@@ -322,25 +322,31 @@ class VertexGenerator {
    * @param node the node to create the elevator vertex from
    */
   private OsmElevatorVertex getElevatorVertex(OsmNode node, OsmEntity entity) {
-    Multimap<OsmLevel, OsmElevatorVertex> verticesOnLevel = getVerticesOnLevel(node);
+    Map<OsmElevatorKey, OsmElevatorVertex> elevatorVertices = getElevatorVertices(node);
     // An OsmElevatorVertex requires one level to be defined.
     OsmLevel level = osmdb.findSingleLevelForEntity(entity);
-    OsmElevatorVertex vertex = vertexFactory.osmElevator(
-      node,
-      getOsmEntityType(entity),
+    OsmEntityType osmEntityType = getOsmEntityType(entity);
+    OsmElevatorKey osmElevatorKey = new OsmElevatorKey(
+      level,
+      node.getId(),
+      osmEntityType,
       entity.getId()
     );
-    verticesOnLevel.put(level, vertex);
-    return vertex;
+    if (!elevatorVertices.containsKey(osmElevatorKey)) {
+      OsmElevatorVertex vertex = vertexFactory.osmElevator(node, osmEntityType, entity.getId());
+      elevatorVertices.put(osmElevatorKey, vertex);
+      return vertex;
+    }
+    return elevatorVertices.get(osmElevatorKey);
   }
 
-  private Multimap<OsmLevel, OsmElevatorVertex> getVerticesOnLevel(OsmNode node) {
+  private Map<OsmElevatorKey, OsmElevatorVertex> getElevatorVertices(OsmNode node) {
     long nodeId = node.getId();
-    if (multiLevelNodes.containsKey(nodeId)) {
-      return multiLevelNodes.get(nodeId);
+    if (elevatorNodes.containsKey(nodeId)) {
+      return elevatorNodes.get(nodeId);
     }
-    Multimap<OsmLevel, OsmElevatorVertex> verticesOnLevel = HashMultimap.create();
-    multiLevelNodes.put(nodeId, verticesOnLevel);
+    Map<OsmElevatorKey, OsmElevatorVertex> verticesOnLevel = new HashMap<>();
+    elevatorNodes.put(nodeId, verticesOnLevel);
     return verticesOnLevel;
   }
 

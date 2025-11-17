@@ -1,12 +1,13 @@
 package org.opentripplanner.graph_builder.module.osm;
 
-import com.google.common.collect.Multimap;
 import gnu.trove.list.TLongList;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -107,27 +108,28 @@ class ElevatorProcessor {
    * Add nodes with tag highway=elevator to graph as elevators.
    */
   private void buildElevatorEdgesFromElevatorNodes(Graph graph) {
-    for (Long nodeId : vertexGenerator.multiLevelNodes().keySet()) {
+    for (Long nodeId : vertexGenerator.elevatorNodes().keySet()) {
       OsmNode node = osmdb.getNode(nodeId);
-      Multimap<OsmLevel, OsmElevatorVertex> vertices = vertexGenerator
-        .multiLevelNodes()
-        .get(nodeId);
+      Map<OsmElevatorKey, OsmElevatorVertex> vertices = vertexGenerator.elevatorNodes().get(nodeId);
 
       // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (vertices.size() < 2) continue;
 
-      List<OsmLevel> levels = vertices.keySet().stream().sorted().toList();
+      List<OsmElevatorKey> osmElevatorKeys = vertices
+        .keySet()
+        .stream()
+        .sorted(Comparator.comparing(OsmElevatorKey::level))
+        .toList();
       ArrayList<Vertex> onboardVertices = new ArrayList<>();
-      for (OsmLevel level : levels) {
-        for (OsmElevatorVertex sourceVertex : vertices.get(level)) {
-          createElevatorVertices(
-            graph,
-            onboardVertices,
-            sourceVertex,
-            sourceVertex.getLabelString() + "_" + level.name(),
-            level
-          );
-        }
+      for (OsmElevatorKey key : osmElevatorKeys) {
+        OsmElevatorVertex sourceVertex = vertices.get(key);
+        createElevatorVertices(
+          graph,
+          onboardVertices,
+          sourceVertex,
+          sourceVertex.getLabelString() + "_" + key.level().name(),
+          key.level()
+        );
       }
 
       var wheelchair = node.explicitWheelchairAccessibility();
@@ -139,7 +141,7 @@ class ElevatorProcessor {
         onboardVertices,
         wheelchair,
         !node.isBicycleDenied(),
-        levels.size(),
+        (int) osmElevatorKeys.stream().map(key -> key.level()).distinct().count(),
         (int) travelTime
       );
       LOG.debug("Created elevator edges for node {}", node.getId());
