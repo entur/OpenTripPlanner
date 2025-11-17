@@ -1,6 +1,7 @@
 package org.opentripplanner.gtfs.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -13,6 +14,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Stop;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -44,6 +46,7 @@ public class StopMapperTest {
   private static final int VEHICLE_TYPE_RAIL = 2;
   private static final int VEHICLE_TYPE_BUS = 3;
   private static final int VEHICLE_TYPE_CABLE_CAR = 5;
+  private static final int VEHICLE_TYPE_RAIL_REPLACEMENT_BUS = 714;
 
   private static final int VEHICLE_TYPE = VEHICLE_TYPE_CABLE_CAR;
 
@@ -78,6 +81,7 @@ public class StopMapperTest {
     assertEquals(URL, result.getUrl().toString());
     assertEquals(Accessibility.POSSIBLE, result.getWheelchairAccessibility());
     assertEquals(ZONE_ID, result.getFirstZoneAsString());
+    assertFalse(result.isSometimesUsedRealtime());
   }
 
   @Test
@@ -189,6 +193,54 @@ public class StopMapperTest {
     RegularStop result = subject.map(input);
 
     assertEquals(PLATFORM_CODE, result.getPlatformCode());
+  }
+
+  @Test
+  void testMapSometimesUsedRealtimeForRailWithFeatureOn() {
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+      Stop input = createBasicStop();
+      input.setVehicleType(VEHICLE_TYPE_RAIL);
+
+      RegularStop result = subject.map(input);
+
+      assertTrue(result.isSometimesUsedRealtime());
+    });
+  }
+
+  @Test
+  void testMapSometimesUsedRealtimeForRailReplacementBusWithFeatureOn() {
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+      Stop input = createBasicStop();
+      input.setVehicleType(VEHICLE_TYPE_RAIL_REPLACEMENT_BUS);
+
+      RegularStop result = subject.map(input);
+
+      assertTrue(result.isSometimesUsedRealtime());
+    });
+  }
+
+  @Test
+  void testMapSometimesUsedRealtimeForBusWithFeatureOn() {
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+      Stop input = createBasicStop();
+      input.setVehicleType(VEHICLE_TYPE_BUS);
+
+      RegularStop result = subject.map(input);
+
+      assertFalse(result.isSometimesUsedRealtime());
+    });
+  }
+
+  @Test
+  void testMapSometimesUsedRealtimeWithFeatureOff() {
+    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOff(() -> {
+      Stop input = createBasicStop();
+      input.setVehicleType(VEHICLE_TYPE_RAIL);
+
+      RegularStop result = subject.map(input);
+
+      assertFalse(result.isSometimesUsedRealtime());
+    });
   }
 
   /**
