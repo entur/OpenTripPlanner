@@ -233,6 +233,30 @@ class BarrierEdgeBuilderTest {
   }
 
   @Test
+  void connectThreeVerticesWithWallAndEntrance() {
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    connectToOutsideWorld(v1, v2, v3);
+
+    var node = new OsmNode();
+    node.addTag("entrance", "main");
+
+    // An entrance can be used to pass the wall
+    subject.build(node, List.of(v1, v2, v3), List.of(WALL));
+    assertEquals(3, v1.getDegreeIn());
+    assertEquals(3, v1.getDegreeOut());
+    assertEquals(3, v2.getDegreeIn());
+    assertEquals(3, v2.getDegreeOut());
+    assertEquals(3, v3.getDegreeIn());
+    assertEquals(3, v3.getDegreeOut());
+    for (var edge : getEdgesThroughBarrierFromVertex(v1)) {
+      assertEquals(ALL, edge.getPermission());
+      assertTrue(edge.isWheelchairAccessible());
+    }
+  }
+
+  @Test
   void throughOneWayTraffic() {
     var v0 = new OsmVertex(0, 0, 1);
     var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
