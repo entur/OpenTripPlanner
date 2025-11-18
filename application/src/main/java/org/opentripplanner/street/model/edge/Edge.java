@@ -105,6 +105,14 @@ public abstract class Edge implements AStarEdge<State, Edge, Vertex>, Serializab
   }
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Edge that = (Edge) o;
+    return (Objects.equals(fromv, that.fromv) && Objects.equals(tov, that.tov));
+  }
+
+  @Override
   public String toString() {
     return buildToString(null, b -> {});
   }

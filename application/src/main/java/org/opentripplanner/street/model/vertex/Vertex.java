@@ -163,6 +163,19 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     return getLabel().toString();
   }
 
+  @Override
+  public int hashCode() {
+    return getLabelString().hashCode();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (o == null || getClass() != o.getClass()) return false;
+    Vertex that = (Vertex) o;
+    return this.getLabelString().equals(that.getLabelString());
+  }
+
   /**
    * If applying turn restrictions to a graph has generated multiple instances of a vertex,
    * one of them is the parent, and the others are subsidiary vertices. Calling getParent()

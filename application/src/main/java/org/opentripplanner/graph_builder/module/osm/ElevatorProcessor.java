@@ -114,6 +114,7 @@ class ElevatorProcessor {
       Map<OsmElevatorKey, OsmLevel> verticeLevels = vertexGenerator.elevatorNodeLevels();
 
       // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
+      // TODO create issue
       if (vertices.size() < 2) continue;
 
       List<OsmElevatorKey> osmElevatorKeys = new ArrayList<>(vertices.keySet());
@@ -126,7 +127,7 @@ class ElevatorProcessor {
           graph,
           onboardVertices,
           sourceVertex,
-          sourceVertex.getLabelString() + "_" + level.name(),
+          sourceVertex.getLabelString(),
           level
         );
       }
@@ -186,13 +187,7 @@ class ElevatorProcessor {
             graph,
             onboardVertices,
             sourceVertex,
-            elevatorWay.getId() +
-            "_" +
-            sourceVertex.getLabelString() +
-            "_" +
-            i +
-            "_" +
-            level.name(),
+            elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
             level
           );
         }
