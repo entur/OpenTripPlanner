@@ -79,7 +79,7 @@ class QuayMapper {
     String subMode = transitMode.subMode();
     boolean sometimesUsedRealtime = false;
 
-    if (OTPFeature.IncludeStopsUsedRealtimeInTransfers.isOn()) {
+    if (OTPFeature.IncludeStopsUsedRealTimeInTransfers.isOn()) {
       if (transitMode.mainMode() == RAIL) {
         sometimesUsedRealtime = true;
       }

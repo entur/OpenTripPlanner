@@ -197,7 +197,7 @@ public class StopMapperTest {
 
   @Test
   void testMapSometimesUsedRealtimeForRailWithFeatureOn() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOn(() -> {
       Stop input = createBasicStop();
       input.setVehicleType(VEHICLE_TYPE_RAIL);
 
@@ -209,7 +209,7 @@ public class StopMapperTest {
 
   @Test
   void testMapSometimesUsedRealtimeForRailReplacementBusWithFeatureOn() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOn(() -> {
       Stop input = createBasicStop();
       input.setVehicleType(VEHICLE_TYPE_RAIL_REPLACEMENT_BUS);
 
@@ -221,7 +221,7 @@ public class StopMapperTest {
 
   @Test
   void testMapSometimesUsedRealtimeForBusWithFeatureOn() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOn(() -> {
       Stop input = createBasicStop();
       input.setVehicleType(VEHICLE_TYPE_BUS);
 
@@ -233,7 +233,7 @@ public class StopMapperTest {
 
   @Test
   void testMapSometimesUsedRealtimeWithFeatureOff() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOff(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOff(() -> {
       Stop input = createBasicStop();
       input.setVehicleType(VEHICLE_TYPE_RAIL);
 

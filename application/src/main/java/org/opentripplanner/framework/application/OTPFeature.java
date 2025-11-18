@@ -43,7 +43,7 @@ public enum OTPFeature {
   ),
   FloatingBike(true, false, "Enable floating bike routing."),
   GtfsGraphQlApi(true, false, "Enable the [GTFS GraphQL API](apis/GTFS-GraphQL-API.md)."),
-  IncludeStopsUsedRealtimeInTransfers(
+  IncludeStopsUsedRealTimeInTransfers(
     false,
     false,
     """
@@ -52,11 +52,9 @@ public enum OTPFeature {
     changed or added by real-time updates. Since transfer generation happens before real-time
     updates are applied, OTP cannot know which stops will be needed. Instead, OTP will attempt to
     identify stops likely to be used by real-time updates at import time. Common cases include rail
-    stops (which often have late platform assignments) and stops reserved for replacement services
-    (which can be detected in NeTEx by examining the stop sub-mode). This feature has no effect if
-    `ConsiderPatternsForDirectTransfers` is disabled.
-
-    This feature is only supported for NeTEx feeds, not for GTFS feeds.
+    stops (which often have late platform assignments) and stops reserved for replacement services.
+    This is detected examining the stop `subMode`(NeTEx) and `vehicleType`(GTFS). This feature has
+    no effect if `ConsiderPatternsForDirectTransfers` is disabled.
     """
   ),
   /**

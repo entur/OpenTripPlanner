@@ -110,7 +110,7 @@ class StopMapper {
    * when it does not have any trips/routes visiting it.
    */
   private static boolean mapSometimesUsedRealtime(TransitMode mode, Stop gtfsStop) {
-    if (OTPFeature.IncludeStopsUsedRealtimeInTransfers.isOn()) {
+    if (OTPFeature.IncludeStopsUsedRealTimeInTransfers.isOn()) {
       if (mode == TransitMode.RAIL) {
         return true;
       }

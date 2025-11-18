@@ -197,7 +197,7 @@ class DirectTransferGeneratorTest {
 
   @Test
   public void testStreetTransfersWithPatternsIncludeRealTimeUsedStops() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOn(() -> {
       var repository = DirectTransferGeneratorTestData.of()
         .withPatterns()
         .withStreetGraph()
@@ -250,7 +250,7 @@ class DirectTransferGeneratorTest {
 
   @Test
   public void testStreetTransfersWithStationWithTransfersNotAllowed() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOn(() -> {
       var repository = DirectTransferGeneratorTestData.of()
         .withPatterns()
         .withStreetGraph()
@@ -279,7 +279,7 @@ class DirectTransferGeneratorTest {
 
   @Test
   public void testBikeRequestWithBikesAllowedTransfersWithIncludeEmptyRailStopsInTransfersOn() {
-    OTPFeature.IncludeStopsUsedRealtimeInTransfers.testOn(() -> {
+    OTPFeature.IncludeStopsUsedRealTimeInTransfers.testOn(() -> {
       var repository = DirectTransferGeneratorTestData.of()
         .withPatterns()
         .withStreetGraph()

@@ -82,6 +82,6 @@ class PatternNearbyStopFilter implements NearbyStopFilter {
   }
 
   private boolean includeStopUsedRealtime(RegularStop stop) {
-    return OTPFeature.IncludeStopsUsedRealtimeInTransfers.isOn() && stop.isSometimesUsedRealtime();
+    return OTPFeature.IncludeStopsUsedRealTimeInTransfers.isOn() && stop.isSometimesUsedRealtime();
   }
 }
