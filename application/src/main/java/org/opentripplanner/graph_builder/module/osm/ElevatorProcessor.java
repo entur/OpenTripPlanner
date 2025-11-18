@@ -77,7 +77,7 @@ class ElevatorProcessor {
    *
    * +==+~~X
    *
-   * +--+~~X
+   * +==+~~X
    *
    * +  GenericVertex
    * X  EndpointVertex
@@ -89,9 +89,9 @@ class ElevatorProcessor {
    *
    * +==+~~X
    * |
-   * +--+~~X
+   * +==+~~X
    * |
-   * +--+~~X
+   * +==+~~X
    *
    * +  GenericVertex
    * X  EndpointVertex
@@ -111,24 +111,23 @@ class ElevatorProcessor {
     for (Long nodeId : vertexGenerator.elevatorNodes().keySet()) {
       OsmNode node = osmdb.getNode(nodeId);
       Map<OsmElevatorKey, OsmElevatorVertex> vertices = vertexGenerator.elevatorNodes().get(nodeId);
+      Map<OsmElevatorKey, OsmLevel> verticeLevels = vertexGenerator.elevatorNodeLevels();
 
       // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (vertices.size() < 2) continue;
 
-      List<OsmElevatorKey> osmElevatorKeys = vertices
-        .keySet()
-        .stream()
-        .sorted(Comparator.comparing(OsmElevatorKey::level))
-        .toList();
+      List<OsmElevatorKey> osmElevatorKeys = new ArrayList<>(vertices.keySet());
+      osmElevatorKeys.sort(Comparator.comparing(verticeLevels::get));
       ArrayList<Vertex> onboardVertices = new ArrayList<>();
       for (OsmElevatorKey key : osmElevatorKeys) {
         OsmElevatorVertex sourceVertex = vertices.get(key);
+        OsmLevel level = verticeLevels.get(key);
         createElevatorVertices(
           graph,
           onboardVertices,
           sourceVertex,
-          sourceVertex.getLabelString() + "_" + key.level().name(),
-          key.level()
+          sourceVertex.getLabelString() + "_" + level.name(),
+          level
         );
       }
 
@@ -139,9 +138,9 @@ class ElevatorProcessor {
         .orElse(-1L);
       createElevatorHopEdges(
         onboardVertices,
+        osmElevatorKeys.stream().map(key -> verticeLevels.get(key)).toList(),
         wheelchair,
         !node.isBicycleDenied(),
-        (int) osmElevatorKeys.stream().map(key -> key.level()).distinct().count(),
         (int) travelTime
       );
       LOG.debug("Created elevator edges for node {}", node.getId());
@@ -199,16 +198,15 @@ class ElevatorProcessor {
         }
 
         var wheelchair = elevatorWay.explicitWheelchairAccessibility();
-        int levels = nodes.size();
         long travelTime = elevatorWay
           .getDuration(osmEntityDurationIssueConsumer)
           .map(Duration::toSeconds)
           .orElse(-1L);
         createElevatorHopEdges(
           onboardVertices,
+          nodeLevels,
           wheelchair,
           !elevatorWay.isBicycleDenied(),
-          levels,
           (int) travelTime
         );
         LOG.debug("Created elevator edges for way {}", elevatorWay.getId());
@@ -229,6 +227,7 @@ class ElevatorProcessor {
     ElevatorAlightEdge.createElevatorAlightEdge(
       onboardVertex,
       sourceVertex,
+      // TODO this will be removed in a later PR and moved to the StreetDetailsService
       new NonLocalizedString(level.name())
     );
 
@@ -238,26 +237,31 @@ class ElevatorProcessor {
 
   private static void createElevatorHopEdges(
     ArrayList<Vertex> onboardVertices,
+    List<OsmLevel> onboardVertexLevels,
     Accessibility wheelchair,
     boolean bicycleAllowed,
-    int levels,
     int travelTime
   ) {
     // -1 because we loop over onboardVertices two at a time
     for (int i = 0, vSize = onboardVertices.size() - 1; i < vSize; i++) {
       Vertex from = onboardVertices.get(i);
       Vertex to = onboardVertices.get(i + 1);
+      OsmLevel fromLevel = onboardVertexLevels.get(i);
+      OsmLevel toLevel = onboardVertexLevels.get(i + 1);
 
       // default permissions: pedestrian, wheelchair, check tag bicycle=yes
       StreetTraversalPermission permission = bicycleAllowed
         ? StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE
         : StreetTraversalPermission.PEDESTRIAN;
 
-      if (travelTime > -1 && levels > 0) {
-        ElevatorHopEdge.bidirectional(from, to, permission, wheelchair, levels, travelTime);
-      } else {
-        ElevatorHopEdge.bidirectional(from, to, permission, wheelchair);
-      }
+      ElevatorHopEdge.bidirectional(
+        from,
+        to,
+        permission,
+        wheelchair,
+        Math.abs(toLevel.level() - fromLevel.level()),
+        travelTime
+      );
     }
   }
 

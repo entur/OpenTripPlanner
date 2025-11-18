@@ -44,6 +44,7 @@ class VertexGenerator {
 
   private final HashMap<Long, Map<OsmElevatorKey, OsmElevatorVertex>> elevatorNodes =
     new HashMap<>();
+  private final HashMap<OsmElevatorKey, OsmLevel> elevatorNodeLevels = new HashMap<>();
 
   /**
    * The map from node to the barrier it belongs to.
@@ -246,6 +247,10 @@ class VertexGenerator {
     return elevatorNodes;
   }
 
+  HashMap<OsmElevatorKey, OsmLevel> elevatorNodeLevels() {
+    return elevatorNodeLevels;
+  }
+
   void initIntersectionNodes() {
     Set<Long> possibleIntersectionNodes = new HashSet<>();
     for (OsmWay way : osmdb.getWays()) {
@@ -323,18 +328,13 @@ class VertexGenerator {
    */
   private OsmElevatorVertex getElevatorVertex(OsmNode node, OsmEntity entity) {
     Map<OsmElevatorKey, OsmElevatorVertex> elevatorVertices = getElevatorVertices(node);
-    // An OsmElevatorVertex requires one level to be defined.
-    OsmLevel level = osmdb.findSingleLevelForEntity(entity);
     OsmEntityType osmEntityType = getOsmEntityType(entity);
-    OsmElevatorKey osmElevatorKey = new OsmElevatorKey(
-      level,
-      node.getId(),
-      osmEntityType,
-      entity.getId()
-    );
+    OsmElevatorKey osmElevatorKey = new OsmElevatorKey(node.getId(), osmEntityType, entity.getId());
     if (!elevatorVertices.containsKey(osmElevatorKey)) {
       OsmElevatorVertex vertex = vertexFactory.osmElevator(node, osmEntityType, entity.getId());
       elevatorVertices.put(osmElevatorKey, vertex);
+      // An OsmElevatorVertex requires one level to be defined.
+      elevatorNodeLevels.put(osmElevatorKey, osmdb.findSingleLevelForEntity(entity));
       return vertex;
     }
     return elevatorVertices.get(osmElevatorKey);
@@ -345,9 +345,9 @@ class VertexGenerator {
     if (elevatorNodes.containsKey(nodeId)) {
       return elevatorNodes.get(nodeId);
     }
-    Map<OsmElevatorKey, OsmElevatorVertex> verticesOnLevel = new HashMap<>();
-    elevatorNodes.put(nodeId, verticesOnLevel);
-    return verticesOnLevel;
+    Map<OsmElevatorKey, OsmElevatorVertex> elevatorVertices = new HashMap<>();
+    elevatorNodes.put(nodeId, elevatorVertices);
+    return elevatorVertices;
   }
 
   private void intersectAreaRingNodes(Set<Long> possibleIntersectionNodes, Ring outerRing) {
