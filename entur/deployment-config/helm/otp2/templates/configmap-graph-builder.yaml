@@ -17,10 +17,10 @@ data:
             "FlexRouting" : true,
             "GoogleCloudStorage" : true,
             // TODO Remove "IncludeEmptyRailStopsInTransfers", when 
-            // "IncludeStopsUsedRealtimeInTransfers" has been is production for a week
+            // "IncludeStopsUsedRealTimeInTransfers" has been is production for a week
             "IncludeEmptyRailStopsInTransfers" : true,
             // Will be used when PR 7042 Missing transfers is merged
-            "IncludeStopsUsedRealtimeInTransfers" : true
+            "IncludeStopsUsedRealTimeInTransfers" : true
         }
       }
   build-config.json: |+
