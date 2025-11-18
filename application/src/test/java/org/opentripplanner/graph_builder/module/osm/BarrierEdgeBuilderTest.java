@@ -186,34 +186,12 @@ class BarrierEdgeBuilderTest {
     assertEquals(1, v3.getDegreeOut());
   }
 
-  @Test
-  void connectThreeVerticesWithWallAndGate() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
-    connectToOutsideWorld(v1, v2, v3);
-
-    var node = new OsmNode();
-    node.addTag("barrier", "gate");
-    node.addTag("access", "no");
-    node.addTag("foot", "yes");
-
-    // A gate can be used to pass the wall, so edges should be built
-    subject.build(node, List.of(v1, v2, v3), List.of(WALL));
-    assertEquals(3, v1.getDegreeIn());
-    assertEquals(3, v1.getDegreeOut());
-    assertEquals(3, v2.getDegreeIn());
-    assertEquals(3, v2.getDegreeOut());
-    assertEquals(3, v3.getDegreeIn());
-    assertEquals(3, v3.getDegreeOut());
-    for (var edge : getEdgesThroughBarrierFromVertex(v1)) {
-      assertEquals(PEDESTRIAN, edge.getPermission());
-      assertTrue(edge.isWheelchairAccessible());
-    }
-  }
-
   static List<Arguments> wallCases() {
     return List.of(
+      Arguments.of(
+        new OsmNode().addTag("barrier", "gate").addTag("access", "no").addTag("foot", "yes"),
+        PEDESTRIAN
+      ),
       Arguments.of(new OsmNode().addTag("barrier", "bollard"), PEDESTRIAN_AND_BICYCLE),
       Arguments.of(new OsmNode().addTag("entrance", "main"), ALL)
     );
