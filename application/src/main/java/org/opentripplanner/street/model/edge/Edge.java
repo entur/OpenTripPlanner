@@ -104,12 +104,15 @@ public abstract class Edge implements AStarEdge<State, Edge, Vertex>, Serializab
     return Objects.hash(fromv, tov);
   }
 
+  /**
+   * Implementing equals methods for edges is complicated. Implementing this to match the hashCode
+   * method causes problems. Leaving this comment here in case it helps someone in the future.
+   * <p>
+   * TODO figure out equals method for edges, e.g. unique long/int for each edge
+   */
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Edge that = (Edge) o;
-    return (Objects.equals(fromv, that.fromv) && Objects.equals(tov, that.tov));
+    return this == o;
   }
 
   @Override

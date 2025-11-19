@@ -1,7 +1,7 @@
 package org.opentripplanner.street.model.vertex;
 
-import org.opentripplanner.osm.model.OsmEntityType;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.osm.model.OsmEntityType;
 
 /**
  * A vertex that represents an OSM elevator node in conjunction with a connected OSM entity. This
@@ -22,7 +22,12 @@ public class OsmElevatorVertex extends OsmVertex {
   private final OsmEntityType osmEntityType;
   private final long entityId;
 
-  public OsmElevatorVertex(long nodeId, WgsCoordinate coordinate, OsmEntityType osmEntityType, long entityId) {
+  public OsmElevatorVertex(
+    long nodeId,
+    WgsCoordinate coordinate,
+    OsmEntityType osmEntityType,
+    long entityId
+  ) {
     super(coordinate.longitude(), coordinate.latitude(), nodeId);
     this.osmEntityType = osmEntityType;
     this.entityId = entityId;

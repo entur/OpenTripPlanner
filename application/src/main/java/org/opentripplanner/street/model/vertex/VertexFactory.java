@@ -51,7 +51,14 @@ public class VertexFactory {
   }
 
   public OsmElevatorVertex osmElevator(OsmNode node, OsmEntityType osmEntityType, long entityId) {
-    return addToGraph(new OsmElevatorVertex(node.getId(), new WgsCoordinate(node.getCoordinate()), osmEntityType, entityId));
+    return addToGraph(
+      new OsmElevatorVertex(
+        node.getId(),
+        new WgsCoordinate(node.getCoordinate()),
+        osmEntityType,
+        entityId
+      )
+    );
   }
 
   public IntersectionVertex intersection(Coordinate edgeCoordinate) {
