@@ -52,7 +52,7 @@ proxy:
 configuration:
   apiProcessingTimeout: "20s"
   carpooling: false
-  emission: false
+  emission: true
   empiricalDelay: true
   flexRouting: true
   floatingBike: true
