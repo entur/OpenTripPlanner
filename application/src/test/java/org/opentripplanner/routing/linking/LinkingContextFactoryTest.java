@@ -28,6 +28,7 @@ import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetStationCentroidLink;
 import org.opentripplanner.street.model.vertex.StationCentroidVertex;
+import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
@@ -314,11 +315,11 @@ class LinkingContextFactoryTest {
     // Verify that vertices were created from the coordinates
     var fromVertices = linkingContext.findVertices(from);
     assertThat(fromVertices).hasSize(1);
-    assertThat(fromVertices).isNotEmpty();
+    assertTemporaryVertexOnStop(fromVertices.stream().findFirst().get(), stopA);
 
     var toVertices = linkingContext.findVertices(to);
     assertThat(toVertices).hasSize(1);
-    assertThat(toVertices).isNotEmpty();
+    assertTemporaryVertexOnStop(toVertices.stream().findFirst().get(), stopD);
 
     container.close();
   }
@@ -352,6 +353,12 @@ class LinkingContextFactoryTest {
     graph.index();
     graph.calculateConvexHull();
     return graph;
+  }
+
+  private void assertTemporaryVertexOnStop(Vertex vertex, RegularStop stop) {
+    assertThat(vertex).isInstanceOf(TemporaryStreetLocation.class);
+    assertEquals(stop.getLat(), vertex.getLat(), 0.0001);
+    assertEquals(stop.getLon(), vertex.getLon(), 0.0001);
   }
 
   private RegularStop toStop(Set<? extends Vertex> fromVertices) {
