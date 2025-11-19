@@ -30,7 +30,7 @@ class TimeLimitEvaluatorTest {
     .withEndTime("10:20")
     .build();
 
-  private static List<Arguments> withInLimitCases() {
+  private static List<Arguments> withinLimitCases() {
     return List.of(
       Arguments.of(DEPARTURE_TO_ARRIVAL, ofMinutes(20)),
       Arguments.of(DEPARTURE_TO_ARRIVAL, ofHours(1)),
@@ -43,13 +43,13 @@ class TimeLimitEvaluatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("withInLimitCases")
+  @MethodSource("withinLimitCases")
   void withinLimit(TimeLimitType type, Duration duration) {
     var limit = new TimeLimit(type, duration);
     assertTrue(TimeLimitEvaluator.withinTimeLimit(limit, FIRST, SECOND));
   }
 
-  private static List<Arguments> belowLimitCases() {
+  private static List<Arguments> outsideLimitCases() {
     return List.of(
       Arguments.of(DEPARTURE_TO_ARRIVAL, ofMinutes(20).minusSeconds(20)),
       Arguments.of(DEPARTURE_TO_DEPARTURE, ofMinutes(10).minusSeconds(1)),
@@ -59,8 +59,8 @@ class TimeLimitEvaluatorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("belowLimitCases")
-  void belowLimit(TimeLimitType type, Duration duration) {
+  @MethodSource("outsideLimitCases")
+  void outsideLimit(TimeLimitType type, Duration duration) {
     var limit = new TimeLimit(type, duration);
     assertFalse(TimeLimitEvaluator.withinTimeLimit(limit, FIRST, SECOND));
   }
