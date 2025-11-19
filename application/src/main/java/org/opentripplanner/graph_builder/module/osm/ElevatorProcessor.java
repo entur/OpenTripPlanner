@@ -43,26 +43,9 @@ class ElevatorProcessor {
 
   private final OsmDatabase osmdb;
   private final VertexGenerator vertexGenerator;
+  private final VertexFactory vertexFactory;
   private final Consumer<String> osmEntityDurationIssueConsumer;
   private final DataImportIssueStore issueStore;
-
-  public ElevatorProcessor(
-    DataImportIssueStore issueStore,
-    OsmDatabase osmdb,
-    VertexGenerator vertexGenerator
-  ) {
-    this.osmdb = osmdb;
-    this.vertexGenerator = vertexGenerator;
-    this.osmEntityDurationIssueConsumer = v ->
-      issueStore.add(
-        Issue.issue(
-          "InvalidDuration",
-          "Duration for osm node {} is not a valid duration: '{}'; the value is ignored.",
-          v
-        )
-      );
-    this.issueStore = issueStore;
-  }
 
   /**
    * This method builds elevator egdes.
@@ -99,15 +82,32 @@ class ElevatorProcessor {
    * == ElevatorBoardEdge/ElevatorAlightEdge
    * |  ElevatorHopEdge
    */
-  public void buildElevatorEdges(Graph graph) {
-    buildElevatorEdgesFromElevatorNodes(graph);
-    buildElevatorEdgesFromElevatorWays(graph);
+  public ElevatorProcessor(
+    DataImportIssueStore issueStore,
+    OsmDatabase osmdb,
+    VertexGenerator vertexGenerator,
+    Graph graph
+  ) {
+    this.osmdb = osmdb;
+    this.vertexGenerator = vertexGenerator;
+    this.vertexFactory = new VertexFactory(graph);
+    this.osmEntityDurationIssueConsumer = v ->
+      issueStore.add(
+        Issue.issue(
+          "InvalidDuration",
+          "Duration for osm node {} is not a valid duration: '{}'; the value is ignored.",
+          v
+        )
+      );
+    this.issueStore = issueStore;
   }
 
   /**
    * Add nodes with tag highway=elevator to graph as elevators.
+   * <p>
+   * Needs to be called after elevatorNodes have been created in vertexGenerator.
    */
-  private void buildElevatorEdgesFromElevatorNodes(Graph graph) {
+  public void buildElevatorEdgesFromElevatorNodes() {
     for (Long nodeId : vertexGenerator.elevatorNodes().keySet()) {
       OsmNode node = osmdb.getNode(nodeId);
       Map<OsmElevatorKey, OsmElevatorVertex> vertices = vertexGenerator.elevatorNodes().get(nodeId);
@@ -123,13 +123,7 @@ class ElevatorProcessor {
       for (OsmElevatorKey key : osmElevatorKeys) {
         OsmElevatorVertex sourceVertex = vertices.get(key);
         OsmLevel level = verticeLevels.get(key);
-        createElevatorVertices(
-          graph,
-          onboardVertices,
-          sourceVertex,
-          sourceVertex.getLabelString(),
-          level
-        );
+        createElevatorVertices(onboardVertices, sourceVertex, sourceVertex.getLabelString(), level);
       }
 
       var wheelchair = node.explicitWheelchairAccessibility();
@@ -149,74 +143,61 @@ class ElevatorProcessor {
   }
 
   /**
-   * Add ways with tag highway=elevator to graph as elevators.
+   * Add way with tag highway=elevator to graph as elevator.
    */
-  private void buildElevatorEdgesFromElevatorWays(Graph graph) {
-    osmdb
-      .getWays()
-      .stream()
-      .filter(this::isElevatorWay)
-      .forEach(elevatorWay -> {
-        List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(elevatorWay);
-        List<Long> nodes = Arrays.stream(elevatorWay.getNodeRefs().toArray())
-          .filter(
-            nodeRef ->
-              vertexGenerator.intersectionNodes().containsKey(nodeRef) &&
-              vertexGenerator.intersectionNodes().get(nodeRef) != null
-          )
-          .boxed()
-          .toList();
+  public void buildElevatorEdgeFromElevatorWay(OsmWay elevatorWay) {
+    List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(elevatorWay);
+    List<Long> nodes = Arrays.stream(elevatorWay.getNodeRefs().toArray())
+      .filter(
+        nodeRef ->
+          vertexGenerator.intersectionNodes().containsKey(nodeRef) &&
+          vertexGenerator.intersectionNodes().get(nodeRef) != null
+      )
+      .boxed()
+      .toList();
 
-        if (nodeLevels.size() != nodes.size()) {
-          issueStore.add(
-            new CouldNotApplyMultiLevelInfoToElevatorWay(
-              elevatorWay,
-              nodeLevels.size(),
-              nodes.size()
-            )
-          );
-          nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
-        }
+    if (nodeLevels.size() != nodes.size()) {
+      issueStore.add(
+        new CouldNotApplyMultiLevelInfoToElevatorWay(elevatorWay, nodeLevels.size(), nodes.size())
+      );
+      nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
+    }
 
-        ArrayList<Vertex> onboardVertices = new ArrayList<>();
-        for (int i = 0; i < nodes.size(); i++) {
-          Long node = nodes.get(i);
-          var sourceVertex = vertexGenerator.intersectionNodes().get(node);
-          OsmLevel level = nodeLevels.get(i);
-          createElevatorVertices(
-            graph,
-            onboardVertices,
-            sourceVertex,
-            elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
-            level
-          );
-        }
+    ArrayList<Vertex> onboardVertices = new ArrayList<>();
+    for (int i = 0; i < nodes.size(); i++) {
+      Long node = nodes.get(i);
+      var sourceVertex = vertexGenerator.intersectionNodes().get(node);
+      OsmLevel level = nodeLevels.get(i);
+      createElevatorVertices(
+        onboardVertices,
+        sourceVertex,
+        elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
+        level
+      );
+    }
 
-        var wheelchair = elevatorWay.explicitWheelchairAccessibility();
-        long travelTime = elevatorWay
-          .getDuration(osmEntityDurationIssueConsumer)
-          .map(Duration::toSeconds)
-          .orElse(-1L);
-        createElevatorHopEdges(
-          onboardVertices,
-          nodeLevels,
-          wheelchair,
-          !elevatorWay.isBicycleDenied(),
-          (int) travelTime
-        );
-        LOG.debug("Created elevator edges for way {}", elevatorWay.getId());
-      });
+    var wheelchair = elevatorWay.explicitWheelchairAccessibility();
+    long travelTime = elevatorWay
+      .getDuration(osmEntityDurationIssueConsumer)
+      .map(Duration::toSeconds)
+      .orElse(-1L);
+    createElevatorHopEdges(
+      onboardVertices,
+      nodeLevels,
+      wheelchair,
+      !elevatorWay.isBicycleDenied(),
+      (int) travelTime
+    );
+    LOG.debug("Created elevator edges for way {}", elevatorWay.getId());
   }
 
-  private static void createElevatorVertices(
-    Graph graph,
+  private void createElevatorVertices(
     ArrayList<Vertex> onboardVertices,
     IntersectionVertex sourceVertex,
     String label,
     OsmLevel level
   ) {
-    var factory = new VertexFactory(graph);
-    ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label);
+    ElevatorVertex onboardVertex = vertexFactory.elevator(sourceVertex, label);
 
     ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex);
     ElevatorAlightEdge.createElevatorAlightEdge(
@@ -260,7 +241,7 @@ class ElevatorProcessor {
     }
   }
 
-  private boolean isElevatorWay(OsmWay way) {
+  public boolean isElevatorWay(OsmWay way) {
     if (!way.isElevator()) {
       return false;
     }
