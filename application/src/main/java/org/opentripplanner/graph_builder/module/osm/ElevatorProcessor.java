@@ -118,7 +118,12 @@ class ElevatorProcessor {
       if (vertices.size() < 2) continue;
 
       List<OsmElevatorKey> osmElevatorKeys = new ArrayList<>(vertices.keySet());
-      osmElevatorKeys.sort(Comparator.comparing(verticeLevels::get));
+      // Sort to make logic correct and create a deterministic order.
+      osmElevatorKeys.sort(
+        Comparator.comparing((OsmElevatorKey key) -> verticeLevels.get(key))
+          .thenComparing(OsmElevatorKey::entityId)
+          .thenComparing(OsmElevatorKey::osmEntityType)
+      );
       ArrayList<Vertex> onboardVertices = new ArrayList<>();
       for (OsmElevatorKey key : osmElevatorKeys) {
         OsmElevatorVertex sourceVertex = vertices.get(key);
