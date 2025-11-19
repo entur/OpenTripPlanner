@@ -2012,6 +2012,11 @@ type RentalVehicleTypeCount {
   vehicleType: RentalVehicleType!
 }
 
+type Replacement {
+  isReplacement: Boolean!
+  replacementFor: [TripOnServiceDate!]
+}
+
 "An estimate for a ride on a hailed vehicle, like an Uber car."
 type RideHailingEstimate {
   "The estimated time it takes for the vehicle to arrive."
@@ -2080,6 +2085,8 @@ type Route implements Node {
   gtfsId: String!
   "Global object ID provided by Relay. This value can be used to refetch this object using **node** query."
   id: ID!
+  "Is this a replacement route for some other route on some dates."
+  isReplacementRoute: Boolean!
   "Long name of the route, e.g. Helsinki-Leppävaara"
   longName(
     """
@@ -2101,6 +2108,8 @@ type Route implements Node {
     """
     serviceDates: LocalDateRangeInput
   ): [Pattern]
+  "Do routes exist which replace this route on some dates."
+  replacementRoutesExist: Boolean!
   "Short name of the route, usually a line number, e.g. 550"
   shortName: String
   """
@@ -2571,6 +2580,8 @@ type Trip implements Node {
   gtfsId: String!
   "Global object ID provided by Relay. This value can be used to refetch this object using **node** query."
   id: ID!
+  "Is this a replacement trip for some other trip on some dates."
+  isReplacementTrip: Boolean!
   """
   The latest real-time occupancy information for the latest occurance of this
   trip.
@@ -2578,6 +2589,8 @@ type Trip implements Node {
   occupancy: TripOccupancy
   "The pattern the trip is running on"
   pattern: Pattern
+  "Do replacement trips exist which replace this trip on some dates."
+  replacementTripsExist: Boolean!
   "The route the trip is running on"
   route: Route!
   "Short name of the route this trip is running. See field `shortName` of Route."
@@ -2628,6 +2641,10 @@ type TripOccupancy {
 type TripOnServiceDate {
   "Information related to trip's scheduled arrival to the final stop location. Can contain real-time information."
   end: StopCall!
+  "Replaced by these trips."
+  replacedBy: [TripOnServiceDate!]!
+  "Is a replacement trip."
+  replacement: Replacement!
   """
   The service date when the trip occurs.
     

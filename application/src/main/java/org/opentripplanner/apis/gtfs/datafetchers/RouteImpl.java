@@ -163,6 +163,11 @@ public class RouteImpl implements GraphQLDataFetchers.GraphQLRoute {
   }
 
   @Override
+  public DataFetcher<Boolean> isReplacementRoute() {
+    return environment -> false;
+  }
+
+  @Override
   public DataFetcher<String> longName() {
     return environment ->
       org.opentripplanner.framework.graphql.GraphQLUtils.getTranslation(
@@ -194,6 +199,11 @@ public class RouteImpl implements GraphQLDataFetchers.GraphQLRoute {
         return patterns;
       }
     };
+  }
+
+  @Override
+  public DataFetcher<Boolean> replacementRoutesExist() {
+    return environment -> false;
   }
 
   @Override

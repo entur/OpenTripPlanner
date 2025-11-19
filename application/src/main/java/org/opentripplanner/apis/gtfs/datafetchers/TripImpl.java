@@ -222,6 +222,13 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   }
 
   @Override
+  public DataFetcher<Boolean> isReplacementTrip() {
+    return environment -> {
+      return false;
+    };
+  }
+
+  @Override
   public DataFetcher<Iterable<Iterable<Double>>> geometry() {
     return environment -> {
       TripPattern tripPattern = getTripPattern(environment);
@@ -253,6 +260,11 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   @Override
   public DataFetcher<TripPattern> pattern() {
     return this::getTripPattern;
+  }
+
+  @Override
+  public DataFetcher<Boolean> replacementTripsExist() {
+    return environment -> false;
   }
 
   @Override

@@ -1018,6 +1018,12 @@ public class GraphQLDataFetchers {
     public DataFetcher<RentalVehicleType> vehicleType();
   }
 
+  public interface GraphQLReplacement {
+    public DataFetcher<Boolean> isReplacement();
+
+    public DataFetcher<Iterable<TripOnServiceDate>> replacementFor();
+  }
+
   /** An estimate for a ride on a hailed vehicle, like an Uber car. */
   public interface GraphQLRideHailingEstimate {
     public DataFetcher<java.time.Duration> arrival();
@@ -1066,11 +1072,15 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
 
+    public DataFetcher<Boolean> isReplacementRoute();
+
     public DataFetcher<String> longName();
 
     public DataFetcher<GraphQLTransitMode> mode();
 
     public DataFetcher<Iterable<TripPattern>> patterns();
+
+    public DataFetcher<Boolean> replacementRoutesExist();
 
     public DataFetcher<String> shortName();
 
@@ -1326,9 +1336,13 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
 
+    public DataFetcher<Boolean> isReplacementTrip();
+
     public DataFetcher<TripOccupancy> occupancy();
 
     public DataFetcher<TripPattern> pattern();
+
+    public DataFetcher<Boolean> replacementTripsExist();
 
     public DataFetcher<Route> route();
 
@@ -1368,6 +1382,10 @@ public class GraphQLDataFetchers {
   /** A trip on a specific service date. */
   public interface GraphQLTripOnServiceDate {
     public DataFetcher<TripTimeOnDate> end();
+
+    public DataFetcher<Iterable<TripOnServiceDate>> replacedBy();
+
+    public DataFetcher<org.opentripplanner.transit.model.network.Replacement> replacement();
 
     public DataFetcher<java.time.LocalDate> serviceDate();
 

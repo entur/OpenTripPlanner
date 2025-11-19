@@ -10,6 +10,7 @@ import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.model.Timetable;
 import org.opentripplanner.model.TripTimeOnDate;
+import org.opentripplanner.transit.model.network.Replacement;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
@@ -37,6 +38,16 @@ public class TripOnServiceDateImpl implements GraphQLDataFetchers.GraphQLTripOnS
         arguments.midnight()
       );
     };
+  }
+
+  @Override
+  public DataFetcher<Replacement> replacement() {
+    return environment -> null;
+  }
+
+  @Override
+  public DataFetcher<Iterable<TripOnServiceDate>> replacedBy() {
+    return environment -> null;
   }
 
   @Override
