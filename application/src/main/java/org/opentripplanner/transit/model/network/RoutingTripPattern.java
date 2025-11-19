@@ -43,7 +43,7 @@ public class RoutingTripPattern implements DefaultTripPattern, Serializable {
       wheelchairAccessible.set(s, pattern.wheelchairAccessible(s));
     }
 
-    this.slackIndex = builder.slackIndex();
+    this.slackIndex = builder.generateSlackIndex();
     this.transitReluctanceFactorIndex = builder.transitReluctanceFactorIndex();
   }
 

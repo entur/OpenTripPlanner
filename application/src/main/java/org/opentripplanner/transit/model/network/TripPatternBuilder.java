@@ -127,12 +127,12 @@ public final class TripPatternBuilder
   }
 
   // TODO: This uses a static SlackProvider. Change it to be injectable if required
-  public int slackIndex() {
+  int generateSlackIndex() {
     return SlackProvider.slackIndex(route.getMode());
   }
 
   // TODO: Change the calculation to be injectable if required
-  public int transitReluctanceFactorIndex() {
+  int transitReluctanceFactorIndex() {
     return route.getMode().ordinal();
   }
 
@@ -160,7 +160,7 @@ public final class TripPatternBuilder
     return netexSubMode != null ? netexSubMode : route.getNetexSubmode();
   }
 
-  public boolean getContainsMultipleModes() {
+  boolean getContainsMultipleModes() {
     return containsMultipleModes;
   }
 
@@ -168,7 +168,7 @@ public final class TripPatternBuilder
     return stopPattern;
   }
 
-  public Timetable getScheduledTimetable() {
+  Timetable getScheduledTimetable() {
     return scheduledTimetable;
   }
 
@@ -176,7 +176,7 @@ public final class TripPatternBuilder
     return scheduledTimetableBuilder;
   }
 
-  public String getName() {
+  String getName() {
     return name;
   }
 
@@ -184,7 +184,7 @@ public final class TripPatternBuilder
     return originalTripPattern;
   }
 
-  public boolean isCreatedByRealtimeUpdate() {
+  boolean isCreatedByRealtimeUpdate() {
     return createdByRealtimeUpdate;
   }
 
