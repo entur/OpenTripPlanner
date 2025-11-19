@@ -314,7 +314,7 @@ public abstract class GraphRoutingTest {
 
     public StationCentroidVertex stationCentroid(Station station) {
       assertTrue(station.shouldRouteToCentroid());
-      return vertexFactory.stationCentroid(station.getId(), station.getCoordinate());
+      return vertexFactory.stationCentroid(station);
     }
 
     public StreetTransitEntranceLink link(StreetVertex from, TransitEntranceVertex to) {

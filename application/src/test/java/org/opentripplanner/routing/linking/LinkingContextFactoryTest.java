@@ -305,7 +305,11 @@ class LinkingContextFactoryTest {
     graph.addVertex(right);
     graph.addVertex(top);
     graph.addVertex(distant);
-    var centroidVertex = new StationCentroidVertex(station.getId(), station.getCoordinate());
+    var centroidVertex = new StationCentroidVertex(
+      station.getId(),
+      station.getName(),
+      station.getCoordinate()
+    );
     graph.addVertex(centroidVertex);
     StreetStationCentroidLink.createStreetStationLink(centroidVertex, left);
     Arrays.stream(stops).forEach(s -> {

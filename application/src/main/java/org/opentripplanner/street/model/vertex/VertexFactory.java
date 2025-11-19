@@ -3,7 +3,6 @@ package org.opentripplanner.street.model.vertex;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.routing.graph.Graph;
@@ -13,10 +12,10 @@ import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.transit.model.basic.Accessibility;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.BoardingArea;
 import org.opentripplanner.transit.model.site.Entrance;
 import org.opentripplanner.transit.model.site.PathwayNode;
+import org.opentripplanner.transit.model.site.Station;
 
 /**
  * This class is the central point where all vertices that are supposed to be permanently part
@@ -126,8 +125,10 @@ public class VertexFactory {
     return addToGraph(v);
   }
 
-  public StationCentroidVertex stationCentroid(FeedScopedId id, WgsCoordinate coordinate) {
-    return addToGraph(new StationCentroidVertex(id, coordinate));
+  public StationCentroidVertex stationCentroid(Station station) {
+    return addToGraph(
+      new StationCentroidVertex(station.getId(), station.getName(), station.getCoordinate())
+    );
   }
 
   public VehicleParkingEntranceVertex vehicleParkingEntrance(VehicleParking vehicleParking) {
