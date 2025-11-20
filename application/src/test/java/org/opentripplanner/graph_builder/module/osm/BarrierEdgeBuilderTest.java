@@ -15,7 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.graph_builder.module.osm.naming.DefaultNamer;
+import org.opentripplanner.graph_builder.services.osm.DefaultNamer;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;

@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
@@ -10,7 +10,7 @@ import org.opentripplanner.osm.model.OsmWay;
 /**
  * Combines the sidewalk and crosswalk namer.
  */
-public class SidewalkCrosswalkNamer implements EdgeNamer {
+class SidewalkCrosswalkNamer implements EdgeNamer {
 
   private final SidewalkNamer sidewalkNamer = new SidewalkNamer();
   private final CrosswalkNamer crosswalkNamer = new CrosswalkNamer();

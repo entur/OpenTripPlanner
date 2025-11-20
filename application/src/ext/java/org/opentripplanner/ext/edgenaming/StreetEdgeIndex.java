@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import java.util.List;
 import java.util.Set;
@@ -32,10 +32,7 @@ class StreetEdgeIndex {
     // add only one of the two edges.
     var edge = pair.pickAny();
     if (edge.getDistanceMeters() <= maxLengthMeters) {
-      index.insert(
-        edge.getGeometry().getEnvelopeInternal(),
-        new EdgeOnLevel((OsmWay) way, edge, levels)
-      );
+      index.insert(edge.getGeometry().getEnvelopeInternal(), new EdgeOnLevel(way, edge, levels));
     }
   }
 

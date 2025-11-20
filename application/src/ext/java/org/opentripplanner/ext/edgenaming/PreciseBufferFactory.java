@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import org.geotools.api.referencing.FactoryException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;

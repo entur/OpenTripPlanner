@@ -7,6 +7,7 @@ import java.time.ZoneId;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.dataoverlay.EdgeUpdaterModule;
+import org.opentripplanner.ext.edgenaming.configure.EdgeNamerModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionGraphBuilderModule;
 import org.opentripplanner.ext.emission.internal.graphbuilder.EmissionGraphBuilder;
@@ -50,12 +51,13 @@ import org.opentripplanner.transit.service.TimetableRepository;
 @Singleton
 @Component(
   modules = {
+    EdgeNamerModule.class,
+    EmissionGraphBuilderModule.class,
+    EmpiricalDelayGraphBuilderModule.class,
     GraphBuilderModule.class,
     GraphBuilderModules.class,
     OsmInfoGraphBuildServiceModule.class,
-    EmissionGraphBuilderModule.class,
     VertexLinkerGraphBuildingModule.class,
-    EmpiricalDelayGraphBuilderModule.class,
   }
 )
 public interface GraphBuilderFactory {

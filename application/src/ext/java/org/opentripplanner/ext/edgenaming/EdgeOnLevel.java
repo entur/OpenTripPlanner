@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import java.util.Set;
 import org.opentripplanner.osm.model.OsmLevel;

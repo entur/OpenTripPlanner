@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * the corner, like https://www.openstreetmap.org/way/1059101564. These cases are, however, detected
  * by the above algorithm and the sidewalk name remains the same.
  */
-public class SidewalkNamer implements EdgeNamer {
+class SidewalkNamer implements EdgeNamer {
 
   private static final Logger LOG = LoggerFactory.getLogger(SidewalkNamer.class);
   private static final double MIN_PERCENT_IN_BUFFER = .85;

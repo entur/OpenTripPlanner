@@ -1,10 +1,10 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.graph_builder.module.osm.naming.StreetEdgeBuilderFactory.edgeBuilder;
+import static org.opentripplanner.ext.edgenaming.StreetEdgeBuilderFactory.edgeBuilder;
 
 import java.util.ArrayList;
 import java.util.List;

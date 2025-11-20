@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.naming;
+package org.opentripplanner.ext.edgenaming;
 
 import java.util.HashSet;
 import org.opentripplanner.framework.i18n.I18NString;
@@ -17,7 +17,7 @@ import org.opentripplanner.street.model.edge.StreetEdge;
  *
  * @author novalis
  */
-public class PortlandCustomNamer implements EdgeNamer {
+class PortlandCustomNamer implements EdgeNamer {
 
   public static String[] STREET_SUFFIXES = {
     "Avenue",
