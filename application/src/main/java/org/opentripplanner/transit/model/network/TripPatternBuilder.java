@@ -8,13 +8,13 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.framework.geometry.CompactLineStringUtils;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.model.Timetable;
-import org.opentripplanner.model.TimetableBuilder;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.Direction;
+import org.opentripplanner.transit.model.timetable.Timetable;
+import org.opentripplanner.transit.model.timetable.TimetableBuilder;
 
 @SuppressWarnings("UnusedReturnValue")
 public final class TripPatternBuilder
