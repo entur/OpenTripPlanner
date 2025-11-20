@@ -163,17 +163,14 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     return getLabel().toString();
   }
 
-  @Override
-  public int hashCode() {
-    return getLabelString().hashCode();
-  }
-
+  /**
+   * Implementing this method breaks at least one test.
+   * <p>
+   * TODO implement this method, vertex label should be globally unique
+   */
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
-    Vertex that = (Vertex) o;
-    return this.getLabelString().equals(that.getLabelString());
+    return this == o;
   }
 
   /**

@@ -12,7 +12,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
@@ -25,10 +24,8 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
-import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.ElevatorVertex;
 import org.opentripplanner.street.model.vertex.OsmVertex;
-import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.VertexFactory;
 import org.opentripplanner.transit.model.basic.Accessibility;
 
@@ -178,27 +175,44 @@ class ElevatorTest {
       osmElevatorVertex4.getLabelString()
     );
 
-    Set<Edge> actualEdgeSet = getActualEdgeSet(graph);
-    Set<Edge> expectedEdgeSet = new HashSet<>();
+    Set<String> actualEdgeSet = getActualEdgeSet(graph);
+    Set<String> expectedEdgeSet = new HashSet<>();
+    HashMap<Edge, Double> elevatorHopEdgeLevels = new HashMap<>();
 
     addElevatorBoardAndAlightEdges(expectedEdgeSet, osmElevatorVertex1, elevatorVertex1);
     addElevatorBoardAndAlightEdges(expectedEdgeSet, osmElevatorVertex2, elevatorVertex2);
     addElevatorBoardAndAlightEdges(expectedEdgeSet, osmElevatorVertex3, elevatorVertex3);
     addElevatorBoardAndAlightEdges(expectedEdgeSet, osmElevatorVertex4, elevatorVertex4);
 
-    addElevatorHopEdges(expectedEdgeSet, elevatorVertex1, elevatorVertex2, 2);
-    addElevatorHopEdges(expectedEdgeSet, elevatorVertex2, elevatorVertex3, 0);
-    addElevatorHopEdges(expectedEdgeSet, elevatorVertex3, elevatorVertex4, 1);
+    addElevatorHopEdges(
+      elevatorVertex1,
+      elevatorVertex2,
+      2,
+      expectedEdgeSet,
+      elevatorHopEdgeLevels
+    );
+    addElevatorHopEdges(
+      elevatorVertex2,
+      elevatorVertex3,
+      0,
+      expectedEdgeSet,
+      elevatorHopEdgeLevels
+    );
+    addElevatorHopEdges(
+      elevatorVertex3,
+      elevatorVertex4,
+      1,
+      expectedEdgeSet,
+      elevatorHopEdgeLevels
+    );
 
     assertEquals(expectedEdgeSet, actualEdgeSet);
     int streetEdgeCount = 8;
     assertEquals(expectedEdgeSet.size() + streetEdgeCount, graph.getEdges().size());
 
-    HashMap<Edge, Double> elevatorHopEdgeLevels = new HashMap<>();
-    expectedEdgeSet
+    graph
+      .getEdgesOfType(ElevatorHopEdge.class)
       .stream()
-      .filter(edge -> edge instanceof ElevatorHopEdge)
-      .map(edge -> (ElevatorHopEdge) edge)
       .forEach(edge -> elevatorHopEdgeLevels.put(edge, edge.getLevels()));
     for (var edge : graph.getEdgesOfType(ElevatorHopEdge.class)) {
       assertEquals(edge.getLevels(), elevatorHopEdgeLevels.get(edge));
@@ -222,7 +236,7 @@ class ElevatorTest {
     OsmModuleTestFactory.of(provider).withGraph(graph).builder().build().buildGraph();
 
     VertexFactory vertexFactory = new VertexFactory(new Graph());
-    Set<Edge> edgeSet = new HashSet<>();
+    Set<String> edgeSet = new HashSet<>();
 
     var osmVertex1 = new OsmVertex(0, 1, 1);
     var osmVertex2 = new OsmVertex(0, 2, 2);
@@ -238,9 +252,14 @@ class ElevatorTest {
 
     addElevatorBoardAndAlightEdges(edgeSet, osmVertex1, elevatorVertex1);
     addElevatorBoardAndAlightEdges(edgeSet, osmVertex2, elevatorVertex2);
-    addElevatorHopEdges(edgeSet, elevatorVertex1, elevatorVertex2, 2.5);
+    addElevatorHopEdges(elevatorVertex1, elevatorVertex2, 2.5, edgeSet, null);
 
-    assertEquals(edgeSet, new HashSet<>(graph.getEdges()));
+    assertEquals(
+      edgeSet,
+      new HashSet<>(
+        graph.getEdges().stream().map(edge -> convertEdgeToVertexLabelString(edge)).toList()
+      )
+    );
     assertEquals(edgeSet.size(), graph.getEdges().size());
   }
 
@@ -260,7 +279,7 @@ class ElevatorTest {
     OsmModuleTestFactory.of(provider).withGraph(graph).builder().build().buildGraph();
 
     VertexFactory vertexFactory = new VertexFactory(new Graph());
-    Set<Edge> edgeSet = new HashSet<>();
+    Set<String> edgeSet = new HashSet<>();
 
     var osmVertex1 = new OsmVertex(0, 1, 1);
     var osmVertex2 = new OsmVertex(0, 2, 2);
@@ -276,61 +295,15 @@ class ElevatorTest {
 
     addElevatorBoardAndAlightEdges(edgeSet, osmVertex1, elevatorVertex1);
     addElevatorBoardAndAlightEdges(edgeSet, osmVertex2, elevatorVertex2);
-    addElevatorHopEdges(edgeSet, elevatorVertex1, elevatorVertex2, 0);
+    addElevatorHopEdges(elevatorVertex1, elevatorVertex2, 0, edgeSet, null);
 
-    assertEquals(edgeSet, new HashSet<>(graph.getEdges()));
+    assertEquals(
+      edgeSet,
+      new HashSet<>(
+        graph.getEdges().stream().map(edge -> convertEdgeToVertexLabelString(edge)).toList()
+      )
+    );
     assertEquals(edgeSet.size(), graph.getEdges().size());
-  }
-
-  private void addElevatorBoardAndAlightEdges(
-    Set<Edge> edgeSet,
-    OsmVertex osmVertex,
-    ElevatorVertex elevatorVertex
-  ) {
-    edgeSet.add(ElevatorBoardEdge.createElevatorBoardEdge(osmVertex, elevatorVertex));
-    edgeSet.add(
-      ElevatorAlightEdge.createElevatorAlightEdge(
-        elevatorVertex,
-        osmVertex,
-        new NonLocalizedString("0")
-      )
-    );
-  }
-
-  private void addElevatorHopEdges(
-    Set<Edge> edgeSet,
-    ElevatorVertex elevatorVertex1,
-    ElevatorVertex elevatorVertex2,
-    double levels
-  ) {
-    edgeSet.add(
-      ElevatorHopEdge.createElevatorHopEdge(
-        elevatorVertex1,
-        elevatorVertex2,
-        StreetTraversalPermission.PEDESTRIAN,
-        Accessibility.NO_INFORMATION,
-        levels,
-        -1
-      )
-    );
-    edgeSet.add(
-      ElevatorHopEdge.createElevatorHopEdge(
-        elevatorVertex2,
-        elevatorVertex1,
-        StreetTraversalPermission.PEDESTRIAN,
-        Accessibility.NO_INFORMATION,
-        levels,
-        -1
-      )
-    );
-  }
-
-  private Set<Edge> getActualEdgeSet(Graph graph) {
-    Set<Edge> actualEdgeSet = new HashSet<>();
-    actualEdgeSet.addAll(graph.getEdgesOfType(ElevatorBoardEdge.class));
-    actualEdgeSet.addAll(graph.getEdgesOfType(ElevatorAlightEdge.class));
-    actualEdgeSet.addAll(graph.getEdgesOfType(ElevatorHopEdge.class));
-    return actualEdgeSet;
   }
 
   @ParameterizedTest
@@ -371,5 +344,89 @@ class ElevatorTest {
       graph.getVertices().size(),
       graph.getVertices().stream().map(vertex -> vertex.getLabel()).distinct().count()
     );
+  }
+
+  private void addElevatorBoardAndAlightEdges(
+    Set<String> edgeSet,
+    OsmVertex osmVertex,
+    ElevatorVertex elevatorVertex
+  ) {
+    edgeSet.add(
+      convertEdgeToVertexLabelString(
+        ElevatorBoardEdge.createElevatorBoardEdge(osmVertex, elevatorVertex)
+      )
+    );
+    edgeSet.add(
+      convertEdgeToVertexLabelString(
+        ElevatorAlightEdge.createElevatorAlightEdge(
+          elevatorVertex,
+          osmVertex,
+          new NonLocalizedString("0")
+        )
+      )
+    );
+  }
+
+  private void addElevatorHopEdges(
+    ElevatorVertex elevatorVertex1,
+    ElevatorVertex elevatorVertex2,
+    double levels,
+    Set<String> edgeSet,
+    HashMap<Edge, Double> elevatorHopEdgeLevels
+  ) {
+    var edge1 = ElevatorHopEdge.createElevatorHopEdge(
+      elevatorVertex1,
+      elevatorVertex2,
+      StreetTraversalPermission.PEDESTRIAN,
+      Accessibility.NO_INFORMATION,
+      levels,
+      -1
+    );
+    var edge2 = ElevatorHopEdge.createElevatorHopEdge(
+      elevatorVertex2,
+      elevatorVertex1,
+      StreetTraversalPermission.PEDESTRIAN,
+      Accessibility.NO_INFORMATION,
+      levels,
+      -1
+    );
+
+    if (elevatorHopEdgeLevels != null) {
+      elevatorHopEdgeLevels.put(edge1, edge1.getLevels());
+      elevatorHopEdgeLevels.put(edge2, edge2.getLevels());
+    }
+
+    edgeSet.add(convertEdgeToVertexLabelString(edge1));
+    edgeSet.add(convertEdgeToVertexLabelString(edge2));
+  }
+
+  private Set<String> getActualEdgeSet(Graph graph) {
+    Set<String> actualEdgeSet = new HashSet<>();
+    actualEdgeSet.addAll(
+      graph
+        .getEdgesOfType(ElevatorBoardEdge.class)
+        .stream()
+        .map(edge -> convertEdgeToVertexLabelString(edge))
+        .toList()
+    );
+    actualEdgeSet.addAll(
+      graph
+        .getEdgesOfType(ElevatorAlightEdge.class)
+        .stream()
+        .map(edge -> convertEdgeToVertexLabelString(edge))
+        .toList()
+    );
+    actualEdgeSet.addAll(
+      graph
+        .getEdgesOfType(ElevatorHopEdge.class)
+        .stream()
+        .map(edge -> convertEdgeToVertexLabelString(edge))
+        .toList()
+    );
+    return actualEdgeSet;
+  }
+
+  private String convertEdgeToVertexLabelString(Edge edge) {
+    return edge.getFromVertex().getLabelString() + "-" + edge.getToVertex().getLabelString();
   }
 }
