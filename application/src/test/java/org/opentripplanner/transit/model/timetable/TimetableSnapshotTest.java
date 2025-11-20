@@ -1,6 +1,7 @@
 package org.opentripplanner.transit.model.timetable;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ConstantsForTests;
@@ -90,11 +92,13 @@ public class TimetableSnapshotTest {
       @Override
       public void update(
         Collection<Timetable> updatedTimetables,
-        Map<TripPattern, SortedSet<Timetable>> timetables
+        Function<FeedScopedId, SortedSet<Timetable>> timetables
       ) {
         updateIsCalled.set(true);
         assertThat(updatedTimetables).hasSize(1);
-        assertThat(timetables).hasSize(1);
+        var timetable = updatedTimetables.stream().findFirst().orElseThrow();
+        var pattern = timetable.getPattern();
+        assertEquals(timetable, timetables.apply(pattern.getId()));
       }
     };
 

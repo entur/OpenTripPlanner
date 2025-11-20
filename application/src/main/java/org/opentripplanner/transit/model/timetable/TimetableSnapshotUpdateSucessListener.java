@@ -1,9 +1,9 @@
 package org.opentripplanner.transit.model.timetable;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.SortedSet;
-import org.opentripplanner.transit.model.network.TripPattern;
+import java.util.function.Function;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * When the {@link TimetableSnapshot} is updated and the commit method has completed this
@@ -13,6 +13,6 @@ import org.opentripplanner.transit.model.network.TripPattern;
 public interface TimetableSnapshotUpdateSucessListener {
   void update(
     Collection<Timetable> updatedTimetables,
-    Map<TripPattern, SortedSet<Timetable>> timetables
+    Function<FeedScopedId, SortedSet<Timetable>> timetables
   );
 }
