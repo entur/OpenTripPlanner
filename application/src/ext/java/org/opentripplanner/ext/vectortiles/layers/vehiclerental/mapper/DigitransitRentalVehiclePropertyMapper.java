@@ -11,8 +11,6 @@ import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 
 public class DigitransitRentalVehiclePropertyMapper extends PropertyMapper<VehicleRentalVehicle> {
 
-  public static final String NAME = "a rental";
-
   @Override
   protected Collection<KeyValue> map(VehicleRentalVehicle vehicle) {
     var items = new ArrayList<KeyValue>();
