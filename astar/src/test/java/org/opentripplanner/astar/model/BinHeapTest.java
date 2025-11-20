@@ -42,7 +42,9 @@ public class BinHeapTest {
     assertEquals(0, q.size());
     // fill and empty the queue a few times
     int sum = 0;
-    for (Integer i : input) q.insert(i, i);
+    for (Integer i : input) {
+      q.insert(i, i);
+    }
     while (!q.empty()) {
       sum += q.extract_min();
     }
