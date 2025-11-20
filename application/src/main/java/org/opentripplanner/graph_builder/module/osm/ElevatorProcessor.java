@@ -12,7 +12,9 @@ import java.util.function.Consumer;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
+import org.opentripplanner.graph_builder.issues.AllWaysOfElevatorNodeOnSameLevel;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToElevatorWay;
+import org.opentripplanner.graph_builder.issues.OnlyOneWayConnectedToElevatorNode;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelFactory;
 import org.opentripplanner.osm.model.OsmNode;
@@ -114,10 +116,15 @@ class ElevatorProcessor {
       Map<OsmElevatorKey, OsmLevel> verticeLevels = vertexGenerator.elevatorNodeLevels();
 
       // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
-      // TODO create issue
-      if (vertices.size() < 2) continue;
+      if (vertices.size() < 2) {
+        issueStore.add(new OnlyOneWayConnectedToElevatorNode(node));
+        continue;
+      }
 
       List<OsmElevatorKey> osmElevatorKeys = new ArrayList<>(vertices.keySet());
+      if (osmElevatorKeys.stream().map(key -> verticeLevels.get(key)).distinct().count() == 1) {
+        issueStore.add(new AllWaysOfElevatorNodeOnSameLevel(node));
+      }
       // Sort to make logic correct and create a deterministic order.
       osmElevatorKeys.sort(
         Comparator.comparing((OsmElevatorKey key) -> verticeLevels.get(key))
