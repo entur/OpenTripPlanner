@@ -46,8 +46,8 @@ public class VertexFactory {
     );
   }
 
-  public ElevatorVertex elevator(Vertex sourceVertex, String label) {
-    return addToGraph(new ElevatorVertex(sourceVertex, label));
+  public ElevatorHopVertex elevator(Vertex sourceVertex, String label) {
+    return addToGraph(new ElevatorHopVertex(sourceVertex, label));
   }
 
   public OsmElevatorVertex osmElevator(OsmNode node, OsmEntityType osmEntityType, long entityId) {

@@ -24,7 +24,7 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
-import org.opentripplanner.street.model.vertex.ElevatorVertex;
+import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.model.vertex.VertexFactory;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -349,7 +349,7 @@ class ElevatorTest {
   private void addElevatorBoardAndAlightEdges(
     Set<String> edgeSet,
     OsmVertex osmVertex,
-    ElevatorVertex elevatorVertex
+    ElevatorHopVertex elevatorVertex
   ) {
     edgeSet.add(
       convertEdgeToVertexLabelString(
@@ -368,8 +368,8 @@ class ElevatorTest {
   }
 
   private void addElevatorHopEdges(
-    ElevatorVertex elevatorVertex1,
-    ElevatorVertex elevatorVertex2,
+    ElevatorHopVertex elevatorVertex1,
+    ElevatorHopVertex elevatorVertex2,
     double levels,
     Set<String> edgeSet,
     HashMap<Edge, Double> elevatorHopEdgeLevels

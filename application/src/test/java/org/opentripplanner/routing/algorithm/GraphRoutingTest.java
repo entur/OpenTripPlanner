@@ -40,7 +40,7 @@ import org.opentripplanner.street.model.edge.StreetTransitEntranceLink;
 import org.opentripplanner.street.model.edge.StreetTransitStopLink;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
-import org.opentripplanner.street.model.vertex.ElevatorVertex;
+import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.StationCentroidVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -199,7 +199,7 @@ public abstract class GraphRoutingTest {
 
     public List<ElevatorEdge> elevator(StreetTraversalPermission permission, Vertex... vertices) {
       List<ElevatorEdge> edges = new ArrayList<>();
-      List<ElevatorVertex> onboardVertices = new ArrayList<>();
+      List<ElevatorHopVertex> onboardVertices = new ArrayList<>();
 
       for (int i = 0; i < vertices.length; i++) {
         Vertex v = vertices[i];

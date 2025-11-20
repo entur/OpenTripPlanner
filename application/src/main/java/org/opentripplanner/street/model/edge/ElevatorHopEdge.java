@@ -146,7 +146,7 @@ public class ElevatorHopEdge extends Edge implements ElevatorEdge, WheelchairTra
     //         X --- X --- X --- X
     // levels     2     0     1
     //
-    // X   ElevatorVertex
+    // X   ElevatorHopVertex
     // --- ElevatorHopEdge
     s1.incrementWeight(
       this.travelTime > 0 ? this.travelTime : (request.elevator().hopCost() * this.levels)

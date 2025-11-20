@@ -28,7 +28,7 @@ import org.opentripplanner.street.model.edge.ElevatorHopEdge;
 import org.opentripplanner.street.model.edge.PathwayEdge;
 import org.opentripplanner.street.model.edge.StreetTransitEntranceLink;
 import org.opentripplanner.street.model.edge.StreetTransitStopLink;
-import org.opentripplanner.street.model.vertex.ElevatorVertex;
+import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.StationEntranceVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
@@ -336,8 +336,8 @@ public class TestStateBuilder {
     return StreetModelForTest.intersectionVertex(count, count);
   }
 
-  private static ElevatorVertex elevator(int count, String label) {
-    return new ElevatorVertex(StreetModelForTest.intersectionVertex(count, count), label);
+  private static ElevatorHopVertex elevator(int count, String label) {
+    return new ElevatorHopVertex(StreetModelForTest.intersectionVertex(count, count), label);
   }
 
   private TestStateBuilder pickUpRentalVehicle(

@@ -24,7 +24,7 @@ import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
-import org.opentripplanner.street.model.vertex.ElevatorVertex;
+import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.OsmElevatorVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -209,7 +209,7 @@ class ElevatorProcessor {
     String label,
     OsmLevel level
   ) {
-    ElevatorVertex onboardVertex = vertexFactory.elevator(sourceVertex, label);
+    ElevatorHopVertex onboardVertex = vertexFactory.elevator(sourceVertex, label);
 
     ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex);
     ElevatorAlightEdge.createElevatorAlightEdge(
