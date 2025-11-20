@@ -38,6 +38,38 @@ import org.slf4j.LoggerFactory;
  * <p>
  * It depends heavily on the idiosyncratic processing of the OSM data in {@link OsmModule}
  * which is the reason this is not a public class.
+ * <p>
+ * Elevators have three types of edges: ElevatorAlightEdges, ElevatorHopEdges, and
+ * ElevatorBoardEdges. The build process involves creating FreeEdges to disconnect from the
+ * graph, GenericVertices to serve as attachment points, and ElevatorBoardEdges and
+ * ElevatorAlightEdges to connect future ElevatorHopEdges to.
+ * <p>
+ * With two connected ways to a node (which can be on the same level), after building the
+ * ElevatorAlightEdge and ElevatorBoardEdge the graph will look like this (side view):
+ *
+ * +==+~~X
+ *
+ * +==+~~X
+ *
+ * +  GenericVertex
+ * X  EndpointVertex
+ * ~~ FreeEdge
+ * == ElevatorBoardEdge/ElevatorAlightEdge
+ * <p>
+ * Another loop fills in the ElevatorHopEdges. After filling in the ElevatorHopEdges when a node
+ * has 3 connected ways the graph will look like this (side view):
+ *
+ * +==+~~X
+ * |
+ * +==+~~X
+ * |
+ * +==+~~X
+ *
+ * +  GenericVertex
+ * X  EndpointVertex
+ * ~~ FreeEdge
+ * == ElevatorBoardEdge/ElevatorAlightEdge
+ * |  ElevatorHopEdge
  */
 class ElevatorProcessor {
 
@@ -49,41 +81,6 @@ class ElevatorProcessor {
   private final Consumer<String> osmEntityDurationIssueConsumer;
   private final DataImportIssueStore issueStore;
 
-  /**
-   * This method builds elevator egdes.
-   * <p>
-   * Elevators have three types of edges: ElevatorAlightEdges, ElevatorHopEdges, and
-   * ElevatorBoardEdges. The build process involves creating FreeEdges to disconnect from the
-   * graph, GenericVertices to serve as attachment points, and ElevatorBoardEdges and
-   * ElevatorAlightEdges to connect future ElevatorHopEdges to.
-   * <p>
-   * With two connected ways to a node (which can be on the same level), after building the
-   * ElevatorAlightEdge and ElevatorBoardEdge the graph will look like this (side view):
-   *
-   * +==+~~X
-   *
-   * +==+~~X
-   *
-   * +  GenericVertex
-   * X  EndpointVertex
-   * ~~ FreeEdge
-   * == ElevatorBoardEdge/ElevatorAlightEdge
-   * <p>
-   * Another loop fills in the ElevatorHopEdges. After filling in the ElevatorHopEdges when a node
-   * has 3 connected ways the graph will look like this (side view):
-   *
-   * +==+~~X
-   * |
-   * +==+~~X
-   * |
-   * +==+~~X
-   *
-   * +  GenericVertex
-   * X  EndpointVertex
-   * ~~ FreeEdge
-   * == ElevatorBoardEdge/ElevatorAlightEdge
-   * |  ElevatorHopEdge
-   */
   public ElevatorProcessor(
     DataImportIssueStore issueStore,
     OsmDatabase osmdb,
