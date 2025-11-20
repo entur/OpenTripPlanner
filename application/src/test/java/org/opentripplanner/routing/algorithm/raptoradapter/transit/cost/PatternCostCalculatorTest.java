@@ -83,7 +83,9 @@ public class PatternCostCalculatorTest {
 
     GeneralizedCostParameters costParams = GeneralizedCostParametersMapper.map(
       routingRequest,
-      data.getPatterns()
+      data.getPatterns(),
+      p -> p.route().getId(),
+      p -> p.route().getAgency().getId()
     );
     var unpreferredPatterns = costParams.unpreferredPatterns();
 
@@ -173,7 +175,9 @@ public class PatternCostCalculatorTest {
     RaptorCostCalculator<TestTripSchedule> createCostCalculator(TestTripSchedule schedule) {
       GeneralizedCostParameters costParams = GeneralizedCostParametersMapper.map(
         createRouteRequest(),
-        List.of(schedule.pattern())
+        List.of(schedule.pattern()),
+        p -> p.route().getId(),
+        p -> p.route().getAgency().getId()
       );
       return CostCalculatorFactory.createCostCalculator(costParams, null);
     }
