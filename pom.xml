@@ -333,6 +333,7 @@
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
                     <skip>${plugin.checkstyle.skip}</skip>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
                 </configuration>
                 <executions>
                     <execution>
