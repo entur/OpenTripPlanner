@@ -340,7 +340,9 @@ public class LegImpl implements GraphQLDataFetchers.GraphQLLeg {
           .map(Leg.class::cast)
           .toList();
         return res;
-      } else return null;
+      } else {
+        return null;
+      }
     };
   }
 
