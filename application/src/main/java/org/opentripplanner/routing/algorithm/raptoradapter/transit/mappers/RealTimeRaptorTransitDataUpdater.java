@@ -17,6 +17,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternFo
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.TransferIndexGenerator;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Timetable;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshotUpdateSucessListener;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -35,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * incremental changes are applied to both the TimetableSnapshot and the RaptorTransitData and they are
  * published together.
  */
-public class RealTimeRaptorTransitDataUpdater {
+public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdateSucessListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(RealTimeRaptorTransitDataUpdater.class);
 
@@ -91,6 +92,7 @@ public class RealTimeRaptorTransitDataUpdater {
   ///
   /// @param updatedTimetables that changed with the current snapshot
   /// @param timetables which are affected by real-time updates
+  @Override
   public void update(
     Collection<Timetable> updatedTimetables,
     Map<TripPattern, SortedSet<Timetable>> timetables

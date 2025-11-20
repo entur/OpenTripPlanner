@@ -23,15 +23,10 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.RealTimeTripUpdate;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -309,7 +304,7 @@ public class TimetableSnapshot {
    *
    * @return whether the update was actually applied
    */
-  public Result<UpdateSuccess, UpdateError> update(RealTimeTripUpdate realTimeTripUpdate) {
+  public void update(RealTimeTripUpdate realTimeTripUpdate) {
     validateNotReadOnly();
 
     TripPattern pattern = realTimeTripUpdate.pattern();
@@ -356,9 +351,6 @@ public class TimetableSnapshot {
         );
       }
     }
-
-    // The time tables are finished during the commit
-    return Result.success(UpdateSuccess.noWarnings(realTimeTripUpdate.producer()));
   }
 
   /**
@@ -376,7 +368,7 @@ public class TimetableSnapshot {
   }
 
   public TimetableSnapshot commit(
-    RealTimeRaptorTransitDataUpdater realtimeRaptorTransitDataUpdater,
+    TimetableSnapshotUpdateSucessListener updatesEventListener,
     boolean force
   ) {
     validateNotReadOnly();
@@ -397,8 +389,8 @@ public class TimetableSnapshot {
       true
     );
 
-    if (realtimeRaptorTransitDataUpdater != null) {
-      realtimeRaptorTransitDataUpdater.update(dirtyTimetables.values(), timetables);
+    if (updatesEventListener != null) {
+      updatesEventListener.update(dirtyTimetables.values(), timetables);
     }
 
     this.dirtyTimetables.clear();
