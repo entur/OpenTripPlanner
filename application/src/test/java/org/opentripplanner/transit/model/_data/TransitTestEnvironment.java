@@ -5,7 +5,7 @@ import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.opentripplanner.LocalTimeParser;
-import org.opentripplanner.model.TimetableSnapshot;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
