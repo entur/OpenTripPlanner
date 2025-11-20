@@ -8,7 +8,6 @@ import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_CEN
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NORTH;
 import static org.opentripplanner.ext.carpooling.TestCarpoolTripBuilder.createSimpleTrip;
 import static org.opentripplanner.ext.carpooling.TestCarpoolTripBuilder.createStop;
-import static org.opentripplanner.ext.carpooling.TestCarpoolTripBuilder.createTripWithCapacity;
 import static org.opentripplanner.ext.carpooling.TestCarpoolTripBuilder.createTripWithStops;
 
 import java.util.List;

@@ -121,8 +121,12 @@ public final class RentalRequest {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     RentalRequest that = (RentalRequest) o;
     return (
       Objects.equals(pickupTime, that.pickupTime) &&

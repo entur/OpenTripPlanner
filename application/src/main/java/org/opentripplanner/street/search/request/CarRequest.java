@@ -113,8 +113,12 @@ public final class CarRequest {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     CarRequest that = (CarRequest) o;
     return (
       DoubleUtils.doubleEquals(that.reluctance, reluctance) &&

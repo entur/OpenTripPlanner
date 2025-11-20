@@ -70,8 +70,12 @@ public class ParkingFilter {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ParkingFilter that = (ParkingFilter) o;
     return (Arrays.equals(not, that.not) && Arrays.equals(select, that.select));
   }

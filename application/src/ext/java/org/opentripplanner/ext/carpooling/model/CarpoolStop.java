@@ -260,8 +260,12 @@ public class CarpoolStop implements StopLocation {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof CarpoolStop other)) return false;
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof CarpoolStop other)) {
+      return false;
+    }
 
     return (
       areaStop.equals(other.areaStop) &&

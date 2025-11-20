@@ -72,8 +72,12 @@ public final class ElevatorRequest implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ElevatorRequest that = (ElevatorRequest) o;
     return (
       boardCost.equals(that.boardCost) &&

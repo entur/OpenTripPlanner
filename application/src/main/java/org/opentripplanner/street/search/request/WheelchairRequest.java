@@ -113,8 +113,12 @@ public class WheelchairRequest {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     WheelchairRequest that = (WheelchairRequest) o;
     return (
       Double.compare(that.inaccessibleStreetReluctance, inaccessibleStreetReluctance) == 0 &&
