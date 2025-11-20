@@ -13,7 +13,7 @@ import org.opentripplanner.transit.model.network.RoutingTripPattern;
  * ordinal, and not in a {@link Map}, because it is faster. The board-slack and alight-slack lookup
  * is done for every strop-arrival computation, and should be as fast as possible.
  */
-public final class SlackProvider implements RaptorSlackProvider {
+public final class DefaultSlackProvider implements RaptorSlackProvider {
 
   /**
    * Keep a list of board-slack values for each mode.
@@ -30,7 +30,7 @@ public final class SlackProvider implements RaptorSlackProvider {
    */
   private final int transferSlack;
 
-  public SlackProvider(
+  public DefaultSlackProvider(
     int transferSlack,
     DurationForEnum<TransitMode> boardSlack,
     DurationForEnum<TransitMode> alightSlack
