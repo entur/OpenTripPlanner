@@ -61,6 +61,8 @@ public class DefaultInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelI
     long lastNodeRef
   ) {
     List<OsmLevel> levels = osmdb.getLevelsForEntity(way);
+    // This check also filters out the default level because the list size is 1 when the default
+    // level is used.
     if (levels.size() == 2) {
       OsmLevel firstVertexOsmLevel = levels.get(0);
       OsmLevel lastVertexOsmLevel = levels.get(1);

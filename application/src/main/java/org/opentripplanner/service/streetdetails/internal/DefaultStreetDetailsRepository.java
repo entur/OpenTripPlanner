@@ -15,7 +15,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 public class DefaultStreetDetailsRepository implements StreetDetailsRepository, Serializable {
 
   private final Map<Edge, InclinedEdgeLevelInfo> inclinedLevelInformation = new HashMap<>();
-  private final Map<Edge, Level> levelInformation = new HashMap<>();
+  private final Map<Edge, Level> horizontalLevelInformation = new HashMap<>();
 
   @Inject
   public DefaultStreetDetailsRepository() {}
@@ -36,19 +36,19 @@ public class DefaultStreetDetailsRepository implements StreetDetailsRepository, 
   public void addHorizontalEdgeLevelInfo(Edge edge, Level level) {
     Objects.requireNonNull(edge);
     Objects.requireNonNull(level);
-    this.levelInformation.put(edge, level);
+    this.horizontalLevelInformation.put(edge, level);
   }
 
   @Override
   public Optional<Level> findHorizontalEdgeLevelInfo(Edge edge) {
-    return Optional.ofNullable(levelInformation.get(edge));
+    return Optional.ofNullable(horizontalLevelInformation.get(edge));
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.of(DefaultStreetDetailsRepository.class)
       .addNum("Inclined edges with level info", inclinedLevelInformation.size())
-      .addNum("Edges with a single associated level", levelInformation.size())
+      .addNum("Horizontal edges with level info", horizontalLevelInformation.size())
       .toString();
   }
 }

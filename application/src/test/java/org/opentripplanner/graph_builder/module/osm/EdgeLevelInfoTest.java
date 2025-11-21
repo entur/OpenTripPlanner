@@ -115,11 +115,41 @@ public class EdgeLevelInfoTest {
       .buildGraph();
 
     var edgeLevelInfoSet = Set.of(new Level(1, "1"), new Level(2, "2"));
-    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
+    assertEquals(
+      edgeLevelInfoSet,
+      getAllHorizontalEdgeLevelInfoObjects(graph, streetDetailsRepository)
+    );
   }
 
   @Test
   void testElevatorNodeEdgeLevelInfoOnSameLevel() {
+    var n1 = node(1, new WgsCoordinate(0, 1));
+    var n2 = node(2, new WgsCoordinate(0, 2));
+    var elevatorNode = node(3, new WgsCoordinate(0, 3));
+    elevatorNode.addTag("highway", "elevator");
+
+    var provider = TestOsmProvider.of()
+      .addWayFromNodes(way -> way.addTag("level", "1"), n1, elevatorNode)
+      .addWayFromNodes(way -> way.addTag("level", "1"), n2, elevatorNode)
+      .build();
+    var graph = new Graph();
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
+    OsmModuleTestFactory.of(provider)
+      .withGraph(graph)
+      .builder()
+      .withStreetDetailsRepository(streetDetailsRepository)
+      .build()
+      .buildGraph();
+
+    var edgeLevelInfoSet = Set.of(new Level(1, "1"));
+    assertEquals(
+      edgeLevelInfoSet,
+      getAllHorizontalEdgeLevelInfoObjects(graph, streetDetailsRepository)
+    );
+  }
+
+  @Test
+  void testElevatorNodeEdgeLevelInfoWithoutDefinedLevels() {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
     var elevatorNode = node(3, new WgsCoordinate(0, 3));
@@ -138,8 +168,8 @@ public class EdgeLevelInfoTest {
       .build()
       .buildGraph();
 
-    var edgeLevelInfoSet = Set.of(new Level(0, "default level"));
-    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
+    // The default level should not be stored because it might be misleading to an end user.
+    assertEquals(Set.of(), getAllHorizontalEdgeLevelInfoObjects(graph, streetDetailsRepository));
   }
 
   @Test
@@ -160,11 +190,38 @@ public class EdgeLevelInfoTest {
       .buildGraph();
 
     var edgeLevelInfoSet = Set.of(new Level(0, "0"), new Level(1, "1"));
-    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
+    assertEquals(
+      edgeLevelInfoSet,
+      getAllHorizontalEdgeLevelInfoObjects(graph, streetDetailsRepository)
+    );
   }
 
   @Test
   void testElevatorWayEdgeLevelInfoOnSameLevel() {
+    var elevatorWay = new OsmWay();
+    elevatorWay.setId(1);
+    elevatorWay.addTag("highway", "elevator");
+    elevatorWay.addTag("level", "1;1");
+
+    var provider = TestOsmProvider.of().addWay(elevatorWay).build();
+    var graph = new Graph();
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
+    OsmModuleTestFactory.of(provider)
+      .withGraph(graph)
+      .builder()
+      .withStreetDetailsRepository(streetDetailsRepository)
+      .build()
+      .buildGraph();
+
+    var edgeLevelInfoSet = Set.of(new Level(1, "1"));
+    assertEquals(
+      edgeLevelInfoSet,
+      getAllHorizontalEdgeLevelInfoObjects(graph, streetDetailsRepository)
+    );
+  }
+
+  @Test
+  void testElevatorWayEdgeLevelInfoWithoutDefinedLevels() {
     var elevatorWay = new OsmWay();
     elevatorWay.setId(1);
     elevatorWay.addTag("highway", "elevator");
@@ -179,8 +236,8 @@ public class EdgeLevelInfoTest {
       .build()
       .buildGraph();
 
-    var edgeLevelInfoSet = Set.of(new Level(0, "default level"));
-    assertEquals(edgeLevelInfoSet, getAllEdgeLevelInfoObjects(graph, streetDetailsRepository));
+    // The default level should not be stored because it might be misleading to an end user.
+    assertEquals(Set.of(), getAllHorizontalEdgeLevelInfoObjects(graph, streetDetailsRepository));
   }
 
   private Set<InclinedEdgeLevelInfo> getAllInclinedEdgeLevelInfoObjects(
@@ -199,7 +256,7 @@ public class EdgeLevelInfoTest {
       .collect(Collectors.toSet());
   }
 
-  private Set<Level> getAllEdgeLevelInfoObjects(
+  private Set<Level> getAllHorizontalEdgeLevelInfoObjects(
     Graph graph,
     StreetDetailsRepository streetDetailsRepository
   ) {

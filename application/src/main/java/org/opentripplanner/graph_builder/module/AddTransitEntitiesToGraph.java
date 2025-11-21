@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.graph.Graph;
@@ -231,62 +232,95 @@ public class AddTransitEntitiesToGraph {
     StationElementVertex fromVertex,
     StationElementVertex toVertex
   ) {
+    StreetTraversalPermission permission = StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
+    int traversalTime = pathway.getTraversalTime();
     StopLevel fromLevel = findStopLevel(fromVertex);
     StopLevel toLevel = findStopLevel(toVertex);
-
     double levels = 1;
-    if (fromLevel.index() != toLevel.index()) {
+    if (fromLevel != null && toLevel != null && fromLevel.index() != toLevel.index()) {
       levels = Math.abs(fromLevel.index() - toLevel.index());
     }
 
     ElevatorVertex fromOnboardVertex = vertexFactory.elevator(
       fromVertex,
       getElevatorLabel(fromVertex, pathway),
-      fromLevel.index()
+      // TODO this will be removed in the future in another PR
+      fromLevel != null ? fromLevel.index() : 0
     );
     ElevatorVertex toOnboardVertex = vertexFactory.elevator(
       toVertex,
       getElevatorLabel(toVertex, pathway),
-      toLevel.index()
+      // TODO this will be removed in the future in another PR
+      toLevel != null ? toLevel.index() : 0
     );
 
-    streetDetailsRepository.addHorizontalEdgeLevelInfo(
-      ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex),
-      new Level(fromLevel.index(), fromLevel.name())
+    createOneWayElevatorEdges(
+      fromVertex,
+      toVertex,
+      fromOnboardVertex,
+      toOnboardVertex,
+      fromLevel,
+      toLevel,
+      permission,
+      levels,
+      traversalTime
     );
-    streetDetailsRepository.addHorizontalEdgeLevelInfo(
-      ElevatorAlightEdge.createElevatorAlightEdge(toOnboardVertex, toVertex),
-      new Level(toLevel.index(), toLevel.name())
+    if (pathway.isBidirectional()) {
+      createOneWayElevatorEdges(
+        toVertex,
+        fromVertex,
+        toOnboardVertex,
+        fromOnboardVertex,
+        toLevel,
+        fromLevel,
+        permission,
+        levels,
+        traversalTime
+      );
+    }
+  }
+
+  private void createOneWayElevatorEdges(
+    StationElementVertex fromVertex,
+    StationElementVertex toVertex,
+    ElevatorVertex fromOnboardVertex,
+    ElevatorVertex toOnboardVertex,
+    @Nullable StopLevel fromLevel,
+    @Nullable StopLevel toLevel,
+    StreetTraversalPermission permission,
+    double levels,
+    int traversalTime
+  ) {
+    ElevatorBoardEdge elevatorBoardEdge = ElevatorBoardEdge.createElevatorBoardEdge(
+      fromVertex,
+      fromOnboardVertex
+    );
+    ElevatorAlightEdge elevatorAlightEdge = ElevatorAlightEdge.createElevatorAlightEdge(
+      toOnboardVertex,
+      toVertex
     );
 
-    StreetTraversalPermission permission = StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
+    if (fromLevel != null) {
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(
+        elevatorBoardEdge,
+        new Level(fromLevel.index(), fromLevel.name())
+      );
+    }
+    if (toLevel != null) {
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(
+        elevatorAlightEdge,
+        new Level(toLevel.index(), toLevel.name())
+      );
+    }
+
     ElevatorHopEdge.createElevatorHopEdge(
       fromOnboardVertex,
       toOnboardVertex,
       permission,
       Accessibility.POSSIBLE,
       levels,
-      pathway.getTraversalTime()
+      traversalTime
     );
-
-    if (pathway.isBidirectional()) {
-      streetDetailsRepository.addHorizontalEdgeLevelInfo(
-        ElevatorBoardEdge.createElevatorBoardEdge(toVertex, toOnboardVertex),
-        new Level(toLevel.index(), toLevel.name())
-      );
-      streetDetailsRepository.addHorizontalEdgeLevelInfo(
-        ElevatorAlightEdge.createElevatorAlightEdge(fromOnboardVertex, fromVertex),
-        new Level(fromLevel.index(), fromLevel.name())
-      );
-      ElevatorHopEdge.createElevatorHopEdge(
-        toOnboardVertex,
-        fromOnboardVertex,
-        permission,
-        Accessibility.POSSIBLE,
-        levels,
-        pathway.getTraversalTime()
-      );
-    }
   }
 
   private static String getElevatorLabel(StationElementVertex vertex, Pathway pathway) {
@@ -294,15 +328,16 @@ public class AddTransitEntitiesToGraph {
   }
 
   /**
-   * Try to find a stop level. If one can not be found, return the default level.
+   * Try to find a stop level. If one can not be found, return null.
    * If a name is not present, default to the index as the name.
    *
-   * @return StopLevel that can not be null without any null fields
+   * @return null or StopLevel without any null fields
    */
+  @Nullable
   public StopLevel findStopLevel(StationElementVertex vertex) {
     var stop = otpTransitService.siteRepository().getRegularStop(vertex.getId());
     if (stop == null || stop.level() == null) {
-      return StationElement.DEFAULT_LEVEL;
+      return null;
     } else {
       var level = stop.level();
       return new StopLevel(

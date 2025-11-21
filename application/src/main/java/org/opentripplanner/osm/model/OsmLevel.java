@@ -7,10 +7,12 @@ public class OsmLevel implements Comparable<OsmLevel> {
 
   private final double level;
   private final String name;
+  private final OsmLevelSource source;
 
-  public OsmLevel(double level, String name) {
+  public OsmLevel(double level, String name, OsmLevelSource source) {
     this.name = Objects.requireNonNull(name);
     this.level = level;
+    this.source = source;
   }
 
   @Override
@@ -52,6 +54,13 @@ public class OsmLevel implements Comparable<OsmLevel> {
    */
   public String name() {
     return this.name;
+  }
+
+  /**
+   * What is the source of the information for this level.
+   */
+  public OsmLevelSource source() {
+    return this.source;
   }
 
   @Override

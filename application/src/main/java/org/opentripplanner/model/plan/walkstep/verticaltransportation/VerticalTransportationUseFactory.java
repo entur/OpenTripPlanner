@@ -1,6 +1,7 @@
 package org.opentripplanner.model.plan.walkstep.verticaltransportation;
 
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.Level;
@@ -57,9 +58,12 @@ public class VerticalTransportationUseFactory {
     State backState,
     ElevatorAlightEdge elevatorAlightEdge
   ) {
-    ElevatorBoardEdge elevatorBoardEdge = (ElevatorBoardEdge) backState
-      .getBackState()
-      .getBackEdge();
+    ElevatorBoardEdge elevatorBoardEdge = findElevatorBoardEdge(backState);
+    if (elevatorBoardEdge == null) {
+      throw new IllegalStateException(
+        "An ElevatorAlightEdge was reached without first traversing an ElevatorBoardEdge"
+      );
+    }
 
     Optional<Level> boardEdgeLevelOptional = streetDetailsService.findHorizontalEdgeLevelInfo(
       elevatorBoardEdge
@@ -68,20 +72,38 @@ public class VerticalTransportationUseFactory {
       elevatorAlightEdge
     );
 
-    if (boardEdgeLevelOptional.isEmpty() || alightEdgeLevelOptional.isEmpty()) {
-      return null;
+    if (boardEdgeLevelOptional.isPresent() && alightEdgeLevelOptional.isPresent()) {
+      Level boardEdgeLevel = boardEdgeLevelOptional.get();
+      Level alightEdgeLevel = alightEdgeLevelOptional.get();
+      VerticalDirection verticalDirection = VerticalDirection.UNKNOWN;
+      if (boardEdgeLevel.level() > alightEdgeLevel.level()) {
+        verticalDirection = VerticalDirection.DOWN;
+      } else if (boardEdgeLevel.level() < alightEdgeLevel.level()) {
+        verticalDirection = VerticalDirection.UP;
+      }
+      return new ElevatorUse(boardEdgeLevel, alightEdgeLevel, verticalDirection);
+    } else if (boardEdgeLevelOptional.isPresent()) {
+      return new ElevatorUse(boardEdgeLevelOptional.get(), null, VerticalDirection.UNKNOWN);
+    } else if (alightEdgeLevelOptional.isPresent()) {
+      return new ElevatorUse(null, alightEdgeLevelOptional.get(), VerticalDirection.UNKNOWN);
     }
+    return null;
+  }
 
-    Level boardEdgeLevel = boardEdgeLevelOptional.get();
-    Level alightEdgeLevel = alightEdgeLevelOptional.get();
-
-    VerticalDirection verticalDirection = VerticalDirection.UNKNOWN;
-    if (boardEdgeLevel.level() > alightEdgeLevel.level()) {
-      verticalDirection = VerticalDirection.DOWN;
-    } else if (boardEdgeLevel.level() < alightEdgeLevel.level()) {
-      verticalDirection = VerticalDirection.UP;
+  /**
+   * Find the ElevatorBoardEdge that was used from the backState of an ElevatorAlightEdge.
+   * This function should never return null unless the graph is broken.
+   */
+  @Nullable
+  private ElevatorBoardEdge findElevatorBoardEdge(State backState) {
+    // The initial value is the first possible state that can be the ElevatorBoardEdge.
+    State currentState = backState.getBackState();
+    while (currentState != null) {
+      if (currentState.getBackEdge() instanceof ElevatorBoardEdge elevatorBoardEdge) {
+        return elevatorBoardEdge;
+      }
+      currentState = currentState.getBackState();
     }
-
-    return new ElevatorUse(boardEdgeLevel, alightEdgeLevel, verticalDirection);
+    return null;
   }
 }

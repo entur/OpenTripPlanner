@@ -14,6 +14,7 @@ import org.opentripplanner.graph_builder.issue.api.Issue;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToElevatorWay;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelFactory;
+import org.opentripplanner.osm.model.OsmLevelSource;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.routing.graph.Graph;
@@ -186,16 +187,20 @@ class ElevatorProcessor {
   ) {
     var factory = new VertexFactory(graph);
     ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label, level.level());
-    Level repositoryLevel = new Level(level.level(), level.name());
+    ElevatorBoardEdge elevatorBoardEdge = ElevatorBoardEdge.createElevatorBoardEdge(
+      sourceVertex,
+      onboardVertex
+    );
+    ElevatorAlightEdge elevatorAlightEdge = ElevatorAlightEdge.createElevatorAlightEdge(
+      onboardVertex,
+      sourceVertex
+    );
 
-    streetDetailsRepository.addHorizontalEdgeLevelInfo(
-      ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex),
-      repositoryLevel
-    );
-    streetDetailsRepository.addHorizontalEdgeLevelInfo(
-      ElevatorAlightEdge.createElevatorAlightEdge(onboardVertex, sourceVertex),
-      repositoryLevel
-    );
+    if (level.source() != OsmLevelSource.DEFAULT) {
+      Level repositoryLevel = new Level(level.level(), level.name());
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(elevatorBoardEdge, repositoryLevel);
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(elevatorAlightEdge, repositoryLevel);
+    }
 
     // accumulate onboard vertices to so they can be connected by hop edges later
     onboardVertices.add(onboardVertex);
