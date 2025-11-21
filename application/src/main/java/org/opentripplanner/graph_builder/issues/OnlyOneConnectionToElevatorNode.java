@@ -3,13 +3,15 @@ package org.opentripplanner.graph_builder.issues;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.osm.model.OsmNode;
 
-public record OnlyOneWayConnectedToElevatorNode(OsmNode node) implements DataImportIssue {
+public record OnlyOneConnectionToElevatorNode(OsmNode node) implements DataImportIssue {
   private static final String FMT =
-    "Elevator node %s has only one connected way. This makes the elevator unusable. " +
+    "Elevator node %s has only one routable connection. " +
+    "This makes the elevator unusable. " +
     "Please check whether the node is correctly modeled.";
 
   private static final String HTMLFMT =
-    "<a href='%s'>Elevator node %s</a> has only one connected way. This makes the elevator unusable. " +
+    "<a href='%s'>Elevator node %s</a> has only one routable connection. " +
+    "This makes the elevator unusable. " +
     "Please check whether the node is correctly modeled.";
 
   @Override

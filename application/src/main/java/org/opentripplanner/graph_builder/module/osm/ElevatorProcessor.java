@@ -14,7 +14,7 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
 import org.opentripplanner.graph_builder.issues.AllWaysOfElevatorNodeOnSameLevel;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToElevatorWay;
-import org.opentripplanner.graph_builder.issues.OnlyOneWayConnectedToElevatorNode;
+import org.opentripplanner.graph_builder.issues.OnlyOneConnectionToElevatorNode;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelFactory;
 import org.opentripplanner.osm.model.OsmNode;
@@ -114,7 +114,7 @@ class ElevatorProcessor {
 
       // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (vertices.size() < 2) {
-        issueStore.add(new OnlyOneWayConnectedToElevatorNode(node));
+        issueStore.add(new OnlyOneConnectionToElevatorNode(node));
         continue;
       }
 
