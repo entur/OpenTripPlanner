@@ -336,8 +336,6 @@
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>
                     <sourceDirectories>
                         <sourceDirectory>src/main/java</sourceDirectory>
-                        <sourceDirectory>src/ext/java</sourceDirectory>
-                        <sourceDirectory>src/ext-test/java</sourceDirectory>
                         <sourceDirectory>src/test-fixtures/java</sourceDirectory>
                     </sourceDirectories>
                 </configuration>
