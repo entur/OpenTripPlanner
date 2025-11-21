@@ -48,7 +48,7 @@ import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
-import org.opentripplanner.model.FeedInfo;
+import org.opentripplanner.model.FeedInfoTestFactory;
 import org.opentripplanner.model.RealTimeTripUpdate;
 import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.model.calendar.CalendarServiceData;
@@ -228,7 +228,7 @@ class GraphQLIntegrationTest {
 
     timetableRepository.addTripPattern(id("pattern-1"), pattern);
 
-    var feedInfo = FeedInfo.dummyForTest(FEED_ID);
+    var feedInfo = FeedInfoTestFactory.dummyForTest(FEED_ID);
     timetableRepository.addFeedInfo(feedInfo);
 
     var agency = Agency.of(new FeedScopedId(FEED_ID, "agency-xx"))

@@ -27,4 +27,5 @@ public class GtfsModuleTestFactory {
       150.0,
       120
     );
-  }}
+  }
+}
