@@ -39,6 +39,7 @@ import org.opentripplanner.routing.algorithm.transferoptimization.api.OptimizedP
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.routing.via.model.ViaCoordinateTransfer;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.model.edge.Edge;
@@ -92,7 +93,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
     this.request = request;
     this.transferStreetRequest = StreetSearchRequestMapper.mapToTransferRequest(request).build();
     this.graphPathToItineraryMapper = new GraphPathToItineraryMapper(
-      transitService::getRegularStop,
+      new TransitServiceResolver(transitService),
       transitService.getTimeZone(),
       graph.streetNotesService,
       streetDetailsService,

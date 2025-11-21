@@ -6,9 +6,9 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.graph.Graph;
@@ -37,6 +37,7 @@ import org.opentripplanner.transit.model.site.PathwayNode;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StationElement;
+import org.opentripplanner.transit.model.site.StopLevel;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -131,7 +132,7 @@ public class AddTransitEntitiesToGraph {
   }
 
   private void addEntrancesToGraph() {
-    for (Entrance entrance : otpTransitService.getAllEntrances()) {
+    for (Entrance entrance : otpTransitService.siteRepository().listEntrances()) {
       TransitEntranceVertex entranceVertex = vertexFactory.transitEntrance(entrance);
       stationElementNodes.put(entrance, entranceVertex);
     }
@@ -140,7 +141,7 @@ public class AddTransitEntitiesToGraph {
   private void addStationCentroidsToGraph() {
     for (Station station : otpTransitService.siteRepository().listStations()) {
       if (station.shouldRouteToCentroid()) {
-        vertexFactory.stationCentroid(station.getId(), station.getCoordinate());
+        vertexFactory.stationCentroid(station);
       }
     }
   }
@@ -162,19 +163,9 @@ public class AddTransitEntitiesToGraph {
         var platformVertex = stationElementNodes.get(boardingArea.getParentStop());
         boolean wheelchair = boardingArea.getWheelchairAccessibility() == Accessibility.POSSIBLE;
 
-        PathwayEdge.createLowCostPathwayEdge(
-          boardingAreaVertex,
-          platformVertex,
-          wheelchair,
-          PathwayMode.WALKWAY
-        );
+        PathwayEdge.createLowCostPathwayEdge(boardingAreaVertex, platformVertex, wheelchair);
 
-        PathwayEdge.createLowCostPathwayEdge(
-          platformVertex,
-          boardingAreaVertex,
-          wheelchair,
-          PathwayMode.WALKWAY
-        );
+        PathwayEdge.createLowCostPathwayEdge(platformVertex, boardingAreaVertex, wheelchair);
       }
     }
   }
@@ -204,8 +195,7 @@ public class AddTransitEntitiesToGraph {
             distance,
             pathway.getStairCount(),
             pathway.getSlope(),
-            pathway.isPathwayModeWheelchairAccessible(),
-            pathway.getPathwayMode()
+            pathway.isPathwayModeWheelchairAccessible()
           );
           if (pathway.isBidirectional()) {
             PathwayEdge.createPathwayEdge(
@@ -216,8 +206,7 @@ public class AddTransitEntitiesToGraph {
               distance,
               -1 * pathway.getStairCount(),
               -1 * pathway.getSlope(),
-              pathway.isPathwayModeWheelchairAccessible(),
-              pathway.getPathwayMode()
+              pathway.isPathwayModeWheelchairAccessible()
             );
           }
         }
@@ -242,36 +231,32 @@ public class AddTransitEntitiesToGraph {
     StationElementVertex fromVertex,
     StationElementVertex toVertex
   ) {
-    StopLevel fromLevel = getStopLevel(fromVertex);
-    StopLevel toLevel = getStopLevel(toVertex);
+    StopLevel fromLevel = findStopLevel(fromVertex);
+    StopLevel toLevel = findStopLevel(toVertex);
 
     double levels = 1;
-    if (
-      fromLevel.index() != null &&
-      toLevel.index() != null &&
-      !fromLevel.index().equals(toLevel.index())
-    ) {
+    if (fromLevel.index() != toLevel.index()) {
       levels = Math.abs(fromLevel.index() - toLevel.index());
     }
 
     ElevatorVertex fromOnboardVertex = vertexFactory.elevator(
       fromVertex,
-      elevatorLabel(fromVertex, pathway),
-      fromLevel.name().toString()
+      getElevatorLabel(fromVertex, pathway),
+      fromLevel.index()
     );
     ElevatorVertex toOnboardVertex = vertexFactory.elevator(
       toVertex,
-      elevatorLabel(toVertex, pathway),
-      toLevel.name().toString()
+      getElevatorLabel(toVertex, pathway),
+      toLevel.index()
     );
 
     streetDetailsRepository.addHorizontalEdgeLevelInfo(
       ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex),
-      new Level(fromLevel.index, fromLevel.name.toString())
+      new Level(fromLevel.index(), fromLevel.name())
     );
     streetDetailsRepository.addHorizontalEdgeLevelInfo(
       ElevatorAlightEdge.createElevatorAlightEdge(toOnboardVertex, toVertex),
-      new Level(toLevel.index, toLevel.name.toString())
+      new Level(toLevel.index(), toLevel.name())
     );
 
     StreetTraversalPermission permission = StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
@@ -287,11 +272,11 @@ public class AddTransitEntitiesToGraph {
     if (pathway.isBidirectional()) {
       streetDetailsRepository.addHorizontalEdgeLevelInfo(
         ElevatorBoardEdge.createElevatorBoardEdge(toVertex, toOnboardVertex),
-        new Level(toLevel.index, toLevel.name.toString())
+        new Level(toLevel.index(), toLevel.name())
       );
       streetDetailsRepository.addHorizontalEdgeLevelInfo(
         ElevatorAlightEdge.createElevatorAlightEdge(fromOnboardVertex, fromVertex),
-        new Level(fromLevel.index, fromLevel.name.toString())
+        new Level(fromLevel.index(), fromLevel.name())
       );
       ElevatorHopEdge.createElevatorHopEdge(
         toOnboardVertex,
@@ -304,25 +289,26 @@ public class AddTransitEntitiesToGraph {
     }
   }
 
-  private static String elevatorLabel(StationElementVertex fromVertex, Pathway pathway) {
-    return "%s_%s".formatted(fromVertex.getLabel(), pathway.getId());
+  private static String getElevatorLabel(StationElementVertex vertex, Pathway pathway) {
+    return "%s_%s".formatted(vertex.getLabel(), pathway.getId());
   }
 
-  private StopLevel getStopLevel(StationElementVertex vertex) {
-    var dfltLevel = new StopLevel(vertex.getName(), null);
+  /**
+   * Try to find a stop level. If one can not be found, return the default level.
+   * If a name is not present, default to the index as the name.
+   *
+   * @return StopLevel that can not be null without any null fields
+   */
+  public StopLevel findStopLevel(StationElementVertex vertex) {
     var stop = otpTransitService.siteRepository().getRegularStop(vertex.getId());
-    if (stop == null) {
-      return dfltLevel;
-    } else if (stop.level() == null) {
-      return dfltLevel;
+    if (stop == null || stop.level() == null) {
+      return StationElement.DEFAULT_LEVEL;
     } else {
       var level = stop.level();
       return new StopLevel(
-        NonLocalizedString.ofNullableOrElse(level.name(), stop.getName()),
+        Objects.requireNonNullElse(level.name(), String.valueOf(level.index())),
         level.index()
       );
     }
   }
-
-  private record StopLevel(I18NString name, Double index) {}
 }

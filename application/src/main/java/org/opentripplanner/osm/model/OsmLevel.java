@@ -25,8 +25,12 @@ public class OsmLevel implements Comparable<OsmLevel> {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     OsmLevel that = (OsmLevel) o;
     // Levels should be equal if their 0-based number representations are equal.
     // There should be no need to compare names.

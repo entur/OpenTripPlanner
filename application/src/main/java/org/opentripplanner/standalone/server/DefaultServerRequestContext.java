@@ -9,6 +9,7 @@ import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.transmodel.TransmodelAPIParameters;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.astar.spi.TraverseVisitor;
+import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
@@ -68,6 +69,9 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   private final WorldEnvelopeService worldEnvelopeService;
 
   /* Optional fields */
+
+  @Nullable
+  private final CarpoolingService carpoolingService;
 
   @Nullable
   private final ItineraryDecorator emissionItineraryDecorator;
@@ -134,6 +138,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     VertexLinker vertexLinker,
     ViaCoordinateTransferFactory viaTransferResolver,
     WorldEnvelopeService worldEnvelopeService,
+    @Nullable CarpoolingService carpoolingService,
     @Nullable ItineraryDecorator emissionItineraryDecorator,
     StreetDetailsService streetDetailsService,
     @Nullable EmpiricalDelayService empiricalDelayService,
@@ -169,6 +174,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     this.worldEnvelopeService = worldEnvelopeService;
 
     // Optional fields
+    this.carpoolingService = carpoolingService;
     this.emissionItineraryDecorator = emissionItineraryDecorator;
     this.streetDetailsService = streetDetailsService;
     this.empiricalDelayService = empiricalDelayService;
@@ -305,6 +311,12 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Override
   public TransmodelAPIParameters transmodelAPIParameters() {
     return transmodelAPIParameters;
+  }
+
+  @Nullable
+  @Override
+  public CarpoolingService carpoolingService() {
+    return carpoolingService;
   }
 
   @Nullable

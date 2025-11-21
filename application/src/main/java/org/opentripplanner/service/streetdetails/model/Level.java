@@ -27,8 +27,12 @@ public class Level implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (o == this) return true;
-    if (o == null || o.getClass() != this.getClass()) return false;
+    if (o == this) {
+      return true;
+    }
+    if (o == null || o.getClass() != this.getClass()) {
+      return false;
+    }
     Level that = (Level) o;
     return this.level == that.level && Objects.equals(this.name, that.name);
   }

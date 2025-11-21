@@ -35,7 +35,7 @@ import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.transit.model.site.Entrance;
+import org.opentripplanner.transit.model.basic.Accessibility;
 
 public class StreetModelForTest {
 
@@ -58,11 +58,12 @@ public class StreetModelForTest {
   }
 
   public static TransitEntranceVertex transitEntranceVertex(String id, double lat, double lon) {
-    var entrance = Entrance.of(id(id))
-      .withCoordinate(new WgsCoordinate(lat, lon))
-      .withName(I18NString.of(id))
-      .build();
-    return new TransitEntranceVertex(entrance);
+    return new TransitEntranceVertex(
+      id(id),
+      new WgsCoordinate(lat, lon),
+      I18NString.of(id),
+      Accessibility.NO_INFORMATION
+    );
   }
 
   public static StreetEdge streetEdge(StreetVertex vA, StreetVertex vB) {

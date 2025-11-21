@@ -28,7 +28,7 @@ import org.opentripplanner.model.plan.leg.ElevationProfile;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.leg.StreetLegBuilder;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
-import org.opentripplanner.routing.graphfinder.StopResolver;
+import org.opentripplanner.routing.graphfinder.SiteResolver;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
@@ -54,20 +54,20 @@ import org.opentripplanner.street.search.state.State;
  */
 public class GraphPathToItineraryMapper {
 
-  private final StopResolver stopResolver;
+  private final SiteResolver siteResolver;
   private final ZoneId timeZone;
   private final StreetNotesService streetNotesService;
   private final StreetDetailsService streetDetailsService;
   private final double ellipsoidToGeoidDifference;
 
   public GraphPathToItineraryMapper(
-    StopResolver stopResolver,
+    SiteResolver siteResolver,
     ZoneId timeZone,
     StreetNotesService streetNotesService,
     StreetDetailsService streetDetailsService,
     double ellipsoidToGeoidDifference
   ) {
-    this.stopResolver = stopResolver;
+    this.siteResolver = siteResolver;
     this.timeZone = ZoneIdFallback.zoneId(timeZone);
     this.streetNotesService = streetNotesService;
     this.streetDetailsService = streetDetailsService;
@@ -212,7 +212,7 @@ public class GraphPathToItineraryMapper {
   /**
    * Calculate the elevationGained and elevationLost fields of an {@link Itinerary}.
    *
-   * @param itinerary The itinerary to calculate the elevation changes for
+   * @param builder   The itinerary builder to calculate the elevation changes for
    * @param edges     The edges that go with the itinerary
    */
   private static void calculateElevations(ItineraryBuilder builder, List<Edge> edges) {
@@ -222,9 +222,13 @@ public class GraphPathToItineraryMapper {
       }
       PackedCoordinateSequence coordinates = edgeWithElevation.getElevationProfile();
 
-      if (coordinates == null) continue;
+      if (coordinates == null) {
+        continue;
+      }
       // TODO Check the test below, AFAIU current elevation profile has 3 dimensions.
-      if (coordinates.getDimension() != 2) continue;
+      if (coordinates.getDimension() != 2) {
+        continue;
+      }
 
       for (int i = 0; i < coordinates.size() - 1; i++) {
         double change = coordinates.getOrdinate(i + 1, 1) - coordinates.getOrdinate(i, 1);
@@ -317,7 +321,7 @@ public class GraphPathToItineraryMapper {
     }
 
     if (vertex instanceof TransitStopVertex tsv) {
-      var stop = Objects.requireNonNull(stopResolver.getStop(tsv.getId()));
+      var stop = Objects.requireNonNull(siteResolver.getStop(tsv.getId()));
       return Place.forStop(stop);
     } else if (vertex instanceof VehicleRentalPlaceVertex) {
       return Place.forVehicleRentalPlace((VehicleRentalPlaceVertex) vertex);
@@ -379,6 +383,7 @@ public class GraphPathToItineraryMapper {
       previousStep,
       streetNotesService,
       streetDetailsService,
+      siteResolver,
       ellipsoidToGeoidDifference
     );
     List<WalkStep> walkSteps = statesToWalkStepsMapper.generateWalkSteps();
@@ -402,9 +407,7 @@ public class GraphPathToItineraryMapper {
       .withDistanceMeters(distanceMeters)
       .withGeneralizedCost((int) (lastState.getWeight() - firstState.getWeight()))
       .withGeometry(geometry)
-      .withElevationProfile(
-        makeElevation(edges, firstState.getPreferences().system().geoidElevation())
-      )
+      .withElevationProfile(makeElevation(edges, firstState.getRequest().geoidElevation()))
       .withWalkSteps(walkSteps)
       .withRentedVehicle(firstState.isRentingVehicle())
       .withWalkingBike(false);

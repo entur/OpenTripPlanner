@@ -153,7 +153,7 @@ class ElevatorProcessor {
           streetDetailsRepository,
           onboardVertices,
           sourceVertex,
-          elevatorWay.getId() + "_" + sourceVertexLabel,
+          elevatorWay.getId() + "_" + sourceVertexLabel + "_" + i,
           nodeLevels.get(i)
         );
       }
@@ -185,7 +185,7 @@ class ElevatorProcessor {
     OsmLevel level
   ) {
     var factory = new VertexFactory(graph);
-    ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label, level.name());
+    ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label, level.level());
     Level repositoryLevel = new Level(level.level(), level.name());
 
     streetDetailsRepository.addHorizontalEdgeLevelInfo(

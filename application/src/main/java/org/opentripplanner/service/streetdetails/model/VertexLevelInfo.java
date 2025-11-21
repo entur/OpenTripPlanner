@@ -32,8 +32,12 @@ public class VertexLevelInfo implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (o == this) return true;
-    if (o == null || o.getClass() != getClass()) return false;
+    if (o == this) {
+      return true;
+    }
+    if (o == null || o.getClass() != getClass()) {
+      return false;
+    }
     VertexLevelInfo that = (VertexLevelInfo) o;
     return Objects.equals(this.level, that.level) && osmNodeId == that.osmNodeId;
   }

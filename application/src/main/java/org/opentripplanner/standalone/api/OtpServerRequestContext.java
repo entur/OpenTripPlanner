@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GtfsApiParameters;
 import org.opentripplanner.apis.transmodel.TransmodelAPIParameters;
 import org.opentripplanner.astar.spi.TraverseVisitor;
+import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.dataoverlay.routing.DataOverlayContext;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.flex.FlexParameters;
@@ -146,6 +147,9 @@ public interface OtpServerRequestContext {
   TransmodelAPIParameters transmodelAPIParameters();
 
   /* Sandbox modules */
+
+  @Nullable
+  CarpoolingService carpoolingService();
 
   @Nullable
   default List<ExtensionRequestContext> listExtensionRequestContexts(RouteRequest request) {
