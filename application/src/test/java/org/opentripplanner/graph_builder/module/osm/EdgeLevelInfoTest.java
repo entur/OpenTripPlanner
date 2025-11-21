@@ -278,7 +278,10 @@ public class EdgeLevelInfoTest {
       .getEdges()
       .stream()
       .flatMap(edge ->
-        streetDetailsRepository.findEdgeLevelInfo(edge).map(Stream::of).orElseGet(Stream::empty)
+        streetDetailsRepository
+          .findHorizontalEdgeLevelInfo(edge)
+          .map(Stream::of)
+          .orElseGet(Stream::empty)
       )
       .collect(Collectors.toSet());
   }

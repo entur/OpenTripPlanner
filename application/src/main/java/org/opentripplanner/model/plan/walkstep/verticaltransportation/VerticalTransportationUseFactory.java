@@ -61,10 +61,10 @@ public class VerticalTransportationUseFactory {
       .getBackState()
       .getBackEdge();
 
-    Optional<Level> boardEdgeLevelOptional = streetDetailsService.findEdgeLevelInfo(
+    Optional<Level> boardEdgeLevelOptional = streetDetailsService.findHorizontalEdgeLevelInfo(
       elevatorBoardEdge
     );
-    Optional<Level> alightEdgeLevelOptional = streetDetailsService.findEdgeLevelInfo(
+    Optional<Level> alightEdgeLevelOptional = streetDetailsService.findHorizontalEdgeLevelInfo(
       elevatorAlightEdge
     );
 

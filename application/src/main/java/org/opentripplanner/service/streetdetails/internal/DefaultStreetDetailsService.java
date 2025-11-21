@@ -23,8 +23,8 @@ public class DefaultStreetDetailsService implements StreetDetailsService {
   }
 
   @Override
-  public Optional<Level> findEdgeLevelInfo(Edge edge) {
-    return repository.findEdgeLevelInfo(edge);
+  public Optional<Level> findHorizontalEdgeLevelInfo(Edge edge) {
+    return repository.findHorizontalEdgeLevelInfo(edge);
   }
 
   @Override

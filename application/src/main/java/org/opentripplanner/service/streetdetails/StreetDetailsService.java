@@ -19,7 +19,7 @@ public interface StreetDetailsService {
   Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(Edge edge);
 
   /**
-   * Find level information for a given edge.
+   * Find level information for a given horizontal edge.
    */
-  Optional<Level> findEdgeLevelInfo(Edge edge);
+  Optional<Level> findHorizontalEdgeLevelInfo(Edge edge);
 }

@@ -23,12 +23,12 @@ public interface StreetDetailsRepository extends Serializable {
   Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(Edge edge);
 
   /**
-   * Associate the edge with level information.
+   * Associate the horizontal edge with level information.
    */
-  void addEdgeLevelInfo(Edge edge, Level level);
+  void addHorizontalEdgeLevelInfo(Edge edge, Level level);
 
   /**
-   * Find level information for a given edge.
+   * Find level information for a given horizontal edge.
    */
-  Optional<Level> findEdgeLevelInfo(Edge edge);
+  Optional<Level> findHorizontalEdgeLevelInfo(Edge edge);
 }

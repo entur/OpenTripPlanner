@@ -354,8 +354,8 @@ class GraphQLIntegrationTest {
       .getBackState()
       .getBackEdge();
     ElevatorAlightEdge elevatorAlightEdge = (ElevatorAlightEdge) elevatorState.getBackEdge();
-    streetDetailsRepository.addEdgeLevelInfo(elevatorBoardEdge, new Level(-2.0, "-2"));
-    streetDetailsRepository.addEdgeLevelInfo(elevatorAlightEdge, new Level(-1.0, "-1"));
+    streetDetailsRepository.addHorizontalEdgeLevelInfo(elevatorBoardEdge, new Level(-2.0, "-2"));
+    streetDetailsRepository.addHorizontalEdgeLevelInfo(elevatorAlightEdge, new Level(-1.0, "-1"));
     var step2 = walkStep("elevator")
       .withRelativeDirection(RelativeDirection.ELEVATOR)
       .withVerticalTransportationUse(

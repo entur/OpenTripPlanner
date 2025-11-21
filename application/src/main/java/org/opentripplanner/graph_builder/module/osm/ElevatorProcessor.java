@@ -188,11 +188,11 @@ class ElevatorProcessor {
     ElevatorVertex onboardVertex = factory.elevator(sourceVertex, label, level.name());
     Level repositoryLevel = new Level(level.level(), level.name());
 
-    streetDetailsRepository.addEdgeLevelInfo(
+    streetDetailsRepository.addHorizontalEdgeLevelInfo(
       ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex),
       repositoryLevel
     );
-    streetDetailsRepository.addEdgeLevelInfo(
+    streetDetailsRepository.addHorizontalEdgeLevelInfo(
       ElevatorAlightEdge.createElevatorAlightEdge(onboardVertex, sourceVertex),
       repositoryLevel
     );

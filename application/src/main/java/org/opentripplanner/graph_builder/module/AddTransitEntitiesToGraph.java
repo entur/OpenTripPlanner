@@ -265,11 +265,11 @@ public class AddTransitEntitiesToGraph {
       toLevel.name().toString()
     );
 
-    streetDetailsRepository.addEdgeLevelInfo(
+    streetDetailsRepository.addHorizontalEdgeLevelInfo(
       ElevatorBoardEdge.createElevatorBoardEdge(fromVertex, fromOnboardVertex),
       new Level(fromLevel.index, fromLevel.name.toString())
     );
-    streetDetailsRepository.addEdgeLevelInfo(
+    streetDetailsRepository.addHorizontalEdgeLevelInfo(
       ElevatorAlightEdge.createElevatorAlightEdge(toOnboardVertex, toVertex),
       new Level(toLevel.index, toLevel.name.toString())
     );
@@ -285,11 +285,11 @@ public class AddTransitEntitiesToGraph {
     );
 
     if (pathway.isBidirectional()) {
-      streetDetailsRepository.addEdgeLevelInfo(
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(
         ElevatorBoardEdge.createElevatorBoardEdge(toVertex, toOnboardVertex),
         new Level(toLevel.index, toLevel.name.toString())
       );
-      streetDetailsRepository.addEdgeLevelInfo(
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(
         ElevatorAlightEdge.createElevatorAlightEdge(fromOnboardVertex, fromVertex),
         new Level(fromLevel.index, fromLevel.name.toString())
       );

@@ -33,14 +33,14 @@ public class DefaultStreetDetailsRepository implements StreetDetailsRepository, 
   }
 
   @Override
-  public void addEdgeLevelInfo(Edge edge, Level level) {
+  public void addHorizontalEdgeLevelInfo(Edge edge, Level level) {
     Objects.requireNonNull(edge);
     Objects.requireNonNull(level);
     this.levelInformation.put(edge, level);
   }
 
   @Override
-  public Optional<Level> findEdgeLevelInfo(Edge edge) {
+  public Optional<Level> findHorizontalEdgeLevelInfo(Edge edge) {
     return Optional.ofNullable(levelInformation.get(edge));
   }
 
