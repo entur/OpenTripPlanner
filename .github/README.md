@@ -52,7 +52,7 @@ for the Entur deployment at Entur. Most of the Entur specific content is just co
 configuration. We use the code from the `dev-2.x` branch in the upstream repository "as is". The Entur `main` branch
 is reset to the upstream `dev-2.x` for _every_ release(except hotfixes).
 
-> ✏️ &nbsp;**Tip!**  Edit this file in the **_main_config_** branch. The `main` branch is reset for every release, so any
+> ✏️ &nbsp;**Tip!**  Edit this file in the **`main_config`** branch. The `main` branch is reset for every release, so any
 > changes to it is ignored in the next release.  
  
 
