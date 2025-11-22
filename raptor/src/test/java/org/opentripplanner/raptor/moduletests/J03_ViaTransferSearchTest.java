@@ -106,7 +106,7 @@ class J03_ViaTransferSearchTest {
 
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
-      "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ B ~ BUS R1 0:20 0:40 ~ D ~ Walk 30s [0:01:30 0:40:30 39m Tₓ1 C₁3_660]",
+      "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ B ~ BUS R1 0:20 0:40 ~ D ~ Walk 30s [0:01:30 0:40:30 39m Tₙ1 C₁3_660]",
       pathsToString(result)
     );
   }
@@ -146,7 +146,7 @@ class J03_ViaTransferSearchTest {
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ C ~ BUS R2 0:12 0:17 ~ E ~ Walk 30s " +
-      "[0:01:30 0:17:30 16m Tₓ1 C₁2_280]",
+      "[0:01:30 0:17:30 16m Tₙ1 C₁2_280]",
       pathsToString(result)
     );
   }
@@ -188,7 +188,7 @@ class J03_ViaTransferSearchTest {
       "BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ C ~ " +
       "BUS R2 0:12 0:15 ~ D ~ Walk 1m ~ E ~ " +
       "BUS R2 0:17 0:15 ~ F ~ Walk 30s " +
-      "[0:01:30 0:15:30 14m Tₓ2 C₁2_820]",
+      "[0:01:30 0:15:30 14m Tₙ2 C₁2_820]",
       pathsToString(result)
     );
   }
@@ -228,7 +228,7 @@ class J03_ViaTransferSearchTest {
     // transfer slack is 60s.
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:04 ~ B ~ Walk 20s ~ B ~ BUS R2 0:05:45 0:11 ~ C ~ Walk 30s " +
-      "[0:01:30 0:11:30 10m Tₓ1 C₁1_880]",
+      "[0:01:30 0:11:30 10m Tₙ1 C₁1_880]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }

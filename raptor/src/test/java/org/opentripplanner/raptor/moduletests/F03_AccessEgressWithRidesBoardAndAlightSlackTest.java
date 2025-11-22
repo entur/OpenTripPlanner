@@ -74,8 +74,8 @@ public class F03_AccessEgressWithRidesBoardAndAlightSlackTest implements RaptorT
 
   static List<RaptorModuleTestCase> testCases() {
     var path =
-      "Flex+Walk 2m 1x ~ B ~ BUS R1 0:04 0:06 ~ C ~ Flex 2m 1x " +
-      "[0:00:30 0:09:10 8m40s Tₓ2 C₁1_360]";
+      "Flex+Walk 2m Rₙ1 ~ B ~ BUS R1 0:04 0:06 ~ C ~ Flex 2m Rₙ1 " +
+      "[0:00:30 0:09:10 8m40s Tₙ2 C₁1_360]";
     return RaptorModuleTestCase.of()
       // TODO - Alight slack is missing
       //.add(TC_MIN_DURATION, "[0:00 0:08:30 8m30s 2tx]")

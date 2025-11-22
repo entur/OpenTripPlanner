@@ -74,8 +74,8 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
     int lat = time("0:43");
 
     var expected = new ExpectedList(
-      "BUS R1 0:10 0:40 30m ~ B 0s ~ Walk 2m 0:40 0:42 [0:09 0:42 33m Tₓ0]",
-      "BUS R1 0:11 0:41 30m ~ B 0s ~ Walk 2m 0:41 0:43 [0:10 0:43 33m Tₓ0]"
+      "BUS R1 0:10 0:40 30m ~ B 0s ~ Walk 2m Pₜ60 0:40 0:42 [0:09 0:42 33m Tₙ0]",
+      "BUS R1 0:11 0:41 30m ~ B 0s ~ Walk 2m Pₜ60 0:41 0:43 [0:10 0:43 33m Tₙ0]"
     );
 
     return RaptorModuleTestCase.of()
@@ -107,8 +107,8 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
     int lat = time("0:51");
 
     var expected = new ExpectedList(
-      "BUS R1 0:18 0:48 30m ~ B 0s ~ Walk 2m 0:48 0:50 [0:17 0:50 33m Tₓ0]",
-      "BUS R1 0:19 0:49 30m ~ B 0s ~ Walk 2m 0:49 0:51 [0:18 0:51 33m Tₓ0]"
+      "BUS R1 0:18 0:48 30m ~ B 0s ~ Walk 2m Pₜ60 0:48 0:50 [0:17 0:50 33m Tₙ0]",
+      "BUS R1 0:19 0:49 30m ~ B 0s ~ Walk 2m Pₜ60 0:49 0:51 [0:18 0:51 33m Tₙ0]"
     );
 
     return RaptorModuleTestCase.of()

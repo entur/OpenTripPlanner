@@ -79,7 +79,7 @@ public class C01_TransferBoardAndAlightSlackTest implements RaptorTestConstants 
       "~ BUS R1 0:02:11 0:03:01 ~ C " +
       "~ BUS R2 0:04:41 0:05:01 ~ D " +
       "~ Walk 20s " +
-      "[0:01:11 0:05:31 4m20s Tₓ1 C₁1_510]";
+      "[0:01:11 0:05:31 4m20s Tₙ1 C₁1_510]";
 
     return RaptorModuleTestCase.of()
       .addMinDuration("4m20s", TX_1, T00_00, T00_30)

@@ -76,10 +76,10 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   private static List<RaptorModuleTestCase> openNoTimeRestrictionTestCase() {
     var expected = new ExpectedList(
-      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m [0:10 0:22 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:20 0:30 ~ B ~ Walk 2m [0:20 0:32 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m [0:30 0:42 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m [0:20+1d 0:32+1d 12m Tₓ0]"
+      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m [0:10 0:22 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:20 0:30 ~ B ~ Walk 2m [0:20 0:32 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m [0:30 0:42 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m [0:20+1d 0:32+1d 12m Tₙ0]"
     );
 
     return RaptorModuleTestCase.of()
@@ -104,10 +104,10 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   private static List<RaptorModuleTestCase> openOneHourTestCase() {
     var expected = new ExpectedList(
-      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m Open(0:00 1:00) [0:10 0:22 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:20 0:30 ~ B ~ Walk 2m Open(0:00 1:00) [0:20 0:32 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m Open(0:00 1:00) [0:30 0:42 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:00 1:00) [0:20+1d 0:32+1d 12m Tₓ0 C₁1_440]"
+      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m Open(0:00 1:00) [0:10 0:22 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:20 0:30 ~ B ~ Walk 2m Open(0:00 1:00) [0:20 0:32 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m Open(0:00 1:00) [0:30 0:42 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:00 1:00) [0:20+1d 0:32+1d 12m Tₙ0 C₁1_440]"
     );
 
     return RaptorModuleTestCase.of()
@@ -131,7 +131,7 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   private static List<RaptorModuleTestCase> openInWholeSearchIntervalTestNextDayTestCase() {
     var expected =
-      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:00 1:00) [0:20+1d 0:32+1d 12m Tₓ0 C₁1_440]";
+      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:00 1:00) [0:20+1d 0:32+1d 12m Tₙ0 C₁1_440]";
 
     return RaptorModuleTestCase.of()
       .withRequest(r ->
@@ -154,8 +154,8 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   private static List<RaptorModuleTestCase> openInFirstHalfIntervalTestCase() {
     var expected = new ExpectedList(
-      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m Open(0:00 0:25) [0:10 0:22 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m Open(0:00 0:25) [0:30 0:02+1d 23h32m Tₓ0 C₁85_440]"
+      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m Open(0:00 0:25) [0:10 0:22 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m Open(0:00 0:25) [0:30 0:02+1d 23h32m Tₙ0 C₁85_440]"
     );
 
     return RaptorModuleTestCase.of()
@@ -179,7 +179,7 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   private static List<RaptorModuleTestCase> openInFirstHalfIntervalTestNextDayTestCase() {
     var expected =
-      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:25 0:40) [0:20+1d 0:32+1d 12m Tₓ0 C₁1_440]";
+      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:25 0:40) [0:20+1d 0:32+1d 12m Tₙ0 C₁1_440]";
 
     return RaptorModuleTestCase.of()
       .withRequest(r ->
@@ -204,10 +204,10 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   private static List<RaptorModuleTestCase> partiallyOpenIntervalTestCase() {
     var expected = new ExpectedList(
-      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m Open(0:25 0:35) [0:10 0:27 17m Tₓ0 C₁1_740]",
-      "A ~ BUS R1 0:20 0:30 ~ B ~ Walk 2m Open(0:25 0:35) [0:20 0:32 12m Tₓ0 C₁1_440]",
-      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m Open(0:25 0:35) [0:30 0:27+1d 23h57m Tₓ0 C₁86_940]",
-      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:25 0:35) [0:20+1d 0:32+1d 12m Tₓ0]"
+      "A ~ BUS R1 0:10 0:20 ~ B ~ Walk 2m Open(0:25 0:35) [0:10 0:27 17m Tₙ0 C₁1_740]",
+      "A ~ BUS R1 0:20 0:30 ~ B ~ Walk 2m Open(0:25 0:35) [0:20 0:32 12m Tₙ0 C₁1_440]",
+      "A ~ BUS R1 0:30 0:40 ~ B ~ Walk 2m Open(0:25 0:35) [0:30 0:27+1d 23h57m Tₙ0 C₁86_940]",
+      "A ~ BUS R1 0:20+1d 0:30+1d ~ B ~ Walk 2m Open(0:25 0:35) [0:20+1d 0:32+1d 12m Tₙ0]"
     );
 
     return RaptorModuleTestCase.of()

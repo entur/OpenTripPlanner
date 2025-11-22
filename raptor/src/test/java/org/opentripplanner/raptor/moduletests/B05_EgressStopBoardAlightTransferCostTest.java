@@ -62,8 +62,8 @@ public class B05_EgressStopBoardAlightTransferCostTest implements RaptorTestCons
         multiCriteria(),
         // We should get both the fastest and the c1-cheapest results
         // The stopBoardAlightTransferCost should not be applied to the egress leg from STOP_D
-        "B ~ BUS R1 0:10 0:14 ~ C ~ Walk 5m [0:10 0:19 9m Tₓ0 C₁840]",
-        "B ~ BUS R1 0:10 0:14 ~ C ~ BUS R2 0:18 0:20 ~ D ~ Walk 20s [0:10 0:20:20 10m20s Tₓ1 C₁640]"
+        "B ~ BUS R1 0:10 0:14 ~ C ~ Walk 5m [0:10 0:19 9m Tₙ0 C₁840]",
+        "B ~ BUS R1 0:10 0:14 ~ C ~ BUS R2 0:18 0:20 ~ D ~ Walk 20s [0:10 0:20:20 10m20s Tₙ1 C₁640]"
       )
       .build();
   }

@@ -115,7 +115,7 @@ class J02_ViaStopSearchTest {
 
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
-      "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ C ~ BUS R1 0:30 0:40 ~ D ~ Walk 30s [0:01:30 0:40:30 39m Tₓ1 C₁3_600]",
+      "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ C ~ BUS R1 0:30 0:40 ~ D ~ Walk 30s [0:01:30 0:40:30 39m Tₙ1 C₁3_600]",
       pathsToString(result)
     );
   }
@@ -151,7 +151,7 @@ class J02_ViaStopSearchTest {
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ D ~ Walk 1m ~ C ~ BUS R2 0:25 0:40 ~ E ~ Walk 30s " +
-      "[0:01:30 0:40:30 39m Tₓ1 C₁3_660]",
+      "[0:01:30 0:40:30 39m Tₙ1 C₁3_660]",
       pathsToString(result)
     );
   }
@@ -191,8 +191,8 @@ class J02_ViaStopSearchTest {
     // A combination of trip one and two with a transfer is not expected.
     assertEquals(
       PathUtils.join(
-        "Walk 30s ~ B ~ BUS R1 0:05 0:15 ~ D ~ Walk 30s [0:04:30 0:15:30 11m Tₓ0 C₁1_320]",
-        "Walk 30s ~ B ~ BUS R1 0:15 0:25 ~ D ~ Walk 30s [0:14:30 0:25:30 11m Tₓ0 C₁1_320]"
+        "Walk 30s ~ B ~ BUS R1 0:05 0:15 ~ D ~ Walk 30s [0:04:30 0:15:30 11m Tₙ0 C₁1_320]",
+        "Walk 30s ~ B ~ BUS R1 0:15 0:25 ~ D ~ Walk 30s [0:14:30 0:25:30 11m Tₙ0 C₁1_320]"
       ),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
@@ -233,8 +233,8 @@ class J02_ViaStopSearchTest {
 
     assertEquals(
       PathUtils.join(
-        "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ C ~ Walk 30s [0:01:30 0:10:30 9m Tₓ0 C₁1_200]",
-        "Walk 30s ~ A ~ BUS R1 0:12 0:20 ~ C ~ Walk 30s [0:11:30 0:20:30 9m Tₓ0 C₁1_200]"
+        "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ C ~ Walk 30s [0:01:30 0:10:30 9m Tₙ0 C₁1_200]",
+        "Walk 30s ~ A ~ BUS R1 0:12 0:20 ~ C ~ Walk 30s [0:11:30 0:20:30 9m Tₙ0 C₁1_200]"
       ),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
@@ -277,7 +277,7 @@ class J02_ViaStopSearchTest {
       "~ BUS R2 0:15 0:25 ~ D " +
       "~ BUS R2 0:35 0:45 ~ F " +
       "~ Walk 30s " +
-      "[0:01:30 0:45:30 44m Tₓ2 C₁4_700]",
+      "[0:01:30 0:45:30 44m Tₙ2 C₁4_700]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }
@@ -316,7 +316,7 @@ class J02_ViaStopSearchTest {
       "~ BUS R1 0:25 0:30 ~ B " +
       "~ BUS R1 0:40 0:45 ~ D " +
       "~ Walk 30s " +
-      "[0:04:30 0:45:30 41m Tₓ2 C₁4_320]",
+      "[0:04:30 0:45:30 41m Tₙ2 C₁4_320]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }
@@ -345,8 +345,8 @@ class J02_ViaStopSearchTest {
     // Verify that both routes are included as a valid result
     assertEquals(
       PathUtils.join(
-        "Walk 2m ~ B ~ BUS R2 0:05 0:14 ~ C ~ Walk 30s [0:03 0:14:30 11m30s Tₓ0 C₁1_440]",
-        "Walk 30s ~ A ~ BUS R1 0:04 0:15 ~ C ~ Walk 30s [0:03:30 0:15:30 12m Tₓ0 C₁1_380]"
+        "Walk 2m ~ B ~ BUS R2 0:05 0:14 ~ C ~ Walk 30s [0:03 0:14:30 11m30s Tₙ0 C₁1_440]",
+        "Walk 30s ~ A ~ BUS R1 0:04 0:15 ~ C ~ Walk 30s [0:03:30 0:15:30 12m Tₙ0 C₁1_380]"
       ),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
@@ -378,7 +378,7 @@ class J02_ViaStopSearchTest {
     // transfer slack is 60s.
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:04 ~ B ~ BUS R2 0:05:45 0:11 ~ C ~ Walk 30s " +
-      "[0:01:30 0:11:30 10m Tₓ1 C₁1_860]",
+      "[0:01:30 0:11:30 10m Tₙ1 C₁1_860]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }

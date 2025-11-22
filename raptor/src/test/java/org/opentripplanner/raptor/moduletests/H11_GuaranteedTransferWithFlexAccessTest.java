@@ -73,16 +73,16 @@ public class H11_GuaranteedTransferWithFlexAccessTest implements RaptorTestConst
 
   static List<RaptorModuleTestCase> testCases() {
     var expected =
-      "Flex 3m 1x ~ A " +
+      "Flex 3m Rₙ1 ~ A " +
       "~ Walk 10m ~ B " +
       "~ BUS R1 0:30 0:45 ~ C " +
       "~ BUS R2 0:45 0:55 ~ D " +
       "~ Walk 1m " +
-      "[0:16 0:56 40m Tₓ2 C₁3_820]";
+      "[0:16 0:56 40m Tₙ2 C₁3_820]";
 
     return RaptorModuleTestCase.of()
-      .add(TC_MIN_DURATION, "[0:00 0:40 40m Tₓ2]")
-      .add(TC_MIN_DURATION_REV, "[0:20 1:00 40m Tₓ2]")
+      .add(TC_MIN_DURATION, "[0:00 0:40 40m Tₙ2]")
+      .add(TC_MIN_DURATION_REV, "[0:20 1:00 40m Tₙ2]")
       .add(standard(), withoutCost(expected))
       .add(multiCriteria(), expected)
       .build();

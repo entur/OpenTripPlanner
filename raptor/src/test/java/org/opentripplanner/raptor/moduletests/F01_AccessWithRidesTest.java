@@ -79,23 +79,23 @@ public class F01_AccessWithRidesTest implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    String expFlexAccess = "Flex 3m 2x ~ D ~ BUS R1 0:14 0:20 ~ F ~ Walk 1m [0:10 0:21 11m Tₓ2]";
-    String expWalkAccess = "Walk 10m ~ B ~ BUS R1 0:10 0:20 ~ F ~ Walk 1m [0:00 0:21 21m Tₓ0]";
+    String expFlexAccess = "Flex 3m Rₙ2 ~ D ~ BUS R1 0:14 0:20 ~ F ~ Walk 1m [0:10 0:21 11m Tₙ2]";
+    String expWalkAccess = "Walk 10m ~ B ~ BUS R1 0:10 0:20 ~ F ~ Walk 1m [0:00 0:21 21m Tₙ0]";
     return RaptorModuleTestCase.of()
       // TODO - Why do we get only one result here - when there is 3 different pareto-optimal
       //      - paths
-      .add(TC_MIN_DURATION, "[0:00 0:11 11m Tₓ0]")
+      .add(TC_MIN_DURATION, "[0:00 0:11 11m Tₙ0]")
       // Return pareto optimal paths with 0, 1 and 2 num-of-transfers
-      .add(TC_MIN_DURATION_REV, "[0:19 0:30 11m Tₓ2]", "[0:17 0:30 13m Tₓ1]", "[0:09 0:30 21m Tₓ0]")
+      .add(TC_MIN_DURATION_REV, "[0:19 0:30 11m Tₙ2]", "[0:17 0:30 13m Tₙ1]", "[0:09 0:30 21m Tₙ0]")
       .add(standard().not(TC_STANDARD_ONE), expFlexAccess)
       // First boarding wins with one-iteration (apply to min-duration and std-one)
       .add(TC_STANDARD_ONE, expWalkAccess)
       .add(
         multiCriteria(),
-        "Flex 3m 2x ~ D ~ BUS R1 0:14 0:20 ~ F ~ Walk 1m [0:10 0:21 11m Tₓ2 C₁1_500]", // ldt
-        "Flex+Walk 2m 2x ~ C ~ BUS R1 0:12 0:20 ~ F ~ Walk 1m [0:09 0:21 12m Tₓ2 C₁1_499]", // cost
-        "Flex+Walk 7m 1x ~ E ~ BUS R1 0:16 0:20 ~ F ~ Walk 1m [0:08 0:21 13m Tₓ1 C₁1_500]", // tx+time
-        "Walk 10m ~ B ~ BUS R1 0:10 0:20 ~ F ~ Walk 1m [0:00 0:21 21m Tₓ0 C₁1_500]" // tx
+        "Flex 3m Rₙ2 ~ D ~ BUS R1 0:14 0:20 ~ F ~ Walk 1m [0:10 0:21 11m Tₙ2 C₁1_500]", // ldt
+        "Flex+Walk 2m Rₙ2 ~ C ~ BUS R1 0:12 0:20 ~ F ~ Walk 1m [0:09 0:21 12m Tₙ2 C₁1_499]", // cost
+        "Flex+Walk 7m Rₙ1 ~ E ~ BUS R1 0:16 0:20 ~ F ~ Walk 1m [0:08 0:21 13m Tₙ1 C₁1_500]", // tx+time
+        "Walk 10m ~ B ~ BUS R1 0:10 0:20 ~ F ~ Walk 1m [0:00 0:21 21m Tₙ0 C₁1_500]" // tx
       )
       .build();
   }
