@@ -98,10 +98,9 @@ class StreetSearchRequestMapperTest {
   void mapTransferRequest(boolean arriveBy) {
     var from = new GenericLocation(null, id("STOP"), null, null);
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
-    var dateTime = Instant.parse("2022-11-10T10:00:00Z");
     var builder = builder()
       .withArriveBy(arriveBy)
-      .withDateTime(dateTime)
+      .withDateTime(INSTANT)
       .withFrom(from)
       .withTo(to)
       .withPreferences(it -> it.withWalk(walk -> walk.withSpeed(2.4)))
@@ -111,12 +110,11 @@ class StreetSearchRequestMapperTest {
 
     var subject = StreetSearchRequestMapper.mapToTransferRequest(request).build();
 
-    assertEquals(Instant.EPOCH, subject.startTime());
     assertNull(subject.fromEnvelope());
     assertNull(subject.toEnvelope());
     assertTrue(subject.wheelchairEnabled());
     assertEquals(2.4, subject.walk().speed());
-    assertEquals(Instant.ofEpochSecond(0), subject.startTime());
+    assertEquals(Instant.EPOCH, subject.startTime());
     // arrive by must always be false for transfer requests
     assertFalse(subject.arriveBy());
   }
