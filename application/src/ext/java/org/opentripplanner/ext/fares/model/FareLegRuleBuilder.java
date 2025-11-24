@@ -18,6 +18,7 @@ public class FareLegRuleBuilder {
   private FeedScopedId toAreaId;
   private FareDistance fareDistance = null;
   private Integer priority;
+  private TimeFrame timeFrame;
 
   public FareLegRuleBuilder(FeedScopedId id, Collection<FareProduct> products) {
     this.id = id;
@@ -50,6 +51,10 @@ public class FareLegRuleBuilder {
 
   public FareDistance fareDistance() {
     return fareDistance;
+  }
+
+  public TimeFrame timeFrame() {
+    return timeFrame;
   }
 
   @Nullable
@@ -87,7 +92,14 @@ public class FareLegRuleBuilder {
     return this;
   }
 
+  public FareLegRuleBuilder withTimeFrame(TimeFrame timeFrame) {
+    this.timeFrame = timeFrame;
+    return this;
+  }
+
   public FareLegRule build() {
     return new FareLegRule(this);
   }
+
+
 }

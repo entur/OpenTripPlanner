@@ -36,6 +36,9 @@ public final class FareLegRule implements Serializable {
   @Nullable
   private final Integer priority;
 
+  @Nullable
+  private final TimeFrame timeFrame;
+
   public FareLegRule(FareLegRuleBuilder builder) {
     if (builder.fareProducts().isEmpty()) {
       throw new IllegalArgumentException("fareProducts must contain at least one value");
@@ -49,6 +52,7 @@ public final class FareLegRule implements Serializable {
     this.toAreaId = builder.toAreaId();
     this.fareDistance = builder.fareDistance();
     this.priority = builder.priority();
+    this.timeFrame = builder.timeFrame();
   }
 
   public String feedId() {

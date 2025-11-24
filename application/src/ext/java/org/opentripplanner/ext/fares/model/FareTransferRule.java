@@ -28,6 +28,9 @@ public final class FareTransferRule implements Serializable {
   @Nullable
   private final TimeLimit timeLimit;
 
+  private final TimeFrame fromTimeFrame = null;
+  private final TimeFrame toTimeFrame = null;
+
   FareTransferRule(FareTransferRuleBuilder b) {
     this.id = Objects.requireNonNull(b.id());
     this.fareProducts = List.copyOf(b.fareProducts());
