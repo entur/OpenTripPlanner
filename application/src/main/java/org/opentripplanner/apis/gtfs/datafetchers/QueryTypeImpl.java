@@ -34,9 +34,9 @@ import org.opentripplanner.apis.gtfs.mapping.routerequest.LegacyRouteRequestMapp
 import org.opentripplanner.apis.gtfs.mapping.routerequest.RouteRequestMapper;
 import org.opentripplanner.apis.gtfs.support.filter.PatternByDateFilterUtil;
 import org.opentripplanner.apis.gtfs.support.time.LocalDateRangeUtil;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
-import org.opentripplanner.ext.fares.impl.gtfs.GtfsFaresService;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
+import org.opentripplanner.ext.fares.service.gtfs.GtfsFaresService;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.gtfs.mapping.DirectionMapper;
 import org.opentripplanner.model.TripTimeOnDate;
