@@ -45,8 +45,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class A04_BoardingTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -87,7 +86,7 @@ public class A04_BoardingTest implements RaptorTestConstants {
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
       .searchOneIterationOnly();
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

@@ -32,8 +32,7 @@ import org.opentripplanner.raptor.spi.TestSlackProvider;
 public class E02_GuaranteedWalkTransferTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -81,7 +80,7 @@ public class E02_GuaranteedWalkTransferTest implements RaptorTestConstants {
     // The test scenario have zero seconds to transfer and a 30s walk leg, so any slack will do.
     data.withSlackProvider(new TestSlackProvider(D30s, D20s, D10s));
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

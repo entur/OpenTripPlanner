@@ -43,8 +43,7 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
   private static final Duration D15m = Duration.ofMinutes(15);
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -69,7 +68,7 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
       .searchWindow(D15m)
       .timetable(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   private static List<RaptorModuleTestCase> openNoTimeRestrictionTestCase() {

@@ -30,8 +30,7 @@ import org.opentripplanner.utils.time.DurationUtils;
 public class B01_AccessTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -60,7 +59,7 @@ public class B01_AccessTest implements RaptorTestConstants {
       // Removing the search-window should not have any effect, but it does.
       .searchWindow(Duration.ofMinutes(20));
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

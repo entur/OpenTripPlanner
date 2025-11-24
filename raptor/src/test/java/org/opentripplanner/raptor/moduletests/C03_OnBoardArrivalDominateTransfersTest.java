@@ -32,11 +32,10 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class C03_OnBoardArrivalDominateTransfersTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
 
   @BeforeEach
   public void setup() {
@@ -64,7 +63,7 @@ public class C03_OnBoardArrivalDominateTransfersTest implements RaptorTestConsta
       .addAccessPaths(walk(STOP_A, D1m))
       .addEgressPaths(walk(STOP_C, D1m));
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

@@ -29,8 +29,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class G06_ClosedEgressOpeningHoursTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -53,7 +52,7 @@ public class G06_ClosedEgressOpeningHoursTest implements RaptorTestConstants {
       .addAccessPaths(free(STOP_A))
       .addEgressPaths(walk(STOP_E, D1m).openingHoursClosed(), walk(STOP_E, D5m));
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

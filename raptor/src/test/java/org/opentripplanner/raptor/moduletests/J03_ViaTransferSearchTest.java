@@ -48,12 +48,13 @@ import org.opentripplanner.raptor.configure.RaptorConfig;
  */
 class J03_ViaTransferSearchTest {
 
+  private final TestTransitData data = new TestTransitData();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
 
   private RaptorRequestBuilder<TestTripSchedule> prepareRequest() {
-    var builder = new RaptorRequestBuilder<TestTripSchedule>();
+    var builder = data.requestBuilder();
 
     builder
       .profile(RaptorProfile.MULTI_CRITERIA)
@@ -77,8 +78,6 @@ class J03_ViaTransferSearchTest {
     "first trip and wait for the next one at the specified via stop."
   )
   void viaSearchAlightingAtViaStop() {
-    var data = new TestTransitData();
-
     data.withTimetables(
       """
       A     B     C     D
@@ -114,8 +113,6 @@ class J03_ViaTransferSearchTest {
     "even when a better regular transfer exists and an earlier departure could be reached. "
   )
   void viaSearchArrivingByTransferAtViaStop() {
-    var data = new TestTransitData();
-
     data.withTimetables(
       """
       A     B           D
@@ -151,8 +148,6 @@ class J03_ViaTransferSearchTest {
     "avoiding using a via-transfer followed by a regular transfer."
   )
   void viaTransferSearchNotFollowedByRegularTransfer() {
-    var data = new TestTransitData();
-
     data
       .withTimetables(
         """
@@ -194,7 +189,6 @@ class J03_ViaTransferSearchTest {
   @Test
   @DisplayName("Test minimum wait time")
   void testMinWaitTime() {
-    var data = new TestTransitData();
     data.withTimetables(
       """
       A     B

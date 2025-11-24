@@ -55,8 +55,7 @@ public class G01_AccessWithOpeningHoursTest implements RaptorTestConstants {
   private static final String EXP_24_25 = " ~ B ~ BUS R1 0:25+1d 0:40+1d ~ E ~ Walk 1m ";
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -85,7 +84,7 @@ public class G01_AccessWithOpeningHoursTest implements RaptorTestConstants {
       .searchWindow(Duration.ofMinutes(30))
       .timetable(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   private static List<RaptorModuleTestCase> openInSearchIntervalCases(String access) {

@@ -66,12 +66,14 @@ class J01_PassThroughTest {
     passThrough("D").addPassThroughStop(STOP_D).build()
   );
 
+  private final TestTransitData data = new TestTransitData();
+
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
 
   private RaptorRequestBuilder<TestTripSchedule> prepareRequest() {
-    var builder = new RaptorRequestBuilder<TestTripSchedule>();
+    var builder = data.requestBuilder();
 
     builder
       .profile(RaptorProfile.MULTI_CRITERIA)
@@ -92,8 +94,6 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Pass-through stop point as a last point in the journey.")
   void passThroughPointOnEgress() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // Only one of them includes required pass-through point.
     // Pass-through point is the last stop in the trip.
@@ -128,8 +128,6 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Pass-through stop point as a first point in the journey.")
   void passThroughPointOnAccess() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // Only one of them includes required pass-through point.
     // Pass-through point is the first stop in the trip.
@@ -164,8 +162,6 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Pass-through stop point as an intermediate point in the journey.")
   void passThroughPointInTheMiddle() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // Only one of them includes required pass-through point.
     // Pass-through point is the intermediate stop in the trip.
@@ -200,8 +196,6 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Multiple pass-through stop points")
   void multiplePassThroughPoints() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // First one includes one pass-through stop point.
     // Second one include the second pass-through point.
@@ -237,8 +231,6 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Pass-through order")
   void passThroughOrder() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // Both include all the desired pass-through stop points but only one of them have correct order.
     data.withTimetables(
@@ -269,8 +261,6 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Multiple stops in same pass-through group")
   void passThroughGroup() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // Route one include STOP_B and route two include STOP_C.
     // Both stops with be part of the same pass-through group

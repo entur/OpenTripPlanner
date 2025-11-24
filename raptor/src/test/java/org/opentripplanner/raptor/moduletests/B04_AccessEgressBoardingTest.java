@@ -46,8 +46,7 @@ public class B04_AccessEgressBoardingTest implements RaptorTestConstants {
     "Walk 10s ~ B ~ BUS R1 0:14 0:38 ~ F ~ Walk 1s [0:13:50 0:38:01 24m11s Tₙ0]";
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -76,7 +75,7 @@ public class B04_AccessEgressBoardingTest implements RaptorTestConstants {
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
       .searchOneIterationOnly();
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

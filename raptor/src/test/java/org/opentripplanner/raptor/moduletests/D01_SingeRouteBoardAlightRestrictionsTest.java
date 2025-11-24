@@ -28,8 +28,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class D01_SingeRouteBoardAlightRestrictionsTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -68,7 +67,7 @@ public class D01_SingeRouteBoardAlightRestrictionsTest implements RaptorTestCons
       .latestArrivalTime(T00_10)
       .timetable(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

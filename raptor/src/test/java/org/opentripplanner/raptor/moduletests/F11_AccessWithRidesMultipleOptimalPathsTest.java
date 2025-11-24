@@ -50,12 +50,11 @@ import org.opentripplanner.raptor.spi.TestSlackProvider;
  */
 public class F11_AccessWithRidesMultipleOptimalPathsTest implements RaptorTestConstants {
 
+  private final TestTransitData data = new TestTransitData();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
-  private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
 
   @BeforeEach
   public void setup() {
@@ -85,7 +84,7 @@ public class F11_AccessWithRidesMultipleOptimalPathsTest implements RaptorTestCo
     data.withTransfer(STOP_B, transfer(STOP_C, D2m)).withTransfer(STOP_C, transfer(STOP_D, D2m));
 
     // Set ModuleTestDebugLogging.DEBUG=true to enable debugging output
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   /**

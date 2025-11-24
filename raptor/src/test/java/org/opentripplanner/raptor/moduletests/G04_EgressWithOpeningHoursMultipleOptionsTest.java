@@ -30,8 +30,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class G04_EgressWithOpeningHoursMultipleOptionsTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -59,7 +58,7 @@ public class G04_EgressWithOpeningHoursMultipleOptionsTest implements RaptorTest
       .searchWindow(Duration.ofMinutes(30))
       .timetable(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> openInWholeSearchIntervalTestCases() {

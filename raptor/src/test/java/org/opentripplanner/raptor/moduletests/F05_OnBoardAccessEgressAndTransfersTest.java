@@ -34,8 +34,7 @@ public class F05_OnBoardAccessEgressAndTransfersTest implements RaptorTestConsta
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
 
   @BeforeEach
   public void setup() {

@@ -36,8 +36,7 @@ public class H11_GuaranteedTransferWithFlexAccessTest implements RaptorTestConst
   private static final int C1_ONE_STOP = RaptorCostConverter.toRaptorCost(2 * 60);
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -71,7 +70,7 @@ public class H11_GuaranteedTransferWithFlexAccessTest implements RaptorTestConst
       .latestArrivalTime(T01_00)
       .constrainedTransfers(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

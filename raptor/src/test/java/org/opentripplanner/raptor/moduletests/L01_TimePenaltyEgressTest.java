@@ -48,8 +48,7 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
   // There are 5 possible trips
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -64,7 +63,7 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
 
     requestBuilder.searchParams().timetable(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   private static List<RaptorModuleTestCase> firstTwoPathsArriveBeforeLAT() {

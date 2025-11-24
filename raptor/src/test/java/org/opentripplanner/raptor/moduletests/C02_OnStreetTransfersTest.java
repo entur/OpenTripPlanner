@@ -35,8 +35,7 @@ import org.opentripplanner.raptor.spi.TestSlackProvider;
 public class C02_OnStreetTransfersTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -72,7 +71,7 @@ public class C02_OnStreetTransfersTest implements RaptorTestConstants {
       .latestArrivalTime(T00_30)
       .searchWindowInSeconds(D3m);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

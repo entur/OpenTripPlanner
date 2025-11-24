@@ -63,12 +63,14 @@ class J02_ViaStopSearchTest {
     viaLocation("D", STOP_B)
   );
 
+  private final TestTransitData data = new TestTransitData();
+
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
 
   private RaptorRequestBuilder<TestTripSchedule> prepareRequest() {
-    var builder = new RaptorRequestBuilder<TestTripSchedule>();
+    var builder = data.requestBuilder();
 
     builder
       .profile(RaptorProfile.MULTI_CRITERIA)
@@ -92,8 +94,6 @@ class J02_ViaStopSearchTest {
     "first trip and wait for the next one at the specified via stop."
   )
   void viaSearchAlightingAtViaStop() {
-    var data = new TestTransitData();
-
     data.withTimetables(
       """
       A     B     C     D
@@ -127,8 +127,6 @@ class J02_ViaStopSearchTest {
     "stop is used over the alternatives."
   )
   void viaSearchArrivingByTransferAtViaStop() {
-    var data = new TestTransitData();
-
     data
       .withTimetables(
         """
@@ -166,8 +164,6 @@ class J02_ViaStopSearchTest {
     "part, no transit. Access arrival should be copied over to 'next' worker."
   )
   void accessWalkToViaStopWithoutTransit() {
-    var data = new TestTransitData();
-
     data.withTimetables(
       """
       A B C D
@@ -213,8 +209,6 @@ class J02_ViaStopSearchTest {
     "more transit."
   )
   void transitToViaStopThenTakeEgressWalkToDestination() {
-    var data = new TestTransitData();
-
     data.withTimetables(
       // The second trip is to check that we do not transfer to the other trip at some point.
       """
@@ -251,8 +245,6 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName("Multiple via points")
   void multipleViaPoints() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // The first one includes one via stop point.
     // The second one includes the second via point.
@@ -322,8 +314,6 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName("Multiple stops in the same via location")
   void testViaSearchWithManyStopsInTheViaLocation() {
-    var data = new TestTransitData();
-
     data.withTimetables(
       """
       A           C

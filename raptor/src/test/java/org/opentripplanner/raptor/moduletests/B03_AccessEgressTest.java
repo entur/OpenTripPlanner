@@ -31,8 +31,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCaseFactor
 public class B03_AccessEgressTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -71,7 +70,7 @@ public class B03_AccessEgressTest implements RaptorTestConstants {
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   /** Only the multi-criteria test-cases differ for timetableView on/off */

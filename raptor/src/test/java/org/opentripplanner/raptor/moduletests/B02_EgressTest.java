@@ -28,8 +28,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class B02_EgressTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
@@ -59,7 +58,7 @@ public class B02_EgressTest implements RaptorTestConstants {
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> testCases() {

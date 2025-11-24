@@ -49,6 +49,9 @@ public class TestTransitData
 
   private final int[] stopBoardAlightTransferCosts = new int[NUM_STOPS];
 
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
+    new RaptorRequestBuilder<>();
+
   private RaptorSlackProvider slackProvider = SLACK_PROVIDER;
 
   /// Create an new instance and call {@link #withTimetables(String)}
@@ -176,6 +179,10 @@ public class TestTransitData
     int routeIndex
   ) {
     return getRoute(routeIndex).transferConstraintsReverseSearch();
+  }
+
+  public RaptorRequestBuilder<TestTripSchedule> requestBuilder() {
+    return requestBuilder;
   }
 
   public TestRoute getRoute(int index) {

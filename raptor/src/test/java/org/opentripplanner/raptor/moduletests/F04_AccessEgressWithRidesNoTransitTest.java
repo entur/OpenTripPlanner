@@ -43,11 +43,10 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 public class F04_AccessEgressWithRidesNoTransitTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
 
   @BeforeEach
   public void setup() {
@@ -67,7 +66,7 @@ public class F04_AccessEgressWithRidesNoTransitTest implements RaptorTestConstan
       .latestArrivalTime(T00_30)
       .searchWindowInSeconds(D10m);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   /* Flex ~ B ~ Walk ~ C ~ Flex */

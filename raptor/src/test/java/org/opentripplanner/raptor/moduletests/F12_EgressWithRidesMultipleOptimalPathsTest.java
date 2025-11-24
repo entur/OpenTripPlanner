@@ -67,12 +67,11 @@ public class F12_EgressWithRidesMultipleOptimalPathsTest implements RaptorTestCo
 
   private static final int C1_10m = RaptorCostConverter.toRaptorCost(D10m);
 
+  private final TestTransitData data = new TestTransitData();
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
   private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
     RaptorConfig.defaultConfigForTest()
   );
-  private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
 
   @BeforeEach
   public void setup() {
@@ -95,7 +94,7 @@ public class F12_EgressWithRidesMultipleOptimalPathsTest implements RaptorTestCo
     data.withTransfer(STOP_B, TestTransfer.transfer(STOP_C, D2m));
 
     // Set ModuleTestDebugLogging.DEBUG=true to enable debugging output
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   static List<RaptorModuleTestCase> withFlexAsBestOptionTestCases() {
