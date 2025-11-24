@@ -1,7 +1,6 @@
 package org.opentripplanner.street.model.vertex;
 
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.graph_builder.module.osm.OsmEntityType;
 
 /**
  * A vertex that represents an OSM elevator node in conjunction with a connected OSM entity. This

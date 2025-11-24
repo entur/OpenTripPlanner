@@ -1,6 +1,6 @@
 package org.opentripplanner.graph_builder.module.osm;
 
-public enum OsmEntityType {
+enum OsmEntityType {
   NODE,
   RELATION,
   WAY,
