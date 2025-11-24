@@ -1,4 +1,4 @@
-package org.opentripplanner.osm.model;
+package org.opentripplanner.graph_builder.module.osm;
 
 public enum OsmEntityType {
   NODE,

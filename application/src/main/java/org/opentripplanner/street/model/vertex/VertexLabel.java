@@ -1,6 +1,6 @@
 package org.opentripplanner.street.model.vertex;
 
-import org.opentripplanner.osm.model.OsmEntityType;
+import org.opentripplanner.graph_builder.module.osm.OsmEntityType;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**

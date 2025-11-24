@@ -128,7 +128,7 @@ class ElevatorProcessor {
           .thenComparing(OsmElevatorKey::entityId)
           .thenComparing(OsmElevatorKey::osmEntityType)
       );
-      ArrayList<Vertex> onboardVertices = new ArrayList<>();
+      List<Vertex> onboardVertices = new ArrayList<>();
       for (OsmElevatorKey key : osmElevatorKeys) {
         OsmElevatorVertex sourceVertex = vertices.get(key);
         OsmLevel level = verticeLevels.get(key);
@@ -172,7 +172,7 @@ class ElevatorProcessor {
       nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
     }
 
-    ArrayList<Vertex> onboardVertices = new ArrayList<>();
+    List<Vertex> onboardVertices = new ArrayList<>();
     for (int i = 0; i < nodes.size(); i++) {
       Long node = nodes.get(i);
       var sourceVertex = vertexGenerator.intersectionNodes().get(node);
@@ -201,7 +201,7 @@ class ElevatorProcessor {
   }
 
   private void createElevatorVertices(
-    ArrayList<Vertex> onboardVertices,
+    List<Vertex> onboardVertices,
     IntersectionVertex sourceVertex,
     String label,
     OsmLevel level
@@ -221,7 +221,7 @@ class ElevatorProcessor {
   }
 
   private static void createElevatorHopEdges(
-    ArrayList<Vertex> onboardVertices,
+    List<Vertex> onboardVertices,
     List<OsmLevel> onboardVertexLevels,
     Accessibility wheelchair,
     boolean bicycleAllowed,

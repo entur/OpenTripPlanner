@@ -1,6 +1,6 @@
 package org.opentripplanner.street.model.vertex;
 
-import org.opentripplanner.osm.model.OsmEntityType;
+import org.opentripplanner.graph_builder.module.osm.OsmEntityType;
 
 /**
  * This vertex is created for a node where a barrier runs along the edge of an area.
