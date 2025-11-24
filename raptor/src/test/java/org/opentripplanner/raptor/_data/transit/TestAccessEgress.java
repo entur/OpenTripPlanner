@@ -9,6 +9,7 @@ import static org.opentripplanner.raptor.api.model.RaptorCostConverter.toRaptorC
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.utils.time.TimeUtils;
@@ -261,6 +262,40 @@ public class TestAccessEgress implements RaptorAccessEgress {
   @Override
   public boolean isFree() {
     return this.free;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    TestAccessEgress that = (TestAccessEgress) o;
+    return (
+      stop == that.stop &&
+      durationInSeconds == that.durationInSeconds &&
+      c1 == that.c1 &&
+      numberOfRides == that.numberOfRides &&
+      stopReachedOnBoard == that.stopReachedOnBoard &&
+      closed == that.closed &&
+      timePenalty == that.timePenalty &&
+      Objects.equals(opening, that.opening) &&
+      Objects.equals(closing, that.closing)
+    );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+      stop,
+      durationInSeconds,
+      c1,
+      numberOfRides,
+      stopReachedOnBoard,
+      closed,
+      timePenalty,
+      opening,
+      closing
+    );
   }
 
   @Override
