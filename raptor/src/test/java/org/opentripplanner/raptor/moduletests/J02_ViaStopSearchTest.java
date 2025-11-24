@@ -14,9 +14,7 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.api.request.RaptorViaLocation.via;
 
 import java.time.Duration;
@@ -96,11 +94,12 @@ class J02_ViaStopSearchTest {
   void viaSearchAlightingAtViaStop() {
     var data = new TestTransitData();
 
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-        schedule("0:02 0:10 0:20 0:30"),
-        schedule("0:12 0:20 0:30 0:40")
-      )
+    data.withTimetables(
+      """
+      A     B     C     D
+      0:02  0:10  0:20  0:30
+      0:12  0:20  0:30  0:40
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -131,9 +130,14 @@ class J02_ViaStopSearchTest {
     var data = new TestTransitData();
 
     data
-      .withRoutes(
-        route("R1", STOP_A, STOP_B, STOP_D, STOP_E).withTimetable(schedule("0:02 0:10 0:20 0:30")),
-        route("R2", STOP_C, STOP_D, STOP_E).withTimetable(schedule("0:25 0:30 0:40"))
+      .withTimetables(
+        """
+        A     B           D     E
+        0:02  0:10        0:20  0:30
+        --
+                    C     D     E
+                    0:25  0:30  0:40
+        """
       )
       // Walk 1 minute to transfer from D to C - this is the only way to visit stop C
       .withTransfer(STOP_D, transfer(STOP_C, D1m));
@@ -164,13 +168,16 @@ class J02_ViaStopSearchTest {
   void accessWalkToViaStopWithoutTransit() {
     var data = new TestTransitData();
 
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-        schedule("0:02 0:05 0:10 0:15"),
-        // We add another trip to allow riding trip one - via B - then ride trip two, this
-        // is not a pareto-optimal solution and should only appear if there is something wrong.
-        schedule("0:12 0:15 0:20 0:25")
-      )
+    data.withTimetables(
+      """
+      A B C D
+      0:02 0:05 0:10 0:15
+      """ +
+      // We add another trip to allow riding trip one - via B - then ride trip two, this
+      // is not a pareto-optimal solution and should only appear if there is something wrong.
+      """
+      0:12 0:15 0:20 0:25
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -208,12 +215,13 @@ class J02_ViaStopSearchTest {
   void transitToViaStopThenTakeEgressWalkToDestination() {
     var data = new TestTransitData();
 
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-        schedule("0:02 0:05 0:10 0:20"),
-        // We add another trip to check that we do not transfer to the other trip at some point.
-        schedule("0:12 0:15 0:20 0:25")
-      )
+    data.withTimetables(
+      // The second trip is to check that we do not transfer to the other trip at some point.
+      """
+      A     B     C     D
+      0:02  0:05  0:10  0:20
+      0:12 0:15 0:20 0:25
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -249,15 +257,13 @@ class J02_ViaStopSearchTest {
     // The first one includes one via stop point.
     // The second one includes the second via point.
     // Both arrive at the desired destination, so normally there should not be any transfers.
-    data.withRoutes(
-      route("R2").timetable(
-        """
-        A    B    C    D    E    F
-        0:02 0:05 0:10 0:15 0:20 0:25
-        0:12 0:15 0:20 0:25 0:30 0:35
-        0:22 0:25 0:30 0:35 0:40 0:45
-        """
-      )
+    data.withTimetables(
+      """
+      A     B     C     D     E     F
+      0:02  0:05  0:10  0:15  0:20  0:25
+      0:12  0:15  0:20  0:25  0:30  0:35
+      0:22  0:25  0:30  0:35  0:40  0:45
+      """
     );
 
     data.withTransferCost(100);
@@ -273,9 +279,9 @@ class J02_ViaStopSearchTest {
     // Verify that both via points are included
     assertEquals(
       "Walk 30s ~ A " +
-      "~ BUS R2 0:02 0:05 ~ B " +
-      "~ BUS R2 0:15 0:25 ~ D " +
-      "~ BUS R2 0:35 0:45 ~ F " +
+      "~ BUS R1 0:02 0:05 ~ B " +
+      "~ BUS R1 0:15 0:25 ~ D " +
+      "~ BUS R1 0:35 0:45 ~ F " +
       "~ Walk 30s " +
       "[0:01:30 0:45:30 44m Tₙ2 C₁4_700]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
@@ -287,19 +293,11 @@ class J02_ViaStopSearchTest {
   void viaSearchWithCircularLine() {
     var data = new TestTransitData();
 
-    data.withRoute(
-      route(
-        "R1",
-        STOP_A,
-        STOP_B,
-        STOP_C,
-        STOP_B,
-        STOP_C,
-        STOP_B,
-        STOP_C,
-        STOP_B,
-        STOP_D
-      ).withTimetable(schedule("0:05 0:10 0:15 0:20 0:25 0:30 0:35 0:40 0:45"))
+    data.withTimetables(
+      """
+      A     B     C     B     C     B     C     B     D
+      0:05  0:10  0:15  0:20  0:25  0:30  0:35  0:40  0:45
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -326,9 +324,14 @@ class J02_ViaStopSearchTest {
   void testViaSearchWithManyStopsInTheViaLocation() {
     var data = new TestTransitData();
 
-    data.withRoutes(
-      route("R1", STOP_A, STOP_C).withTimetable(schedule("0:04 0:15")),
-      route("R2", STOP_B, STOP_C).withTimetable(schedule("0:05 0:14"))
+    data.withTimetables(
+      """
+      A           C
+      0:04        0:15
+      --
+            B     C
+            0:05  0:14
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -356,13 +359,16 @@ class J02_ViaStopSearchTest {
   @DisplayName("Test minimum wait time")
   void testMinWaitTime() {
     var data = new TestTransitData();
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B).withTimetable(schedule("0:02:00 0:04:00")),
-      route("R2", STOP_B, STOP_C).withTimetable(
-        schedule("0:05:44 0:10"),
-        schedule("0:05:45 0:11"),
-        schedule("0:05:46 0:12")
-      )
+    data.withTimetables(
+      """
+      A     B
+      0:02  0:04
+      --
+            B        C
+            0:05:44  0:10
+            0:05:45  0:11
+            0:05:46  0:12
+      """
     );
 
     var requestBuilder = prepareRequest();

@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
@@ -46,13 +44,18 @@ public class H11_GuaranteedTransferWithFlexAccessTest implements RaptorTestConst
 
   @BeforeEach
   public void setup() {
-    var r1 = route("R1", STOP_B, STOP_C).withTimetable(schedule("0:30 0:45"));
-    var r2 = route("R2", STOP_C, STOP_D).withTimetable(schedule("0:45 0:55"));
+    data.withTimetables(
+      """
+      B     C
+      0:30  0:45
+      --
+            C     D
+            0:45  0:55
+      """
+    );
+    var tripA = data.getRoute(0).getTripSchedule(0);
+    var tripB = data.getRoute(1).getTripSchedule(0);
 
-    var tripA = r1.timetable().getTripSchedule(0);
-    var tripB = r2.timetable().getTripSchedule(0);
-
-    data.withRoutes(r1, r2);
     data.withGuaranteedTransfer(tripA, STOP_C, tripB, STOP_C);
     data.withTransfer(STOP_A, TestTransfer.transfer(STOP_B, D10m));
     data.withTransferCost(100);

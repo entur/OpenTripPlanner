@@ -51,10 +51,16 @@ public class F04_AccessEgressWithRidesNoTransitTest implements RaptorTestConstan
 
   @BeforeEach
   public void setup() {
+    // The transit must exist for data to be valid, but it is not routed on or used by the test
     data
-      // The transit must exist for data to be valid, but it is not routed on or used by the test
-      .withTransit("Any", "12:00 13:00", STOP_A, STOP_D)
+      .withTimetables(
+        """
+        A      D
+        12:00  13:00
+        """
+      )
       .withTransfer(STOP_B, transfer(STOP_C, D5m));
+
     requestBuilder
       .searchParams()
       .earliestDepartureTime(T00_10)

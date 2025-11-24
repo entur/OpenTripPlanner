@@ -40,7 +40,12 @@ public class F05_OnBoardAccessEgressAndTransfersTest implements RaptorTestConsta
   @BeforeEach
   public void setup() {
     data
-      .withTransit("R1", "0:10 0:20", STOP_B, STOP_C)
+      .withTimetables(
+        """
+        B     C
+        0:10  0:20
+        """
+      )
       .withTransfer(STOP_A, transfer(STOP_B, D10s))
       .withTransfer(STOP_C, transfer(STOP_D, D10s));
 

@@ -1,8 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -15,7 +13,6 @@ import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
-import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.configure.RaptorConfig;
@@ -57,10 +54,12 @@ public class D01_SingeRouteBoardAlightRestrictionsTest implements RaptorTestCons
    */
   @BeforeEach
   void setup() {
-    TestTripPattern pattern = TestTripPattern.of("R1", STOP_B, STOP_C, STOP_D)
-      .restrictions("B BA A")
-      .build();
-    data.withRoute(route(pattern).withTimetable(schedule("00:01, 00:03, 00:05")));
+    data.withTimetables(
+      """
+      B      C      D
+      00:01  00:03  00:05
+      """
+    );
     requestBuilder
       .searchParams()
       .addAccessPaths(TestAccessEgress.walk(STOP_B, D30s))

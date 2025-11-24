@@ -13,8 +13,6 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.api.request.RaptorViaLocation.passThrough;
 
 import java.time.Duration;
@@ -101,10 +99,15 @@ class J01_PassThroughTest {
     // Pass-through point is the last stop in the trip.
     // The trip with pass-through point have significant longer travel time so that normally it
     //  should not be used
-    var r1 = route("R1", STOP_A, STOP_B, STOP_C).withTimetable(schedule("0:02 0:05 0:20"));
-    var r2 = route("R2", STOP_A, STOP_B, STOP_D).withTimetable(schedule("0:02 0:10 0:50"));
-
-    data.withRoutes(r1, r2);
+    data.withTimetables(
+      """
+      A     B     C
+      0:02  0:05  0:20
+      --
+      A     B           D
+      0:02  0:10        0:50
+      """
+    );
 
     var requestBuilder = prepareRequest();
 
@@ -132,10 +135,15 @@ class J01_PassThroughTest {
     // Pass-through point is the first stop in the trip.
     // The trip with pass-through point have significant longer travel time so that normally it
     //  should not be used
-    var r1 = route("R1", STOP_B, STOP_C, STOP_D).withTimetable(schedule("0:02 0:05 0:20"));
-    var r2 = route("R2", STOP_A, STOP_C, STOP_D).withTimetable(schedule("0:02 0:10 0:50"));
-
-    data.withRoutes(r1, r2);
+    data.withTimetables(
+      """
+            B     C     D
+            0:02  0:05  0:20
+      ---
+      A           C     D
+      0:02        0:10  0:50
+      """
+    );
 
     var requestBuilder = prepareRequest();
 
@@ -163,10 +171,15 @@ class J01_PassThroughTest {
     // Pass-through point is the intermediate stop in the trip.
     // The trip with pass-through point have significant longer travel time so that normally it
     //  should not be used
-    var r1 = route("R1", STOP_A, STOP_B, STOP_D).withTimetable(schedule("0:02 0:05 0:20"));
-    var r2 = route("R2", STOP_A, STOP_C, STOP_D).withTimetable(schedule("0:02 0:10 0:50"));
-
-    data.withRoutes(r1, r2);
+    data.withTimetables(
+      """
+      A     B     D
+      0:02  0:05  0:20
+      ---
+      A     C     D
+      0:02  0:10  0:50
+      """
+    );
     data.withTransferCost(100);
 
     var requestBuilder = prepareRequest();
@@ -193,14 +206,16 @@ class J01_PassThroughTest {
     // First one includes one pass-through stop point.
     // Second one include the second pass-through point.
     // Both arrive at the desired destination so normally there should not be any transfers.
-    var r1 = route("R1", STOP_A, STOP_B, STOP_C, STOP_F).withTimetable(
-      schedule("0:02 0:05 0:10 0:20")
-    );
-    var r2 = route("R2", STOP_C, STOP_D, STOP_E, STOP_F).withTimetable(
-      schedule("0:15 0:20 0:30 0:50")
+    data.withTimetables(
+      """
+      A     B     C     F
+      0:02  0:05  0:10  0:20
+      --
+      C     D     E     F
+      0:15  0:20  0:30  0:50
+      """
     );
 
-    data.withRoutes(r1, r2);
     data.withTransferCost(100);
 
     var requestBuilder = prepareRequest();
@@ -226,14 +241,15 @@ class J01_PassThroughTest {
 
     // Create two routes.
     // Both include all the desired pass-through stop points but only one of them have correct order.
-    var r1 = route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-      schedule("0:05 0:10 0:15 0:20")
+    data.withTimetables(
+      """
+      A     B     C     D
+      0:05  0:10  0:15  0:20
+      --
+      A     C     B     D
+      0:05  0:10  0:15  0:17
+      """
     );
-    var r2 = route("R2", STOP_A, STOP_C, STOP_B, STOP_D).withTimetable(
-      schedule("0:05 0:10 0:15 0:17")
-    );
-
-    data.withRoutes(r1, r2);
 
     var requestBuilder = prepareRequest();
 
@@ -259,10 +275,15 @@ class J01_PassThroughTest {
     // Route one include STOP_B and route two include STOP_C.
     // Both stops with be part of the same pass-through group
     //  so that both routes should be valid
-    var r1 = route("R1", STOP_A, STOP_C, STOP_E).withTimetable(schedule("0:04 0:10 0:15"));
-    var r2 = route("R2", STOP_B, STOP_D, STOP_E).withTimetable(schedule("0:05 0:10 0:14"));
-
-    data.withRoutes(r1, r2);
+    data.withTimetables(
+      """
+      A     C     E
+      0:04  0:10  0:15
+      --
+      B     D     E
+      0:05  0:10  0:14
+      """
+    );
 
     var requestBuilder = prepareRequest();
 

@@ -2,10 +2,7 @@ package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
-import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
@@ -44,8 +41,15 @@ public class C03_OnBoardArrivalDominateTransfersTest implements RaptorTestConsta
   @BeforeEach
   public void setup() {
     data
-      .withRoute(route(pattern("R1", STOP_A, STOP_B)).withTimetable(schedule().times("0:05 0:08")))
-      .withRoute(route(pattern("R2", STOP_B, STOP_C)).withTimetable(schedule().times("0:12 0:15")))
+      .withTimetables(
+        """
+        A     B
+        0:05  0:08
+        --
+        B     C
+        0:12  0:15
+        """
+      )
       // We add a transfer here which arrive at C before R2, but it should not be used.
       .withTransfer(STOP_B, transfer(STOP_C, D1m));
 

@@ -5,8 +5,6 @@ import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flexAndWalk;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_REV_ONE;
@@ -48,10 +46,11 @@ public class F02_EgressWithRidesTest implements RaptorTestConstants {
 
   @BeforeEach
   void setup() {
-    data.withRoute(
-      route("R1", STOP_B, STOP_C, STOP_D, STOP_E, STOP_F).withTimetable(
-        schedule("0:10, 0:12, 0:14, 0:16, 0:18")
-      )
+    data.withTimetables(
+      """
+      B     C     D     E     F
+      0:10  0:12  0:14  0:16  0:18
+      """
     );
     // We will test board- and alight-slack in a separate test
     data.withSlackProvider(new TestSlackProvider(60, 0, 0));

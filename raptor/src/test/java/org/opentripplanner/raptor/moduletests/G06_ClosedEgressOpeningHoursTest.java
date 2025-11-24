@@ -3,8 +3,6 @@ package org.opentripplanner.raptor.moduletests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.free;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -39,7 +37,12 @@ public class G06_ClosedEgressOpeningHoursTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withRoute(route("R1", STOP_A, STOP_E).withTimetable(schedule("00:05 00:10")));
+    data.withTimetables(
+      """
+      A     E
+      00:05 00:10
+      """
+    );
 
     requestBuilder
       .searchParams()

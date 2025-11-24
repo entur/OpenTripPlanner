@@ -1,8 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
@@ -44,20 +42,22 @@ public class E03_NotAllowedConstrainedTransferTest implements RaptorTestConstant
    */
   @BeforeEach
   public void setup() {
-    var r1 = route("R1", STOP_A, STOP_B).withTimetable(schedule("0:02 0:05"));
-    var r2 = route("R2", STOP_B, STOP_C).withTimetable(
-      schedule("0:10 0:15"),
-      // Add another schedule - should not be used even if the not-allowed is
-      // attached to the first one - not-allowed in Raptor apply to the Route.
-      // The trip/timetable search should handle not-allowed on trip level.
-      schedule("0:12 0:17")
+    data.withTimetables(
+      """
+      --
+      A     B
+      0:02  0:05
+      --
+            B     C
+            0:10  0:15
+            0:12  0:17
+      --
+            B     C
+            0:15  0:20
+      """
     );
-    var r3 = route("R3", STOP_B, STOP_C).withTimetable(schedule("0:15 0:20"));
-
-    var tripR1a = r1.timetable().getTripSchedule(0);
-    var tripR2a = r2.timetable().getTripSchedule(0);
-
-    data.withRoutes(r1, r2, r3);
+    var tripR1a = data.getRoute(0).getTripSchedule(0);
+    var tripR2a = data.getRoute(1).getTripSchedule(0);
 
     // Apply not-allowed on the first trip from R1 and R2 - when found this will apply to
     // the second trip in R2 as well. This is of cause not a correct way to implement the

@@ -1,8 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -53,13 +51,18 @@ public class E02_GuaranteedWalkTransferTest implements RaptorTestConstants {
    */
   @BeforeEach
   public void setup() {
-    var r1 = route("R1", STOP_A, STOP_B).withTimetable(schedule("0:02 0:05"));
-    var r2 = route("R2", STOP_C, STOP_D).withTimetable(schedule("0:05 0:10"));
+    data.withTimetables(
+      """
+      A     B
+      0:02  0:05
+      --
+      C     D
+      0:05  0:10
+      """
+    );
+    var tripA = data.getRoute(0).getTripSchedule(0);
+    var tripB = data.getRoute(1).getTripSchedule(0);
 
-    var tripA = r1.timetable().getTripSchedule(0);
-    var tripB = r2.timetable().getTripSchedule(0);
-
-    data.withRoutes(r1, r2);
     data.withGuaranteedTransfer(tripA, STOP_B, tripB, STOP_C);
     data.withTransfer(STOP_B, TestTransfer.transfer(STOP_C, 30));
     data.withTransferCost(100);

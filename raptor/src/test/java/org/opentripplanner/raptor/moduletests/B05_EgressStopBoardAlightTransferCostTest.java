@@ -1,8 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 
 import java.util.List;
@@ -36,9 +34,15 @@ public class B05_EgressStopBoardAlightTransferCostTest implements RaptorTestCons
 
   @BeforeEach
   void setup() {
-    data
-      .withRoute(route("R1", STOP_B, STOP_C).withTimetable(schedule("0:10, 0:14")))
-      .withRoute(route("R2", STOP_C, STOP_D).withTimetable(schedule("0:18, 0:20")));
+    data.withTimetables(
+      """
+      B     C
+      0:10  0:14
+      --
+      C     D
+      0:18  0:20
+      """
+    );
 
     data.withTransferCost(0).withBoardCost(0);
     data.withStopBoardAlightTransferCost(STOP_D, 60000);
@@ -47,8 +51,10 @@ public class B05_EgressStopBoardAlightTransferCostTest implements RaptorTestCons
       .searchParams()
       .addAccessPaths(TestAccessEgress.free(STOP_B))
       .addEgressPaths(
-        TestAccessEgress.walk(STOP_C, D5m), // This will be the fastest
-        TestAccessEgress.walk(STOP_D, D20s) // This will be the cheapest
+        // This will be the fastest
+        TestAccessEgress.walk(STOP_C, D5m),
+        // This will be the cheapest
+        TestAccessEgress.walk(STOP_D, D20s)
       )
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30);

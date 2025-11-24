@@ -3,8 +3,6 @@ package org.opentripplanner.raptor.moduletests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_ONE;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_REV;
@@ -43,7 +41,6 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
   private static final int T24_10 = hm2time(24, 10);
   private static final int T25_00 = hm2time(25, 0);
   private static final Duration D15m = Duration.ofMinutes(15);
-  private static final Duration D25h = Duration.ofHours(25);
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
@@ -54,13 +51,14 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withRoute(
-      route("R1", STOP_A, STOP_B).withTimetable(
-        schedule("00:10 00:20"),
-        schedule("00:20 00:30"),
-        schedule("00:30 00:40"),
-        schedule("24:20 24:30")
-      )
+    data.withTimetables(
+      """
+      A      B
+      00:10  00:20
+      00:20  00:30
+      00:30  00:40
+      24:20  24:30
+      """
     );
     requestBuilder.searchParams().addAccessPaths(TestAccessEgress.free(STOP_A));
 

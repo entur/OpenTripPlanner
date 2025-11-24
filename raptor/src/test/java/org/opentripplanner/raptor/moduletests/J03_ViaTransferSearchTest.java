@@ -14,7 +14,6 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
 import static org.opentripplanner.raptor.api.request.RaptorViaLocation.via;
 
@@ -80,14 +79,12 @@ class J03_ViaTransferSearchTest {
   void viaSearchAlightingAtViaStop() {
     var data = new TestTransitData();
 
-    data.withRoutes(
-      route("R1").timetable(
-        """
-        A    B    C    D
-        0:02 0:10 0:20 0:30
-        0:12 0:20 0:30 0:40
-        """
-      )
+    data.withTimetables(
+      """
+      A     B     C     D
+      0:02  0:10  0:20  0:30
+      0:12  0:20  0:30  0:40
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -119,18 +116,15 @@ class J03_ViaTransferSearchTest {
   void viaSearchArrivingByTransferAtViaStop() {
     var data = new TestTransitData();
 
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_D).withTimetable(
-        """
-        0:02 0:10 0:12
-        """
-      ),
-      route("R2", STOP_C, STOP_D, STOP_E).withTimetable(
-        """
-        0:10 0:13 0:15
-        0:12 0:15 0:17
-        """
-      )
+    data.withTimetables(
+      """
+      A     B           D
+      0:02  0:10        0:12
+      --
+                  C     D     E
+                  0:10  0:13  0:15
+                  0:12  0:15  0:17
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -160,18 +154,22 @@ class J03_ViaTransferSearchTest {
     var data = new TestTransitData();
 
     data
-      .withRoutes(
-        route("R1", STOP_A, STOP_B).withTimetable("0:02 0:10"),
-        route("R2", STOP_C, STOP_D).withTimetable("0:12 0:15"),
-        route("R2", STOP_E, STOP_F).withTimetable(
-          """
-          0:15 0:17
-          0:17 0:15
-          """
-        )
+      .withTimetables(
+        """
+        A     B
+        0:02  0:10
+        --
+        C     D
+        0:12  0:15
+        --
+        E     F
+        0:15  0:17
+        0:17  0:15
+        """
       )
       .withTransfer(STOP_C, transfer(STOP_E, D1m))
       .withTransfer(STOP_D, transfer(STOP_E, D1m));
+
     var requestBuilder = prepareRequest();
 
     requestBuilder
@@ -187,7 +185,7 @@ class J03_ViaTransferSearchTest {
       "Walk 30s ~ A ~ " +
       "BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ C ~ " +
       "BUS R2 0:12 0:15 ~ D ~ Walk 1m ~ E ~ " +
-      "BUS R2 0:17 0:15 ~ F ~ Walk 30s " +
+      "BUS R3 0:17 0:15 ~ F ~ Walk 30s " +
       "[0:01:30 0:15:30 14m Tₙ2 C₁2_820]",
       pathsToString(result)
     );
@@ -197,16 +195,16 @@ class J03_ViaTransferSearchTest {
   @DisplayName("Test minimum wait time")
   void testMinWaitTime() {
     var data = new TestTransitData();
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B).withTimetable("0:02:00 0:04:00"),
-      route("R2").timetable(
-        """
-        B        C
-        0:05:44  0:10
-        0:05:45  0:11
-        0:05:46  0:12
-        """
-      )
+    data.withTimetables(
+      """
+      A     B
+      0:02  0:04
+      --
+            B        C
+            0:05:44  0:10
+            0:05:45  0:11
+            0:05:46  0:12
+      """
     );
 
     var requestBuilder = prepareRequest();

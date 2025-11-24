@@ -2,8 +2,6 @@ package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_ONE;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_REV;
@@ -43,8 +41,12 @@ public class G03_AccessWithOpeningHoursMultipleOptionsTest implements RaptorTest
 
   @BeforeEach
   public void setup() {
-    data.withRoute(
-      route("R1", STOP_B, STOP_C).withTimetable(schedule("00:10 00:20"), schedule("00:15 00:25"))
+    data.withTimetables(
+      """
+      B      C
+      00:10  00:20
+      00:15  00:25
+      """
     );
     requestBuilder
       .searchParams()

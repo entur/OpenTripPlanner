@@ -11,7 +11,6 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_A;
 import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_B;
 import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_C;
@@ -58,16 +57,16 @@ public class K02_TransitPriorityDestinationTest {
     // its cost is outside the range allowed by the slack).
     data.withRoutes(
       route(TestTripPattern.of("L1", STOP_B, STOP_C).priorityGroup(GROUP_A).build()).withTimetable(
-        schedule("00:02 00:12")
+        "00:02 00:12"
       ),
       route(TestTripPattern.of("U1", STOP_B, STOP_D).priorityGroup(GROUP_A).build()).withTimetable(
-        schedule("00:02 00:12:01")
+        "00:02 00:12:01"
       ),
       route(TestTripPattern.of("L2", STOP_B, STOP_E).priorityGroup(GROUP_B).build()).withTimetable(
-        schedule("00:02 00:13")
+        "00:02 00:13"
       ),
       route(TestTripPattern.of("L3", STOP_B, STOP_F).priorityGroup(GROUP_C).build()).withTimetable(
-        schedule("00:02 00:14")
+        "00:02 00:14"
       )
     );
 

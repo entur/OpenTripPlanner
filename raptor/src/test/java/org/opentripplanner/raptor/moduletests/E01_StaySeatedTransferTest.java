@@ -1,8 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -40,24 +38,21 @@ public class E01_StaySeatedTransferTest implements RaptorTestConstants {
     RaptorConfig.defaultConfigForTest()
   );
 
-  /**
-   * Schedule
-   * <pre>
-   * Stop:   1       2       3
-   *   R1: 00:02 - 00:05
-   *   R2:         00:05 - 00:10
-   *</pre>
-   * Access(stop 1) and egress(stop 3) is 30s.
-   */
   @BeforeEach
   public void setup() {
-    var r1 = route("R1", STOP_A, STOP_B).withTimetable(schedule("0:02 0:05"));
-    var r2 = route("R2", STOP_B, STOP_C).withTimetable(schedule("0:05 0:10"));
+    data.withTimetables(
+      """
+      A     B
+      0:02  0:05
+      -- No slack for transfer at stop B
+            B     C
+            0:05  0:10
+      """
+    );
 
-    var tripA = r1.timetable().getTripSchedule(0);
-    var tripB = r2.timetable().getTripSchedule(0);
+    var tripA = data.getRoute(0).getTripSchedule(0);
+    var tripB = data.getRoute(1).getTripSchedule(0);
 
-    data.withRoutes(r1, r2);
     data.withConstrainedTransfer(tripA, STOP_B, tripB, STOP_B, TestTransferConstraint.staySeated());
     data.withTransferCost(100);
 

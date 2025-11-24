@@ -1,15 +1,12 @@
 package org.opentripplanner.raptor._data.transit;
 
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor.api.model.RaptorConstrainedTransfer;
@@ -33,6 +30,8 @@ import org.opentripplanner.raptor.util.BitSetIterator;
 public class TestTransitData
   implements RaptorTransitDataProvider<TestTripSchedule>, RaptorTestConstants {
 
+  private static final Pattern ROUTE_NAME_PATTERN = Pattern.compile("[-\\w]+");
+
   public static final TestTransferConstraint TX_GUARANTEED = TestTransferConstraint.guaranteed();
   public static final TestTransferConstraint TX_NOT_ALLOWED = TestTransferConstraint.notAllowed();
 
@@ -51,6 +50,11 @@ public class TestTransitData
   private final int[] stopBoardAlightTransferCosts = new int[NUM_STOPS];
 
   private RaptorSlackProvider slackProvider = SLACK_PROVIDER;
+
+  /// Create an new instance and call {@link #withTimetables(String)}
+  public static TestTransitData of(String roteTimetables) {
+    return new TestTransitData().withTimetables(roteTimetables);
+  }
 
   @Override
   public Iterator<? extends RaptorTransfer> getTransfersFromStop(int fromStop) {
@@ -193,6 +197,41 @@ public class TestTransitData
       .withLogger(logger);
   }
 
+  /// Build a test data with multiple routes. The route name is generated(R1, R2 ...) if not
+  /// provided. See  {@link TestRoute#withTimetable(String)} for timetable format.
+  ///
+  /// For exampe, creating R1 and Route-55:
+  /// ```
+  /// A      B      C      F
+  /// 10:00  10:20  10:25  10:45
+  /// -- Comments are allowed on route separator lines..
+  /// Route-55
+  /// B     C
+  /// 10:05 11:05
+  /// 11:05 12:05
+  ///```
+  public TestTransitData withTimetables(String routeTimetable) {
+    int routeIndex = 0;
+    for (String timetable : routeTimetable.split("\s*--.*\n")) {
+      if (!timetable.isBlank()) {
+        var firstLine = timetable.lines().findFirst().orElseThrow();
+        if (ROUTE_NAME_PATTERN.matcher(firstLine.trim()).matches()) {
+          withTimetable(firstLine, timetable.substring(firstLine.length() + 1).trim());
+        } else {
+          withTimetable("R" + (++routeIndex), timetable.trim());
+        }
+      }
+    }
+    return this;
+  }
+
+  public TestTransitData withTimetable(String routeName, String timetable) {
+    if (!timetable.isBlank()) {
+      withRoute(TestRoute.route(routeName).timetable(timetable.trim()));
+    }
+    return this;
+  }
+
   public TestTransitData withRoute(TestRoute route) {
     this.routes.add(route);
     int routeIndex = this.routes.indexOf(route);
@@ -203,19 +242,6 @@ public class TestTransitData
       routeIndexesByStopIndex.get(stopIndex).add(routeIndex);
     }
     return this;
-  }
-
-  /**
-   * Same as:
-   * <pre>
-   * withRoute(
-   *   route(pattern(routeName, stopIndexes))
-   *     .withTimetable(schedule().times(times))
-   * )
-   * </pre>
-   */
-  public TestTransitData withTransit(String routeName, String times, int... stopIndexes) {
-    return withRoute(route(pattern(routeName, stopIndexes)).withTimetable(schedule().times(times)));
   }
 
   public TestTransitData withRoutes(TestRoute... routes) {

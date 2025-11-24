@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.free;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_ONE;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_REV;
@@ -65,17 +63,18 @@ public class G01_AccessWithOpeningHoursTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withRoute(
-      route("R1", STOP_B, STOP_E).withTimetable(
-        schedule("00:15 00:30"),
-        schedule("00:20 00:35"),
-        schedule("00:25 00:40"),
-        schedule("00:30 00:45"),
-        schedule("24:15 24:30"),
-        schedule("24:20 24:35"),
-        // Not within time-limit 24:42 (need 2 min for egress)
-        schedule("24:25 24:40")
-      )
+    data.withTimetables(
+      """
+      B      E
+      00:15  00:30
+      00:20  00:35
+      00:25  00:40
+      00:30  00:45
+      24:15  24:30
+      24:20  24:35
+      """ +
+      // Not within time-limit 24:42 (need 2 min for egress)
+      "24:25  24:40"
     );
     requestBuilder.searchParams().addEgressPaths(walk(STOP_E, D1m));
 

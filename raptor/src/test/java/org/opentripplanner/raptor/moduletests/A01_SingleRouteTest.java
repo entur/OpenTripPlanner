@@ -1,9 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -54,9 +51,13 @@ public class A01_SingleRouteTest implements RaptorTestConstants {
    */
   @BeforeEach
   void setup() {
-    data.withRoute(
-      route(pattern("R1", STOP_B, STOP_C, STOP_D)).withTimetable(schedule("00:01, 00:03, 00:05"))
+    data.withTimetables(
+      """
+      B      C      D
+      00:01  00:03  00:05
+      """
     );
+
     requestBuilder
       .searchParams()
       .addAccessPaths(TestAccessEgress.walk(STOP_B, D30s))

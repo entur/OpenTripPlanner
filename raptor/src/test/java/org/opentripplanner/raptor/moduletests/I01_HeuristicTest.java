@@ -3,9 +3,6 @@ package org.opentripplanner.raptor.moduletests;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,33 +42,17 @@ public class I01_HeuristicTest implements RaptorTestConstants {
     new RaptorRequestBuilder<>();
   private final RaptorConfig<TestTripSchedule> config = RaptorConfig.defaultConfigForTest();
 
-  /**
-   * <pre>
-   * Stops: 0..4
-   *
-   * Stop on route (stop indexes):
-   *   R1:  1 - 2
-   *   R2:  3 - 4
-   *
-   * Schedule:
-   *   R1: 00:01 - 00:03
-   *   R2: 00:05 - 00:08
-   *
-   * Access (toStop & duration):
-   *   1  30s
-   *
-   * Egress (fromStop & duration):
-   *   3  20s
-   *
-   * Transfers:
-   *   2 -> 3 30s
-   * </pre>
-   */
   @BeforeEach
   public void setup() {
-    data.withRoute(route(pattern("R1", STOP_A, STOP_B)).withTimetable(schedule("00:01, 00:03")));
-
-    data.withRoute(route(pattern("R1", STOP_C, STOP_D)).withTimetable(schedule("00:05, 00:08")));
+    data.withTimetables(
+      """
+      A      B
+      00:01  00:03
+      --
+      C      D
+      00:05  00:08
+      """
+    );
 
     data.withTransfer(STOP_B, TestTransfer.transfer(STOP_C, D30s));
 
