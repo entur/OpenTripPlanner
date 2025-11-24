@@ -20,6 +20,9 @@ import org.opentripplanner.utils.collection.SetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * The main part of the fare engine: it applies the leg and transfer rules to the transit legs.
+ */
 class FareLookupService implements Serializable {
 
   private static final Logger LOG = LoggerFactory.getLogger(FareLookupService.class);

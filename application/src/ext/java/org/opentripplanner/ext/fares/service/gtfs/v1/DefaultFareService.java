@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.fares.model.FareAttribute;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
-import org.opentripplanner.ext.fares.service.gtfs.FareAndId;
 import org.opentripplanner.ext.fares.service.gtfs.v1.custom.CombinedInterlinedTransitLeg;
 import org.opentripplanner.ext.fares.service.gtfs.v1.custom.HSLFareService;
 import org.opentripplanner.ext.fares.service.gtfs.v1.custom.HighestFareInFreeTransferWindowFareService;

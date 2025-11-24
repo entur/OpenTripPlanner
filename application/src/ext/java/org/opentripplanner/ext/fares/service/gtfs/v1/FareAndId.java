@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.fares.service.gtfs;
+package org.opentripplanner.ext.fares.service.gtfs.v1;
 
 import org.opentripplanner.transit.model.basic.Money;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
