@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.api.PathUtils;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransferConstraint;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -39,16 +38,20 @@ public class E01_StaySeatedTransferTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      A     B
-      0:02  0:05
-      -- No slack for transfer at stop B
-            B     C
-            0:05  0:10
-      """
-    );
+    data
+      .access("Walk 30s ~ A")
+      .withTimetables(
+        """
+        A     B
+        0:02  0:05
+        --
+        B     C
+        0:05  0:10
+        """
+      )
+      .egress("C ~ Walk 30s");
 
+    // No slack for transfer at stop B
     var tripA = data.getRoute(0).getTripSchedule(0);
     var tripB = data.getRoute(1).getTripSchedule(0);
 
@@ -59,8 +62,6 @@ public class E01_StaySeatedTransferTest implements RaptorTestConstants {
     requestBuilder
       .searchParams()
       .constrainedTransfers(true)
-      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_C, D30s))
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30)
       .timetable(true);

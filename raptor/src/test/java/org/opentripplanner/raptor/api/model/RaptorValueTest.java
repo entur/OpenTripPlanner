@@ -27,7 +27,6 @@ class RaptorValueTest {
     TIME_PENALTY_VALUE,
     RaptorValueType.TIME_PENALTY
   );
-  private static final RaptorValue VIAS = new RaptorValue(VIAS_VALUE, RaptorValueType.VIAS);
   private static final RaptorValue WAIT_TIME_COST = new RaptorValue(
     WAIT_TIME_COST_VALUE,
     RaptorValueType.WAIT_TIME_COST
@@ -41,7 +40,6 @@ class RaptorValueTest {
     assertEquals(TIME_PENALTY_VALUE, TIME_PENALTY.value());
     assertEquals(TX_VALUE, TRANSFERS.value());
     assertEquals(TX_PRIORITY_VALUE, TRANSFER_PRIORITY.value());
-    assertEquals(VIAS_VALUE, VIAS.value());
     assertEquals(WAIT_TIME_COST_VALUE, WAIT_TIME_COST.value());
   }
 
@@ -53,7 +51,6 @@ class RaptorValueTest {
     assertEquals(RaptorValueType.TIME_PENALTY, TIME_PENALTY.type());
     assertEquals(RaptorValueType.TRANSFERS, TRANSFERS.type());
     assertEquals(RaptorValueType.TRANSFER_PRIORITY, TRANSFER_PRIORITY.type());
-    assertEquals(RaptorValueType.VIAS, VIAS.type());
     assertEquals(RaptorValueType.WAIT_TIME_COST, WAIT_TIME_COST.type());
   }
 
@@ -80,7 +77,6 @@ class RaptorValueTest {
     assertEquals("Pₜ600", TIME_PENALTY.toString());
     assertEquals("Tₙ1", TRANSFERS.toString());
     assertEquals("Tₚ31", TRANSFER_PRIORITY.toString());
-    assertEquals("Vₙ3", VIAS.toString());
     assertEquals("Wₜ1.02", WAIT_TIME_COST.toString());
   }
 
@@ -92,7 +88,6 @@ class RaptorValueTest {
     assertEquals(TIME_PENALTY, RaptorValue.of("Pₜ600"));
     assertEquals(TRANSFERS, RaptorValue.of("Tₙ1"));
     assertEquals(TRANSFER_PRIORITY, RaptorValue.of("Tₚ31"));
-    assertEquals(VIAS, RaptorValue.of("Vₙ3"));
     assertEquals(WAIT_TIME_COST, RaptorValue.of("Wₜ1.02"));
   }
 }

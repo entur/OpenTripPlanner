@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -43,24 +42,22 @@ public class I01_HeuristicTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      A      B
-      00:01  00:03
-      --
-      C      D
-      00:05  00:08
-      """
-    );
+    data
+      .access("Walk 30s ~ A")
+      .withTimetables(
+        """
+        A      B
+        00:01  00:03
+        --
+        C      D
+        00:05  00:08
+        """
+      )
+      .egress("D ~ Walk 20s");
 
     data.withTransfer(STOP_B, TestTransfer.transfer(STOP_C, D30s));
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_D, D20s))
-      .earliestDepartureTime(T00_00)
-      .timetable(true);
+    requestBuilder.searchParams().earliestDepartureTime(T00_00).timetable(true);
 
     requestBuilder.profile(RaptorProfile.MULTI_CRITERIA);
 

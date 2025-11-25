@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
@@ -40,6 +39,7 @@ public class C03_OnBoardArrivalDominateTransfersTest implements RaptorTestConsta
   @BeforeEach
   public void setup() {
     data
+      .access("Walk 1m ~ A")
       .withTimetables(
         """
         A     B
@@ -49,6 +49,7 @@ public class C03_OnBoardArrivalDominateTransfersTest implements RaptorTestConsta
         0:12  0:15
         """
       )
+      .egress("C ~ Walk 1m")
       // We add a transfer here which arrive at C before R2, but it should not be used.
       .withTransfer(STOP_B, transfer(STOP_C, D1m));
 
@@ -57,11 +58,6 @@ public class C03_OnBoardArrivalDominateTransfersTest implements RaptorTestConsta
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30)
       .searchWindowInSeconds(D10m);
-
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D1m))
-      .addEgressPaths(walk(STOP_C, D1m));
 
     ModuleTestDebugLogging.setupDebugLogging(data);
   }

@@ -9,7 +9,6 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_F;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_A;
 import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_B;
@@ -54,20 +53,25 @@ public class K02_TransitPriorityDestinationTest {
     // Given a slack on the cost equals to ~90s this makes both L1 and L2 optimal (since
     // they are in different groups), but not L3 (which certainly is in its own group but
     // its cost is outside the range allowed by the slack).
-    data.withRoutes(
-      route(TestTripPattern.of("L1", STOP_B, STOP_C).priorityGroup(GROUP_A).build()).withTimetable(
-        "00:02 00:12"
-      ),
-      route(TestTripPattern.of("U1", STOP_B, STOP_D).priorityGroup(GROUP_A).build()).withTimetable(
-        "00:02 00:12:01"
-      ),
-      route(TestTripPattern.of("L2", STOP_B, STOP_E).priorityGroup(GROUP_B).build()).withTimetable(
-        "00:02 00:13"
-      ),
-      route(TestTripPattern.of("L3", STOP_B, STOP_F).priorityGroup(GROUP_C).build()).withTimetable(
-        "00:02 00:14"
+    data
+      // Add 1 second access paths
+      .access("Walk 1s ~ B")
+      .withRoutes(
+        route(
+          TestTripPattern.of("L1", STOP_B, STOP_C).priorityGroup(GROUP_A).build()
+        ).withTimetable("00:02 00:12"),
+        route(
+          TestTripPattern.of("U1", STOP_B, STOP_D).priorityGroup(GROUP_A).build()
+        ).withTimetable("00:02 00:12:01"),
+        route(
+          TestTripPattern.of("L2", STOP_B, STOP_E).priorityGroup(GROUP_B).build()
+        ).withTimetable("00:02 00:13"),
+        route(
+          TestTripPattern.of("L3", STOP_B, STOP_F).priorityGroup(GROUP_C).build()
+        ).withTimetable("00:02 00:14")
       )
-    );
+      // Add 1 second egress paths
+      .egress("C ~ Walk 1s", "D ~ Walk 1s", "E ~ Walk 1s", "F ~ Walk 1s");
 
     requestBuilder
       .profile(RaptorProfile.MULTI_CRITERIA)
@@ -88,14 +92,6 @@ public class K02_TransitPriorityDestinationTest {
         .withRelaxC1(value -> value + C1_SLACK_90s)
         .withTransitPriorityCalculator(PRIORITY_GROUP_CALCULATOR)
     );
-    // Add 1 second access/egress paths
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_B, 1))
-      .addEgressPaths(walk(STOP_C, 1))
-      .addEgressPaths(walk(STOP_D, 1))
-      .addEgressPaths(walk(STOP_E, 1))
-      .addEgressPaths(walk(STOP_F, 1));
   }
 
   @Test

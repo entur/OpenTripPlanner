@@ -1,9 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flexAndWalk;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_ONE;
@@ -47,30 +44,27 @@ public class F01_AccessWithRidesTest implements RaptorTestConstants {
 
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      B     C     D     E     F
-      0:10  0:12  0:14  0:16  0:20
-      """
-    );
+    data
+      .access(
+        // lowest num-of-transfers (0)
+        "Walk 10m C₁180 ~ B",
+        // lowest cost
+        "Flex+Walk 2m Rₙ2 C₁239 ~ C",
+        // latest departure time
+        "Flex 3m Rₙ2 C₁360 ~ D",
+        // best on combination of transfers and time
+        "Flex+Walk 7m Rₙ1 C₁480 ~ E"
+      )
+      .withTimetables(
+        """
+        B     C     D     E     F
+        0:10  0:12  0:14  0:16  0:20
+        """
+      )
+      .egress("F ~ Walk 1m");
+
     // We will test board- and alight-slack in a separate test
     data.withSlackProvider(new TestSlackProvider(TRANSFER_SLACK, 0, 0));
-
-    requestBuilder
-      .searchParams()
-      // All access paths are all pareto-optimal (McRaptor).
-      .addAccessPaths(
-        // lowest num-of-transfers (0)
-        walk(STOP_B, D10m, C1_ONE_STOP + C1_TRANSFER_SLACK),
-        // lowest cost
-        flexAndWalk(STOP_C, D2m, TWO_RIDES, 2 * C1_ONE_STOP - C1_ONE_SEC),
-        // latest departure time
-        flex(STOP_D, D3m, TWO_RIDES, 3 * C1_ONE_STOP),
-        // best on combination of transfers and time
-        flexAndWalk(STOP_E, D7m, ONE_RIDE, 4 * C1_ONE_STOP)
-      )
-      .addEgressPaths(walk(STOP_F, D1m));
-
     requestBuilder.searchParams().earliestDepartureTime(T00_00).latestArrivalTime(T00_30);
 
     ModuleTestDebugLogging.setupDebugLogging(data);
@@ -90,10 +84,14 @@ public class F01_AccessWithRidesTest implements RaptorTestConstants {
       .add(TC_STANDARD_ONE, expWalkAccess)
       .add(
         multiCriteria(),
-        "Flex 3m Rₙ2 ~ D ~ BUS R1 0:14 0:20 ~ F ~ Walk 1m [0:10 0:21 11m Tₙ2 C₁1_500]", // ldt
-        "Flex+Walk 2m Rₙ2 ~ C ~ BUS R1 0:12 0:20 ~ F ~ Walk 1m [0:09 0:21 12m Tₙ2 C₁1_499]", // cost
-        "Flex+Walk 7m Rₙ1 ~ E ~ BUS R1 0:16 0:20 ~ F ~ Walk 1m [0:08 0:21 13m Tₙ1 C₁1_500]", // tx+time
-        "Walk 10m ~ B ~ BUS R1 0:10 0:20 ~ F ~ Walk 1m [0:00 0:21 21m Tₙ0 C₁1_500]" // tx
+        // Latest departure time
+        "Flex 3m Rₙ2 ~ D ~ BUS R1 0:14 0:20 ~ F ~ Walk 1m [0:10 0:21 11m Tₙ2 C₁1_500]",
+        // Lowest cost
+        "Flex+Walk 2m Rₙ2 ~ C ~ BUS R1 0:12 0:20 ~ F ~ Walk 1m [0:09 0:21 12m Tₙ2 C₁1_499]",
+        // Lowest num-of-transfers + time
+        "Flex+Walk 7m Rₙ1 ~ E ~ BUS R1 0:16 0:20 ~ F ~ Walk 1m [0:08 0:21 13m Tₙ1 C₁1_500]",
+        // Lowest num-of-transfers
+        "Walk 10m ~ B ~ BUS R1 0:10 0:20 ~ F ~ Walk 1m [0:00 0:21 21m Tₙ0 C₁1_500]"
       )
       .build();
   }

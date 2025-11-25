@@ -11,7 +11,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -35,28 +34,26 @@ public class B02_EgressTest implements RaptorTestConstants {
 
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      B     C     D     E     F     G
-      0:10  0:14  0:18  0:20  0:24  0:28
-      """
-    );
-
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(TestAccessEgress.walk(STOP_B, D20s))
-      .addEgressPaths(
-        // Not optimal
-        TestAccessEgress.walk(STOP_D, D20m),
-        // Earliest arrival time: 0:16 + 3m = 0:19
-        TestAccessEgress.walk(STOP_E, D7m),
-        // Best compromise of cost and time
-        TestAccessEgress.walk(STOP_F, D4m),
-        // Lowest cost
-        TestAccessEgress.walk(STOP_G, D1s)
+    data
+      .access("Walk 20s ~ B")
+      .withTimetables(
+        """
+        B     C     D     E     F     G
+        0:10  0:14  0:18  0:20  0:24  0:28
+        """
       )
-      .earliestDepartureTime(T00_00)
-      .latestArrivalTime(T00_30);
+      .egress(
+        // Not optimal
+        "D ~ Walk 20m",
+        // Earliest arrival time: 0:16 + 3m = 0:19
+        "E ~ Walk 7m",
+        // Best compromise of cost and time
+        "F ~ Walk 4m",
+        // Lowest cost
+        "G ~ Walk 1s"
+      );
+
+    requestBuilder.searchParams().earliestDepartureTime(T00_00).latestArrivalTime(T00_30);
 
     ModuleTestDebugLogging.setupDebugLogging(data);
   }

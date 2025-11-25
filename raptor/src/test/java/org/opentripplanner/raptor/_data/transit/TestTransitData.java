@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor._data.transit;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -9,6 +10,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
+import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorConstrainedTransfer;
 import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
@@ -57,6 +59,31 @@ public class TestTransitData
   /// Create an new instance and call {@link #withTimetables(String)}
   public static TestTransitData of(String roteTimetables) {
     return new TestTransitData().withTimetables(roteTimetables);
+  }
+
+  public TestTransitData access(String... accessList) {
+    access(Arrays.stream(accessList).map(TestAccessEgress::of).toArray(TestAccessEgress[]::new));
+    return this;
+  }
+
+  public TestTransitData access(RaptorAccessEgress... accessList) {
+    requestBuilder.searchParams().addAccessPaths(accessList);
+    return this;
+  }
+
+  public TestTransitData egress(String... egressList) {
+    egress(
+      Arrays.stream(egressList)
+        .map(TestTransitData::flipEgress)
+        .map(TestAccessEgress::of)
+        .toArray(TestAccessEgress[]::new)
+    );
+    return this;
+  }
+
+  public TestTransitData egress(RaptorAccessEgress... egressList) {
+    requestBuilder.searchParams().addEgressPaths(egressList);
+    return this;
   }
 
   @Override
@@ -376,5 +403,10 @@ public class TestTransitData
       }
     }
     return stops;
+  }
+
+  private static String flipEgress(String egress) {
+    int pos = egress.indexOf('~');
+    return egress.substring(pos + 1).trim() + " ~ " + egress.substring(0, pos).trim();
   }
 }

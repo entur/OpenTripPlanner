@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.api.PathUtils;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -50,15 +49,19 @@ public class E02_GuaranteedWalkTransferTest implements RaptorTestConstants {
    */
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      A     B
-      0:02  0:05
-      --
-      C     D
-      0:05  0:10
-      """
-    );
+    data
+      .access("Walk 30s ~ A")
+      .withTimetables(
+        """
+        A     B
+        0:02  0:05
+        --
+        C     D
+        0:05  0:10
+        """
+      )
+      .egress("D ~ Walk 30s");
+
     var tripA = data.getRoute(0).getTripSchedule(0);
     var tripB = data.getRoute(1).getTripSchedule(0);
 
@@ -70,8 +73,6 @@ public class E02_GuaranteedWalkTransferTest implements RaptorTestConstants {
     requestBuilder
       .searchParams()
       .constrainedTransfers(true)
-      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_D, D30s))
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30)
       .timetable(true);

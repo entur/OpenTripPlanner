@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -53,25 +52,28 @@ public class B04_AccessEgressBoardingTest implements RaptorTestConstants {
 
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      A     B     C     D     E     F
-      0:10  0:14  0:18  0:30  0:34  0:38
-      """
-    );
+    data
+      .access(
+        "Walk 1s ~ A",
+        // Best option
+        "Walk 10s ~ B",
+        "Walk 5m ~ C"
+      )
+      .withTimetables(
+        """
+        A     B     C     D     E     F
+        0:10  0:14  0:18  0:30  0:34  0:38
+        """
+      )
+      .egress(
+        "D ~ Walk 5m",
+        // Best option
+        "E ~ Walk 10s",
+        "F ~ Walk 1s"
+      );
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(
-        TestAccessEgress.walk(STOP_A, D1s),
-        TestAccessEgress.walk(STOP_B, D10s), // Best option
-        TestAccessEgress.walk(STOP_C, D5m)
-      )
-      .addEgressPaths(
-        TestAccessEgress.walk(STOP_D, D5m),
-        TestAccessEgress.walk(STOP_E, D10s), // Best option
-        TestAccessEgress.walk(STOP_F, D1s)
-      )
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
       .searchOneIterationOnly();

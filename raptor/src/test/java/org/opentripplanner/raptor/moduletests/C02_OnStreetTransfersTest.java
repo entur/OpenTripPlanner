@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
 import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
@@ -45,28 +44,29 @@ public class C02_OnStreetTransfersTest implements RaptorTestConstants {
     //Given slack: transfer 30s, board 0s, alight 0s
     data.withSlackProvider(new TestSlackProvider(D30s, D0s, D0s));
 
-    data.withRoute(
-      route(pattern("R1", STOP_B, STOP_C)).withTimetable(
-        schedule().departures("00:02:00, 00:03:10").arrDepOffset(D10s)
+    data
+      // Start walking 1m before: 30s walk + 30s board-slack
+      .access("Walk 30s ~ B")
+      .withRoute(
+        route(pattern("R1", STOP_B, STOP_C)).withTimetable(
+          schedule().departures("00:02:00, 00:03:10").arrDepOffset(D10s)
+        )
       )
-    );
-
-    // It is not possible to transfer from D -> C
-    data.withTransfer(STOP_C, TestTransfer.transfer(STOP_D, D30s));
-
-    data.withRoute(
-      route(pattern("R2", STOP_D, STOP_E)).withTimetable(
-        // Missed by 1 second
-        schedule().departures("00:03:59, 00:05:09").arrDepOffset(D10s),
-        // Exact match
-        schedule().departures("00:04:00, 00:05:10").arrDepOffset(D10s)
+      // It is not possible to transfer from D -> C
+      .withTransfer(STOP_C, TestTransfer.transfer(STOP_D, D30s))
+      .withRoute(
+        route(pattern("R2", STOP_D, STOP_E)).withTimetable(
+          // Missed by 1 second
+          schedule().departures("00:03:59, 00:05:09").arrDepOffset(D10s),
+          // Exact match
+          schedule().departures("00:04:00, 00:05:10").arrDepOffset(D10s)
+        )
       )
-    );
+      // Ends 30s after last stop arrival: 10s alight-slack + 20s walk
+      .egress("E ~ Walk 20s");
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_B, D30s)) // Start walking 1m before: 30s walk + 30s board-slack
-      .addEgressPaths(walk(STOP_E, D20s)) // Ends 30s after last stop arrival: 10s alight-slack + 20s walk
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30)
       .searchWindowInSeconds(D3m);

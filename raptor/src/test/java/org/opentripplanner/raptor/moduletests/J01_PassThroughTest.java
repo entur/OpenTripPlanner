@@ -1,18 +1,13 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.D2m;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.D30s;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_A;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_B;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_C;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_D;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_E;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_F;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor.api.request.RaptorViaLocation.passThrough;
 
 import java.time.Duration;
@@ -109,14 +104,11 @@ class J01_PassThroughTest {
       """
     );
 
+    data.access("Walk 30s ~ A").egress("D ~ Walk 30s", "C ~ Walk 30s");
+
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocation(PASS_THROUGH_STOP_D)
-      .addEgressPaths(walk(STOP_D, D30s))
-      .addEgressPaths(walk(STOP_C, D30s));
+    requestBuilder.searchParams().addViaLocation(PASS_THROUGH_STOP_D);
 
     // Verify that only the journey with pass-through stop point is included in response
     assertEquals(
@@ -128,29 +120,27 @@ class J01_PassThroughTest {
   @Test
   @DisplayName("Pass-through stop point as a first point in the journey.")
   void passThroughPointOnAccess() {
-    // Create two routes.
-    // Only one of them includes required pass-through point.
-    // Pass-through point is the first stop in the trip.
-    // The trip with pass-through point have significant longer travel time so that normally it
-    //  should not be used
-    data.withTimetables(
-      """
-            B     C     D
-            0:02  0:05  0:20
-      ---
-      A           C     D
-      0:02        0:10  0:50
-      """
-    );
+    data
+      .access("Walk 30s ~ A", "Walk 30s ~ B")
+      // Create two routes.
+      // Only one of them includes required pass-through point.
+      // Pass-through point is the first stop in the trip.
+      // The trip with pass-through point have significant longer travel time so that normally it
+      //  should not be used
+      .withTimetables(
+        """
+              B     C     D
+              0:02  0:05  0:20
+        ---
+        A           C     D
+        0:02        0:10  0:50
+        """
+      )
+      .egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addAccessPaths(walk(STOP_B, D30s))
-      .addViaLocation(PASS_THROUGH_STOP_A)
-      .addEgressPaths(walk(STOP_D, D30s));
+    requestBuilder.searchParams().addViaLocation(PASS_THROUGH_STOP_A);
 
     // Verify that only the journey with pass-through stop point is included in response
     assertEquals(
@@ -177,14 +167,11 @@ class J01_PassThroughTest {
       """
     );
     data.withTransferCost(100);
+    data.access("Walk 30s ~ A").egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocation(PASS_THROUGH_STOP_C)
-      .addEgressPaths(walk(STOP_D, D30s));
+    requestBuilder.searchParams().addViaLocation(PASS_THROUGH_STOP_C);
 
     // Verify that only the journey with pass-through stop point is included in response
     assertEquals(
@@ -211,14 +198,11 @@ class J01_PassThroughTest {
     );
 
     data.withTransferCost(100);
+    data.access("Walk 30s ~ A").egress("F ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocations(PASS_THROUGH_STOP_B_THEN_D)
-      .addEgressPaths(walk(STOP_F, D30s));
+    requestBuilder.searchParams().addViaLocations(PASS_THROUGH_STOP_B_THEN_D);
 
     // Verify that Raptor generated journey with a transfer to r2 so that both pass-through points
     //  are included
@@ -243,13 +227,11 @@ class J01_PassThroughTest {
       """
     );
 
+    data.access("Walk 30s ~ A").egress("D ~ Walk 30s");
+
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocations(PASS_THROUGH_STOP_B_THEN_C)
-      .addEgressPaths(walk(STOP_D, D30s));
+    requestBuilder.searchParams().addViaLocations(PASS_THROUGH_STOP_B_THEN_C);
 
     // Verify that only route with correct pass-through order is returned
     assertEquals(
@@ -275,16 +257,13 @@ class J01_PassThroughTest {
       """
     );
 
+    // Both routes are pareto optimal.
+    // Route 2 is faster but it contains more walk
+    data.access("Walk 30s ~ A", "Walk 2m ~ B").egress("E ~ Walk 30s");
+
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      // Both routes are pareto optimal.
-      // Route 2 is faster but it contains more walk
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addAccessPaths(walk(STOP_B, D2m))
-      .addViaLocations(PASS_THROUGH_STOP_B_OR_C)
-      .addEgressPaths(walk(STOP_E, D30s));
+    requestBuilder.searchParams().addViaLocations(PASS_THROUGH_STOP_B_OR_C);
 
     // Verify that both routes are included as a valid result
     assertEquals(

@@ -5,7 +5,6 @@ import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.access;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.bus;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.egress;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.transfer;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flexWithOnBoard;
 import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
 import static org.opentripplanner.raptor.api.model.RaptorCostConverter.toRaptorCost;
 import static org.opentripplanner.raptor.api.model.RaptorTransferConstraint.REGULAR_TRANSFER;
@@ -182,11 +181,10 @@ public class BasicPathTestCase implements RaptorTestConstants {
     EGRESS_C1
   );
   // this is of course not a real flex egress
-  private static final RaptorAccessEgress FLEX = flexWithOnBoard(
+  private static final RaptorAccessEgress FLEX = TestAccessEgress.flex(
     STOP_E,
-    EGRESS_DURATION,
-    EGRESS_C1
-  );
+    EGRESS_DURATION
+  ).withCost(EGRESS_C1);
 
   public static final String LINE_11 = "L11";
   public static final String LINE_21 = "L21";

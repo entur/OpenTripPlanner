@@ -62,20 +62,21 @@ public class G01_AccessWithOpeningHoursTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      B      E
-      00:15  00:30
-      00:20  00:35
-      00:25  00:40
-      00:30  00:45
-      24:15  24:30
-      24:20  24:35
-      """ +
-      // Not within time-limit 24:42 (need 2 min for egress)
-      "24:25  24:40"
-    );
-    requestBuilder.searchParams().addEgressPaths(walk(STOP_E, D1m));
+    data
+      .withTimetables(
+        """
+        B      E
+        00:15  00:30
+        00:20  00:35
+        00:25  00:40
+        00:30  00:45
+        24:15  24:30
+        24:20  24:35
+        """ +
+        // Not within time-limit 24:42 (need 2 min for egress)
+        "24:25  24:40"
+      )
+      .egress("E ~ Walk 1m");
 
     requestBuilder
       .searchParams()
@@ -118,7 +119,7 @@ public class G01_AccessWithOpeningHoursTest implements RaptorTestConstants {
   @ParameterizedTest
   @MethodSource("openAllDayTestCases")
   void openAllDayTest(RaptorModuleTestCase testCase) {
-    requestBuilder.searchParams().addAccessPaths(walk(STOP_B, D2m));
+    data.access("Walk 2m ~ B");
     assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
   }
 

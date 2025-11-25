@@ -8,7 +8,6 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_A;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_B;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_C;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_D;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_E;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_F;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
@@ -94,21 +93,20 @@ class J02_ViaStopSearchTest {
     "first trip and wait for the next one at the specified via stop."
   )
   void viaSearchAlightingAtViaStop() {
-    data.withTimetables(
-      """
-      A     B     C     D
-      0:02  0:10  0:20  0:30
-      0:12  0:20  0:30  0:40
-      """
-    );
+    data
+      .access("Walk 30s ~ A")
+      .withTimetables(
+        """
+        A     B     C     D
+        0:02  0:10  0:20  0:30
+        0:12  0:20  0:30  0:40
+        """
+      )
+      .egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocation(via("C").addViaStop(STOP_C).build())
-      .addEgressPaths(walk(STOP_D, D30s));
+    requestBuilder.searchParams().addViaLocation(via("C").addViaStop(STOP_C).build());
 
     var result = raptorService.route(requestBuilder.build(), data);
 
@@ -140,13 +138,11 @@ class J02_ViaStopSearchTest {
       // Walk 1 minute to transfer from D to C - this is the only way to visit stop C
       .withTransfer(STOP_D, transfer(STOP_C, D1m));
 
+    data.access("Walk 30s ~ A").egress("E ~ Walk 30s");
+
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocation(via("C").addViaStop(STOP_C).build())
-      .addEgressPaths(walk(STOP_E, D30s));
+    requestBuilder.searchParams().addViaLocation(via("C").addViaStop(STOP_C).build());
 
     var result = raptorService.route(requestBuilder.build(), data);
 
@@ -176,19 +172,15 @@ class J02_ViaStopSearchTest {
       """
     );
 
-    var requestBuilder = prepareRequest();
-
     // We will add access to A, B, and C, but since the B stop is the via point we expect that to
     // be used
-    requestBuilder
-      .searchParams()
-      .addViaLocations(VIA_LOCATION_STOP_B)
-      // We allow access to A, B, and C - if the via search works as expected, only access to B
-      // should be used - access to A would require an extra transfer; C has no valid paths.
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addAccessPaths(walk(STOP_B, D30s))
-      .addAccessPaths(walk(STOP_C, D30s))
-      .addEgressPaths(walk(STOP_D, D30s));
+    // We allow access to A, B, and C - if the via search works as expected, only access to B
+    // should be used - access to A would require an extra transfer; C has no valid paths.
+    data.access("Walk 30s ~ A", "Walk 30s ~ B", "Walk 30s ~ C").egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    requestBuilder.searchParams().addViaLocations(VIA_LOCATION_STOP_B);
 
     // Verify that the journey start by walking to the via stop, the uses one trip to the destination.
     // A combination of trip one and two with a transfer is not expected.

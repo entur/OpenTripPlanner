@@ -2,7 +2,6 @@ package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.free;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
@@ -58,28 +57,28 @@ public class F11_AccessWithRidesMultipleOptimalPathsTest implements RaptorTestCo
 
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      A     B
-      0:02  0:10
-      --
-      C     E
-      0:15  0:20
-      --
-      D     F
-      0:16  0:22
-      """
-    );
-    // We will test board- and alight-slack in a separate test
-    data.withSlackProvider(new TestSlackProvider(D1m, D0s, D0s));
+    data
+      .access("Free ~ A", "Flex 11m Rₙ1 ~ C")
+      .withTimetables(
+        """
+        A     B
+        0:02  0:10
+        --
+        C     E
+        0:15  0:20
+        --
+        D     F
+        0:16  0:22
+        """
+      )
+      // We will test board- and alight-slack in a separate test
+      .withSlackProvider(new TestSlackProvider(D1m, D0s, D0s));
 
     requestBuilder
       .searchParams()
       .timetable(true)
       .earliestDepartureTime(T00_02)
       .latestArrivalTime(T00_30);
-
-    requestBuilder.searchParams().addAccessPaths(free(STOP_A), flex(STOP_C, D11m));
 
     data.withTransfer(STOP_B, transfer(STOP_C, D2m)).withTransfer(STOP_C, transfer(STOP_D, D2m));
 

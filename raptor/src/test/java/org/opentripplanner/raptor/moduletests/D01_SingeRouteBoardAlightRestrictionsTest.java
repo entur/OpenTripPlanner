@@ -11,7 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.api.PathUtils;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -53,16 +52,18 @@ public class D01_SingeRouteBoardAlightRestrictionsTest implements RaptorTestCons
    */
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      B      C      D
-      00:01  00:03  00:05
-      """
-    );
+    data
+      .access("Walk 30s ~ B")
+      .withTimetables(
+        """
+        B      C      D
+        00:01  00:03  00:05
+        """
+      )
+      .egress("D ~ Walk 20s");
+
     requestBuilder
       .searchParams()
-      .addAccessPaths(TestAccessEgress.walk(STOP_B, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_D, D20s))
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_10)
       .timetable(true);

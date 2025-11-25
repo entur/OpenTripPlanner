@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -52,37 +51,38 @@ public class A04_BoardingTest implements RaptorTestConstants {
 
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      -- R1
-      A     B
-      0:10  0:18
-      -- R2
-      A           C
-      0:14        0:18
-      -- R3
-      A                 D
-      0:12              0:18
+    data
+      .access("Walk 1m ~ A")
+      .withTimetables(
+        """
+        -- R1
+        A     B
+        0:10  0:18
+        -- R2
+        A           C
+        0:14        0:18
+        -- R3
+        A                 D
+        0:12              0:18
 
-      -- R4
-            B     C     D     E     F     G
-            0:20  0:21  0:22  0:30  0:31  0:32
-      -- R5
-                              E                 H
-                              0:35              0:42
-      -- R6
-                                    F           H
-                                    0:35        0:40
-      -- R7
-                                          G     H
-                                          0:35  0:44
-      """
-    );
+        -- R4
+              B     C     D     E     F     G
+              0:20  0:21  0:22  0:30  0:31  0:32
+        -- R5
+                                E                 H
+                                0:35              0:42
+        -- R6
+                                      F           H
+                                      0:35        0:40
+        -- R7
+                                            G     H
+                                            0:35  0:44
+        """
+      )
+      .egress("H ~ Walk 1m");
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D1m))
-      .addEgressPaths(walk(STOP_H, D1m))
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
       .searchOneIterationOnly();

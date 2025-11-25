@@ -9,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -33,30 +32,28 @@ public class B05_EgressStopBoardAlightTransferCostTest implements RaptorTestCons
 
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      B     C
-      0:10  0:14
-      --
-      C     D
-      0:18  0:20
-      """
-    );
-
-    data.withTransferCost(0).withBoardCost(0);
-    data.withStopBoardAlightTransferCost(STOP_D, 60000);
-
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(TestAccessEgress.free(STOP_B))
-      .addEgressPaths(
-        // This will be the fastest
-        TestAccessEgress.walk(STOP_C, D5m),
-        // This will be the cheapest
-        TestAccessEgress.walk(STOP_D, D20s)
+    data
+      .access("Free ~ B")
+      .withTimetables(
+        """
+        B     C
+        0:10  0:14
+        --
+        C     D
+        0:18  0:20
+        """
       )
-      .earliestDepartureTime(T00_00)
-      .latestArrivalTime(T00_30);
+      .egress(
+        // This will be the fastest
+        "C ~ Walk 5m",
+        // This will be the cheapest
+        "D ~ Walk 20s"
+      )
+      .withTransferCost(0)
+      .withBoardCost(0)
+      .withStopBoardAlightTransferCost(STOP_D, 60_000);
+
+    requestBuilder.searchParams().earliestDepartureTime(T00_00).latestArrivalTime(T00_30);
 
     ModuleTestDebugLogging.setupDebugLogging(data);
   }

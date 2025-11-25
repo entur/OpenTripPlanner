@@ -2,8 +2,6 @@ package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flexAndWalk;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
@@ -45,6 +43,8 @@ public class F05_OnBoardAccessEgressAndTransfersTest implements RaptorTestConsta
         0:10  0:20
         """
       )
+      .access("Flex+Walk 2m Rₙ1 ~ A", "Flex 5m Rₙ1 ~ A")
+      .egress("D ~ Flex+Walk 2m Rₙ1", "D ~ Flex 5m Rₙ1")
       .withTransfer(STOP_A, transfer(STOP_B, D10s))
       .withTransfer(STOP_C, transfer(STOP_D, D10s));
 
@@ -53,11 +53,6 @@ public class F05_OnBoardAccessEgressAndTransfersTest implements RaptorTestConsta
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30)
       .searchWindowInSeconds(D10m);
-
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(flexAndWalk(STOP_A, D2m), flex(STOP_A, D5m))
-      .addEgressPaths(flexAndWalk(STOP_D, D2m), flex(STOP_D, D5m));
   }
 
   static List<RaptorModuleTestCase> testCases() {

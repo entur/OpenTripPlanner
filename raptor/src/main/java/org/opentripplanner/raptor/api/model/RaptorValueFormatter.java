@@ -36,13 +36,17 @@ final class RaptorValueFormatter {
     return FORMAT_CENTI.format(value / 100.0);
   }
 
-  static int parseValue(String valueString) {
+  static int parse(String valueString) {
     try {
-      if (valueString.contains(".")) {
-        return (int) Math.round(FORMAT_CENTI.parse(valueString).doubleValue() * 100.0);
-      } else {
-        return FORMAT_INT.parse(valueString).intValue();
-      }
+      return FORMAT_INT.parse(valueString).intValue();
+    } catch (ParseException e) {
+      throw new IllegalArgumentException("Not a valid Raptor value: " + valueString, e);
+    }
+  }
+
+  static int parseCenti(String valueString) {
+    try {
+      return (int) Math.round(FORMAT_CENTI.parse(valueString).doubleValue() * 100.0);
     } catch (ParseException e) {
       throw new IllegalArgumentException("Not a valid Raptor value: " + valueString, e);
     }

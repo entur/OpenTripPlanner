@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD;
@@ -21,7 +19,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -75,10 +72,17 @@ public class F12_EgressWithRidesMultipleOptimalPathsTest implements RaptorTestCo
 
   @BeforeEach
   public void setup() {
-    data.withRoutes(
-      route("R1", STOP_A, STOP_C).withTimetable(schedule("0:04 0:20")),
-      route("R2", STOP_A, STOP_B).withTimetable(schedule("0:05 0:16"))
-    );
+    data
+      .access("Free ~ A")
+      .withTimetables(
+        """
+        A     C
+        0:04  0:20
+        --
+        A     B
+        0:05  0:16
+        """
+      );
 
     // We will test board- and alight-slack in a separate test
     data.withSlackProvider(new TestSlackProvider(D1m, D0s, D0s));
@@ -88,8 +92,6 @@ public class F12_EgressWithRidesMultipleOptimalPathsTest implements RaptorTestCo
       .earliestDepartureTime(T00_00)
       .searchWindowInSeconds(D20m)
       .latestArrivalTime(T00_30);
-
-    requestBuilder.searchParams().addAccessPaths(TestAccessEgress.free(STOP_A));
 
     data.withTransfer(STOP_B, TestTransfer.transfer(STOP_C, D2m));
 

@@ -12,7 +12,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -38,37 +37,35 @@ public class B03_AccessEgressTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-        A     B     C     D     E     F     G     H
-        0:10  0:14  0:18  0:22  0:28  0:32  0:36  0:40
-      """
-    );
-
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(
+    data
+      .access(
         // Lowest cost
-        TestAccessEgress.walk(STOP_A, D1s),
+        "Walk 1s ~ A",
         // Best compromise of cost and time
-        TestAccessEgress.walk(STOP_B, D4m),
+        "Walk 4m ~ B",
         // Latest departure time: 0:16 - 5m = 0:11
-        TestAccessEgress.walk(STOP_C, D7m),
+        "Walk 7m ~ C",
         // Not optimal
-        TestAccessEgress.walk(STOP_D, D20m)
+        "Walk 20m ~ D"
       )
-      .addEgressPaths(
+      .withTimetables(
+        """
+          A     B     C     D     E     F     G     H
+          0:10  0:14  0:18  0:22  0:28  0:32  0:36  0:40
+        """
+      )
+      .egress(
         // Not optimal
-        TestAccessEgress.walk(STOP_E, D20m),
+        "E ~ Walk 20m",
         // Earliest arrival time: 0:18 + 3m = 0:21
-        TestAccessEgress.walk(STOP_F, D7m),
+        "F ~ Walk 7m",
         // Best compromise of cost and time
-        TestAccessEgress.walk(STOP_G, D4m),
+        "G ~ Walk 4m",
         // Lowest cost
-        TestAccessEgress.walk(STOP_H, D1s)
-      )
-      .earliestDepartureTime(T00_00)
-      .latestArrivalTime(T01_00);
+        "H ~ Walk 1s"
+      );
+
+    requestBuilder.searchParams().earliestDepartureTime(T00_00).latestArrivalTime(T01_00);
 
     ModuleTestDebugLogging.setupDebugLogging(data);
   }

@@ -99,7 +99,7 @@ public interface RaptorAccessEgress {
   }
 
   default boolean hasTimePenalty() {
-    return timePenalty() != RaptorConstants.TIME_NOT_SET;
+    return RaptorConstants.isTimeSet(timePenalty());
   }
 
   /* TIME-DEPENDENT ACCESS/TRANSFER/EGRESS */

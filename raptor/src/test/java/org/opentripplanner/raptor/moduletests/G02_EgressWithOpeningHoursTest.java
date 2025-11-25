@@ -19,7 +19,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -50,16 +49,17 @@ public class G02_EgressWithOpeningHoursTest implements RaptorTestConstants {
 
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      A      B
-      00:10  00:20
-      00:20  00:30
-      00:30  00:40
-      24:20  24:30
-      """
-    );
-    requestBuilder.searchParams().addAccessPaths(TestAccessEgress.free(STOP_A));
+    data
+      .access("Free ~ A")
+      .withTimetables(
+        """
+        A      B
+        00:10  00:20
+        00:20  00:30
+        00:30  00:40
+        24:20  24:30
+        """
+      );
 
     requestBuilder
       .searchParams()

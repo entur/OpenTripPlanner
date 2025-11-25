@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.api.PathUtils;
-import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -41,20 +40,24 @@ public class E03_NotAllowedConstrainedTransferTest implements RaptorTestConstant
    */
   @BeforeEach
   public void setup() {
-    data.withTimetables(
-      """
-      --
-      A     B
-      0:02  0:05
-      --
-            B     C
-            0:10  0:15
-            0:12  0:17
-      --
-            B     C
-            0:15  0:20
-      """
-    );
+    data
+      .access("Walk 30s ~ A")
+      .withTimetables(
+        """
+        --
+        A     B
+        0:02  0:05
+        --
+        B     C
+        0:10  0:15
+        0:12  0:17
+        --
+        B     C
+        0:15  0:20
+        """
+      )
+      .egress("C ~ Walk 30s");
+
     var tripR1a = data.getRoute(0).getTripSchedule(0);
     var tripR2a = data.getRoute(1).getTripSchedule(0);
 
@@ -69,8 +72,6 @@ public class E03_NotAllowedConstrainedTransferTest implements RaptorTestConstant
     requestBuilder
       .searchParams()
       .constrainedTransfers(true)
-      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_C, D30s))
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T00_30)
       .timetable(true);

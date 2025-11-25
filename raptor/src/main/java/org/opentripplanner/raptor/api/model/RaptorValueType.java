@@ -23,9 +23,7 @@ public enum RaptorValueType {
   /// Transfer priority
   TRANSFER_PRIORITY("Tₚ"),
   /// Number of rides
-  RIDES("Rₙ"),
-  /// Number of via locations visited
-  VIAS("Vₙ");
+  RIDES("Rₙ");
 
   private final String prefix;
 
@@ -44,7 +42,11 @@ public enum RaptorValueType {
     };
   }
 
-  public int parseValue(String text) {
-    return RaptorValueFormatter.parseValue(text.substring(prefix.length()));
+  public int parseValue(String value) {
+    String v = value.substring(prefix.length());
+    return switch (this) {
+      case C1, WAIT_TIME_COST -> RaptorValueFormatter.parseCenti(v);
+      default -> RaptorValueFormatter.parse(v);
+    };
   }
 }

@@ -2,9 +2,6 @@ package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.api.PathUtils.withoutCost;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flex;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.flexAndWalk;
-import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_MIN_DURATION_REV;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.TC_STANDARD_REV_ONE;
@@ -45,25 +42,28 @@ public class F02_EgressWithRidesTest implements RaptorTestConstants {
 
   @BeforeEach
   void setup() {
-    data.withTimetables(
-      """
-      B     C     D     E     F
-      0:10  0:12  0:14  0:16  0:18
-      """
-    );
+    data
+      .access("Walk 1m ~ B")
+      .withTimetables(
+        """
+        B     C     D     E     F
+        0:10  0:12  0:14  0:16  0:18
+        """
+      )
+      // All egress paths are all pareto-optimal (McRaptor).
+      .egress(
+        // best combination of transfers and time
+        "C ~ Flex+Walk 7m Rₙ1",
+        // earliest arrival time
+        "D ~ Flex 3m Rₙ2",
+        // lowest cost
+        "E ~ Flex+Walk 1m59s Rₙ2",
+        // lowest num-of-transfers (0)
+        "F ~ Walk 10m"
+      );
     // We will test board- and alight-slack in a separate test
     data.withSlackProvider(new TestSlackProvider(60, 0, 0));
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_B, D1m))
-      // All egress paths are all pareto-optimal (McRaptor).
-      .addEgressPaths(
-        flexAndWalk(STOP_C, D7m), // best combination of transfers and time
-        flex(STOP_D, D3m, TWO_RIDES), // earliest arrival time
-        flexAndWalk(STOP_E, D1m59s, TWO_RIDES), // lowest cost
-        walk(STOP_F, D10m) // lowest num-of-transfers (0)
-      );
     requestBuilder.searchParams().earliestDepartureTime(T00_00).latestArrivalTime(T00_30);
 
     ModuleTestDebugLogging.setupDebugLogging(data);
