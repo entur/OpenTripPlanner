@@ -339,6 +339,13 @@
                         <sourceDirectory>src/test-fixtures/java</sourceDirectory>
                     </sourceDirectories>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>12.1.2</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>validate</id>
