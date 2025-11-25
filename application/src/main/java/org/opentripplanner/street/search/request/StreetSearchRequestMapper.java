@@ -108,8 +108,12 @@ public class StreetSearchRequestMapper {
       .withParking(b2 -> mapParking(b2, preferences.parking()))
       .withRental(b2 -> mapRental(b2, preferences.rental()))
       .withOptimizeType(preferences.optimizeType())
-      .withOptimizeTriangle(preferences.optimizeTriangle())
+      .withOptimizeTriangle(mapTriangle(preferences.optimizeTriangle()))
       .withWalking(b2 -> mapVehicleWalking(b2, preferences.walking()));
+  }
+
+  private static TimeSlopeSafetyTriangle mapTriangle(org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle original) {
+    return new TimeSlopeSafetyTriangle(original.time(), original.slope(), original.safety());
   }
 
   private static void mapCar(CarRequest.Builder b, CarPreferences car) {
@@ -130,7 +134,7 @@ public class StreetSearchRequestMapper {
       .withReluctance(scooter.reluctance())
       .withRental(b2 -> mapRental(b2, scooter.rental()))
       .withOptimizeType(scooter.optimizeType())
-      .withOptimizeTriangle(scooter.optimizeTriangle())
+      .withOptimizeTriangle(mapTriangle(scooter.optimizeTriangle()))
       .build();
   }
 

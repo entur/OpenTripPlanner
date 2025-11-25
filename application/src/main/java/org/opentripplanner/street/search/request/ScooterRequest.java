@@ -8,7 +8,6 @@ import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Units;
-import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
