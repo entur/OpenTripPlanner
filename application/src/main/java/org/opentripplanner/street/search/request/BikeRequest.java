@@ -7,7 +7,6 @@ import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -25,7 +24,6 @@ public final class BikeRequest {
 
   private final double speed;
   private final double reluctance;
-  private final Cost boardCost;
   private final ParkingRequest parking;
   private final RentalRequest rental;
   private final VehicleRoutingOptimizeType optimizeType;
@@ -35,7 +33,6 @@ public final class BikeRequest {
   private BikeRequest() {
     this.speed = 5;
     this.reluctance = 2.0;
-    this.boardCost = Cost.costOfMinutes(10);
     this.parking = ParkingRequest.DEFAULT;
     this.rental = RentalRequest.DEFAULT;
     this.optimizeType = SAFE_STREETS;
@@ -46,7 +43,6 @@ public final class BikeRequest {
   private BikeRequest(Builder builder) {
     this.speed = Units.speed(builder.speed);
     this.reluctance = Units.reluctance(builder.reluctance);
-    this.boardCost = builder.boardCost;
     this.parking = builder.parking;
     this.rental = builder.rental;
     this.optimizeType = Objects.requireNonNull(builder.optimizeType);
@@ -71,15 +67,6 @@ public final class BikeRequest {
 
   public double reluctance() {
     return reluctance;
-  }
-
-  /**
-   * Separate cost for boarding a vehicle with a bicycle, which is more difficult than on foot. This
-   * is in addition to the cost of the transfer(biking) and waiting-time. It is also in addition to
-   * the transfer preferences.
-   */
-  public int boardCost() {
-    return boardCost.toSeconds();
   }
 
   /** Parking preferences that can be different per request */
@@ -120,7 +107,6 @@ public final class BikeRequest {
     return (
       doubleEquals(that.speed, speed) &&
       doubleEquals(that.reluctance, reluctance) &&
-      boardCost.equals(that.boardCost) &&
       Objects.equals(parking, that.parking) &&
       Objects.equals(rental, that.rental) &&
       optimizeType == that.optimizeType &&
@@ -134,7 +120,6 @@ public final class BikeRequest {
     return Objects.hash(
       speed,
       reluctance,
-      boardCost,
       parking,
       rental,
       optimizeType,
@@ -148,7 +133,6 @@ public final class BikeRequest {
     return ToStringBuilder.of(BikeRequest.class)
       .addNum("speed", speed, DEFAULT.speed)
       .addNum("reluctance", reluctance, DEFAULT.reluctance)
-      .addObj("boardCost", boardCost, DEFAULT.boardCost)
       .addObj("parking", parking, DEFAULT.parking)
       .addObj("rental", rental, DEFAULT.rental)
       .addEnum("optimizeType", optimizeType, DEFAULT.optimizeType)
@@ -163,7 +147,6 @@ public final class BikeRequest {
     private final BikeRequest original;
     private double speed;
     private double reluctance;
-    private Cost boardCost;
     private ParkingRequest parking;
     private RentalRequest rental;
     private VehicleRoutingOptimizeType optimizeType;
@@ -174,7 +157,6 @@ public final class BikeRequest {
       this.original = original;
       this.speed = original.speed;
       this.reluctance = original.reluctance;
-      this.boardCost = original.boardCost;
       this.parking = original.parking;
       this.rental = original.rental;
       this.optimizeType = original.optimizeType;
@@ -201,15 +183,6 @@ public final class BikeRequest {
 
     public Builder withReluctance(double reluctance) {
       this.reluctance = reluctance;
-      return this;
-    }
-
-    public Cost boardCost() {
-      return boardCost;
-    }
-
-    public Builder withBoardCost(int boardCost) {
-      this.boardCost = Cost.costOfSeconds(boardCost);
       return this;
     }
 

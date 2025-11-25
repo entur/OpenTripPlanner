@@ -104,7 +104,6 @@ public class StreetSearchRequestMapper {
     b
       .withReluctance(preferences.reluctance())
       .withSpeed(preferences.speed())
-      .withBoardCost(preferences.boardCost())
       .withParking(b2 -> mapParking(b2, preferences.parking()))
       .withRental(b2 -> mapRental(b2, preferences.rental()))
       .withOptimizeType(preferences.optimizeType())
@@ -121,7 +120,6 @@ public class StreetSearchRequestMapper {
   private static void mapCar(CarRequest.Builder b, CarPreferences car) {
     b
       .withReluctance(car.reluctance())
-      .withBoardCost(car.boardCost())
       .withParking(b2 -> mapParking(b2, car.parking()))
       .withRental(b2 -> mapRental(b2, car.rental()))
       .withPickupTime(car.pickupTime())

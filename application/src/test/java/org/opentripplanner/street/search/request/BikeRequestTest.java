@@ -13,7 +13,6 @@ class BikeRequestTest {
 
   public static final double SPEED = 2.0;
   public static final double RELUCTANCE = 1.2;
-  public static final int BOARD_COST = 660;
   public static final TimeSlopeSafetyTriangle TRIANGLE = TimeSlopeSafetyTriangle.of()
     .withSlope(1)
     .build();
@@ -25,7 +24,6 @@ class BikeRequestTest {
   private final BikeRequest subject = BikeRequest.of()
     .withSpeed(SPEED)
     .withReluctance(RELUCTANCE)
-    .withBoardCost(BOARD_COST)
     .withOptimizeType(OPTIMIZE_TYPE)
     .withRental(rental -> rental.withPickupTime(Duration.ofSeconds(RENTAL_PICKUP_TIME)).build())
     .withParking(parking -> parking.withCost(PARK_COST).build())
@@ -40,11 +38,6 @@ class BikeRequestTest {
   @Test
   void reluctance() {
     assertEquals(RELUCTANCE, subject.reluctance());
-  }
-
-  @Test
-  void boardCost() {
-    assertEquals(BOARD_COST, subject.boardCost());
   }
 
   @Test
@@ -92,7 +85,6 @@ class BikeRequestTest {
       "BikeRequest{" +
       "speed: 2.0, " +
       "reluctance: 1.2, " +
-      "boardCost: $660, " +
       "parking: ParkingRequest{cost: $30}, " +
       "rental: RentalRequest{pickupTime: 30s}, " +
       "optimizeType: TRIANGLE, " +

@@ -187,7 +187,6 @@ class StreetSearchRequestMapperTest {
     var bikeRequest = subject.bike();
     assertEquals(5.0, bikeRequest.speed());
     assertEquals(1.5, bikeRequest.reluctance());
-    assertEquals(200, bikeRequest.boardCost());
     assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
 
     var walking = bikeRequest.walking();
