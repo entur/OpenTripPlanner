@@ -296,7 +296,7 @@ public class OrcaFareService extends DefaultFareService {
       return Optional.empty();
     }
     return switch (fareType) {
-      case youth, electronicYouth -> Optional.of(getYouthFare(fareType, rideType));
+      case youth, electronicYouth -> getYouthFare(fareType, rideType);
       case electronicSpecial -> getLiftFare(rideType, defaultFare, leg);
       case electronicSenior, senior -> getSeniorFare(fareType, rideType, defaultFare, leg);
       case regular, electronicRegular -> getRegularFare(fareType, rideType, defaultFare, leg);
@@ -348,7 +348,7 @@ public class OrcaFareService extends DefaultFareService {
         SKAGIT_CROSS_COUNTY -> fareType.equals(FareType.electronicRegular)
         ? Optional.empty()
         : defaultFare;
-      case MONORAIL -> optionalUSD(4.00f);
+      case MONORAIL -> Optional.empty();
       default -> defaultFare;
     };
   }
@@ -374,7 +374,7 @@ public class OrcaFareService extends DefaultFareService {
         EVERETT_TRANSIT,
         PIERCE_COUNTY_TRANSIT,
         SEATTLE_STREET_CAR -> optionalUSD(1.00f);
-      case MONORAIL -> optionalUSD(2.00f);
+      case MONORAIL -> Optional.empty();
       case WASHINGTON_STATE_FERRIES -> defaultFare.map(df ->
         getWashingtonStateFerriesFare(route.getLongName(), FareType.electronicSpecial, df)
       );
@@ -420,7 +420,7 @@ public class OrcaFareService extends DefaultFareService {
         PIERCE_COUNTY_TRANSIT,
         SEATTLE_STREET_CAR,
         KITSAP_TRANSIT -> optionalUSD(1f);
-      case MONORAIL -> optionalUSD(2f);
+      case MONORAIL -> Optional.empty();
       case KC_WATER_TAXI_VASHON_ISLAND -> optionalUSD(3f);
       case KC_WATER_TAXI_WEST_SEATTLE -> optionalUSD(2.5f);
       case KITSAP_TRANSIT_FAST_FERRY_WESTBOUND -> leg
@@ -440,11 +440,11 @@ public class OrcaFareService extends DefaultFareService {
   /**
    * Apply youth discount fares based on the ride type. Youth ride free in Washington.
    */
-  private Money getYouthFare(FareType fareType, RideType rideType) {
-    if (rideType == RideType.MONORAIL && fareType == FareType.youth) {
-      return Money.usDollars(2.00f);
+  private Optional<Money> getYouthFare(FareType fareType, RideType rideType) {
+    if (rideType == RideType.MONORAIL) {
+      return Optional.empty();
     }
-    return Money.ZERO_USD;
+    return Optional.of(ZERO_USD);
   }
 
   /**
