@@ -201,6 +201,27 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
+  void bikeTriangle() {
+    var builder = builder()
+      .withPreferences(pref ->
+        pref.withBike(bike ->
+          bike
+            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withOptimizeTriangle(it -> it.withTime(1).withSafety(2).withSlope(3))
+        )
+      );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var bikeRequest = subject.bike();
+    assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
+    assertEquals(0.5, bikeRequest.optimizeTriangle().slope());
+    assertEquals(0.33, bikeRequest.optimizeTriangle().safety());
+    assertEquals(0.17, bikeRequest.optimizeTriangle().time());
+  }
+
+  @Test
   void mapCarRequest() {
     var builder = builder()
       .withPreferences(pref ->
