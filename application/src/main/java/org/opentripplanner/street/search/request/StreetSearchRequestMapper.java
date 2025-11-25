@@ -112,7 +112,9 @@ public class StreetSearchRequestMapper {
       .withWalking(b2 -> mapVehicleWalking(b2, preferences.walking()));
   }
 
-  private static TimeSlopeSafetyTriangle mapTriangle(org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle original) {
+  private static TimeSlopeSafetyTriangle mapTriangle(
+    org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle original
+  ) {
     return new TimeSlopeSafetyTriangle(original.time(), original.slope(), original.safety());
   }
 

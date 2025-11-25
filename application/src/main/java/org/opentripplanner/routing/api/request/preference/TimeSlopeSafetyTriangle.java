@@ -1,7 +1,6 @@
 package org.opentripplanner.routing.api.request.preference;
 
 import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
-import static org.opentripplanner.utils.lang.DoubleUtils.roundTo2Decimals;
 
 /**
  * Sets the (bicycle or scooter) triangle routing parameters -- the relative importance of safety,
@@ -25,34 +24,6 @@ public record TimeSlopeSafetyTriangle(double time, double slope, double safety) 
 
   public static final TimeSlopeSafetyTriangle DEFAULT = new TimeSlopeSafetyTriangle(1, 1, 1);
 
-  /**
-   * Sets the bicycle or scooter triangle routing parameters -- the relative importance of safety,
-   * flatness, and speed. These three fields of the RouteRequest should have values between 0 and 1,
-   * and should add up to 1. This setter function accepts any three numbers and will normalize them
-   * to add up to 1.
-   */
-  public TimeSlopeSafetyTriangle(double time, double slope, double safety) {
-    safety = positiveValueOrZero(safety);
-    slope = positiveValueOrZero(slope);
-    time = positiveValueOrZero(time);
-
-    if (zeroVector(time, slope, safety)) {
-      time = 1.0;
-      slope = 1.0;
-      safety = 1.0;
-    }
-
-    // Normalize
-    double total = safety + slope + time;
-    time /= total;
-    slope /= total;
-
-    // We round to closest 2 decimals
-    this.time = roundTo2Decimals(time);
-    this.slope = roundTo2Decimals(slope);
-    this.safety = roundTo2Decimals(1.0 - (this.time + this.slope));
-  }
-
   public TimeSlopeSafetyTriangle.Builder copyOf() {
     return new Builder(this);
   }
@@ -66,10 +37,6 @@ public record TimeSlopeSafetyTriangle(double time, double slope, double safety) 
    */
   public static TimeSlopeSafetyTriangle.Builder of() {
     return new Builder();
-  }
-
-  private static double positiveValueOrZero(double value) {
-    return Math.max(0, value);
   }
 
   private static boolean zeroVector(double a, double b, double c) {

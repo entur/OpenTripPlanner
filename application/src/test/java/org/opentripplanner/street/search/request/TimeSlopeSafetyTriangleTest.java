@@ -38,7 +38,7 @@ public class TimeSlopeSafetyTriangleTest {
     double expSafety,
     String description
   ) {
-    var subject = org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle.of()
+    var subject = TimeSlopeSafetyTriangle.of()
       .withTime(inTime)
       .withSlope(inSlope)
       .withSafety(inSafety)
@@ -51,13 +51,13 @@ public class TimeSlopeSafetyTriangleTest {
   @Test
   public void testBuildWithDefaultValue() {
     // Set som arbitrary values for the default instance
-    var expected = org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle.of()
+    var expected = TimeSlopeSafetyTriangle.of()
       .withTime(1.0)
       .withSlope(2.0)
       .withSafety(3.0)
       .build();
     // then the default should be returned if no value is set
-    var result = org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle.of().buildOrDefault(expected);
+    var result = TimeSlopeSafetyTriangle.of().buildOrDefault(expected);
 
     assertSame(expected, result);
   }
