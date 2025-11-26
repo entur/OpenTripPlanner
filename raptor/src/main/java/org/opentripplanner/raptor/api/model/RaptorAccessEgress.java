@@ -128,6 +128,9 @@ public interface RaptorAccessEgress {
    * ore more via-locations. If so Raptor needs to know how many via-locations are included
    * so it can skip these.
    * <p>
+   * If the access/egress {@code stop} is a via-location then this method should include
+   * it in the count.
+   * <p>
    * The default is zero via-lcations visited.
    */
   default int numberOfViaLocationsVisited() {
