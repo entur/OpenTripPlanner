@@ -4,6 +4,7 @@ import static org.opentripplanner.raptor.api.model.RaptorConstants.TIME_NOT_SET;
 import static org.opentripplanner.raptor.api.model.RaptorValueType.C1;
 import static org.opentripplanner.raptor.api.model.RaptorValueType.RIDES;
 import static org.opentripplanner.raptor.api.model.RaptorValueType.TIME_PENALTY;
+import static org.opentripplanner.raptor.api.model.RaptorValueType.VIAS;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -306,6 +307,9 @@ public interface RaptorAccessEgress {
     }
     if (hasRides()) {
       buf.append(' ').append(RIDES.format(numberOfRides()));
+    }
+    if (numberOfViaLocationsVisited() > 0) {
+      buf.append(' ').append(VIAS.format(numberOfViaLocationsVisited()));
     }
     if (hasTimePenalty()) {
       buf.append(' ').append(TIME_PENALTY.format(timePenalty()));
