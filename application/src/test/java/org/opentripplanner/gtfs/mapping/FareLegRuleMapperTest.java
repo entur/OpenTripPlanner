@@ -50,7 +50,12 @@ class FareLegRuleMapperTest {
   @MethodSource("testCases")
   void mapDistance(TestCase tc) {
     var productMapper = new FareProductMapper(ID_FACTORY);
-    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, productMapper, DataImportIssueStore.NOOP);
+    var ruleMapper = new FareLegRuleMapper(
+      ID_FACTORY,
+      productMapper,
+      timeframeMapper(),
+      DataImportIssueStore.NOOP
+    );
     var productId = new AgencyAndId("1", "1");
     var fp = new FareProduct();
     fp.setAmount(10);
@@ -76,7 +81,12 @@ class FareLegRuleMapperTest {
   @Test
   void multipleProducts() {
     var productMapper = new FareProductMapper(ID_FACTORY);
-    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, productMapper, DataImportIssueStore.NOOP);
+    var ruleMapper = new FareLegRuleMapper(
+      ID_FACTORY,
+      productMapper,
+      timeframeMapper(),
+      DataImportIssueStore.NOOP
+    );
 
     var cashMedium = new FareMedium();
     cashMedium.setId(new AgencyAndId("1", "cash"));
@@ -107,7 +117,12 @@ class FareLegRuleMapperTest {
   @Test
   void priority() {
     var productMapper = new FareProductMapper(ID_FACTORY);
-    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, productMapper, DataImportIssueStore.NOOP);
+    var ruleMapper = new FareLegRuleMapper(
+      ID_FACTORY,
+      productMapper,
+      timeframeMapper(),
+      DataImportIssueStore.NOOP
+    );
     var product = cashProduct(null);
     productMapper.map(product);
 
@@ -123,7 +138,12 @@ class FareLegRuleMapperTest {
   @Test
   void noProductFound() {
     var issues = new DefaultDataImportIssueStore();
-    var ruleMapper = new FareLegRuleMapper(ID_FACTORY, new FareProductMapper(ID_FACTORY), issues);
+    var ruleMapper = new FareLegRuleMapper(
+      ID_FACTORY,
+      new FareProductMapper(ID_FACTORY),
+      timeframeMapper(),
+      issues
+    );
 
     var obaRule = new FareLegRule();
     obaRule.setFareProductId(new AgencyAndId("1", "notfound"));
@@ -146,5 +166,9 @@ class FareLegRuleMapperTest {
     cashProduct.setFareMedium(creditMedium);
     cashProduct.setFareProductId(productId);
     return cashProduct;
+  }
+
+  private static TimeframeMapper timeframeMapper() {
+    return new TimeframeMapper(ID_FACTORY);
   }
 }

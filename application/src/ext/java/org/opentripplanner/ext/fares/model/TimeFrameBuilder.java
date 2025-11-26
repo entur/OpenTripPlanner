@@ -19,12 +19,12 @@ public class TimeFrameBuilder {
     return this;
   }
 
-  public TimeFrameBuilder setEnd(LocalTime end) {
+  public TimeFrameBuilder withEnd(LocalTime end) {
     this.end = end;
     return this;
   }
 
-  public TimeFrame build() {
-    return new TimeFrame(this);
+  public Timeframe build() {
+    return new Timeframe(this);
   }
 }

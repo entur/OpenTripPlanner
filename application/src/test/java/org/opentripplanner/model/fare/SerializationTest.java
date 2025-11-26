@@ -1,7 +1,6 @@
 package org.opentripplanner.model.fare;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.io.Serializable;
 import java.lang.reflect.Field;
@@ -12,8 +11,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
-import org.opentripplanner.ext.fares.model.TimeFrame;
 import org.opentripplanner.ext.fares.model.TimeLimit;
+import org.opentripplanner.ext.fares.model.Timeframe;
 
 class SerializationTest {
 
@@ -23,7 +22,7 @@ class SerializationTest {
     FareMedium.class,
     RiderCategory.class,
     TimeLimit.class,
-    TimeFrame.class
+    Timeframe.class
   );
 
   static Stream<Class<?>> cases() {

@@ -37,22 +37,27 @@ public final class FareLegRule implements Serializable {
   private final Integer priority;
 
   @Nullable
-  private final TimeFrame timeFrame;
+  private final Collection<Timeframe> fromTimeframes;
+
+  @Nullable
+  private final Collection<Timeframe> toTimeframes;
 
   public FareLegRule(FareLegRuleBuilder builder) {
-    if (builder.fareProducts().isEmpty()) {
+    if (builder.fareProducts.isEmpty()) {
       throw new IllegalArgumentException("fareProducts must contain at least one value");
     }
-    builder.fareProducts().forEach(Objects::requireNonNull);
-    this.id = Objects.requireNonNull(builder.id());
-    this.fareProducts = builder.fareProducts();
-    this.legGroupId = builder.legGroupId();
-    this.networkId = builder.networkId();
-    this.fromAreaId = builder.fromAreaId();
-    this.toAreaId = builder.toAreaId();
-    this.fareDistance = builder.fareDistance();
-    this.priority = builder.priority();
-    this.timeFrame = builder.timeFrame();
+    builder.fareProducts.forEach(Objects::requireNonNull);
+    this.id = Objects.requireNonNull(builder.id);
+    this.fareProducts = builder.fareProducts;
+    this.legGroupId = builder.legGroupId;
+    this.networkId = builder.networkId;
+    this.fromAreaId = builder.fromAreaId;
+    this.toAreaId = builder.toAreaId;
+    this.fareDistance = builder.fareDistance;
+    this.priority = builder.priority;
+    // for serialization purposes, make sure that they are immutable lists
+    this.fromTimeframes = List.copyOf(builder.fromTimeframes);
+    this.toTimeframes = List.copyOf(builder.toTimeframes);
   }
 
   public String feedId() {
