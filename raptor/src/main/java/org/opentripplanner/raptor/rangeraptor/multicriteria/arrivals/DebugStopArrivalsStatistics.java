@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals;
 
 import static java.util.Locale.ROOT;
 
