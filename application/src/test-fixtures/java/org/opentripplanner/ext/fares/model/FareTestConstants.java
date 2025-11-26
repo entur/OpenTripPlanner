@@ -1,6 +1,6 @@
-package org.opentripplanner.ext.fares.service._support;
+package org.opentripplanner.ext.fares.model;
 
-import static org.opentripplanner.ext.fares.service._support.FareModelForTest.fareProduct;
+import static org.opentripplanner.ext.fares.model.FareModelForTest.fareProduct;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.groupOfRoutes;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 

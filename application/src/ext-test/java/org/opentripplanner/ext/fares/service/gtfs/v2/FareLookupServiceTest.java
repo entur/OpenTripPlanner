@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareLegRuleBuilder;
-import org.opentripplanner.ext.fares.service._support.FareTestConstants;
+import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.TransitLeg;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;

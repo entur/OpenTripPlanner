@@ -112,6 +112,14 @@ public final class FareLegRule implements Serializable {
     return fareProducts;
   }
 
+  public Collection<Timeframe> fromTimeframes() {
+    return fromTimeframes;
+  }
+
+  public Collection<Timeframe> toTimeframes() {
+    return toTimeframes;
+  }
+
   @Override
   public boolean equals(Object obj) {
     if (obj == this) {

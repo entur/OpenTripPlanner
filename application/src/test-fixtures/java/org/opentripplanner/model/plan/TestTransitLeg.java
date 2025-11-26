@@ -1,15 +1,28 @@
 package org.opentripplanner.model.plan;
 
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.transit.model.basic.TransitMode.BUS;
+
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner._support.time.ZoneIds;
+import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.leg.LegCallTime;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.organization.Agency;
+import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.site.StopType;
 
 /**
  * Many methods in this class throw {@link NotImplementedException}. Please implement them when
@@ -17,12 +30,26 @@ import org.opentripplanner.transit.model.basic.TransitMode;
  */
 public class TestTransitLeg implements TransitLeg {
 
+  public static final Agency AGENCY = Agency.of(FeedScopedIdForTestFactory.id("a1"))
+    .withName("Test Agency")
+    .withTimezone(ZoneIds.BERLIN.toString())
+    .build();
   private final ZonedDateTime startTime;
   private final ZonedDateTime endTime;
 
   public TestTransitLeg(TestTransitLegBuilder builder) {
     this.startTime = builder.startTime;
     this.endTime = builder.endTime;
+  }
+
+  @Override
+  public Agency agency() {
+    return AGENCY;
+  }
+
+  @Override
+  public Route route() {
+    return Route.of(id("r1")).withShortName("Test Route").withAgency(AGENCY).withMode(BUS).build();
   }
 
   @Override
@@ -67,12 +94,12 @@ public class TestTransitLeg implements TransitLeg {
 
   @Override
   public Place from() {
-    throw new NotImplementedException();
+    return Place.forStop(new TestStopLocation());
   }
 
   @Override
   public Place to() {
-    throw new NotImplementedException();
+    return Place.forStop(new TestStopLocation());
   }
 
   @Override
@@ -107,5 +134,58 @@ public class TestTransitLeg implements TransitLeg {
 
   public static TestTransitLegBuilder of() {
     return new TestTransitLegBuilder();
+  }
+
+  class TestStopLocation implements StopLocation {
+
+    @Override
+    public FeedScopedId getId() {
+      return id("s1");
+    }
+
+    @Override
+    public int getIndex() {
+      return -999;
+    }
+
+    @Override
+    public @Nullable I18NString getName() {
+      return null;
+    }
+
+    @Override
+    public @Nullable I18NString getDescription() {
+      return null;
+    }
+
+    @Override
+    public @Nullable I18NString getUrl() {
+      return null;
+    }
+
+    @Override
+    public StopType getStopType() {
+      return null;
+    }
+
+    @Override
+    public WgsCoordinate getCoordinate() {
+      return null;
+    }
+
+    @Override
+    public @Nullable Geometry getGeometry() {
+      return null;
+    }
+
+    @Override
+    public boolean isPartOfStation() {
+      return false;
+    }
+
+    @Override
+    public boolean isPartOfSameStationAs(StopLocation alternativeStop) {
+      return false;
+    }
   }
 }

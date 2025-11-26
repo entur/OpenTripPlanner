@@ -30,6 +30,7 @@ class FareLookupService implements Serializable {
   private final List<FareTransferRule> transferRules;
   private final AreaMatcher areaMatcher;
   private final NetworkMatcher networkMatcher;
+  private final TimeframeMatcher timeframeMatcher;
 
   FareLookupService(
     List<FareLegRule> legRules,
@@ -42,6 +43,7 @@ class FareLookupService implements Serializable {
     var rulePriorityMatcher = new RulePriorityMatcher(legRules);
     this.areaMatcher = new AreaMatcher(rulePriorityMatcher, legRules, stopAreas);
     this.networkMatcher = new NetworkMatcher(rulePriorityMatcher, legRules);
+    this.timeframeMatcher = new TimeframeMatcher();
   }
 
   /**
@@ -229,7 +231,8 @@ class FareLookupService implements Serializable {
       // covers this area
       areaMatcher.matchesFromArea(leg.from().stop, rule.fromAreaId()) &&
       areaMatcher.matchesToArea(leg.to().stop, rule.toAreaId()) &&
-      DistanceMatcher.matchesDistance(leg, rule)
+      DistanceMatcher.matchesDistance(leg, rule) &&
+      timeframeMatcher.matchesTimeframes(leg, rule)
     );
   }
 

@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.fares.service._support;
+package org.opentripplanner.ext.fares.model;
 
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.OTHER_FEED_AGENCY;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
