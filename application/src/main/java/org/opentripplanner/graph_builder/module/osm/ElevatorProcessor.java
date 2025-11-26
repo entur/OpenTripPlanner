@@ -40,35 +40,47 @@ import org.slf4j.LoggerFactory;
  * which is the reason this is not a public class.
  * <p>
  * Elevators have three types of edges: ElevatorAlightEdges, ElevatorHopEdges, and
- * ElevatorBoardEdges. The build process involves creating FreeEdges to disconnect from the
- * graph, GenericVertices to serve as attachment points, and ElevatorBoardEdges and
- * ElevatorAlightEdges to connect future ElevatorHopEdges to.
+ * ElevatorBoardEdges. Elevators also have two types of vertices: the OsmElevatorVertex and the
+ * ElevatorHopVertex.
+ * <p>
+ * For elevator nodes, the build process first generates OsmElevatorVertices during previous phases
+ * of the graph build. These vertices serve as attachment points to the graph for elevators.
+ * Elevator ways connect to the graph by using existing intersection vertices that are also part of
+ * the elevator way.
+ * <p>
+ * The next step is to iterate over these attachment points and generate the ElevatorBoardEdges and
+ * ElevatorAlightEdges. The other end for these edges is an ElevatorHopVertex. The
+ * ElevatorBoardEdge allows boarding while the ElevatorAlightEdge allows alighting the elevator.
+ * <p>
+ * The last step is to connect all ElevatorHopVertices with ElevatorHopEdges. The amount of levels
+ * between ElevatorHopVertices is stored in the edge. This incurs a cost dependent on the amount of
+ * levels traveled. If the ElevatorHopVertices are on the same level (for example because of bad
+ * data), the ElevatorHopEdge can have a cost of zero, but the board cost still applies in the
+ * ElevatorBoardEdge.
  * <p>
  * With two connected ways to a node (which can be on the same level), after building the
  * ElevatorAlightEdge and ElevatorBoardEdge the graph will look like this (side view):
  *
- * +==+~~X
+ * +==X
  *
- * +==+~~X
+ * +==X
  *
- * +  GenericVertex
- * X  EndpointVertex
- * ~~ FreeEdge
- * == ElevatorBoardEdge/ElevatorAlightEdge
+ * +  ElevatorHopVertex
+ * X  OsmElevatorVertex or IntersectionVertex
+ * == ElevatorBoardEdge and ElevatorAlightEdge
  * <p>
  * Another loop fills in the ElevatorHopEdges. After filling in the ElevatorHopEdges when a node
  * has 3 connected ways the graph will look like this (side view):
  *
- * +==+~~X
+ * +==X
  * |
- * +==+~~X
+ * +==X
  * |
- * +==+~~X
+ * +==X
  *
- * +  GenericVertex
- * X  EndpointVertex
- * ~~ FreeEdge
- * == ElevatorBoardEdge/ElevatorAlightEdge
+ * +  ElevatorHopVertex
+ * X  OsmElevatorVertex or IntersectionVertex
+ * == ElevatorBoardEdge and ElevatorAlightEdge
  * |  ElevatorHopEdge
  */
 class ElevatorProcessor {
@@ -128,11 +140,16 @@ class ElevatorProcessor {
           .thenComparing(OsmElevatorKey::entityId)
           .thenComparing(OsmElevatorKey::osmEntityType)
       );
-      List<Vertex> onboardVertices = new ArrayList<>();
+      List<ElevatorHopVertex> elevatorHopVertices = new ArrayList<>();
       for (OsmElevatorKey key : osmElevatorKeys) {
         OsmElevatorVertex sourceVertex = vertices.get(key);
         OsmLevel level = verticeLevels.get(key);
-        createElevatorVertices(onboardVertices, sourceVertex, sourceVertex.getLabelString(), level);
+        createElevatorVertices(
+          elevatorHopVertices,
+          sourceVertex,
+          sourceVertex.getLabelString(),
+          level
+        );
       }
 
       var wheelchair = node.explicitWheelchairAccessibility();
@@ -141,7 +158,7 @@ class ElevatorProcessor {
         .map(Duration::toSeconds)
         .orElse(-1L);
       createElevatorHopEdges(
-        onboardVertices,
+        elevatorHopVertices,
         osmElevatorKeys.stream().map(key -> verticeLevels.get(key)).toList(),
         wheelchair,
         !node.isBicycleDenied(),
@@ -172,13 +189,13 @@ class ElevatorProcessor {
       nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
     }
 
-    List<Vertex> onboardVertices = new ArrayList<>();
+    List<ElevatorHopVertex> elevatorHopVertices = new ArrayList<>();
     for (int i = 0; i < nodes.size(); i++) {
       Long node = nodes.get(i);
       var sourceVertex = vertexGenerator.intersectionNodes().get(node);
       OsmLevel level = nodeLevels.get(i);
       createElevatorVertices(
-        onboardVertices,
+        elevatorHopVertices,
         sourceVertex,
         elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
         level
@@ -191,7 +208,7 @@ class ElevatorProcessor {
       .map(Duration::toSeconds)
       .orElse(-1L);
     createElevatorHopEdges(
-      onboardVertices,
+      elevatorHopVertices,
       nodeLevels,
       wheelchair,
       !elevatorWay.isBicycleDenied(),
@@ -201,38 +218,38 @@ class ElevatorProcessor {
   }
 
   private void createElevatorVertices(
-    List<Vertex> onboardVertices,
+    List<ElevatorHopVertex> elevatorHopVertices,
     IntersectionVertex sourceVertex,
     String label,
     OsmLevel level
   ) {
-    ElevatorHopVertex onboardVertex = vertexFactory.elevator(sourceVertex, label);
+    ElevatorHopVertex elevatorHopVertex = vertexFactory.elevator(sourceVertex, label);
 
-    ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, onboardVertex);
+    ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, elevatorHopVertex);
     ElevatorAlightEdge.createElevatorAlightEdge(
-      onboardVertex,
+      elevatorHopVertex,
       sourceVertex,
       // TODO this will be removed in a later PR and moved to the StreetDetailsService
       new NonLocalizedString(level.name())
     );
 
-    // accumulate onboard vertices to so they can be connected by hop edges later
-    onboardVertices.add(onboardVertex);
+    // Accumulate ElevatorHopVertices so they can be connected by ElevatorHopEdges later.
+    elevatorHopVertices.add(elevatorHopVertex);
   }
 
   private static void createElevatorHopEdges(
-    List<Vertex> onboardVertices,
-    List<OsmLevel> onboardVertexLevels,
+    List<ElevatorHopVertex> elevatorHopVertices,
+    List<OsmLevel> elevatorHopVertexLevels,
     Accessibility wheelchair,
     boolean bicycleAllowed,
     int travelTime
   ) {
-    // -1 because we loop over onboardVertices two at a time
-    for (int i = 0, vSize = onboardVertices.size() - 1; i < vSize; i++) {
-      Vertex from = onboardVertices.get(i);
-      Vertex to = onboardVertices.get(i + 1);
-      OsmLevel fromLevel = onboardVertexLevels.get(i);
-      OsmLevel toLevel = onboardVertexLevels.get(i + 1);
+    // -1 because we loop over elevatorHopVertices two at a time
+    for (int i = 0, vSize = elevatorHopVertices.size() - 1; i < vSize; i++) {
+      Vertex from = elevatorHopVertices.get(i);
+      Vertex to = elevatorHopVertices.get(i + 1);
+      OsmLevel fromLevel = elevatorHopVertexLevels.get(i);
+      OsmLevel toLevel = elevatorHopVertexLevels.get(i + 1);
 
       // default permissions: pedestrian, wheelchair, check tag bicycle=yes
       StreetTraversalPermission permission = bicycleAllowed
