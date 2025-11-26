@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * This {@link java.util.Collection} store all pareto-optimal elements. The {@link #add(Object)}
@@ -23,9 +24,11 @@ import java.util.stream.Collectors;
  *
  * @param <T> the element type
  */
-public class ParetoSet<T> extends AbstractCollection<T> {
+public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSetWithMarker {
 
   private final ParetoComparator<T> comparator;
+
+  @Nullable
   private final ParetoSetEventListener<? super T> eventListener;
 
   @SuppressWarnings("unchecked")
@@ -43,7 +46,7 @@ public class ParetoSet<T> extends AbstractCollection<T> {
    */
   public ParetoSet(
     ParetoComparator<T> comparator,
-    ParetoSetEventListener<? super T> eventListener
+    @Nullable ParetoSetEventListener<? super T> eventListener
   ) {
     this.comparator = comparator;
     this.eventListener = eventListener;
@@ -209,14 +212,6 @@ public class ParetoSet<T> extends AbstractCollection<T> {
    */
   protected void notifyElementMoved(int fromIndex, int toIndex) {
     // Noop
-  }
-
-  protected ParetoComparator<T> getComparator() {
-    return comparator;
-  }
-
-  protected ParetoSetEventListener<? super T> getEventListener() {
-    return eventListener;
   }
 
   /**
