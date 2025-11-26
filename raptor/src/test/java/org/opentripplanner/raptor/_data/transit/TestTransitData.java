@@ -57,8 +57,8 @@ public class TestTransitData
   private RaptorSlackProvider slackProvider = SLACK_PROVIDER;
 
   /// Create an new instance and call {@link #withTimetables(String)}
-  public static TestTransitData of(String roteTimetables) {
-    return new TestTransitData().withTimetables(roteTimetables);
+  public static TestTransitData of(String routeTimetables) {
+    return new TestTransitData().withTimetables(routeTimetables);
   }
 
   public TestTransitData access(String... accessList) {
