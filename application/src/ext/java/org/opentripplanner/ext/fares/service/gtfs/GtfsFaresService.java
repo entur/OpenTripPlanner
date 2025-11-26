@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.fares.service.gtfs;
 
 import com.google.common.collect.Multimap;
-import java.io.Serial;
 import java.util.Objects;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.ext.fares.service.gtfs.v2.GtfsFaresV2Service;
