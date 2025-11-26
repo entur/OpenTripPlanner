@@ -21,6 +21,7 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.McRangeRaptorWorkerS
 import org.opentripplanner.raptor.rangeraptor.multicriteria.MultiCriteriaRoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ViaConnectionStopArrivalEventListener;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalParetoSetComparatorFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalsEventListenerMapper;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
@@ -116,11 +117,17 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
    */
   public McStopArrivals<T> stopArrivals() {
     if (arrivals == null) {
+      // Glue arrivals to next-connection, egress/destination events, and debug-event on stops.
+      var listeners = ArrivalsEventListenerMapper.<T>of(
+        context().debugFactory(),
+        createViaConnectionListeners(),
+        contextSegment.egressPaths(),
+        createDestinationArrivalPaths()
+      );
+
       this.arrivals = new McStopArrivals<>(
         context().nStops(),
-        contextSegment.egressPaths(),
-        createViaConnectionListeners(),
-        createDestinationArrivalPaths(),
+        listeners,
         createFactoryParetoComparator(),
         context().debugFactory()
       );
