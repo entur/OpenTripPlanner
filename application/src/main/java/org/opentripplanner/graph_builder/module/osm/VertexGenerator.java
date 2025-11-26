@@ -27,6 +27,7 @@ import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.OsmBoardingLocationVertex;
 import org.opentripplanner.street.model.vertex.OsmElevatorVertex;
+import org.opentripplanner.street.model.vertex.OsmEntityType;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.model.vertex.VertexFactory;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -205,7 +206,7 @@ class VertexGenerator {
     var vertex = vertexFactory.osmOnLinearBarrier(
       nodeOnBarrier.getCoordinate(),
       nodeOnBarrier.getId(),
-      OsmEntityTypeMapper.map(getOsmEntityType(entity)),
+      getOsmEntityType(entity),
       entity.getId()
     );
     vertices.put(entity, vertex);
@@ -330,11 +331,7 @@ class VertexGenerator {
     OsmEntityType osmEntityType = getOsmEntityType(entity);
     OsmElevatorKey osmElevatorKey = new OsmElevatorKey(node.getId(), osmEntityType, entity.getId());
     if (!elevatorVertices.containsKey(osmElevatorKey)) {
-      OsmElevatorVertex vertex = vertexFactory.osmElevator(
-        node,
-        OsmEntityTypeMapper.map(osmEntityType),
-        entity.getId()
-      );
+      OsmElevatorVertex vertex = vertexFactory.osmElevator(node, osmEntityType, entity.getId());
       elevatorVertices.put(osmElevatorKey, vertex);
       // An OsmElevatorVertex requires one level to be defined.
       elevatorNodeLevels.put(osmElevatorKey, osmdb.findSingleLevelForEntity(entity));
