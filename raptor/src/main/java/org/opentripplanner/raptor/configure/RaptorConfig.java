@@ -19,7 +19,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.McStopArrivals;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.configure.McRangeRaptorConfig;
 import org.opentripplanner.raptor.rangeraptor.standard.configure.StdRangeRaptorConfig;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorSearchWindowCalculator;
