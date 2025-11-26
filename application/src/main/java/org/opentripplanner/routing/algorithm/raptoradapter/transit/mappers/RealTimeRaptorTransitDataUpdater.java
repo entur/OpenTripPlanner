@@ -10,11 +10,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.TransferIndexGenerator;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshotUpdateSucessListener;
@@ -95,7 +97,7 @@ public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdate
   @Override
   public void update(
     Collection<Timetable> updatedTimetables,
-    Map<TripPattern, SortedSet<Timetable>> timetables
+    Function<FeedScopedId, SortedSet<Timetable>> timetableProvider
   ) {
     if (!timetableRepository.hasRealtimeRaptorTransitData()) {
       return;
@@ -218,7 +220,7 @@ public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdate
           if (!pattern.isCreatedByRealtimeUpdater()) {
             continue;
           }
-          var oldTimeTable = timetables.get(pattern);
+          var oldTimeTable = timetableProvider.apply(pattern.getId());
           if (oldTimeTable != null) {
             var toRemove = oldTimeTable
               .stream()
