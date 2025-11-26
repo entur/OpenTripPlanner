@@ -51,7 +51,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private McRangeRaptorWorkerState<T> state;
   private Heuristics heuristics;
   private McStopArrivals<T> arrivals;
-  private McStopArrivals<T> nextLegArrivals = null;
+  private McStopArrivals<T> nextSegmentArrivals = null;
   private McStopArrivalFactory<T> stopArrivalFactory = null;
 
   public McRangeRaptorConfig(
@@ -90,10 +90,10 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
    * Sets the next leg state. This is used to connect the state created by this config with the
    * next leg. If this is the last leg, the next leg should be {@code null}. This is optional.
    */
-  public McRangeRaptorConfig<T> connectWithNextLegArrivals(
-    @Nullable McStopArrivals<T> nextLegArrivals
+  public McRangeRaptorConfig<T> connectWithNextSegmentArrivals(
+    @Nullable McStopArrivals<T> nextSegmentArrivals
   ) {
-    this.nextLegArrivals = nextLegArrivals;
+    this.nextSegmentArrivals = nextSegmentArrivals;
     return this;
   }
 
@@ -221,7 +221,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
     return ViaConnectionStopArrivalEventListener.createEventListeners(
       contextSegment.viaConnections(),
       createStopArrivalFactory(),
-      nextLegArrivals,
+      nextSegmentArrivals,
       context().lifeCycle()::onTransfersForRoundComplete
     );
   }

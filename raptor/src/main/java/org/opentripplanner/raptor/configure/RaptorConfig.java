@@ -109,7 +109,7 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
         var c = new McRangeRaptorConfig<>(
           ctxSegment,
           passThroughPointsService
-        ).connectWithNextLegArrivals(nextStopArrivals);
+        ).connectWithNextSegmentArrivals(nextStopArrivals);
         var w = createWorker(ctxSegment, c.state(), c.strategy());
         worker = RangeRaptorWorkerComposite.of(w, worker);
         nextStopArrivals = c.stopArrivals();
