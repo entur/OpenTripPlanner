@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.configure;
 
+import gnu.trove.map.TIntObjectMap;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -8,6 +9,7 @@ import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.request.MultiCriteriaRequest;
 import org.opentripplanner.raptor.api.request.RaptorTransitGroupPriorityCalculator;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
+import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContext;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContextViaSegments;
 import org.opentripplanner.raptor.rangeraptor.internalapi.Heuristics;
@@ -36,6 +38,7 @@ import org.opentripplanner.raptor.rangeraptor.path.DestinationArrivalPaths;
 import org.opentripplanner.raptor.rangeraptor.path.configure.PathConfig;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.raptor.util.paretoset.ParetoSet;
+import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 
 /**
  * Configure and create multi-criteria worker, state and child classes.
@@ -217,7 +220,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
     return ArrivalParetoSetComparatorFactory.factory(mcRequest().relaxC1(), dominanceFunctionC2());
   }
 
-  private List<ViaConnectionStopArrivalEventListener<T>> createViaConnectionListeners() {
+  private TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> createViaConnectionListeners() {
     return ViaConnectionStopArrivalEventListener.createEventListeners(
       contextSegment.viaConnections(),
       createStopArrivalFactory(),
