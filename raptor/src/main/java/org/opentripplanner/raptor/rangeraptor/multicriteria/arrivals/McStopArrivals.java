@@ -66,6 +66,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     return minInt(arrivals[stopIndex].stream(), McStopArrival::arrivalTime);
   }
 
+  /** Slow! do not use during routing! */
   public boolean reachedByTransit(int stopIndex) {
     return (
       arrivals[stopIndex] != null &&

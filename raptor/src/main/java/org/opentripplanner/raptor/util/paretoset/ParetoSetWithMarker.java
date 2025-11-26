@@ -6,7 +6,7 @@ package org.opentripplanner.raptor.util.paretoset;
  *
  * @param <T> the element type
  */
-public class ParetoSetWithMarker<T> extends ParetoSet<T> {
+public final class ParetoSetWithMarker<T> extends ParetoSet<T> {
 
   private int marker = 0;
 
