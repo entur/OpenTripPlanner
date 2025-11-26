@@ -2,13 +2,14 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
 import static org.opentripplanner.raptor.api.model.PathLegType.TRANSIT;
 
+import gnu.trove.map.TIntObjectMap;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalParetoSetComparatorFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
@@ -17,6 +18,7 @@ import org.opentripplanner.raptor.rangeraptor.transit.EgressPaths;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
+import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 
 /**
  * This class serve as a wrapper for all stop arrival pareto set, one set for each stop. It also
@@ -44,7 +46,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
   public McStopArrivals(
     int nStops,
     @Nullable EgressPaths egressPaths,
-    List<ViaConnectionStopArrivalEventListener<T>> viaConnectionListeners,
+    TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> viaConnectionListeners,
     DestinationArrivalPaths<T> paths,
     ArrivalParetoSetComparatorFactory<McStopArrival<T>> comparatorFactory,
     DebugHandlerFactory<T> debugHandlerFactory
@@ -138,13 +140,12 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
   }
 
   private void initViaConnections(
-    List<ViaConnectionStopArrivalEventListener<T>> viaConnectionListeners
+    TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> viaConnectionListeners
   ) {
-    for (ViaConnectionStopArrivalEventListener<T> it : viaConnectionListeners) {
-      int stop = it.fromStop();
+    for (int stop : viaConnectionListeners.keys()) {
       this.arrivals[stop] = StopArrivalParetoSet.of(comparator)
         .withDebugListener(debugHandlerFactory.paretoSetStopArrivalListener(stop))
-        .withNextLegListener(it)
+        .withNextLegListener(viaConnectionListeners.get(stop))
         .build();
     }
   }
