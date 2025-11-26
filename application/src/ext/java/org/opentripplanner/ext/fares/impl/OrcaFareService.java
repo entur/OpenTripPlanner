@@ -341,7 +341,9 @@ public class OrcaFareService extends DefaultFareService {
       case WASHINGTON_STATE_FERRIES -> defaultFare.map(df ->
         getWashingtonStateFerriesFare(route.getLongName(), fareType, df)
       );
-      case SOUND_TRANSIT_BUS -> optionalUSD(3.25f);
+      case KC_METRO, SEATTLE_STREET_CAR, SOUND_TRANSIT_BUS, SOUND_TRANSIT_LINK -> optionalUSD(3.00f);
+      case COMM_TRANS_LOCAL_SWIFT -> optionalUSD(2.50f);
+      case EVERETT_TRANSIT, PIERCE_COUNTY_TRANSIT ->  optionalUSD(2.00f);
       case WHATCOM_LOCAL,
         WHATCOM_CROSS_COUNTY,
         SKAGIT_LOCAL,
@@ -594,12 +596,18 @@ public class OrcaFareService extends DefaultFareService {
         // Generate medium ID for the agency's cash transfer
         var mediumId = "cash";
         var agencyTransferMedium = new FareMedium(new FeedScopedId(FEED_ID, mediumId), mediumId);
+        var agencySpecificFareProduct = FareProduct.of(
+          new FeedScopedId(FEED_ID, mediumId),
+          String.format("%s Cash Transfer", leg.agency().getName()),
+          legFare
+        );
 
         // Look for existing fare products with this medium ID
         var validAgencyFareProducts = validFareProducts
           .stream()
           .map(ExtendedFareOffer::fareOffer)
           .filter(fp -> fp.fareProduct().medium().equals(agencyTransferMedium))
+          .filter(fp -> fp.fareProduct().name().equals(agencySpecificFareProduct.name()))
           .toList();
 
         // Check if we have any valid agency transfer products
@@ -608,11 +616,7 @@ public class OrcaFareService extends DefaultFareService {
         if (!hasValidTransfer) {
           // Create a new fare product for this agency transfer
           var riderCategory = getRiderCategory(fareType);
-          var newFareProduct = FareProduct.of(
-            new FeedScopedId(FEED_ID, mediumId),
-            String.format("%s Cash Transfer", leg.agency().getName()),
-            legFare
-          )
+          var newFareProduct = agencySpecificFareProduct
             .withCategory(riderCategory)
             .withMedium(agencyTransferMedium)
             .build();
