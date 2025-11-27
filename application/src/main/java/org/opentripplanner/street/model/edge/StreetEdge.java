@@ -17,6 +17,7 @@ import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.routing.linking.DisposableEdgeCollection;
 import org.opentripplanner.routing.util.ElevationUtils;
+import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
@@ -47,6 +48,25 @@ public class StreetEdge
   private static final Logger LOG = LoggerFactory.getLogger(StreetEdge.class);
 
   private static final double SAFEST_STREETS_SAFETY_FACTOR = 0.1;
+
+  /**
+   * Slope sensitivity factor for electric-assist vehicles (e-bikes).
+   * This value determines how much of the slope effect is felt by the rider:
+   * - 0.0 = motor fully compensates for slopes (like ELECTRIC)
+   * - 1.0 = no motor assistance on slopes (like HUMAN)
+   * - 0.3 = motor compensates for 70% of slope difficulty, rider feels 30%
+   * <p>
+   * This factor is applied to both speed calculations (how fast you can go uphill)
+   * and work/energy calculations (how much effort uphills require).
+   * <p>
+   * Note: This linear factor is applied to slope-adjusted distances that are computed
+   * non-linearly (steeper slopes have disproportionately higher costs). In reality, e-bike
+   * motors provide relatively more benefit on steeper slopes. However, since accurate motor
+   * curves vary by e-bike model and this is a routing heuristic rather than a physics
+   * simulation, a linear approximation is a reasonable pragmatic choice. The value can be
+   * tuned based on real-world route preference feedback.
+   */
+  private static final double ELECTRIC_ASSIST_SLOPE_SENSITIVITY = 0.3;
 
   /** If you have more than 16 flags, increase flags to short or int */
   static final int BACK_FLAG_INDEX = 0;
@@ -999,7 +1019,7 @@ public class StreetEdge
 
     var traversalCosts =
       switch (traverseMode) {
-        case BICYCLE, SCOOTER -> bicycleOrScooterTraversalCost(request, traverseMode, speed);
+        case BICYCLE, SCOOTER -> bicycleOrScooterTraversalCost(request, traverseMode, speed, s0);
         case WALK -> walkingTraversalCosts(
           request,
           traverseMode,
@@ -1112,9 +1132,16 @@ public class StreetEdge
   private TraversalCosts bicycleOrScooterTraversalCost(
     StreetSearchRequest req,
     TraverseMode mode,
-    double speed
+    double speed,
+    State state
   ) {
-    double time = getEffectiveBikeDistance() / speed;
+    PropulsionType propulsion = state.isRentingVehicle()
+      ? state.rentalVehiclePropulsionType()
+      : null;
+
+    double effectiveTimeDistance = getEffectiveDistanceForPropulsion(propulsion);
+    double time = effectiveTimeDistance / speed;
+
     double weight;
     var optimizeType = mode == TraverseMode.BICYCLE
       ? req.bike().optimizeType()
@@ -1129,12 +1156,12 @@ public class StreetEdge
       }
       case SAFE_STREETS -> weight = getEffectiveBicycleSafetyDistance() / speed;
       case FLAT_STREETS -> /* see notes in StreetVertex on speed overhead */weight =
-        getEffectiveBikeDistanceForWorkCost() / speed;
-      case SHORTEST_DURATION -> weight = getEffectiveBikeDistance() / speed;
+        getEffectiveWorkDistanceForPropulsion(propulsion) / speed;
+      case SHORTEST_DURATION -> weight = effectiveTimeDistance / speed;
       case TRIANGLE -> {
-        double quick = getEffectiveBikeDistance();
+        double quick = effectiveTimeDistance;
         double safety = getEffectiveBicycleSafetyDistance();
-        double slope = getEffectiveBikeDistanceForWorkCost();
+        double slope = getEffectiveWorkDistanceForPropulsion(propulsion);
         var triangle = mode == TraverseMode.BICYCLE
           ? req.bike().optimizeTriangle()
           : req.scooter().optimizeTriangle();
@@ -1146,6 +1173,56 @@ public class StreetEdge
     var reluctance = StreetEdgeReluctanceCalculator.computeReluctance(req, mode, false, isStairs());
     weight *= reluctance;
     return new TraversalCosts(time, weight);
+  }
+
+  /**
+   * Calculate effective distance for time/speed based on propulsion type.
+   *
+   * For ELECTRIC (e-scooters): constant speed, ignore slope
+   * For ELECTRIC_ASSIST (e-bikes): reduced slope sensitivity (motor helps uphill)
+   * For HUMAN and others: full slope effect
+   */
+  private double getEffectiveDistanceForPropulsion(PropulsionType propulsion) {
+    if (propulsion == null) {
+      return getEffectiveBikeDistance();
+    }
+    return switch (propulsion) {
+      case ELECTRIC -> getDistanceMeters();
+      case ELECTRIC_ASSIST -> interpolateSlopeEffect(
+        getEffectiveBikeDistance(),
+        ELECTRIC_ASSIST_SLOPE_SENSITIVITY
+      );
+      default -> getEffectiveBikeDistance();
+    };
+  }
+
+  /**
+   * Calculate effective work distance based on propulsion type.
+   */
+  private double getEffectiveWorkDistanceForPropulsion(PropulsionType propulsion) {
+    if (propulsion == null) {
+      return getEffectiveBikeDistanceForWorkCost();
+    }
+    return switch (propulsion) {
+      case ELECTRIC -> getDistanceMeters();
+      case ELECTRIC_ASSIST -> interpolateSlopeEffect(
+        getEffectiveBikeDistanceForWorkCost(),
+        ELECTRIC_ASSIST_SLOPE_SENSITIVITY
+      );
+      default -> getEffectiveBikeDistanceForWorkCost();
+    };
+  }
+
+  /**
+   * Interpolate between flat distance and slope-adjusted distance.
+   * Formula: flat + (sloped - flat) × sensitivity = flat × (1 - sensitivity) + sloped × sensitivity
+   *
+   * @param slopedDistance the slope-adjusted effective distance
+   * @param slopeSensitivity 0.0 = ignore slope (use flat distance), 1.0 = full slope effect
+   */
+  private double interpolateSlopeEffect(double slopedDistance, double slopeSensitivity) {
+    double flatDistance = getDistanceMeters();
+    return flatDistance + (slopedDistance - flatDistance) * slopeSensitivity;
   }
 
   private TraversalCosts walkingTraversalCosts(
