@@ -5,7 +5,9 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import org.opentripplanner.core.model.id.FeedScopedId;
+import java.time.LocalTime;
 import org.opentripplanner.model.fare.FareProduct;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model.basic.Money;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 
@@ -19,4 +21,15 @@ public interface FareTestConstants {
 
   FeedScopedId LEG_GROUP_A = id("LG-A");
   FeedScopedId LEG_GROUP_B = id("LG-B");
+  Timeframe TIMEFRAME_TWELVE_TO_TWO = Timeframe.of()
+    .withServiceId(FeedScopedIdForTestFactory.id("s1"))
+    .withStart(LocalTime.of(12, 0))
+    .withEnd(LocalTime.of(14, 0))
+    .build();
+
+  Timeframe TIMEFRAME_THREE_TO_FIVE = Timeframe.of()
+    .withServiceId(FeedScopedIdForTestFactory.id("s1"))
+    .withStart(LocalTime.of(15, 0))
+    .withEnd(LocalTime.of(17, 0))
+    .build();
 }

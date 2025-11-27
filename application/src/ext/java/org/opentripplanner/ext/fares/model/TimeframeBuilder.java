@@ -3,23 +3,23 @@ package org.opentripplanner.ext.fares.model;
 import java.time.LocalTime;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 
-public class TimeFrameBuilder {
+public class TimeframeBuilder {
 
   FeedScopedId serviceId;
   LocalTime start = LocalTime.MIN;
   LocalTime end = LocalTime.MAX;
 
-  public TimeFrameBuilder withServiceId(FeedScopedId serviceId) {
+  public TimeframeBuilder withServiceId(FeedScopedId serviceId) {
     this.serviceId = serviceId;
     return this;
   }
 
-  public TimeFrameBuilder withStart(LocalTime start) {
+  public TimeframeBuilder withStart(LocalTime start) {
     this.start = start;
     return this;
   }
 
-  public TimeFrameBuilder withEnd(LocalTime end) {
+  public TimeframeBuilder withEnd(LocalTime end) {
     this.end = end;
     return this;
   }

@@ -232,7 +232,7 @@ class FareLookupService implements Serializable {
       areaMatcher.matchesFromArea(leg.from().stop, rule.fromAreaId()) &&
       areaMatcher.matchesToArea(leg.to().stop, rule.toAreaId()) &&
       DistanceMatcher.matchesDistance(leg, rule) &&
-      timeframeMatcher.matchesTimeframes(leg, rule)
+      TimeframeMatcher.matchesTimeframes(leg, rule)
     );
   }
 

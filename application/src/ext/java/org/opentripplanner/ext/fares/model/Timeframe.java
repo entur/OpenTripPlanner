@@ -12,14 +12,14 @@ public class Timeframe implements Serializable {
   private final LocalTime start;
   private final LocalTime end;
 
-  public Timeframe(TimeFrameBuilder timeFrameBuilder) {
+  public Timeframe(TimeframeBuilder timeFrameBuilder) {
     this.serviceId = requireNonNull(timeFrameBuilder.serviceId);
     this.start = requireNonNull(timeFrameBuilder.start);
     this.end = requireNonNull(timeFrameBuilder.end);
   }
 
-  public static TimeFrameBuilder of() {
-    return new TimeFrameBuilder();
+  public static TimeframeBuilder of() {
+    return new TimeframeBuilder();
   }
 
   public FeedScopedId serviceId() {
