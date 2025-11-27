@@ -327,6 +327,7 @@ public class StreetEdge
       if (editor != null) {
         editor.dropFloatingVehicle(
           s0.vehicleRentalFormFactor(),
+          s0.rentalVehiclePropulsionType(),
           s0.getVehicleRentalNetwork(),
           s0.getRequest().arriveBy()
         );
@@ -343,6 +344,7 @@ public class StreetEdge
       if (editor != null) {
         editor.dropFloatingVehicle(
           s0.vehicleRentalFormFactor(),
+          s0.rentalVehiclePropulsionType(),
           s0.getVehicleRentalNetwork(),
           s0.getRequest().arriveBy()
         );
@@ -372,6 +374,7 @@ public class StreetEdge
       if (afterTraversal != null) {
         afterTraversal.dropFloatingVehicle(
           state.vehicleRentalFormFactor(),
+          state.rentalVehiclePropulsionType(),
           state.getVehicleRentalNetwork(),
           state.getRequest().arriveBy()
         );
@@ -840,7 +843,12 @@ public class StreetEdge
   ) {
     var edit = doTraverse(s0, TraverseMode.WALK, false);
     if (edit != null) {
-      edit.dropFloatingVehicle(s0.vehicleRentalFormFactor(), network, s0.getRequest().arriveBy());
+      edit.dropFloatingVehicle(
+        s0.vehicleRentalFormFactor(),
+        s0.rentalVehiclePropulsionType(),
+        network,
+        s0.getRequest().arriveBy()
+      );
       if (network != null) {
         edit.resetStartedInNoDropOffZone();
       }
