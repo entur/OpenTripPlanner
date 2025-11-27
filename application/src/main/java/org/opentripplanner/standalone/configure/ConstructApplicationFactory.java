@@ -55,6 +55,8 @@ import org.opentripplanner.standalone.config.configure.ConfigModule;
 import org.opentripplanner.standalone.server.MetricsLogging;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.service.StreetLimitationParametersServiceModule;
+import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.configure.TransferServiceModule;
 import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -85,6 +87,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     StopConsolidationServiceModule.class,
     StreetLimitationParametersServiceModule.class,
     TransitModule.class,
+    TransferServiceModule.class,
     VehicleParkingServiceModule.class,
     VehicleRentalRepositoryModule.class,
     VehicleRentalServiceModule.class,
@@ -99,6 +102,7 @@ public interface ConstructApplicationFactory {
   LinkingContextFactory linkingContextFactory();
   VertexLinker vertexLinker();
   TimetableRepository timetableRepository();
+  TransferRepository transferRepository();
   WorldEnvelopeRepository worldEnvelopeRepository();
   WorldEnvelopeService worldEnvelopeService();
   RealtimeVehicleRepository realtimeVehicleRepository();
@@ -163,6 +167,9 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder timetableRepository(TimetableRepository timetableRepository);
+
+    @BindsInstance
+    Builder transferRepository(TransferRepository transferRepository);
 
     @BindsInstance
     Builder graphVisualizer(@Nullable GraphVisualizer graphVisualizer);

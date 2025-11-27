@@ -46,6 +46,7 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.street.StreetRepository;
+import org.opentripplanner.transfer.TransferRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 @Singleton
@@ -109,6 +110,9 @@ public interface GraphBuilderFactory {
 
     @BindsInstance
     Builder timetableRepository(TimetableRepository timetableRepository);
+
+    @BindsInstance
+    Builder transferRepository(TransferRepository transferRepository);
 
     @BindsInstance
     Builder osmInfoGraphBuildRepository(OsmInfoGraphBuildRepository osmInfoGraphBuildRepository);

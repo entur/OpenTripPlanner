@@ -36,6 +36,7 @@ import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.server.DefaultServerRequestContext;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.transfer.TransferService;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.visualizer.GraphVisualizer;
 
@@ -51,6 +52,7 @@ public class ConstructApplicationModule {
     LinkingContextFactory linkingContextFactory,
     VertexLinker vertexLinker,
     TransitService transitService,
+    TransferService transferService,
     WorldEnvelopeService worldEnvelopeService,
     RealtimeVehicleService realtimeVehicleService,
     VehicleRentalService vehicleRentalService,
@@ -91,6 +93,7 @@ public class ConstructApplicationModule {
       rideHailingServices,
       defaultRequest,
       streetLimitationParametersService,
+      transferService,
       transitRoutingConfig,
       transitService,
       triasApiParameters,

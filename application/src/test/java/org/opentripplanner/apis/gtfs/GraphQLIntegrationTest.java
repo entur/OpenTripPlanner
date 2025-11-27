@@ -88,6 +88,7 @@ import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.standalone.config.framework.json.JsonSupport;
 import org.opentripplanner.test.support.FilePatternSource;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.Money;
@@ -438,6 +439,7 @@ class GraphQLIntegrationTest {
     context = new GraphQLRequestContext(
       new TestRoutingService(List.of(i1)),
       transitService,
+      TransferServiceTestFactory.defaultTransferService(),
       new DefaultFareService(),
       defaultVehicleRentalService,
       new DefaultVehicleParkingService(parkingRepository),

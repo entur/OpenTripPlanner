@@ -48,6 +48,7 @@ import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.internal.DefaultStreetRepository;
 import org.opentripplanner.street.model.StreetModelDetails;
+import org.opentripplanner.transfer.TransferRepository;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -101,6 +102,7 @@ public class GraphSerializationTest {
       osmGraphBuildRepository,
       streetRepository,
       model.timetableRepository(),
+      model.transferRepository(),
       weRepo,
       parkingRepository,
       emissionRepository,
@@ -131,6 +133,7 @@ public class GraphSerializationTest {
       osmGraphBuildRepository,
       streetRepository,
       model.timetableRepository(),
+      model.transferRepository(),
       worldEnvelopeRepository,
       parkingRepository,
       emissionRepository,
@@ -237,6 +240,7 @@ public class GraphSerializationTest {
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     StreetRepository streetRepository,
     TimetableRepository originalTimetableRepository,
+    TransferRepository originalTransferRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository vehicleParkingRepository,
     EmissionRepository emissionRepository,
@@ -250,6 +254,7 @@ public class GraphSerializationTest {
       osmInfoGraphBuildRepository,
       streetRepository,
       originalTimetableRepository,
+      originalTransferRepository,
       worldEnvelopeRepository,
       vehicleParkingRepository,
       BuildConfig.DEFAULT,

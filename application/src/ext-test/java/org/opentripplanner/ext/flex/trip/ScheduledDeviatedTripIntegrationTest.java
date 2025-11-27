@@ -29,6 +29,8 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
+import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -46,6 +48,7 @@ class ScheduledDeviatedTripIntegrationTest {
 
   static Graph graph;
   static TimetableRepository timetableRepository;
+  static TransferRepository transferRepository;
 
   float delta = 0.01f;
 
@@ -93,6 +96,7 @@ class ScheduledDeviatedTripIntegrationTest {
     var serverContext = TestServerContext.createServerContext(
       graph,
       timetableRepository,
+      transferRepository,
       new DefaultFareService()
     );
 
@@ -151,6 +155,7 @@ class ScheduledDeviatedTripIntegrationTest {
     TestOtpModel model = FlexIntegrationTestData.cobbFlexGtfs();
     graph = model.graph();
     timetableRepository = model.timetableRepository();
+    transferRepository = TransferServiceTestFactory.defaultTransferRepository();
   }
 
   private static List<Itinerary> getItineraries(

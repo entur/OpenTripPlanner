@@ -47,6 +47,7 @@ import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.test.support.ResourceLoader;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.service.SiteRepository;
@@ -175,9 +176,11 @@ public class ConstantsForTests {
 
       addPortlandVehicleRentals(graph);
 
+      var transferRepository = TransferServiceTestFactory.defaultTransferRepository();
       new DirectTransferGenerator(
         graph,
         timetableRepository,
+        transferRepository,
         DataImportIssueStore.NOOP,
         Duration.ofMinutes(30),
         List.of(RouteRequest.defaultValue())
@@ -185,7 +188,7 @@ public class ConstantsForTests {
 
       graph.index();
 
-      return new TestOtpModel(graph, timetableRepository, fareFactory);
+      return new TestOtpModel(graph, timetableRepository, transferRepository, fareFactory);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -248,8 +251,9 @@ public class ConstantsForTests {
     var siteRepository = new SiteRepository();
     var graph = new Graph();
     var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
+    var transferRepository = TransferServiceTestFactory.defaultTransferRepository();
     addGtfsToGraph(graph, timetableRepository, gtfsFile, fareServiceFactory, null);
-    return new TestOtpModel(graph, timetableRepository, fareServiceFactory);
+    return new TestOtpModel(graph, timetableRepository, transferRepository, fareServiceFactory);
   }
 
   public static TestOtpModel buildNewMinimalNetexGraph() {

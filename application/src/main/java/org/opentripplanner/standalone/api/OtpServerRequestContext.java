@@ -41,6 +41,7 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.transfer.TransferService;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
@@ -95,6 +96,9 @@ public interface OtpServerRequestContext {
    */
   @HttpRequestScoped
   RoutingService routingService();
+
+  @HttpRequestScoped
+  TransferService transferService();
 
   /**
    * Get information on geographical bounding box and center coordinates.

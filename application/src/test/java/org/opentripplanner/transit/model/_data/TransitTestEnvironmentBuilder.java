@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.function.Consumer;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.RouteBuilder;
@@ -34,7 +35,11 @@ public class TransitTestEnvironmentBuilder {
   public TransitTestEnvironment build() {
     var siteRepository = site.build();
     var timetableRepository = timetable.build(siteRepository);
-    return new TransitTestEnvironment(timetableRepository, defaultServiceDate);
+    return new TransitTestEnvironment(
+      timetableRepository,
+      TransferServiceTestFactory.defaultTransferRepository(),
+      defaultServiceDate
+    );
   }
 
   /**

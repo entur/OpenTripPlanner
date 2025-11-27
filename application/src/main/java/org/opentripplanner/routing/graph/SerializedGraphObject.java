@@ -35,6 +35,7 @@ import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.transfer.TransferRepository;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -64,6 +65,7 @@ public class SerializedGraphObject implements Serializable {
   public final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
 
   public final TimetableRepository timetableRepository;
+  public final TransferRepository transferRepository;
   public final WorldEnvelopeRepository worldEnvelopeRepository;
   private final Collection<Edge> edges;
 
@@ -96,6 +98,7 @@ public class SerializedGraphObject implements Serializable {
     @Nullable OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     StreetRepository streetRepository,
     TimetableRepository timetableRepository,
+    TransferRepository transferRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
     VehicleParkingRepository parkingRepository,
     BuildConfig buildConfig,
@@ -111,6 +114,7 @@ public class SerializedGraphObject implements Serializable {
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
     this.streetRepository = streetRepository;
     this.timetableRepository = timetableRepository;
+    this.transferRepository = transferRepository;
     this.worldEnvelopeRepository = worldEnvelopeRepository;
     this.parkingRepository = parkingRepository;
     this.buildConfig = buildConfig;
@@ -205,6 +209,7 @@ public class SerializedGraphObject implements Serializable {
       serObj.reconstructEdgeLists();
       serObj.timetableRepository.getSiteRepository().reindexAfterDeserialization();
       serObj.timetableRepository.index();
+      serObj.transferRepository.index();
       logSerializationCompleteStatus(serObj.graph, serObj.timetableRepository);
       return serObj;
     } catch (IOException e) {
