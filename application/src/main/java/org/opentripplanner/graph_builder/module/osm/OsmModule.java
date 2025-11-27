@@ -502,7 +502,7 @@ public class OsmModule implements GraphBuilderModule {
             way
           );
         } else if (elevatorProcessor.isElevatorWay(way)) {
-          elevatorProcessor.buildElevatorEdgeFromElevatorWay(way);
+          elevatorProcessor.buildElevatorEdgesFromElevatorWay(way);
         } else {
           StreetEdgePair streets = getEdgesForStreet(
             fromVertex,

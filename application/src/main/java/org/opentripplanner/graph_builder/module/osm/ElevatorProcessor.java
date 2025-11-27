@@ -176,7 +176,7 @@ class ElevatorProcessor {
   /**
    * Add way with tag highway=elevator to graph as elevator.
    */
-  public void buildElevatorEdgeFromElevatorWay(OsmWay elevatorWay) {
+  public void buildElevatorEdgesFromElevatorWay(OsmWay elevatorWay) {
     List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(elevatorWay);
     List<Long> nodes = Arrays.stream(elevatorWay.getNodeRefs().toArray())
       .filter(
