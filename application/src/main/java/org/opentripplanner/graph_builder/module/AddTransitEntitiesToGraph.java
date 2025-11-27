@@ -20,7 +20,7 @@ import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
 import org.opentripplanner.street.model.edge.PathwayEdge;
-import org.opentripplanner.street.model.vertex.ElevatorVertex;
+import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.StationElementVertex;
 import org.opentripplanner.street.model.vertex.TransitBoardingAreaVertex;
 import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
@@ -224,7 +224,7 @@ public class AddTransitEntitiesToGraph {
 
   /**
    * Create elevator edges from pathways. As pathway based elevators are not vertices, but edges in
-   * the pathway model, we have to model each possible movement as an ElevatorVertex-StationElementVertex pair,
+   * the pathway model, we have to model each possible movement as an ElevatorHopVertex-StationElementVertex pair,
    * instead of having only one set of vertices per level and edges between them.
    */
   private void createElevatorEdgesAndAddThemToGraph(
@@ -241,17 +241,13 @@ public class AddTransitEntitiesToGraph {
       levels = Math.abs(fromLevel.index() - toLevel.index());
     }
 
-    ElevatorVertex fromOnboardVertex = vertexFactory.elevator(
+    ElevatorHopVertex fromOnboardVertex = vertexFactory.elevator(
       fromVertex,
-      getElevatorLabel(fromVertex, pathway),
-      // TODO this will be removed in the future in another PR
-      fromLevel != null ? fromLevel.index() : 0
+      getElevatorLabel(fromVertex, pathway)
     );
-    ElevatorVertex toOnboardVertex = vertexFactory.elevator(
+    ElevatorHopVertex toOnboardVertex = vertexFactory.elevator(
       toVertex,
-      getElevatorLabel(toVertex, pathway),
-      // TODO this will be removed in the future in another PR
-      toLevel != null ? toLevel.index() : 0
+      getElevatorLabel(toVertex, pathway)
     );
 
     createOneWayElevatorEdges(
@@ -283,8 +279,8 @@ public class AddTransitEntitiesToGraph {
   private void createOneWayElevatorEdges(
     StationElementVertex fromVertex,
     StationElementVertex toVertex,
-    ElevatorVertex fromOnboardVertex,
-    ElevatorVertex toOnboardVertex,
+    ElevatorHopVertex fromOnboardVertex,
+    ElevatorHopVertex toOnboardVertex,
     @Nullable StopLevel fromLevel,
     @Nullable StopLevel toLevel,
     StreetTraversalPermission permission,
