@@ -301,8 +301,6 @@ public class TimetableSnapshot {
    * does not exist yet in the Timetable, add it. This method will make a protective copy of the
    * Timetable if such a copy has not already been made while building up this snapshot, handling
    * both cases where patterns were pre-existing in static data or created by realtime data.
-   *
-   * @return whether the update was actually applied
    */
   public void update(RealTimeTripUpdate realTimeTripUpdate) {
     validateNotReadOnly();
@@ -368,7 +366,7 @@ public class TimetableSnapshot {
   }
 
   public TimetableSnapshot commit(
-    TimetableSnapshotUpdateSucessListener updatesEventListener,
+    @Nullable TimetableSnapshotUpdateListener updatesEventListener,
     boolean force
   ) {
     validateNotReadOnly();

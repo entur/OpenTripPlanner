@@ -19,7 +19,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtr
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Timetable;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshotUpdateSucessListener;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshotUpdateListener;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -38,7 +38,7 @@ import org.slf4j.LoggerFactory;
  * incremental changes are applied to both the TimetableSnapshot and the RaptorTransitData and they are
  * published together.
  */
-public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdateSucessListener {
+public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdateListener {
 
   private static final Logger LOG = LoggerFactory.getLogger(RealTimeRaptorTransitDataUpdater.class);
 
@@ -91,9 +91,6 @@ public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdate
   ///       was for a scheduled trip, then the schedule should be restored.
   /// 3. Remove the `oldTripPatternsForDate` and add the `newTripPatternsForDate` to the
   ///    [RaptorTransitData].
-  ///
-  /// @param updatedTimetables that changed with the current snapshot
-  /// @param timetables which are affected by real-time updates
   @Override
   public void update(
     Collection<Timetable> updatedTimetables,

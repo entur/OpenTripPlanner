@@ -84,7 +84,7 @@ public class TimetableSnapshotTest {
 
     AtomicBoolean updateIsCalled = new AtomicBoolean();
 
-    var updateListener = new TimetableSnapshotUpdateSucessListener() {
+    var updateListener = new TimetableSnapshotUpdateListener() {
       @Override
       public void update(
         Collection<Timetable> updatedTimetables,
