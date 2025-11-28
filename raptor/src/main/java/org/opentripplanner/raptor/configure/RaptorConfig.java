@@ -111,7 +111,7 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
           passThroughPointsService
         ).connectWithNextSegmentArrivals(nextStopArrivals);
         var w = createWorker(ctxSegment, c.state(), c.strategy());
-        worker = RangeRaptorWorkerComposite.of(w, worker);
+        worker = RangeRaptorWorkerComposite.of(c.createPathParetoComparator(), w, worker);
         nextStopArrivals = c.stopArrivals();
       }
     } else {
