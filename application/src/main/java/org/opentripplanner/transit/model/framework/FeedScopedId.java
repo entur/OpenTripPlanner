@@ -90,6 +90,14 @@ public final class FeedScopedId implements Serializable, Comparable<FeedScopedId
     return value != null && value.indexOf(ID_SEPARATOR) > -1;
   }
 
+  public void requireSameFeedId(FeedScopedId other) {
+    if (!feedId.equals(other.feedId)) {
+      throw new IllegalArgumentException(
+        "FeedIds does not match: '" + feedId + "' != '" + other.feedId + "'"
+      );
+    }
+  }
+
   /**
    * Concatenate feedId and id into a string.
    */
