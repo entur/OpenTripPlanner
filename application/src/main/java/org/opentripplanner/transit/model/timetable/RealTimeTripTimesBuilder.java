@@ -69,6 +69,14 @@ public class RealTimeTripTimesBuilder {
     return scheduledTripTimes().getNumStops();
   }
 
+  public boolean isNoData(int index) {
+    return stopRealTimeStates[index] == StopRealTimeState.NO_DATA;
+  }
+
+  public boolean hasNoDelay(int index) {
+    return getArrivalDelay(index) == null && getDepartureDelay(index) == null;
+  }
+
   public int[] arrivalTimes() {
     var result = new int[arrivalTimes.length];
     for (int i = 0; i < arrivalTimes.length; i++) {

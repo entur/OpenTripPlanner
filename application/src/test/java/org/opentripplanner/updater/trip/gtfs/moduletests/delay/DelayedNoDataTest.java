@@ -36,7 +36,5 @@ class DelayedNoDataTest implements RealtimeTestConstants {
     var result = rt.applyTripUpdate(tripUpdate);
 
     assertSuccess(result);
-
   }
-
 }
