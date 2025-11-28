@@ -1,5 +1,6 @@
-package org.opentripplanner.updater.trip.gtfs.moduletests.delay;
+package org.opentripplanner.updater.trip.gtfs.moduletests.propagation;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
@@ -10,15 +11,15 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 
-class DelayedNoDataTest implements RealtimeTestConstants {
-
+class BackwardsEarlynessPropagationTest implements RealtimeTestConstants {
+ 
   private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
   private final RegularStop stopA = envBuilder.stop(STOP_A_ID);
   private final RegularStop stopB = envBuilder.stop(STOP_B_ID);
   private final RegularStop stopC = envBuilder.stop(STOP_C_ID);
 
   @Test
-  void singleStopDelay() {
+  void leadingNoDataWithEarlyArrival() {
     var tripInput = TripInput.of(TRIP_1_ID)
       .addStop(stopA, "10:00", "10:00")
       .addStop(stopB, "10:10", "10:10")
@@ -36,5 +37,9 @@ class DelayedNoDataTest implements RealtimeTestConstants {
     var result = rt.applyTripUpdate(tripUpdate);
 
     assertSuccess(result);
+    assertEquals(
+      "UPDATED | A [ND] 10:00 10:00 | B [ND] 10:09 10:09 | C 10:09 10:09",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
   }
 }
