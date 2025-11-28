@@ -1,10 +1,9 @@
 package org.opentripplanner.updater.trip.gtfs;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.List;
 import java.util.OptionalInt;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -28,10 +27,7 @@ class BackwardsDelayRequiredInterpolatorTest {
   void noPropagation() {
     var builder = SCHEDULED_TRIP_TIMES.createRealTimeWithoutScheduledTimes()
       .withArrivalDelay(0, -3);
-    assertEquals(
-      OptionalInt.empty(),
-      new BackwardsDelayRequiredInterpolator(false).propagateBackwards(builder)
-    );
+    assertThat(new BackwardsDelayRequiredInterpolator(false).propagateBackwards(builder)).isEmpty();
     // nothing after the first given update should be touched, so it should be left null
     assertNull(builder.getDepartureDelay(0));
   }
@@ -165,36 +161,8 @@ class BackwardsDelayRequiredInterpolatorTest {
   }
 
   @Test
-  void precedingNoDataWithEarlyArrival() {
-    int sixMinutesEarly = -6 * 60;
-    var builder = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
-      .withNoData(0)
-      .withNoData(1)
-      .withNoData(2)
-      .withArrivalDelay(3, sixMinutesEarly)
-      .withDepartureDelay(3, sixMinutesEarly);
-
-    assertEquals(
-      OptionalInt.of(3),
-      new BackwardsDelayRequiredInterpolator(true).propagateBackwards(builder)
-    );
-
-    assertEquals(-60, builder.getArrivalDelay(2));
-    assertEquals(-60, builder.getDepartureDelay(2));
-    assertEquals(StopRealTimeState.NO_DATA, builder.getStopRealTimeState(2));
-    List.of(0,1).forEach(i -> {
-      assertEquals(0, builder.getArrivalDelay(i));
-      assertEquals(0, builder.getDepartureDelay(i));
-      assertEquals(StopRealTimeState.NO_DATA, builder.getStopRealTimeState(i));
-    });
-  }
-
-  @Test
   void noUpdatesAtAll() {
     var builder = SCHEDULED_TRIP_TIMES.createRealTimeWithoutScheduledTimes();
-    assertThrows(IllegalArgumentException.class, () ->
-      new BackwardsDelayRequiredInterpolator(false).propagateBackwards(builder)
-    );
+    assertThat(new BackwardsDelayRequiredInterpolator(false).propagateBackwards(builder)).isEmpty();
   }
-
 }

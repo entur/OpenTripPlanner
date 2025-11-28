@@ -12,18 +12,18 @@ import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 
 class BackwardsEarlynessPropagationTest implements RealtimeTestConstants {
- 
+
   private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
   private final RegularStop stopA = envBuilder.stop(STOP_A_ID);
   private final RegularStop stopB = envBuilder.stop(STOP_B_ID);
   private final RegularStop stopC = envBuilder.stop(STOP_C_ID);
+  private final TripInput tripInput = TripInput.of(TRIP_1_ID)
+    .addStop(stopA, "10:00", "10:00")
+    .addStop(stopB, "10:10", "10:10")
+    .addStop(stopC, "10:20", "10:20");
 
   @Test
   void leadingNoDataWithEarlyArrival() {
-    var tripInput = TripInput.of(TRIP_1_ID)
-      .addStop(stopA, "10:00", "10:00")
-      .addStop(stopB, "10:10", "10:10")
-      .addStop(stopC, "10:20", "10:20");
     var env = envBuilder.addTrip(tripInput).build();
     var rt = GtfsRtTestHelper.of(env);
 
@@ -39,6 +39,27 @@ class BackwardsEarlynessPropagationTest implements RealtimeTestConstants {
     assertSuccess(result);
     assertEquals(
       "UPDATED | A [ND] 10:00 10:00 | B [ND] 10:09 10:09 | C 10:09 10:09",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
+
+  @Test
+  void onlyNoDate() {
+    var env = envBuilder.addTrip(tripInput).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addNoDataStop(0)
+      .addNoDataStop(1)
+      .addNoDataStop(2)
+      .build();
+
+    var result = rt.applyTripUpdate(tripUpdate);
+
+    assertSuccess(result);
+    assertEquals(
+      "UPDATED | A [ND] 10:00 10:00 | B [ND] 10:10 10:10 | C [ND] 10:20 10:20",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
