@@ -6,6 +6,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.request.MultiCriteriaRequest;
 import org.opentripplanner.raptor.api.request.RaptorTransitGroupPriorityCalculator;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
@@ -52,6 +53,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private final PathConfig<T> pathConfig;
   private final PassThroughPointsService passThroughPointsService;
   private DestinationArrivalPaths<T> paths;
+  private ParetoComparator<RaptorPath<T>> comparator;
   private McRangeRaptorWorkerState<T> state;
   private Heuristics heuristics;
   private McStopArrivals<T> arrivals;
@@ -133,6 +135,14 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
       );
     }
     return arrivals;
+  }
+
+  public ParetoComparator<RaptorPath<T>> createPathParetoComparator() {
+    if (comparator == null) {
+      var c2Comp = includeC2() ? dominanceFunctionC2() : null;
+      comparator = pathConfig.createPathParetoComparator(resolveCostConfig(), c2Comp);
+    }
+    return comparator;
   }
 
   /* private factory methods */
@@ -217,8 +227,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private DestinationArrivalPaths<T> createDestinationArrivalPaths() {
     if (paths == null) {
-      var c2Comp = includeC2() ? dominanceFunctionC2() : null;
-      paths = pathConfig.createDestArrivalPaths(resolveCostConfig(), c2Comp);
+      paths = pathConfig.createDestArrivalPaths(resolveCostConfig(), createPathParetoComparator());
     }
     return paths;
   }
