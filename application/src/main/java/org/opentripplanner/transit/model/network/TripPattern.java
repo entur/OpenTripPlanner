@@ -142,6 +142,8 @@ public final class TripPattern
 
     this.hopGeometries = builder.hopGeometries();
     this.routingTripPattern = new RoutingTripPattern(this);
+
+    getId().requireSameFeedId(route.getId());
   }
 
   public static TripPatternBuilder of(FeedScopedId id) {
@@ -445,7 +447,7 @@ public final class TripPattern
    */
   public String getFeedId() {
     // The feed id is the same as the agency id on the route, this allows us to obtain it from there.
-    return route.getId().getFeedId();
+    return getId().getFeedId();
   }
 
   public RoutingTripPattern getRoutingTripPattern() {
