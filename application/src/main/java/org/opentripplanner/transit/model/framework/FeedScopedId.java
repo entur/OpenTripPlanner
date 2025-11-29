@@ -93,7 +93,7 @@ public final class FeedScopedId implements Serializable, Comparable<FeedScopedId
   public void requireSameFeedId(FeedScopedId other) {
     if (!feedId.equals(other.feedId)) {
       throw new IllegalArgumentException(
-        "FeedIds does not match: '" + feedId + "' != '" + other.feedId + "'"
+        "FeedIds do not match: '" + feedId + "' != '" + other.feedId + "'"
       );
     }
   }
