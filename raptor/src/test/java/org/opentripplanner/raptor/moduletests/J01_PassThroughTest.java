@@ -20,7 +20,7 @@ import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
-import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.raptor.configure.RaptorTestFactory;
 
 /**
  * FEATURE UNDER TEST
@@ -63,9 +63,7 @@ class J01_PassThroughTest {
 
   private final TestTransitData data = new TestTransitData();
 
-  private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
-    RaptorConfig.defaultConfigForTest()
-  );
+  private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
   private RaptorRequestBuilder<TestTripSchedule> prepareRequest() {
     var builder = data.requestBuilder();
