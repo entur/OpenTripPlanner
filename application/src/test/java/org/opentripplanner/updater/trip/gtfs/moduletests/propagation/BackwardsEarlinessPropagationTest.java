@@ -11,7 +11,7 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 
-class BackwardsEarlynessPropagationTest implements RealtimeTestConstants {
+class BackwardsEarlinessPropagationTest implements RealtimeTestConstants {
 
   private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
   private final RegularStop stopA = envBuilder.stop(STOP_A_ID);
@@ -44,7 +44,7 @@ class BackwardsEarlynessPropagationTest implements RealtimeTestConstants {
   }
 
   @Test
-  void onlyNoDate() {
+  void onlyNoData() {
     var env = envBuilder.addTrip(tripInput).build();
     var rt = GtfsRtTestHelper.of(env);
 

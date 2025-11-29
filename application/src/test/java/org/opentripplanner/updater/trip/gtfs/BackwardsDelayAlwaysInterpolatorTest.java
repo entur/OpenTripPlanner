@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.OptionalInt;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
@@ -27,9 +26,7 @@ class BackwardsDelayAlwaysInterpolatorTest {
   void noPropagation() {
     var builder = SCHEDULED_TRIP_TIMES.createRealTimeWithoutScheduledTimes()
       .withArrivalDelay(0, -3);
-    assertThat(
-      new BackwardsDelayAlwaysInterpolator().propagateBackwards(builder)
-    ).isEmpty();
+    assertThat(new BackwardsDelayAlwaysInterpolator().propagateBackwards(builder)).isEmpty();
     // nothing after the first given update should be touched, so it should be left null
     assertNull(builder.getDepartureDelay(0));
   }

@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.gtfs;
 
 import java.util.OptionalInt;
-import java.util.stream.IntStream;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 
 abstract class AbstractBackwardsDelayInterpolator implements BackwardsDelayInterpolator {
@@ -11,15 +10,15 @@ abstract class AbstractBackwardsDelayInterpolator implements BackwardsDelayInter
    * @return The first stop position with given time if propagation is done.
    */
   public OptionalInt propagateBackwards(RealTimeTripTimesBuilder builder) {
-    var max = builder.numberOfStops();
-    var containsNoUpdates = IntStream.range(0, max).allMatch(
-      i -> builder.hasNoDelay(i) || builder.isNoData(i)
-    );
+    var containsNoUpdates = builder
+      .listStopPositions()
+      .allMatch(i -> builder.hasNoDelay(i) || builder.isNoData(i));
     if (containsNoUpdates) {
       return OptionalInt.empty();
     }
 
     var firstUpdatedIndex = getFirstUpdatedIndex(builder);
+    // if the first stop already has a real-time update, there is nothing to propagate
     if (firstUpdatedIndex == 0) {
       return OptionalInt.empty();
     }

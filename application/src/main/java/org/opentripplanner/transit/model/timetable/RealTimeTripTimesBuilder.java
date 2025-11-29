@@ -4,6 +4,7 @@ import static org.opentripplanner.transit.model.timetable.TimetableValidationErr
 import static org.opentripplanner.transit.model.timetable.TimetableValidationError.ErrorCode.MISSING_DEPARTURE_TIME;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -32,9 +33,9 @@ public class RealTimeTripTimesBuilder {
   private boolean updated;
 
   /**
-   * This constructor take a ScheduledTripTimes (not base TripTimes) to enforce creating a new
+   * This constructor takes a ScheduledTripTimes (not base TripTimes) to enforce creating a new
    * RealTimeTripTimes based on the scheduled info. RT updates are  NOT cumulative and this
-   * enforce copying the scheduled information, not the previous real-time update.
+   * enforces copying the scheduled information, not the previous real-time update.
    * <p>
    * The arrival and departure times are left uninitialized by this constructor, and they need to
    * be set explicitly.
@@ -69,12 +70,26 @@ public class RealTimeTripTimesBuilder {
     return scheduledTripTimes().getNumStops();
   }
 
-  public boolean isNoData(int index) {
-    return stopRealTimeStates[index] == StopRealTimeState.NO_DATA;
+  /**
+   * Returns a stream of the positions of the stops in these trip times (starting at 0). Useful
+   * for iterating over them.
+   */
+  public IntStream listStopPositions() {
+    return IntStream.range(0, numberOfStops());
   }
 
-  public boolean hasNoDelay(int index) {
-    return getArrivalDelay(index) == null && getDepartureDelay(index) == null;
+  /**
+   * Does the real-time update say there there is no data for this stop?
+   */
+  public boolean isNoData(int pos) {
+    return stopRealTimeStates[pos] == StopRealTimeState.NO_DATA;
+  }
+
+  /**
+   * Does this stop have neither real-time arrival nor departure information?
+   */
+  public boolean hasNoDelay(int pos) {
+    return getArrivalDelay(pos) == null && getDepartureDelay(pos) == null;
   }
 
   public int[] arrivalTimes() {
