@@ -24,12 +24,9 @@ import javax.annotation.Nullable;
  *
  * @param <T> the element type
  */
-public final class ParetoSet<T> extends AbstractCollection<T> {
+public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSetWithListener {
 
   private final ParetoComparator<T> comparator;
-
-  @Nullable
-  private final ParetoSetEventListener<? super T> eventListener;
 
   @SuppressWarnings("unchecked")
   private T[] elements = (T[]) new Object[16];
@@ -40,23 +37,15 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
 
   private int marker = 0;
 
-  private ParetoSet(
-    ParetoComparator<T> comparator,
-    @Nullable ParetoSetEventListener<? super T> eventListener
-  ) {
+  protected ParetoSet(ParetoComparator<T> comparator) {
     this.comparator = comparator;
-    this.eventListener = eventListener;
-  }
-
-  private ParetoSet(ParetoComparator<T> comparator) {
-    this(comparator, null);
   }
 
   /**
    * Create a new ParetoSet with a comparator.
    */
   public static <T> ParetoSet<T> of(ParetoComparator<T> comparator) {
-    return of(comparator, null);
+    return new ParetoSet<>(comparator);
   }
 
   /**
@@ -69,10 +58,12 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
     ParetoComparator<T> comparator,
     @Nullable ParetoSetEventListener<? super T> eventListener
   ) {
-    return new ParetoSet<>(comparator, eventListener);
+    return eventListener == null
+      ? of(comparator)
+      : new ParetoSetWithListener<>(comparator, eventListener);
   }
 
-  public T get(int index) {
+  public final T get(int index) {
     return elements[index];
   }
 
@@ -97,11 +88,11 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
   }
   */
 
-  public int size() {
+  public final int size() {
     return size;
   }
 
-  public boolean isEmpty() {
+  public final boolean isEmpty() {
     return size == 0;
   }
 
@@ -111,7 +102,7 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
   }
    */
 
-  public boolean add(T newValue) {
+  public final boolean add(T newValue) {
     if (size == 0) {
       acceptAndAppendValue(newValue);
       return true;
@@ -164,7 +155,7 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
     }
   }*/
 
-  public void clear() {
+  public final void clear() {
     size = 0;
     goodElement = null;
     marker = 0;
@@ -181,7 +172,7 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
    * <p/>
    * Both methods are optimized for performance; hence the add method does not use this method.
    */
-  public boolean qualify(T newValue) {
+  public final boolean qualify(T newValue) {
     if (size == 0) {
       return true;
     }
@@ -243,7 +234,7 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
    * Notify subclasses about reindexing. This method is empty, and only exist for subclasses to
    * override it.
    */
-  private void notifyElementMoved(int fromIndex, int toIndex) {
+  private final void notifyElementMoved(int fromIndex, int toIndex) {
     if (fromIndex == marker) {
       marker = toIndex;
     }
@@ -272,7 +263,7 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
    * is changed the returned values of the iterator also changes. Do not update on this collection
    * while using this iterator.
    */
-  private Iterator<T> tailIterator(final int startInclusive) {
+  private final Iterator<T> tailIterator(final int startInclusive) {
     return new Iterator<>() {
       int i = startInclusive;
 
@@ -292,7 +283,7 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
    * Remove all elements dominated by the {@code newValue} starting from {@code index + 1}. The
    * element at {@code index} is dropped.
    */
-  private void removeDominatedElementsFromRestOfSetAndAddNewElement(
+  private final void removeDominatedElementsFromRestOfSetAndAddNewElement(
     final T newValue,
     final int index
   ) {
@@ -321,62 +312,50 @@ public final class ParetoSet<T> extends AbstractCollection<T> {
     size = i + 1;
   }
 
-  private boolean leftVectorDominatesRightVector(T left, T right) {
+  private final boolean leftVectorDominatesRightVector(T left, T right) {
     return leftDominanceExist(left, right) && !rightDominanceExist(left, right);
   }
 
-  private void acceptAndAppendValue(T newValue) {
+  private final void acceptAndAppendValue(T newValue) {
     notifyElementAccepted(newValue);
     elements[size++] = newValue;
   }
 
-  private void assertEnoughSpaceInSet() {
+  private final void assertEnoughSpaceInSet() {
     if (size == elements.length) {
       elements = Arrays.copyOf(elements, elements.length * 2);
     }
   }
 
-  private boolean leftDominanceExist(T left, T right) {
+  private final boolean leftDominanceExist(T left, T right) {
     return comparator.leftDominanceExist(left, right);
   }
 
-  private boolean rightDominanceExist(T left, T right) {
+  private final boolean rightDominanceExist(T left, T right) {
     return comparator.leftDominanceExist(right, left);
   }
 
-  private void notifyElementAccepted(T newElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementAccepted(newElement);
-    }
-  }
+  protected void notifyElementAccepted(T newElement) {}
 
-  private void notifyElementDropped(T element, T droppedByElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementDropped(element, droppedByElement);
-    }
-  }
+  protected void notifyElementDropped(T element, T droppedByElement) {}
 
-  private void notifyElementRejected(T element, T rejectByElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementRejected(element, rejectByElement);
-    }
-  }
+  protected void notifyElementRejected(T element, T rejectByElement) {}
 
-  public boolean hasElementsAfterMarker() {
+  public final boolean hasElementsAfterMarker() {
     return marker != size();
   }
 
   /**
    * List all elements added after the marker.
    */
-  public Iterable<T> elementsAfterMarker() {
+  public final Iterable<T> elementsAfterMarker() {
     return tail(marker);
   }
 
   /**
    * Move the marker after the last element in the set.
    */
-  public void markAtEndOfSet() {
+  public final void markAtEndOfSet() {
     marker = size();
   }
 }
