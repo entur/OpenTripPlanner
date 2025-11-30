@@ -137,14 +137,14 @@ public final class AccessEgressFunctions {
     ParetoComparator<RaptorAccessEgress> comparator
   ) {
     var mapByStop = groupByStop(paths);
-    var set = new ParetoSet<>(comparator);
+    var set = ParetoSet.of(comparator);
     var result = new ArrayList<RaptorAccessEgress>();
 
     for (int stop : mapByStop.keys()) {
       var list = mapByStop.get(stop);
       set.clear();
       set.addAll(list);
-      result.addAll(set);
+      result.addAll(set.stream().toList());
     }
     return result;
   }

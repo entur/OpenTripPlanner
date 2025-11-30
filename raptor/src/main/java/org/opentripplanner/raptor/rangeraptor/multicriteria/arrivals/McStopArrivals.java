@@ -13,8 +13,8 @@ import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
+import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
-import org.opentripplanner.raptor.util.paretoset.ParetoSetWithMarker;
 
 /**
  * This class serve as a wrapper for all stop arrival pareto set, one set for each stop. It also
@@ -25,7 +25,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetWithMarker;
  */
 public final class McStopArrivals<T extends RaptorTripSchedule> {
 
-  private final ParetoSetWithMarker<McStopArrival<T>>[] arrivals;
+  private final ParetoSet<McStopArrival<T>>[] arrivals;
   private final BitSet touchedStops;
 
   private final DebugHandlerFactory<T> debugHandlerFactory;
@@ -46,14 +46,14 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     DebugHandlerFactory<T> debugHandlerFactory
   ) {
     //noinspection unchecked
-    this.arrivals = (ParetoSetWithMarker<McStopArrival<T>>[]) new ParetoSetWithMarker[nStops];
+    this.arrivals = (ParetoSet<McStopArrival<T>>[]) new ParetoSet[nStops];
     this.touchedStops = new BitSet(nStops);
     this.comparator = comparatorFactory.compareArrivalTimeRoundCostAndOnBoardArrival();
     this.debugHandlerFactory = debugHandlerFactory;
     this.debugStats = new DebugStopArrivalsStatistics(debugHandlerFactory.debugLogger());
 
     for (int stop : arrivalListeners.keys()) {
-      this.arrivals[stop] = new ParetoSetWithMarker<>(comparator, arrivalListeners.get(stop));
+      this.arrivals[stop] = ParetoSet.of(comparator, arrivalListeners.get(stop));
     }
   }
 
@@ -126,9 +126,9 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
 
   /* private methods */
 
-  private ParetoSetWithMarker<McStopArrival<T>> findOrCreateSet(final int stop) {
+  private ParetoSet<McStopArrival<T>> findOrCreateSet(final int stop) {
     if (arrivals[stop] == null) {
-      arrivals[stop] = new ParetoSetWithMarker<>(
+      arrivals[stop] = ParetoSet.of(
         comparator,
         debugHandlerFactory.paretoSetStopArrivalListener(stop)
       );

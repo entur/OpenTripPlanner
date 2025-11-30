@@ -16,7 +16,7 @@ import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.StopArrivalFactoryC1;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c1.PatternRideC1;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
-import org.opentripplanner.raptor.util.paretoset.ParetoSetWithMarker;
+import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 
 public class StopArrivalStateParetoSetTest {
 
@@ -72,8 +72,8 @@ public class StopArrivalStateParetoSetTest {
     ParetoComparator<McStopArrival<RaptorTripSchedule>> comparator =
       COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost();
     return Stream.of(
-      Arguments.of("Stop Arrival - regular", new ParetoSetWithMarker(comparator)),
-      Arguments.of("Stop Arrival - w/egress", new ParetoSetWithMarker(comparator))
+      Arguments.of("Stop Arrival - regular", ParetoSet.of(comparator)),
+      Arguments.of("Stop Arrival - w/egress", ParetoSet.of(comparator))
     );
   }
 
@@ -81,7 +81,7 @@ public class StopArrivalStateParetoSetTest {
   @MethodSource("testCases")
   public void addOneElementToSet(
     String testCaseName,
-    ParetoSetWithMarker<McStopArrival<RaptorTripSchedule>> subject
+    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
   ) {
     subject.add(newAccessStopState(STOP_1, 10, ANY));
     assertStopsInSet(subject, STOP_1);
@@ -91,7 +91,7 @@ public class StopArrivalStateParetoSetTest {
   @MethodSource("testCases")
   public void testTimeDominance(
     String testCaseName,
-    ParetoSetWithMarker<McStopArrival<RaptorTripSchedule>> subject
+    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
   ) {
     subject.add(newAccessStopState(STOP_1, 10, ANY));
     subject.add(newAccessStopState(STOP_2, 9, ANY));
@@ -104,7 +104,7 @@ public class StopArrivalStateParetoSetTest {
   @MethodSource("testCases")
   public void testRoundDominance(
     String testCaseName,
-    ParetoSetWithMarker<McStopArrival<RaptorTripSchedule>> subject
+    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
   ) {
     subject.add(newTransferStopState(ROUND_1, STOP_1, 10, ANY));
     subject.add(newTransferStopState(ROUND_2, STOP_2, 10, ANY));
@@ -115,7 +115,7 @@ public class StopArrivalStateParetoSetTest {
   @MethodSource("testCases")
   public void testCostDominance(
     String testCaseName,
-    ParetoSetWithMarker<McStopArrival<RaptorTripSchedule>> subject
+    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
   ) {
     subject.add(newTransferStopState(ROUND_1, STOP_1, ANY, 20));
     subject.add(newTransferStopState(ROUND_1, STOP_2, ANY, 10));
@@ -126,7 +126,7 @@ public class StopArrivalStateParetoSetTest {
   @MethodSource("testCases")
   public void testRoundAndTimeDominance(
     String testCaseName,
-    ParetoSetWithMarker<McStopArrival<RaptorTripSchedule>> subject
+    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
   ) {
     subject.add(newTransferStopState(ROUND_1, STOP_1, 10, ANY));
     subject.add(newTransferStopState(ROUND_1, STOP_2, 8, ANY));
@@ -159,7 +159,7 @@ public class StopArrivalStateParetoSetTest {
   public void testTransitAndTransferDoesNotAffectDominance() {
     ParetoComparator<McStopArrival<RaptorTripSchedule>> comparator =
       COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost();
-    var subject = new ParetoSetWithMarker(comparator);
+    var subject = ParetoSet.of(comparator);
     subject.add(newAccessStopState(STOP_1, 20, ANY));
     subject.add(newTransitStopState(ROUND_1, STOP_2, 10, ANY));
     subject.add(newTransferStopState(ROUND_1, STOP_4, 8, ANY));
@@ -174,9 +174,7 @@ public class StopArrivalStateParetoSetTest {
    */
   @Test
   public void testTransitAndTransferDoesAffectDominanceForStopArrivalsWithEgress() {
-    var subject = new ParetoSetWithMarker(
-      COMPARATOR_FACTORY.compareArrivalTimeRoundCostAndOnBoardArrival()
-    );
+    var subject = ParetoSet.of(COMPARATOR_FACTORY.compareArrivalTimeRoundCostAndOnBoardArrival());
     subject.add(newAccessStopState(STOP_1, 20, ANY));
     subject.add(newTransitStopState(ROUND_1, STOP_2, 10, ANY));
     subject.add(newTransferStopState(ROUND_1, STOP_4, 8, ANY));
@@ -229,7 +227,7 @@ public class StopArrivalStateParetoSetTest {
   }
 
   private void assertStopsInSet(
-    ParetoSetWithMarker<McStopArrival<RaptorTripSchedule>> subject,
+    ParetoSet<McStopArrival<RaptorTripSchedule>> subject,
     int... expStopIndexes
   ) {
     int[] result = subject.stream().mapToInt(McStopArrival::stop).sorted().toArray();
