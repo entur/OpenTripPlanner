@@ -24,7 +24,7 @@ import javax.annotation.Nullable;
  *
  * @param <T> the element type
  */
-public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSetWithMarker {
+public final class ParetoSet<T> extends AbstractCollection<T> {
 
   private final ParetoComparator<T> comparator;
 
@@ -38,13 +38,9 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
 
   private T goodElement = null;
 
-  /**
-   * Create a new ParetoSet with a comparator and a drop event listener.
-   *
-   * @param comparator    The comparator to use with this set
-   * @param eventListener At most one listener can be registered to listen for drop events.
-   */
-  public ParetoSet(
+  private int marker = 0;
+
+  private ParetoSet(
     ParetoComparator<T> comparator,
     @Nullable ParetoSetEventListener<? super T> eventListener
   ) {
@@ -52,11 +48,28 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     this.eventListener = eventListener;
   }
 
+  private ParetoSet(ParetoComparator<T> comparator) {
+    this(comparator, null);
+  }
+
   /**
    * Create a new ParetoSet with a comparator.
    */
-  public ParetoSet(ParetoComparator<T> comparator) {
-    this(comparator, null);
+  public static <T> ParetoSet<T> of(ParetoComparator<T> comparator) {
+    return of(comparator, null);
+  }
+
+  /**
+   * Create a new ParetoSet with a comparator and a drop event listener.
+   *
+   * @param comparator    The comparator to use with this set
+   * @param eventListener At most one listener can be registered to listen for drop events.
+   */
+  public static <T> ParetoSet<T> of(
+    ParetoComparator<T> comparator,
+    @Nullable ParetoSetEventListener<? super T> eventListener
+  ) {
+    return new ParetoSet<>(comparator, eventListener);
   }
 
   public T get(int index) {
@@ -69,17 +82,35 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
    * This is NOT thread-safe and the behavior is undefined if the collection is modified during the
    * iteration.
    */
-  @Override
   public final Iterator<T> iterator() {
     return tailIterator(0);
   }
 
-  @Override
+  /*
+  public final Iterable iterable() {
+    return new Iterable() {
+      @Override
+      public Iterator iterator() {
+        return iterator();
+      }
+    };
+  }
+  */
+
   public int size() {
     return size;
   }
 
-  @Override
+  public boolean isEmpty() {
+    return size == 0;
+  }
+
+  /*
+  public Stream<T> stream() {
+    return Arrays.stream(elements, 0, size);
+  }
+   */
+
   public boolean add(T newValue) {
     if (size == 0) {
       acceptAndAppendValue(newValue);
@@ -126,15 +157,17 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     return false;
   }
 
-  @Override
-  public boolean remove(Object o) {
-    throw new UnsupportedOperationException();
-  }
+  /*
+  public void addAll(Collection<T> elements) {
+    for (T element : elements) {
+      add(element);
+    }
+  }*/
 
-  @Override
   public void clear() {
     size = 0;
     goodElement = null;
+    marker = 0;
   }
 
   @Override
@@ -210,8 +243,10 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
    * Notify subclasses about reindexing. This method is empty, and only exist for subclasses to
    * override it.
    */
-  protected void notifyElementMoved(int fromIndex, int toIndex) {
-    // Noop
+  private void notifyElementMoved(int fromIndex, int toIndex) {
+    if (fromIndex == marker) {
+      marker = toIndex;
+    }
   }
 
   /**
@@ -325,5 +360,23 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     if (eventListener != null) {
       eventListener.notifyElementRejected(element, rejectByElement);
     }
+  }
+
+  public boolean hasElementsAfterMarker() {
+    return marker != size();
+  }
+
+  /**
+   * List all elements added after the marker.
+   */
+  public Iterable<T> elementsAfterMarker() {
+    return tail(marker);
+  }
+
+  /**
+   * Move the marker after the last element in the set.
+   */
+  public void markAtEndOfSet() {
+    marker = size();
   }
 }

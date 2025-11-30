@@ -222,7 +222,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private <R extends PatternRide<T>> ParetoSet<R> createPatternRideParetoSet(
     ParetoComparator<R> comparator
   ) {
-    return new ParetoSet<>(comparator, context().debugFactory().paretoSetPatternRideListener());
+    return ParetoSet.of(comparator, context().debugFactory().paretoSetPatternRideListener());
   }
 
   private DestinationArrivalPaths<T> createDestinationArrivalPaths() {

@@ -18,7 +18,7 @@ public class RouterResultPathAggregator<T extends RaptorTripSchedule>
     Collection<RaptorRouterResult<T>> results,
     ParetoComparator<RaptorPath<T>> comparator
   ) {
-    this.paths = new ParetoSet<>(comparator);
+    this.paths = ParetoSet.of(comparator);
     RaptorRouterResult<T> first = null;
     for (var it : results) {
       if (first == null) {
@@ -31,7 +31,7 @@ public class RouterResultPathAggregator<T extends RaptorTripSchedule>
 
   @Override
   public Collection<RaptorPath<T>> extractPaths() {
-    return paths;
+    return paths.stream().toList();
   }
 
   @Override
