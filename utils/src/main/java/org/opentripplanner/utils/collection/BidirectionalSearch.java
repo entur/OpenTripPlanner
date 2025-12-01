@@ -26,7 +26,7 @@ public class BidirectionalSearch {
    *
    * @param startIndex the index to start searching from; if not within bounds, the method
    *                   returns empty. If the {@code startIndex} is out of bound, the start
-   *                   posission is adjusted to the closest posiossion inside the search
+   *                   position is adjusted to the closest position inside the search
    *                   range.
    * @param lowerBound the lower bound of the search range (inclusive)
    * @param upperBound the upper bound of the search range (exclusive)
