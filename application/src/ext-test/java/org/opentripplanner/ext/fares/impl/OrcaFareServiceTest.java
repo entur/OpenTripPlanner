@@ -485,10 +485,10 @@ public class OrcaFareServiceTest {
       getLeg(KITSAP_TRANSIT_AGENCY_ID, 132)
     );
     calculateFare(rides, regular, usDollars(8.5f).plus(DEFAULT_TEST_RIDE_PRICE));
-    calculateFare(rides, FareType.senior, usDollars(3.00f));
+    calculateFare(rides, FareType.senior, usDollars(4.00f));
     calculateFare(rides, FareType.youth, Money.ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
-    calculateFare(rides, FareType.electronicRegular, DEFAULT_TEST_RIDE_PRICE.times(2));
+    calculateFare(rides, FareType.electronicRegular, usDollars(3f).plus(DEFAULT_TEST_RIDE_PRICE));
     calculateFare(rides, FareType.electronicSenior, usDollars(2.00f)); // Transfer extended by CT ride
     calculateFare(rides, FareType.electronicYouth, ZERO_USD);
   }
