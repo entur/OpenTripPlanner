@@ -6,8 +6,8 @@ package org.opentripplanner.model.plan.leg;
 public enum ViaLocationType {
   /**
    * The location is visited physically by boarding or alighting a transit trip at a given stop, or
-   * by traveling via requested coordinate location as part of a access, transfer or egress leg.
-   * Intermediate stops visited on-board do not count.
+   * by traveling via requested coordinate location as part of a access, transfer, egress or direct
+   * segment. Intermediate stops visited on-board do not count.
    */
   VISIT,
   /**

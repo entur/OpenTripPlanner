@@ -796,7 +796,7 @@ type Leg {
   """
   interlineWithPreviousLeg: Boolean
   "Whether the destination of this leg (field `to`) is one of the intermediate places specified in the query."
-  intermediatePlace: Boolean @deprecated(reason : "Not implemented")
+  intermediatePlace: Boolean @deprecated(reason : "Not implemented. Use `viaLocationType` from from/to fields instead.")
   """
   For transit legs, intermediate stops between the Place where the leg
   originates and the Place where the leg ends. For non-transit legs, null.
@@ -3936,8 +3936,8 @@ enum ViaLocationType {
   PASS_THROUGH
   """
   The location is visited physically by boarding or alighting a transit trip at a given stop, or by
-  traveling via requested coordinate location as part of a access, transfer or egress leg.
-  Intermediate stops visited on-board do not count.
+  traveling via requested coordinate location as part of a access, transfer, egress or direct
+  segment. Intermediate stops visited on-board do not count.
   """
   VISIT
 }
