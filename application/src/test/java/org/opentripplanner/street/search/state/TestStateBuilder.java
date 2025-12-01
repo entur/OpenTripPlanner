@@ -121,11 +121,7 @@ public class TestStateBuilder {
     var to = StreetModelForTest.intersectionVertex(count, count);
 
     var edge = StreetModelForTest.streetEdge(from, to);
-    var states = edge.traverse(currentState);
-    if (states.length != 1) {
-      throw new IllegalStateException("Only single state transitions are supported.");
-    }
-    currentState = states[0];
+    currentState = requireSingleState(edge.traverse(currentState));
     return this;
   }
 
@@ -142,11 +138,7 @@ public class TestStateBuilder {
       .withName(name)
       .buildAndConnect();
 
-    var states = edge.traverse(currentState);
-    if (states.length != 1) {
-      throw new IllegalStateException("Only single state transitions are supported.");
-    }
-    currentState = states[0];
+    currentState = requireSingleState(edge.traverse(currentState));
     return this;
   }
 
@@ -165,11 +157,7 @@ public class TestStateBuilder {
       true
     ).buildAndConnect();
 
-    var states = edge.traverse(currentState);
-    if (states.length != 1) {
-      throw new IllegalStateException("Only single state transitions are supported.");
-    }
-    currentState = states[0];
+    currentState = requireSingleState(edge.traverse(currentState));
     return this;
   }
 
@@ -182,11 +170,7 @@ public class TestStateBuilder {
     var to = StreetModelForTest.intersectionVertex(count, count);
     var edge = StreetModelForTest.escalatorEdge(from, to, 30, null);
 
-    var states = edge.traverse(currentState);
-    if (states.length != 1) {
-      throw new IllegalStateException("Only single state transitions are supported.");
-    }
-    currentState = states[0];
+    currentState = requireSingleState(edge.traverse(currentState));
     return this;
   }
 
@@ -195,11 +179,7 @@ public class TestStateBuilder {
     var from = (StreetVertex) currentState.vertex;
     var to = StreetModelForTest.intersectionVertex(count, count);
     var area = StreetModelForTest.areaEdge(from, to, name, StreetTraversalPermission.PEDESTRIAN);
-    var states = area.traverse(currentState);
-    if (states.length != 1) {
-      throw new IllegalStateException("Only single state transitions are supported.");
-    }
-    currentState = states[0];
+    currentState = requireSingleState(area.traverse(currentState));
     return this;
   }
 
@@ -359,11 +339,7 @@ public class TestStateBuilder {
     } else {
       edge = StreetTransitStopLink.createStreetTransitStopLink(from, to);
     }
-    var states = edge.traverse(currentState);
-    if (states.length != 1) {
-      throw new IllegalStateException("Only single state transitions are supported.");
-    }
-    currentState = states[0];
+    currentState = requireSingleState(edge.traverse(currentState));
     return this;
   }
 
@@ -404,6 +380,13 @@ public class TestStateBuilder {
     currentState = linkBack.traverse(currentState)[0];
 
     return this;
+  }
+
+  private State requireSingleState(State[] states) {
+    if (states.length != 1) {
+      throw new IllegalStateException("Only single state transitions are supported.");
+    }
+    return states[0];
   }
 
   public State build() {
