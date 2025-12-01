@@ -105,12 +105,14 @@ public class OsmModule implements GraphBuilderModule {
     Collection<OsmProvider> providers,
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
+    StreetDetailsRepository streetDetailsRepository,
     StreetRepository streetRepository,
     VehicleParkingRepository vehicleParkingRepository
   ) {
     return new OsmModuleBuilder(
       providers,
       graph,
+      streetDetailsRepository,
       streetRepository,
       osmInfoGraphBuildRepository,
       vehicleParkingRepository
@@ -121,6 +123,7 @@ public class OsmModule implements GraphBuilderModule {
     OsmProvider provider,
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
+    StreetDetailsRepository streetDetailsRepository,
     StreetRepository streetRepository,
     VehicleParkingRepository vehicleParkingRepository
   ) {
@@ -128,6 +131,7 @@ public class OsmModule implements GraphBuilderModule {
       List.of(provider),
       graph,
       osmInfoGraphBuildRepository,
+      streetDetailsRepository,
       streetRepository,
       vehicleParkingRepository
     );

@@ -10,7 +10,6 @@ import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.model.StreetConstants;
@@ -23,9 +22,9 @@ public class OsmModuleBuilder {
   private final Collection<OsmProvider> providers;
   private final Graph graph;
   private final VehicleParkingRepository parkingRepository;
+  private final StreetDetailsRepository streetDetailsRepository;
   private final StreetRepository streetRepository;
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
-  private StreetDetailsRepository streetDetailsRepository = new DefaultStreetDetailsRepository();
 
   private Set<String> boardingAreaRefTags = Set.of();
   private DataImportIssueStore issueStore = DataImportIssueStore.NOOP;
@@ -41,12 +40,14 @@ public class OsmModuleBuilder {
   public OsmModuleBuilder(
     Collection<OsmProvider> providers,
     Graph graph,
+    StreetDetailsRepository streetDetailsRepository,
     StreetRepository streetRepository,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
     VehicleParkingRepository parkingRepository
   ) {
     this.providers = providers;
     this.graph = graph;
+    this.streetDetailsRepository = streetDetailsRepository;
     this.streetRepository = streetRepository;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
     this.parkingRepository = parkingRepository;
@@ -99,13 +100,6 @@ public class OsmModuleBuilder {
 
   public OsmModuleBuilder withIncludeOsmSubwayEntrances(boolean includeOsmSubwayEntrances) {
     this.includeOsmSubwayEntrances = includeOsmSubwayEntrances;
-    return this;
-  }
-
-  public OsmModuleBuilder withStreetDetailsRepository(
-    StreetDetailsRepository streetDetailsRepository
-  ) {
-    this.streetDetailsRepository = streetDetailsRepository;
     return this;
   }
 

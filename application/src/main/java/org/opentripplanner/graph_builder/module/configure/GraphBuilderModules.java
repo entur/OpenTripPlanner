@@ -92,6 +92,7 @@ public class GraphBuilderModules {
       providers,
       graph,
       osmInfoGraphBuildRepository,
+      streetDetailsRepository,
       streetRepository,
       vehicleParkingRepository
     )
@@ -101,7 +102,6 @@ public class GraphBuilderModules {
       .withStaticParkAndRide(config.staticParkAndRide)
       .withStaticBikeParkAndRide(config.staticBikeParkAndRide)
       .withIncludeInclinedEdgeLevelInfo(config.includeInclinedEdgeLevelInfo)
-      .withStreetDetailsRepository(streetDetailsRepository)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
       .withIncludeOsmSubwayEntrances(config.osmDefaults.includeOsmSubwayEntrances())

@@ -49,8 +49,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       // The build config field that needs to bet set for inclined edge level info to be stored.
       .withIncludeInclinedEdgeLevelInfo(true)
       .build()
@@ -85,8 +85,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       // The build config field that needs to bet set for inclined edge level info to be stored.
       .withIncludeInclinedEdgeLevelInfo(false)
       .build()
@@ -110,8 +110,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       .build()
       .buildGraph();
 
@@ -137,8 +137,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       .build()
       .buildGraph();
 
@@ -164,8 +164,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       .build()
       .buildGraph();
 
@@ -185,8 +185,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       .build()
       .buildGraph();
 
@@ -209,8 +209,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       .build()
       .buildGraph();
 
@@ -232,8 +232,8 @@ public class EdgeLevelInfoTest {
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .builder()
       .withStreetDetailsRepository(streetDetailsRepository)
+      .builder()
       .build()
       .buildGraph();
 
