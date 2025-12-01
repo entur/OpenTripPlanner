@@ -17,7 +17,7 @@ public class NoopInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelInfo
   public void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,
-    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional,
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo,
     OsmWay way
   ) {}
 }

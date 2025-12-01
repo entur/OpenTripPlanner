@@ -110,14 +110,9 @@ public class DefaultInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelI
   public void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,
-    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional,
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo,
     OsmWay way
   ) {
-    if (inclinedEdgeLevelInfoOptional.isEmpty()) {
-      return;
-    }
-
-    InclinedEdgeLevelInfo inclinedEdgeLevelInfo = inclinedEdgeLevelInfoOptional.get();
     Edge edge = forwardEdge != null ? forwardEdge : backwardEdge;
     if (edge != null && inclinedEdgeLevelInfo.canBeAppliedToEdge(edge)) {
       if (forwardEdge != null) {

@@ -16,10 +16,10 @@ public interface InclinedEdgeLevelInfoProcessor {
 
   public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmWay way);
 
-  public void storeLevelInfoForEdge(
+  void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
     @Nullable Edge backwardEdge,
-    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional,
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo,
     OsmWay way
   );
 }

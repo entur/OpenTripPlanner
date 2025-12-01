@@ -494,12 +494,14 @@ public class OsmModule implements GraphBuilderModule {
             fromVertex,
             toVertex
           );
-          inclinedEdgeLevelInfoProcessor.storeLevelInfoForEdge(
-            escalatorEdgePair.main(),
-            escalatorEdgePair.back(),
-            inclinedEdgeLevelInfoOptional,
-            way
-          );
+          if (inclinedEdgeLevelInfoOptional.isPresent()) {
+            inclinedEdgeLevelInfoProcessor.storeLevelInfoForEdge(
+              escalatorEdgePair.main(),
+              escalatorEdgePair.back(),
+              inclinedEdgeLevelInfoOptional.get(),
+              way
+            );
+          }
         } else if (elevatorProcessor.isElevatorWay(way)) {
           elevatorProcessor.buildElevatorEdgesFromElevatorWay(way);
         } else {
@@ -531,11 +533,11 @@ public class OsmModule implements GraphBuilderModule {
             }
           });
 
-          if (way.isStairs()) {
+          if (way.isStairs() && inclinedEdgeLevelInfoOptional.isPresent()) {
             inclinedEdgeLevelInfoProcessor.storeLevelInfoForEdge(
               street,
               backStreet,
-              inclinedEdgeLevelInfoOptional,
+              inclinedEdgeLevelInfoOptional.get(),
               way
             );
           }
