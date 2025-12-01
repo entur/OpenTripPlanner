@@ -347,7 +347,7 @@ public class OsmModule implements GraphBuilderModule {
     LOG.info(progress.startMessage());
     var escalatorProcessor = new EscalatorProcessor(issueStore);
     var inclinedEdgeLevelInfoProcessor = params.includeInclinedEdgeLevelInfo()
-      ? new DefaultInclinedEdgeLevelInfoProcessor(issueStore, streetDetailsRepository)
+      ? new DefaultInclinedEdgeLevelInfoProcessor(issueStore, streetDetailsRepository, osmdb)
       : new NoopInclinedEdgeLevelInfoProcessor();
 
     WAY: for (OsmWay way : osmdb.getWays()) {
@@ -414,7 +414,6 @@ public class OsmModule implements GraphBuilderModule {
 
       var platformOptional = getPlatform(osmdb, way);
       var inclinedEdgeLevelInfoOptional = inclinedEdgeLevelInfoProcessor.findInclinedEdgeLevelInfo(
-        osmdb,
         way
       );
 

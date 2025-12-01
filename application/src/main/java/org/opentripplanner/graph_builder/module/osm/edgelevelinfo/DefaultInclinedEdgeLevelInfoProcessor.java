@@ -19,23 +19,26 @@ public class DefaultInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelI
 
   private final DataImportIssueStore issueStore;
   private final StreetDetailsRepository streetDetailsRepository;
+  private final OsmDatabase osmdb;
 
   public DefaultInclinedEdgeLevelInfoProcessor(
     DataImportIssueStore issueStore,
-    StreetDetailsRepository streetDetailsRepository
+    StreetDetailsRepository streetDetailsRepository,
+    OsmDatabase osmdb
   ) {
     this.issueStore = issueStore;
     this.streetDetailsRepository = streetDetailsRepository;
+    this.osmdb = osmdb;
   }
 
   @Override
-  public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmDatabase osmdb, OsmWay way) {
+  public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmWay way) {
     var nodeRefs = way.getNodeRefs();
     long firstNodeRef = nodeRefs.get(0);
     long lastNodeRef = nodeRefs.get(nodeRefs.size() - 1);
 
-    InclinedEdgeLevelInfo levelInfo = findLevelInfo(osmdb, way, firstNodeRef, lastNodeRef);
-    InclinedEdgeLevelInfo inclineInfo = findInclineInfo(osmdb, way, firstNodeRef, lastNodeRef);
+    InclinedEdgeLevelInfo levelInfo = findLevelInfo(way, firstNodeRef, lastNodeRef);
+    InclinedEdgeLevelInfo inclineInfo = findInclineInfo(way, firstNodeRef, lastNodeRef);
 
     if (
       levelInfo != null &&
@@ -54,12 +57,7 @@ public class DefaultInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelI
     return Optional.empty();
   }
 
-  private InclinedEdgeLevelInfo findLevelInfo(
-    OsmDatabase osmdb,
-    OsmWay way,
-    long firstNodeRef,
-    long lastNodeRef
-  ) {
+  private InclinedEdgeLevelInfo findLevelInfo(OsmWay way, long firstNodeRef, long lastNodeRef) {
     List<OsmLevel> levels = osmdb.getLevelsForEntity(way);
     // This check also filters out the default level because the list size is 1 when the default
     // level is used.
@@ -93,12 +91,7 @@ public class DefaultInclinedEdgeLevelInfoProcessor implements InclinedEdgeLevelI
     return null;
   }
 
-  private InclinedEdgeLevelInfo findInclineInfo(
-    OsmDatabase osmdb,
-    OsmWay way,
-    long firstNodeRef,
-    long lastNodeRef
-  ) {
+  private InclinedEdgeLevelInfo findInclineInfo(OsmWay way, long firstNodeRef, long lastNodeRef) {
     if (way.isInclineUp()) {
       return new InclinedEdgeLevelInfo(
         new VertexLevelInfo(null, firstNodeRef),
