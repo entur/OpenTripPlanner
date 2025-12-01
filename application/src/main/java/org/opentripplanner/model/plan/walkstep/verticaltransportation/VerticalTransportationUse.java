@@ -10,12 +10,8 @@ import org.opentripplanner.service.streetdetails.model.Level;
 public abstract sealed class VerticalTransportationUse
   permits ElevatorUse, EscalatorUse, StairsUse {
 
-  @Nullable
   private final Level from;
-
-  @Nullable
   private final Level to;
-
   private final VerticalDirection verticalDirection;
 
   public VerticalTransportationUse(
@@ -28,10 +24,22 @@ public abstract sealed class VerticalTransportationUse
     this.verticalDirection = verticalDirection;
   }
 
+  /**
+   * Can be null when no valid level info was found. This is the case, for example, when level
+   * information for an elevator is not set in OSM and OTP uses the default level, or when level
+   * info is not in the correct format for inclined edges.
+   */
+  @Nullable
   public Level from() {
     return this.from;
   }
 
+  /**
+   * Can be null when no valid level info was found. This is the case, for example, when level
+   * information for an elevator is not set in OSM and OTP uses the default level, or when level
+   * info is not in the correct format for inclined edges.
+   */
+  @Nullable
   public Level to() {
     return this.to;
   }
