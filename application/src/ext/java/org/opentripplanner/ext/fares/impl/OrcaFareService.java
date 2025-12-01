@@ -341,9 +341,11 @@ public class OrcaFareService extends DefaultFareService {
       case WASHINGTON_STATE_FERRIES -> defaultFare.map(df ->
         getWashingtonStateFerriesFare(route.getLongName(), fareType, df)
       );
-      case KC_METRO, SEATTLE_STREET_CAR, SOUND_TRANSIT_BUS, SOUND_TRANSIT_LINK -> optionalUSD(3.00f);
+      case KC_METRO, SEATTLE_STREET_CAR, SOUND_TRANSIT_BUS, SOUND_TRANSIT_LINK -> optionalUSD(
+        3.00f
+      );
       case COMM_TRANS_LOCAL_SWIFT -> optionalUSD(2.50f);
-      case EVERETT_TRANSIT, PIERCE_COUNTY_TRANSIT ->  optionalUSD(2.00f);
+      case EVERETT_TRANSIT, PIERCE_COUNTY_TRANSIT -> optionalUSD(2.00f);
       case WHATCOM_LOCAL,
         WHATCOM_CROSS_COUNTY,
         SKAGIT_LOCAL,
