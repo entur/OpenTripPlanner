@@ -10,9 +10,7 @@ abstract class AbstractBackwardsDelayInterpolator implements BackwardsDelayInter
    * @return The first stop position with given time if propagation is done.
    */
   public OptionalInt propagateBackwards(RealTimeTripTimesBuilder builder) {
-    var containsNoUpdates = builder
-      .listStopPositions()
-      .allMatch(i -> builder.hasNoDelay(i) || builder.isNoData(i));
+    var containsNoUpdates = builder.listStopPositions().allMatch(builder::containsNoRealTimeTimes);
     if (containsNoUpdates) {
       return OptionalInt.empty();
     }
@@ -28,7 +26,7 @@ abstract class AbstractBackwardsDelayInterpolator implements BackwardsDelayInter
 
   protected int getFirstUpdatedIndex(RealTimeTripTimesBuilder builder) {
     var firstUpdatedIndex = 0;
-    while (builder.isNoData(firstUpdatedIndex) || builder.hasNoDelay(firstUpdatedIndex)) {
+    while (builder.containsNoRealTimeTimes(firstUpdatedIndex)) {
       ++firstUpdatedIndex;
       if (firstUpdatedIndex == builder.numberOfStops()) {
         throw new IllegalArgumentException(

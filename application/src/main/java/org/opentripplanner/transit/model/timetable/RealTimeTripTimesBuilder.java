@@ -52,6 +52,18 @@ public class RealTimeTripTimesBuilder {
     Arrays.fill(occupancyStatus, OccupancyStatus.NO_DATA_AVAILABLE);
   }
 
+  /**
+   * Does this stop have any usable real-time update on the departure or arrival time? Stops with
+   * NO_DATA or CANCELLED, for example, do not.
+   */
+  public boolean containsNoRealTimeTimes(int i) {
+    return (
+      stopRealTimeStates[i] == StopRealTimeState.NO_DATA ||
+      stopRealTimeStates[i] == StopRealTimeState.CANCELLED ||
+      (getArrivalDelay(i) == null && getDepartureDelay(i) == null)
+    );
+  }
+
   static RealTimeTripTimesBuilder fromScheduledTimes(ScheduledTripTimes tripTimes) {
     var instance = new RealTimeTripTimesBuilder(tripTimes);
     instance.copyMissingTimesFromScheduledTimetable();
@@ -76,20 +88,6 @@ public class RealTimeTripTimesBuilder {
    */
   public IntStream listStopPositions() {
     return IntStream.range(0, numberOfStops());
-  }
-
-  /**
-   * Does the real-time update say there there is no data for this stop?
-   */
-  public boolean isNoData(int pos) {
-    return stopRealTimeStates[pos] == StopRealTimeState.NO_DATA;
-  }
-
-  /**
-   * Does this stop have neither real-time arrival nor departure information?
-   */
-  public boolean hasNoDelay(int pos) {
-    return getArrivalDelay(pos) == null && getDepartureDelay(pos) == null;
   }
 
   public int[] arrivalTimes() {

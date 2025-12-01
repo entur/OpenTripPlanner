@@ -3,11 +3,11 @@ package org.opentripplanner.updater.trip.gtfs;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.opentripplanner.transit.model.timetable.StopRealTimeState.CANCELLED;
 import static org.opentripplanner.transit.model.timetable.StopRealTimeState.DEFAULT;
 import static org.opentripplanner.transit.model.timetable.StopRealTimeState.NO_DATA;
 
 import java.util.List;
-import java.util.OptionalInt;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -45,7 +45,7 @@ class NoDataBackwardsEarlinessInterpolatorTest {
       .withArrivalDelay(3, SIX_MINUTES_EARLY)
       .withDepartureDelay(3, SIX_MINUTES_EARLY);
 
-    assertEquals(OptionalInt.of(3), interpolator.propagateBackwards(builder));
+    assertThat(interpolator.propagateBackwards(builder)).hasValue(3);
 
     assertEquals(-60, builder.getArrivalDelay(2));
     assertEquals(-60, builder.getDepartureDelay(2));
@@ -109,6 +109,27 @@ class NoDataBackwardsEarlinessInterpolatorTest {
     assertThat(builder.stopRealTimeStates())
       .asList()
       .containsExactly(NO_DATA, NO_DATA, NO_DATA, NO_DATA, DEFAULT);
+
+    assertNotNull(builder.build());
+  }
+
+  @ParameterizedTest
+  @MethodSource("allInterpolators")
+  void leadingNoDataAndCancelledWithEarlyArrival(BackwardsDelayInterpolator interpolator) {
+    var builder = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
+      .withNoData(0)
+      .withCanceled(1)
+      .withNoData(2)
+      .withArrivalDelay(3, SIX_MINUTES_EARLY)
+      .withDepartureDelay(3, SIX_MINUTES_EARLY);
+
+    assertThat(interpolator.propagateBackwards(builder)).hasValue(3);
+
+    assertEquals(NO_DATA, builder.getStopRealTimeState(2));
+
+    assertThat(builder.stopRealTimeStates())
+      .asList()
+      .containsExactly(NO_DATA, CANCELLED, NO_DATA, DEFAULT, DEFAULT);
 
     assertNotNull(builder.build());
   }
