@@ -1,7 +1,5 @@
 package org.opentripplanner.ext.stopconsolidation;
 
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
-
 import java.util.List;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
@@ -39,7 +37,7 @@ class TestStopConsolidationModel {
     .withId(new FeedScopedId(SECONDARY_FEED_ID, "secondary-stop-D"))
     .build();
 
-  static final TripPattern PATTERN = TripPattern.of(id("123"))
+  static final TripPattern PATTERN = TripPattern.of(new FeedScopedId(SECONDARY_FEED_ID, "123"))
     .withRoute(ROUTE)
     .withStopPattern(STOP_PATTERN)
     .build();

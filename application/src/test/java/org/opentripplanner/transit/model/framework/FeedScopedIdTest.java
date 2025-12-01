@@ -55,6 +55,14 @@ class FeedScopedIdTest {
   }
 
   @Test
+  void requireSameFeedId() {
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      new FeedScopedId("F", "1").requireSameFeedId(new FeedScopedId("E", "1"))
+    );
+    assertEquals("FeedIds do not match: 'F' != 'E'", ex.getMessage());
+  }
+
+  @Test
   void throwWhenParsingNull() {
     var input = new ArrayList<String>();
     input.add(null);

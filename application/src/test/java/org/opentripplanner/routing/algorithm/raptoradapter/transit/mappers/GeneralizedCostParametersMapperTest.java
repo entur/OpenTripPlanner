@@ -46,7 +46,9 @@ class GeneralizedCostParametersMapperTest {
 
     BitSet unpreferredPatterns = GeneralizedCostParametersMapper.map(
       routingRequest,
-      data.getPatterns()
+      data.getPatterns(),
+      p -> p.route().getId(),
+      p -> p.route().getAgency().getId()
     ).unpreferredPatterns();
 
     for (var pattern : data.getPatterns()) {
@@ -67,7 +69,12 @@ class GeneralizedCostParametersMapperTest {
 
     assertEquals(
       new BitSet(),
-      GeneralizedCostParametersMapper.map(routingRequest, data.getPatterns()).unpreferredPatterns()
+      GeneralizedCostParametersMapper.map(
+        routingRequest,
+        data.getPatterns(),
+        p -> p.route().getId(),
+        p -> p.route().getAgency().getId()
+      ).unpreferredPatterns()
     );
   }
 

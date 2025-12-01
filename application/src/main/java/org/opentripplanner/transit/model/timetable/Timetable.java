@@ -1,4 +1,4 @@
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.timetable;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -9,10 +9,6 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.Direction;
-import org.opentripplanner.transit.model.timetable.FrequencyEntry;
-import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.TripTimes;
 
 /**
  * A Timetable is a TripTimes (stop-level details like arrival and departure times) for each of the

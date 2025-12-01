@@ -30,7 +30,7 @@ import org.opentripplanner.utils.lang.StringUtils;
  * by its service id and can be looked up with
  * {@link org.opentripplanner.model.calendar.CalendarService}.
  * <p>Trips that follow the same sequence of stops are grouped under a {@link org.opentripplanner.transit.model.network.TripPattern}
- * via a {@link org.opentripplanner.model.Timetable}
+ * via a {@link Timetable}
  * <p>A Trip is equivalent to the TransModel concept of SERVICE JOURNEY.
  */
 public final class Trip extends AbstractTransitEntity<Trip, TripBuilder> implements LogInfo {
