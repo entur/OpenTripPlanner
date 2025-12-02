@@ -148,7 +148,8 @@ public class StreetSearchRequestMapper {
         rental.arrivingInRentalVehicleAtDestinationCost()
       )
       .withBannedNetworks(rental.bannedNetworks())
-      .withAllowedNetworks(rental.allowedNetworks());
+      .withAllowedNetworks(rental.allowedNetworks())
+      .withElectricAssistSlopeSensitivity(rental.electricAssistSlopeSensitivity());
   }
 
   private static void mapParking(ParkingRequest.Builder b, VehicleParkingPreferences pref) {

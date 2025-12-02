@@ -49,25 +49,6 @@ public class StreetEdge
 
   private static final double SAFEST_STREETS_SAFETY_FACTOR = 0.1;
 
-  /**
-   * Slope sensitivity factor for electric-assist vehicles (e-bikes).
-   * This value determines how much of the slope effect is felt by the rider:
-   * - 0.0 = motor fully compensates for slopes (like ELECTRIC)
-   * - 1.0 = no motor assistance on slopes (like HUMAN)
-   * - 0.3 = motor compensates for 70% of slope difficulty, rider feels 30%
-   * <p>
-   * This factor is applied to both speed calculations (how fast you can go uphill)
-   * and work/energy calculations (how much effort uphills require).
-   * <p>
-   * Note: This linear factor is applied to slope-adjusted distances that are computed
-   * non-linearly (steeper slopes have disproportionately higher costs). In reality, e-bike
-   * motors provide relatively more benefit on steeper slopes. However, since accurate motor
-   * curves vary by e-bike model and this is a routing heuristic rather than a physics
-   * simulation, a linear approximation is a reasonable pragmatic choice. The value can be
-   * tuned based on real-world route preference feedback.
-   */
-  private static final double ELECTRIC_ASSIST_SLOPE_SENSITIVITY = 0.3;
-
   /** If you have more than 16 flags, increase flags to short or int */
   static final int BACK_FLAG_INDEX = 0;
   static final int ROUNDABOUT_FLAG_INDEX = 1;
@@ -1139,7 +1120,14 @@ public class StreetEdge
       ? state.rentalVehiclePropulsionType()
       : null;
 
-    double effectiveTimeDistance = getEffectiveDistanceForPropulsion(propulsion);
+    double electricAssistSlopeSensitivity = mode == TraverseMode.BICYCLE
+      ? req.bike().rental().electricAssistSlopeSensitivity()
+      : req.scooter().rental().electricAssistSlopeSensitivity();
+
+    double effectiveTimeDistance = getEffectiveDistanceForPropulsion(
+      propulsion,
+      electricAssistSlopeSensitivity
+    );
     double time = effectiveTimeDistance / speed;
 
     double weight;
@@ -1156,12 +1144,15 @@ public class StreetEdge
       }
       case SAFE_STREETS -> weight = getEffectiveBicycleSafetyDistance() / speed;
       case FLAT_STREETS -> /* see notes in StreetVertex on speed overhead */weight =
-        getEffectiveWorkDistanceForPropulsion(propulsion) / speed;
+        getEffectiveWorkDistanceForPropulsion(propulsion, electricAssistSlopeSensitivity) / speed;
       case SHORTEST_DURATION -> weight = effectiveTimeDistance / speed;
       case TRIANGLE -> {
         double quick = effectiveTimeDistance;
         double safety = getEffectiveBicycleSafetyDistance();
-        double slope = getEffectiveWorkDistanceForPropulsion(propulsion);
+        double slope = getEffectiveWorkDistanceForPropulsion(
+          propulsion,
+          electricAssistSlopeSensitivity
+        );
         var triangle = mode == TraverseMode.BICYCLE
           ? req.bike().optimizeTriangle()
           : req.scooter().optimizeTriangle();
@@ -1182,7 +1173,10 @@ public class StreetEdge
    * For ELECTRIC_ASSIST (e-bikes): reduced slope sensitivity (motor helps uphill)
    * For HUMAN and others: full slope effect
    */
-  private double getEffectiveDistanceForPropulsion(PropulsionType propulsion) {
+  private double getEffectiveDistanceForPropulsion(
+    PropulsionType propulsion,
+    double electricAssistSlopeSensitivity
+  ) {
     if (propulsion == null) {
       return getEffectiveBikeDistance();
     }
@@ -1190,7 +1184,7 @@ public class StreetEdge
       case ELECTRIC -> getDistanceMeters();
       case ELECTRIC_ASSIST -> interpolateSlopeEffect(
         getEffectiveBikeDistance(),
-        ELECTRIC_ASSIST_SLOPE_SENSITIVITY
+        electricAssistSlopeSensitivity
       );
       default -> getEffectiveBikeDistance();
     };
@@ -1199,7 +1193,10 @@ public class StreetEdge
   /**
    * Calculate effective work distance based on propulsion type.
    */
-  private double getEffectiveWorkDistanceForPropulsion(PropulsionType propulsion) {
+  private double getEffectiveWorkDistanceForPropulsion(
+    PropulsionType propulsion,
+    double electricAssistSlopeSensitivity
+  ) {
     if (propulsion == null) {
       return getEffectiveBikeDistanceForWorkCost();
     }
@@ -1207,7 +1204,7 @@ public class StreetEdge
       case ELECTRIC -> getDistanceMeters();
       case ELECTRIC_ASSIST -> interpolateSlopeEffect(
         getEffectiveBikeDistanceForWorkCost(),
-        ELECTRIC_ASSIST_SLOPE_SENSITIVITY
+        electricAssistSlopeSensitivity
       );
       default -> getEffectiveBikeDistanceForWorkCost();
     };
