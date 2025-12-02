@@ -105,7 +105,7 @@ public class TripPatternTest {
     var stopPattern = builder.build();
     var route = TimetableRepositoryForTest.route("R1").build();
 
-    return TripPattern.of(new FeedScopedId("Test", "T1"))
+    return TripPattern.of(new FeedScopedId(route.getId().getFeedId(), "T1"))
       .withRoute(route)
       .withStopPattern(stopPattern)
       .withOriginalTripPattern(originalTripPattern)
