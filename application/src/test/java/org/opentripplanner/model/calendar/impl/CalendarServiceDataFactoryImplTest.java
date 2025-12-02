@@ -132,7 +132,9 @@ public class CalendarServiceDataFactoryImplTest {
 
     // Supplement test data with at least one entity in all collections
     builder.getCalendarDates().add(removeMondayFromAlldays());
-    builder.getFeedInfos().add(FeedInfoTestFactory.dummyForTest(TimetableRepositoryForTest.FEED_ID));
+    builder
+      .getFeedInfos()
+      .add(FeedInfoTestFactory.dummyForTest(TimetableRepositoryForTest.FEED_ID));
 
     return ctxBuilder.build();
   }
