@@ -9,7 +9,7 @@ import org.opentripplanner.raptor.rangeraptor.transit.ViaConnections;
 
 /**
  * A search can be split into one or more segments with a via point between each segment. The
- * {@code parent} search context will have a list of contexts for each segments. The access and
+ * {@code parent} search context will have a list of contexts, one for each segment. The access and
  * egress paths are injected into the appropriate segment based on the number-of-via-points they
  * contains {@link RaptorAccessEgress#numberOfViaLocationsVisited()}. Tf the access and egress is
  * not visiting any via locations, then the first segment will have all {@code accessPaths}
@@ -39,23 +39,23 @@ public class SearchContextViaSegments<T extends RaptorTripSchedule> {
   }
 
   /**
-   * The parent search context this leg is part of.
+   * The parent search context this segment is part of.
    */
   public SearchContext<T> parent() {
     return parent;
   }
 
   /**
-   * The set of access paths to be used to board this leg. This method returns an empty
-   * set of access-paths if the leg is not the first leg. Hence, it is null-safe.
+   * The set of access paths to be used to board this segment. This method returns an empty
+   * set of access-paths. Hence, it is null-safe.
    */
   public AccessPaths accessPaths() {
     return accessPaths;
   }
 
   /**
-   * The via connections for the via-location this leg ends with. This is {@code null} if this
-   * leg is the last leg.
+   * The via connections for the via-location this segment ends with. This is {@code null} if this
+   * segment is the last segment.
    */
   @Nullable
   public ViaConnections viaConnections() {
@@ -63,7 +63,7 @@ public class SearchContextViaSegments<T extends RaptorTripSchedule> {
   }
 
   /**
-   * The egress path for search. Non-null if and only if this is the last leg.
+   * The set of egress paths to go stright to the destination for given the segemnt.
    */
   @Nullable
   public EgressPaths egressPaths() {

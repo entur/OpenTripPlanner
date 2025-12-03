@@ -119,10 +119,12 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
         nextStopArrivals = c.stopArrivals();
       }
     } else {
-      // The first leg is the only leg
-      var leg = context.segments().getFirst();
-      var c = new McRangeRaptorConfig<>(leg, passThroughPointsService).withHeuristics(heuristics);
-      worker = createWorker(leg, c.state(), c.strategy());
+      // The first segment is the only segment
+      var segment = context.segments().getFirst();
+      var c = new McRangeRaptorConfig<>(segment, passThroughPointsService).withHeuristics(
+        heuristics
+      );
+      worker = createWorker(segment, c.state(), c.strategy());
     }
     return createRangeRaptor(context, worker);
   }
