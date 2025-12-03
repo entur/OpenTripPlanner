@@ -53,7 +53,6 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add Transmodel `carpool` streetMode [#7084](https://github.com/opentripplanner/OpenTripPlanner/pull/7084)
 - Add information to GraphQL schemas about if a place in an itinerary is a via location [#7090](https://github.com/opentripplanner/OpenTripPlanner/pull/7090)
 - Fix NeTEx graph builder crash on duplicate StopPointInJourneyPattern [#7092](https://github.com/opentripplanner/OpenTripPlanner/pull/7092)
-- Move test code to test-fixtures [#7100](https://github.com/opentripplanner/OpenTripPlanner/pull/7100)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
