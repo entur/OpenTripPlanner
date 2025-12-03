@@ -34,7 +34,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
   private final boolean stopReachedOnBoard;
   private final boolean free;
   private final int openFrom;
-  private final int openTo;
+  private final int openUntil;
   private final boolean closed;
   private final int timePenalty;
 
@@ -45,7 +45,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     this.stopReachedOnBoard = builder.stopReachedOnBoard;
     this.free = builder.free;
     this.openFrom = builder.openFrom;
-    this.openTo = builder.openTo;
+    this.openUntil = builder.openUntil;
     this.closed = builder.closed;
     this.timePenalty = builder.timePenalty;
     this.c1 = builder.c1;
@@ -57,7 +57,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     }
     if (closed) {
       RaptorConstants.assertTimeNotSet(openFrom);
-      RaptorConstants.assertTimeNotSet(openTo);
+      RaptorConstants.assertTimeNotSet(openUntil);
     }
     assertTrue(numberOfRides >= 0);
   }
@@ -215,7 +215,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
 
     int days = Math.floorDiv(requestedDepartureTime, SECONDS_IN_A_DAY);
     int specificOpenFrom = days * SECONDS_IN_A_DAY + openFrom;
-    int specificOpenTo = days * SECONDS_IN_A_DAY + openTo;
+    int specificOpenTo = days * SECONDS_IN_A_DAY + openUntil;
 
     if (requestedDepartureTime < specificOpenFrom) {
       return specificOpenFrom;
@@ -239,7 +239,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     int requestedDepartureTime = requestedArrivalTime - durationInSeconds();
     int days = Math.floorDiv(requestedDepartureTime, SECONDS_IN_A_DAY);
     int specificOpenFrom = days * SECONDS_IN_A_DAY + openFrom;
-    int specificOpenTo = days * SECONDS_IN_A_DAY + openTo;
+    int specificOpenTo = days * SECONDS_IN_A_DAY + openUntil;
     int closeAtArrival = specificOpenTo + durationInSeconds();
 
     if (requestedDepartureTime < specificOpenFrom) {
@@ -253,7 +253,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
 
   @Override
   public boolean hasOpeningHours() {
-    return closed || (isTimeSet(openTo) && isTimeSet(openTo));
+    return closed || (isTimeSet(openFrom) && isTimeSet(openUntil));
   }
 
   @Override
@@ -285,7 +285,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       stopReachedOnBoard == that.stopReachedOnBoard &&
       timePenalty == that.timePenalty &&
       closed == that.closed &&
-      openTo == that.openTo &&
+      openUntil == that.openUntil &&
       openFrom == that.openFrom
     );
   }
@@ -300,7 +300,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       stopReachedOnBoard,
       timePenalty,
       closed,
-      openTo,
+      openUntil,
       openFrom
     );
   }
@@ -322,7 +322,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     int numberOfRides = DEFAULT_NUMBER_OF_RIDES;
     boolean stopReachedOnBoard = STOP_REACHED_ON_FOOT;
     int openFrom = RaptorConstants.TIME_NOT_SET;
-    int openTo = RaptorConstants.TIME_NOT_SET;
+    int openUntil = RaptorConstants.TIME_NOT_SET;
     private boolean free = false;
     private boolean closed = false;
     private int timePenalty = RaptorConstants.TIME_NOT_SET;
@@ -341,7 +341,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       this.c1 = original.c1;
       this.numberOfRides = original.numberOfRides;
       this.openFrom = original.openFrom;
-      this.openTo = original.openTo;
+      this.openUntil = original.openUntil;
       this.closed = original.closed;
       this.timePenalty = original.timePenalty;
     }
@@ -353,7 +353,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       this.free = data.isFree();
       this.closed = data.isClosed();
       this.openFrom = data.openFrom();
-      this.openTo = data.openTo();
+      this.openUntil = data.openTo();
 
       for (RaptorValue field : data.fields()) {
         switch (field.type()) {
@@ -397,25 +397,25 @@ public class TestAccessEgress implements RaptorAccessEgress {
       return this;
     }
 
-    Builder withOpeningHours(int opening, int closing) {
-      if (opening > closing) {
+    Builder withOpeningHours(int openFrom, int openUntil) {
+      if (openFrom > openUntil) {
         throw new IllegalStateException(
           "Must open before is close. Opens at " +
-          TimeUtils.timeToStrCompact(opening) +
+          TimeUtils.timeToStrCompact(openFrom) +
           " and close at " +
-          TimeUtils.timeToStrCompact(closing) +
+          TimeUtils.timeToStrCompact(openUntil) +
           "."
         );
       }
       this.closed = false;
-      this.openFrom = opening;
-      this.openTo = closing;
+      this.openFrom = openFrom;
+      this.openUntil = openUntil;
       return this;
     }
 
     Builder withClosed() {
       this.openFrom = RaptorConstants.TIME_NOT_SET;
-      this.openTo = RaptorConstants.TIME_NOT_SET;
+      this.openUntil = RaptorConstants.TIME_NOT_SET;
       this.closed = true;
       return this;
     }
