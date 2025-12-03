@@ -244,9 +244,9 @@ public class TestTransitData
   /// 10:05 11:05
   /// 11:05 12:05
   ///```
-  public TestTransitData withTimetables(String routeTimetable) {
+  public TestTransitData withTimetables(String routeTimetables) {
     int routeIndex = 0;
-    for (String timetable : routeTimetable.split("\s*--.*\n")) {
+    for (String timetable : routeTimetables.split("\s*--.*\n")) {
       if (!timetable.isBlank()) {
         var firstLine = timetable.lines().findFirst().orElseThrow();
         if (ROUTE_NAME_PATTERN.matcher(firstLine.trim()).matches()) {
