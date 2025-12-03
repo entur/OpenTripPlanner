@@ -5,11 +5,13 @@ import static org.opentripplanner.raptor.api.request.Optimization.PARALLEL;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.time.Instant;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.model.GeneralizedCostRelaxFunction;
@@ -34,6 +36,7 @@ import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.routing.api.request.via.VisitViaLocation;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.grouppriority.DefaultTransitGroupPriorityCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +44,7 @@ import org.slf4j.LoggerFactory;
 public class RaptorRequestMapper<T extends RaptorTripSchedule> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RaptorRequestMapper.class);
+  private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
   private final RouteRequest request;
   private final Collection<? extends RaptorAccessEgress> accessPaths;
@@ -186,8 +190,8 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       var debugLogger = new SystemErrDebugLogger(true, false);
 
       debug
-        .withStops(raptorDebugging.stops())
-        .withPath(raptorDebugging.path())
+        .withStops(mapDebugStopList(raptorDebugging.stops()))
+        .withPath(mapDebugStopList(raptorDebugging.path()))
         .withDebugPathFromStopIndex(raptorDebugging.debugPathFromStopIndex())
         .withLogger(debugLogger);
 
@@ -317,5 +321,22 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       case PATTERN_RIDES -> target.withPatternRideDebugListener(logger::patternRideLister);
       case DESTINATION_ARRIVALS -> target.withPathFilteringListener(logger::pathFilteringListener);
     }
+  }
+
+  private List<Integer> mapDebugStopList(List<String> stops) {
+    List<Integer> result = new ArrayList<>();
+    for (String stop : stops) {
+      try {
+        result.add(Integer.parseInt(stop));
+      } catch (NumberFormatException ignore) {
+        var a = lookUpStopIndex.lookupStopLocationIndexes(FeedScopedId.parse(stop)).toArray();
+        if (a.length != 1) {
+          LOG.error("Unable to parse the input stop id: '" + stop + "'");
+          return List.of();
+        }
+        result.add(a[0]);
+      }
+    }
+    return result;
   }
 }
