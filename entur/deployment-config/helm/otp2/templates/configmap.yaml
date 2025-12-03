@@ -215,11 +215,10 @@ data:
           {
             "type": "siri-et-carpooling-updater",
             "frequency": "20s",
-            "url":  "https://api.dev.entur.io/realtime/v1/services/ENT?SIRI_VERSION=2.1",
+            "url":  "{{ .Values.configuration.siriETCarpoolingUpdater }}",
             "feedId": "EN",
             "timeout": "10s",
-            "blockReadinessUntilInitialized": true,
-            "fuzzyTripMatching": true
+            "blockReadinessUntilInitialized": true
           },
      {{- end }}
     {{- if .Values.configuration.siriETPubsubUpdater.enabled }}

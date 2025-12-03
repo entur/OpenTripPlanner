@@ -51,7 +51,7 @@ proxy:
 # Realtime-updaters use internal service instead of external (Apigee) to avoid inexplicable timeouts
 configuration:
   apiProcessingTimeout: "7s"
-  carpooling: false
+  carpooling: true
   emission: true
   empiricalDelay: true
   flexRouting: true
@@ -61,6 +61,7 @@ configuration:
   optimizeTransfers: true
   parallelRouting: false
   siriETUpdater: http://anshar.dev.entur.internal/anshar/services
+  siriETCarpoolingUpdater: http://subula.dev.entur.internal/siri/et
   siriETPubsubUpdater:
     enabled: true
     topicProjectName: ent-anshar-dev
