@@ -19,10 +19,9 @@ and in the [transferRequests in build-config.json](BuildConfiguration.md#transfe
 | arriveBy                                                                                                     |        `boolean`       | Whether the trip should depart or arrive at the specified date and time.                                                                                 | *Optional* | `false`          |  2.0  |
 | [boardSlack](#rd_boardSlack)                                                                                 |       `duration`       | The time safety margin when boarding a vehicle.                                                                                                          | *Optional* | `"PT0S"`         |  2.0  |
 | [drivingDirection](#rd_drivingDirection)                                                                     |         `enum`         | The driving direction to use in the intersection traversal calculation                                                                                   | *Optional* | `"right"`        |  2.2  |
-| elevatorBoardCost                                                                                            |        `integer`       | What is the cost of boarding a elevator?                                                                                                                 | *Optional* | `90`             |  2.0  |
 | elevatorBoardTime                                                                                            |        `integer`       | How long does it take to get on an elevator, on average.                                                                                                 | *Optional* | `90`             |  2.0  |
-| elevatorHopCost                                                                                              |        `integer`       | What is the cost of travelling one floor on an elevator?                                                                                                 | *Optional* | `20`             |  2.0  |
 | elevatorHopTime                                                                                              |        `integer`       | How long does it take to advance one floor on an elevator?                                                                                               | *Optional* | `20`             |  2.0  |
+| elevatorReluctance                                                                                           |        `double`        | A multiplier to specify how bad using an elevator is.                                                                                                    | *Optional* | `2.0`            |  2.0  |
 | geoidElevation                                                                                               |        `boolean`       | If true, the Graph's ellipsoidToGeoidDifference is applied to all elevations returned by this query.                                                     | *Optional* | `false`          |  2.0  |
 | ignoreRealtimeUpdates                                                                                        |        `boolean`       | When true, real-time updates are ignored during this search.                                                                                             | *Optional* | `false`          |  2.0  |
 | [intersectionTraversalModel](#rd_intersectionTraversalModel)                                                 |         `enum`         | The model that computes the costs of turns.                                                                                                              | *Optional* | `"simple"`       |  2.2  |
@@ -1190,9 +1189,8 @@ include stairs as a last result.
     "transferPenalty" : 0,
     "turnReluctance" : 1.0,
     "elevatorBoardTime" : 90,
-    "elevatorBoardCost" : 90,
     "elevatorHopTime" : 20,
-    "elevatorHopCost" : 20,
+    "elevatorReluctance" : 2.0,
     "bicycle" : {
       "speed" : 5,
       "reluctance" : 5.0,

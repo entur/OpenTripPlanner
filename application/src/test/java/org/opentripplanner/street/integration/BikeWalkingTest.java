@@ -254,8 +254,8 @@ public class BikeWalkingTest extends GraphRoutingTest {
       Q,
       "null - 0 / 0.0 - null",
       "WALK - 10 / 20.0 - CD street",
-      "WALK - 90 / 90.0 - Elevator",
-      "WALK - 20 / 20.0 - null",
+      "WALK - 90 / 180.0 - Elevator",
+      "WALK - 20 / 40.0 - null",
       "WALK - 0 / 1.0 - 1"
     );
   }
@@ -270,8 +270,8 @@ public class BikeWalkingTest extends GraphRoutingTest {
       Q,
       "null - 0 / 0.0 - null",
       "🚲WALK - 20 / 100.0 - CD street",
-      "🚲WALK - 90 / 90.0 - Elevator",
-      "🚲WALK - 20 / 20.0 - null",
+      "🚲WALK - 90 / 180.0 - Elevator",
+      "🚲WALK - 20 / 40.0 - null",
       "🚲WALK - 0 / 1.0 - 1"
     );
   }
@@ -285,15 +285,15 @@ public class BikeWalkingTest extends GraphRoutingTest {
       List.of(
         "null - 0 / 0.0 - null",
         "BICYCLE - 5 / 10.0 - CD street",
-        "🚲WALK - 190 / 1090.0 - Elevator",
-        "🚲WALK - 20 / 20.0 - null",
+        "🚲WALK - 190 / 1180.0 - Elevator",
+        "🚲WALK - 20 / 40.0 - null",
         "🚲WALK - 0 / 1.0 - 1"
       ),
       List.of(
         "null - 0 / 0.0 - null",
         "BICYCLE - 105 / 1010.0 - CD street",
-        "🚲WALK - 90 / 90.0 - Elevator",
-        "🚲WALK - 20 / 20.0 - null",
+        "🚲WALK - 90 / 180.0 - Elevator",
+        "🚲WALK - 20 / 40.0 - null",
         "🚲WALK - 0 / 1.0 - 1"
       )
     );

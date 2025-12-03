@@ -8,21 +8,14 @@ import org.junit.jupiter.api.Test;
 
 class ElevatorPreferencesTest {
 
-  public static final int BOARD_COST = 100;
   public static final int BOARD_TIME = 60;
-  public static final int HOP_COST = 200;
   public static final int HOP_TIME = 120;
+  public static final double RELUCTANCE = 2.5;
   private final ElevatorPreferences subject = ElevatorPreferences.of()
-    .withBoardCost(BOARD_COST)
     .withBoardTime(BOARD_TIME)
-    .withHopCost(HOP_COST)
     .withHopTime(HOP_TIME)
+    .withReluctance(RELUCTANCE)
     .build();
-
-  @Test
-  void boardCost() {
-    assertEquals(BOARD_COST, subject.boardCost());
-  }
 
   @Test
   void boardTime() {
@@ -30,13 +23,13 @@ class ElevatorPreferencesTest {
   }
 
   @Test
-  void hopCost() {
-    assertEquals(HOP_COST, subject.hopCost());
+  void hopTime() {
+    assertEquals(HOP_TIME, subject.hopTime());
   }
 
   @Test
-  void hopTime() {
-    assertEquals(HOP_TIME, subject.hopTime());
+  void reluctance() {
+    assertEquals(RELUCTANCE, subject.reluctance());
   }
 
   @Test
@@ -55,7 +48,7 @@ class ElevatorPreferencesTest {
   void testToString() {
     assertEquals("ElevatorPreferences{}", ElevatorPreferences.DEFAULT.toString());
     assertEquals(
-      "ElevatorPreferences{boardCost: $100, boardTime: 1m, hopCost: $200, hopTime: 2m}",
+      "ElevatorPreferences{boardTime: 1m, hopTime: 2m, reluctance: 2.5}",
       subject.toString()
     );
   }

@@ -52,11 +52,11 @@ class ElevatorHopEdgeTest {
   static Stream<Arguments> all() {
     return Stream.of(
       // no extra cost
-      Arguments.of(Accessibility.POSSIBLE, 20),
+      Arguments.of(Accessibility.POSSIBLE, 40),
       // low extra cost
-      Arguments.of(Accessibility.NO_INFORMATION, 40),
+      Arguments.of(Accessibility.NO_INFORMATION, 60),
       // high extra cost
-      Arguments.of(Accessibility.NOT_POSSIBLE, 3620)
+      Arguments.of(Accessibility.NOT_POSSIBLE, 3640)
     );
   }
 

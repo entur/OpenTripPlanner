@@ -440,13 +440,6 @@ public class RouteRequestConfig {
       .withElevator(elevator -> {
         var dftElevator = dft.elevator();
         elevator
-          .withBoardCost(
-            c
-              .of("elevatorBoardCost")
-              .since(V2_0)
-              .summary("What is the cost of boarding a elevator?")
-              .asInt(dftElevator.boardCost())
-          )
           .withBoardTime(
             c
               .of("elevatorBoardTime")
@@ -454,19 +447,19 @@ public class RouteRequestConfig {
               .summary("How long does it take to get on an elevator, on average.")
               .asInt(dftElevator.boardTime())
           )
-          .withHopCost(
-            c
-              .of("elevatorHopCost")
-              .since(V2_0)
-              .summary("What is the cost of travelling one floor on an elevator?")
-              .asInt(dftElevator.hopCost())
-          )
           .withHopTime(
             c
               .of("elevatorHopTime")
               .since(V2_0)
               .summary("How long does it take to advance one floor on an elevator?")
               .asInt(dftElevator.hopTime())
+          )
+          .withReluctance(
+            c
+              .of("elevatorReluctance")
+              .since(V2_0)
+              .summary("A multiplier to specify how bad using an elevator is.")
+              .asDouble(dftElevator.reluctance())
           );
       })
       .withAccessEgress(accessEgress -> {

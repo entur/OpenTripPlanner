@@ -44,7 +44,7 @@ public class ElevatorBoardEdge extends Edge implements BikeWalkableEdge, Elevato
 
     var req = s0.getRequest();
 
-    s1.incrementWeight(req.elevator().boardCost());
+    s1.incrementWeight(req.elevator().reluctance() * req.elevator().boardTime());
     s1.incrementTimeInSeconds(req.elevator().boardTime());
 
     return s1.makeStateArray();

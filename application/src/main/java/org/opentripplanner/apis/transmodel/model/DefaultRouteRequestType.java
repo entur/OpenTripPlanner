@@ -142,14 +142,6 @@ public class DefaultRouteRequestType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("elevatorBoardCost")
-          .description("What is the cost of boarding a elevator?")
-          .type(Scalars.GraphQLInt)
-          .dataFetcher(env -> preferences.street().elevator().boardCost())
-          .build()
-      )
-      .field(
-        GraphQLFieldDefinition.newFieldDefinition()
           .name("elevatorHopTime")
           .description("How long does it take to advance one floor on an elevator?")
           .type(Scalars.GraphQLInt)
@@ -158,10 +150,10 @@ public class DefaultRouteRequestType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("elevatorHopCost")
-          .description("What is the cost of travelling one floor on an elevator?")
+          .name("elevatorReluctance")
+          .description("A multiplier to specify how bad using an elevator is.")
           .type(Scalars.GraphQLInt)
-          .dataFetcher(env -> preferences.street().elevator().hopCost())
+          .dataFetcher(env -> preferences.street().elevator().reluctance())
           .build()
       )
       .field(

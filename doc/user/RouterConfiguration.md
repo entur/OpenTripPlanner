@@ -496,9 +496,8 @@ Used to group requests when monitoring OTP.
     "transferPenalty" : 0,
     "turnReluctance" : 1.0,
     "elevatorBoardTime" : 90,
-    "elevatorBoardCost" : 90,
     "elevatorHopTime" : 20,
-    "elevatorHopCost" : 20,
+    "elevatorReluctance" : 2.0,
     "bicycle" : {
       "speed" : 5,
       "reluctance" : 5.0,

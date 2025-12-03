@@ -351,7 +351,7 @@ class StreetSearchRequestMapperTest {
     var builder = builder()
       .withPreferences(pref ->
         pref.withStreet(s ->
-          s.withElevator(e -> e.withBoardTime(88).withBoardCost(77).withHopTime(66).withHopCost(55))
+          s.withElevator(e -> e.withBoardTime(88).withHopTime(66).withReluctance(2.0))
         )
       );
 
@@ -360,9 +360,8 @@ class StreetSearchRequestMapperTest {
 
     var req = subject.elevator();
     assertEquals(88, req.boardTime());
-    assertEquals(77, req.boardCost());
     assertEquals(66, req.hopTime());
-    assertEquals(55, req.hopCost());
+    assertEquals(2.0, req.reluctance());
   }
 
   @Test
