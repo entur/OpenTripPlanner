@@ -152,7 +152,7 @@ public class DefaultRouteRequestType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("elevatorReluctance")
           .description("A multiplier to specify how bad using an elevator is.")
-          .type(Scalars.GraphQLInt)
+          .type(Scalars.GraphQLFloat)
           .dataFetcher(env -> preferences.street().elevator().reluctance())
           .build()
       )

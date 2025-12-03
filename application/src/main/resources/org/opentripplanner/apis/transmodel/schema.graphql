@@ -1103,7 +1103,7 @@ type RoutingParameters {
   "How long does it take to advance one floor on an elevator?"
   elevatorHopTime: Int
   "A multiplier to specify how bad using an elevator is."
-  elevatorReluctance: Int
+  elevatorReluctance: Float
   "Whether to apply the ellipsoid->geoid offset to all elevations in the response."
   geoIdElevation: Boolean
   "When true, real-time updates are ignored during this search."
