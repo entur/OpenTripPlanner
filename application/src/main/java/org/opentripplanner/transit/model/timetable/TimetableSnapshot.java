@@ -1,4 +1,4 @@
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.timetable;
 
 import static org.opentripplanner.utils.collection.CollectionUtils.getByNullableKey;
 
@@ -23,18 +23,10 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
 import org.opentripplanner.transit.model.framework.FeedScopedId;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
-import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
-import org.opentripplanner.transit.model.timetable.TripTimes;
-import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -110,7 +102,7 @@ public class TimetableSnapshot {
    * The compound key approach better reflects the fact that there should be only one Timetable per
    * TripPattern and date.
    */
-  private final Map<TripPattern, SortedSet<Timetable>> timetables;
+  private final Map<FeedScopedId, SortedSet<Timetable>> timetables;
 
   /**
    * For cases where the trip pattern (sequence of stops visited) has been changed by a realtime
@@ -176,7 +168,7 @@ public class TimetableSnapshot {
   }
 
   private TimetableSnapshot(
-    Map<TripPattern, SortedSet<Timetable>> timetables,
+    Map<FeedScopedId, SortedSet<Timetable>> timetables,
     Map<TripIdAndServiceDate, TripPattern> realTimeNewTripPatternsForModifiedTrips,
     Map<FeedScopedId, Route> realtimeAddedRoutes,
     Map<FeedScopedId, Trip> realtimeAddedTrips,
@@ -204,7 +196,7 @@ public class TimetableSnapshot {
    * the originally scheduled timetable if there are no updates in this snapshot.
    */
   public Timetable resolve(TripPattern pattern, @Nullable LocalDate serviceDate) {
-    SortedSet<Timetable> sortedTimetables = timetables.get(pattern);
+    SortedSet<Timetable> sortedTimetables = timetables.get(pattern.getId());
 
     if (sortedTimetables != null && serviceDate != null) {
       for (Timetable timetable : sortedTimetables) {
@@ -309,10 +301,8 @@ public class TimetableSnapshot {
    * does not exist yet in the Timetable, add it. This method will make a protective copy of the
    * Timetable if such a copy has not already been made while building up this snapshot, handling
    * both cases where patterns were pre-existing in static data or created by realtime data.
-   *
-   * @return whether the update was actually applied
    */
-  public Result<UpdateSuccess, UpdateError> update(RealTimeTripUpdate realTimeTripUpdate) {
+  public void update(RealTimeTripUpdate realTimeTripUpdate) {
     validateNotReadOnly();
 
     TripPattern pattern = realTimeTripUpdate.pattern();
@@ -359,9 +349,6 @@ public class TimetableSnapshot {
         );
       }
     }
-
-    // The time tables are finished during the commit
-    return Result.success(UpdateSuccess.noWarnings(realTimeTripUpdate.producer()));
   }
 
   /**
@@ -379,7 +366,7 @@ public class TimetableSnapshot {
   }
 
   public TimetableSnapshot commit(
-    RealTimeRaptorTransitDataUpdater realtimeRaptorTransitDataUpdater,
+    @Nullable TimetableSnapshotUpdateListener updatesEventListener,
     boolean force
   ) {
     validateNotReadOnly();
@@ -400,8 +387,8 @@ public class TimetableSnapshot {
       true
     );
 
-    if (realtimeRaptorTransitDataUpdater != null) {
-      realtimeRaptorTransitDataUpdater.update(dirtyTimetables.values(), timetables);
+    if (updatesEventListener != null) {
+      updatesEventListener.update(dirtyTimetables.values(), timetables::get);
     }
 
     this.dirtyTimetables.clear();
@@ -456,7 +443,7 @@ public class TimetableSnapshot {
       realTimeNewTripPatternsForModifiedTrips.remove(new TripIdAndServiceDate(tripId, serviceDate));
       // Remove times for the trip from any timetables
       // under that now-obsolete realtime-added pattern.
-      SortedSet<Timetable> sortedTimetables = this.timetables.get(pattern);
+      SortedSet<Timetable> sortedTimetables = this.timetables.get(pattern.getId());
       if (sortedTimetables != null) {
         TripTimes tripTimesToRemove = null;
         for (Timetable timetable : sortedTimetables) {
@@ -499,9 +486,9 @@ public class TimetableSnapshot {
     validateNotReadOnly();
 
     boolean modified = false;
-    for (Iterator<TripPattern> it = timetables.keySet().iterator(); it.hasNext();) {
-      TripPattern pattern = it.next();
-      SortedSet<Timetable> sortedTimetables = timetables.get(pattern);
+    for (Iterator<FeedScopedId> it = timetables.keySet().iterator(); it.hasNext();) {
+      FeedScopedId patternId = it.next();
+      SortedSet<Timetable> sortedTimetables = timetables.get(patternId);
       SortedSet<Timetable> toKeepTimetables = new TreeSet<>(new SortedTimetableComparator());
       for (Timetable timetable : sortedTimetables) {
         if (serviceDate.isBefore(timetable.getServiceDate())) {
@@ -514,7 +501,7 @@ public class TimetableSnapshot {
       if (toKeepTimetables.isEmpty()) {
         it.remove();
       } else {
-        timetables.put(pattern, ImmutableSortedSet.copyOfSorted(toKeepTimetables));
+        timetables.put(patternId, ImmutableSortedSet.copyOfSorted(toKeepTimetables));
       }
     }
 
@@ -568,7 +555,7 @@ public class TimetableSnapshot {
    * @return true if the timetable changed as a result of the call
    */
   private boolean clearTimetables(String feedId) {
-    return timetables.keySet().removeIf(tripPattern -> feedId.equals(tripPattern.getFeedId()));
+    return timetables.keySet().removeIf(id -> feedId.equals(id.getFeedId()));
   }
 
   /**
@@ -628,7 +615,7 @@ public class TimetableSnapshot {
    * The SortedSet is made immutable to prevent change after snapshot publication.
    */
   private void swapTimetable(TripPattern pattern, Timetable original, Timetable updated) {
-    SortedSet<Timetable> sortedTimetables = timetables.get(pattern);
+    SortedSet<Timetable> sortedTimetables = timetables.get(pattern.getId());
     if (sortedTimetables == null) {
       sortedTimetables = new TreeSet<>(new SortedTimetableComparator());
     } else {
@@ -643,7 +630,7 @@ public class TimetableSnapshot {
       sortedTimetables.remove(original);
     }
     sortedTimetables.add(updated);
-    timetables.put(pattern, ImmutableSortedSet.copyOfSorted(sortedTimetables));
+    timetables.put(pattern.getId(), ImmutableSortedSet.copyOfSorted(sortedTimetables));
 
     // if the timetable was already modified by a previous real-time update in the same snapshot
     // and for the same service date,
