@@ -264,6 +264,24 @@ class RaptorRequestMapperTest {
     }
   }
 
+  @Test
+  void testRaptorDegugRequest() {
+    var request = requestBuilder()
+      .withJourney(jb ->
+        jb.withTransit(tb ->
+          tb.withRaptorDebugging(db -> db.withStops(STOP_A.getId().toString()).withPath("2 3* 4"))
+        )
+      )
+      .buildRequest();
+
+    var result = map(request);
+    var subject = result.debug();
+
+    assertEquals(List.of(STOP_A.getIndex()), subject.stops());
+    assertEquals(List.of(2, 3, 4), subject.path());
+    assertEquals(1, subject.debugPathFromStopIndex());
+  }
+
   private static RaptorRequest<TestTripSchedule> map(RouteRequest request) {
     return RaptorRequestMapper.mapRequest(
       request,
