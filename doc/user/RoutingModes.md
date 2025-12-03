@@ -150,6 +150,10 @@ Used for any rail system that runs on a single rail.
 
 Used for intercity or long-distance travel.
 
+<h4 id="SNOW_AND_ICE">SNOW_AND_ICE</h4>
+
+Used for off-road snow and ice vehicles
+
 <h4 id="SUBWAY">SUBWAY</h4>
 
 Subway or Metro, used for any underground rail system within a metropolitan area.
