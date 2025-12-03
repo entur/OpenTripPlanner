@@ -26,6 +26,7 @@ import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundle;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
+import org.opentripplanner.gtfs.graphbuilder.GtfsModuleTestFactory;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
@@ -209,7 +210,7 @@ public abstract class GtfsTest {
       )
     );
 
-    GtfsModule gtfsGraphBuilderImpl = GtfsModule.forTest(
+    GtfsModule gtfsGraphBuilderImpl = GtfsModuleTestFactory.forTest(
       gtfsBundleList,
       timetableRepository,
       graph,
