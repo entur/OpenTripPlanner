@@ -82,10 +82,6 @@ public class RaptorConstants {
     return time != TIME_NOT_SET;
   }
 
-  public static boolean isNotTimeSet(int time) {
-    return time == TIME_NOT_SET;
-  }
-
   public static void assertTimeNotSet(int time) {
     if (isTimeSet(time)) {
       throw new IllegalArgumentException("Time value is set: " + time);
