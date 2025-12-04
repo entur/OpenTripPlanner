@@ -18,6 +18,7 @@ public class TimeSlopeSafetyTriangleTest {
     return Stream.of(
       // Input: time | slope | safety || Expected: time | slope | safety
       Arguments.of(0.5, 0.3, 0.2, 0.5, 0.3, 0.2, "Exact"),
+      Arguments.of(-0.5, -0.3, -0.2, -0.5, -0.3, -0.2, "Negative values are kept as is"),
       Arguments.of(1d, 0d, 0d, 1d, 0d, 0d, "Two zeros"),
       Arguments.of(0d, 0.07, 0.93, 0d, 0.07, 0.93, "None precise round-off: " + (1.0 - 0.07))
     );
@@ -56,5 +57,13 @@ public class TimeSlopeSafetyTriangleTest {
     var result = TimeSlopeSafetyTriangle.of().buildOrDefault(expected);
 
     assertSame(expected, result);
+  }
+
+  @Test
+  public void testLessThanZero() {
+    var subject = new TimeSlopeSafetyTriangle(0.1, -1, -1);
+    assertEquals(0.1, subject.time(), DELTA);
+    assertEquals(-1, subject.slope(), DELTA);
+    assertEquals(-1, subject.safety(), DELTA);
   }
 }

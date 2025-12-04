@@ -4,16 +4,9 @@ import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 
 /**
  * Sets the (bicycle or scooter) triangle routing parameters -- the relative importance of safety,
- * flatness, and speed. These three fields should have values between 0 and 1, and should add up to
- * 1.
- * <p>
- * The constructor accepts any three numbers and will normalize them to add up to 1. {@code time}
- * and {@code slope} are rounded to the closest two decimal number, then
- * {@code safety := 1.0 - (time + slope)}. This is done to make the rounding predictable and to
- * allways add up to one. This allows this class to be used in an index of a cache. For example:
- * <pre>
- *   ( 1.0, 1.0, 1.0 ) => ( time: 0.33, slope: 0.33, safety: 0.34 )
- * </pre>
+ * flatness, and speed. These three fields _should_ have values between 0 and 1, and _should_ add up to
+ * 1, these constraints are not enforced in this class, however, and any value is accepted. Instead,
+ * the values are normalized in the domain layer.
  * <p>
  * This class is currently only used with bicycle routing, but is not limited to that.
  * <p>
