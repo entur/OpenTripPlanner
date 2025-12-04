@@ -56,8 +56,8 @@ public class TestAccessEgress implements RaptorAccessEgress {
       assertTrue(durationInSeconds > 0);
     }
     if (closed) {
-      RaptorConstants.assertTimeNotSet(openFrom);
-      RaptorConstants.assertTimeNotSet(openUntil);
+      assertTimeNotSet(openFrom, "'openFrom'");
+      assertTimeNotSet(openUntil, "'openUntil'");
     }
     assertTrue(numberOfRides >= 0);
   }
@@ -422,6 +422,12 @@ public class TestAccessEgress implements RaptorAccessEgress {
 
     TestAccessEgress build() {
       return new TestAccessEgress(this);
+    }
+  }
+
+  public static void assertTimeNotSet(int time, String field) {
+    if (isTimeSet(time)) {
+      throw new IllegalArgumentException("Time '" + field + "' is set: " + time);
     }
   }
 }
