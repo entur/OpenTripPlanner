@@ -11,7 +11,7 @@ public class RaptorTestFactory {
     return new RaptorService<>(configForTest());
   }
 
-  private static <T extends RaptorTripSchedule> RaptorConfig<T> configForTest() {
+  public static <T extends RaptorTripSchedule> RaptorConfig<T> configForTest() {
     return new RaptorConfig<>(new RaptorTuningParameters() {}, new RaptorEnvironment() {});
   }
 }

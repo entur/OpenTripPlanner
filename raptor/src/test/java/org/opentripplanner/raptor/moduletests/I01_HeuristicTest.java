@@ -14,6 +14,7 @@ import org.opentripplanner.raptor.api.request.Optimization;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.raptor.configure.RaptorTestFactory;
 import org.opentripplanner.raptor.rangeraptor.internalapi.Heuristics;
 import org.opentripplanner.raptor.service.RangeRaptorDynamicSearch;
 
@@ -38,7 +39,7 @@ public class I01_HeuristicTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
-  private final RaptorConfig<TestTripSchedule> config = RaptorConfig.defaultConfigForTest();
+  private final RaptorConfig<TestTripSchedule> config = RaptorTestFactory.configForTest();
 
   @BeforeEach
   public void setup() {

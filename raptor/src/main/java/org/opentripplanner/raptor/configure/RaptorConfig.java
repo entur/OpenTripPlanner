@@ -47,10 +47,6 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     this.environment = environment;
   }
 
-  public static <T extends RaptorTripSchedule> RaptorConfig<T> defaultConfigForTest() {
-    return new RaptorConfig<>(new RaptorTuningParameters() {}, new RaptorEnvironment() {});
-  }
-
   public SearchContext<T> context(RaptorTransitDataProvider<T> transit, RaptorRequest<T> request) {
     // The passThroughPointsService is needed to create the context, so we initialize it here.
     this.passThroughPointsService = createPassThroughPointsService(request);
