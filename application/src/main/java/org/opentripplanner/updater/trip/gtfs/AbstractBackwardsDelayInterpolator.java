@@ -10,11 +10,6 @@ abstract class AbstractBackwardsDelayInterpolator implements BackwardsDelayInter
    * @return The first stop position with given time if propagation is done.
    */
   public OptionalInt propagateBackwards(RealTimeTripTimesBuilder builder) {
-    var containsNoUpdates = builder.listStopPositions().allMatch(builder::containsNoRealTimeTimes);
-    if (containsNoUpdates) {
-      return OptionalInt.empty();
-    }
-
     var firstUpdatedIndex = getFirstUpdatedIndex(builder);
     // if the first stop already has a real-time update, there is nothing to propagate
     if (firstUpdatedIndex == 0) {

@@ -1,8 +1,11 @@
 package org.opentripplanner.updater.trip.gtfs.moduletests.propagation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NEGATIVE_HOP_TIME;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
@@ -32,15 +35,34 @@ class BackwardsEarlinessPropagationCancellationTest implements RealtimeTestConst
     var tripUpdate = rt
       .tripUpdateScheduled(TRIP_1_ID)
       .addNoDataStop(0)
-      .addSkippedStop(1)
-      .addNoDataStop(2)
+      .addNoDataStop(1)
+      .addSkippedStop(2)
       .addStopTime(3, "10:19")
       .build();
 
     assertSuccess(rt.applyTripUpdate(tripUpdate));
     assertEquals(
-      "UPDATED | A [ND] 10:00 10:00 | B [C] 10:10 10:10 | C [ND] 10:19 10:19 | D 10:19 10:19",
+      "UPDATED | A [ND] 10:00 10:00 | B [ND] 10:10 10:10 | C [C] 10:19 10:19 | D 10:19 10:19",
       env.tripData(TRIP_1_ID).showTimetable()
     );
+  }
+
+  @Test
+  @Disabled(
+    "The real-time updater code doesn't currently process estimated times on a skipped stop"
+  )
+  void invalidEstimatedTimeOnSkippedStop() {
+    var env = envBuilder.addTrip(tripInput).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addNoDataStop(0)
+      .addNoDataStop(1)
+      .addSkippedStop(2, "10:20")
+      .addStopTime(3, "10:19")
+      .build();
+
+    assertFailure(NEGATIVE_HOP_TIME, rt.applyTripUpdate(tripUpdate));
   }
 }

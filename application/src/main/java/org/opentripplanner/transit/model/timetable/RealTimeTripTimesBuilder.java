@@ -53,15 +53,10 @@ public class RealTimeTripTimesBuilder {
   }
 
   /**
-   * Does this stop have any usable real-time update on the departure or arrival time? Stops with
-   * NO_DATA or CANCELLED, for example, do not.
+   * Does this stop have any real-time update on the departure or arrival time?
    */
   public boolean containsNoRealTimeTimes(int i) {
-    return (
-      stopRealTimeStates[i] == StopRealTimeState.NO_DATA ||
-      stopRealTimeStates[i] == StopRealTimeState.CANCELLED ||
-      (getArrivalDelay(i) == null && getDepartureDelay(i) == null)
-    );
+    return getArrivalDelay(i) == null && getDepartureDelay(i) == null;
   }
 
   static RealTimeTripTimesBuilder fromScheduledTimes(ScheduledTripTimes tripTimes) {

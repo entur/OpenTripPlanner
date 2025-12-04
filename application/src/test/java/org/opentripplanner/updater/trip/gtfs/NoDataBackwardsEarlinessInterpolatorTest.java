@@ -38,12 +38,14 @@ class NoDataBackwardsEarlinessInterpolatorTest {
   @ParameterizedTest
   @MethodSource("requiredInterpolators")
   void precedingNoDataWithEarlyArrival(BackwardsDelayInterpolator interpolator) {
-    var builder = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
+    var builder = SCHEDULED_TRIP_TIMES.createRealTimeWithoutScheduledTimes()
       .withNoData(0)
       .withNoData(1)
       .withNoData(2)
       .withArrivalDelay(3, SIX_MINUTES_EARLY)
-      .withDepartureDelay(3, SIX_MINUTES_EARLY);
+      .withDepartureDelay(3, SIX_MINUTES_EARLY)
+      .withArrivalDelay(4, SIX_MINUTES_EARLY)
+      .withDepartureDelay(4, SIX_MINUTES_EARLY);
 
     assertThat(interpolator.propagateBackwards(builder)).hasValue(3);
 
@@ -68,60 +70,15 @@ class NoDataBackwardsEarlinessInterpolatorTest {
 
   @ParameterizedTest
   @MethodSource("allInterpolators")
-  void noDataOnly(BackwardsDelayInterpolator interpolator) {
-    var builder = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
-      .withNoData(0)
-      .withNoData(1)
-      .withNoData(2)
-      .withNoData(3)
-      .withNoData(4);
-
-    assertThat(interpolator.propagateBackwards(builder)).isEmpty();
-
-    builder
-      .listStopPositions()
-      .forEach(i -> {
-        assertEquals(0, builder.getArrivalDelay(i));
-        assertEquals(0, builder.getDepartureDelay(i));
-        assertEquals(NO_DATA, builder.getStopRealTimeState(i));
-      });
-    assertNotNull(builder.build());
-  }
-
-  @ParameterizedTest
-  @MethodSource("allInterpolators")
-  void leadingNoDataOnly(BackwardsDelayInterpolator interpolator) {
-    var builder = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
-      .withNoData(0)
-      .withNoData(1)
-      .withNoData(2)
-      .withNoData(3);
-
-    assertThat(interpolator.propagateBackwards(builder)).hasValue(4);
-
-    builder
-      .listStopPositions()
-      .forEach(i -> {
-        assertEquals(0, builder.getArrivalDelay(i));
-        assertEquals(0, builder.getDepartureDelay(i));
-      });
-
-    assertThat(builder.stopRealTimeStates())
-      .asList()
-      .containsExactly(NO_DATA, NO_DATA, NO_DATA, NO_DATA, DEFAULT);
-
-    assertNotNull(builder.build());
-  }
-
-  @ParameterizedTest
-  @MethodSource("allInterpolators")
   void leadingNoDataAndCancelledWithEarlyArrival(BackwardsDelayInterpolator interpolator) {
-    var builder = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
+    var builder = SCHEDULED_TRIP_TIMES.createRealTimeWithoutScheduledTimes()
       .withNoData(0)
       .withCanceled(1)
       .withNoData(2)
       .withArrivalDelay(3, SIX_MINUTES_EARLY)
-      .withDepartureDelay(3, SIX_MINUTES_EARLY);
+      .withDepartureDelay(3, SIX_MINUTES_EARLY)
+      .withArrivalDelay(4, SIX_MINUTES_EARLY)
+      .withDepartureDelay(4, SIX_MINUTES_EARLY);
 
     assertThat(interpolator.propagateBackwards(builder)).hasValue(3);
 
