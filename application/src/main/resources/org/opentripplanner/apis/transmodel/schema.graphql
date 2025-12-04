@@ -2084,14 +2084,10 @@ enum TransportSubmode {
 enum VehicleOptimisationMethod {
   "Prefer flat terrain"
   flat
-  "Prefer designated bike paths"
-  greenways
   "Prefer faster routes"
   quick
   "Prefer safer routes"
   safe
-  "Prefer safer streets"
-  safest_streets
   "Custom optimization using triangle factors"
   triangle
 }

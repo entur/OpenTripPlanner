@@ -66,8 +66,6 @@ public class EnumTypes {
     .value("quick", VehicleRoutingOptimizeType.SHORTEST_DURATION, "Prefer faster routes")
     .value("safe", VehicleRoutingOptimizeType.SAFE_STREETS, "Prefer safer routes")
     .value("flat", VehicleRoutingOptimizeType.FLAT_STREETS, "Prefer flat terrain")
-    .value("greenways", VehicleRoutingOptimizeType.SAFEST_STREETS, "Prefer designated bike paths")
-    .value("safest_streets", VehicleRoutingOptimizeType.SAFEST_STREETS, "Prefer safer streets")
     .value(
       "triangle",
       VehicleRoutingOptimizeType.TRIANGLE,
