@@ -65,7 +65,7 @@ public final class TimeSlopeSafetyTriangle {
    * are set the new instance will contain only those values, and the none set values will be zero.
    */
   public static Builder of() {
-    return new Builder();
+    return new Builder(DEFAULT);
   }
 
   private static double positiveValueOrZero(double value) {
@@ -130,17 +130,10 @@ public final class TimeSlopeSafetyTriangle {
     private final TimeSlopeSafetyTriangle original;
 
     private Builder(TimeSlopeSafetyTriangle original) {
-      this.time = original.time;
-      this.slope = original.slope;
-      this.safety = original.safety;
-      this.original = original;
-    }
-
-    private Builder() {
       this.time = ZERO;
       this.slope = ZERO;
       this.safety = ZERO;
-      this.original = TimeSlopeSafetyTriangle.DEFAULT;
+      this.original = original;
     }
 
     public double time() {
