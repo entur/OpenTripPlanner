@@ -13,6 +13,7 @@ on:
     paths:
       - 'client/**'
       - 'application/src/main/resources/org/opentripplanner/apis/transmodel/schema.graphql'
+  workflow_dispatch:
 
 # to avoid conflicts, make sure that only one workflow pushes to Github at the same time
 concurrency:
