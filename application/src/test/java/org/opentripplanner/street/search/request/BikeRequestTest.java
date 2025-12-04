@@ -88,8 +88,7 @@ class BikeRequestTest {
       "parking: ParkingRequest{cost: $30}, " +
       "rental: RentalRequest{pickupTime: 30s}, " +
       "optimizeType: TRIANGLE, " +
-      "optimizeTriangle: TimeSlopeSafetyTriangle[time=0.0, slope=1.0, safety=0.0]" +
-      "}",
+      "optimizeTriangle: [time: 0.0, slope: 1.0, safety: 0.0]}",
       subject.toString()
     );
   }

@@ -114,7 +114,11 @@ public class StreetSearchRequestMapper {
   private static TimeSlopeSafetyTriangle mapTriangle(
     org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle original
   ) {
-    return new TimeSlopeSafetyTriangle(original.time(), original.slope(), original.safety());
+    return TimeSlopeSafetyTriangle.of()
+      .withTime(original.time())
+      .withSlope(original.slope())
+      .withSafety(original.safety())
+      .build();
   }
 
   private static void mapCar(CarRequest.Builder b, CarPreferences car) {

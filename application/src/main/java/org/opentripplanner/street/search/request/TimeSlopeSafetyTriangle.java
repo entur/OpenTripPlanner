@@ -3,6 +3,9 @@ package org.opentripplanner.street.search.request;
 import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 import static org.opentripplanner.utils.lang.DoubleUtils.roundTo2Decimals;
 
+import java.util.Objects;
+import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
+
 /**
  * Sets the (bicycle or scooter) triangle routing parameters -- the relative importance of safety,
  * flatness, and speed. These three fields should have values between 0 and 1, and should add up to
@@ -10,10 +13,14 @@ import static org.opentripplanner.utils.lang.DoubleUtils.roundTo2Decimals;
  * <p>
  * THIS CLASS IS IMMUTABLE AND THREAD-SAFE.
  */
-public record TimeSlopeSafetyTriangle(double time, double slope, double safety) {
+public final class TimeSlopeSafetyTriangle {
+
   private static final double ZERO = 0.0;
 
   public static final TimeSlopeSafetyTriangle DEFAULT = new TimeSlopeSafetyTriangle(1, 1, 1);
+  private final double time;
+  private final double slope;
+  private final double safety;
 
   /**
    * Sets the bicycle or scooter triangle routing parameters -- the relative importance of safety,
@@ -21,7 +28,7 @@ public record TimeSlopeSafetyTriangle(double time, double slope, double safety) 
    * and should add up to 1. This setter function accepts any three numbers and will normalize them
    * to add up to 1.
    */
-  public TimeSlopeSafetyTriangle(double time, double slope, double safety) {
+  private TimeSlopeSafetyTriangle(double time, double slope, double safety) {
     safety = positiveValueOrZero(safety);
     slope = positiveValueOrZero(slope);
     time = positiveValueOrZero(time);
@@ -64,6 +71,52 @@ public record TimeSlopeSafetyTriangle(double time, double slope, double safety) 
 
   private static boolean zeroVector(double a, double b, double c) {
     return a == ZERO && b == ZERO && c == ZERO;
+  }
+
+  public double time() {
+    return time;
+  }
+
+  public double slope() {
+    return slope;
+  }
+
+  public double safety() {
+    return safety;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (obj == this) {
+      return true;
+    }
+    if (obj == null || obj.getClass() != this.getClass()) {
+      return false;
+    }
+    var that = (TimeSlopeSafetyTriangle) obj;
+    return (
+      Double.doubleToLongBits(this.time) == Double.doubleToLongBits(that.time) &&
+      Double.doubleToLongBits(this.slope) == Double.doubleToLongBits(that.slope) &&
+      Double.doubleToLongBits(this.safety) == Double.doubleToLongBits(that.safety)
+    );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(time, slope, safety);
+  }
+
+  @Override
+  public String toString() {
+    return ValueObjectToStringBuilder.of()
+      .addText("[time: ")
+      .addNum(time)
+      .addText(", slope: ")
+      .addNum(slope)
+      .addText(", safety: ")
+      .addNum(safety)
+      .addText("]")
+      .toString();
   }
 
   public static class Builder {

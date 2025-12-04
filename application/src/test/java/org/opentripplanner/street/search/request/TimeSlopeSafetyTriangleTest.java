@@ -64,9 +64,20 @@ public class TimeSlopeSafetyTriangleTest {
 
   @Test
   public void testLessThanZero() {
-    var subject = new TimeSlopeSafetyTriangle(0.1, -1, -1);
+    var subject = TimeSlopeSafetyTriangle.of().withTime(0.1).withSlope(-1).withSafety(-1).build();
     assertEquals(1, subject.time(), DELTA);
     assertEquals(0, subject.slope(), DELTA);
     assertEquals(0, subject.safety(), DELTA);
+  }
+
+  @Test
+  public void testToString() {
+    var subject = TimeSlopeSafetyTriangle.of()
+      .withTime(0.1)
+      .withSlope(-1)
+      .withSafety(-1)
+      .build()
+      .toString();
+    assertEquals("[time: 1.0, slope: 0.0, safety: 0.0]", subject);
   }
 }
