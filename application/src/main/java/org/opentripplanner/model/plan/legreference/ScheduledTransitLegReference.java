@@ -17,7 +17,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.utils.collection.BidirectionalSearch;
+import org.opentripplanner.utils.collection.TwoWayLinearSearch;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.slf4j.Logger;
@@ -306,7 +306,7 @@ public record ScheduledTransitLegReference(
     int stopPosition,
     Predicate<StopLocation> matcher
   ) {
-    return BidirectionalSearch.findNearest(stopPosition, 0, tripPattern.numberOfStops(), i ->
+    return TwoWayLinearSearch.findNearest(stopPosition, 0, tripPattern.numberOfStops(), i ->
       matcher.test(tripPattern.getStops().get(i))
     );
   }

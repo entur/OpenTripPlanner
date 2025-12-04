@@ -4,13 +4,13 @@ import java.util.OptionalInt;
 import java.util.function.IntFunction;
 
 /**
- * Utility class for performing bidirectional searches in index-based collections.
+ * Utility class for performing two-way linear searches in index-based collections.
  * <p>
  * This class provides methods to search for elements by expanding outward from a starting
  * index in both forward and backward directions simultaneously, finding the closest match
  * to the starting point.
  */
-public class BidirectionalSearch {
+public class TwoWayLinearSearch {
 
   /**
    * Finds the nearest index that satisfies the given test condition by searching

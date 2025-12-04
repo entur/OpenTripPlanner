@@ -10,7 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-class BidirectionalSearchTest {
+class TwoWayLinearSearchTest {
 
   private static final int[] O = {};
   private static final int[] A0 = { 0 };
@@ -51,11 +51,11 @@ class BidirectionalSearchTest {
   void testFindNearest(int expected, int[] a, int start, int lowerBound, int upperBound) {
     assertEquals(
       OptionalInt.of(expected),
-      BidirectionalSearch.findNearest(start, lowerBound, upperBound, i -> a[i] == 1)
+      TwoWayLinearSearch.findNearest(start, lowerBound, upperBound, i -> a[i] == 1)
     );
     assertEquals(
       OptionalInt.of(expected),
-      BidirectionalSearch.findNearest(start, lowerBound, upperBound, i -> a[i] == 1)
+      TwoWayLinearSearch.findNearest(start, lowerBound, upperBound, i -> a[i] == 1)
     );
   }
 
@@ -93,7 +93,7 @@ class BidirectionalSearchTest {
   ) {
     assertEquals(
       OptionalInt.empty(),
-      BidirectionalSearch.findNearest(start, lowerBound, upperBound, i -> a[i] == 1),
+      TwoWayLinearSearch.findNearest(start, lowerBound, upperBound, i -> a[i] == 1),
       description
     );
   }
@@ -101,12 +101,12 @@ class BidirectionalSearchTest {
   @Test
   void testOutOfBounds() {
     var ex = assertThrows(ArrayIndexOutOfBoundsException.class, () ->
-      BidirectionalSearch.findNearest(0, -1, 3, i -> A001[i] == 1)
+      TwoWayLinearSearch.findNearest(0, -1, 3, i -> A001[i] == 1)
     );
     assertEquals("Index -1 out of bounds for length 3", ex.getMessage());
 
     ex = assertThrows(ArrayIndexOutOfBoundsException.class, () ->
-      BidirectionalSearch.findNearest(2, 0, A100.length + 1, i -> A100[i] == 1)
+      TwoWayLinearSearch.findNearest(2, 0, A100.length + 1, i -> A100[i] == 1)
     );
     assertEquals("Index 3 out of bounds for length 3", ex.getMessage());
   }
