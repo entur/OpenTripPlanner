@@ -50,6 +50,9 @@ public final class TimeSlopeSafetyTriangle {
     this.safety = roundTo2Decimals(1.0 - (this.time + this.slope));
   }
 
+  /**
+   * Creates a copy of this object (with the same values) as a builder.
+   */
   public Builder copyOf() {
     return new Builder(this);
   }
