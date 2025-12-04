@@ -1,7 +1,6 @@
 package org.opentripplanner.street.search.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -49,17 +48,13 @@ public class TimeSlopeSafetyTriangleTest {
   }
 
   @Test
-  public void testBuildWithDefaultValue() {
+  public void testBuildDefaultValues() {
     // Set som arbitrary values for the default instance
-    var expected = TimeSlopeSafetyTriangle.of()
-      .withTime(1.0)
-      .withSlope(2.0)
-      .withSafety(3.0)
-      .build();
+    var expected = TimeSlopeSafetyTriangle.of().withTime(1).withSlope(1).withSafety(1).build();
     // then the default should be returned if no value is set
-    var result = TimeSlopeSafetyTriangle.of().buildOrDefault(expected);
+    var result = TimeSlopeSafetyTriangle.of().build();
 
-    assertSame(expected, result);
+    assertEquals(expected, result);
   }
 
   @Test

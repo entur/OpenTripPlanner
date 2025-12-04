@@ -59,7 +59,7 @@ public final class TimeSlopeSafetyTriangle {
 
   /**
    * Creates a special builder, which used together with the
-   * {@link Builder#buildOrDefault(TimeSlopeSafetyTriangle)} can return a new instance or the
+   * {@link #buildOrDefault()} can return a new instance or the
    * default value if no values are set. This is useful in the APIs where we want to fall back to
    * the default {@link TimeSlopeSafetyTriangle}, if no values are set. If only one or two values
    * are set the new instance will contain only those values, and the none set values will be zero.
@@ -127,17 +127,20 @@ public final class TimeSlopeSafetyTriangle {
     private double time;
     private double slope;
     private double safety;
+    private final TimeSlopeSafetyTriangle original;
 
     private Builder(TimeSlopeSafetyTriangle original) {
       this.time = original.time;
       this.slope = original.slope;
       this.safety = original.safety;
+      this.original = original;
     }
 
     private Builder() {
       this.time = ZERO;
       this.slope = ZERO;
       this.safety = ZERO;
+      this.original = TimeSlopeSafetyTriangle.DEFAULT;
     }
 
     public double time() {
@@ -175,13 +178,9 @@ public final class TimeSlopeSafetyTriangle {
     }
 
     public TimeSlopeSafetyTriangle build() {
-      return new TimeSlopeSafetyTriangle(time, slope, safety);
-    }
-
-    public TimeSlopeSafetyTriangle buildOrDefault(TimeSlopeSafetyTriangle defaultValue) {
       // If none of the fields are set, fallback to the default values given
       if (zeroVector(time, slope, safety)) {
-        return defaultValue;
+        return original;
       }
       return new TimeSlopeSafetyTriangle(time, slope, safety);
     }

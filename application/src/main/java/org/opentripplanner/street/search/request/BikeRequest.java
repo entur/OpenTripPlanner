@@ -213,7 +213,7 @@ public final class BikeRequest {
     public Builder withForcedOptimizeTriangle(Consumer<TimeSlopeSafetyTriangle.Builder> body) {
       var builder = TimeSlopeSafetyTriangle.of();
       body.accept(builder);
-      this.optimizeTriangle = builder.buildOrDefault(this.optimizeTriangle);
+      this.optimizeTriangle = builder.build();
       if (!builder.isEmpty()) {
         this.optimizeType = TRIANGLE;
       }
@@ -223,7 +223,7 @@ public final class BikeRequest {
     public Builder withOptimizeTriangle(Consumer<TimeSlopeSafetyTriangle.Builder> body) {
       var builder = TimeSlopeSafetyTriangle.of();
       body.accept(builder);
-      this.optimizeTriangle = builder.buildOrDefault(this.optimizeTriangle);
+      this.optimizeTriangle = builder.build();
       return this;
     }
 
