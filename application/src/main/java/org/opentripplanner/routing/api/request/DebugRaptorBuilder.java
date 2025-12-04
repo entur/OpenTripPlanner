@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.lang.StringUtils;
 
 public class DebugRaptorBuilder implements Serializable {
@@ -88,7 +89,7 @@ public class DebugRaptorBuilder implements Serializable {
     return original.equals(value) ? original : value;
   }
 
-  private static List<String> split(String stops) {
+  private static List<String> split(@Nullable String stops) {
     if (stops == null) {
       return List.of();
     }
