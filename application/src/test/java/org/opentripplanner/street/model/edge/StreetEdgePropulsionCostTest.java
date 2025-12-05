@@ -3,10 +3,16 @@ package org.opentripplanner.street.model.edge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.of;
 import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
 import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdge;
 
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -17,6 +23,7 @@ import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
 
 /**
@@ -25,7 +32,7 @@ import org.opentripplanner.street.search.state.StateEditor;
  * Verifies that different propulsion types (ELECTRIC, ELECTRIC_ASSIST, HUMAN) result in
  * appropriate cost calculations, especially regarding slope effects:
  * - ELECTRIC (e-scooters): Use flat distance (constant speed, motor does all work)
- * - ELECTRIC_ASSIST (e-bikes): Reduced slope sensitivity (30% of human-powered effect)
+ * - ELECTRIC_ASSIST (e-bikes): Reduced slope sensitivity (default 30% of human-powered effect)
  * - HUMAN and others: Full slope effect
  */
 class StreetEdgePropulsionCostTest {
@@ -36,6 +43,49 @@ class StreetEdgePropulsionCostTest {
 
   private final StreetVertex v0 = intersectionVertex(0.0, 0.0);
   private final StreetVertex v1 = intersectionVertex(2.0, 2.0);
+
+  private StreetVertex from;
+  private StreetVertex to;
+  private StreetEdge hillyEdge;
+  private double flatDistance;
+  private double slopedDistance;
+
+  @BeforeEach
+  void setUp() {
+    Coordinate c1 = new Coordinate(-122.575033, 45.456773);
+    Coordinate c2 = new Coordinate(-122.576668, 45.451426);
+
+    from = intersectionVertex("from", c1.y, c1.x);
+    to = intersectionVertex("to", c2.y, c2.x);
+
+    var geometry = org.opentripplanner.framework.geometry.GeometryUtils.getGeometryFactory()
+      .createLineString(new Coordinate[] { c1, c2 });
+
+    hillyEdge = new StreetEdgeBuilder<>()
+      .withFromVertex(from)
+      .withToVertex(to)
+      .withGeometry(geometry)
+      .withName("Hilly Street")
+      .withMeterLength(LENGTH)
+      .withPermission(StreetTraversalPermission.ALL)
+      .buildAndConnect();
+
+    // Add elevation profile (10% slope up and down)
+    Coordinate[] profile = new Coordinate[] {
+      new Coordinate(0, 0),
+      new Coordinate(LENGTH / 2, LENGTH / 20.0),
+      new Coordinate(LENGTH, 0),
+    };
+    PackedCoordinateSequence elev = new PackedCoordinateSequence.Double(profile);
+    StreetElevationExtensionBuilder.of(hillyEdge)
+      .withElevationProfile(elev)
+      .withComputed(false)
+      .build()
+      .ifPresent(hillyEdge::setElevationExtension);
+
+    flatDistance = hillyEdge.getDistanceMeters();
+    slopedDistance = hillyEdge.getEffectiveBikeDistance();
+  }
 
   @Test
   void rentalScooterCanTraverseEdge() {
@@ -56,220 +106,55 @@ class StreetEdgePropulsionCostTest {
     assertEquals(PropulsionType.ELECTRIC, result[0].rentalVehiclePropulsionType());
   }
 
+  @Test
+  void hillyEdgeHasSlopeEffect() {
+    // Verify that the test edge has slope effect
+    assertTrue(slopedDistance > flatDistance);
+  }
+
   /**
-   * Tests that electric scooters ignore slope for time calculation.
-   * On a hilly street with elevation profile, an electric scooter should use flat distance
-   * for its time estimate since the motor maintains constant speed.
+   * Test cases for propulsion type slope sensitivity.
+   * Each case specifies: propulsion type, form factor, street mode, slope sensitivity factor.
    * <p>
-   * Uses TRIANGLE optimization with time=1 to isolate the time/speed component,
-   * similar to the approach in StreetEdgeScooterTraversalTest.
+   * Slope sensitivity determines how much the elevation profile affects travel time:
+   * - 0.0: No slope effect (electric scooters maintain constant speed)
+   * - 0.3: Default e-assist sensitivity (motor helps on hills)
+   * - 1.0: Full slope effect (human-powered)
    */
-  @Test
-  void electricScooterUsesConstantSpeedOnHillyTerrain() {
-    // Create edge with elevation profile
-    Coordinate c1 = new Coordinate(-122.575033, 45.456773);
-    Coordinate c2 = new Coordinate(-122.576668, 45.451426);
-
-    StreetVertex from = intersectionVertex("from", c1.y, c1.x);
-    StreetVertex to = intersectionVertex("to", c2.y, c2.x);
-
-    var geometry = org.opentripplanner.framework.geometry.GeometryUtils.getGeometryFactory()
-      .createLineString(new Coordinate[] { c1, c2 });
-
-    StreetEdge hillyEdge = new StreetEdgeBuilder<>()
-      .withFromVertex(from)
-      .withToVertex(to)
-      .withGeometry(geometry)
-      .withName("Hilly Street")
-      .withMeterLength(LENGTH)
-      .withPermission(StreetTraversalPermission.ALL)
-      .buildAndConnect();
-
-    // Add elevation profile (10% slope up and down)
-    Coordinate[] profile = new Coordinate[] {
-      new Coordinate(0, 0),
-      new Coordinate(LENGTH / 2, LENGTH / 20.0), // 10% slope up
-      new Coordinate(LENGTH, 0), // 10% slope down
-    };
-    PackedCoordinateSequence elev = new PackedCoordinateSequence.Double(profile);
-    StreetElevationExtensionBuilder.of(hillyEdge)
-      .withElevationProfile(elev)
-      .withComputed(false)
-      .build()
-      .ifPresent(hillyEdge::setElevationExtension);
-
-    // Verify the edge has slope effect (effective bike distance should differ from flat distance)
-    double effectiveBikeDistance = hillyEdge.getEffectiveBikeDistance();
-    double flatDistance = hillyEdge.getDistanceMeters();
-    // The effective bike distance should be greater than flat due to uphill slope penalty
-    assertTrue(effectiveBikeDistance > flatDistance);
-
-    // Electric scooter rental - use TRIANGLE with time=1 to test time calculation
-    var req = StreetSearchRequest.of()
-      .withMode(StreetMode.SCOOTER_RENTAL)
-      .withScooter(scooter ->
-        scooter
-          .withSpeed(SPEED)
-          .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
-          .withOptimizeTriangle(it -> it.withTime(1))
-          .withReluctance(1)
-      )
-      .build();
-
-    var editor = new StateEditor(from, req);
-    editor.beginFloatingVehicleRenting(
-      RentalFormFactor.SCOOTER,
-      PropulsionType.ELECTRIC,
-      "network",
-      false
+  static Stream<Arguments> propulsionSlopeCases() {
+    return Stream.of(
+      of(PropulsionType.ELECTRIC, RentalFormFactor.SCOOTER, StreetMode.SCOOTER_RENTAL, 0.0),
+      of(
+        PropulsionType.ELECTRIC_ASSIST,
+        RentalFormFactor.BICYCLE,
+        StreetMode.BIKE_RENTAL,
+        VehicleRentalPreferences.DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY
+      ),
+      of(PropulsionType.HUMAN, RentalFormFactor.BICYCLE, StreetMode.BIKE_RENTAL, 1.0)
     );
-    var state = editor.makeState();
-
-    var result = hillyEdge.traverse(state)[0];
-
-    // Electric scooter should use flat distance for time (ignores slope)
-    double expectedWeight = LENGTH / SPEED; // flat distance / speed
-    assertEquals(expectedWeight, result.getWeight() - state.getWeight(), DELTA);
   }
 
   /**
-   * Tests that human-powered bikes use full slope effect for time calculation.
-   * Uses TRIANGLE optimization with time=1 to isolate the time/speed component.
+   * Tests that different propulsion types result in appropriate slope sensitivity for time
+   * calculation. Uses TRIANGLE optimization with time=1 to isolate the time/speed component.
    */
-  @Test
-  void humanPoweredBikeUsesFullSlopeEffect() {
-    // Create edge with elevation profile
-    Coordinate c1 = new Coordinate(-122.575033, 45.456773);
-    Coordinate c2 = new Coordinate(-122.576668, 45.451426);
-
-    StreetVertex from = intersectionVertex("from", c1.y, c1.x);
-    StreetVertex to = intersectionVertex("to", c2.y, c2.x);
-
-    var geometry = org.opentripplanner.framework.geometry.GeometryUtils.getGeometryFactory()
-      .createLineString(new Coordinate[] { c1, c2 });
-
-    StreetEdge hillyEdge = new StreetEdgeBuilder<>()
-      .withFromVertex(from)
-      .withToVertex(to)
-      .withGeometry(geometry)
-      .withName("Hilly Street")
-      .withMeterLength(LENGTH)
-      .withPermission(StreetTraversalPermission.ALL)
-      .buildAndConnect();
-
-    // Add elevation profile (10% slope up and down)
-    Coordinate[] profile = new Coordinate[] {
-      new Coordinate(0, 0),
-      new Coordinate(LENGTH / 2, LENGTH / 20.0),
-      new Coordinate(LENGTH, 0),
-    };
-    PackedCoordinateSequence elev = new PackedCoordinateSequence.Double(profile);
-    StreetElevationExtensionBuilder.of(hillyEdge)
-      .withElevationProfile(elev)
-      .withComputed(false)
-      .build()
-      .ifPresent(hillyEdge::setElevationExtension);
-
-    double slopedDistance = hillyEdge.getEffectiveBikeDistance();
-
-    // Human-powered bike rental - use TRIANGLE with time=1 to test time calculation
-    var req = StreetSearchRequest.of()
-      .withMode(StreetMode.BIKE_RENTAL)
-      .withBike(bike ->
-        bike
-          .withSpeed(SPEED)
-          .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
-          .withOptimizeTriangle(it -> it.withTime(1))
-          .withReluctance(1)
-      )
-      .build();
-
-    var editor = new StateEditor(from, req);
-    editor.beginFloatingVehicleRenting(
-      RentalFormFactor.BICYCLE,
-      PropulsionType.HUMAN,
-      "network",
-      false
-    );
-    var state = editor.makeState();
-
-    var result = hillyEdge.traverse(state)[0];
-
-    // Human-powered bike should use sloped distance for time (full slope effect)
-    double expectedWeight = slopedDistance / SPEED;
-    assertEquals(expectedWeight, result.getWeight() - state.getWeight(), DELTA);
-  }
-
-  /**
-   * Tests that electric-assist bikes have reduced slope sensitivity (30%).
-   * Uses TRIANGLE optimization with time=1 to isolate the time/speed component.
-   */
-  @Test
-  void electricAssistBikeHasReducedSlopeEffect() {
-    // Create edge with elevation profile
-    Coordinate c1 = new Coordinate(-122.575033, 45.456773);
-    Coordinate c2 = new Coordinate(-122.576668, 45.451426);
-
-    StreetVertex from = intersectionVertex("from", c1.y, c1.x);
-    StreetVertex to = intersectionVertex("to", c2.y, c2.x);
-
-    var geometry = org.opentripplanner.framework.geometry.GeometryUtils.getGeometryFactory()
-      .createLineString(new Coordinate[] { c1, c2 });
-
-    StreetEdge hillyEdge = new StreetEdgeBuilder<>()
-      .withFromVertex(from)
-      .withToVertex(to)
-      .withGeometry(geometry)
-      .withName("Hilly Street")
-      .withMeterLength(LENGTH)
-      .withPermission(StreetTraversalPermission.ALL)
-      .buildAndConnect();
-
-    // Add elevation profile (10% slope up and down)
-    Coordinate[] profile = new Coordinate[] {
-      new Coordinate(0, 0),
-      new Coordinate(LENGTH / 2, LENGTH / 20.0),
-      new Coordinate(LENGTH, 0),
-    };
-    PackedCoordinateSequence elev = new PackedCoordinateSequence.Double(profile);
-    StreetElevationExtensionBuilder.of(hillyEdge)
-      .withElevationProfile(elev)
-      .withComputed(false)
-      .build()
-      .ifPresent(hillyEdge::setElevationExtension);
-
-    double flatDistance = hillyEdge.getDistanceMeters();
-    double slopedDistance = hillyEdge.getEffectiveBikeDistance();
-    // Use default slope sensitivity from preferences
-    double slopeSensitivity = VehicleRentalPreferences.DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY;
+  @ParameterizedTest(
+    name = "propulsion={0}, formFactor={1}, mode={2} should have slope sensitivity {3}"
+  )
+  @MethodSource("propulsionSlopeCases")
+  void propulsionTypeAffectsSlopeCalculation(
+    PropulsionType propulsionType,
+    RentalFormFactor formFactor,
+    StreetMode streetMode,
+    double slopeSensitivity
+  ) {
     double expectedEffectiveDistance =
       flatDistance + (slopedDistance - flatDistance) * slopeSensitivity;
+    double expectedWeight = expectedEffectiveDistance / SPEED;
 
-    // Electric-assist bike rental - use TRIANGLE with time=1 to test time calculation
-    var req = StreetSearchRequest.of()
-      .withMode(StreetMode.BIKE_RENTAL)
-      .withBike(bike ->
-        bike
-          .withSpeed(SPEED)
-          .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
-          .withOptimizeTriangle(it -> it.withTime(1))
-          .withReluctance(1)
-      )
-      .build();
-
-    var editor = new StateEditor(from, req);
-    editor.beginFloatingVehicleRenting(
-      RentalFormFactor.BICYCLE,
-      PropulsionType.ELECTRIC_ASSIST,
-      "network",
-      false
-    );
-    var state = editor.makeState();
-
+    State state = createRentalState(streetMode, formFactor, propulsionType);
     var result = hillyEdge.traverse(state)[0];
 
-    // Electric-assist bike should use 30% of slope effect
-    double expectedWeight = expectedEffectiveDistance / SPEED;
     assertEquals(expectedWeight, result.getWeight() - state.getWeight(), DELTA);
   }
 
@@ -278,47 +163,11 @@ class StreetEdgePropulsionCostTest {
    */
   @Test
   void customElectricAssistSlopeSensitivity() {
-    // Create edge with elevation profile
-    Coordinate c1 = new Coordinate(-122.575033, 45.456773);
-    Coordinate c2 = new Coordinate(-122.576668, 45.451426);
-
-    StreetVertex from = intersectionVertex("from", c1.y, c1.x);
-    StreetVertex to = intersectionVertex("to", c2.y, c2.x);
-
-    var geometry = org.opentripplanner.framework.geometry.GeometryUtils.getGeometryFactory()
-      .createLineString(new Coordinate[] { c1, c2 });
-
-    StreetEdge hillyEdge = new StreetEdgeBuilder<>()
-      .withFromVertex(from)
-      .withToVertex(to)
-      .withGeometry(geometry)
-      .withName("Hilly Street")
-      .withMeterLength(LENGTH)
-      .withPermission(StreetTraversalPermission.ALL)
-      .buildAndConnect();
-
-    // Add elevation profile
-    Coordinate[] profile = new Coordinate[] {
-      new Coordinate(0, 0),
-      new Coordinate(LENGTH / 2, LENGTH / 20.0),
-      new Coordinate(LENGTH, 0),
-    };
-    PackedCoordinateSequence elev = new PackedCoordinateSequence.Double(profile);
-    StreetElevationExtensionBuilder.of(hillyEdge)
-      .withElevationProfile(elev)
-      .withComputed(false)
-      .build()
-      .ifPresent(hillyEdge::setElevationExtension);
-
-    double flatDistance = hillyEdge.getDistanceMeters();
-    double slopedDistance = hillyEdge.getEffectiveBikeDistance();
-
-    // Use custom sensitivity of 0.5 (50% slope effect)
     double customSensitivity = 0.5;
     double expectedEffectiveDistance =
       flatDistance + (slopedDistance - flatDistance) * customSensitivity;
+    double expectedWeight = expectedEffectiveDistance / SPEED;
 
-    // Electric-assist bike rental with custom slope sensitivity
     var req = StreetSearchRequest.of()
       .withMode(StreetMode.BIKE_RENTAL)
       .withBike(bike ->
@@ -342,7 +191,41 @@ class StreetEdgePropulsionCostTest {
 
     var result = hillyEdge.traverse(state)[0];
 
-    double expectedWeight = expectedEffectiveDistance / SPEED;
     assertEquals(expectedWeight, result.getWeight() - state.getWeight(), DELTA);
+  }
+
+  private State createRentalState(
+    StreetMode streetMode,
+    RentalFormFactor formFactor,
+    PropulsionType propulsionType
+  ) {
+    StreetSearchRequest req;
+    if (streetMode == StreetMode.SCOOTER_RENTAL) {
+      req = StreetSearchRequest.of()
+        .withMode(streetMode)
+        .withScooter(scooter ->
+          scooter
+            .withSpeed(SPEED)
+            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withOptimizeTriangle(it -> it.withTime(1))
+            .withReluctance(1)
+        )
+        .build();
+    } else {
+      req = StreetSearchRequest.of()
+        .withMode(streetMode)
+        .withBike(bike ->
+          bike
+            .withSpeed(SPEED)
+            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withOptimizeTriangle(it -> it.withTime(1))
+            .withReluctance(1)
+        )
+        .build();
+    }
+
+    var editor = new StateEditor(from, req);
+    editor.beginFloatingVehicleRenting(formFactor, propulsionType, "network", false);
+    return editor.makeState();
   }
 }
