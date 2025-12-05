@@ -444,4 +444,6 @@ public interface TransitService {
    * This does not include real-time updates, so it only checks the scheduled service dates.
    */
   boolean hasScheduledServicesAfter(LocalDate date, StopLocation stop);
+
+  ReplacementHelper getReplacementHelper();
 }

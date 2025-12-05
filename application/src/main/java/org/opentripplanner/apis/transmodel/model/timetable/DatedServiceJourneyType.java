@@ -41,7 +41,8 @@ public class DatedServiceJourneyType {
     GraphQLOutputType serviceJourneyType,
     GraphQLOutputType journeyPatternType,
     GraphQLType estimatedCallType,
-    GraphQLType quayType
+    GraphQLType quayType,
+    GraphQLOutputType replacementType
   ) {
     return GraphQLObjectType.newObject()
       .name(NAME)
@@ -151,6 +152,30 @@ public class DatedServiceJourneyType {
               .findTripTimesOnDate(tripOnServiceDate.getTrip(), tripOnServiceDate.getServiceDate())
               .orElse(List.of());
           })
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("replacement")
+          .type(new GraphQLNonNull(replacementType))
+          .description("Is a replacement trip")
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .getReplacement(tripOnServiceDate(environment))
+          )
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("replacedBy")
+          .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(REF))))
+          .description("Replaced by these trips")
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .getReplacedBy(tripOnServiceDate(environment))
+          )
           .build()
       )
       .build();

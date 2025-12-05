@@ -108,6 +108,7 @@ import org.opentripplanner.apis.transmodel.model.timetable.DatedServiceJourneyQu
 import org.opentripplanner.apis.transmodel.model.timetable.DatedServiceJourneyType;
 import org.opentripplanner.apis.transmodel.model.timetable.EmpiricalDelayType;
 import org.opentripplanner.apis.transmodel.model.timetable.InterchangeType;
+import org.opentripplanner.apis.transmodel.model.timetable.ReplacementType;
 import org.opentripplanner.apis.transmodel.model.timetable.ServiceJourneyType;
 import org.opentripplanner.apis.transmodel.model.timetable.TimetabledPassingTimeType;
 import org.opentripplanner.apis.transmodel.model.timetable.TripMetadataType;
@@ -167,6 +168,7 @@ public class TransmodelGraphQLSchemaFactory {
   private final ViaTripQuery viaTripQueryFactory;
   private final GroupOfLinesType groupOfLinesTypeFactory;
   private final DatedServiceJourneyQuery datedServiceJourneyQueryFactory;
+  private final ReplacementType replacementTypeFactory;
 
   private final Relay relay = new Relay();
 
@@ -199,6 +201,7 @@ public class TransmodelGraphQLSchemaFactory {
     this.viaTripQueryFactory = new ViaTripQuery(idMapper);
     this.groupOfLinesTypeFactory = new GroupOfLinesType(idMapper);
     this.datedServiceJourneyQueryFactory = new DatedServiceJourneyQuery(idMapper);
+    this.replacementTypeFactory = new ReplacementType();
   }
 
   public GraphQLSchema create() {
@@ -350,11 +353,14 @@ public class TransmodelGraphQLSchemaFactory {
       TimetabledPassingTimeType.REF
     );
 
+    GraphQLOutputType replacementType = replacementTypeFactory.create();
+
     GraphQLOutputType datedServiceJourneyType = datedServiceJourneyTypeFactory.create(
       serviceJourneyType,
       journeyPatternType,
       estimatedCallType,
-      quayType
+      quayType,
+      replacementType
     );
 
     GraphQLOutputType timetabledPassingTime = TimetabledPassingTimeType.create(

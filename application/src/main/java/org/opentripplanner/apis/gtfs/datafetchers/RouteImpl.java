@@ -164,7 +164,11 @@ public class RouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 
   @Override
   public DataFetcher<Boolean> isReplacementRoute() {
-    return environment -> false;
+    return environment -> {
+      var route = getSource(environment);
+      var replacementHelper = getTransitService(environment).getReplacementHelper();
+      return replacementHelper.isReplacementRoute(route);
+    };
   }
 
   @Override
@@ -203,7 +207,11 @@ public class RouteImpl implements GraphQLDataFetchers.GraphQLRoute {
 
   @Override
   public DataFetcher<Boolean> replacementRoutesExist() {
-    return environment -> false;
+    return environment -> {
+      var route = getSource(environment);
+      var replacementHelper = getTransitService(environment).getReplacementHelper();
+      return replacementHelper.replacementRoutesExist(route);
+    };
   }
 
   @Override

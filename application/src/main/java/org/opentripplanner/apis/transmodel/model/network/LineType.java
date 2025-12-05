@@ -223,6 +223,30 @@ public class LineType {
           .dataFetcher(environment -> (getSource(environment)).getGroupsOfRoutes())
           .build()
       )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("isReplacementLine")
+          .description("Is this line replacing some other line.")
+          .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .isReplacementRoute(getSource(environment))
+          )
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("replacementLinesExist")
+          .description("Do routes exist which replace this route on some dates")
+          .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .replacementRoutesExist(getSource(environment))
+          )
+          .build()
+      )
       .build();
   }
 

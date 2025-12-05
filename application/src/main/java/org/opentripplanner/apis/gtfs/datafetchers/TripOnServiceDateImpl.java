@@ -42,12 +42,16 @@ public class TripOnServiceDateImpl implements GraphQLDataFetchers.GraphQLTripOnS
 
   @Override
   public DataFetcher<Replacement> replacement() {
-    return environment -> null;
+    return environment -> getTransitService(environment)
+      .getReplacementHelper()
+      .getReplacement(getSource(environment));
   }
 
   @Override
   public DataFetcher<Iterable<TripOnServiceDate>> replacedBy() {
-    return environment -> null;
+    return environment -> getTransitService(environment)
+      .getReplacementHelper()
+      .getReplacedBy(getSource(environment));
   }
 
   @Override

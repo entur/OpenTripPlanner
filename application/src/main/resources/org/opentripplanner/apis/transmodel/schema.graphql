@@ -183,6 +183,10 @@ type DatedServiceJourney {
     "Only fetch the last n quays on the service journey"
     last: Int
   ): [Quay!]!
+  "Replaced by these trips"
+  replacedBy: [DatedServiceJourney!]!
+  "Is a replacement trip"
+  replacement: Replacement!
   "List of the dated service journeys this dated service journeys replaces"
   replacementFor: [DatedServiceJourney!]!
   "The service journey this Dated Service Journey is based on"
@@ -429,6 +433,8 @@ type Line {
   "Groups of lines that line is a part of."
   groupOfLines: [GroupOfLines]!
   id: ID!
+  "Is this line replacing some other line."
+  isReplacementLine: Boolean!
   journeyPatterns: [JourneyPattern]
   name: String
   notices: [Notice!]!
@@ -437,6 +443,8 @@ type Line {
   "Publicly announced code for line, differentiating it from other lines for the same operator."
   publicCode: String
   quays: [Quay]!
+  "Do routes exist which replace this route on some dates"
+  replacementLinesExist: Boolean!
   serviceJourneys: [ServiceJourney]!
   "Get all situations active for the line."
   situations: [PtSituationElement!]!
@@ -1045,6 +1053,12 @@ type RentalVehicleType {
   vehicleTypeId: String!
 }
 
+"Replacement"
+type Replacement {
+  isReplacement: Boolean!
+  replacementFor: [DatedServiceJourney!]
+}
+
 "Description of the reason, why the planner did not return any results"
 type RoutingError {
   "An enum describing the reason"
@@ -1212,6 +1226,8 @@ type ServiceJourney {
     date: Date
   ): [EstimatedCall!]! @timingData
   id: ID!
+  "Is this a replacement ServiceJourney for some other ServiceJourney on some dates"
+  isReplacementServiceJourney: Boolean!
   "JourneyPattern for the service journey, according to scheduled data. If the ServiceJourney is not included in the scheduled data, null is returned."
   journeyPattern: JourneyPattern
   line: Line!

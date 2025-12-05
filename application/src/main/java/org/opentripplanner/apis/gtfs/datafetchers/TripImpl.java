@@ -222,13 +222,6 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   }
 
   @Override
-  public DataFetcher<Boolean> isReplacementTrip() {
-    return environment -> {
-      return false;
-    };
-  }
-
-  @Override
   public DataFetcher<Iterable<Iterable<Double>>> geometry() {
     return environment -> {
       TripPattern tripPattern = getTripPattern(environment);
@@ -255,6 +248,12 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   public DataFetcher<Relay.ResolvedGlobalId> id() {
     return environment ->
       new Relay.ResolvedGlobalId("Trip", getSource(environment).getId().toString());
+  }
+
+  @Override
+  public DataFetcher<Boolean> isReplacementTrip() {
+    return environment ->
+      getSource(environment).getNetexSubMode().toString().toLowerCase().contains("replacement");
   }
 
   @Override

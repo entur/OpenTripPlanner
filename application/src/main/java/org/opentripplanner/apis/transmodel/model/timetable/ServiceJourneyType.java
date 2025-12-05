@@ -305,6 +305,32 @@ public class ServiceJourneyType {
           )
           .build()
       )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("isReplacementServiceJourney")
+          .description(
+            "Is this a replacement ServiceJourney for some other ServiceJourney on some dates"
+          )
+          .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .isReplacementTrip(trip(environment))
+          )
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("replacementServiceJourneysExist")
+          .description("Are there replacement ServiceJourneys for this ServiceJourney")
+          .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .replacementTripsExist(trip(environment))
+          )
+          .build()
+      )
       .build();
   }
 
