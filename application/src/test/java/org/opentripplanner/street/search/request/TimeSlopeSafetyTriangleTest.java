@@ -49,12 +49,10 @@ public class TimeSlopeSafetyTriangleTest {
 
   @Test
   public void testBuildDefaultValues() {
-    // Set som arbitrary values for the default instance
-    var expected = TimeSlopeSafetyTriangle.of().withTime(1).withSlope(1).withSafety(1).build();
-    // then the default should be returned if no value is set
-    var result = TimeSlopeSafetyTriangle.of().build();
-
-    assertEquals(expected, result);
+    var result = TimeSlopeSafetyTriangle.of().withSlope(1).build();
+    assertEquals("[time: 0.0, slope: 1.0, safety: 0.0]", result.toString());
+    var result2 = TimeSlopeSafetyTriangle.of().withSlope(0).build();
+    assertEquals("[time: 0.33, slope: 0.33, safety: 0.34]", result2.toString());
   }
 
   @Test

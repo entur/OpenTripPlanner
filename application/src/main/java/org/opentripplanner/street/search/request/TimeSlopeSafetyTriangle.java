@@ -58,11 +58,9 @@ public final class TimeSlopeSafetyTriangle {
   }
 
   /**
-   * Creates a special builder, which used together with the
-   * {@link #buildOrDefault()} can return a new instance or the
-   * default value if no values are set. This is useful in the APIs where we want to fall back to
-   * the default {@link TimeSlopeSafetyTriangle}, if no values are set. If only one or two values
-   * are set the new instance will contain only those values, and the none set values will be zero.
+   * Creates a special builder which is initialized with default values.
+   * This is useful in the APIs where we want to fall back to
+   * the default {@link TimeSlopeSafetyTriangle}, if no values are set.
    */
   public static Builder of() {
     return new Builder(DEFAULT);
