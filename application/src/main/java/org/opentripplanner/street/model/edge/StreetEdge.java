@@ -1116,14 +1116,9 @@ public class StreetEdge
     double speed,
     State state
   ) {
-    PropulsionType propulsion = state.isRentingVehicle()
-      ? state.rentalVehiclePropulsionType()
-      : null;
+    PropulsionType propulsion = state.getPropulsionType();
 
-    double electricAssistSlopeSensitivity = mode == TraverseMode.BICYCLE
-      ? req.bike().rental().electricAssistSlopeSensitivity()
-      : req.scooter().rental().electricAssistSlopeSensitivity();
-
+    double electricAssistSlopeSensitivity = req.electricAssistSlopeSensitivity(mode);
     double effectiveTimeDistance = getEffectiveDistanceForPropulsion(
       propulsion,
       electricAssistSlopeSensitivity
