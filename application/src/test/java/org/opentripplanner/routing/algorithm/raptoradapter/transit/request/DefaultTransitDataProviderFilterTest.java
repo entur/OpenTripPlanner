@@ -380,6 +380,66 @@ class DefaultTransitDataProviderFilterTest {
     assertTrue(validateModes(List.of(new MainAndSubMode(BUS, LOCAL_BUS)), patternTimes));
   }
 
+  /**
+   * Test filtering by main mode only (no submode) on a pattern with multiple modes.
+   * This tests the scenario where a TripPattern contains trips with different modes
+   * (e.g., BUS and COACH), and we want to filter by just BUS.
+   */
+  @Test
+  void filterByMainModeOnMultiModePattern() {
+    // Create a pattern with containsMultipleModes=true
+    // The pattern itself is marked as BUS, but contains multiple modes
+    var busTrip = createPatternAndTimesWithMultipleModes(
+      TimetableRepositoryForTest.id("T1"),
+      TransitMode.BUS
+    );
+
+    var coachTrip = createPatternAndTimesWithMultipleModes(
+      TimetableRepositoryForTest.id("T2"),
+      TransitMode.COACH
+    );
+
+    // Filter for BUS only (no submode specified)
+    var filter = DefaultTransitDataProviderFilter.of()
+      .withFilters(filterForMode(TransitMode.BUS))
+      .build();
+
+    // BUS trip should pass the filter
+    assertTrue(validate(filter, busTrip), "BUS trip should be included when filtering for BUS");
+
+    // COACH trip should NOT pass the filter - this is the bug!
+    // Currently this incorrectly returns true because trip-level filtering is skipped
+    assertFalse(
+      validate(filter, coachTrip),
+      "COACH trip should be excluded when filtering for BUS"
+    );
+  }
+
+  /**
+   * Test filtering by main mode on a pattern with multiple modes, verifying that
+   * multiple different modes can be correctly filtered.
+   */
+  @Test
+  void filterByDifferentMainModesOnMultiModePattern() {
+    var busTrip = createPatternAndTimesWithMultipleModes(
+      TimetableRepositoryForTest.id("T1"),
+      TransitMode.BUS
+    );
+
+    var railTrip = createPatternAndTimesWithMultipleModes(
+      TimetableRepositoryForTest.id("T2"),
+      TransitMode.RAIL
+    );
+
+    // Filter for RAIL only
+    var filter = DefaultTransitDataProviderFilter.of()
+      .withFilters(filterForMode(TransitMode.RAIL))
+      .build();
+
+    assertFalse(validate(filter, busTrip), "BUS trip should be excluded when filtering for RAIL");
+    assertTrue(validate(filter, railTrip), "RAIL trip should be included when filtering for RAIL");
+  }
+
   @Ignore
   void selectCombinationTest() {
     // This test illustrates a bug in the filtering logic.
@@ -973,6 +1033,48 @@ class DefaultTransitDataProviderFilterTest {
       null,
       true
     );
+  }
+
+  /**
+   * Creates a PatternAndTimes where the pattern has containsMultipleModes=true,
+   * simulating a NeTEx JourneyPattern with trips of different modes.
+   * The trip's mode is set to the specified mode.
+   */
+  private PatternAndTimes createPatternAndTimesWithMultipleModes(
+    FeedScopedId tripId,
+    TransitMode tripMode
+  ) {
+    Trip trip = Trip.of(tripId)
+      .withRoute(ROUTE)
+      .withMode(tripMode)
+      .withBikesAllowed(BikeAccess.NOT_ALLOWED)
+      .withCarsAllowed(CarAccess.NOT_ALLOWED)
+      .withWheelchairBoarding(Accessibility.NOT_POSSIBLE)
+      .build();
+
+    StopTime stopTime = new StopTime();
+    stopTime.setStop(STOP_FOR_TEST);
+    stopTime.setArrivalTime(60);
+    stopTime.setDepartureTime(60);
+    stopTime.setStopSequence(0);
+
+    StopPattern stopPattern = new StopPattern(List.of(stopTime));
+
+    // Pattern is marked as BUS (first trip's mode) but contains multiple modes
+    var tripPattern = TripPattern.of(TimetableRepositoryForTest.id("P1"))
+      .withRoute(ROUTE)
+      .withStopPattern(stopPattern)
+      .withMode(TransitMode.BUS)
+      .withContainsMultipleModes(true)
+      .build();
+
+    TripTimes tripTimes = TripTimesFactory.tripTimes(
+      trip,
+      List.of(new StopTime()),
+      new Deduplicator()
+    );
+
+    return new PatternAndTimes(tripPattern, tripTimes);
   }
 
   public static RegularStop stopForTest(
