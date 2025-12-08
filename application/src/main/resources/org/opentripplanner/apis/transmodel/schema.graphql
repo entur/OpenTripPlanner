@@ -2160,7 +2160,7 @@ scalar Time
 
 "Bicycle routing preferences."
 input BikePreferencesInput {
-  "The set of characteristics that the user wants to optimize for during bicycle routing. Default: safe_streets"
+  "The set of characteristics that the user wants to optimize for during bicycle routing."
   optimisationMethod: VehicleOptimisationMethod = safe
   "A measure of how bad biking is compared to being in transit for equal periods of time. Higher values make routing prefer other modes over biking. Default: 2.0"
   reluctance: Float = 2.0
@@ -2307,11 +2307,11 @@ input RelaxCostInput {
 
 "Scooter routing preferences."
 input ScooterPreferencesInput {
-  "The set of characteristics that the user wants to optimize for during scooter routing. Default: safe_streets"
+  "The set of characteristics that the user wants to optimize for during scooter routing."
   optimisationMethod: VehicleOptimisationMethod = safe
-  "A measure of how bad scooter travel is compared to being in transit for equal periods of time. Higher values make routing prefer other modes over scooter. Default: 2.0"
+  "A measure of how bad scooter travel is compared to being in transit for equal periods of time. Higher values make routing prefer other modes over scooter."
   reluctance: Float = 2.0
-  "The maximum scooter speed along streets, in meters per second. Default: 5.0"
+  "The maximum scooter speed along streets, in meters per second."
   speed: Float = 5.0
   "When using optimisationMethod 'triangle', these values tell the routing engine how important each factor is compared to the others. All values should add up to 1."
   triangleFactors: TriangleFactors
