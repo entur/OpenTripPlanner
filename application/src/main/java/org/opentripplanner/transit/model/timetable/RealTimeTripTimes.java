@@ -22,7 +22,7 @@ import org.opentripplanner.utils.lang.IntUtils;
  * GTFS).
  */
 
-public final class RealTimeTripTimes implements TripTimes {
+public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
 
   private final ScheduledTripTimes scheduledTripTimes;
 
@@ -295,7 +295,7 @@ public final class RealTimeTripTimes implements TripTimes {
    * Time-shift all times on this trip. This is used when updating the time zone for the trip.
    */
   @Override
-  public RealTimeTripTimes adjustTimesToGraphTimeZone(Duration shiftDelta) {
+  public RealTimeTripTimes withAdjustedTimeZone(Duration shiftDelta) {
     return new RealTimeTripTimes(this, (int) shiftDelta.toSeconds());
   }
 

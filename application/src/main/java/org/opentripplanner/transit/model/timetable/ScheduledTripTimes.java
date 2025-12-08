@@ -28,7 +28,7 @@ import org.opentripplanner.utils.time.TimeUtils;
  *
  * @see RealTimeTripTimes for real-time version
  */
-public final class ScheduledTripTimes implements TripTimes {
+public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
 
   /**
    * When time-shifting from one time-zone to another negative times may occur.
@@ -136,7 +136,7 @@ public final class ScheduledTripTimes implements TripTimes {
   }
 
   @Override
-  public ScheduledTripTimes adjustTimesToGraphTimeZone(Duration shiftDelta) {
+  public ScheduledTripTimes withAdjustedTimeZone(Duration shiftDelta) {
     return copyOfNoDuplication().plusTimeShift((int) shiftDelta.toSeconds()).build();
   }
 

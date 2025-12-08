@@ -20,7 +20,7 @@ import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
  * GTFS). Unless stated otherwise, accessor methods which take an integer stop parameter refer to
  * the position within the trip's TripPattern (not its GTFS stop sequence for example).
  */
-public interface TripTimes extends Serializable, Comparable<TripTimes> {
+public interface TripTimes<T extends TripTimes> extends Serializable, Comparable<TripTimes> {
   /**
    * Create a RealTimeTripTimesBuilder using the information, but not the times, from this
    * TripTimes.
@@ -37,7 +37,7 @@ public interface TripTimes extends Serializable, Comparable<TripTimes> {
   int getServiceCode();
 
   /** Make a copy of the TripTimes with the new service code, for use while adding trips to Timetable */
-  TripTimes withServiceCode(int serviceCode);
+  T withServiceCode(int serviceCode);
 
   /**
    * The time in seconds after midnight at which the vehicle should arrive at the given stop
@@ -195,5 +195,5 @@ public interface TripTimes extends Serializable, Comparable<TripTimes> {
   /**
    * Time-shift all times on this trip. This is used when updating the time zone for the trip.
    */
-  TripTimes adjustTimesToGraphTimeZone(Duration shiftDelta);
+  T withAdjustedTimeZone(Duration shiftDelta);
 }
