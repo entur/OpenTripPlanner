@@ -187,7 +187,6 @@ class StreetSearchRequestMapperTest {
     var bikeRequest = subject.bike();
     assertEquals(5.0, bikeRequest.speed());
     assertEquals(1.5, bikeRequest.reluctance());
-    assertEquals(200, bikeRequest.boardCost());
     assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
 
     var walking = bikeRequest.walking();
@@ -199,6 +198,27 @@ class StreetSearchRequestMapperTest {
     assertEquals(0.1, bikeRequest.optimizeTriangle().slope());
     assertEquals(0.1, bikeRequest.optimizeTriangle().safety());
     assertEquals(0.8, bikeRequest.optimizeTriangle().time());
+  }
+
+  @Test
+  void bikeTriangle() {
+    var builder = builder()
+      .withPreferences(pref ->
+        pref.withBike(bike ->
+          bike
+            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withOptimizeTriangle(it -> it.withTime(1).withSafety(2).withSlope(3))
+        )
+      );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var bikeRequest = subject.bike();
+    assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
+    assertEquals(0.5, bikeRequest.optimizeTriangle().slope());
+    assertEquals(0.33, bikeRequest.optimizeTriangle().safety());
+    assertEquals(0.17, bikeRequest.optimizeTriangle().time());
   }
 
   @Test
