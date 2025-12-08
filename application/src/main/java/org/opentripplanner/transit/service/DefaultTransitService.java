@@ -113,7 +113,7 @@ public class DefaultTransitService implements TransitEditorService {
     this.timetableRepositoryIndex = timetableRepository.getTimetableRepositoryIndex();
     this.timetableSnapshot = timetableSnapshot;
     this.stopTimesHelper = new StopTimesHelper(this);
-    this.replacementHelper = new ReplacementHelper(this);
+    this.replacementHelper = new ReplacementHelper(this, timetableRepository, timetableSnapshot);
   }
 
   @Override

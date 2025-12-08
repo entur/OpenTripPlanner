@@ -1,6 +1,8 @@
 package org.opentripplanner.transit.service;
 
-import java.util.Collections;
+import java.util.stream.Stream;
+import javax.annotation.Nullable;
+import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.transit.model.network.Replacement;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -8,10 +10,20 @@ import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
 public class ReplacementHelper {
 
-  private TransitService transitService;
+  private final TransitService transitService;
+  private final TimetableRepository timetableRepository;
 
-  public ReplacementHelper(TransitService transitService) {
+  @Nullable
+  private final TimetableSnapshot timetableSnapshot;
+
+  public ReplacementHelper(
+    TransitService transitService,
+    TimetableRepository timetableRepository,
+    @Nullable TimetableSnapshot timetableSnapshot
+  ) {
     this.transitService = transitService;
+    this.timetableRepository = timetableRepository;
+    this.timetableSnapshot = timetableSnapshot;
   }
 
   public boolean isReplacementRoute(Route route) {
@@ -46,6 +58,14 @@ public class ReplacementHelper {
   }
 
   public Iterable<TripOnServiceDate> getReplacedBy(TripOnServiceDate tripOnServiceDate) {
-    return Collections.emptyList();
+    var id = tripOnServiceDate.getId();
+    var replacedBy = timetableRepository.getReplacedByTripOnServiceDate(id);
+    if (timetableSnapshot != null) {
+      return Stream.concat(
+        replacedBy.stream(),
+        timetableSnapshot.getReplacedByTripOnServiceDate(id).stream()
+      ).toList();
+    }
+    return replacedBy;
   }
 }

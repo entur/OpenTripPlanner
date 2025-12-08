@@ -144,6 +144,10 @@ public class TimetableSnapshot {
   private final Multimap<Route, TripPattern> realTimeAddedPatternsForRoute;
   private final Map<FeedScopedId, TripOnServiceDate> realTimeAddedTripOnServiceDateById;
   private final Map<
+    FeedScopedId,
+    List<TripOnServiceDate>
+  > realTimeAddedReplacedByTripOnServiceDateById;
+  private final Map<
     TripIdAndServiceDate,
     TripOnServiceDate
   > realTimeAddedTripOnServiceDateForTripAndDay;
@@ -170,6 +174,7 @@ public class TimetableSnapshot {
       HashMultimap.create(),
       new HashMap<>(),
       new HashMap<>(),
+      new HashMap<>(),
       HashMultimap.create(),
       false
     );
@@ -183,6 +188,7 @@ public class TimetableSnapshot {
     Map<Trip, TripPattern> realTimeAddedPatternForTrip,
     Multimap<Route, TripPattern> realTimeAddedPatternsForRoute,
     Map<FeedScopedId, TripOnServiceDate> realTimeAddedTripOnServiceDateById,
+    Map<FeedScopedId, List<TripOnServiceDate>> realTimeAddedReplacedByTripOnServiceDateById,
     Map<TripIdAndServiceDate, TripOnServiceDate> realTimeAddedTripOnServiceDateForTripAndDay,
     SetMultimap<StopLocation, TripPattern> patternsForStop,
     boolean readOnly
@@ -194,6 +200,8 @@ public class TimetableSnapshot {
     this.realTimeAddedPatternForTrip = realTimeAddedPatternForTrip;
     this.realTimeAddedPatternsForRoute = realTimeAddedPatternsForRoute;
     this.realTimeAddedTripOnServiceDateById = realTimeAddedTripOnServiceDateById;
+    this.realTimeAddedReplacedByTripOnServiceDateById =
+      realTimeAddedReplacedByTripOnServiceDateById;
     this.realTimeAddedTripOnServiceDateForTripAndDay = realTimeAddedTripOnServiceDateForTripAndDay;
     this.patternsForStop = patternsForStop;
     this.readOnly = readOnly;
@@ -353,6 +361,11 @@ public class TimetableSnapshot {
 
       if (tripOnServiceDate != null) {
         realTimeAddedTripOnServiceDateById.put(tripOnServiceDate.getId(), tripOnServiceDate);
+        for (var replacementFor : tripOnServiceDate.getReplacementFor()) {
+          realTimeAddedReplacedByTripOnServiceDateById
+            .computeIfAbsent(replacementFor.getId(), k -> new ArrayList<>())
+            .add(tripOnServiceDate);
+        }
         realTimeAddedTripOnServiceDateForTripAndDay.put(
           new TripIdAndServiceDate(tripId, serviceDate),
           tripOnServiceDate
@@ -395,6 +408,12 @@ public class TimetableSnapshot {
       Map.copyOf(realTimeAddedPatternForTrip),
       ImmutableSetMultimap.copyOf(realTimeAddedPatternsForRoute),
       Map.copyOf(realTimeAddedTripOnServiceDateById),
+      realTimeAddedReplacedByTripOnServiceDateById
+        .entrySet()
+        .stream()
+        .collect(
+          Collectors.toUnmodifiableMap(Entry::getKey, entry -> List.copyOf(entry.getValue()))
+        ),
       Map.copyOf(realTimeAddedTripOnServiceDateForTripAndDay),
       ImmutableSetMultimap.copyOf(patternsForStop),
       true
@@ -532,6 +551,10 @@ public class TimetableSnapshot {
     }
 
     return modified;
+  }
+
+  public Collection<TripOnServiceDate> getReplacedByTripOnServiceDate(FeedScopedId id) {
+    return realTimeAddedReplacedByTripOnServiceDateById.getOrDefault(id, Collections.emptyList());
   }
 
   public boolean isDirty() {

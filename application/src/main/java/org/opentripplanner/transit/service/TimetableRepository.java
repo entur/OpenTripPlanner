@@ -124,6 +124,8 @@ public class TimetableRepository implements Serializable {
 
   private final Map<FeedScopedId, TripPattern> tripPatternForId = new HashMap<>();
   private final Map<FeedScopedId, TripOnServiceDate> tripOnServiceDates = new HashMap<>();
+  private final Map<FeedScopedId, List<TripOnServiceDate>> replacedByTripOnServiceDates =
+    new HashMap<>();
 
   private final Map<FeedScopedId, FlexTrip<?, ?>> flexTripsById = new HashMap<>();
 
@@ -396,6 +398,15 @@ public class TimetableRepository implements Serializable {
   public void addTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {
     invalidateIndex();
     tripOnServiceDates.put(tripOnServiceDate.getId(), tripOnServiceDate);
+    for (var replacementFor : tripOnServiceDate.getReplacementFor()) {
+      replacedByTripOnServiceDates
+        .computeIfAbsent(replacementFor.getId(), k -> new ArrayList<>())
+        .add(tripOnServiceDate);
+    }
+  }
+
+  public List<TripOnServiceDate> getReplacedByTripOnServiceDate(FeedScopedId id) {
+    return replacedByTripOnServiceDates.getOrDefault(id, Collections.emptyList());
   }
 
   /**
