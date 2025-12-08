@@ -191,11 +191,6 @@ public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
   }
 
   @Override
-  public int sortIndex() {
-    return getDepartureTime(0);
-  }
-
-  @Override
   public BookingInfo getDropOffBookingInfo(int stopPos) {
     return dropOffBookingInfos.get(stopPos);
   }
