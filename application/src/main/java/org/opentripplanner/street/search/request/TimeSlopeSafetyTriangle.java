@@ -66,14 +66,6 @@ public final class TimeSlopeSafetyTriangle {
     return new Builder(DEFAULT);
   }
 
-  private static double positiveValueOrZero(double value) {
-    return Math.max(0, value);
-  }
-
-  private static boolean zeroVector(double a, double b, double c) {
-    return a == ZERO && b == ZERO && c == ZERO;
-  }
-
   public double time() {
     return time;
   }
@@ -118,6 +110,14 @@ public final class TimeSlopeSafetyTriangle {
       .addNum(safety)
       .addText("]")
       .toString();
+  }
+
+  private static double positiveValueOrZero(double value) {
+    return Math.max(0, value);
+  }
+
+  private static boolean zeroVector(double a, double b, double c) {
+    return a == ZERO && b == ZERO && c == ZERO;
   }
 
   public static class Builder {
