@@ -2,6 +2,7 @@ package org.opentripplanner.transit.model.timetable;
 
 import java.io.Serializable;
 import org.opentripplanner.model.Frequency;
+import org.opentripplanner.utils.time.TimeUtils;
 
 /**
  * Uses a TripTimes to represent multiple trips following the same template at regular intervals.
@@ -53,9 +54,9 @@ public class FrequencyEntry implements Serializable {
     return String.format(
       "FreqEntry: trip %s start %s end %s headway %s",
       tripTimes.getTrip(),
-      formatSeconds(startTime),
-      formatSeconds(endTime),
-      formatSeconds(headway)
+      TimeUtils.timeToStrLong(startTime),
+      TimeUtils.timeToStrLong(endTime),
+      TimeUtils.timeToStrLong(headway)
     );
   }
 
@@ -135,14 +136,5 @@ public class FrequencyEntry implements Serializable {
       exactTimes,
       tripTimes.withServiceCode(serviceCode)
     );
-  }
-
-  /** Used in debugging / dumping times. */
-  private static String formatSeconds(int s) {
-    int m = s / 60;
-    s = s % 60;
-    final int h = m / 60;
-    m = m % 60;
-    return String.format("%02d:%02d:%02d", h, m, s);
   }
 }
