@@ -244,4 +244,10 @@ public class StreetSearchRequest implements AStarRequest {
   public ParkingRequest parking(TraverseMode mode) {
     return mode == TraverseMode.CAR ? car.parking() : bike.parking();
   }
+
+  public double electricAssistSlopeSensitivity(TraverseMode mode) {
+    return mode == TraverseMode.BICYCLE
+      ? bike().rental().electricAssistSlopeSensitivity()
+      : scooter().rental().electricAssistSlopeSensitivity();
+  }
 }

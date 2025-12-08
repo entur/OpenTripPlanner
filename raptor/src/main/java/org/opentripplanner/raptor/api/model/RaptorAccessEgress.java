@@ -1,6 +1,9 @@
 package org.opentripplanner.raptor.api.model;
 
 import static org.opentripplanner.raptor.api.model.RaptorConstants.TIME_NOT_SET;
+import static org.opentripplanner.raptor.api.model.RaptorValueType.C1;
+import static org.opentripplanner.raptor.api.model.RaptorValueType.RIDES;
+import static org.opentripplanner.raptor.api.model.RaptorValueType.TIME_PENALTY;
 
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
@@ -96,7 +99,7 @@ public interface RaptorAccessEgress {
   }
 
   default boolean hasTimePenalty() {
-    return timePenalty() != RaptorConstants.TIME_NOT_SET;
+    return RaptorConstants.isTimeSet(timePenalty());
   }
 
   /* TIME-DEPENDENT ACCESS/TRANSFER/EGRESS */
@@ -271,10 +274,13 @@ public interface RaptorAccessEgress {
     }
     buf.append(' ').append(DurationUtils.durationToStr(durationInSeconds()));
     if (includeCost && c1() > 0) {
-      buf.append(' ').append(RaptorValueFormatter.formatC1(c1()));
+      buf.append(' ').append(C1.format(c1()));
     }
     if (hasRides()) {
-      buf.append(' ').append(numberOfRides()).append('x');
+      buf.append(' ').append(RIDES.format(numberOfRides()));
+    }
+    if (hasTimePenalty()) {
+      buf.append(' ').append(TIME_PENALTY.format(timePenalty()));
     }
     if (hasOpeningHours()) {
       buf.append(' ').append(openingHoursToString());

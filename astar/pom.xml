@@ -13,7 +13,12 @@
     <name>OpenTripPlanner - A*</name>
 
     <build>
-        <plugins/>
+        <plugins>
+            <plugin>
+                <groupId>com.hubspot.maven.plugins</groupId>
+                <artifactId>prettier-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencies>

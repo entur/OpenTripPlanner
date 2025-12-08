@@ -209,9 +209,9 @@ class BikePreferencesMapperTest {
     assertEquals(7.0, result.speed()); // Wrapper value
     assertEquals(VehicleRoutingOptimizeType.TRIANGLE, result.optimizeType()); // Wrapper value
     // Values may be slightly different due to rounding in Units class
-    assertEquals(0.33, result.optimizeTriangle().time());
-    assertEquals(0.44, result.optimizeTriangle().slope());
-    assertEquals(0.23, result.optimizeTriangle().safety());
+    assertEquals(0.3, result.optimizeTriangle().time());
+    assertEquals(0.4, result.optimizeTriangle().slope());
+    assertEquals(0.2, result.optimizeTriangle().safety());
   }
 
   @Test

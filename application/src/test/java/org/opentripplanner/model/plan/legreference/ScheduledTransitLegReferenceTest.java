@@ -323,6 +323,7 @@ class ScheduledTransitLegReferenceTest {
       SIMPLE_TRIP_ID,
       SERVICE_DATE,
       0,
+      // last stop + 1
       NUMBER_OF_STOPS,
       STOP_1_ID,
       STOP_2_ID,
