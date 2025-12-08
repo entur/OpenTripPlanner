@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.model.GeneralizedCostRelaxFunction;
@@ -44,7 +43,6 @@ import org.slf4j.LoggerFactory;
 public class RaptorRequestMapper<T extends RaptorTripSchedule> {
 
   private static final Logger LOG = LoggerFactory.getLogger(RaptorRequestMapper.class);
-  private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
   private final RouteRequest request;
   private final Collection<? extends RaptorAccessEgress> accessPaths;
