@@ -2,6 +2,7 @@ package org.opentripplanner.ext.smoovebikerental;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Map;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
@@ -9,7 +10,6 @@ import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalSystem;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.updater.spi.DataSource;
 import org.opentripplanner.updater.spi.GenericJsonDataSource;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;

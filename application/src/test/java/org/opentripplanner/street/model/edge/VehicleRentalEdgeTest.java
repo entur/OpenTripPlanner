@@ -17,6 +17,7 @@ import static org.opentripplanner.street.model.RentalFormFactor.SCOOTER;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
@@ -31,7 +32,6 @@ import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.VehicleRentalState;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class VehicleRentalEdgeTest {
 

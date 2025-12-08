@@ -2,8 +2,8 @@ package org.opentripplanner.service.vehiclerental.model;
 
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * A geometry that describes descriptions about traversing with a rental vehicle or dropping it off
