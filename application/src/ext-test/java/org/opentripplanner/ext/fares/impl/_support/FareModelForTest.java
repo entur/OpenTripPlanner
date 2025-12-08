@@ -4,11 +4,11 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import java.time.ZonedDateTime;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareAttribute;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.transit.model.basic.Money;

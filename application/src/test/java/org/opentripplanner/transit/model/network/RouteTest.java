@@ -7,8 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;

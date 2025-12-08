@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.i18n;
+package org.opentripplanner.core.model.i18n;
 
 import java.util.Locale;
 import javax.annotation.Nullable;

@@ -1,7 +1,7 @@
 package org.opentripplanner.transit.model.timetable;
 
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;

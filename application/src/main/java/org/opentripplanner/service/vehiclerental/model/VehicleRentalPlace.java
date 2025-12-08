@@ -1,8 +1,8 @@
 package org.opentripplanner.service.vehiclerental.model;
 
 import java.util.Set;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.search.request.RentalRequest;
 
