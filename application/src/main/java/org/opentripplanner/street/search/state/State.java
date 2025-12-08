@@ -220,11 +220,6 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     );
   }
 
-  @Nullable
-  public PropulsionType getPropulsionType() {
-    return isRentingVehicle() ? rentalVehiclePropulsionType() : null;
-  }
-
   private boolean vehicleRentalIsFinished() {
     return (
       stateData.vehicleRentalState == VehicleRentalState.HAVE_RENTED ||
