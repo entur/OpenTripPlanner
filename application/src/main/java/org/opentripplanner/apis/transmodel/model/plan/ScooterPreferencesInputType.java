@@ -15,9 +15,7 @@ public class ScooterPreferencesInputType {
       .field(
         GraphQLInputObjectField.newInputObjectField()
           .name("speed")
-          .description(
-            "The maximum scooter speed along streets, in meters per second."
-          )
+          .description("The maximum scooter speed along streets, in meters per second.")
           .type(Scalars.GraphQLFloat)
           .defaultValue(dft.speed())
           .build()
