@@ -41,9 +41,7 @@ public class BikePreferencesInputType {
         GraphQLInputObjectField.newInputObjectField()
           .name("optimisationMethod")
           .description(
-            "The set of characteristics that the user wants to optimize for during bicycle routing. " +
-            "Default: " +
-            dft.optimizeType().name().toLowerCase()
+            "The set of characteristics that the user wants to optimize for during bicycle routing."
           )
           .type(EnumTypes.VEHICLE_OPTIMISATION_METHOD)
           .defaultValue(dft.optimizeType())

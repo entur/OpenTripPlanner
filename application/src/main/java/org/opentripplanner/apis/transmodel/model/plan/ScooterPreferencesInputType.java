@@ -16,9 +16,7 @@ public class ScooterPreferencesInputType {
         GraphQLInputObjectField.newInputObjectField()
           .name("speed")
           .description(
-            "The maximum scooter speed along streets, in meters per second. " +
-            "Default: " +
-            dft.speed()
+            "The maximum scooter speed along streets, in meters per second."
           )
           .type(Scalars.GraphQLFloat)
           .defaultValue(dft.speed())
@@ -29,9 +27,7 @@ public class ScooterPreferencesInputType {
           .name("reluctance")
           .description(
             "A measure of how bad scooter travel is compared to being in transit for equal periods of time. " +
-            "Higher values make routing prefer other modes over scooter. " +
-            "Default: " +
-            dft.reluctance()
+            "Higher values make routing prefer other modes over scooter."
           )
           .type(Scalars.GraphQLFloat)
           .defaultValue(dft.reluctance())
@@ -41,9 +37,7 @@ public class ScooterPreferencesInputType {
         GraphQLInputObjectField.newInputObjectField()
           .name("optimisationMethod")
           .description(
-            "The set of characteristics that the user wants to optimize for during scooter routing. " +
-            "Default: " +
-            dft.optimizeType().name().toLowerCase()
+            "The set of characteristics that the user wants to optimize for during scooter routing."
           )
           .type(EnumTypes.VEHICLE_OPTIMISATION_METHOD)
           .defaultValue(dft.optimizeType())
