@@ -142,10 +142,28 @@ public class DefaultRouteRequestType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
+          .name("elevatorBoardCost")
+          .deprecate("Use elevatorReluctance to set cost instead.")
+          .description("What is the cost of boarding a elevator?")
+          .type(Scalars.GraphQLInt)
+          .dataFetcher(env -> preferences.street().elevator().boardCost())
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
           .name("elevatorHopTime")
           .description("How long does it take to advance one floor on an elevator?")
           .type(Scalars.GraphQLInt)
           .dataFetcher(env -> preferences.street().elevator().hopTime())
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("elevatorHopCost")
+          .deprecate("Use elevatorReluctance to set cost instead.")
+          .description("What is the cost of travelling one floor on an elevator?")
+          .type(Scalars.GraphQLInt)
+          .dataFetcher(env -> preferences.street().elevator().hopCost())
           .build()
       )
       .field(

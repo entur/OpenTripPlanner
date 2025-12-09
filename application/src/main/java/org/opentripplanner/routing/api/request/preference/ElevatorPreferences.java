@@ -40,6 +40,14 @@ public final class ElevatorPreferences implements Serializable {
   }
 
   /**
+   * What is the cost of boarding an elevator?
+   */
+  @Deprecated
+  public int boardCost() {
+    return (int) (boardTime * reluctance);
+  }
+
+  /**
    * How long does it take to board an elevator, on average (actually, it probably should be a bit *more*
    * than average, to prevent optimistic trips)? Setting it to "seems like forever," while accurate,
    * will probably prevent OTP from working correctly.
@@ -50,8 +58,13 @@ public final class ElevatorPreferences implements Serializable {
 
   /**
    * What is the cost of travelling one floor on an elevator?
-   * It is assumed that getting off an elevator is completely free.
    */
+  @Deprecated
+  public int hopCost() {
+    return (int) (hopTime * reluctance);
+  }
+
+  /** How long does it take to travel one floor on an elevator? */
   public int hopTime() {
     return hopTime;
   }
