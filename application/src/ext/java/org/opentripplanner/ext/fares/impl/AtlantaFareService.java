@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
 import org.opentripplanner.model.fare.FareProduct;
@@ -23,7 +24,6 @@ import org.opentripplanner.model.fare.ItineraryFare;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.core.FareType;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 
 public class AtlantaFareService extends DefaultFareService {

@@ -16,9 +16,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.fare.FareMedium;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.fare.FareProduct;
@@ -27,7 +28,6 @@ import org.opentripplanner.model.fare.RiderCategory;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.core.FareType;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 
 public class OrcaFareService extends DefaultFareService {

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.BarrierIntersectingHighway;
 import org.opentripplanner.graph_builder.issues.DifferentLevelsSharingBarrier;

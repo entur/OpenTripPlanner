@@ -5,11 +5,11 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.Itinerary;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.utils.collection.ListUtils;
 
 /**

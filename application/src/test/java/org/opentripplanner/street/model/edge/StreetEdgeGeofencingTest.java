@@ -17,6 +17,7 @@ import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
@@ -30,7 +31,6 @@ import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class StreetEdgeGeofencingTest {
 
