@@ -5,12 +5,9 @@ import javax.annotation.Nullable;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
 import org.opentripplanner.service.streetdetails.model.Level;
-import org.opentripplanner.service.streetdetails.model.VertexLevelInfo;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
-import org.opentripplanner.street.model.edge.EscalatorEdge;
-import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.search.state.State;
 
@@ -26,38 +23,7 @@ public class VerticalTransportationUseFactory {
     this.streetDetailsService = streetDetailsService;
   }
 
-  public VerticalTransportationUse createInclinedVerticalTransportationUse(Edge edge) {
-    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional =
-      streetDetailsService.findInclinedEdgeLevelInfo(edge);
-    if (inclinedEdgeLevelInfoOptional.isEmpty()) {
-      return null;
-    }
-    InclinedEdgeLevelInfo inclinedEdgeLevelInfo = inclinedEdgeLevelInfoOptional.get();
-
-    VerticalDirection verticalDirection = edge.getFromVertex() instanceof OsmVertex fromVertex &&
-      fromVertex.nodeId() == inclinedEdgeLevelInfo.lowerVertexInfo().osmNodeId()
-      ? VerticalDirection.UP
-      : VerticalDirection.DOWN;
-    VertexLevelInfo fromVertexInfo = verticalDirection == VerticalDirection.UP
-      ? inclinedEdgeLevelInfo.lowerVertexInfo()
-      : inclinedEdgeLevelInfo.upperVertexInfo();
-    VertexLevelInfo toVertexInfo = verticalDirection == VerticalDirection.UP
-      ? inclinedEdgeLevelInfo.upperVertexInfo()
-      : inclinedEdgeLevelInfo.lowerVertexInfo();
-
-    if (edge instanceof EscalatorEdge) {
-      return new EscalatorUse(fromVertexInfo.level(), toVertexInfo.level(), verticalDirection);
-    }
-    if (edge instanceof StreetEdge streetEdge && streetEdge.isStairs()) {
-      return new StairsUse(fromVertexInfo.level(), toVertexInfo.level(), verticalDirection);
-    }
-    return null;
-  }
-
-  public VerticalTransportationUse createElevatorUse(
-    State backState,
-    ElevatorAlightEdge elevatorAlightEdge
-  ) {
+  public ElevatorUse createElevatorUse(State backState, ElevatorAlightEdge elevatorAlightEdge) {
     ElevatorBoardEdge elevatorBoardEdge = findElevatorBoardEdge(backState);
     if (elevatorBoardEdge == null) {
       throw new IllegalStateException(
@@ -71,7 +37,6 @@ public class VerticalTransportationUseFactory {
     Optional<Level> alightEdgeLevelOptional = streetDetailsService.findHorizontalEdgeLevelInfo(
       elevatorAlightEdge
     );
-
     if (boardEdgeLevelOptional.isPresent() && alightEdgeLevelOptional.isPresent()) {
       Level boardEdgeLevel = boardEdgeLevelOptional.get();
       Level alightEdgeLevel = alightEdgeLevelOptional.get();
@@ -87,7 +52,73 @@ public class VerticalTransportationUseFactory {
     } else if (alightEdgeLevelOptional.isPresent()) {
       return new ElevatorUse(null, alightEdgeLevelOptional.get(), VerticalDirection.UNKNOWN);
     }
-    return null;
+    return new ElevatorUse(null, null, VerticalDirection.UNKNOWN);
+  }
+
+  public EscalatorUse createEscalatorUse(Edge edge) {
+    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional =
+      streetDetailsService.findInclinedEdgeLevelInfo(edge);
+    if (inclinedEdgeLevelInfoOptional.isEmpty()) {
+      return new EscalatorUse(null, null, VerticalDirection.UNKNOWN);
+    }
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo = inclinedEdgeLevelInfoOptional.get();
+
+    VerticalDirection verticalDirection = getInclinedEdgeVerticalDirection(
+      edge,
+      inclinedEdgeLevelInfo
+    );
+    if (verticalDirection == VerticalDirection.UP) {
+      return new EscalatorUse(
+        inclinedEdgeLevelInfo.lowerVertexInfo().level(),
+        inclinedEdgeLevelInfo.upperVertexInfo().level(),
+        verticalDirection
+      );
+    } else {
+      return new EscalatorUse(
+        inclinedEdgeLevelInfo.upperVertexInfo().level(),
+        inclinedEdgeLevelInfo.lowerVertexInfo().level(),
+        verticalDirection
+      );
+    }
+  }
+
+  public StairsUse createStairsUse(Edge edge) {
+    Optional<InclinedEdgeLevelInfo> inclinedEdgeLevelInfoOptional =
+      streetDetailsService.findInclinedEdgeLevelInfo(edge);
+    if (inclinedEdgeLevelInfoOptional.isEmpty()) {
+      return new StairsUse(null, null, VerticalDirection.UNKNOWN);
+    }
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo = inclinedEdgeLevelInfoOptional.get();
+
+    VerticalDirection verticalDirection = getInclinedEdgeVerticalDirection(
+      edge,
+      inclinedEdgeLevelInfo
+    );
+    if (verticalDirection == VerticalDirection.UP) {
+      return new StairsUse(
+        inclinedEdgeLevelInfo.lowerVertexInfo().level(),
+        inclinedEdgeLevelInfo.upperVertexInfo().level(),
+        verticalDirection
+      );
+    } else {
+      return new StairsUse(
+        inclinedEdgeLevelInfo.upperVertexInfo().level(),
+        inclinedEdgeLevelInfo.lowerVertexInfo().level(),
+        verticalDirection
+      );
+    }
+  }
+
+  private VerticalDirection getInclinedEdgeVerticalDirection(
+    Edge edge,
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo
+  ) {
+    return (
+        edge.getFromVertex() instanceof OsmVertex fromVertex &&
+        fromVertex.nodeId() == inclinedEdgeLevelInfo.lowerVertexInfo().osmNodeId()
+      )
+      ? VerticalDirection.UP
+      : VerticalDirection.DOWN;
   }
 
   /**

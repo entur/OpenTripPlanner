@@ -584,9 +584,7 @@ public class StatesToWalkStepsMapper {
         .withRelativeDirection(RelativeDirection.STAIRS)
         .withAbsoluteDirection(DirectionUtils.getFirstAngle(geom))
         .addDistance(edge.getDistanceMeters())
-        .withVerticalTransportationUse(
-          verticalTransportationUseFactory.createInclinedVerticalTransportationUse(edge)
-        )
+        .withVerticalTransportationUse(verticalTransportationUseFactory.createStairsUse(edge))
     );
 
     lastAngle = DirectionUtils.getLastAngle(geom);
@@ -605,9 +603,7 @@ public class StatesToWalkStepsMapper {
         .withRelativeDirection(RelativeDirection.ESCALATOR)
         .withAbsoluteDirection(DirectionUtils.getFirstAngle(geom))
         .addDistance(edge.getDistanceMeters())
-        .withVerticalTransportationUse(
-          verticalTransportationUseFactory.createInclinedVerticalTransportationUse(edge)
-        )
+        .withVerticalTransportationUse(verticalTransportationUseFactory.createEscalatorUse(edge))
     );
 
     lastAngle = DirectionUtils.getLastAngle(geom);
