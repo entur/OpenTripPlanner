@@ -2,7 +2,7 @@ package org.opentripplanner.model.fare;
 
 import java.io.Serializable;
 import java.util.Objects;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.utils.lang.Sandbox;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -46,8 +46,12 @@ public final class RiderCategory implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (obj == this) return true;
-    if (obj == null || obj.getClass() != this.getClass()) return false;
+    if (obj == this) {
+      return true;
+    }
+    if (obj == null || obj.getClass() != this.getClass()) {
+      return false;
+    }
     var that = (RiderCategory) obj;
     return Objects.equals(this.id, that.id) && Objects.equals(this.name, that.name);
   }

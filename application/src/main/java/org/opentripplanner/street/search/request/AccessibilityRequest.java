@@ -97,8 +97,12 @@ public final class AccessibilityRequest {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     AccessibilityRequest that = (AccessibilityRequest) o;
     return (
       onlyConsiderAccessible == that.onlyConsiderAccessible &&

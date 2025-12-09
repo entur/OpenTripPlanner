@@ -10,9 +10,9 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.geometry.DirectionUtils;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.plan.leg.ElevationProfile;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
@@ -321,7 +321,9 @@ public class StatesToWalkStepsMapper {
     String lastStepName = lastStep.directionTextNoParens();
     String twoBackStepName = twoBack.directionTextNoParens();
     String threeBackStepName = threeBack.directionTextNoParens();
-    if (lastStepName == null || twoBackStepName == null || threeBackStepName == null) return false;
+    if (lastStepName == null || twoBackStepName == null || threeBackStepName == null) {
+      return false;
+    }
 
     return (
       (!lastStep.isCrossing() || lastStep.nameIsDerived()) &&

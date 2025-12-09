@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -30,7 +31,6 @@ import org.opentripplanner.routing.linking.internal.VertexCreationService.Locati
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * This is a factory that is responsible for linking origin, destination and visit via locations
@@ -280,7 +280,10 @@ public class LinkingContextFactory {
         var carRoutableVertex = getCarRoutableStreetVertex(container, location, type);
         carRoutableVertex.ifPresent(results::add);
       }
-    } else if (location.getCoordinate() != null) {
+    }
+
+    // If no vertices found from stop ID lookup and coordinates are available, use coordinates as fallback
+    if (results.isEmpty() && location.getCoordinate() != null) {
       // Connect a temporary vertex from coordinate to graph
       results.add(
         vertexCreationService.createVertexFromCoordinate(

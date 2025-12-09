@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
 import org.opentripplanner.model.fare.FareProduct;
@@ -23,7 +24,6 @@ import org.opentripplanner.model.fare.ItineraryFare;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.core.FareType;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 
 public class AtlantaFareService extends DefaultFareService {
@@ -285,7 +285,9 @@ public class AtlantaFareService extends DefaultFareService {
           default -> new TransferMeta(TransferType.NO_TRANSFER);
         };
       case MARTA:
-        if (!isElectronicPayment(fareType)) return new TransferMeta(TransferType.END_TRANSFER);
+        if (!isElectronicPayment(fareType)) {
+          return new TransferMeta(TransferType.END_TRANSFER);
+        }
         return switch (fromRideType) {
           case MARTA,
             XPRESS_AFTERNOON,
@@ -300,7 +302,9 @@ public class AtlantaFareService extends DefaultFareService {
       case XPRESS_MORNING:
       case XPRESS_AFTERNOON:
         boolean payOnExit = toRideType == RideType.XPRESS_AFTERNOON;
-        if (!isElectronicPayment(fareType)) return new TransferMeta(TransferType.END_TRANSFER);
+        if (!isElectronicPayment(fareType)) {
+          return new TransferMeta(TransferType.END_TRANSFER);
+        }
         return switch (fromRideType) {
           case MARTA,
             COBB_EXPRESS,
@@ -325,7 +329,9 @@ public class AtlantaFareService extends DefaultFareService {
           default -> new TransferMeta(TransferType.END_TRANSFER);
         };
       case GCT_LOCAL:
-        if (!isElectronicPayment(fareType)) return new TransferMeta(TransferType.END_TRANSFER);
+        if (!isElectronicPayment(fareType)) {
+          return new TransferMeta(TransferType.END_TRANSFER);
+        }
         return switch (fromRideType) {
           case MARTA, GCT_LOCAL, GCT_EXPRESS_Z1, GCT_EXPRESS_Z2 -> new TransferMeta(
             TransferType.FREE_TRANSFER
@@ -334,7 +340,9 @@ public class AtlantaFareService extends DefaultFareService {
         };
       case GCT_EXPRESS_Z1:
       case GCT_EXPRESS_Z2:
-        if (!isElectronicPayment(fareType)) return new TransferMeta(TransferType.END_TRANSFER);
+        if (!isElectronicPayment(fareType)) {
+          return new TransferMeta(TransferType.END_TRANSFER);
+        }
         return switch (fromRideType) {
           case MARTA -> new TransferMeta(TransferType.FREE_TRANSFER);
           case GCT_LOCAL, GCT_EXPRESS_Z1, GCT_EXPRESS_Z2 -> new TransferMeta(
