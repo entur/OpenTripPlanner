@@ -2,9 +2,9 @@ package org.opentripplanner.transit.service;
 
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.TimetableSnapshot;
 import org.opentripplanner.transit.model.network.Replacement;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
