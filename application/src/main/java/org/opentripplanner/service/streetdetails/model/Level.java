@@ -14,7 +14,7 @@ public class Level implements Serializable {
 
   public Level(double level, String name) {
     this.level = level;
-    this.name = name;
+    this.name = Objects.requireNonNull(name);
   }
 
   public double level() {

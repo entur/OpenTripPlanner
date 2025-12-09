@@ -65,7 +65,6 @@ public class SerializedGraphObject implements Serializable {
   public final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
 
   public final StreetDetailsRepository streetDetailsRepository;
-
   public final TimetableRepository timetableRepository;
   public final WorldEnvelopeRepository worldEnvelopeRepository;
   private final Collection<Edge> edges;

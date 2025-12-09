@@ -362,7 +362,7 @@ public class BuildConfig implements OtpDataStoreConfig {
       .of("includeInclinedEdgeLevelInfo")
       .since(V2_9)
       .summary(
-        "Whether level info for inclined edges should be stored in the StreetDetailsService."
+        "Whether level info for inclined edges should be stored in the graph for use during runtime."
       )
       .asBoolean(false);
     subwayAccessTime = root

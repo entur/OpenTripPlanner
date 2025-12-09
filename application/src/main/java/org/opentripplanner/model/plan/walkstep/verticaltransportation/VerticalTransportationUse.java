@@ -1,5 +1,6 @@
 package org.opentripplanner.model.plan.walkstep.verticaltransportation;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.service.streetdetails.model.Level;
 
@@ -21,7 +22,7 @@ public abstract sealed class VerticalTransportationUse
   ) {
     this.from = from;
     this.to = to;
-    this.verticalDirection = verticalDirection;
+    this.verticalDirection = Objects.requireNonNull(verticalDirection);
   }
 
   /**

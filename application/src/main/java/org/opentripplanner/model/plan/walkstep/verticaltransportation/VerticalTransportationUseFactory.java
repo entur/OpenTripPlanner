@@ -15,8 +15,8 @@ import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.search.state.State;
 
 /**
- * Represents information about a single use of a set of stairs related to
- * {@link org.opentripplanner.model.plan.walkstep.WalkStep}.
+ * This factory is responsible for creating {@link VerticalTransportationUse} objects.
+ * This applies to inclined edges and elevators.
  */
 public class VerticalTransportationUseFactory {
 

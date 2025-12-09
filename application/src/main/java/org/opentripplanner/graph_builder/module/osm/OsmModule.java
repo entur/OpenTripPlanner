@@ -70,9 +70,7 @@ public class OsmModule implements GraphBuilderModule {
   private final List<OsmProvider> providers;
   private final Graph graph;
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
-
   private final StreetDetailsRepository streetDetailsRepository;
-
   private final VehicleParkingRepository parkingRepository;
   private final StreetRepository streetRepository;
 

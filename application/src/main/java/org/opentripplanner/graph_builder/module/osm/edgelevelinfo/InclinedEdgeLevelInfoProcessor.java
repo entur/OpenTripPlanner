@@ -14,7 +14,7 @@ import org.opentripplanner.street.model.edge.Edge;
 public interface InclinedEdgeLevelInfoProcessor {
   InclinedEdgeLevelInfoProcessor NOOP = new NoopInclinedEdgeLevelInfoProcessor();
 
-  public Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmWay way);
+  Optional<InclinedEdgeLevelInfo> findInclinedEdgeLevelInfo(OsmWay way);
 
   void storeLevelInfoForEdge(
     @Nullable Edge forwardEdge,
