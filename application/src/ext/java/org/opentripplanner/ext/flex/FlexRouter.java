@@ -23,6 +23,7 @@ import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
@@ -123,7 +124,7 @@ public class FlexRouter {
     );
   }
 
-  public List<Itinerary> createFlexOnlyItineraries(boolean arriveBy) {
+  public List<Itinerary> createFlexOnlyItineraries(boolean arriveBy, RouteRequest request) {
     OTPRequestTimeoutException.checkForTimeout();
 
     var directFlexPaths = new FlexDirectPathFactory(
@@ -139,7 +140,7 @@ public class FlexRouter {
     for (DirectFlexPath it : directFlexPaths) {
       var startTime = startOfTime.plusSeconds(it.startTime());
       var itinerary = graphPathToItineraryMapper
-        .generateItinerary(new GraphPath<>(it.state()))
+        .generateItinerary(new GraphPath<>(it.state()), request)
         .withTimeShiftToStartAt(startTime);
 
       if (itinerary != null) {

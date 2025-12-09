@@ -13,7 +13,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ConstantsForTests;
-import org.opentripplanner.model.FeedInfo;
+import org.opentripplanner.model.FeedInfoTestFactory;
 import org.opentripplanner.model.Frequency;
 import org.opentripplanner.model.calendar.ServiceCalendar;
 import org.opentripplanner.model.calendar.ServiceCalendarDate;
@@ -99,7 +99,7 @@ public class OtpTransitServiceBuilderTest {
 
     // Supplement test data with at least one entity in all collections
     builder.getCalendarDates().add(createAServiceCalendarDateExclution(SERVICE_WEEKDAYS_ID));
-    builder.getFeedInfos().add(FeedInfo.dummyForTest(FEED_ID));
+    builder.getFeedInfos().add(FeedInfoTestFactory.dummyForTest(FEED_ID));
 
     return builder;
   }

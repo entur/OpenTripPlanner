@@ -281,7 +281,7 @@ public class RaptorPathToItineraryMapperTest {
       stopTimes.add(stopTime);
     }
 
-    var builder = TripPattern.of(new FeedScopedId("TestFeed", "TestId"))
+    var builder = TripPattern.of(new FeedScopedId(pattern.route().getId().getFeedId(), "TestId"))
       .withRoute(pattern.route())
       .withStopPattern(new StopPattern(stopTimes));
     return builder.build();

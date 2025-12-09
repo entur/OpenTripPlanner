@@ -5702,6 +5702,12 @@ public class GraphQLTypes {
     UP,
   }
 
+  /** Categorization for via locations. */
+  public enum GraphQLViaLocationType {
+    PASS_THROUGH,
+    VISIT,
+  }
+
   public static class GraphQLWalkPreferencesInput {
 
     private org.opentripplanner.framework.model.Cost boardCost;

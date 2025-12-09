@@ -1,11 +1,9 @@
-package org.opentripplanner.model;
+package org.opentripplanner.transit.model.timetable;
 
 import java.time.LocalDate;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
-import org.opentripplanner.transit.model.timetable.TripTimes;
 
 /**
  * Represents the real-time update of a single trip.
