@@ -34,6 +34,16 @@ public class ReplacementHelper {
   }
 
   public boolean replacementRoutesExist(Route route) {
+    for (var tripOnServiceDate : transitService.listTripsOnServiceDate()) {
+      if (tripOnServiceDate.getTrip().getRoute().getId().equals(route.getId())) {
+        var id = tripOnServiceDate.getId();
+        return (
+          !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
+          (timetableSnapshot != null &&
+            !timetableSnapshot.getReplacedByTripOnServiceDate(id).isEmpty())
+        );
+      }
+    }
     return false;
   }
 
@@ -46,6 +56,16 @@ public class ReplacementHelper {
   }
 
   public boolean replacementTripsExist(Trip trip) {
+    for (var tripOnServiceDate : transitService.listTripsOnServiceDate()) {
+      if (tripOnServiceDate.getTrip().getId().equals(trip.getId())) {
+        var id = tripOnServiceDate.getId();
+        return (
+          !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
+          (timetableSnapshot != null &&
+            !timetableSnapshot.getReplacedByTripOnServiceDate(id).isEmpty())
+        );
+      }
+    }
     return false;
   }
 
