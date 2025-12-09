@@ -1,4 +1,4 @@
-package org.opentripplanner.transit.model.framework;
+package org.opentripplanner.core.model.id;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
