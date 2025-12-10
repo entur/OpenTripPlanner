@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.util.HashMap;
 import java.util.Map;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareRulesData;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareServiceFactory;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.fares.FareService;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public class AtlantaFareServiceFactory extends DefaultFareServiceFactory {
 

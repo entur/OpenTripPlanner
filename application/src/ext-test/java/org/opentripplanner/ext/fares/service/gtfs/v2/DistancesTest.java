@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareDistance;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
@@ -21,7 +22,6 @@ import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Distance;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class DistancesTest {
 

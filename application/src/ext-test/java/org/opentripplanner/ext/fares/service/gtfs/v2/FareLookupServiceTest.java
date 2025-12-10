@@ -15,13 +15,13 @@ import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareLegRuleBuilder;
 import org.opentripplanner.ext.fares.service._support.FareTestConstants;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.TransitLeg;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.site.RegularStop;
 

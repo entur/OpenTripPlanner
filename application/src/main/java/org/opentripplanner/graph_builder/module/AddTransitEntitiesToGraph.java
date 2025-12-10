@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.model.OtpTransitService;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.street.model.StreetTraversalPermission;
