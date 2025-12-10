@@ -27,7 +27,7 @@ import org.opentripplanner.model.FeedInfoTestFactory;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceCalendarDate;
-import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
+import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -126,7 +126,7 @@ public class CalendarServiceDataFactoryImplTest {
       TimetableRepositoryForTest.FEED_ID,
       ConstantsForTests.SIMPLE_GTFS
     );
-    OtpTransitServiceBuilder builder = ctxBuilder
+    TransitDataImportBuilder builder = ctxBuilder
       .withDataImportIssueStore(DataImportIssueStore.NOOP)
       .getTransitBuilder();
 

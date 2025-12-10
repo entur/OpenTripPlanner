@@ -39,7 +39,7 @@ import org.opentripplanner.transit.service.SiteRepository;
  *
  * @author Thomas Gran (Capra) - tgr@capraconsulting.no (30.10.2017)
  */
-public class OtpTransitServiceBuilderLimitPeriodTest {
+public class TransitDataImportBuilderLimitPeriodTest {
 
   private static final LocalDate D0 = LocalDate.of(2020, 1, 1);
   private static final LocalDate D1 = LocalDate.of(2020, 1, 8);
@@ -66,11 +66,11 @@ public class OtpTransitServiceBuilderLimitPeriodTest {
   private final Trip tripCSDOut = createTrip("TDateOut", SERVICE_D_OUT);
   private TripPattern patternInT1;
   private TripPattern patternInT2;
-  private OtpTransitServiceBuilder subject;
+  private TransitDataImportBuilder subject;
 
   @BeforeEach
   public void setUp() {
-    subject = new OtpTransitServiceBuilder(new SiteRepository(), DataImportIssueStore.NOOP);
+    subject = new TransitDataImportBuilder(new SiteRepository(), DataImportIssueStore.NOOP);
 
     // Add a service calendar that overlap with the period limit
     subject.getCalendars().add(createServiceCalendar(SERVICE_C_IN, D1, D3));
