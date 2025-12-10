@@ -273,7 +273,7 @@ public class LuceneIndex implements Serializable {
         new Term(TYPE, analyzer.normalize(TYPE, StopCluster.class.getSimpleName()))
       );
 
-      var boostedCodeQuery = new org.apache.lucene.search.BoostQuery(codeQuery, 100.0f);
+      var boostedCodeQuery = new BoostQuery(codeQuery, 100.0f);
 
       var builder = new BooleanQuery.Builder()
         .setMinimumNumberShouldMatch(1)

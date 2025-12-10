@@ -31,12 +31,12 @@ public class GeocoderResource {
     @QueryParam("focusLatitude") Double focusLat,
     @QueryParam("focusLongitude") Double focusLon
   ) {
-    if (query == null || query.length() < 3) {
+    if (query == null || query.length() < 2) {
       return Response.status(Response.Status.BAD_REQUEST)
         .entity(
           Map.of(
             "error",
-            "Query parameter 'query' must be provided and have at least 3 characters."
+            "Query parameter 'query' must be provided and have at least 2 characters."
           )
         )
         .build();
