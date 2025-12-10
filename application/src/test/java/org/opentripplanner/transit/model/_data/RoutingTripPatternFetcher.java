@@ -7,6 +7,9 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternFo
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.service.TransitService;
 
+/**
+ * Convenience fetcher for routing trip patterns.
+ */
 public class RoutingTripPatternFetcher {
 
   private final TransitService transitService;
@@ -17,23 +20,18 @@ public class RoutingTripPatternFetcher {
     this.serviceDate = serviceDate;
   }
 
-  public List<RoutingTripPattern> findRoutingTripPatterns() {
-    return tripPatternsForDate(serviceDate)
-      .stream()
-      .map(TripPatternForDate::getTripPattern)
-      .sorted()
-      .toList();
-  }
-
+  /**
+   * Get the patterns for the given service data, extract their ids, convert to string and sort
+   * them alphabetically.
+   */
   public List<String> ids() {
-    return findRoutingTripPatterns()
-      .stream()
-      .map(t -> t.getPattern().getId().toString())
-      .sorted()
-      .toList();
+    return list().stream().map(t -> t.getPattern().getId().toString()).sorted().toList();
   }
 
-  private Collection<TripPatternForDate> tripPatternsForDate(LocalDate serviceDate) {
-    return transitService.getRealtimeRaptorTransitData().getTripPatternsForRunningDate(serviceDate);
+  public List<RoutingTripPattern> list() {
+    final Collection<TripPatternForDate> tripPatternsForRunningDate = transitService
+      .getRealtimeRaptorTransitData()
+      .getTripPatternsForRunningDate(serviceDate);
+    return tripPatternsForRunningDate.stream().map(TripPatternForDate::getTripPattern).toList();
   }
 }
