@@ -1,5 +1,7 @@
 package org.opentripplanner.transit.model._data;
 
+import static org.opentripplanner.transit.model._data.RoutingTripPatternFetcher.CancellationFilter.EXCLUDE_CANCELLED;
+
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
@@ -36,11 +38,7 @@ public class RoutingTripPatternFetcher {
    * Returns a copy of this fetcher that excludes cancelled trips.
    */
   public RoutingTripPatternFetcher excludeCancelled() {
-    return new RoutingTripPatternFetcher(
-      transitService,
-      serviceDate,
-      CancellationFilter.EXCLUDE_CANCELLED
-    );
+    return new RoutingTripPatternFetcher(transitService, serviceDate, EXCLUDE_CANCELLED);
   }
 
   /**
@@ -56,7 +54,7 @@ public class RoutingTripPatternFetcher {
       .getRealtimeRaptorTransitData()
       .getTripPatternsForRunningDate(serviceDate);
 
-    if (filter == CancellationFilter.EXCLUDE_CANCELLED) {
+    if (filter == EXCLUDE_CANCELLED) {
       tripPatternsForRunningDate = tripPatternsForRunningDate
         .stream()
         .filter(t -> !t.tripTimes().stream().allMatch(TripTimes::isCanceledOrDeleted))

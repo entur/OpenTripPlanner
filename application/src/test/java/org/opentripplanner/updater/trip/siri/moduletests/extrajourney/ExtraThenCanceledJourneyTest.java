@@ -50,7 +50,7 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(cancelledJourney(siri)));
     var patternFetcher = env.routingTripPatterns();
     assertThat(patternFetcher.ids()).containsExactly("F:Pattern1", "F:routeId::001:RT");
-    assertThat(env.routingTripPatterns().excludeCancelled().ids()).containsExactly("F:Pattern1");
+    assertThat(patternFetcher.excludeCancelled().ids()).containsExactly("F:Pattern1");
 
     assertEquals(
       "CANCELED | A 11:00 11:00 | B 11:10 11:10",

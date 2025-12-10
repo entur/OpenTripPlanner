@@ -103,7 +103,9 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
   }
 
   @Test
-  @Disabled
+  @Disabled(
+    "Can be enabled when https://github.com/opentripplanner/OpenTripPlanner/pull/6280 is merged"
+  )
   void reuseRealtimeTripPatterns() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).addTrip(TRIP_2_INPUT).build();
 
@@ -175,7 +177,9 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
   }
 
   @Test
-  @Disabled
+  @Disabled(
+    "Can be enabled when https://github.com/opentripplanner/OpenTripPlanner/pull/6280 is merged"
+  )
   void reuseRealtimeTripPatternsOnDifferentServiceDates() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).addTrip(TRIP_2_INPUT).build();
 
