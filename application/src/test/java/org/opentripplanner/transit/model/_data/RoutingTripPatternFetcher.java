@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
@@ -14,14 +15,36 @@ public class RoutingTripPatternFetcher {
 
   private final TransitService transitService;
   private final LocalDate serviceDate;
+  private final CancellationFilter filter;
 
-  public RoutingTripPatternFetcher(TransitService transitService, LocalDate serviceDate) {
+  enum CancellationFilter {
+    INCLUDE_CANCELLED,
+    EXCLUDE_CANCELLED,
+  }
+
+  RoutingTripPatternFetcher(
+    TransitService transitService,
+    LocalDate serviceDate,
+    CancellationFilter filter
+  ) {
     this.transitService = transitService;
     this.serviceDate = serviceDate;
+    this.filter = filter;
   }
 
   /**
-   * Get the patterns for the given service data, extract their ids, convert to string and sort
+   * Returns a copy of this fetcher that excludes cancelled trips.
+   */
+  public RoutingTripPatternFetcher excludeCancelled() {
+    return new RoutingTripPatternFetcher(
+      transitService,
+      serviceDate,
+      CancellationFilter.EXCLUDE_CANCELLED
+    );
+  }
+
+  /**
+   * Get the patterns for the given service data, extract their ids, converts to string and sort
    * them alphabetically.
    */
   public List<String> ids() {
@@ -29,9 +52,16 @@ public class RoutingTripPatternFetcher {
   }
 
   public List<RoutingTripPattern> list() {
-    final Collection<TripPatternForDate> tripPatternsForRunningDate = transitService
+    Collection<TripPatternForDate> tripPatternsForRunningDate = transitService
       .getRealtimeRaptorTransitData()
       .getTripPatternsForRunningDate(serviceDate);
+
+    if (filter == CancellationFilter.EXCLUDE_CANCELLED) {
+      tripPatternsForRunningDate = tripPatternsForRunningDate
+        .stream()
+        .filter(t -> !t.tripTimes().stream().allMatch(TripTimes::isCanceledOrDeleted))
+        .toList();
+    }
     return tripPatternsForRunningDate.stream().map(TripPatternForDate::getTripPattern).toList();
   }
 }
