@@ -61,6 +61,7 @@ public class OrcaFareServiceTest {
 
   private static final Money ONE_DOLLAR = usDollars(1f);
   private static final Money TWO_DOLLARS = usDollars(2);
+  private static final Money THREE_DOLLARS = usDollars(3);
   private static final Money HALF_FERRY_FARE = usDollars(1.75f);
   private static final Money ORCA_SPECIAL_FARE = usDollars(1.00f);
   public static final Money VASHON_WATER_TAXI_CASH_FARE = usDollars(7.00f);
@@ -188,11 +189,11 @@ public class OrcaFareServiceTest {
   @Test
   void calculateFareForSingleAgency() {
     List<Leg> rides = List.of(getLeg(COMM_TRANS_AGENCY_ID, "400", 0));
-    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE);
+    calculateFare(rides, regular, usDollars(2.5f));
     calculateFare(rides, FareType.senior, usDollars(1.00f));
     calculateFare(rides, FareType.youth, ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, usDollars(1.00f));
-    calculateFare(rides, FareType.electronicRegular, DEFAULT_TEST_RIDE_PRICE);
+    calculateFare(rides, FareType.electronicRegular, usDollars(2.5f));
     calculateFare(rides, FareType.electronicSenior, usDollars(1.00f));
     calculateFare(rides, FareType.electronicYouth, ZERO_USD);
   }
@@ -208,7 +209,7 @@ public class OrcaFareServiceTest {
       getLeg(WASHINGTON_STATE_FERRIES_AGENCY_ID, 1),
       getLeg(COMM_TRANS_AGENCY_ID, 2)
     );
-    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE.times(3));
+    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE.times(2).plus(usDollars(2.5f)));
     calculateFare(rides, FareType.senior, DEFAULT_TEST_RIDE_PRICE.plus(usDollars(2f)));
     calculateFare(rides, FareType.youth, Money.ZERO_USD);
     calculateFare(
@@ -450,11 +451,11 @@ public class OrcaFareServiceTest {
       getLeg(PIERCE_COUNTY_TRANSIT_AGENCY_ID, "594", 120),
       getLeg(KC_METRO_AGENCY_ID, "550", 240)
     );
-    calculateFare(rides, regular, usDollars(9.75f));
+    calculateFare(rides, regular, usDollars(9.00f));
     calculateFare(rides, FareType.senior, usDollars(3.00f));
     calculateFare(rides, FareType.youth, Money.ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, usDollars(3f));
-    calculateFare(rides, FareType.electronicRegular, usDollars(9.75f));
+    calculateFare(rides, FareType.electronicRegular, usDollars(9.00f));
     calculateFare(rides, FareType.electronicSenior, usDollars(3.00f));
     calculateFare(rides, FareType.electronicYouth, Money.ZERO_USD);
 
@@ -463,11 +464,11 @@ public class OrcaFareServiceTest {
       getLeg(PIERCE_COUNTY_TRANSIT_AGENCY_ID, "500", 0),
       getLeg(PIERCE_COUNTY_TRANSIT_AGENCY_ID, "501", 60)
     );
-    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE.times(2));
+    calculateFare(rides, regular, TWO_DOLLARS.times(2));
     calculateFare(rides, FareType.senior, TWO_DOLLARS);
     calculateFare(rides, FareType.youth, Money.ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, usDollars(1f));
-    calculateFare(rides, FareType.electronicRegular, DEFAULT_TEST_RIDE_PRICE);
+    calculateFare(rides, FareType.electronicRegular, TWO_DOLLARS);
     calculateFare(rides, FareType.electronicSenior, ONE_DOLLAR);
     calculateFare(rides, FareType.electronicYouth, Money.ZERO_USD);
   }
@@ -483,11 +484,11 @@ public class OrcaFareServiceTest {
       getLeg(KITSAP_TRANSIT_AGENCY_ID, 131),
       getLeg(KITSAP_TRANSIT_AGENCY_ID, 132)
     );
-    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE.times(3));
-    calculateFare(rides, FareType.senior, usDollars(3.00f));
+    calculateFare(rides, regular, usDollars(8.5f).plus(DEFAULT_TEST_RIDE_PRICE));
+    calculateFare(rides, FareType.senior, usDollars(4.00f));
     calculateFare(rides, FareType.youth, Money.ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
-    calculateFare(rides, FareType.electronicRegular, DEFAULT_TEST_RIDE_PRICE.times(2));
+    calculateFare(rides, FareType.electronicRegular, usDollars(3f).plus(DEFAULT_TEST_RIDE_PRICE));
     calculateFare(rides, FareType.electronicSenior, usDollars(2.00f)); // Transfer extended by CT ride
     calculateFare(rides, FareType.electronicYouth, ZERO_USD);
   }
@@ -499,7 +500,7 @@ public class OrcaFareServiceTest {
       getLeg(KC_METRO_AGENCY_ID, "973", 100), // higher fare, extends transfer
       getLeg(KC_METRO_AGENCY_ID, 200) // extended transfer due to middle leg
     );
-    calculateFare(rides, regular, usDollars(13.23f));
+    calculateFare(rides, regular, usDollars(12.25f));
     calculateFare(rides, FareType.senior, usDollars(4.50f));
     calculateFare(rides, FareType.youth, Money.ZERO_USD);
     calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
@@ -527,25 +528,24 @@ public class OrcaFareServiceTest {
   }
 
   /**
-   * Test monorail fares to ensure correct fare amounts are applied for all fare types.
-   * Monorail has unique fare structure where youth are not free (unlike other agencies).
+   * We explicitly do not calculate monorail fares
    */
   @Test
   void calculateMonorailFares() {
     List<Leg> rides = List.of(getLeg(MONORAIL_AGENCY_ID, 0));
 
-    calculateFare(rides, regular, usDollars(4.00f));
-    calculateFare(rides, FareType.senior, usDollars(2.00f));
-    calculateFare(rides, FareType.youth, usDollars(2.00f));
-    calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
-    calculateFare(rides, FareType.electronicRegular, usDollars(4.00f));
-    calculateFare(rides, FareType.electronicSenior, usDollars(2.00f));
+    calculateFare(rides, regular, usDollars(0.00f));
+    calculateFare(rides, FareType.senior, usDollars(0.00f));
+    calculateFare(rides, FareType.youth, usDollars(0.00f));
+    calculateFare(rides, FareType.electronicSpecial, usDollars(0.00f));
+    calculateFare(rides, FareType.electronicRegular, usDollars(0.00f));
+    calculateFare(rides, FareType.electronicSenior, usDollars(0.00f));
     calculateFare(rides, FareType.electronicYouth, usDollars(0.00f));
   }
 
   /**
    * Test monorail fares with transfers to ensure transfer logic works correctly
-   * with monorail's unique fare structure.
+   * with monorail's unique fare structure. Update: we now exclude monorail from fare calcs
    */
   @Test
   void calculateMonorailFaresWithTransfers() {
@@ -555,12 +555,12 @@ public class OrcaFareServiceTest {
       getLeg(COMM_TRANS_AGENCY_ID, 60)
     );
 
-    calculateFare(rides, regular, DEFAULT_TEST_RIDE_PRICE.times(2).plus(usDollars(4.00f)));
-    calculateFare(rides, FareType.youth, usDollars(2.00f));
-    calculateFare(rides, FareType.electronicRegular, usDollars(4.00f));
-    calculateFare(rides, FareType.electronicSenior, usDollars(2.00f));
+    calculateFare(rides, regular, THREE_DOLLARS.plus(usDollars(2.50f)));
+    calculateFare(rides, FareType.youth, ZERO_USD);
+    calculateFare(rides, FareType.electronicRegular, usDollars(3.00f));
+    calculateFare(rides, FareType.electronicSenior, usDollars(1.00f));
     calculateFare(rides, FareType.electronicYouth, usDollars(0.00f));
-    calculateFare(rides, FareType.electronicSpecial, usDollars(2.00f));
+    calculateFare(rides, FareType.electronicSpecial, usDollars(1.00f));
   }
 
   static Stream<Arguments> allTypes() {
