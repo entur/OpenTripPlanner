@@ -116,4 +116,18 @@ public final class TransitTestEnvironment {
   public TripOnDateDataFetcher tripData(String tripId, LocalDate serviceDate) {
     return new TripOnDateDataFetcher(transitService(), id(tripId), serviceDate);
   }
+
+  /**
+   * Returns a fetcher for the given service date.
+   */
+  public RoutingTripPatternFetcher routingTripPatterns(LocalDate serviceDate) {
+    return new RoutingTripPatternFetcher(transitService(), serviceDate);
+  }
+
+  /**
+   * Returns a fetcher for the default service date.
+   */
+  public RoutingTripPatternFetcher routingTripPatterns() {
+    return routingTripPatterns(defaultServiceDate);
+  }
 }
