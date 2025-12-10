@@ -16,7 +16,7 @@ import org.opentripplanner.TestServerContext;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.ext.flex.FlexIntegrationTestData;
 import org.opentripplanner.graph_builder.module.ValidateAndInterpolateStopTimesForEachTrip;
 import org.opentripplanner.model.GenericLocation;

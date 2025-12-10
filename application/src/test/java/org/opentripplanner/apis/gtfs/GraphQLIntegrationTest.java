@@ -45,7 +45,7 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.ItineraryFaresDecorator;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.FeedInfoTestFactory;
 import org.opentripplanner.model.calendar.CalendarServiceData;

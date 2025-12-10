@@ -33,7 +33,7 @@ import org.opentripplanner.ext.empiricaldelay.internal.DefaultEmpiricalDelayRepo
 import org.opentripplanner.ext.empiricaldelay.model.EmpiricalDelay;
 import org.opentripplanner.ext.empiricaldelay.model.TripDelays;
 import org.opentripplanner.ext.empiricaldelay.model.calendar.EmpiricalDelayCalendar;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareServiceFactory;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareServiceFactory;
 import org.opentripplanner.framework.geometry.HashGridSpatialIndex;
 import org.opentripplanner.framework.model.Gram;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareServiceFactory;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareServiceFactory;
 import org.opentripplanner.graph_builder.module.TimeZoneAdjusterModule;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.test.support.ResourceLoader;
