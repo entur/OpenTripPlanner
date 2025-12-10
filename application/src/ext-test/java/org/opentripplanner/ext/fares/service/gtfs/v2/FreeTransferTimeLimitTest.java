@@ -11,13 +11,13 @@ import com.google.common.collect.ImmutableMultimap;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
 import org.opentripplanner.ext.fares.service._support.FareTestConstants;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 
 class FreeTransferTimeLimitTest implements PlanTestConstants, FareTestConstants {
