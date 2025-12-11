@@ -32,6 +32,11 @@ class EstimatedVehicleJourneyCodeAdapterTest {
       "RUT:Unknown:1234, RUT:Unknown:1234",
       "RUT:ServiceJourney:1234:extra, RUT:DatedServiceJourney:1234:extra",
       "RUT:DatedServiceJourney:1234:extra, RUT:DatedServiceJourney:1234:extra",
+      "\"\" , \"\"",
+      "::,::",
+      "::ID, ::ID",
+      ":ServiceJourney:ID, :DatedServiceJourney:ID",
+      "NAME_SPACE::, NAME_SPACE::",
     }
   )
   void getDatedServiceJourneyId(String code, String expected) {

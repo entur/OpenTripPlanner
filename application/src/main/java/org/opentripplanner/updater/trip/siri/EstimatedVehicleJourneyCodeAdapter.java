@@ -8,15 +8,17 @@ package org.opentripplanner.updater.trip.siri;
  * Transforms IDs with 3 or more colon-separated parts where the second part is
  * "ServiceJourney" or "DatedServiceJourney". Other formats are returned unchanged.
  */
-public class EstimatedVehicleJourneyCodeAdapter {
+class EstimatedVehicleJourneyCodeAdapter {
 
   private static final String SERVICE_JOURNEY = "ServiceJourney";
   private static final String DATED_SERVICE_JOURNEY = "DatedServiceJourney";
 
   private final String estimatedVehicleJourneyCode;
+  private final String[] parts;
 
   public EstimatedVehicleJourneyCodeAdapter(String estimatedVehicleJourneyCode) {
     this.estimatedVehicleJourneyCode = estimatedVehicleJourneyCode;
+    this.parts = estimatedVehicleJourneyCode.split(":");
   }
 
   /**
@@ -36,7 +38,6 @@ public class EstimatedVehicleJourneyCodeAdapter {
   }
 
   private String normalizeEntityType(String sourceType, String targetType) {
-    String[] parts = estimatedVehicleJourneyCode.split(":");
     if (parts.length >= 3 && parts[1].equals(sourceType)) {
       String remainder = String.join(":", java.util.Arrays.copyOfRange(parts, 2, parts.length));
       return parts[0] + ":" + targetType + ":" + remainder;
