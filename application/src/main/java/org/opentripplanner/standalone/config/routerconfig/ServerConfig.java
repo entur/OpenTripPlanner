@@ -6,6 +6,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Set;
 import org.opentripplanner.apis.support.graphql.injectdoc.ApiDocumentationProfile;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -17,6 +18,7 @@ public class ServerConfig implements OTPWebApplicationParameters {
   private final Duration apiProcessingTimeout;
   private final List<RequestTraceParameter> traceParameters;
   private final ApiDocumentationProfile apiDocumentationProfile;
+  private final ClientMetricsConfig clientMetrics;
 
   public ServerConfig(String parameterName, NodeAdapter root) {
     NodeAdapter c = root
@@ -106,6 +108,50 @@ public class ServerConfig implements OTPWebApplicationParameters {
             .asBoolean(false)
         )
       );
+
+    var clientMetricsNode = c
+      .of("clientMetrics")
+      .since(V2_7)
+      .summary("Configuration for HTTP client request metrics.")
+      .description(
+        """
+        When enabled, records response time metrics per client. The client is identified by a
+        configurable HTTP header (`clientHeader`). Only clients in the `knownClients` list are
+        tracked individually; unknown clients are grouped under "other" to prevent metric
+        cardinality explosion. Requires the ActuatorAPI feature to be enabled.
+        """
+      )
+      .asObject();
+
+    boolean clientMetricsEnabled = clientMetricsNode
+      .of("enabled")
+      .since(V2_7)
+      .summary("Enable client request metrics.")
+      .asBoolean(false);
+
+    String clientHeader = clientMetricsNode
+      .of("clientHeader")
+      .since(V2_7)
+      .summary("HTTP header name used to identify the client.")
+      .asString(ClientMetricsConfig.DEFAULT_CLIENT_HEADER);
+
+    Set<String> knownClients = Set.copyOf(
+      clientMetricsNode
+        .of("knownClients")
+        .since(V2_7)
+        .summary("List of known client names to track individually.")
+        .description(
+          """
+          Clients not in this list will be grouped under "other". This prevents high cardinality
+          metrics when unknown clients send requests.
+          """
+        )
+        .asStringList(List.of())
+    );
+
+    this.clientMetrics = clientMetricsEnabled
+      ? new ClientMetricsConfig(true, clientHeader, knownClients)
+      : ClientMetricsConfig.DISABLED;
   }
 
   public Duration apiProcessingTimeout() {
@@ -119,6 +165,11 @@ public class ServerConfig implements OTPWebApplicationParameters {
 
   public ApiDocumentationProfile apiDocumentationProfile() {
     return apiDocumentationProfile;
+  }
+
+  @Override
+  public ClientMetricsConfig clientMetrics() {
+    return clientMetrics;
   }
 
   public void validate(Duration streetRoutingTimeout) {
