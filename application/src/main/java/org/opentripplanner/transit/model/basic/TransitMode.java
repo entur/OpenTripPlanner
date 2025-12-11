@@ -21,7 +21,8 @@ public enum TransitMode implements DocumentedEnum<TransitMode> {
   TROLLEYBUS,
   MONORAIL,
   CARPOOL,
-  TAXI;
+  TAXI,
+  SNOW_AND_ICE;
 
   private static final Set<TransitMode> ON_STREET_MODES = EnumSet.of(
     COACH,
@@ -84,6 +85,7 @@ public enum TransitMode implements DocumentedEnum<TransitMode> {
       If your data source for the carpool trips is SIRI use the `CARPOOL` street mode instead.
       """;
       case TAXI -> "Using a taxi service";
+      case SNOW_AND_ICE -> "Used for off-road snow and ice vehicles";
     };
   }
 }

@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>222</otp.serialization.version.id>
+        <otp.serialization.version.id>226</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.1</geotools.version>
@@ -102,6 +102,7 @@
         <module>application</module>
         <module>otp-shaded</module>
         <module>test/integration</module>
+        <module>domain-core</module>
     </modules>
 
 
@@ -117,6 +118,24 @@
                     <groupId>com.hubspot.maven.plugins</groupId>
                     <artifactId>prettier-maven-plugin</artifactId>
                     <version>${plugin.prettier.version}</version>
+                    <configuration>
+                        <skip>${plugin.prettier.skip}</skip>
+                        <prettierJavaVersion>2.6.8</prettierJavaVersion>
+                        <inputGlobs>
+                            <inputGlob>src/main/java/**/*.java</inputGlob>
+                            <inputGlob>src/test/java/**/*.java</inputGlob>
+                            <inputGlob>src/test-fixtures/java/**/*.java</inputGlob>
+                        </inputGlobs>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>prettier-format</id>
+                            <phase>validate</phase>
+                            <goals>
+                                <goal>${plugin.prettier.goal}</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -334,14 +353,6 @@
                         <version>2.22.0</version>
                     </dependency>
                 </dependencies>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -372,28 +383,6 @@
                         <phase>validate</phase>
                         <goals>
                             <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>com.hubspot.maven.plugins</groupId>
-                <artifactId>prettier-maven-plugin</artifactId>
-                <configuration>
-                    <skip>${plugin.prettier.skip}</skip>
-                    <prettierJavaVersion>2.6.8</prettierJavaVersion>
-                    <inputGlobs>
-                        <inputGlob>src/main/java/**/*.java</inputGlob>
-                        <inputGlob>src/test/java/**/*.java</inputGlob>
-                        <inputGlob>src/test-fixtures/java/**/*.java</inputGlob>
-                    </inputGlobs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>validate</phase>
-                        <goals>
-                            <goal>${plugin.prettier.goal}</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -477,7 +466,7 @@
                 <!-- This makes sure all google libraries are using compatible versions. -->
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.71.0</version>
+                <version>26.72.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -630,8 +619,8 @@
             <activation>
                 <property>
                     <!--
-                      This works as a short alias to enable this from the command line. To skip
-                      rewrite, set the 'rw' system property with the '-D rw' parameter.
+                      This works as a short alias to enable this from the command line.
+                      To run rewrite, set the 'rw' system property with the '-Drw' parameter.
                     -->
                     <name>rw</name>
                     <value/>
@@ -641,6 +630,23 @@
                 <plugin.rewrite.skip>false</plugin.rewrite.skip>
                 <plugin.checkstyle.skip>true</plugin.checkstyle.skip>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.openrewrite.maven</groupId>
+                        <artifactId>rewrite-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>rewrite-run</id>
+                                <phase>validate</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>clean-test-snapshots</id>
