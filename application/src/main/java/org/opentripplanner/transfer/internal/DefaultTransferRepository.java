@@ -3,14 +3,19 @@ package org.opentripplanner.transfer.internal;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import org.opentripplanner.ext.flex.FlexTransferIndex;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.transfer.TransferRepository;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DefaultTransferRepository implements TransferRepository {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultTransferRepository.class);
 
   private final Multimap<StopLocation, PathTransfer> transfersByStop = HashMultimap.create();
 
@@ -45,26 +50,30 @@ public class DefaultTransferRepository implements TransferRepository {
   @Override
   public void index() {
     if (index == null) {
-      index = new TransferIndex(this);
+      LOG.info("Transfer repository index init...");
+      if (OTPFeature.FlexRouting.isOn()) {
+        index = new FlexTransferIndex(this);
+      } else {
+        index = new DefaultTransferIndex();
+      }
+      LOG.info("Transfer repository index init complete.");
     }
   }
 
   @Override
-  public Collection<PathTransfer> getTransfersToStop(StopLocation stopLocation) {
+  public Collection<PathTransfer> findWalkTransfersToStop(StopLocation toStop) {
     if (index == null) {
-      // ToDo: Or better throw an exception?
-      return Collections.emptyList();
+      throw new IllegalStateException("The transfer index is needed but not initialized");
     }
-    return index.getTransfersToStop(stopLocation);
+    return index.findWalkTransfersToStop(toStop);
   }
 
   @Override
-  public Collection<PathTransfer> getTransfersFromStop(StopLocation stopLocation) {
+  public Collection<PathTransfer> findWalkTransfersFromStop(StopLocation fromStop) {
     if (index == null) {
-      // ToDo: Or better throw an exception?
-      return Collections.emptyList();
+      throw new IllegalStateException("The transfer index is needed but not initialized");
     }
-    return index.getTransfersFromStop(stopLocation);
+    return index.findWalkTransfersFromStop(fromStop);
   }
 
   private void invalidateIndex() {

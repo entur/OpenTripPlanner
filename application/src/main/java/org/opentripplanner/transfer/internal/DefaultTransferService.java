@@ -27,11 +27,11 @@ public class DefaultTransferService implements TransferService {
     return transferRepository.findTransfersByStop(stop);
   }
 
-  public Collection<PathTransfer> getTransfersToStop(StopLocation stopLocation) {
-    return transferRepository.getTransfersToStop(stopLocation);
+  public Collection<PathTransfer> findWalkTransfersToStop(StopLocation toStop) {
+    return transferRepository.findWalkTransfersToStop(toStop);
   }
 
-  public Collection<PathTransfer> getTransfersFromStop(StopLocation stopLocation) {
-    return transferRepository.getTransfersFromStop(stopLocation);
+  public Collection<PathTransfer> findWalkTransfersFromStop(StopLocation fromStop) {
+    return transferRepository.findWalkTransfersFromStop(fromStop);
   }
 }

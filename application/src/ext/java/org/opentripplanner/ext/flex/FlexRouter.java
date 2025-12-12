@@ -210,12 +210,12 @@ public class FlexRouter {
 
     @Override
     public Collection<PathTransfer> getTransfersFromStop(StopLocation stop) {
-      return transferService.getTransfersFromStop(stop);
+      return transferService.findWalkTransfersFromStop(stop);
     }
 
     @Override
     public Collection<PathTransfer> getTransfersToStop(StopLocation stop) {
-      return transferService.getTransfersToStop(stop);
+      return transferService.findWalkTransfersToStop(stop);
     }
 
     @Override

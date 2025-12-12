@@ -12,7 +12,19 @@ import org.opentripplanner.transit.model.site.StopLocation;
 public interface TransferService {
   Collection<PathTransfer> findTransfersByStop(StopLocation stop);
 
-  Collection<PathTransfer> getTransfersFromStop(StopLocation stopLocation);
+  /**
+   * @param fromStop {@code StopLocation} that is set as a from-stop
+   * @return all {@code PathTransfer}s with the specified {@code StopLocation} as a from-stop
+   * @throws UnsupportedOperationException if flex routing is not activated
+   * @throws IllegalStateException if the index was not initialized
+   */
+  Collection<PathTransfer> findWalkTransfersFromStop(StopLocation fromStop);
 
-  Collection<PathTransfer> getTransfersToStop(StopLocation stopLocation);
+  /**
+   * @param toStop {@code StopLocation} that is set as a to-stop
+   * @return all {@code PathTransfer}s with the specified {@code StopLocation} as a to-stop
+   * @throws UnsupportedOperationException if flex routing is not activated
+   * @throws IllegalStateException if the index was not initialized
+   */
+  Collection<PathTransfer> findWalkTransfersToStop(StopLocation toStop);
 }
