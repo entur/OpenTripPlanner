@@ -439,7 +439,7 @@ public class StopImpl implements GraphQLDataFetchers.GraphQLStop {
           ).getGraphQLMaxDistance();
 
           return getTransferService(environment)
-            .getTransfersByStop(stop)
+            .findTransfersByStop(stop)
             .stream()
             .filter(transfer -> maxDistance == null || transfer.getDistanceMeters() < maxDistance)
             .filter(transfer -> transfer.to instanceof RegularStop)

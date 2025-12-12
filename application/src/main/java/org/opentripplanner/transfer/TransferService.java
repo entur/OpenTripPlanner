@@ -10,7 +10,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
  * stable over the course of a request.
  */
 public interface TransferService {
-  Collection<PathTransfer> getTransfersByStop(StopLocation stop);
+  Collection<PathTransfer> findTransfersByStop(StopLocation stop);
 
   Collection<PathTransfer> getTransfersFromStop(StopLocation stopLocation);
 

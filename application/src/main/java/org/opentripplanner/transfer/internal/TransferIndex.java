@@ -22,7 +22,7 @@ class TransferIndex {
     LOG.info("Transfer repository index init...");
     if (OTPFeature.FlexRouting.isOn()) {
       // Flex transfers should only use WALK mode transfers.
-      for (PathTransfer transfer : transferRepository.findTransfers(StreetMode.WALK)) {
+      for (PathTransfer transfer : transferRepository.findTransfersByMode(StreetMode.WALK)) {
         transfersToStop.put(transfer.to, transfer);
         transfersFromStop.put(transfer.from, transfer);
       }

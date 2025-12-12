@@ -17,13 +17,13 @@ public class DefaultTransferRepository implements TransferRepository {
   private transient TransferIndex index;
 
   @Override
-  public Collection<PathTransfer> getTransfersByStop(StopLocation stop) {
+  public Collection<PathTransfer> findTransfersByStop(StopLocation stop) {
     return transfersByStop.get(stop);
   }
 
   /** Pre-generated transfers between all stops filtered based on the modes in the PathTransfer. */
   @Override
-  public List<PathTransfer> findTransfers(StreetMode mode) {
+  public List<PathTransfer> findTransfersByMode(StreetMode mode) {
     return transfersByStop
       .values()
       .stream()
@@ -32,7 +32,7 @@ public class DefaultTransferRepository implements TransferRepository {
   }
 
   @Override
-  public Collection<PathTransfer> getAllPathTransfers() {
+  public Collection<PathTransfer> listPathTransfers() {
     return transfersByStop.values();
   }
 

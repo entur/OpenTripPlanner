@@ -16,11 +16,11 @@ import org.opentripplanner.transit.model.site.StopLocation;
  * correctly.
  */
 public interface TransferRepository extends Serializable {
-  Collection<PathTransfer> getTransfersByStop(StopLocation stop);
+  Collection<PathTransfer> findTransfersByStop(StopLocation stop);
 
-  List<PathTransfer> findTransfers(StreetMode mode);
+  List<PathTransfer> findTransfersByMode(StreetMode mode);
 
-  Collection<PathTransfer> getAllPathTransfers();
+  Collection<PathTransfer> listPathTransfers();
 
   void addAllTransfersByStops(Multimap<StopLocation, PathTransfer> transfersByStop);
 

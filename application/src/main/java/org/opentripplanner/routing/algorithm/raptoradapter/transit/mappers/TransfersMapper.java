@@ -29,7 +29,7 @@ class TransfersMapper {
 
       ArrayList<Transfer> list = new ArrayList<>();
 
-      for (PathTransfer pathTransfer : transferRepository.getTransfersByStop(stop)) {
+      for (PathTransfer pathTransfer : transferRepository.findTransfersByStop(stop)) {
         if (pathTransfer.to instanceof RegularStop) {
           int toStopIndex = pathTransfer.to.getIndex();
           Transfer newTransfer;
