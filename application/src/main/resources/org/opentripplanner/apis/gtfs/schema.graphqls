@@ -2113,8 +2113,8 @@ type Route implements Node {
     """
     serviceDates: LocalDateRangeInput
   ): [Pattern]
-  "Do routes exist which replace this route on some dates."
-  replacementRoutesExist: Boolean!
+  "Do replacements exist for this route on some dates."
+  replacementsExist: Boolean!
   "Short name of the route, usually a line number, e.g. 550"
   shortName: String
   """
@@ -2594,8 +2594,8 @@ type Trip implements Node {
   occupancy: TripOccupancy
   "The pattern the trip is running on"
   pattern: Pattern
-  "Do replacement trips exist which replace this trip on some dates."
-  replacementTripsExist: Boolean!
+  "Do replacements exist which replace this trip on some dates."
+  replacementsExist: Boolean!
   "The route the trip is running on"
   route: Route!
   "Short name of the route this trip is running. See field `shortName` of Route."

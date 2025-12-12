@@ -1083,7 +1083,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<Iterable<TripPattern>> patterns();
 
-    public DataFetcher<Boolean> replacementRoutesExist();
+    public DataFetcher<Boolean> replacementsExist();
 
     public DataFetcher<String> shortName();
 
@@ -1345,7 +1345,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<TripPattern> pattern();
 
-    public DataFetcher<Boolean> replacementTripsExist();
+    public DataFetcher<Boolean> replacementsExist();
 
     public DataFetcher<Route> route();
 

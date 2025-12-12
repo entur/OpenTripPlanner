@@ -443,8 +443,8 @@ type Line {
   "Publicly announced code for line, differentiating it from other lines for the same operator."
   publicCode: String
   quays: [Quay]!
-  "Do routes exist which replace this route on some dates"
-  replacementLinesExist: Boolean!
+  "Are there replacement DatedServiceJourneys for this Line"
+  replacementsExist: Boolean!
   serviceJourneys: [ServiceJourney]!
   "Get all situations active for the line."
   situations: [PtSituationElement!]!
@@ -1250,8 +1250,8 @@ type ServiceJourney {
     "Only fetch the last n quays on the service journey"
     last: Int
   ): [Quay!]!
-  "Are there replacement ServiceJourneys for this ServiceJourney"
-  replacementServiceJourneysExist: Boolean!
+  "Are there replacement DatedServiceJourneys for this ServiceJourney"
+  replacementsExist: Boolean!
   serviceAlteration: ServiceAlteration @deprecated(reason : "The service journey alteration will be moved out of SJ and grouped together with the SJ and date. In Netex this new type is called DatedServiceJourney. We will create artificial DSJs for the old SJs.")
   "Get all situations active for the service journey."
   situations: [PtSituationElement!]!

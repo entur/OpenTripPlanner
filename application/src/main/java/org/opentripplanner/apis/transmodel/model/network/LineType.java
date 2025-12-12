@@ -237,13 +237,13 @@ public class LineType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("replacementLinesExist")
-          .description("Do routes exist which replace this route on some dates")
+          .name("replacementsExist")
+          .description("Are there replacement DatedServiceJourneys for this Line")
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .dataFetcher(environment ->
             GqlUtil.getTransitService(environment)
               .getReplacementHelper()
-              .replacementRoutesExist(getSource(environment))
+              .replacementsExist(getSource(environment))
           )
           .build()
       )

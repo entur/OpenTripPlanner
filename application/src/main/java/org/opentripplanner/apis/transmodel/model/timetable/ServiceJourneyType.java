@@ -321,13 +321,13 @@ public class ServiceJourneyType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("replacementServiceJourneysExist")
-          .description("Are there replacement ServiceJourneys for this ServiceJourney")
+          .name("replacementsExist")
+          .description("Are there replacement DatedServiceJourneys for this ServiceJourney")
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .dataFetcher(environment ->
             GqlUtil.getTransitService(environment)
               .getReplacementHelper()
-              .replacementTripsExist(trip(environment))
+              .replacementsExist(trip(environment))
           )
           .build()
       )
