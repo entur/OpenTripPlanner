@@ -1,7 +1,6 @@
 package org.opentripplanner.transit.model._data;
 
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
-import static org.opentripplanner.transit.model._data.RoutingTripPatternFetcher.CancellationFilter.INCLUDE_CANCELLED;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -121,14 +120,14 @@ public final class TransitTestEnvironment {
   /**
    * Returns a fetcher for the given service date. By default it also includes cancelled trips.
    */
-  public RoutingTripPatternFetcher routingTripPatterns(LocalDate serviceDate) {
-    return new RoutingTripPatternFetcher(transitService(), serviceDate, INCLUDE_CANCELLED);
+  public RoutingTripPatternDataFetcher routingTripPatterns(LocalDate serviceDate) {
+    return new RoutingTripPatternDataFetcher(transitService(), serviceDate);
   }
 
   /**
    * Returns a fetcher for the default service date. By default it also includes cancelled trips.
    */
-  public RoutingTripPatternFetcher routingTripPatterns() {
+  public RoutingTripPatternDataFetcher routingTripPatterns() {
     return routingTripPatterns(defaultServiceDate);
   }
 }

@@ -46,7 +46,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   @Test
   void testAddJourneyWithExistingRoute() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
-    assertThat(env.routingTripPatterns().ids()).containsExactly("F:Pattern1");
+    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1[SCHEDULED]");
     var siri = SiriTestHelper.of(env);
 
     Route route = ROUTE;
@@ -81,7 +81,10 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       transitService.findPatterns(route).size(),
       "The added trip should use a new pattern for this route"
     );
-    assertThat(env.routingTripPatterns().ids()).containsExactly("F:Pattern1", "F:routeId::001:RT");
+    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+      "F:Pattern1[SCHEDULED]",
+      "F:routeId::001:RT[ADDED]"
+    );
   }
 
   @Test
@@ -89,7 +92,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     // we actually don't need the trip, but it's the only way to add a route to the index
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
 
-    assertThat(env.routingTripPatterns().ids()).containsExactly("F:Pattern1");
+    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1[SCHEDULED]");
     var siri = SiriTestHelper.of(env);
 
     String newRouteRef = "new route ref";
@@ -116,9 +119,9 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertNotNull(newRoute);
     assertEquals(1, transitService.findPatterns(newRoute).size());
 
-    assertThat(env.routingTripPatterns().ids()).containsExactly(
-      "F:Pattern1",
-      "F:new route ref::001:RT"
+    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+      "F:Pattern1[SCHEDULED]",
+      "F:new route ref::001:RT[ADDED]"
     );
   }
 
@@ -138,7 +141,10 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertEquals(1, result2.successful());
     assertEquals(numTrips + 1, env.transitService().listTrips().size());
 
-    assertThat(env.routingTripPatterns().ids()).containsExactly("F:Pattern1", "F:routeId::001:RT");
+    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+      "F:Pattern1[SCHEDULED]",
+      "F:routeId::001:RT[UPDATED]"
+    );
   }
 
   @Test
@@ -172,7 +178,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   @Test
   void testReplaceJourney() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
-    assertThat(env.routingTripPatterns().ids()).containsExactly("F:Pattern1");
+    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1[SCHEDULED]");
     var siri = SiriTestHelper.of(env);
 
     var updates = siri
@@ -203,7 +209,10 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     // Original trip should not get canceled
     var originalTripTimes = env.tripData(TRIP_1_ID).tripTimes();
     assertEquals(RealTimeState.SCHEDULED, originalTripTimes.getRealTimeState());
-    assertThat(env.routingTripPatterns().ids()).containsExactly("F:Pattern1", "F:routeId::001:RT");
+    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+      "F:Pattern1[SCHEDULED]",
+      "F:routeId::001:RT[ADDED]"
+    );
   }
 
   @Test
