@@ -60,6 +60,7 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
   @Override
   public void processGtfs(FareRulesData fareRulesData) {
     fillFareRules(fareRulesData.fareAttributes(), fareRulesData.fareRules(), regularFareRules);
+    this.serviceDates.putAll(fareRulesData.timeframeServiceIds());
     this.fareLegRules.addAll(fareRulesData.fareLegRules());
     this.fareTransferRules.addAll(fareRulesData.fareTransferRules());
     this.stopAreas.putAll(fareRulesData.stopAreas());

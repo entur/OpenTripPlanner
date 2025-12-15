@@ -151,6 +151,12 @@ public class GtfsModule implements GraphBuilderModule {
         TransitDataImportBuilder builder = mapper.getBuilder();
         var fareRulesData = mapper.fareRulesData();
 
+        calendarServiceData
+          .getServiceIds()
+          .forEach(sId ->
+            fareRulesData.putServiceIds(sId, calendarServiceData.getServiceDatesForServiceId(sId))
+          );
+
         builder.limitServiceDays(transitPeriodLimit);
 
         calendarServiceData.add(builder.buildCalendarServiceData());

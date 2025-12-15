@@ -5,6 +5,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.fare.FareProduct;
@@ -118,6 +121,15 @@ public final class FareLegRule implements Serializable {
 
   public Collection<Timeframe> toTimeframes() {
     return toTimeframes;
+  }
+
+  /**
+   * The set of the service ids of all timeframes in this rule.
+   */
+  public Set<FeedScopedId> listTimeFrameServiceIds() {
+    return Stream.concat(fromTimeframes.stream(), toTimeframes.stream())
+      .map(s -> s.serviceId())
+      .collect(Collectors.toUnmodifiableSet());
   }
 
   @Override
