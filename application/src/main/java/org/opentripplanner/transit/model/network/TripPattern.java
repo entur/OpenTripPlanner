@@ -110,7 +110,7 @@ public final class TripPattern
    * the other hand this TripPattern instance was created from the schedule data, this field will be
    * false.
    */
-  private final boolean createdByRealtimeUpdater;
+  private final boolean stopPatternChangedInRealTime;
 
   private final RoutingTripPattern routingTripPattern;
 
@@ -119,7 +119,7 @@ public final class TripPattern
     this.name = builder.getName();
     this.route = builder.getRoute();
     this.stopPattern = requireNonNull(builder.getStopPattern());
-    this.createdByRealtimeUpdater = builder.isCreatedByRealtimeUpdate();
+    this.stopPatternChangedInRealTime = builder.isStopPatternChangedInRealTime();
     this.mode = requireNonNull(builder.getMode());
     this.netexSubMode = requireNonNull(builder.getNetexSubmode());
     this.containsMultipleModes = builder.getContainsMultipleModes();
@@ -402,15 +402,21 @@ public final class TripPattern
     return scheduledTimetable;
   }
 
-  /**
-   * Has the TripPattern been created by a real-time update.
-   */
-  public boolean isCreatedByRealtimeUpdater() {
-    return createdByRealtimeUpdater;
-  }
-
   public TripPattern getOriginalTripPattern() {
     return originalTripPattern;
+  }
+
+  /**
+   * When a trip is added or rerouted by a realtime update, this may give rise to a new StopPattern
+   * (and also a new TripPattern) that did not exist in the scheduled data. For such cases, this
+   * field will be {@code true}.
+   *
+   * Returns {@code true} if this TripPattern is a modified version of a scheduled TripPattern.
+   * If this method returns {@code false}, this TripPattern is either a scheduled TripPattern or
+   * a TripPattern generated from scratch in real-time (GTFS ADDED/NeTEx ExtraJourney).
+   */
+  public boolean isStopPatternChangedInRealTime() {
+    return stopPatternChangedInRealTime;
   }
 
   public boolean isModified() {

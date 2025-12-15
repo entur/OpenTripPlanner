@@ -319,7 +319,7 @@ public class TimetableSnapshot {
     swapTimetable(pattern, tt, updated);
 
     Trip trip = updatedTripTimes.getTrip();
-    if (pattern.isCreatedByRealtimeUpdater()) {
+    if (pattern.isStopPatternChangedInRealTime()) {
       // Remember this pattern for the added trip id and service date
       FeedScopedId tripId = trip.getId();
       TripIdAndServiceDate tripIdAndServiceDate = new TripIdAndServiceDate(tripId, serviceDate);
@@ -596,7 +596,7 @@ public class TimetableSnapshot {
    * Add the patterns to the stop index, only if they come from a modified pattern
    */
   private void addPatternToIndex(TripPattern tripPattern) {
-    if (tripPattern.isCreatedByRealtimeUpdater()) {
+    if (tripPattern.isStopPatternChangedInRealTime()) {
       //TODO - SIRI: Add pattern to index?
 
       for (var stop : tripPattern.getStops()) {

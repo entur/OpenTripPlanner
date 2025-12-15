@@ -151,7 +151,7 @@ class ExtraCallTripBuilder {
       .withNetexSubmode(trip.getNetexSubMode())
       .withStopPattern(stopPattern)
       .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(tripTimes))
-      .withCreatedByRealtimeUpdater(true)
+      .withStopPatternChangedInRealTime(true)
       .build();
 
     RealTimeTripTimesBuilder builder = tripTimes.createRealTimeFromScheduledTimes();

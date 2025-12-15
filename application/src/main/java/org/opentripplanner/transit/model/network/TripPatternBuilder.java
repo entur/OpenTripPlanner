@@ -29,7 +29,7 @@ public final class TripPatternBuilder
   private TimetableBuilder scheduledTimetableBuilder;
   private String name;
 
-  private boolean createdByRealtimeUpdate;
+  private boolean stopPatternChangedInRealTime;
 
   private TripPattern originalTripPattern;
   private List<LineString> hopGeometries;
@@ -48,7 +48,7 @@ public final class TripPatternBuilder
     this.containsMultipleModes = original.getContainsMultipleModes();
     this.stopPattern = original.getStopPattern();
     this.scheduledTimetable = original.getScheduledTimetable();
-    this.createdByRealtimeUpdate = original.isCreatedByRealtimeUpdater();
+    this.stopPatternChangedInRealTime = original.isStopPatternChangedInRealTime();
     this.originalTripPattern = original.getOriginalTripPattern();
     this.hopGeometries = original.getGeometry() == null
       ? null
@@ -110,8 +110,8 @@ public final class TripPatternBuilder
     return this;
   }
 
-  public TripPatternBuilder withCreatedByRealtimeUpdater(boolean createdByRealtimeUpdate) {
-    this.createdByRealtimeUpdate = createdByRealtimeUpdate;
+  public TripPatternBuilder withStopPatternChangedInRealTime(boolean stopPatternChangedInRealTime) {
+    this.stopPatternChangedInRealTime = stopPatternChangedInRealTime;
     return this;
   }
 
@@ -173,8 +173,8 @@ public final class TripPatternBuilder
     return originalTripPattern;
   }
 
-  boolean isCreatedByRealtimeUpdate() {
-    return createdByRealtimeUpdate;
+  boolean isStopPatternChangedInRealTime() {
+    return stopPatternChangedInRealTime;
   }
 
   public byte[][] hopGeometries() {
