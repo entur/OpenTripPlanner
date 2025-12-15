@@ -513,11 +513,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
                 <configuration>
-                    <sourceDirectories>
-                        <sourceDirectory>src/main/java</sourceDirectory>
+                    <sourceDirectories combine.children="append">
                         <sourceDirectory>src/ext/java</sourceDirectory>
                         <sourceDirectory>src/ext-test/java</sourceDirectory>
-                        <sourceDirectory>src/test-fixtures/java</sourceDirectory>
                     </sourceDirectories>
                 </configuration>
             </plugin>
