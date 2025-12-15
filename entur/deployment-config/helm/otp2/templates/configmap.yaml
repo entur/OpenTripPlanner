@@ -17,7 +17,12 @@ data:
               "httpRequestHeader": "ET-Client-Name",
               "logKey": "etClientName"
             }
-          ]
+          ],
+          "clientMetrics": {
+            "enabled": true,
+            "clientHeader": "et-client-name",
+            "knownClients": ["ruter-tetApp", "ruter-travel-api", "entur-search", "vy-itinerary-high-priority", "atb-bff", "entur-client-app", "skyss-ios", "troms-bff", "kolumbus-reisevenn"]
+          }
         },
         "routingDefaults": {
           "streetRoutingTimeout": "5s",
