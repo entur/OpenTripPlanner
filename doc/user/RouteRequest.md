@@ -107,8 +107,8 @@ and in the [transferRequests in build-config.json](BuildConfiguration.md#transfe
 |       [bannedNetworks](#rd_car_rental_bannedNetworks)                                                        |       `string[]`       | The vehicle rental networks which may not be used. If empty, no networks are banned.                                                                     | *Optional* |                  |  2.1  |
 | elevator                                                                                                     |        `object`        | Elevator preferences.                                                                                                                                    | *Optional* |                  |  2.9  |
 |    boardCost                                                                                                 |        `integer`       | What is the cost of boarding a elevator?                                                                                                                 | *Optional* | `15`             |  2.9  |
-|    boardTime                                                                                                 |       `duration`       | How long does it take to get on an elevator, on average.                                                                                                 | *Optional* | `"PT1M30S"`      |  2.9  |
-|    hopTime                                                                                                   |       `duration`       | How long does it take to advance one floor on an elevator?                                                                                               | *Optional* | `"PT20S"`        |  2.9  |
+|    boardSlack                                                                                                |       `duration`       | How long it takes to get on an elevator, on average.                                                                                                     | *Optional* | `"PT1M30S"`      |  2.9  |
+|    hopTime                                                                                                   |       `duration`       | How long it takes to advance one floor on an elevator, on average.                                                                                       | *Optional* | `"PT20S"`        |  2.9  |
 |    reluctance                                                                                                |        `double`        | A multiplier to specify how bad using an elevator is.                                                                                                    | *Optional* | `2.0`            |  2.9  |
 | [itineraryFilters](#rd_itineraryFilters)                                                                     |        `object`        | Configure itinerary filters that may modify itineraries, sort them, and filter away less preferable results.                                             | *Optional* |                  |  2.0  |
 |    [accessibilityScore](#rd_if_accessibilityScore)                                                           |        `boolean`       | An experimental feature contributed by IBI which adds a sandbox accessibility *score* between 0 and 1 for each leg and itinerary.                        | *Optional* | `false`          |  2.2  |
@@ -1192,7 +1192,7 @@ include stairs as a last result.
     "turnReluctance" : 1.0,
     "elevator" : {
       "boardCost" : 15,
-      "boardTime" : "90s",
+      "boardSlack" : "90s",
       "hopTime" : "20s",
       "reluctance" : 2.0
     },

@@ -18,20 +18,20 @@ public final class ElevatorRequest implements Serializable {
   public static final ElevatorRequest DEFAULT = new ElevatorRequest();
 
   private final Cost boardCost;
-  private final Duration boardTime;
+  private final Duration boardSlack;
   private final Duration hopTime;
   private final double reluctance;
 
   private ElevatorRequest() {
     this.boardCost = Cost.costOfSeconds(15);
-    this.boardTime = Duration.ofSeconds(90);
+    this.boardSlack = Duration.ofSeconds(90);
     this.hopTime = Duration.ofSeconds(20);
     this.reluctance = 2.0;
   }
 
   private ElevatorRequest(Builder builder) {
     this.boardCost = builder.boardCost;
-    this.boardTime = builder.boardTime;
+    this.boardSlack = builder.boardSlack;
     this.hopTime = builder.hopTime;
     this.reluctance = Units.reluctance(builder.reluctance);
   }
@@ -56,8 +56,8 @@ public final class ElevatorRequest implements Serializable {
    * than average, to prevent optimistic trips)? Setting it to "seems like forever," while accurate,
    * will probably prevent OTP from working correctly.
    */
-  public Duration boardTime() {
-    return boardTime;
+  public Duration boardSlack() {
+    return boardSlack;
   }
 
   /**
@@ -82,7 +82,7 @@ public final class ElevatorRequest implements Serializable {
     ElevatorRequest that = (ElevatorRequest) o;
     return (
       Objects.equals(boardCost, that.boardCost) &&
-      Objects.equals(boardTime, that.boardTime) &&
+      Objects.equals(boardSlack, that.boardSlack) &&
       Objects.equals(hopTime, that.hopTime) &&
       reluctance == that.reluctance
     );
@@ -90,14 +90,14 @@ public final class ElevatorRequest implements Serializable {
 
   @Override
   public int hashCode() {
-    return Objects.hash(boardCost, boardTime, hopTime, reluctance);
+    return Objects.hash(boardCost, boardSlack, hopTime, reluctance);
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.of(ElevatorRequest.class)
       .addObj("boardCost", boardCost, DEFAULT.boardCost)
-      .addDuration("boardTime", boardTime, DEFAULT.boardTime)
+      .addDuration("boardSlack", boardSlack, DEFAULT.boardSlack)
       .addDuration("hopTime", hopTime, DEFAULT.hopTime)
       .addNum("reluctance", reluctance, DEFAULT.reluctance)
       .toString();
@@ -107,14 +107,14 @@ public final class ElevatorRequest implements Serializable {
 
     private final ElevatorRequest original;
     private Cost boardCost;
-    private Duration boardTime;
+    private Duration boardSlack;
     private Duration hopTime;
     private double reluctance;
 
     public Builder(ElevatorRequest original) {
       this.original = original;
       this.boardCost = original.boardCost;
-      this.boardTime = original.boardTime;
+      this.boardSlack = original.boardSlack;
       this.hopTime = original.hopTime;
       this.reluctance = original.reluctance;
     }
@@ -124,8 +124,8 @@ public final class ElevatorRequest implements Serializable {
       return this;
     }
 
-    public Builder withBoardTime(Duration boardTime) {
-      this.boardTime = boardTime;
+    public Builder withBoardSlack(Duration boardSlack) {
+      this.boardSlack = boardSlack;
       return this;
     }
 

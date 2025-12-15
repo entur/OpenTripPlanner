@@ -497,7 +497,7 @@ Used to group requests when monitoring OTP.
     "turnReluctance" : 1.0,
     "elevator" : {
       "boardCost" : 15,
-      "boardTime" : "90s",
+      "boardSlack" : "90s",
       "hopTime" : "20s",
       "reluctance" : 2.0
     },

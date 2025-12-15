@@ -135,9 +135,18 @@ public class DefaultRouteRequestType {
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("elevatorBoardTime")
-          .description("How long does it take to get on an elevator, on average.")
+          .deprecate("Use elevatorBoardSlack to set cost instead.")
+          .description("How long it takes to get on an elevator, on average.")
           .type(Scalars.GraphQLInt)
-          .dataFetcher(env -> preferences.street().elevator().boardTime().toSeconds())
+          .dataFetcher(env -> preferences.street().elevator().boardSlack().toSeconds())
+          .build()
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("elevatorBoardSlack")
+          .description("How long it takes to get on an elevator, on average.")
+          .type(Scalars.GraphQLInt)
+          .dataFetcher(env -> preferences.street().elevator().boardSlack().toSeconds())
           .build()
       )
       .field(
@@ -151,7 +160,7 @@ public class DefaultRouteRequestType {
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("elevatorHopTime")
-          .description("How long does it take to advance one floor on an elevator?")
+          .description("How long it takes to advance one floor on an elevator, on average.")
           .type(Scalars.GraphQLInt)
           .dataFetcher(env -> preferences.street().elevator().hopTime().toSeconds())
           .build()

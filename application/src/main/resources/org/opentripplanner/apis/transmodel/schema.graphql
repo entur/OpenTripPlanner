@@ -1100,11 +1100,13 @@ type RoutingParameters {
   disableRemainingWeightHeuristic: Boolean
   "What is the cost of boarding a elevator?"
   elevatorBoardCost: Int
-  "How long does it take to get on an elevator, on average."
-  elevatorBoardTime: Int
+  "How long it takes to get on an elevator, on average."
+  elevatorBoardSlack: Int
+  "How long it takes to get on an elevator, on average."
+  elevatorBoardTime: Int @deprecated(reason : "Use elevatorBoardSlack to set cost instead.")
   "What is the cost of travelling one floor on an elevator?"
   elevatorHopCost: Int @deprecated(reason : "Use elevatorReluctance to set cost instead.")
-  "How long does it take to advance one floor on an elevator?"
+  "How long it takes to advance one floor on an elevator, on average."
   elevatorHopTime: Int
   "A multiplier to specify how bad using an elevator is."
   elevatorReluctance: Float

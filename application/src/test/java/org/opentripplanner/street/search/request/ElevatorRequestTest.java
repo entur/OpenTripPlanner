@@ -10,12 +10,12 @@ import org.junit.jupiter.api.Test;
 class ElevatorRequestTest {
 
   public static final int BOARD_COST = 100;
-  public static final Duration BOARD_TIME = Duration.ofSeconds(60);
+  public static final Duration BOARD_SLACK = Duration.ofSeconds(60);
   public static final Duration HOP_TIME = Duration.ofSeconds(120);
   public static final double RELUCTANCE = 2.5;
   private final ElevatorRequest subject = ElevatorRequest.of()
     .withBoardCost(BOARD_COST)
-    .withBoardTime(BOARD_TIME)
+    .withBoardSlack(BOARD_SLACK)
     .withHopTime(HOP_TIME)
     .withReluctance(RELUCTANCE)
     .build();
@@ -26,8 +26,8 @@ class ElevatorRequestTest {
   }
 
   @Test
-  void boardTime() {
-    assertEquals(BOARD_TIME, subject.boardTime());
+  void boardSlack() {
+    assertEquals(BOARD_SLACK, subject.boardSlack());
   }
 
   @Test
@@ -47,8 +47,8 @@ class ElevatorRequestTest {
     assertSame(subject, subject.copyOf().build());
 
     // Create a copy, make a change and set it back again to force creating a new object
-    var other = subject.copyOf().withBoardTime(Duration.ofSeconds(123)).build();
-    var same = other.copyOf().withBoardTime(BOARD_TIME).build();
+    var other = subject.copyOf().withBoardSlack(Duration.ofSeconds(123)).build();
+    var same = other.copyOf().withBoardSlack(BOARD_SLACK).build();
     assertEqualsAndHashCode(subject, other, same);
   }
 
@@ -56,7 +56,7 @@ class ElevatorRequestTest {
   void testToString() {
     assertEquals("ElevatorRequest{}", ElevatorRequest.DEFAULT.toString());
     assertEquals(
-      "ElevatorRequest{boardCost: $100, boardTime: 1m, hopTime: 2m, reluctance: 2.5}",
+      "ElevatorRequest{boardCost: $100, boardSlack: 1m, hopTime: 2m, reluctance: 2.5}",
       subject.toString()
     );
   }

@@ -187,7 +187,7 @@ public class StreetSearchRequestMapper {
   private static void mapElevator(ElevatorRequest.Builder b, ElevatorPreferences elevator) {
     b
       .withBoardCost(elevator.boardCost())
-      .withBoardTime(elevator.boardTime())
+      .withBoardSlack(elevator.boardSlack())
       .withHopTime(elevator.hopTime())
       .withReluctance(elevator.reluctance())
       .build();

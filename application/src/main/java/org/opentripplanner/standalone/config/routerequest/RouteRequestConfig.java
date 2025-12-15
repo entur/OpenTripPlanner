@@ -453,18 +453,18 @@ public class RouteRequestConfig {
               .summary("What is the cost of boarding a elevator?")
               .asInt(dftElevator.boardCost())
           )
-          .withBoardTime(
+          .withBoardSlack(
             cElevator
-              .of("boardTime")
+              .of("boardSlack")
               .since(V2_9)
-              .summary("How long does it take to get on an elevator, on average.")
-              .asDuration(dftElevator.boardTime())
+              .summary("How long it takes to get on an elevator, on average.")
+              .asDuration(dftElevator.boardSlack())
           )
           .withHopTime(
             cElevator
               .of("hopTime")
               .since(V2_9)
-              .summary("How long does it take to advance one floor on an elevator?")
+              .summary("How long it takes to advance one floor on an elevator, on average.")
               .asDuration(dftElevator.hopTime())
           )
           .withReluctance(
