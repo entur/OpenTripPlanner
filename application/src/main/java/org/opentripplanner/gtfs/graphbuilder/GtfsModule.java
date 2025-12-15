@@ -151,15 +151,15 @@ public class GtfsModule implements GraphBuilderModule {
         TransitDataImportBuilder builder = mapper.getBuilder();
         var fareRulesData = mapper.fareRulesData();
 
+        builder.limitServiceDays(transitPeriodLimit);
+
+        calendarServiceData.add(builder.buildCalendarServiceData());
+
         calendarServiceData
           .getServiceIds()
           .forEach(sId ->
             fareRulesData.putServiceIds(sId, calendarServiceData.getServiceDatesForServiceId(sId))
           );
-
-        builder.limitServiceDays(transitPeriodLimit);
-
-        calendarServiceData.add(builder.buildCalendarServiceData());
 
         if (OTPFeature.FlexRouting.isOn()) {
           builder.getFlexTripsById().addAll(FlexTripsMapper.createFlexTrips(builder, issueStore));
