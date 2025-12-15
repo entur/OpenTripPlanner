@@ -11,9 +11,18 @@ import org.opentripplanner.model.Frequency;
  */
 public class FrequencyEntry implements Serializable {
 
-  public final int startTime; // sec after midnight
-  public final int endTime; // sec after midnight
-  public final int headway; // sec
+  /**
+   * Star time as seconds after midnight.
+   */
+  public final int startTime;
+  /**
+   * End time as seconds after midnight.
+   */
+  public final int endTime;
+  /**
+   * Headway in seconds.
+   */
+  public final int headway;
   public final boolean exactTimes;
   public final ScheduledTripTimes tripTimes;
 
@@ -62,8 +71,10 @@ public class FrequencyEntry implements Serializable {
   public int nextDepartureTime(int stop, int time) {
     // Start time and end time are for the first stop in the trip. Find the time offset for this stop.
     int stopOffset = tripTimes.getDepartureTime(stop) - tripTimes.getDepartureTime(0);
-    int beg = startTime + stopOffset; // First time a vehicle passes by this stop.
-    int end = endTime + stopOffset; // Latest a vehicle can pass by this stop.
+    // First time a vehicle passes by this stop.
+    int beg = startTime + stopOffset;
+    // Latest a vehicle can pass by this stop.
+    int end = endTime + stopOffset;
     if (time > end) {
       return -1;
     }
@@ -79,7 +90,8 @@ public class FrequencyEntry implements Serializable {
       // this would work better for time window edges.
       if (dep < beg) {
         return beg;
-      } // not quite right
+      }
+      // not quite right
       if (dep < end) {
         return dep;
       }
@@ -89,8 +101,10 @@ public class FrequencyEntry implements Serializable {
 
   public int prevArrivalTime(int stop, int t) {
     int stopOffset = tripTimes.getArrivalTime(stop) - tripTimes.getDepartureTime(0);
-    int beg = startTime + stopOffset; // First time a vehicle passes by this stop.
-    int end = endTime + stopOffset; // Latest a vehicle can pass by this stop.
+    // First time a vehicle passes by this stop.
+    int beg = startTime + stopOffset;
+    // Latest a vehicle can pass by this stop.
+    int end = endTime + stopOffset;
     if (t < beg) {
       return -1;
     }
@@ -108,7 +122,8 @@ public class FrequencyEntry implements Serializable {
       int dep = t - headway;
       if (dep > end) {
         return end;
-      } // not quite right
+      }
+      // not quite right
       if (dep > beg) {
         return dep;
       }

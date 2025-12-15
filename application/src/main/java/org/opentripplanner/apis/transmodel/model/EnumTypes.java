@@ -279,8 +279,11 @@ public class EnumTypes {
     .value("followSigns", RelativeDirection.FOLLOW_SIGNS)
     .build();
 
+  /**
+   * SIRI - ReportTypeEnumeration
+   */
   public static final GraphQLEnumType REPORT_TYPE = GraphQLEnumType.newEnum()
-    .name("ReportType") //SIRI - ReportTypeEnumeration
+    .name("ReportType")
     .value("general", "general", "Indicates a general info-message that should not affect trip.")
     .value("incident", "incident", "Indicates an incident that may affect trip.")
     .build();
@@ -332,8 +335,11 @@ public class EnumTypes {
     .value("planned", TripAlteration.PLANNED)
     .build();
 
+  /**
+   * SIRI - SeverityEnumeration
+   */
   public static final GraphQLEnumType SEVERITY = GraphQLEnumType.newEnum()
-    .name("Severity") //SIRI - SeverityEnumeration
+    .name("Severity")
     .value("unknown", "unknown", "Situation has unknown impact on trips.")
     .value("noImpact", "noImpact", "Situation has no impact on trips.")
     .value("verySlight", "verySlight", "Situation has a very slight impact on trips.")
@@ -344,8 +350,11 @@ public class EnumTypes {
     .value("undefined", "undefined", "Severity is undefined.")
     .build();
 
+  /**
+   * SIRI - RoutePointTypeEnumeration
+   */
   public static final GraphQLEnumType STOP_CONDITION_ENUM = GraphQLEnumType.newEnum()
-    .name("StopCondition") //SIRI - RoutePointTypeEnumeration
+    .name("StopCondition")
     .value(
       "destination",
       StopCondition.DESTINATION,
