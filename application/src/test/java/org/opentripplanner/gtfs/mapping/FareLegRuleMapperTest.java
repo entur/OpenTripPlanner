@@ -3,6 +3,8 @@ package org.opentripplanner.gtfs.mapping;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.time.LocalTime;
+import java.util.Collection;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -11,6 +13,7 @@ import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.FareLegRule;
 import org.onebusaway.gtfs.model.FareMedium;
 import org.onebusaway.gtfs.model.FareProduct;
+import org.onebusaway.gtfs.model.Timeframe;
 import org.opentripplanner.ext.fares.model.FareDistance;
 import org.opentripplanner.ext.fares.model.FareDistance.LinearDistance;
 import org.opentripplanner.ext.fares.model.FareDistance.Stops;
@@ -155,6 +158,45 @@ class FareLegRuleMapperTest {
     assertThat(issues.listIssues().stream().map(DataImportIssue::getType)).containsExactly(
       "UnknownFareProductId"
     );
+  }
+
+  @Test
+  void timeframes() {
+    var timeframeMapper = timeframeMapper();
+    var productMapper = new FareProductMapper(ID_FACTORY);
+    var ruleMapper = new FareLegRuleMapper(
+      ID_FACTORY,
+      productMapper,
+      timeframeMapper,
+      DataImportIssueStore.NOOP
+    );
+
+    var product = cashProduct(null);
+    productMapper.map(product);
+
+    var tfId = new AgencyAndId("1", "tf1");
+    var tf = new Timeframe();
+    tf.setTimeframeGroupId(tfId);
+    tf.setStartTime(LocalTime.NOON);
+    tf.setEndTime(LocalTime.NOON.plusHours(1));
+    tf.setServiceId("s1");
+    timeframeMapper.map(tf);
+
+    var obaRule = new FareLegRule();
+    obaRule.setFareProductId(product.getFareProductId());
+    obaRule.setFromTimeframeGroupId(tfId);
+    obaRule.setToTimeframeGroupId(tfId);
+
+    var mapped = List.copyOf(ruleMapper.map(List.of(obaRule))).getFirst();
+
+    assertEquals("[[12:00-13:00,A:s1]]", toStr(mapped.fromTimeframes()));
+    assertEquals("[[12:00-13:00,A:s1]]", toStr(mapped.toTimeframes()));
+  }
+
+  private static String toStr(
+    Collection<org.opentripplanner.ext.fares.model.Timeframe> timeframes
+  ) {
+    return timeframes.stream().map(t -> t.toString()).toList().toString();
   }
 
   private static FareProduct cashProduct(FareMedium creditMedium) {
