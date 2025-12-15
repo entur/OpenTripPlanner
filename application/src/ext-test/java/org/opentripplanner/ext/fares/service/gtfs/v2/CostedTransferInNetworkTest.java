@@ -2,7 +2,6 @@ package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.ext.fares.model.FareTransferRule.UNLIMITED_TRANSFERS;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
@@ -13,7 +12,6 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
-import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -27,27 +25,31 @@ class CostedTransferInNetworkTest implements PlanTestConstants, FareTestConstant
   private static final Route ROUTE_4 = TimetableRepositoryForTest.route("r4").build();
   private static final FeedScopedId LEG_GROUP = id("leg-group-a");
 
-  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2ServiceFactory.build(
-    List.of(
-      FareLegRule.of(id("r1"), FARE_PRODUCT_A)
-        .withLegGroupId(LEG_GROUP)
-        .withNetworkId(NETWORK_A.getId())
-        .build(),
-      FareLegRule.of(id("r2"), FARE_PRODUCT_B)
-        .withLegGroupId(LEG_GROUP)
-        .withNetworkId(NETWORK_A.getId())
-        .build()
-    ),
-    List.of(
-      FareTransferRule.of()
-        .withId(id("transfer"))
-        .withFromLegGroup(LEG_GROUP)
-        .withToLegGroup(LEG_GROUP)
-        .withTransferCount(UNLIMITED_TRANSFERS)
-        .withFareProducts(List.of(TRANSFER_1))
-        .build()
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
+    .withLegRules(
+      List.of(
+        FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+          .withLegGroupId(LEG_GROUP)
+          .withNetworkId(NETWORK_A.getId())
+          .build(),
+        FareLegRule.of(id("r2"), FARE_PRODUCT_B)
+          .withLegGroupId(LEG_GROUP)
+          .withNetworkId(NETWORK_A.getId())
+          .build()
+      )
     )
-  );
+    .withTransferRules(
+      List.of(
+        FareTransferRule.of()
+          .withId(id("transfer"))
+          .withFromLegGroup(LEG_GROUP)
+          .withToLegGroup(LEG_GROUP)
+          .withTransferCount(FareTransferRule.UNLIMITED_TRANSFERS)
+          .withFareProducts(List.of(TRANSFER_1))
+          .build()
+      )
+    )
+    .build();
 
   @Test
   void twoLegs() {

@@ -16,24 +16,26 @@ import org.opentripplanner.model.plan.TestTransitLeg;
 
 class TimeframeTest implements PlanTestConstants, FareTestConstants {
 
-  private static final GtfsFaresV2Service SERVICE = new GtfsFaresV2Service(
-    List.of(
-      FareLegRule.of(id("r1"), FARE_PRODUCT_A)
-        .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
-        .build(),
-      FareLegRule.of(id("r2"), FARE_PRODUCT_B)
-        .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
-        .build()
-    ),
-    List.of(),
-    ImmutableMultimap.of(),
-    ImmutableMultimap.of(
-      TIMEFRAME_THREE_TO_FIVE.serviceId(),
-      DEFAULT_DATE,
-      TIMEFRAME_TWELVE_TO_TWO.serviceId(),
-      DEFAULT_DATE
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
+    .withLegRules(
+      List.of(
+        FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+          .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
+          .build(),
+        FareLegRule.of(id("r2"), FARE_PRODUCT_B)
+          .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
+          .build()
+      )
     )
-  );
+    .withServiceIds(
+      ImmutableMultimap.of(
+        TIMEFRAME_THREE_TO_FIVE.serviceId(),
+        DEFAULT_DATE,
+        TIMEFRAME_TWELVE_TO_TWO.serviceId(),
+        DEFAULT_DATE
+      )
+    )
+    .build();
 
   @Test
   void oneLeg() {

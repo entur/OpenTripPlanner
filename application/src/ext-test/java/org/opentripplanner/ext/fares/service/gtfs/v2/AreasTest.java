@@ -12,7 +12,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
-import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.plan.Itinerary;
@@ -53,27 +52,30 @@ class AreasTest implements PlanTestConstants {
   private static final FeedScopedId INNER_ZONE = id("inner-zone");
   private static final FeedScopedId OUTER_ZONE = id("outer-zone");
 
-  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2ServiceFactory.build(
-    List.of(
-      FareLegRule.of(id("2"), SINGLE_TO_OUTER)
-        .withLegGroupId(LEG_GROUP1)
-        .withToAreaId(OUTER_ZONE)
-        .build(),
-      FareLegRule.of(id("3"), SINGLE_FROM_OUTER)
-        .withLegGroupId(LEG_GROUP1)
-        .withFromAreaId(OUTER_ZONE)
-        .build(),
-      FareLegRule.of(id("6"), INNER_TO_OUTER_ZONE_SINGLE)
-        .withLegGroupId(LEG_GROUP1)
-        .withFromAreaId(INNER_ZONE)
-        .withToAreaId(OUTER_ZONE)
-        .build()
-    ),
-    List.of(),
-    Multimaps.forMap(
-      Map.of(INNER_ZONE_PLACE.stop.getId(), INNER_ZONE, OUTER_ZONE_PLACE.stop.getId(), OUTER_ZONE)
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
+    .withLegRules(
+      List.of(
+        FareLegRule.of(id("2"), SINGLE_TO_OUTER)
+          .withLegGroupId(LEG_GROUP1)
+          .withToAreaId(OUTER_ZONE)
+          .build(),
+        FareLegRule.of(id("3"), SINGLE_FROM_OUTER)
+          .withLegGroupId(LEG_GROUP1)
+          .withFromAreaId(OUTER_ZONE)
+          .build(),
+        FareLegRule.of(id("6"), INNER_TO_OUTER_ZONE_SINGLE)
+          .withLegGroupId(LEG_GROUP1)
+          .withFromAreaId(INNER_ZONE)
+          .withToAreaId(OUTER_ZONE)
+          .build()
+      )
     )
-  );
+    .withStopAreas(
+      Multimaps.forMap(
+        Map.of(INNER_ZONE_PLACE.stop.getId(), INNER_ZONE, OUTER_ZONE_PLACE.stop.getId(), OUTER_ZONE)
+      )
+    )
+    .build();
 
   @Test
   void twoAreaIds() {

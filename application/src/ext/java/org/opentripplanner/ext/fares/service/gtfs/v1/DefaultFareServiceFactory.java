@@ -48,12 +48,12 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
     DefaultFareService fareService = new DefaultFareService();
     fareService.addFareRules(FareType.regular, regularFareRules.values());
 
-    var faresV2Service = new GtfsFaresV2Service(
-      fareLegRules,
-      fareTransferRules,
-      stopAreas,
-      serviceDates
-    );
+    var faresV2Service = GtfsFaresV2Service.of()
+      .withLegRules(fareLegRules)
+      .withTransferRules(fareTransferRules)
+      .withStopAreas(stopAreas)
+      .withServiceIds(serviceDates)
+      .build();
     return new GtfsFaresService(fareService, faresV2Service);
   }
 

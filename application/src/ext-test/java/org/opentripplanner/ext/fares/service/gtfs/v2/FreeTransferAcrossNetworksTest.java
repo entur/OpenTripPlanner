@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
-import com.google.common.collect.ImmutableMultimap;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ext.fares.model.FareLegRule;
@@ -24,27 +23,29 @@ class FreeTransferAcrossNetworksTest implements PlanTestConstants, FareTestConst
     .withGroupOfRoutes(List.of(NETWORK_B))
     .build();
 
-  GtfsFaresV2Service service = new GtfsFaresV2Service(
-    List.of(
-      FareLegRule.of(LEG_GROUP_A, FARE_PRODUCT_A)
-        .withLegGroupId(LEG_GROUP_A)
-        .withNetworkId(NETWORK_A.getId())
-        .build(),
-      FareLegRule.of(LEG_GROUP_B, FARE_PRODUCT_B)
-        .withLegGroupId(LEG_GROUP_B)
-        .withNetworkId(NETWORK_B.getId())
-        .build()
-    ),
-    List.of(
-      FareTransferRule.of()
-        .withId(id("transfer"))
-        .withFromLegGroup(LEG_GROUP_A)
-        .withToLegGroup(LEG_GROUP_B)
-        .build()
-    ),
-    ImmutableMultimap.of(),
-    ImmutableMultimap.of()
-  );
+  GtfsFaresV2Service service = GtfsFaresV2Service.of()
+    .withLegRules(
+      List.of(
+        FareLegRule.of(LEG_GROUP_A, FARE_PRODUCT_A)
+          .withLegGroupId(LEG_GROUP_A)
+          .withNetworkId(NETWORK_A.getId())
+          .build(),
+        FareLegRule.of(LEG_GROUP_B, FARE_PRODUCT_B)
+          .withLegGroupId(LEG_GROUP_B)
+          .withNetworkId(NETWORK_B.getId())
+          .build()
+      )
+    )
+    .withTransferRules(
+      List.of(
+        FareTransferRule.of()
+          .withId(id("transfer"))
+          .withFromLegGroup(LEG_GROUP_A)
+          .withToLegGroup(LEG_GROUP_B)
+          .build()
+      )
+    )
+    .build();
 
   @Test
   void freeTransferAcrossNetwork() {
