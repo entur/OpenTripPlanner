@@ -351,7 +351,13 @@ class StreetSearchRequestMapperTest {
     var builder = builder()
       .withPreferences(pref ->
         pref.withStreet(s ->
-          s.withElevator(e -> e.withBoardTime(88).withHopTime(66).withReluctance(2.0))
+          s.withElevator(e ->
+            e
+              .withBoardTime(Duration.ofSeconds(88))
+              .withBoardCost(77)
+              .withHopTime(Duration.ofSeconds(66))
+              .withReluctance(2.0)
+          )
         )
       );
 
@@ -359,8 +365,9 @@ class StreetSearchRequestMapperTest {
     var subject = StreetSearchRequestMapper.mapInternal(request).build();
 
     var req = subject.elevator();
-    assertEquals(88, req.boardTime());
-    assertEquals(66, req.hopTime());
+    assertEquals(88, req.boardTime().toSeconds());
+    assertEquals(77, req.boardCost());
+    assertEquals(66, req.hopTime().toSeconds());
     assertEquals(2.0, req.reluctance());
   }
 

@@ -7,6 +7,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_4;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 import static org.opentripplanner.standalone.config.routerequest.ItineraryFiltersConfig.mapItineraryFilterParams;
 import static org.opentripplanner.standalone.config.routerequest.TransferConfig.mapTransferPreferences;
 import static org.opentripplanner.standalone.config.routerequest.TriangleOptimizationConfig.mapOptimizationTriangle;
@@ -416,6 +417,11 @@ public class RouteRequestConfig {
 
   private static void mapStreetPreferences(NodeAdapter c, StreetPreferences.Builder builder) {
     var dft = builder.original();
+    NodeAdapter cElevator = c
+      .of("elevator")
+      .since(V2_9)
+      .summary("Elevator preferences.")
+      .asObject();
     NodeAdapter cae = c
       .of("accessEgress")
       .since(V2_4)
@@ -440,24 +446,31 @@ public class RouteRequestConfig {
       .withElevator(elevator -> {
         var dftElevator = dft.elevator();
         elevator
+          .withBoardCost(
+            cElevator
+              .of("boardCost")
+              .since(V2_9)
+              .summary("What is the cost of boarding a elevator?")
+              .asInt(dftElevator.boardCost())
+          )
           .withBoardTime(
-            c
-              .of("elevatorBoardTime")
-              .since(V2_0)
+            cElevator
+              .of("boardTime")
+              .since(V2_9)
               .summary("How long does it take to get on an elevator, on average.")
-              .asInt(dftElevator.boardTime())
+              .asDuration(dftElevator.boardTime())
           )
           .withHopTime(
-            c
-              .of("elevatorHopTime")
-              .since(V2_0)
+            cElevator
+              .of("hopTime")
+              .since(V2_9)
               .summary("How long does it take to advance one floor on an elevator?")
-              .asInt(dftElevator.hopTime())
+              .asDuration(dftElevator.hopTime())
           )
           .withReluctance(
-            c
-              .of("elevatorReluctance")
-              .since(V2_0)
+            cElevator
+              .of("reluctance")
+              .since(V2_9)
               .summary("A multiplier to specify how bad using an elevator is.")
               .asDouble(dftElevator.reluctance())
           );

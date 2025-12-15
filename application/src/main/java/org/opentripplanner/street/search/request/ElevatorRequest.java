@@ -1,8 +1,10 @@
 package org.opentripplanner.street.search.request;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -15,19 +17,22 @@ public final class ElevatorRequest implements Serializable {
 
   public static final ElevatorRequest DEFAULT = new ElevatorRequest();
 
-  private final int boardTime;
-  private final int hopTime;
+  private final Cost boardCost;
+  private final Duration boardTime;
+  private final Duration hopTime;
   private final double reluctance;
 
   private ElevatorRequest() {
-    this.boardTime = 90;
-    this.hopTime = 20;
+    this.boardCost = Cost.costOfSeconds(15);
+    this.boardTime = Duration.ofSeconds(90);
+    this.hopTime = Duration.ofSeconds(20);
     this.reluctance = 2.0;
   }
 
   private ElevatorRequest(Builder builder) {
-    this.boardTime = Units.duration(builder.boardTime);
-    this.hopTime = Units.duration(builder.hopTime);
+    this.boardCost = builder.boardCost;
+    this.boardTime = builder.boardTime;
+    this.hopTime = builder.hopTime;
     this.reluctance = Units.reluctance(builder.reluctance);
   }
 
@@ -40,19 +45,25 @@ public final class ElevatorRequest implements Serializable {
   }
 
   /**
+   * What is the cost of boarding an elevator?
+   */
+  public int boardCost() {
+    return boardCost.toSeconds();
+  }
+
+  /**
    * How long does it take to board an elevator, on average (actually, it probably should be a bit *more*
    * than average, to prevent optimistic trips)? Setting it to "seems like forever," while accurate,
    * will probably prevent OTP from working correctly.
    */
-  public int boardTime() {
+  public Duration boardTime() {
     return boardTime;
   }
 
   /**
-   * What is the cost of travelling one floor on an elevator?
-   * It is assumed that getting off an elevator is completely free.
+   * How long does it take to travel one floor on an elevator?
    */
-  public int hopTime() {
+  public Duration hopTime() {
     return hopTime;
   }
 
@@ -70,20 +81,24 @@ public final class ElevatorRequest implements Serializable {
     }
     ElevatorRequest that = (ElevatorRequest) o;
     return (
-      boardTime == that.boardTime && hopTime == that.hopTime && reluctance == that.reluctance
+      Objects.equals(boardCost, that.boardCost) &&
+      Objects.equals(boardTime, that.boardTime) &&
+      Objects.equals(hopTime, that.hopTime) &&
+      reluctance == that.reluctance
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(boardTime, hopTime, reluctance);
+    return Objects.hash(boardCost, boardTime, hopTime, reluctance);
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.of(ElevatorRequest.class)
-      .addDurationSec("boardTime", boardTime, DEFAULT.boardTime)
-      .addDurationSec("hopTime", hopTime, DEFAULT.hopTime)
+      .addObj("boardCost", boardCost, DEFAULT.boardCost)
+      .addDuration("boardTime", boardTime, DEFAULT.boardTime)
+      .addDuration("hopTime", hopTime, DEFAULT.hopTime)
       .addNum("reluctance", reluctance, DEFAULT.reluctance)
       .toString();
   }
@@ -91,23 +106,30 @@ public final class ElevatorRequest implements Serializable {
   public static class Builder {
 
     private final ElevatorRequest original;
-    private int boardTime;
-    private int hopTime;
+    private Cost boardCost;
+    private Duration boardTime;
+    private Duration hopTime;
     private double reluctance;
 
     public Builder(ElevatorRequest original) {
       this.original = original;
+      this.boardCost = original.boardCost;
       this.boardTime = original.boardTime;
       this.hopTime = original.hopTime;
       this.reluctance = original.reluctance;
     }
 
-    public Builder withBoardTime(int boardTime) {
+    public Builder withBoardCost(int boardCost) {
+      this.boardCost = Cost.costOfSeconds(boardCost);
+      return this;
+    }
+
+    public Builder withBoardTime(Duration boardTime) {
       this.boardTime = boardTime;
       return this;
     }
 
-    public Builder withHopTime(int hopTime) {
+    public Builder withHopTime(Duration hopTime) {
       this.hopTime = hopTime;
       return this;
     }

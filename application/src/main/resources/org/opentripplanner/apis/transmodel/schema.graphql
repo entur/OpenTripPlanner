@@ -1099,7 +1099,7 @@ type RoutingParameters {
   "If true, the remaining weight heuristic is disabled."
   disableRemainingWeightHeuristic: Boolean
   "What is the cost of boarding a elevator?"
-  elevatorBoardCost: Int @deprecated(reason : "Use elevatorReluctance to set cost instead.")
+  elevatorBoardCost: Int
   "How long does it take to get on an elevator, on average."
   elevatorBoardTime: Int
   "What is the cost of travelling one floor on an elevator?"

@@ -17,7 +17,7 @@ class StreetPreferencesTest {
   private static final Duration MAX_DIRECT = Duration.ofMinutes(10);
   private static final Duration ROUTING_TIMEOUT = Duration.ofSeconds(3);
   private static final DrivingDirection DRIVING_DIRECTION = DrivingDirection.LEFT;
-  private static final int ELEVATOR_BOARD_TIME = (int) Duration.ofMinutes(2).toSeconds();
+  private static final Duration ELEVATOR_BOARD_TIME = Duration.ofMinutes(2);
   private static final IntersectionTraversalModel INTERSECTION_TRAVERSAL_MODEL =
     IntersectionTraversalModel.CONSTANT;
 

@@ -1,8 +1,10 @@
 package org.opentripplanner.routing.api.request.preference;
 
 import java.io.Serializable;
+import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
+import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -15,19 +17,22 @@ public final class ElevatorPreferences implements Serializable {
 
   public static final ElevatorPreferences DEFAULT = new ElevatorPreferences();
 
-  private final int boardTime;
-  private final int hopTime;
+  private final Cost boardCost;
+  private final Duration boardTime;
+  private final Duration hopTime;
   private final double reluctance;
 
   private ElevatorPreferences() {
-    this.boardTime = 90;
-    this.hopTime = 20;
+    this.boardCost = Cost.costOfSeconds(15);
+    this.boardTime = Duration.ofSeconds(90);
+    this.hopTime = Duration.ofSeconds(20);
     this.reluctance = 2.0;
   }
 
   private ElevatorPreferences(Builder builder) {
-    this.boardTime = Units.duration(builder.boardTime);
-    this.hopTime = Units.duration(builder.hopTime);
+    this.boardCost = builder.boardCost;
+    this.boardTime = builder.boardTime;
+    this.hopTime = builder.hopTime;
     this.reluctance = Units.reluctance(builder.reluctance);
   }
 
@@ -42,9 +47,8 @@ public final class ElevatorPreferences implements Serializable {
   /**
    * What is the cost of boarding an elevator?
    */
-  @Deprecated
   public int boardCost() {
-    return (int) (boardTime * reluctance);
+    return boardCost.toSeconds();
   }
 
   /**
@@ -52,20 +56,14 @@ public final class ElevatorPreferences implements Serializable {
    * than average, to prevent optimistic trips)? Setting it to "seems like forever," while accurate,
    * will probably prevent OTP from working correctly.
    */
-  public int boardTime() {
+  public Duration boardTime() {
     return boardTime;
   }
 
   /**
-   * What is the cost of travelling one floor on an elevator?
+   * How long does it take to travel one floor on an elevator?
    */
-  @Deprecated
-  public int hopCost() {
-    return (int) (hopTime * reluctance);
-  }
-
-  /** How long does it take to travel one floor on an elevator? */
-  public int hopTime() {
+  public Duration hopTime() {
     return hopTime;
   }
 
@@ -83,20 +81,24 @@ public final class ElevatorPreferences implements Serializable {
     }
     ElevatorPreferences that = (ElevatorPreferences) o;
     return (
-      boardTime == that.boardTime && hopTime == that.hopTime && reluctance == that.reluctance
+      Objects.equals(boardCost, that.boardCost) &&
+      Objects.equals(boardTime, that.boardTime) &&
+      Objects.equals(hopTime, that.hopTime) &&
+      reluctance == that.reluctance
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(boardTime, hopTime, reluctance);
+    return Objects.hash(boardCost, boardTime, hopTime, reluctance);
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.of(ElevatorPreferences.class)
-      .addDurationSec("boardTime", boardTime, DEFAULT.boardTime)
-      .addDurationSec("hopTime", hopTime, DEFAULT.hopTime)
+      .addObj("boardCost", boardCost, DEFAULT.boardCost)
+      .addDuration("boardTime", boardTime, DEFAULT.boardTime)
+      .addDuration("hopTime", hopTime, DEFAULT.hopTime)
       .addNum("reluctance", reluctance, DEFAULT.reluctance)
       .toString();
   }
@@ -104,12 +106,14 @@ public final class ElevatorPreferences implements Serializable {
   public static class Builder {
 
     private final ElevatorPreferences original;
-    private int boardTime;
-    private int hopTime;
+    private Cost boardCost;
+    private Duration boardTime;
+    private Duration hopTime;
     private double reluctance;
 
     public Builder(ElevatorPreferences original) {
       this.original = original;
+      this.boardCost = original.boardCost;
       this.boardTime = original.boardTime;
       this.hopTime = original.hopTime;
       this.reluctance = original.reluctance;
@@ -119,12 +123,17 @@ public final class ElevatorPreferences implements Serializable {
       return original;
     }
 
-    public Builder withBoardTime(int boardTime) {
+    public Builder withBoardCost(int boardCost) {
+      this.boardCost = Cost.costOfSeconds(boardCost);
+      return this;
+    }
+
+    public Builder withBoardTime(Duration boardTime) {
       this.boardTime = boardTime;
       return this;
     }
 
-    public Builder withHopTime(int hopTime) {
+    public Builder withHopTime(Duration hopTime) {
       this.hopTime = hopTime;
       return this;
     }
