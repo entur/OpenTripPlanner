@@ -4,9 +4,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
-import com.google.common.collect.Multimaps;
+import com.google.common.collect.ImmutableMultimap;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
@@ -43,7 +42,8 @@ class FreeTransferAcrossNetworksTest implements PlanTestConstants, FareTestConst
         .withToLegGroup(LEG_GROUP_B)
         .build()
     ),
-    Multimaps.forMap(Map.of())
+    ImmutableMultimap.of(),
+    ImmutableMultimap.of()
   );
 
   @Test

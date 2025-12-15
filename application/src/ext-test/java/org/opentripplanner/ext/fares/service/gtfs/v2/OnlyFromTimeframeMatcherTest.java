@@ -4,11 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import com.google.common.collect.ImmutableMultimap;
 import java.time.LocalTime;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.ext.fares.model.Timeframe;
@@ -16,8 +18,9 @@ import org.opentripplanner.model.plan.TestTransitLeg;
 
 class OnlyFromTimeframeMatcherTest implements FareTestConstants {
 
+  public static final FeedScopedId S1 = id("s1");
   public static final Timeframe TF_TWELVE_TO_TWO = Timeframe.of()
-    .withServiceId(id("s1"))
+    .withServiceId(S1)
     .withStart(LocalTime.of(12, 0))
     .withEnd(LocalTime.of(14, 0))
     .build();
@@ -41,7 +44,8 @@ class OnlyFromTimeframeMatcherTest implements FareTestConstants {
   @MethodSource("outsideTimeframeCases")
   void outsideTimeframe(String startTime, String endTime) {
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    assertFalse(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(ImmutableMultimap.of(S1, leg.serviceDate()));
+    assertFalse(matcher.matchesTimeframes(leg, RULE));
   }
 
   private static List<Arguments> withinTimeframeCases() {
@@ -58,7 +62,8 @@ class OnlyFromTimeframeMatcherTest implements FareTestConstants {
   @MethodSource("withinTimeframeCases")
   void withinTimeframe(String startTime, String endTime) {
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    assertTrue(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(ImmutableMultimap.of(S1, leg.serviceDate()));
+    assertTrue(matcher.matchesTimeframes(leg, RULE));
   }
 
   private static FareLegRule legRule(Timeframe tf) {

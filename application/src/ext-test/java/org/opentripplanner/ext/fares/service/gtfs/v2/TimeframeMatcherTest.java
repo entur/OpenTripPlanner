@@ -4,13 +4,16 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import com.google.common.collect.ImmutableMultimap;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.model.plan.TestTransitLeg;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 
 class TimeframeMatcherTest implements FareTestConstants {
 
@@ -18,6 +21,7 @@ class TimeframeMatcherTest implements FareTestConstants {
     .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
     .withToTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
     .build();
+  public static final FeedScopedId ID2 = FeedScopedIdForTestFactory.id("2");
 
   private static List<Arguments> outsideTimeframeCases() {
     return List.of(
@@ -38,7 +42,10 @@ class TimeframeMatcherTest implements FareTestConstants {
   @MethodSource("outsideTimeframeCases")
   void outsideTimeframes(String startTime, String endTime) {
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    assertFalse(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(
+      ImmutableMultimap.of(TIMEFRAME_TWELVE_TO_TWO.serviceId(), leg.serviceDate())
+    );
+    assertFalse(matcher.matchesTimeframes(leg, RULE));
   }
 
   private static List<Arguments> withinTimeframeCases() {
@@ -54,7 +61,10 @@ class TimeframeMatcherTest implements FareTestConstants {
   @MethodSource("withinTimeframeCases")
   void withinTimeframes(String startTime, String endTime) {
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    assertTrue(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(
+      ImmutableMultimap.of(TIMEFRAME_TWELVE_TO_TWO.serviceId(), leg.serviceDate())
+    );
+    assertTrue(matcher.matchesTimeframes(leg, RULE));
   }
 
   @ParameterizedTest
@@ -63,8 +73,18 @@ class TimeframeMatcherTest implements FareTestConstants {
     var leg = TestTransitLeg.of()
       .withStartTime(startTime)
       .withEndTime(endTime)
-      .withServiceId(id("2"))
+      .withServiceId(ID2)
       .build();
-    assertFalse(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(
+      ImmutableMultimap.of(
+        TIMEFRAME_TWELVE_TO_TWO.serviceId(),
+        leg.serviceDate().plusDays(1),
+        TIMEFRAME_THREE_TO_FIVE.serviceId(),
+        leg.serviceDate().plusDays(1),
+        ID2,
+        leg.serviceDate()
+      )
+    );
+    assertFalse(matcher.matchesTimeframes(leg, RULE));
   }
 }

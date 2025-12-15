@@ -6,15 +6,14 @@ import static org.opentripplanner.ext.fares.model.FareTransferRule.UNLIMITED_TRA
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
-import com.google.common.collect.Multimaps;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
+import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -28,7 +27,7 @@ class CostedTransferInNetworkTest implements PlanTestConstants, FareTestConstant
   private static final Route ROUTE_4 = TimetableRepositoryForTest.route("r4").build();
   private static final FeedScopedId LEG_GROUP = id("leg-group-a");
 
-  private static final GtfsFaresV2Service SERVICE = new GtfsFaresV2Service(
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2ServiceFactory.build(
     List.of(
       FareLegRule.of(id("r1"), FARE_PRODUCT_A)
         .withLegGroupId(LEG_GROUP)
@@ -47,8 +46,7 @@ class CostedTransferInNetworkTest implements PlanTestConstants, FareTestConstant
         .withTransferCount(UNLIMITED_TRANSFERS)
         .withFareProducts(List.of(TRANSFER_1))
         .build()
-    ),
-    Multimaps.forMap(Map.of())
+    )
   );
 
   @Test

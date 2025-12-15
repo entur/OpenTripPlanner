@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareDistance;
 import org.opentripplanner.ext.fares.model.FareLegRule;
+import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.fare.FareProduct;
@@ -125,7 +126,7 @@ class DistancesTest {
     var i1 = newItinerary(PlanTestConstants.A, 0)
       .bus(ID, 0, 50, 1, 20, PlanTestConstants.C)
       .build();
-    var faresV2Service = new GtfsFaresV2Service(
+    var faresV2Service = GtfsFaresV2ServiceFactory.build(
       stopRules,
       List.of(),
       Multimaps.forMap(
@@ -146,7 +147,7 @@ class DistancesTest {
       PlanTestConstants.A.coordinate.longitude() + SphericalDistanceLibrary.metersToDegrees(5_000)
     );
     var i1 = newItinerary(PlanTestConstants.A, 0).bus(ID, 0, 50, dest).build();
-    var faresV2Service = new GtfsFaresV2Service(
+    var faresV2Service = GtfsFaresV2ServiceFactory.build(
       distanceRules,
       List.of(),
       Multimaps.forMap(

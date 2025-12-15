@@ -5,9 +5,8 @@ import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.groupOfRoutes;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
-import com.google.common.collect.Multimaps;
+import com.google.common.collect.ImmutableMultimap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -49,7 +48,8 @@ class FreeTransferInNetworkTest implements PlanTestConstants {
         .withToLegGroup(LEG_GROUP)
         .build()
     ),
-    Multimaps.forMap(Map.of())
+    ImmutableMultimap.of(),
+    ImmutableMultimap.of()
   );
 
   @Test

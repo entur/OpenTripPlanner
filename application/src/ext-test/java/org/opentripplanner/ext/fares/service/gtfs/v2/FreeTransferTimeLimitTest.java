@@ -7,7 +7,6 @@ import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 import static org.opentripplanner.utils.time.TimeUtils.time;
 
-import com.google.common.collect.ImmutableMultimap;
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -15,6 +14,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
+import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -27,7 +27,7 @@ class FreeTransferTimeLimitTest implements PlanTestConstants, FareTestConstants 
     .withGroupOfRoutes(List.of(NETWORK_A))
     .build();
 
-  private static final GtfsFaresV2Service SERVICE = new GtfsFaresV2Service(
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2ServiceFactory.build(
     List.of(
       FareLegRule.of(id("r1"), FARE_PRODUCT_A)
         .withLegGroupId(LEG_GROUP)
@@ -42,8 +42,7 @@ class FreeTransferTimeLimitTest implements PlanTestConstants, FareTestConstants 
         .withTransferCount(UNLIMITED_TRANSFERS)
         .withTimeLimit(DEPARTURE_TO_DEPARTURE, Duration.ofMinutes(10))
         .build()
-    ),
-    ImmutableMultimap.of()
+    )
   );
 
   @Test

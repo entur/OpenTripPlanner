@@ -1,5 +1,8 @@
 package org.opentripplanner.ext.fares.service.gtfs.v2;
 
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.Multimap;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -15,6 +18,12 @@ import org.opentripplanner.model.plan.TransitLeg;
  */
 class TimeframeMatcher {
 
+  private final ImmutableSetMultimap<FeedScopedId, LocalDate> serviceDatesForServiceId;
+
+  TimeframeMatcher(Multimap<FeedScopedId, LocalDate> serviceDatesForServiceId) {
+    this.serviceDatesForServiceId = ImmutableSetMultimap.copyOf(serviceDatesForServiceId);
+  }
+
   ///
   /// Check if a leg matches the timeframe restrictions of a fare rule.
   ///
@@ -22,7 +31,7 @@ class TimeframeMatcher {
   /// - The rule has no timeframe restrictions (empty), OR
   /// - The leg's departure time falls within at least one of the rule's from timeframes, AND
   /// - The leg's arrival time falls within at least one of the rule's to timeframes
-  static boolean matchesTimeframes(TransitLeg leg, FareLegRule rule) {
+  boolean matchesTimeframes(TransitLeg leg, FareLegRule rule) {
     var fromTimeframes = rule.fromTimeframes();
     var toTimeframes = rule.toTimeframes();
 
@@ -33,12 +42,10 @@ class TimeframeMatcher {
 
     // Check from timeframes (departure time)
     var fromMatches =
-      fromTimeframes.isEmpty() ||
-      matchesAnyTimeframe(leg.start().scheduledTime(), leg.trip().getServiceId(), fromTimeframes);
+      fromTimeframes.isEmpty() || matchesAnyTimeframe(leg.start().scheduledTime(), fromTimeframes);
 
     var toMatches =
-      toTimeframes.isEmpty() ||
-      matchesAnyTimeframe(leg.end().scheduledTime(), leg.trip().getServiceId(), toTimeframes);
+      toTimeframes.isEmpty() || matchesAnyTimeframe(leg.end().scheduledTime(), toTimeframes);
 
     return fromMatches && toMatches;
   }
@@ -46,28 +53,21 @@ class TimeframeMatcher {
   /**
    * Check if a time matches any of the provided timeframes.
    */
-  private static boolean matchesAnyTimeframe(
-    ZonedDateTime time,
-    FeedScopedId serviceId,
-    Collection<Timeframe> timeframes
-  ) {
-    return timeframes.stream().anyMatch(tf -> matchesTimeframe(time, serviceId, tf));
+  private boolean matchesAnyTimeframe(ZonedDateTime time, Collection<Timeframe> timeframes) {
+    return timeframes.stream().anyMatch(tf -> matchesTimeframe(time, tf));
   }
 
   /**
    * Check if a time falls within a specific timeframe.
    */
-  private static boolean matchesTimeframe(
-    ZonedDateTime time,
-    FeedScopedId serviceId,
-    Timeframe timeframe
-  ) {
+  private boolean matchesTimeframe(ZonedDateTime time, Timeframe timeframe) {
     var localTime = time.toLocalTime();
     // For now, only check time ranges
     var start = timeframe.startTime();
     var end = timeframe.endTime();
 
-    if (!timeframe.serviceId().equals(serviceId)) {
+    var dates = serviceDatesForServiceId.get(timeframe.serviceId());
+    if (!dates.contains(time.toLocalDate())) {
       return false;
     }
 

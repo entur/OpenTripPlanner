@@ -3,6 +3,7 @@ package org.opentripplanner.ext.fares.service.gtfs.v1;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -40,13 +41,19 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
 
   // mapping the stop ids to area ids. one stop can be in several areas.
   private final Multimap<FeedScopedId, FeedScopedId> stopAreas = ArrayListMultimap.create();
+  private final Multimap<FeedScopedId, LocalDate> serviceDates = ArrayListMultimap.create();
 
   @Override
   public FareService makeFareService() {
     DefaultFareService fareService = new DefaultFareService();
     fareService.addFareRules(FareType.regular, regularFareRules.values());
 
-    var faresV2Service = new GtfsFaresV2Service(fareLegRules, fareTransferRules, stopAreas);
+    var faresV2Service = new GtfsFaresV2Service(
+      fareLegRules,
+      fareTransferRules,
+      stopAreas,
+      serviceDates
+    );
     return new GtfsFaresService(fareService, faresV2Service);
   }
 

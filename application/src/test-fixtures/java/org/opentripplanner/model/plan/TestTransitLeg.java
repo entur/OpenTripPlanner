@@ -2,6 +2,7 @@ package org.opentripplanner.model.plan;
 
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
@@ -127,6 +128,11 @@ public class TestTransitLeg implements TransitLeg {
   @Override
   public int generalizedCost() {
     return 0;
+  }
+
+  @Override
+  public LocalDate serviceDate() {
+    return startTime.toLocalDate();
   }
 
   @Override

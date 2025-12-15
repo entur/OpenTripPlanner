@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTestConstants;
+import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
 
@@ -18,7 +19,7 @@ class FlexLegTest implements PlanTestConstants, FareTestConstants {
   private static final FeedScopedId LEG_GROUP = id("leg-group-a");
   private static final FeedScopedId STOP_AREA = id("stop-area-a");
 
-  private static final GtfsFaresV2Service SERVICE = new GtfsFaresV2Service(
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2ServiceFactory.build(
     List.of(
       FareLegRule.of(id("r1"), FARE_PRODUCT_A)
         .withLegGroupId(LEG_GROUP)

@@ -5,6 +5,7 @@ import static org.opentripplanner.utils.collection.ListUtils.partitionIntoOverla
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -35,7 +36,8 @@ class FareLookupService implements Serializable {
   FareLookupService(
     List<FareLegRule> legRules,
     List<FareTransferRule> fareTransferRules,
-    Multimap<FeedScopedId, FeedScopedId> stopAreas
+    Multimap<FeedScopedId, FeedScopedId> stopAreas,
+    Multimap<FeedScopedId, LocalDate> serviceDates
   ) {
     this.legRules = List.copyOf(legRules);
     this.transferRules = stripWildcards(fareTransferRules);
@@ -43,7 +45,7 @@ class FareLookupService implements Serializable {
     var rulePriorityMatcher = new RulePriorityMatcher(legRules);
     this.areaMatcher = new AreaMatcher(rulePriorityMatcher, legRules, stopAreas);
     this.networkMatcher = new NetworkMatcher(rulePriorityMatcher, legRules);
-    this.timeframeMatcher = new TimeframeMatcher();
+    this.timeframeMatcher = new TimeframeMatcher(serviceDates);
   }
 
   /**
@@ -232,7 +234,7 @@ class FareLookupService implements Serializable {
       areaMatcher.matchesFromArea(leg.from().stop, rule.fromAreaId()) &&
       areaMatcher.matchesToArea(leg.to().stop, rule.toAreaId()) &&
       DistanceMatcher.matchesDistance(leg, rule) &&
-      TimeframeMatcher.matchesTimeframes(leg, rule)
+      timeframeMatcher.matchesTimeframes(leg, rule)
     );
   }
 

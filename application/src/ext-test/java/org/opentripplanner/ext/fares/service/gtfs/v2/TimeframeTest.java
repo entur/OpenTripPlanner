@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.opentripplanner.model.plan.TestTransitLegBuilder.DEFAULT_DATE;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import com.google.common.collect.ImmutableMultimap;
@@ -25,7 +26,13 @@ class TimeframeTest implements PlanTestConstants, FareTestConstants {
         .build()
     ),
     List.of(),
-    ImmutableMultimap.of()
+    ImmutableMultimap.of(),
+    ImmutableMultimap.of(
+      TIMEFRAME_THREE_TO_FIVE.serviceId(),
+      DEFAULT_DATE,
+      TIMEFRAME_TWELVE_TO_TWO.serviceId(),
+      DEFAULT_DATE
+    )
   );
 
   @Test

@@ -6,13 +6,13 @@ import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.FEED_ID;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
-import com.google.common.collect.ImmutableMultimap;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
+import org.opentripplanner.ext.fares.service.v2.GtfsFaresV2ServiceFactory;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.plan.Itinerary;
@@ -60,7 +60,7 @@ class GtfsFaresV2ServiceTest implements PlanTestConstants {
     .withValidity(Duration.ofDays(1))
     .build();
 
-  private static final GtfsFaresV2Service SERVICE = new GtfsFaresV2Service(
+  private static final GtfsFaresV2Service SERVICE = GtfsFaresV2ServiceFactory.build(
     List.of(
       FareLegRule.of(id("1"), ALL_NETWORKS_SINGLE).withLegGroupId(LEG_GROUP1).build(),
       FareLegRule.of(id("4"), ALL_NETWORKS_DAY_PASS).withLegGroupId(LEG_GROUP1).build(),
@@ -76,8 +76,7 @@ class GtfsFaresV2ServiceTest implements PlanTestConstants {
         .withLegGroupId(id("another-leg-group"))
         .build()
     ),
-    List.of(),
-    ImmutableMultimap.of()
+    List.of()
   );
 
   @Test

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import com.google.common.collect.ImmutableMultimap;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -33,7 +34,10 @@ class OnlyToTimeframeMatcherTest implements FareTestConstants {
   @MethodSource("outsideTimeframeCases")
   void outsideTimeframe(String startTime, String endTime) {
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    assertFalse(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(
+      ImmutableMultimap.of(TIMEFRAME_TWELVE_TO_TWO.serviceId(), leg.serviceDate())
+    );
+    assertFalse(matcher.matchesTimeframes(leg, RULE));
   }
 
   private static List<Arguments> withinTimeframeCases() {
@@ -52,6 +56,9 @@ class OnlyToTimeframeMatcherTest implements FareTestConstants {
   @MethodSource("withinTimeframeCases")
   void withinTimeframe(String startTime, String endTime) {
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    assertTrue(TimeframeMatcher.matchesTimeframes(leg, RULE));
+    var matcher = new TimeframeMatcher(
+      ImmutableMultimap.of(TIMEFRAME_TWELVE_TO_TWO.serviceId(), leg.serviceDate())
+    );
+    assertTrue(matcher.matchesTimeframes(leg, RULE));
   }
 }
