@@ -52,6 +52,7 @@ class AddedTripBuilder {
   private final ZoneId timeZone;
   private final Function<Trip, FeedScopedId> getTripPatternId;
   private final FeedScopedId tripId;
+  private final FeedScopedId datedServiceJourneyId;
   private final Operator operator;
   private final String dataSource;
   private final String lineRef;
@@ -76,9 +77,11 @@ class AddedTripBuilder {
   ) {
     // Verifying values required in SIRI Profile
     // Added ServiceJourneyId
-    String newServiceJourneyRef = estimatedVehicleJourney.getEstimatedVehicleJourneyCode();
-    Objects.requireNonNull(newServiceJourneyRef, "EstimatedVehicleJourneyCode is required");
-    tripId = entityResolver.resolveId(newServiceJourneyRef);
+    String estimatedVehicleJourneyCode = estimatedVehicleJourney.getEstimatedVehicleJourneyCode();
+    Objects.requireNonNull(estimatedVehicleJourneyCode, "EstimatedVehicleJourneyCode is required");
+    var codeAdapter = new EstimatedVehicleJourneyCodeAdapter(estimatedVehicleJourneyCode);
+    tripId = entityResolver.resolveId(codeAdapter.getServiceJourneyId());
+    datedServiceJourneyId = entityResolver.resolveId(codeAdapter.getDatedServiceJourneyId());
 
     // OperatorRef of added trip
     Objects.requireNonNull(estimatedVehicleJourney.getOperatorRef(), "OperatorRef is required");
@@ -126,6 +129,7 @@ class AddedTripBuilder {
     EntityResolver entityResolver,
     Function<Trip, FeedScopedId> getTripPatternId,
     FeedScopedId tripId,
+    FeedScopedId datedServiceJourneyId,
     Operator operator,
     String lineRef,
     Route replacedRoute,
@@ -146,6 +150,7 @@ class AddedTripBuilder {
     this.timeZone = transitService.getTimeZone();
     this.getTripPatternId = getTripPatternId;
     this.tripId = tripId;
+    this.datedServiceJourneyId = datedServiceJourneyId;
     this.operator = operator;
     this.lineRef = lineRef;
     this.replacedRoute = replacedRoute;
@@ -257,7 +262,7 @@ class AddedTripBuilder {
     }
 
     /* Validate */
-    var tripOnServiceDate = TripOnServiceDate.of(tripId)
+    var tripOnServiceDate = TripOnServiceDate.of(datedServiceJourneyId)
       .withTrip(trip)
       .withServiceDate(serviceDate)
       .withReplacementFor(replacedTrips)
