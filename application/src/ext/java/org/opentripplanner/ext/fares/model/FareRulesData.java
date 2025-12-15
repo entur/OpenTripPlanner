@@ -53,7 +53,7 @@ public final class FareRulesData {
     Multimap<FeedScopedId, LocalDate> ret = HashMultimap.create();
     fareLegRules
       .stream()
-      .flatMap(r -> r.listTimeFrameServiceIds().stream())
+      .flatMap(r -> r.listTimeframeServiceIds().stream())
       .forEach(sid -> ret.putAll(sid, serviceIdsToServiceDates.get(sid)));
     return ret;
   }

@@ -126,7 +126,7 @@ public final class FareLegRule implements Serializable {
   /**
    * The set of the service ids of all timeframes in this rule.
    */
-  public Set<FeedScopedId> listTimeFrameServiceIds() {
+  public Set<FeedScopedId> listTimeframeServiceIds() {
     return Stream.concat(fromTimeframes.stream(), toTimeframes.stream())
       .map(s -> s.serviceId())
       .collect(Collectors.toUnmodifiableSet());

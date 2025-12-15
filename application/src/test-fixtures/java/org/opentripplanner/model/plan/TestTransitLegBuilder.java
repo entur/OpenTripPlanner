@@ -14,7 +14,6 @@ import org.opentripplanner.transit.model.timetable.Trip;
 
 public class TestTransitLegBuilder {
 
-  public static final LocalDate DEFAULT_DATE = LocalDate.parse("2025-11-17");
   private static final Agency AGENCY = Agency.of(id("a1"))
     .withName("Test Agency")
     .withTimezone(ZoneIds.UTC.toString())
@@ -24,8 +23,9 @@ public class TestTransitLegBuilder {
     .withAgency(AGENCY)
     .withMode(TransitMode.BUS)
     .build();
+  private static final LocalDate DATE = LocalDate.parse("2025-11-17");
   private static final ZonedDateTime TIME = LocalTime.parse("12:00")
-    .atDate(DEFAULT_DATE)
+    .atDate(DATE)
     .atZone(ZoneIds.UTC);
   ZonedDateTime startTime = TIME;
   ZonedDateTime endTime = TIME.plusHours(1);
@@ -33,13 +33,13 @@ public class TestTransitLegBuilder {
 
   public TestTransitLegBuilder withStartTime(String startTime) {
     var time = LocalTime.parse(startTime);
-    this.startTime = DEFAULT_DATE.atTime(time).atZone(ZoneIds.UTC);
+    this.startTime = DATE.atTime(time).atZone(ZoneIds.UTC);
     return this;
   }
 
   public TestTransitLegBuilder withEndTime(String endTime) {
     var time = LocalTime.parse(endTime);
-    this.endTime = DEFAULT_DATE.atTime(time).atZone(ZoneIds.UTC);
+    this.endTime = DATE.atTime(time).atZone(ZoneIds.UTC);
     return this;
   }
 

@@ -7,7 +7,7 @@ import java.time.LocalTime;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
- * A fare timeframe what can model at what times on which service dates a fare rule applies.
+ * A fare timeframe which can model at what times on which dates a fare rule applies.
  */
 public class Timeframe implements Serializable {
 
