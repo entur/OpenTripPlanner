@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -31,7 +32,9 @@ public final class TripPatternBuilder
 
   private boolean stopPatternChangedInRealTime;
 
+  @Nullable
   private TripPattern originalTripPattern;
+
   private List<LineString> hopGeometries;
 
   TripPatternBuilder(FeedScopedId id) {
@@ -115,7 +118,7 @@ public final class TripPatternBuilder
     return this;
   }
 
-  public TripPatternBuilder withOriginalTripPattern(TripPattern originalTripPattern) {
+  public TripPatternBuilder withOriginalTripPattern(@Nullable TripPattern originalTripPattern) {
     this.originalTripPattern = originalTripPattern;
     return this;
   }
@@ -169,6 +172,7 @@ public final class TripPatternBuilder
     return name;
   }
 
+  @Nullable
   public TripPattern getOriginalTripPattern() {
     return originalTripPattern;
   }

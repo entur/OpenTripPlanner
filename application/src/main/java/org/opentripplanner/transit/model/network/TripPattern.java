@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -44,6 +45,14 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  *   details shared across all trips in the TripPattern; it reflects business practices outside
  *   routing; it is essential to optimizations in routing algorithms like Raptor. We may be
  *   conflating a domain model grouping with an internal routing grouping.
+ * TODO RT_TG In addition to AB comment: this does not map cleanly to NeTEx JourneyPattern, the
+ *   consept does not exist in GTFS. The TripPattern ID is unfortunatly exposed in the OTP APIs.
+ *   This class has a 1-to-1 relationship with RoutingTripPattern. To support a more flexible
+ *   system and more use-cases we should consider keeping "routing-tables" apart from the bussiness
+ *   domain model. One example, if the wheelchair accessability differ between trips within the
+ *   same pattern, then we can not support it - wheelchair is not part of the TripPattern key.
+ *   Putting everything into the key is not a good options either, the fragmentation will have a
+ *   negative performance impact.
  * <p>
  * This is called a JOURNEY_PATTERN in the Transmodel vocabulary. However, GTFS calls a Transmodel
  * JOURNEY a "trip", thus TripPattern.
@@ -94,22 +103,9 @@ public final class TripPattern
    */
   private final byte[][] hopGeometries;
 
-  /**
-   * The original TripPattern this replaces at least for one modified trip.
-   *
-   * Currently this seems to only be set (via TripPatternBuilder) from TripPatternCache and
-   * SiriTripPatternCache.
-   *
-   * FIXME RT_AB: Revise comments to make it clear how this is used (it is only used rarely).
-   */
+  @Nullable
   private final TripPattern originalTripPattern;
 
-  /**
-   * When a trip is added or rerouted by a realtime update, this may give rise to a new TripPattern
-   * that did not exist in the scheduled data. For such TripPatterns this field will be true. If on
-   * the other hand this TripPattern instance was created from the schedule data, this field will be
-   * false.
-   */
   private final boolean stopPatternChangedInRealTime;
 
   private final RoutingTripPattern routingTripPattern;
@@ -148,6 +144,15 @@ public final class TripPattern
 
   public static TripPatternBuilder of(FeedScopedId id) {
     return new TripPatternBuilder(id);
+  }
+
+  /**
+   * Uae this to alter an existing pattern BEFORE it is added the model. This method will keep all
+   * field as is.
+   */
+  @Override
+  public TripPatternBuilder copy() {
+    return new TripPatternBuilder(this);
   }
 
   /** The human-readable, unique name for this trip pattern. */
@@ -402,6 +407,15 @@ public final class TripPattern
     return scheduledTimetable;
   }
 
+  /**
+   * The original TripPattern this replaces at least for one modified trip.
+   *
+   * Currently this seems to only be set (via TripPatternBuilder) from TripPatternCache and
+   * SiriTripPatternCache.
+   *
+   * FIXME RT_AB: Revise comments to make it clear how this is used (it is only used rarely).
+   */
+  @Nullable
   public TripPattern getOriginalTripPattern() {
     return originalTripPattern;
   }
@@ -498,11 +512,6 @@ public final class TripPattern
       Objects.equals(this.stopPattern, other.stopPattern) &&
       Objects.equals(this.scheduledTimetable, other.scheduledTimetable)
     );
-  }
-
-  @Override
-  public TripPatternBuilder copy() {
-    return new TripPatternBuilder(this);
   }
 
   /**
