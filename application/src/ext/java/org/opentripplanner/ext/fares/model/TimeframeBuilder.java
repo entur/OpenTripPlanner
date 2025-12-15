@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.fares.model;
 
 import java.time.LocalTime;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 public class TimeframeBuilder {
 

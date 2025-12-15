@@ -2,10 +2,10 @@ package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.Timeframe;
 import org.opentripplanner.model.plan.TransitLeg;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * Matches based on the semantics of the GTFS fares V2 timeframes.

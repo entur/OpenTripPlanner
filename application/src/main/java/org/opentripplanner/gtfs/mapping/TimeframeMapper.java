@@ -3,8 +3,8 @@ package org.opentripplanner.gtfs.mapping;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.util.Collection;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.Timeframe;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class TimeframeMapper {
 

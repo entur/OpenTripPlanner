@@ -4,7 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.Serializable;
 import java.time.LocalTime;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 public class Timeframe implements Serializable {
 
