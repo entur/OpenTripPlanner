@@ -17,7 +17,6 @@ import org.opentripplanner.ext.fares.model.FareRulesData;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
 import org.opentripplanner.ext.fares.service.gtfs.GtfsFaresService;
 import org.opentripplanner.ext.fares.service.gtfs.v2.GtfsFaresV2Service;
-import org.opentripplanner.model.TransitDataImport;
 import org.opentripplanner.routing.core.FareType;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.fares.FareServiceFactory;
@@ -52,7 +51,7 @@ public class DefaultFareServiceFactory implements FareServiceFactory {
   }
 
   @Override
-  public void processGtfs(FareRulesData fareRulesData, TransitDataImport transitService) {
+  public void processGtfs(FareRulesData fareRulesData) {
     fillFareRules(fareRulesData.fareAttributes(), fareRulesData.fareRules(), regularFareRules);
     this.fareLegRules.addAll(fareRulesData.fareLegRules());
     this.fareTransferRules.addAll(fareRulesData.fareTransferRules());
