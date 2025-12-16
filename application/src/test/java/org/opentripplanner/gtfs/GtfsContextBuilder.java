@@ -8,7 +8,6 @@ import org.opentripplanner.graph_builder.module.ValidateAndInterpolateStopTimesF
 import org.opentripplanner.graph_builder.module.geometry.GeometryProcessor;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.gtfs.mapping.GTFSToTransitDataImportMapper;
-import org.opentripplanner.model.TransitDataImport;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.impl.CalendarServiceImpl;
@@ -80,7 +79,7 @@ public class GtfsContextBuilder {
    */
   public GtfsContext build() {
     repairStopTimesAndGenerateTripPatterns();
-    return new GtfsContextImpl(feedId, transitBuilder);
+    return new GtfsContextImpl(feedId, transitBuilder.buildCalendarServiceData());
   }
 
   /**
@@ -149,23 +148,16 @@ public class GtfsContextBuilder {
   private static class GtfsContextImpl implements GtfsContext {
 
     private final String feedId;
-    private final TransitDataImport transitService;
     private final CalendarServiceData calendarServiceData;
 
-    private GtfsContextImpl(String feedId, TransitDataImportBuilder builder) {
+    private GtfsContextImpl(String feedId, CalendarServiceData calendarServiceData) {
       this.feedId = feedId;
-      this.calendarServiceData = builder.buildCalendarServiceData();
-      this.transitService = builder.build();
+      this.calendarServiceData = calendarServiceData;
     }
 
     @Override
     public String getFeedId() {
       return feedId;
-    }
-
-    @Override
-    public TransitDataImport getTransitService() {
-      return transitService;
     }
 
     @Override
