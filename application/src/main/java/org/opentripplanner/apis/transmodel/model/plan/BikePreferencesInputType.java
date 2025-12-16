@@ -15,11 +15,7 @@ public class BikePreferencesInputType {
       .field(
         GraphQLInputObjectField.newInputObjectField()
           .name("speed")
-          .description(
-            "The maximum bike speed along streets, in meters per second. " +
-            "Default: " +
-            dft.speed()
-          )
+          .description("The maximum bike speed along streets, in meters per second.")
           .type(Scalars.GraphQLFloat)
           .defaultValue(dft.speed())
           .build()
@@ -29,9 +25,7 @@ public class BikePreferencesInputType {
           .name("reluctance")
           .description(
             "A measure of how bad biking is compared to being in transit for equal periods of time. " +
-            "Higher values make routing prefer other modes over biking. " +
-            "Default: " +
-            dft.reluctance()
+            "Higher values make routing prefer other modes over biking."
           )
           .type(Scalars.GraphQLFloat)
           .defaultValue(dft.reluctance())
