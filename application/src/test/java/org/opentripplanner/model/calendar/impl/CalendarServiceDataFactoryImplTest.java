@@ -31,9 +31,6 @@ import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
-/**
- * @author Thomas Gran (Capra) - tgr@capraconsulting.no (08.11.2017)
- */
 public class CalendarServiceDataFactoryImplTest {
 
   private static final FeedScopedId SERVICE_ALLDAYS_ID = id("alldays");

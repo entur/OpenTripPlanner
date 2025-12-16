@@ -36,8 +36,6 @@ import org.opentripplanner.transit.service.SiteRepository;
  * limited to [D0, D1] excluding services on D2 and D3.
  * <p>
  * All data related in the last part of the service should be removed after D1 until D3.
- *
- * @author Thomas Gran (Capra) - tgr@capraconsulting.no (30.10.2017)
  */
 public class TransitDataImportBuilderLimitPeriodTest {
 
