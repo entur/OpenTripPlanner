@@ -51,14 +51,6 @@ public class FrequencyEntry implements Serializable {
     return endTime;
   }
 
-  public int headwayInSeconds() {
-    return headway_s;
-  }
-
-  public boolean isExactTimes() {
-    return exactTimes;
-  }
-
   /// Compute the needed slack to make the boarding safe. For true frequency-based trips (not exact
   /// times), we must add the whole headway, since you might miss the previous trip by 1 second. In
   /// areas where most services operate like this, this becomes a bit defensive, and using the
@@ -72,7 +64,14 @@ public class FrequencyEntry implements Serializable {
     return tripTimes;
   }
 
+  /**
+   * Time-shift all times. This is used when updating the time zone for the trip.
+   */
   public FrequencyEntry withAdjustedTimes(Duration timeshift) {
+    // TODO: The start and end time is NOT adjusted, this looks like it could be a bug, please
+    //       explain why this is correct or fix the error. The timeShift operation might be
+    //       valid with respect to routing, but the start/end is exposed outside the class
+    //       and used in logic which assumes they are in the internal model time-zone.
     return new FrequencyEntry(
       startTime,
       endTime,
