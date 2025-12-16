@@ -21,16 +21,16 @@ import org.opentripplanner.transit.model.timetable.TimetableBuilder;
 public final class TripPatternBuilder
   extends AbstractEntityBuilder<TripPattern, TripPatternBuilder> {
 
+  private String name;
+  private boolean realTimeTripPattern;
+  private boolean stopPatternChangedInRealTime;
+  private boolean containsMultipleModes;
   private Route route;
   private TransitMode mode;
   private SubMode netexSubMode;
-  private boolean containsMultipleModes;
   private StopPattern stopPattern;
   private Timetable scheduledTimetable;
   private TimetableBuilder scheduledTimetableBuilder;
-  private String name;
-
-  private boolean stopPatternChangedInRealTime;
 
   @Nullable
   private TripPattern originalTripPattern;
@@ -52,6 +52,7 @@ public final class TripPatternBuilder
     this.stopPattern = original.getStopPattern();
     this.scheduledTimetable = original.getScheduledTimetable();
     this.stopPatternChangedInRealTime = original.isStopPatternChangedInRealTime();
+    this.realTimeTripPattern = original.isRealTimeTripPattern();
     this.originalTripPattern = original.getOriginalTripPattern();
     this.hopGeometries = original.getGeometry() == null
       ? null
@@ -103,8 +104,8 @@ public final class TripPatternBuilder
   public TripPatternBuilder withScheduledTimeTableBuilder(
     UnaryOperator<TimetableBuilder> producer
   ) {
-    // create a builder for the scheduled timetable only if it needs to be modified.
-    // otherwise reuse the existing timetable
+    // Create a builder for the scheduled timetable only if it needs to be modified.
+    // Otherwise reuse the existing timetable
     if (scheduledTimetableBuilder == null) {
       scheduledTimetableBuilder = scheduledTimetable.copyOf();
       scheduledTimetable = null;
@@ -113,8 +114,39 @@ public final class TripPatternBuilder
     return this;
   }
 
-  public TripPatternBuilder withStopPatternChangedInRealTime(boolean stopPatternChangedInRealTime) {
-    this.stopPatternChangedInRealTime = stopPatternChangedInRealTime;
+  /**
+   * Indicate that this TripPattern is created in RealTime, and that the stop pattern of the
+   * original scheduled trip is changed.
+   * <p>
+   *  TODO - ENCAPSULATE realTimeTripPattern & stopPatternChangedInRealTime initialization
+   *    The next 2 methods (withRealTimeTripPattern() and withStopPatternChangedInRealTime()) are
+   *    internal domain business rules, and should be enforced by the aggregate root, not delegated
+   *    to the creators(updaters) and unit-tests. A better solution to this would be to make static
+   *    factory methods, but it does not make the problem go away. If, e.g. the Route is chosen as
+   *    the aggregate root, then the logic would be in the Route class - totally hidden for all
+   *    users of Route/TripPattern/Trip and so on.
+   *
+   * @see #withRealTimeAddedTrip() as an alternative
+   * @see TripPattern#isRealTimeTripPattern()
+   * @see TripPattern#isStopPatternChangedInRealTime()
+   *
+   */
+  public TripPatternBuilder withRealTimeStopPatternChanged() {
+    this.realTimeTripPattern = true;
+    this.stopPatternChangedInRealTime = true;
+    return this;
+  }
+
+  /**
+   * Indicate that this TripPattern is created in RealTime for a new trip (GTFS ADDED trip/NeTEx
+   * ExtraJourney).
+   * @see #withRealTimeStopPatternChanged() as an alternative
+   * @see TripPattern#isRealTimeTripPattern()
+   * @see TripPattern#isStopPatternChangedInRealTime()
+   */
+  public TripPatternBuilder withRealTimeAddedTrip() {
+    this.realTimeTripPattern = true;
+    this.stopPatternChangedInRealTime = false;
     return this;
   }
 
@@ -177,6 +209,10 @@ public final class TripPatternBuilder
     return originalTripPattern;
   }
 
+  boolean isRealTimeTripPattern() {
+    return realTimeTripPattern;
+  }
+
   boolean isStopPatternChangedInRealTime() {
     return stopPatternChangedInRealTime;
   }
@@ -200,8 +236,8 @@ public final class TripPatternBuilder
   /**
    * This will copy the geometry from another TripPattern to this one. It checks if each hop is
    * between the same stops before copying that hop geometry. If the stops are different but lie
-   * within same station, old geometry will be used with overwrite on first and last point (to match
-   * new stop places). Otherwise, it will default to straight lines between hops.
+   * within the same station, old geometry will be used with overwriting the first and last point
+   * (to match new stop places). Otherwise, it will default to straight lines between hops.
    */
   private List<LineString> generateHopGeometriesFromOriginalTripPattern() {
     // This accounts for the new TripPattern provided by a real-time update and the one that is

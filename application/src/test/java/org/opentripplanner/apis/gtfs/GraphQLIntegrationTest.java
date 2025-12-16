@@ -290,7 +290,7 @@ class GraphQLIntegrationTest {
           TripPattern.of(new FeedScopedId(FEED_ID, "ADDED_TRIP_PATTERN"))
             .withRoute(t.getRoute())
             .withStopPattern(TimetableRepositoryForTest.stopPattern(A.stop, B.stop, C.stop, D.stop))
-            .withStopPatternChangedInRealTime(true)
+            .withRealTimeStopPatternChanged()
             .build(),
           realTimeTripTimes,
           SERVICE_DATE,

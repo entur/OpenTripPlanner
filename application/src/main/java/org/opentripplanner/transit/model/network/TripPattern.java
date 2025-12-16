@@ -106,6 +106,7 @@ public final class TripPattern
   @Nullable
   private final TripPattern originalTripPattern;
 
+  private final boolean realTimeTripPattern;
   private final boolean stopPatternChangedInRealTime;
 
   private final RoutingTripPattern routingTripPattern;
@@ -115,6 +116,7 @@ public final class TripPattern
     this.name = builder.getName();
     this.route = builder.getRoute();
     this.stopPattern = requireNonNull(builder.getStopPattern());
+    this.realTimeTripPattern = builder.isRealTimeTripPattern();
     this.stopPatternChangedInRealTime = builder.isStopPatternChangedInRealTime();
     this.mode = requireNonNull(builder.getMode());
     this.netexSubMode = requireNonNull(builder.getNetexSubmode());
@@ -140,6 +142,10 @@ public final class TripPattern
     this.routingTripPattern = new RoutingTripPattern(this);
 
     getId().requireSameFeedId(route.getId());
+
+    if (stopPatternChangedInRealTime && !realTimeTripPattern) {
+      throw new IllegalStateException();
+    }
   }
 
   public static TripPatternBuilder of(FeedScopedId id) {
@@ -424,7 +430,7 @@ public final class TripPattern
    * When a trip is added or rerouted by a realtime update, this may give rise to a new StopPattern
    * (and also a new TripPattern) that did not exist in the scheduled data. For such cases, this
    * field will be {@code true}.
-   *
+   * <p>
    * Returns {@code true} if this TripPattern is a modified version of a scheduled TripPattern.
    * If this method returns {@code false}, this TripPattern is either a scheduled TripPattern or
    * a TripPattern generated from scratch in real-time (GTFS ADDED/NeTEx ExtraJourney).
@@ -433,6 +439,20 @@ public final class TripPattern
     return stopPatternChangedInRealTime;
   }
 
+  /**
+   * Returns {@code true} if this TripPattern is created in real time, {@code false} if the
+   * TripPattern is created from planned/scheduled data. Note! This trip pattern can represent a
+   * new trip (GTFS ADDED or NeTEx Extra Journey) or a modification of a scheduled trip.
+   */
+  public boolean isRealTimeTripPattern() {
+    return realTimeTripPattern;
+  }
+
+  /**
+   * @deprecated This method is not clearly defined. Use {@link #isStopPatternModifiedInRealTime()}
+   * or {@link #isRealTimeTripPattern()} if possible, or clarify what this is needed for.
+   */
+  @Deprecated
   public boolean isModified() {
     return originalTripPattern != null;
   }
