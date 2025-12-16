@@ -3732,7 +3732,6 @@ enum RelativeDirection {
   More information about the entrance is in the `step.feature` field.
   """
   ENTER_STATION
-  ESCALATOR
   """
   Exiting a public transport station. If it's not known if the passenger is entering or exiting
   then `CONTINUE` is used.
@@ -3748,7 +3747,6 @@ enum RelativeDirection {
   RIGHT
   SLIGHTLY_LEFT
   SLIGHTLY_RIGHT
-  STAIRS
   UTURN_LEFT
   UTURN_RIGHT
 }

@@ -20,6 +20,9 @@ import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
@@ -44,6 +47,7 @@ class StatesToWalkStepsMapperTest {
     );
     var elevatorStep = walkSteps.get(3);
     assertEquals(RelativeDirection.ELEVATOR, elevatorStep.getRelativeDirection());
+    assertTrue(elevatorStep.verticalTransportationUse().get() instanceof ElevatorUse);
     assertTrue(elevatorStep.getAbsoluteDirection().isEmpty());
   }
 
@@ -53,7 +57,7 @@ class StatesToWalkStepsMapperTest {
       TestStateBuilder.ofWalking().streetEdge().stairsEdge().streetEdge()
     );
     assertEquals(RelativeDirection.DEPART, walkSteps.get(0).getRelativeDirection());
-    assertEquals(RelativeDirection.STAIRS, walkSteps.get(1).getRelativeDirection());
+    assertTrue(walkSteps.get(1).verticalTransportationUse().get() instanceof StairsUse);
     assertEquals(RelativeDirection.CONTINUE, walkSteps.get(2).getRelativeDirection());
   }
 
@@ -63,7 +67,7 @@ class StatesToWalkStepsMapperTest {
       TestStateBuilder.ofWalking().streetEdge().escalatorEdge().streetEdge()
     );
     assertEquals(RelativeDirection.DEPART, walkSteps.get(0).getRelativeDirection());
-    assertEquals(RelativeDirection.ESCALATOR, walkSteps.get(1).getRelativeDirection());
+    assertTrue(walkSteps.get(1).verticalTransportationUse().get() instanceof EscalatorUse);
     assertEquals(RelativeDirection.CONTINUE, walkSteps.get(2).getRelativeDirection());
   }
 

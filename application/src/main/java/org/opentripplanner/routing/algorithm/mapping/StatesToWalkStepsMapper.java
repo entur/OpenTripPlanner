@@ -17,6 +17,9 @@ import org.opentripplanner.model.plan.leg.ElevationProfile;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.model.plan.walkstep.WalkStepBuilder;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.ElevatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.EscalatorUse;
+import org.opentripplanner.model.plan.walkstep.verticaltransportation.StairsUse;
 import org.opentripplanner.model.plan.walkstep.verticaltransportation.VerticalTransportationUseFactory;
 import org.opentripplanner.routing.graphfinder.EntranceResolver;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
@@ -396,9 +399,9 @@ public class StatesToWalkStepsMapper {
   private boolean canZagBeRemoved(WalkStepBuilder walkStepBuilder) {
     return (
       !walkStepBuilder.hasEntrance() &&
-      walkStepBuilder.relativeDirection() != RelativeDirection.ESCALATOR &&
-      walkStepBuilder.relativeDirection() != RelativeDirection.STAIRS &&
-      walkStepBuilder.relativeDirection() != RelativeDirection.ELEVATOR
+      !(walkStepBuilder.verticalTransportationUse() instanceof ElevatorUse) &&
+      !(walkStepBuilder.verticalTransportationUse() instanceof EscalatorUse) &&
+      !(walkStepBuilder.verticalTransportationUse() instanceof StairsUse)
     );
   }
 
@@ -581,7 +584,7 @@ public class StatesToWalkStepsMapper {
   ) {
     addStep(
       createWalkStep(forwardState, backState)
-        .withRelativeDirection(RelativeDirection.STAIRS)
+        .withRelativeDirection(RelativeDirection.CONTINUE)
         .withAbsoluteDirection(DirectionUtils.getFirstAngle(geom))
         .addDistance(edge.getDistanceMeters())
         .withVerticalTransportationUse(verticalTransportationUseFactory.createStairsUse(edge))
@@ -600,7 +603,7 @@ public class StatesToWalkStepsMapper {
   ) {
     addStep(
       createWalkStep(forwardState, backState)
-        .withRelativeDirection(RelativeDirection.ESCALATOR)
+        .withRelativeDirection(RelativeDirection.CONTINUE)
         .withAbsoluteDirection(DirectionUtils.getFirstAngle(geom))
         .addDistance(edge.getDistanceMeters())
         .withVerticalTransportationUse(verticalTransportationUseFactory.createEscalatorUse(edge))

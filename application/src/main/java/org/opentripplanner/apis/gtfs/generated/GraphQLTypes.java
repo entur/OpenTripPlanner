@@ -4462,7 +4462,6 @@ public class GraphQLTypes {
     DEPART,
     ELEVATOR,
     ENTER_STATION,
-    ESCALATOR,
     EXIT_STATION,
     FOLLOW_SIGNS,
     HARD_LEFT,
@@ -4471,7 +4470,6 @@ public class GraphQLTypes {
     RIGHT,
     SLIGHTLY_LEFT,
     SLIGHTLY_RIGHT,
-    STAIRS,
     UTURN_LEFT,
     UTURN_RIGHT,
   }

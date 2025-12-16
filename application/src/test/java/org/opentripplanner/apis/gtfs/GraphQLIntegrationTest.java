@@ -385,7 +385,7 @@ class GraphQLIntegrationTest {
     );
     streetDetailsRepository.addInclinedEdgeLevelInfo(stairsEdge, inclinedEdgeLevelInfo);
     var step4 = walkStep("stairs")
-      .withRelativeDirection(RelativeDirection.STAIRS)
+      .withRelativeDirection(RelativeDirection.CONTINUE)
       .withVerticalTransportationUse(verticalTransportationUseFactory.createStairsUse(stairsEdge))
       .addEdge(stairsEdge)
       .build();
@@ -394,7 +394,7 @@ class GraphQLIntegrationTest {
     var escalatorEdge = escalatorState.getBackEdge();
     streetDetailsRepository.addInclinedEdgeLevelInfo(escalatorEdge, inclinedEdgeLevelInfo);
     var step5 = walkStep("escalator")
-      .withRelativeDirection(RelativeDirection.ESCALATOR)
+      .withRelativeDirection(RelativeDirection.CONTINUE)
       .withVerticalTransportationUse(
         verticalTransportationUseFactory.createEscalatorUse(escalatorEdge)
       )

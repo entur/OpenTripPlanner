@@ -163,8 +163,9 @@ public class WalkStepBuilder {
     return entrance != null;
   }
 
-  public boolean hasVerticalTransportationUse() {
-    return verticalTransportationUse != null;
+  @Nullable
+  public VerticalTransportationUse verticalTransportationUse() {
+    return verticalTransportationUse;
   }
 
   public WalkStepBuilder addStreetNotes(Set<StreetNote> notes) {

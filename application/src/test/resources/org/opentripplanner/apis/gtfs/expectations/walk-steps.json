@@ -47,7 +47,7 @@
                   {
                     "streetName": "stairs",
                     "area": false,
-                    "relativeDirection": "STAIRS",
+                    "relativeDirection": "CONTINUE",
                     "absoluteDirection": null,
                     "feature": {
                       "__typename": "StairsUse",
@@ -65,7 +65,7 @@
                   {
                     "streetName": "escalator",
                     "area": false,
-                    "relativeDirection": "ESCALATOR",
+                    "relativeDirection": "CONTINUE",
                     "absoluteDirection": null,
                     "feature": {
                       "__typename": "EscalatorUse",
