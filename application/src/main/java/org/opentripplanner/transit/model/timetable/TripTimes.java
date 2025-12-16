@@ -19,7 +19,7 @@ import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
  * trip using this interface. All times are expressed as seconds since midnight (as in
  * GTFS). Unless stated otherwise, accessor methods which take an integer stop parameter refer to
  * the position within the trip's TripPattern, not its GTFS stop sequence for example or Raptor
- * stop index. The stop position is 0(zerp) based.
+ * stop index. The stop position is 0(zero) based.
  */
 public interface TripTimes<T extends TripTimes> extends Serializable, Comparable<TripTimes> {
   /**
