@@ -23,11 +23,10 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.opentripplanner.api.common.LocationStringParser;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundle;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
-import org.opentripplanner.gtfs.graphbuilder.GtfsModuleTestFactory;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
@@ -210,7 +209,7 @@ public abstract class GtfsTest {
       )
     );
 
-    GtfsModule gtfsGraphBuilderImpl = GtfsModuleTestFactory.forTest(
+    GtfsModule gtfsGraphBuilderImpl = GtfsModule.forTest(
       gtfsBundleList,
       timetableRepository,
       graph,
