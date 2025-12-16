@@ -85,9 +85,9 @@ public class TimetableBuilder {
    * trip times.
    * <p>
    */
-  public TimetableBuilder withAdjustedTimeZone(Duration timeshift) {
-    tripTimes.replaceAll((t, tt) -> tt.withAdjustedTimeZone(timeshift));
-    frequencies.replaceAll(it -> it.adjustTimesToGraphTimeZone(timeshift));
+  public TimetableBuilder withAdjustedTimes(Duration timeshift) {
+    tripTimes.replaceAll((t, tt) -> tt.withAdjustedTimes(timeshift));
+    frequencies.replaceAll(it -> it.withAdjustedTimes(timeshift));
     return this;
   }
 

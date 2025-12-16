@@ -295,7 +295,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
    * Time-shift all times on this trip. This is used when updating the time zone for the trip.
    */
   @Override
-  public RealTimeTripTimes withAdjustedTimeZone(Duration shiftDelta) {
+  public RealTimeTripTimes withAdjustedTimes(Duration shiftDelta) {
     return new RealTimeTripTimes(this, (int) shiftDelta.toSeconds());
   }
 

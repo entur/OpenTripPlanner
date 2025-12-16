@@ -136,7 +136,7 @@ public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
   }
 
   @Override
-  public ScheduledTripTimes withAdjustedTimeZone(Duration shiftDelta) {
+  public ScheduledTripTimes withAdjustedTimes(Duration shiftDelta) {
     return copyOfNoDuplication().plusTimeShift((int) shiftDelta.toSeconds()).build();
   }
 

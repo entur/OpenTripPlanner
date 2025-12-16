@@ -72,13 +72,13 @@ public class FrequencyEntry implements Serializable {
     return tripTimes;
   }
 
-  public FrequencyEntry adjustTimesToGraphTimeZone(Duration timeshift) {
+  public FrequencyEntry withAdjustedTimes(Duration timeshift) {
     return new FrequencyEntry(
       startTime,
       endTime,
       headway_s,
       exactTimes,
-      tripTimes.withAdjustedTimeZone(timeshift)
+      tripTimes.withAdjustedTimes(timeshift)
     );
   }
 

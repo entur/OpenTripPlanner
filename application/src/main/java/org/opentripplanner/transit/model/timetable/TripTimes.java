@@ -201,5 +201,5 @@ public interface TripTimes<T extends TripTimes> extends Serializable, Comparable
   /**
    * Time-shift all times on this trip. This is used when updating the time zone for the trip.
    */
-  T withAdjustedTimeZone(Duration shiftDelta);
+  T withAdjustedTimes(Duration shiftDelta);
 }

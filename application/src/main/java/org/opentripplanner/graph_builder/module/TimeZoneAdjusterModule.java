@@ -48,7 +48,7 @@ public class TimeZoneAdjusterModule implements GraphBuilderModule {
 
         TripPattern updatedPattern = pattern
           .copy()
-          .withScheduledTimeTableBuilder(builder -> builder.withAdjustedTimeZone(timeShift))
+          .withScheduledTimeTableBuilder(builder -> builder.withAdjustedTimes(timeShift))
           .build();
         // replace the original pattern with the updated pattern in the transit model
         timetableRepository.addTripPattern(updatedPattern.getId(), updatedPattern);
