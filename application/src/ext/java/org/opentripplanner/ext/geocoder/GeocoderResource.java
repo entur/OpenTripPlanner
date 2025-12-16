@@ -31,14 +31,9 @@ public class GeocoderResource {
     @QueryParam("focusLatitude") Double focusLat,
     @QueryParam("focusLongitude") Double focusLon
   ) {
-    if (query == null || query.length() < 2) {
+    if (query == null) {
       return Response.status(Response.Status.BAD_REQUEST)
-        .entity(
-          Map.of(
-            "error",
-            "Query parameter 'query' must be provided and have at least 2 characters."
-          )
-        )
+        .entity(Map.of("error", "Query parameter 'query' must be provided."))
         .build();
     }
     WgsCoordinate focusPoint = null;
