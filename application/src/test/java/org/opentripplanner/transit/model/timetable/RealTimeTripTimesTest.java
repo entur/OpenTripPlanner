@@ -382,14 +382,14 @@ class RealTimeTripTimesTest {
 
     @Test
     void stopIndexOfGtfsSequence() {
-      var stopIndex = createInitialTripTimes().stopIndexOfGtfsSequence(40);
+      var stopIndex = createInitialTripTimes().stopPositionForGtfsSequence(40);
       assertTrue(stopIndex.isPresent());
       assertEquals(4, stopIndex.getAsInt());
     }
 
     @Test
     void unknownGtfsSequence() {
-      var stopIndex = createInitialTripTimes().stopIndexOfGtfsSequence(4);
+      var stopIndex = createInitialTripTimes().stopPositionForGtfsSequence(4);
       assertTrue(stopIndex.isEmpty());
     }
   }

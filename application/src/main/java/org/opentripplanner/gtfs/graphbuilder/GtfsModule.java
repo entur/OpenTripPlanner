@@ -29,12 +29,12 @@ import org.opentripplanner.graph_builder.module.ValidateAndInterpolateStopTimesF
 import org.opentripplanner.graph_builder.module.geometry.GeometryProcessor;
 import org.opentripplanner.gtfs.GenerateTripPatternsOperation;
 import org.opentripplanner.gtfs.interlining.InterlineProcessor;
-import org.opentripplanner.gtfs.mapping.GTFSToOtpTransitServiceMapper;
-import org.opentripplanner.model.OtpTransitService;
+import org.opentripplanner.gtfs.mapping.GTFSToTransitDataImportMapper;
+import org.opentripplanner.model.TransitDataImport;
 import org.opentripplanner.model.TripStopTimes;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
-import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
+import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -133,8 +133,8 @@ public class GtfsModule implements GraphBuilderModule {
 
         feedIdsEncountered.put(feedId, gtfsBundle);
 
-        GTFSToOtpTransitServiceMapper mapper = new GTFSToOtpTransitServiceMapper(
-          new OtpTransitServiceBuilder(timetableRepository.getSiteRepository(), issueStore),
+        GTFSToTransitDataImportMapper mapper = new GTFSToTransitDataImportMapper(
+          new TransitDataImportBuilder(timetableRepository.getSiteRepository(), issueStore),
           feedId,
           issueStore,
           gtfsBundle.parameters().discardMinTransferTimes(),
@@ -142,7 +142,7 @@ public class GtfsModule implements GraphBuilderModule {
         );
         mapper.mapStopTripAndRouteDataIntoBuilder(gtfsDao);
 
-        OtpTransitServiceBuilder builder = mapper.getBuilder();
+        TransitDataImportBuilder builder = mapper.getBuilder();
         var fareRulesData = mapper.fareRulesData();
 
         builder.limitServiceDays(transitPeriodLimit);
@@ -174,9 +174,9 @@ public class GtfsModule implements GraphBuilderModule {
           issueStore
         );
 
-        OtpTransitService otpTransitService = builder.build();
+        TransitDataImport dataImport = builder.build();
 
-        addTimetableRepositoryToGraph(graph, timetableRepository, otpTransitService);
+        addTimetableRepositoryToGraph(graph, timetableRepository, dataImport);
 
         if (gtfsBundle.parameters().blockBasedInterlining()) {
           new InterlineProcessor(
@@ -185,10 +185,10 @@ public class GtfsModule implements GraphBuilderModule {
             gtfsBundle.parameters().maxInterlineDistance(),
             issueStore,
             calendarServiceData
-          ).run(otpTransitService.getTripPatterns());
+          ).run(dataImport.getTripPatterns());
         }
 
-        fareServiceFactory.processGtfs(fareRulesData, otpTransitService);
+        fareServiceFactory.processGtfs(fareRulesData);
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -253,7 +253,7 @@ public class GtfsModule implements GraphBuilderModule {
   private void createTripPatterns(
     DeduplicatorService deduplicator,
     TimetableRepository timetableRepository,
-    OtpTransitServiceBuilder builder,
+    TransitDataImportBuilder builder,
     Set<FeedScopedId> calServiceIds,
     GeometryProcessor geometryProcessor,
     DataImportIssueStore issueStore
@@ -277,10 +277,10 @@ public class GtfsModule implements GraphBuilderModule {
   private void addTimetableRepositoryToGraph(
     Graph graph,
     TimetableRepository timetableRepository,
-    OtpTransitService otpTransitService
+    TransitDataImport dataImport
   ) {
-    AddTransitEntitiesToTimetable.addToTimetable(otpTransitService, timetableRepository);
-    AddTransitEntitiesToGraph.addToGraph(otpTransitService, subwayAccessTime_s, graph);
+    AddTransitEntitiesToTimetable.addToTimetable(dataImport, timetableRepository);
+    AddTransitEntitiesToGraph.addToGraph(dataImport, subwayAccessTime_s, graph);
   }
 
   private GtfsRelationalDao loadBundle(GtfsBundle gtfsBundle) throws IOException {
