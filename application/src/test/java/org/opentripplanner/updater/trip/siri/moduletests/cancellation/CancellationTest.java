@@ -110,7 +110,7 @@ class CancellationTest implements RealtimeTestConstants {
   void testChangeQuayAndCancelAddedTrip() {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
 
-    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1[SCHEDULED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[SCHEDULED]");
     var siri = SiriTestHelper.of(env);
 
     var creation = new SiriEtBuilder(env.localTimeParser())
@@ -134,7 +134,7 @@ class CancellationTest implements RealtimeTestConstants {
       "ADDED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
-    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
       "F:route-id::001:RT[ADDED]"
     );
@@ -147,7 +147,7 @@ class CancellationTest implements RealtimeTestConstants {
       "CANCELED | A 0:00:11 0:00:11 | B 0:00:20 0:00:20",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
-    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
       "F:route-id::001:RT[CANCELED]"
     );

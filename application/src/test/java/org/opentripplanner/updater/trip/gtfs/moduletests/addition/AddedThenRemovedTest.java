@@ -37,7 +37,7 @@ class AddedThenRemovedTest implements RealtimeTestConstants {
     "Can be enabled when https://github.com/opentripplanner/OpenTripPlanner/pull/6280 is merged"
   )
   void addedThenRemoved() {
-    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1");
 
     var tripUpdate = rt
       .tripUpdate(ADDED_TRIP_ID, NEW)
@@ -47,15 +47,15 @@ class AddedThenRemovedTest implements RealtimeTestConstants {
 
     assertSuccess(rt.applyTripUpdate(tripUpdate));
 
-    assertThat(env.routingTripPatterns().summarize()).containsExactly(
-      "F:Pattern1",
-      "F:AddedTrip::rt#1"
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
+      "F:Pattern1[SCHEDULED]",
+      "F:AddedTrip::rt#1[ADDED]"
     );
 
     // the GTFS updater is configured to clear timetables, so an empty list should remove the
     // previously added one
     assertNoFailure(rt.applyTripUpdates(List.of()));
 
-    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[SCHEDULED]");
   }
 }

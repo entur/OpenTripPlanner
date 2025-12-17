@@ -29,7 +29,7 @@ class QuayChangeTest implements RealtimeTestConstants {
   @Test
   void testChangeQuay() {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
-    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1[SCHEDULED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[SCHEDULED]");
     var siri = SiriTestHelper.of(env);
 
     var updates = siri
@@ -49,6 +49,6 @@ class QuayChangeTest implements RealtimeTestConstants {
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
-    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Route1::001:RT[MODIFIED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Route1::001:RT[MODIFIED]");
   }
 }

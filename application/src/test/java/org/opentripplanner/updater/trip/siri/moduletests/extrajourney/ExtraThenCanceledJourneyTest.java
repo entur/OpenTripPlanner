@@ -34,7 +34,7 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
   @Test
   void extraThenCanceledJourney() {
     var env = envBuilder.addTrip(TRIP_1_INPUT).build();
-    assertThat(env.routingTripPatterns().summarize()).containsExactly("F:Pattern1[SCHEDULED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[SCHEDULED]");
     var siri = SiriTestHelper.of(env);
 
     assertSuccess(siri.applyEstimatedTimetable(addedJourney(siri)));
@@ -44,15 +44,14 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
 
-    assertThat(env.routingTripPatterns().summarize()).containsExactly(
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
       "F:routeId::001:RT[ADDED]"
     );
 
     // cancel the added journey again, should add a cancelled trip to the raptor data
     assertSuccess(siri.applyEstimatedTimetable(cancelledJourney(siri)));
-    var patternFetcher = env.routingTripPatterns();
-    assertThat(patternFetcher.summarize()).containsExactly(
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
       "F:routeId::001:RT[CANCELED]"
     );

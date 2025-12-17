@@ -120,14 +120,14 @@ public final class TransitTestEnvironment {
   /**
    * Returns a fetcher for the given service date. By default it also includes cancelled trips.
    */
-  public RoutingTripPatternDataFetcher routingTripPatterns(LocalDate serviceDate) {
-    return new RoutingTripPatternDataFetcher(transitService(), serviceDate);
+  public RaptorTransitDataFetcher raptorData(LocalDate serviceDate) {
+    return new RaptorTransitDataFetcher(transitService(), serviceDate);
   }
 
   /**
    * Returns a fetcher for the default service date. By default it also includes cancelled trips.
    */
-  public RoutingTripPatternDataFetcher routingTripPatterns() {
-    return routingTripPatterns(defaultServiceDate);
+  public RaptorTransitDataFetcher raptorData() {
+    return raptorData(defaultServiceDate);
   }
 }
