@@ -1,8 +1,8 @@
 package org.opentripplanner.transit.service;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
@@ -28,7 +28,9 @@ public class ReplacementHelperTest implements RealtimeTestConstants {
   private final String ROUTE_1_ID = "route_1";
   private final String ROUTE_2_ID = "route_2";
   private final Route ROUTE_1 = envBuilder.route(ROUTE_1_ID);
-  private final Route ROUTE_2 = envBuilder.route(ROUTE_2_ID, routeBuilder -> routeBuilder.withNetexSubmode("railReplacementBus"));
+  private final Route ROUTE_2 = envBuilder.route(ROUTE_2_ID, routeBuilder ->
+    routeBuilder.withNetexSubmode("railReplacementBus")
+  );
 
   private final TransitTestEnvironment env = envBuilder
     .addTrip(
@@ -93,8 +95,16 @@ public class ReplacementHelperTest implements RealtimeTestConstants {
     // fails because there is no syntetic TOSD for TRIP_1_ID
     // assertTrue(replacementHelper.replacementsExist(transitService.getTrip(id(TRIP_1_ID))));
 
-    assertEquals(addedTripOnServiceDate2, replacementHelper.getReplacedBy(addedTripOnServiceDate).iterator().next());
-    assertTrue(replacementHelper.getReplacement(addedTripOnServiceDate2).getReplacementFor().contains(addedTripOnServiceDate));
+    assertEquals(
+      addedTripOnServiceDate2,
+      replacementHelper.getReplacedBy(addedTripOnServiceDate).iterator().next()
+    );
+    assertTrue(
+      replacementHelper
+        .getReplacement(addedTripOnServiceDate2)
+        .getReplacementFor()
+        .contains(addedTripOnServiceDate)
+    );
   }
 
   private TripOnServiceDate createReplacementTrip(String oldId, String newId, String min) {
