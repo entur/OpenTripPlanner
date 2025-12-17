@@ -11,8 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
@@ -145,13 +146,13 @@ public class TemporaryPartialStreetEdgeTest {
     List<StreetEdge> edges = new ArrayList<>();
     edges.add(e2);
 
-    TemporaryStreetLocation end = StreetModelForTest.createTemporaryStreetLocationForTest(
+    TemporaryStreetLocation end = StreetModelFactory.createTemporaryStreetLocationForTest(
       new NonLocalizedString("foo"),
       edges,
       nearestPoint,
       true
     );
-    TemporaryStreetLocation start = StreetModelForTest.createTemporaryStreetLocationForTest(
+    TemporaryStreetLocation start = StreetModelFactory.createTemporaryStreetLocationForTest(
       new NonLocalizedString("foo"),
       edges,
       nearestPoint,
@@ -283,7 +284,7 @@ public class TemporaryPartialStreetEdgeTest {
   }
 
   private IntersectionVertex vertex(String label, double lat, double lon) {
-    return StreetModelForTest.intersectionVertex(label, lat, lon);
+    return StreetModelFactory.intersectionVertex(label, lat, lon);
   }
 
   /**

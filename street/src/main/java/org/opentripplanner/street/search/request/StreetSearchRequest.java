@@ -9,8 +9,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.astar.spi.AStarRequest;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
@@ -20,7 +19,7 @@ import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.utils.time.TimeUtils;
 
 /**
- * This class contains all information from the {@link RouteRequest} class required for an A* search
+ * This class contains all information for an A* search
  */
 public class StreetSearchRequest implements AStarRequest {
 

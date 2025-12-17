@@ -1,4 +1,4 @@
-package org.opentripplanner.api.resource;
+package org.opentripplanner.api.common;
 
 import static java.util.Locale.ENGLISH;
 import static java.util.Locale.FRENCH;
@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.util.Locale;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.api.common.Message;
 
 public class MessageTest {
 

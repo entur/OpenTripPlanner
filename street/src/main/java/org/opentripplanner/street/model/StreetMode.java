@@ -1,8 +1,8 @@
-package org.opentripplanner.routing.api.request;
+package org.opentripplanner.street.model;
 
 import java.util.EnumSet;
 import java.util.Set;
-import org.opentripplanner.framework.doc.DocumentedEnum;
+import org.opentripplanner.core.model.doc.DocumentedEnum;
 
 public enum StreetMode implements DocumentedEnum<StreetMode> {
   /**

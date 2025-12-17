@@ -1,12 +1,11 @@
 package org.opentripplanner.street.model.edge;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.SimpleConcreteEdge;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 
@@ -14,8 +13,8 @@ public class EdgeTest {
 
   @Test
   public void testConstruct() {
-    Vertex head = StreetModelForTest.intersectionVertex("head", 47.669457, -122.387577);
-    Vertex tail = StreetModelForTest.intersectionVertex("tail", 47.669462, -122.384739);
+    Vertex head = StreetModelFactory.intersectionVertex("head", 47.669457, -122.387577);
+    Vertex tail = StreetModelFactory.intersectionVertex("tail", 47.669462, -122.384739);
     Edge e = SimpleConcreteEdge.createSimpleConcreteEdge(head, tail);
 
     assertEquals(head, e.getFromVertex());

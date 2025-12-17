@@ -1,8 +1,8 @@
 package org.opentripplanner.street.model.vertex;
 
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
-import org.opentripplanner.transit.model.basic.Accessibility;
 
 /**
  * This vertex is created from all barrier tags.

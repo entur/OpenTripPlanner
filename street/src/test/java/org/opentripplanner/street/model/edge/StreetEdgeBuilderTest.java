@@ -6,15 +6,15 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 
 class StreetEdgeBuilderTest {
 
-  private static final StreetVertex FROM_VERTEX = StreetModelForTest.V1;
-  private static final StreetVertex TO_VERTEX = StreetModelForTest.V2;
+  private static final StreetVertex FROM_VERTEX = StreetModelFactory.V1;
+  private static final StreetVertex TO_VERTEX = StreetModelFactory.V2;
   private static final StreetTraversalPermission STREET_TRAVERSAL_PERMISSION =
     StreetTraversalPermission.ALL;
 

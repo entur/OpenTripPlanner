@@ -9,16 +9,15 @@ import java.util.Optional;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.framework.geometry.CompactLineStringUtils;
-import org.opentripplanner.framework.geometry.DirectionUtils;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.framework.geometry.SplitLineString;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
-import org.opentripplanner.routing.util.ElevationUtils;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.street.geometry.CompactLineStringUtils;
+import org.opentripplanner.street.geometry.DirectionUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
+import org.opentripplanner.street.geometry.SplitLineString;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.StreetTraversalPermission;
+import org.opentripplanner.street.model.elevation.ElevationUtils;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
@@ -821,10 +820,10 @@ public class StreetEdge
    * Helper method for {@link #splitStatesAfterHavingExitedNoDropOffZoneWhenReverseSearching}.
    * Create a single new state, exiting a no-drop-off zone, in reverse, and continuing
    * on a rental vehicle in the known network, or an unknown network if network is null,
-   * unless the known network is not accepted by the provided {@link RoutingPreferences}.
+   * unless the known network is not accepted by the provided {@link StreetSearchRequest}.
    * @param s0 The parent state (i.e. the following state, as we are in reverse)
    * @param network Network id, or null if unknown
-   * @param request Active {@link RoutingPreferences}
+   * @param request Active {@link StreetSearchRequest}
    * @return Newly generated {@link State}, or null if the state would have been forbidden.
    */
   private State createStateAfterHavingExitedNoDropOffZoneWhenReverseSearching(

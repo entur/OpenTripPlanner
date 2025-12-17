@@ -1,4 +1,4 @@
-package org.opentripplanner.transit.model.basic;
+package org.opentripplanner.core.model.basic;
 
 import java.util.Optional;
 import java.util.function.Consumer;

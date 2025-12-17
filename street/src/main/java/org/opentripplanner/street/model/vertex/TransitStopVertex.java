@@ -4,21 +4,21 @@ import static org.opentripplanner.street.search.TraverseMode.CAR;
 import static org.opentripplanner.street.search.TraverseMode.WALK;
 
 import java.util.Objects;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.PathwayEdge;
 import org.opentripplanner.street.model.edge.StreetTransitEntityLink;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TransitStopVertex extends StationElementVertex {
 
   private static final Logger LOG = LoggerFactory.getLogger(TransitStopVertex.class);
-  private final boolean isFerryStop;
+  private final boolean isFerry;
   private final Accessibility wheelchairAccessibility;
 
   /**
@@ -31,10 +31,10 @@ public class TransitStopVertex extends StationElementVertex {
     FeedScopedId id,
     WgsCoordinate coordinate,
     Accessibility wheelchairAccessibility,
-    boolean isFerryStop
+    boolean isFerry
   ) {
     super(id, coordinate.longitude(), coordinate.latitude(), I18NString.of(id.getId()));
-    this.isFerryStop = isFerryStop;
+    this.isFerry = isFerry;
     this.wheelchairAccessibility = Objects.requireNonNull(wheelchairAccessibility);
   }
 
@@ -70,7 +70,7 @@ public class TransitStopVertex extends StationElementVertex {
   }
 
   public boolean isFerryStop() {
-    return isFerryStop;
+    return isFerry;
   }
 
   /**

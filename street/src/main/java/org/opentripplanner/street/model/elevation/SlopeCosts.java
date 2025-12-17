@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.util;
+package org.opentripplanner.street.model.elevation;
 
 public class SlopeCosts {
 
@@ -31,7 +31,7 @@ public class SlopeCosts {
    */
   public final double effectiveWalkFactor;
 
-  SlopeCosts(
+  public SlopeCosts(
     double slopeSpeedFactor,
     double slopeWorkFactor,
     double slopeSafetyCost,

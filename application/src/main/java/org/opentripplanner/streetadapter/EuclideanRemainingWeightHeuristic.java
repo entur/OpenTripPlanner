@@ -1,11 +1,11 @@
-package org.opentripplanner.street.search.strategy;
+package org.opentripplanner.streetadapter;
 
 import java.util.Set;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
-import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
+import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.StreetConstants;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.FreeEdge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -24,7 +24,7 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
   private double maxStreetSpeed;
   private double walkingSpeed;
   private boolean arriveBy;
-  private float maxCarSpeed;
+  private final float maxCarSpeed;
 
   public EuclideanRemainingWeightHeuristic() {
     this(DEFAULT_MAX_CAR_SPEED);

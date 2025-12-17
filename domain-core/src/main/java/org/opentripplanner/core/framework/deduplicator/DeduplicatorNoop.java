@@ -1,4 +1,4 @@
-package org.opentripplanner.transit.model.framework;
+package org.opentripplanner.core.framework.deduplicator;
 
 import java.util.BitSet;
 import java.util.List;

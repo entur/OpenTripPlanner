@@ -4,7 +4,7 @@ import static org.opentripplanner.street.search.request.AccessibilityRequest.ofC
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Units;
+import org.opentripplanner.utils.lang.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

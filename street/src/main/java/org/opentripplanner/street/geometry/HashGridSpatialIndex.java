@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.geometry;
+package org.opentripplanner.street.geometry;
 
 import gnu.trove.map.hash.TLongObjectHashMap;
 import gnu.trove.set.TLongSet;

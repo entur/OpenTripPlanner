@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelFactory.streetEdge;
+import static org.opentripplanner.street.model.StreetModelFactory.streetEdgeBuilder;
 import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
-import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdge;
-import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdgeBuilder;
 
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,15 +19,15 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
-import org.opentripplanner.routing.util.ElevationUtils;
-import org.opentripplanner.routing.util.SlopeCosts;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
+import org.opentripplanner.street.model.elevation.ElevationUtils;
+import org.opentripplanner.street.model.elevation.SlopeCosts;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -320,8 +320,8 @@ public class StreetEdgeTest {
     Coordinate c1 = new Coordinate(-122.575033, 45.456773);
     Coordinate c2 = new Coordinate(-122.576668, 45.451426);
 
-    StreetVertex v1 = StreetModelForTest.intersectionVertex("v1", c1.x, c1.y);
-    StreetVertex v2 = StreetModelForTest.intersectionVertex("v2", c2.x, c2.y);
+    StreetVertex v1 = StreetModelFactory.intersectionVertex("v1", c1.x, c1.y);
+    StreetVertex v2 = StreetModelFactory.intersectionVertex("v2", c2.x, c2.y);
 
     GeometryFactory factory = new GeometryFactory();
     LineString geometry = factory.createLineString(new Coordinate[] { c1, c2 });

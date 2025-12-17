@@ -2,19 +2,19 @@ package org.opentripplanner.street.model.edge;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 
 class VehicleParkingEdgeTest {
 
@@ -131,8 +131,8 @@ class VehicleParkingEdgeTest {
     boolean carPlaces,
     VehicleParkingSpaces availability
   ) {
-    return StreetModelForTest.vehicleParking()
-      .id(TimetableRepositoryForTest.id("VehicleParking"))
+    return StreetModelFactory.vehicleParking()
+      .id(id("VehicleParking"))
       .bicyclePlaces(bicyclePlaces)
       .carPlaces(carPlaces)
       .availability(availability)
@@ -144,7 +144,7 @@ class VehicleParkingEdgeTest {
     String id = "Entrance";
     return builder ->
       builder
-        .entranceId(TimetableRepositoryForTest.id(id))
+        .entranceId(id(id))
         .name(new NonLocalizedString(id))
         .coordinate(new WgsCoordinate(0, 0));
   }

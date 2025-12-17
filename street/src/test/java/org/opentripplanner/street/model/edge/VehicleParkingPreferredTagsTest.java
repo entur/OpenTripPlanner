@@ -9,13 +9,13 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
@@ -66,7 +66,7 @@ class VehicleParkingPreferredTagsTest {
     double expectedCost,
     boolean arriveBy
   ) {
-    var parking = StreetModelForTest.vehicleParking()
+    var parking = StreetModelFactory.vehicleParking()
       .tags(parkingTags)
       .availability(VehicleParkingSpaces.builder().bicycleSpaces(100).build())
       .bicyclePlaces(true)

@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.core;
+package org.opentripplanner.street.model;
 
 import java.util.Collections;
 import java.util.EnumSet;

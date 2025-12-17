@@ -2,17 +2,18 @@ package org.opentripplanner.street.model;
 
 import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 
+import java.time.Instant;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.service.vehicleparking.model.VehicleParking;
+import org.opentripplanner.service.vehiclerental.model.TestFreeFloatingRentalVehicleBuilder;
+import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.geometry.SplitLineString;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.service.vehicleparking.model.VehicleParking;
-import org.opentripplanner.service.vehiclerental.model.TestFreeFloatingRentalVehicleBuilder;
-import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.edge.AreaEdgeBuilder;
 import org.opentripplanner.street.model.edge.AreaGroup;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -20,7 +21,7 @@ import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
 import org.opentripplanner.street.model.edge.TemporaryPartialStreetEdge;
 import org.opentripplanner.street.model.edge.TemporaryPartialStreetEdgeBuilder;
-import org.opentripplanner.street.model.linking.EdgeDisposable;
+import org.opentripplanner.street.model.edge.linking.EdgeDisposable;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -125,8 +126,29 @@ public class StreetModelFactory {
   ) {
     return streetEdge(from, to, 1, permissions);
   }
+public static VehicleRentalPlaceVertex rentalVertex(
+    RentalFormFactor formFactor,
+    Instant availableUntil
+  ) {
+    TestFreeFloatingRentalVehicleBuilder vehicleBuilder = getTestRentalVehicleBuilder(
+      formFactor
+    ).withAvailableUntil(availableUntil);
+    return new VehicleRentalPlaceVertex(vehicleBuilder.build());
+  }
 
+  public static VehicleParking.VehicleParkingBuilder vehicleParking() {
+    return VehicleParking.builder().id(id("vehicle-parking-1")).coordinate(WgsCoordinate.GREENWICH);
+  }
   public static VehicleRentalPlaceVertex rentalVertex(RentalFormFactor formFactor) {
+    var rentalVehicleBuilder = getTestRentalVehicleBuilder(formFactor);
+    return new VehicleRentalPlaceVertex(rentalVehicleBuilder.build());
+  }
+
+
+
+  private static TestFreeFloatingRentalVehicleBuilder getTestRentalVehicleBuilder(
+    RentalFormFactor formFactor
+  ) {
     var rentalVehicleBuilder = TestFreeFloatingRentalVehicleBuilder.of()
       .withLatitude(-122.575133)
       .withLongitude(45.456773);
@@ -137,11 +159,7 @@ public class StreetModelFactory {
     } else if (formFactor == RentalFormFactor.CAR) {
       rentalVehicleBuilder.withVehicleCar();
     }
-    return new VehicleRentalPlaceVertex(rentalVehicleBuilder.build());
-  }
-
-  public static VehicleParking.VehicleParkingBuilder vehicleParking() {
-    return VehicleParking.builder().id(id("vehicle-parking-1")).coordinate(WgsCoordinate.GREENWICH);
+    return rentalVehicleBuilder;
   }
 
   /**

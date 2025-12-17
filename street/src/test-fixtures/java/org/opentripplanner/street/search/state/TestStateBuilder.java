@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.List;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.service.vehiclerental.model.TestFreeFloatingRentalVehicleBuilder;
 import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationBuilder;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
@@ -18,8 +17,8 @@ import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.StreetModelFactory;
+import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
@@ -46,10 +45,7 @@ public class TestStateBuilder {
   private TestStateBuilder(StreetMode mode) {
     currentState = new State(
       StreetModelFactory.intersectionVertex(count, count),
-      StreetSearchRequest.of()
-        .withMode(mode)
-        .withStartTime(DEFAULT_START_TIME)
-        .build()
+      StreetSearchRequest.of().withMode(mode).withStartTime(DEFAULT_START_TIME).build()
     );
   }
 
@@ -205,8 +201,7 @@ public class TestStateBuilder {
 
     var alightEdge = ElevatorAlightEdge.createElevatorAlightEdge(
       onboard2,
-      offboard2,
-      new NonLocalizedString("1")
+      offboard2
     );
 
     currentState = EdgeTraverser.traverseEdges(

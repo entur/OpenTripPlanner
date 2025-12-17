@@ -1,12 +1,12 @@
-package org.opentripplanner.service.vehicleparking.model;
+package org.opentripplanner.streetadapter;
 
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
-import org.opentripplanner.street.model.vertex.VertexFactory;
 
 public class VehicleParkingHelper {
 

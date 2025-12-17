@@ -4,8 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.params.provider.Arguments.of;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
-import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdge;
+import static org.opentripplanner.street.model.StreetMode.SCOOTER_RENTAL;
+import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelFactory.streetEdge;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,13 +16,14 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
-import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.RentalFormFactor;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.StreetTraversalPermission;
+import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.model.vertex.StreetVertex;
+import org.opentripplanner.street.search.request.RentalRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
@@ -59,9 +61,7 @@ class StreetEdgePropulsionCostTest {
     to = intersectionVertex("to", c2.y, c2.x);
 
     var geometry =
-      org.opentripplanner.framework.geometry.GeometryUtils.getGeometryFactory().createLineString(
-        new Coordinate[] { c1, c2 }
-      );
+      GeometryUtils.getGeometryFactory().createLineString(new Coordinate[] { c1, c2 });
 
     hillyEdge = new StreetEdgeBuilder<>()
       .withFromVertex(from)
@@ -92,7 +92,7 @@ class StreetEdgePropulsionCostTest {
   @Test
   void rentalScooterCanTraverseEdge() {
     StreetEdge edge = streetEdge(v0, v1, 100.0, StreetTraversalPermission.ALL);
-    var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
+    var req = StreetSearchRequest.of().withMode(SCOOTER_RENTAL).build();
     var editor = new StateEditor(v0, req);
     editor.beginFloatingVehicleRenting(
       RentalFormFactor.SCOOTER,
@@ -125,12 +125,12 @@ class StreetEdgePropulsionCostTest {
    */
   static Stream<Arguments> propulsionSlopeCases() {
     return Stream.of(
-      of(PropulsionType.ELECTRIC, RentalFormFactor.SCOOTER, StreetMode.SCOOTER_RENTAL, 0.0),
+      of(PropulsionType.ELECTRIC, RentalFormFactor.SCOOTER, SCOOTER_RENTAL, 0.0),
       of(
         PropulsionType.ELECTRIC_ASSIST,
         RentalFormFactor.BICYCLE,
         StreetMode.BIKE_RENTAL,
-        VehicleRentalPreferences.DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY
+        RentalRequest.DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY
       ),
       of(PropulsionType.HUMAN, RentalFormFactor.BICYCLE, StreetMode.BIKE_RENTAL, 1.0)
     );
@@ -202,7 +202,7 @@ class StreetEdgePropulsionCostTest {
     PropulsionType propulsionType
   ) {
     StreetSearchRequest req;
-    if (streetMode == StreetMode.SCOOTER_RENTAL) {
+    if (streetMode == SCOOTER_RENTAL) {
       req = StreetSearchRequest.of()
         .withMode(streetMode)
         .withScooter(scooter ->

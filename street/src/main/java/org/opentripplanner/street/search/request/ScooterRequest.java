@@ -1,14 +1,14 @@
 package org.opentripplanner.street.search.request;
 
-import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.SAFE_STREETS;
-import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.TRIANGLE;
+import static org.opentripplanner.street.model.VehicleRoutingOptimizeType.SAFE_STREETS;
+import static org.opentripplanner.street.model.VehicleRoutingOptimizeType.TRIANGLE;
 import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 import static org.opentripplanner.utils.lang.ObjectUtils.ifNotNull;
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Units;
-import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
+import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
+import org.opentripplanner.utils.lang.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

@@ -6,14 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.core.model.accessibility.Accessibility;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
-import org.opentripplanner.transit.model.basic.Accessibility;
 
 public class BarrierVertexTest {
 
@@ -22,7 +22,7 @@ public class BarrierVertexTest {
     BarrierVertex bv = new BarrierVertex(2.0, 2.0, 0, Accessibility.NO_INFORMATION);
     bv.setBarrierPermissions(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE);
 
-    StreetVertex endVertex = StreetModelForTest.intersectionVertex("end_vertex", 1.0, 2.0);
+    StreetVertex endVertex = StreetModelFactory.intersectionVertex("end_vertex", 1.0, 2.0);
 
     StreetEdge bv_to_endVertex_forward = edge(bv, endVertex, 100, false);
 

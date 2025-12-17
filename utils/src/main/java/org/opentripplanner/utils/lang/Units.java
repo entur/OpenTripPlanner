@@ -1,10 +1,8 @@
-package org.opentripplanner.framework.model;
+package org.opentripplanner.utils.lang;
 
 import static java.lang.Math.abs;
 
 import java.util.Locale;
-import org.opentripplanner.utils.lang.DoubleUtils;
-import org.opentripplanner.utils.lang.IntUtils;
 
 /**
  * This utility can be used to perform sanity checks on common number types. It will also normalize

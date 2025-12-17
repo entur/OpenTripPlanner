@@ -1,4 +1,4 @@
-package org.opentripplanner.model.calendar.openinghours;
+package org.opentripplanner.street.model.openinghours;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;

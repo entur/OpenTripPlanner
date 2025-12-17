@@ -1,4 +1,4 @@
-package org.opentripplanner.model.calendar.openinghours;
+package org.opentripplanner.street.model.openinghours;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.opentripplanner.transit.model.framework.DeduplicatorService;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 
 public class OHCalendarBuilder {
 
@@ -277,7 +277,7 @@ public class OHCalendarBuilder {
      *    on the common days, one for the beginning and one for the end part of this builder's
      *    opening period
      *
-     * @return a list of new {@link org.opentripplanner.model.calendar.openinghours.OHCalendarBuilder.OpeningHoursBuilder} created while
+     * @return a list of new {@link OHCalendarBuilder.OpeningHoursBuilder} created while
      * splitting existing builders.
      */
     public OpeningHoursBuilderAndNewBuilders createBuildersForRelativeComplement(

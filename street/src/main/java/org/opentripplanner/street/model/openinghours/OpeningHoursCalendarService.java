@@ -1,14 +1,13 @@
-package org.opentripplanner.model.calendar.openinghours;
+package org.opentripplanner.street.model.openinghours;
 
 import jakarta.inject.Inject;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Objects;
-import org.opentripplanner.model.calendar.LocalDateInterval;
-import org.opentripplanner.standalone.config.api.TransitServicePeriod;
-import org.opentripplanner.transit.model.framework.DeduplicatorService;
-import org.opentripplanner.transit.model.framework.DeduplicatorService;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.core.framework.di.TransitServicePeriod;
+import org.opentripplanner.core.model.time.LocalDateInterval;
 
 public class OpeningHoursCalendarService implements Serializable {
 

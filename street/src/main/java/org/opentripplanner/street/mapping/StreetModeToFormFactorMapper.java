@@ -1,7 +1,7 @@
-package org.opentripplanner.routing.algorithm.mapping;
+package org.opentripplanner.street.mapping;
 
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.street.model.RentalFormFactor;
+import org.opentripplanner.street.model.StreetMode;
 
 public class StreetModeToFormFactorMapper {
 

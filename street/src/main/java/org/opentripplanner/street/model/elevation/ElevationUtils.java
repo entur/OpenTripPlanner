@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.util;
+package org.opentripplanner.street.model.elevation;
 
 import java.util.LinkedList;
 import java.util.List;

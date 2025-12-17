@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.geometry;
+package org.opentripplanner.street.geometry;
 
 import static java.lang.Math.abs;
 import static java.lang.Math.atan2;

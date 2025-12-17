@@ -6,18 +6,18 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 
 class TemporaryPartialStreetEdgeBuilderTest {
 
-  private static final StreetVertex FROM_VERTEX = StreetModelForTest.V1;
-  private static final StreetVertex TO_VERTEX = StreetModelForTest.V2;
-  public static final StreetEdge PARENT_EDGE = StreetModelForTest.streetEdge(
-    StreetModelForTest.V3,
-    StreetModelForTest.V4
+  private static final StreetVertex FROM_VERTEX = StreetModelFactory.V1;
+  private static final StreetVertex TO_VERTEX = StreetModelFactory.V2;
+  public static final StreetEdge PARENT_EDGE = StreetModelFactory.streetEdge(
+    StreetModelFactory.V3,
+    StreetModelFactory.V4
   );
   private static final StreetTraversalPermission STREET_TRAVERSAL_PERMISSION =
     StreetTraversalPermission.ALL;

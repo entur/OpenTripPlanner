@@ -8,9 +8,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 
@@ -60,7 +60,7 @@ public class IntersectionVertexTest {
 
   @Test
   public void testInferredFreeFlowing() {
-    IntersectionVertex iv = StreetModelForTest.intersectionVertex("vertex", 1.0, 2.0);
+    IntersectionVertex iv = StreetModelFactory.intersectionVertex("vertex", 1.0, 2.0);
     assertFalse(iv.hasDrivingTrafficLight());
     assertFalse(iv.inferredFreeFlowing());
     assertEquals(0, iv.getDegreeIn());
@@ -82,7 +82,7 @@ public class IntersectionVertexTest {
     assertEquals(1, iv.getDegreeOut());
     assertFalse(iv.inferredFreeFlowing());
 
-    iv = StreetModelForTest.intersectionVertex("vertex", 1.0, 2.0);
+    iv = StreetModelFactory.intersectionVertex("vertex", 1.0, 2.0);
     iv.addIncoming(fromEdge);
     iv.addOutgoing(straightAheadEdge);
     assertFalse(iv.hasDrivingTrafficLight());
@@ -101,7 +101,7 @@ public class IntersectionVertexTest {
    ****/
 
   private StreetVertex vertex(String label, double lat, double lon) {
-    return StreetModelForTest.intersectionVertex(label, lat, lon);
+    return StreetModelFactory.intersectionVertex(label, lat, lon);
   }
 
   /**

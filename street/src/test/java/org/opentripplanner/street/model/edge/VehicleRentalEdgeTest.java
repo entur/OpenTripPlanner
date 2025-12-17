@@ -4,15 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.opentripplanner.routing.api.request.StreetMode.BIKE_RENTAL;
-import static org.opentripplanner.routing.api.request.StreetMode.CAR_RENTAL;
-import static org.opentripplanner.routing.api.request.StreetMode.SCOOTER_RENTAL;
 import static org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType.ELECTRIC;
 import static org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType.HUMAN;
 import static org.opentripplanner.street.model.RentalFormFactor.BICYCLE;
 import static org.opentripplanner.street.model.RentalFormFactor.CAR;
 import static org.opentripplanner.street.model.RentalFormFactor.MOPED;
 import static org.opentripplanner.street.model.RentalFormFactor.SCOOTER;
+import static org.opentripplanner.street.model.StreetMode.BIKE_RENTAL;
+import static org.opentripplanner.street.model.StreetMode.CAR_RENTAL;
+import static org.opentripplanner.street.model.StreetMode.SCOOTER_RENTAL;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -22,7 +22,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationBuilder;
@@ -31,7 +30,8 @@ import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.RentalFormFactor;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.search.request.RentalPeriod;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
@@ -403,7 +403,7 @@ class VehicleRentalEdgeTest {
     RentalFormFactor formFactor,
     boolean banNetwork
   ) {
-    this.vertex = StreetModelForTest.rentalVertex(formFactor);
+    this.vertex = StreetModelFactory.rentalVertex(formFactor);
 
     vehicleRentalEdge = VehicleRentalEdge.createVehicleRentalEdge(vertex, formFactor);
 
@@ -425,7 +425,7 @@ class VehicleRentalEdgeTest {
     boolean arriveBy
   ) {
     RentalFormFactor formFactor = RentalFormFactor.CAR;
-    this.vertex = StreetModelForTest.rentalVertex(formFactor, vehicleAvailableUntil);
+    this.vertex = StreetModelFactory.rentalVertex(formFactor, vehicleAvailableUntil);
     this.vehicleRentalEdge = VehicleRentalEdge.createVehicleRentalEdge(vertex, formFactor);
     StreetSearchRequestBuilder streetSearchRequestBuilder = StreetSearchRequest.of()
       .withMode(CAR_RENTAL)

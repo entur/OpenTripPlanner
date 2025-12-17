@@ -1,4 +1,4 @@
-package org.opentripplanner.street.search;
+package org.opentripplanner.streetadapter;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -15,10 +15,8 @@ import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.opentripplanner.street.search.request.StreetSearchRequestMapper;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
-import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
 
 public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, StreetSearchBuilder> {
 

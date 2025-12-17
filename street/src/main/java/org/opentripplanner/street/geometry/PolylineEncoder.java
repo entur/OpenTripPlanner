@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.geometry;
+package org.opentripplanner.street.geometry;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -58,7 +58,7 @@ public class PolylineEncoder {
    * @param points array of JTS Coordinates to encode
    * @return a PolylineEncoderResult containing the encoded string and the number of points encoded
    */
-  static PolylineEncoderResult encodeCoordinates(Coordinate[] points) {
+  public static PolylineEncoderResult encodeCoordinates(Coordinate[] points) {
     StringBuilder encodedPoints = new StringBuilder();
 
     int plat = 0;

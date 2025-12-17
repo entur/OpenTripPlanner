@@ -1,18 +1,19 @@
-package org.opentripplanner.framework.geometry;
+package org.opentripplanner.street.geometry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.framework.geometry.WgsCoordinate.GREENWICH;
+import static org.opentripplanner.street.geometry.WgsCoordinate.GREENWICH;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner._support.geometry.Coordinates;
 
 public class WgsCoordinateTest {
+
+  private static final Coordinate HAMBURG = new Coordinate(10.0003, 53.5566);
 
   @Test
   void normalize() {
@@ -115,7 +116,7 @@ public class WgsCoordinateTest {
 
   @Test
   void roundingTo10m() {
-    var hamburg = new WgsCoordinate(Coordinates.HAMBURG);
+    var hamburg = new WgsCoordinate(HAMBURG);
     var rounded = hamburg.roundToApproximate10m();
     assertEquals(10.0003, rounded.longitude());
     assertEquals(53.5566, rounded.latitude());
@@ -123,7 +124,7 @@ public class WgsCoordinateTest {
 
   @Test
   void roundingTo100m() {
-    var hamburg = new WgsCoordinate(Coordinates.HAMBURG);
+    var hamburg = new WgsCoordinate(HAMBURG);
     var rounded = hamburg.roundToApproximate100m();
     assertEquals(10, rounded.longitude());
     assertEquals(53.557, rounded.latitude());

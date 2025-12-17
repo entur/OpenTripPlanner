@@ -8,16 +8,16 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
-import org.opentripplanner.routing.util.ElevationUtils;
-import org.opentripplanner.routing.util.SlopeCosts;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.RentalFormFactor;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
+import org.opentripplanner.street.model.elevation.ElevationUtils;
+import org.opentripplanner.street.model.elevation.SlopeCosts;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
@@ -35,11 +35,11 @@ public class StreetEdgeScooterTraversalTest {
     Coordinate c2 = new Coordinate(-122.576668, 45.451426);
 
     var formFactor = RentalFormFactor.SCOOTER;
-    var rentalVertex = StreetModelForTest.rentalVertex(formFactor);
+    var rentalVertex = StreetModelFactory.rentalVertex(formFactor);
     var vehicleRentalEdge = VehicleRentalEdge.createVehicleRentalEdge(rentalVertex, formFactor);
 
-    StreetVertex v1 = StreetModelForTest.intersectionVertex("v1", c1.x, c1.y);
-    StreetVertex v2 = StreetModelForTest.intersectionVertex("v2", c2.x, c2.y);
+    StreetVertex v1 = StreetModelFactory.intersectionVertex("v1", c1.x, c1.y);
+    StreetVertex v2 = StreetModelFactory.intersectionVertex("v2", c2.x, c2.y);
 
     var link = StreetVehicleRentalLink.createStreetVehicleRentalLink(rentalVertex, v1);
 
@@ -111,9 +111,9 @@ public class StreetEdgeScooterTraversalTest {
 
   @Test
   public void testWalkingBeforeScooter() {
-    StreetEdge e1 = StreetModelForTest.streetEdgeBuilder(
-      StreetModelForTest.V1,
-      StreetModelForTest.V2,
+    StreetEdge e1 = StreetModelFactory.streetEdgeBuilder(
+      StreetModelFactory.V1,
+      StreetModelFactory.V2,
       100.0,
       StreetTraversalPermission.ALL
     )
@@ -124,12 +124,12 @@ public class StreetEdgeScooterTraversalTest {
       .withWalk(walk -> walk.withReluctance(1))
       .withMode(StreetMode.SCOOTER_RENTAL);
 
-    State s0 = new State(StreetModelForTest.V1, request.build());
+    State s0 = new State(StreetModelFactory.V1, request.build());
     State result = e1.traverse(s0)[0];
 
     request.withScooter(scooter -> scooter.withReluctance(5).withSpeed(8.5));
 
-    s0 = new State(StreetModelForTest.V1, request.build());
+    s0 = new State(StreetModelFactory.V1, request.build());
     var scooterReluctanceResult = e1.traverse(s0)[0];
 
     // Scooter preferences shouldn't affect walking when SCOOTER_RENTAL is used as mode
@@ -146,11 +146,11 @@ public class StreetEdgeScooterTraversalTest {
 
     var formFactor = RentalFormFactor.SCOOTER;
 
-    var rentalVertex = StreetModelForTest.rentalVertex(formFactor);
+    var rentalVertex = StreetModelFactory.rentalVertex(formFactor);
     var vehicleRentalEdge = VehicleRentalEdge.createVehicleRentalEdge(rentalVertex, formFactor);
 
-    StreetVertex v1 = StreetModelForTest.intersectionVertex("v1", c1.x, c1.y);
-    StreetVertex v2 = StreetModelForTest.intersectionVertex("v2", c2.x, c2.y);
+    StreetVertex v1 = StreetModelFactory.intersectionVertex("v1", c1.x, c1.y);
+    StreetVertex v2 = StreetModelFactory.intersectionVertex("v2", c2.x, c2.y);
 
     var link = StreetVehicleRentalLink.createStreetVehicleRentalLink(rentalVertex, v1);
 

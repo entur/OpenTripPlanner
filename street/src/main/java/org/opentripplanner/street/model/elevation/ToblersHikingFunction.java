@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.util.elevation;
+package org.opentripplanner.street.model.elevation;
 
 /**
  * <p>

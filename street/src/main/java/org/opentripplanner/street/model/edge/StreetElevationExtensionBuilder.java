@@ -2,9 +2,9 @@ package org.opentripplanner.street.model.edge;
 
 import java.util.Optional;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner.routing.util.ElevationUtils;
-import org.opentripplanner.routing.util.SlopeCosts;
 import org.opentripplanner.street.model.StreetTraversalPermission;
+import org.opentripplanner.street.model.elevation.ElevationUtils;
+import org.opentripplanner.street.model.elevation.SlopeCosts;
 
 /**
  * Build an elevation profile for a StreetEdge.

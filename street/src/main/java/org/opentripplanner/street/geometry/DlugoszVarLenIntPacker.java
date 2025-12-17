@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.geometry;
+package org.opentripplanner.street.geometry;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;

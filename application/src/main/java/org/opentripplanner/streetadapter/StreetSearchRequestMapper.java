@@ -1,4 +1,4 @@
-package org.opentripplanner.street.search.request;
+package org.opentripplanner.streetadapter;
 
 import java.time.Instant;
 import java.util.List;
@@ -20,6 +20,21 @@ import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
+import org.opentripplanner.street.search.request.AccessibilityRequest;
+import org.opentripplanner.street.search.request.BikeRequest;
+import org.opentripplanner.street.search.request.CarRequest;
+import org.opentripplanner.street.search.request.ElevatorRequest;
+import org.opentripplanner.street.search.request.EscalatorRequest;
+import org.opentripplanner.street.search.request.ParkingRequest;
+import org.opentripplanner.street.search.request.RentalPeriod;
+import org.opentripplanner.street.search.request.RentalRequest;
+import org.opentripplanner.street.search.request.ScooterRequest;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
+import org.opentripplanner.street.search.request.TimeSlopeSafetyTriangle;
+import org.opentripplanner.street.search.request.VehicleWalkingRequest;
+import org.opentripplanner.street.search.request.WalkRequest;
+import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.street.search.request.filter.ParkingFilter;
 import org.opentripplanner.street.search.request.filter.ParkingSelect;
 import org.opentripplanner.street.search.request.filter.ParkingSelect.TagsSelect;

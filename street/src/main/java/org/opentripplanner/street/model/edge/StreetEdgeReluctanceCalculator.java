@@ -1,6 +1,5 @@
 package org.opentripplanner.street.model.edge;
 
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.VehicleWalkingRequest;
@@ -13,7 +12,7 @@ class StreetEdgeReluctanceCalculator {
 
   /**
    * Compute reluctance for a regular street section. Note! This does not apply if in a wheelchair,
-   * see {@link #computeWheelchairReluctance(RoutingPreferences, double, boolean, boolean)}.
+   * see {@link #computeWheelchairReluctance(StreetSearchRequest, double, boolean, boolean)}.
    */
   static double computeReluctance(
     StreetSearchRequest pref,

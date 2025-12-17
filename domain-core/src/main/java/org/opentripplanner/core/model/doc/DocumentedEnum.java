@@ -1,4 +1,4 @@
-package org.opentripplanner.framework.doc;
+package org.opentripplanner.core.model.doc;
 
 /**
  * This interface is used to allow the enum documentation to be written in one place, and reused in

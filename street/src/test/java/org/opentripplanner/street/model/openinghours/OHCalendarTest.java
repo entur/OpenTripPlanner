@@ -1,4 +1,4 @@
-package org.opentripplanner.model.calendar.openinghours;
+package org.opentripplanner.street.model.openinghours;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,12 +12,11 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.transit.model.framework.Deduplicator;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 
 class OHCalendarTest {
 
-  private final ZoneId zoneId = ZoneIds.PARIS;
+  private final ZoneId zoneId = ZoneId.of("Europe/Paris");
 
   @Test
   void simpleCase() {
@@ -26,7 +25,7 @@ class OHCalendarTest {
     // Create a new service (one instance for the entire graph build) with
     // first and last day of service
     var service = new OpeningHoursCalendarService(
-      new Deduplicator(),
+      DeduplicatorService.NOOP,
       LocalDate.of(2022, Month.JANUARY, 1),
       LocalDate.of(2024, Month.DECEMBER, 31)
     );
@@ -111,7 +110,7 @@ class OHCalendarTest {
   @Test
   void openOnMondaysAndSundays() {
     var service = new OpeningHoursCalendarService(
-      new Deduplicator(),
+      DeduplicatorService.NOOP,
       LocalDate.of(2022, Month.MARCH, 1),
       LocalDate.of(2024, Month.JANUARY, 15)
     );

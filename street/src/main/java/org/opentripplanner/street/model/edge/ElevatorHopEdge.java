@@ -2,13 +2,13 @@ package org.opentripplanner.street.model.edge;
 
 import java.time.Duration;
 import java.util.Optional;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
-import org.opentripplanner.transit.model.basic.Accessibility;
 
 /**
  * A relatively low cost edge for travelling one level in an elevator.

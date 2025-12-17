@@ -2,7 +2,7 @@ package org.opentripplanner.street.model.edge;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;

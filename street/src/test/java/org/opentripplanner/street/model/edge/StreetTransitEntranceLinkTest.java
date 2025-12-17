@@ -4,18 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
 
 public class StreetTransitEntranceLinkTest {
 
-  private static final TransitEntranceVertex ENTRANCE = StreetModelForTest.transitEntranceVertex(
+  private static final TransitEntranceVertex ENTRANCE = StreetModelFactory.transitEntranceVertex(
     "entrance",
     1,
     2
   );
-  private static final IntersectionVertex STREET_VERTEX = StreetModelForTest.intersectionVertex(
+  private static final IntersectionVertex STREET_VERTEX = StreetModelFactory.intersectionVertex(
     1,
     1
   );

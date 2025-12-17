@@ -10,9 +10,9 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 
 class StreetElevationExtensionBuilderTest {
 
@@ -31,8 +31,8 @@ class StreetElevationExtensionBuilderTest {
 
   private static final LineString GEOMETRY = GeometryUtils.getGeometryFactory().createLineString(
     new Coordinate[] {
-      StreetModelForTest.V1.getCoordinate(),
-      StreetModelForTest.V2.getCoordinate(),
+        StreetModelFactory.V1.getCoordinate(),
+        StreetModelFactory.V2.getCoordinate(),
     }
   );
   private StreetEdgeBuilder<?> streetEdgeBuilder;
@@ -41,8 +41,8 @@ class StreetElevationExtensionBuilderTest {
   void setup() {
     streetEdgeBuilder = new StreetEdgeBuilder<>()
       .withPermission(StreetTraversalPermission.ALL)
-      .withFromVertex(StreetModelForTest.V1)
-      .withToVertex(StreetModelForTest.V2)
+      .withFromVertex(StreetModelFactory.V1)
+      .withToVertex(StreetModelFactory.V2)
       .withGeometry(GEOMETRY);
   }
 

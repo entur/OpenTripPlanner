@@ -2,7 +2,7 @@ package org.opentripplanner.street.model.vertex;
 
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
  * A vertex representing a station centroid. This can be used as a source/destination for routing.

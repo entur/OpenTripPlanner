@@ -13,7 +13,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -240,7 +240,7 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   /**
    * Compare two vertices and return {@code true} if they are close together - have the same
    * location.
-   * @see org.opentripplanner.framework.geometry.WgsCoordinate#sameLocation(WgsCoordinate)
+   * @see WgsCoordinate#sameLocation(WgsCoordinate)
    **/
   public boolean sameLocation(Vertex other) {
     return new WgsCoordinate(getLat(), getLon()).sameLocation(

@@ -6,7 +6,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -46,7 +46,7 @@ public final class RentalRequest {
     this.allowArrivingInRentedVehicleAtDestination = false;
     this.allowedNetworks = Set.of();
     this.bannedNetworks = Set.of();
-    this.electricAssistSlopeSensitivity = DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY;
+    this.electricAssistSlopeSensitivity = RentalRequest.DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY;
   }
 
   private RentalRequest(Builder builder) {

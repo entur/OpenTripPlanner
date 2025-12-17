@@ -3,10 +3,10 @@ package org.opentripplanner.street.model.edge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
-import static org.opentripplanner.transit.model.basic.Accessibility.NOT_POSSIBLE;
-import static org.opentripplanner.transit.model.basic.Accessibility.NO_INFORMATION;
-import static org.opentripplanner.transit.model.basic.Accessibility.POSSIBLE;
+import static org.opentripplanner.core.model.accessibility.Accessibility.NOT_POSSIBLE;
+import static org.opentripplanner.core.model.accessibility.Accessibility.NO_INFORMATION;
+import static org.opentripplanner.core.model.accessibility.Accessibility.POSSIBLE;
+import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -16,16 +16,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Point;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.core.model.accessibility.Accessibility;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.search.request.AccessibilityRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;
-import org.opentripplanner.transit.model.basic.Accessibility;
 
 class StreetTransitEntityLinkTest {
 
@@ -63,7 +63,7 @@ class StreetTransitEntityLinkTest {
     }
 
     private State[] traverse(Stop stop, boolean onlyAccessible) {
-      var from = StreetModelForTest.intersectionVertex("A", 10, 10);
+      var from = StreetModelFactory.intersectionVertex("A", 10, 10);
       var to = TransitStopVertex.of()
         .withId(id(stop.id))
         .withPoint(stop.coordinate)
