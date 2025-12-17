@@ -232,6 +232,7 @@ class AddedTripBuilder {
       .withMode(trip.getMode())
       .withNetexSubmode(trip.getNetexSubMode())
       .withStopPattern(stopPattern)
+      .withRealTimeAddedTrip()
       .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(tripTimes))
       .build();
 
