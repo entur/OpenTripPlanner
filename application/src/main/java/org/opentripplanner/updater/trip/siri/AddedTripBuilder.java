@@ -52,7 +52,7 @@ class AddedTripBuilder {
   private final ZoneId timeZone;
   private final Function<Trip, FeedScopedId> getTripPatternId;
   private final FeedScopedId tripId;
-  private final FeedScopedId datedServiceJourneyId;
+  private final FeedScopedId tripOnServiceDateId;
   private final Operator operator;
   private final String dataSource;
   private final String lineRef;
@@ -81,7 +81,7 @@ class AddedTripBuilder {
     Objects.requireNonNull(estimatedVehicleJourneyCode, "EstimatedVehicleJourneyCode is required");
     var codeAdapter = new EstimatedVehicleJourneyCodeAdapter(estimatedVehicleJourneyCode);
     tripId = entityResolver.resolveId(codeAdapter.getServiceJourneyId());
-    datedServiceJourneyId = entityResolver.resolveId(codeAdapter.getDatedServiceJourneyId());
+    tripOnServiceDateId = entityResolver.resolveId(codeAdapter.getDatedServiceJourneyId());
 
     // OperatorRef of added trip
     Objects.requireNonNull(estimatedVehicleJourney.getOperatorRef(), "OperatorRef is required");
@@ -129,7 +129,7 @@ class AddedTripBuilder {
     EntityResolver entityResolver,
     Function<Trip, FeedScopedId> getTripPatternId,
     FeedScopedId tripId,
-    FeedScopedId datedServiceJourneyId,
+    FeedScopedId tripOnServiceDateId,
     Operator operator,
     String lineRef,
     Route replacedRoute,
@@ -150,7 +150,7 @@ class AddedTripBuilder {
     this.timeZone = transitService.getTimeZone();
     this.getTripPatternId = getTripPatternId;
     this.tripId = tripId;
-    this.datedServiceJourneyId = datedServiceJourneyId;
+    this.tripOnServiceDateId = tripOnServiceDateId;
     this.operator = operator;
     this.lineRef = lineRef;
     this.replacedRoute = replacedRoute;
@@ -262,7 +262,7 @@ class AddedTripBuilder {
     }
 
     /* Validate */
-    var tripOnServiceDate = TripOnServiceDate.of(datedServiceJourneyId)
+    var tripOnServiceDate = TripOnServiceDate.of(tripOnServiceDateId)
       .withTrip(trip)
       .withServiceDate(serviceDate)
       .withReplacementFor(replacedTrips)
