@@ -15,7 +15,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareRulesData;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
+import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopTransferPriority;
@@ -25,7 +25,7 @@ import org.opentripplanner.transit.model.site.StopTransferPriority;
  * General mapping code or reusable business logic should be moved into the Builder; hence reusable
  * for other import modules.
  */
-public class GTFSToOtpTransitServiceMapper {
+public class GTFSToTransitDataImportMapper {
 
   private final AgencyMapper agencyMapper;
 
@@ -79,7 +79,7 @@ public class GTFSToOtpTransitServiceMapper {
 
   private final DataImportIssueStore issueStore;
 
-  private final OtpTransitServiceBuilder builder;
+  private final TransitDataImportBuilder builder;
 
   private final FareRulesData fareRulesBuilder = new FareRulesData();
 
@@ -88,8 +88,8 @@ public class GTFSToOtpTransitServiceMapper {
   private final TranslationHelper translationHelper;
   private final boolean discardMinTransferTimes;
 
-  public GTFSToOtpTransitServiceMapper(
-    OtpTransitServiceBuilder builder,
+  public GTFSToTransitDataImportMapper(
+    TransitDataImportBuilder builder,
     String feedId,
     DataImportIssueStore issueStore,
     boolean discardMinTransferTimes,
@@ -161,7 +161,7 @@ public class GTFSToOtpTransitServiceMapper {
     stopAreaMapper = new StopAreaMapper(idFactory);
   }
 
-  public OtpTransitServiceBuilder getBuilder() {
+  public TransitDataImportBuilder getBuilder() {
     return builder;
   }
 

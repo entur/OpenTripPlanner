@@ -117,24 +117,6 @@ public class OsmModule implements GraphBuilderModule {
     );
   }
 
-  public static OsmModuleBuilder of(
-    OsmProvider provider,
-    Graph graph,
-    OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
-    StreetDetailsRepository streetDetailsRepository,
-    StreetRepository streetRepository,
-    VehicleParkingRepository vehicleParkingRepository
-  ) {
-    return of(
-      List.of(provider),
-      graph,
-      osmInfoGraphBuildRepository,
-      streetDetailsRepository,
-      streetRepository,
-      vehicleParkingRepository
-    );
-  }
-
   @Override
   public void buildGraph() {
     // the OsmDatabase contains very large collections and should _not_ be stored as an instance

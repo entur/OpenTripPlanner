@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>226</otp.serialization.version.id>
+        <otp.serialization.version.id>227</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.1</geotools.version>
@@ -563,7 +563,7 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
-                <version>5.20.0</version>
+                <version>5.21.0</version>
             </dependency>
             <dependency>
                 <groupId>io.github.origin-energy</groupId>

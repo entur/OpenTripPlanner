@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
-import org.opentripplanner.model.OtpTransitService;
+import org.opentripplanner.model.TransitDataImport;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.model.Level;
@@ -47,7 +47,7 @@ public class AddTransitEntitiesToGraph {
 
   private static final Logger LOG = LoggerFactory.getLogger(AddTransitEntitiesToGraph.class);
 
-  private final OtpTransitService otpTransitService;
+  private final TransitDataImport dataImport;
 
   private final StreetDetailsRepository streetDetailsRepository;
 
@@ -63,25 +63,25 @@ public class AddTransitEntitiesToGraph {
    *                         negative the default value of zero is used.
    */
   private AddTransitEntitiesToGraph(
-    OtpTransitService otpTransitService,
+    TransitDataImport dataImport,
     int subwayAccessTime,
     Graph graph,
     StreetDetailsRepository streetDetailsRepository
   ) {
-    this.otpTransitService = otpTransitService;
+    this.dataImport = dataImport;
     this.subwayAccessTime = Math.max(subwayAccessTime, 0);
     this.vertexFactory = new VertexFactory(graph);
     this.streetDetailsRepository = streetDetailsRepository;
   }
 
   public static void addToGraph(
-    OtpTransitService otpTransitService,
+    TransitDataImport dataImport,
     int subwayAccessTime,
     Graph graph,
     StreetDetailsRepository streetDetailsRepository
   ) {
     var adder = new AddTransitEntitiesToGraph(
-      otpTransitService,
+      dataImport,
       subwayAccessTime,
       graph,
       streetDetailsRepository
@@ -105,7 +105,7 @@ public class AddTransitEntitiesToGraph {
     // Compute the set of modes for each stop based on all the TripPatterns it is part of
     SetMultimap<StopLocation, TransitMode> stopModeMap = HashMultimap.create();
 
-    for (TripPattern pattern : otpTransitService.getTripPatterns()) {
+    for (TripPattern pattern : dataImport.getTripPatterns()) {
       TransitMode mode = pattern.getMode();
       for (var stop : pattern.getStops()) {
         stopModeMap.put(stop, mode);
@@ -114,7 +114,7 @@ public class AddTransitEntitiesToGraph {
 
     // Add a vertex representing the stop.
     // It is now possible for these vertices to not be connected to any edges.
-    for (RegularStop stop : otpTransitService.siteRepository().listRegularStops()) {
+    for (RegularStop stop : dataImport.siteRepository().listRegularStops()) {
       Set<TransitMode> modes = stopModeMap.get(stop);
       var b = TransitStopVertex.of()
         .withId(stop.getId())
@@ -133,14 +133,14 @@ public class AddTransitEntitiesToGraph {
   }
 
   private void addEntrancesToGraph() {
-    for (Entrance entrance : otpTransitService.siteRepository().listEntrances()) {
+    for (Entrance entrance : dataImport.siteRepository().listEntrances()) {
       TransitEntranceVertex entranceVertex = vertexFactory.transitEntrance(entrance);
       stationElementNodes.put(entrance, entranceVertex);
     }
   }
 
   private void addStationCentroidsToGraph() {
-    for (Station station : otpTransitService.siteRepository().listStations()) {
+    for (Station station : dataImport.siteRepository().listStations()) {
       if (station.shouldRouteToCentroid()) {
         vertexFactory.stationCentroid(station);
       }
@@ -148,14 +148,14 @@ public class AddTransitEntitiesToGraph {
   }
 
   private void addPathwayNodesToGraph() {
-    for (PathwayNode node : otpTransitService.getAllPathwayNodes()) {
+    for (PathwayNode node : dataImport.getAllPathwayNodes()) {
       TransitPathwayNodeVertex nodeVertex = vertexFactory.transitPathwayNode(node);
       stationElementNodes.put(node, nodeVertex);
     }
   }
 
   private void addBoardingAreasToGraph() {
-    for (BoardingArea boardingArea : otpTransitService.getAllBoardingAreas()) {
+    for (BoardingArea boardingArea : dataImport.getAllBoardingAreas()) {
       TransitBoardingAreaVertex boardingAreaVertex = vertexFactory.transitBoardingArea(
         boardingArea
       );
@@ -172,7 +172,7 @@ public class AddTransitEntitiesToGraph {
   }
 
   private void createPathwayEdgesAndAddThemToGraph() {
-    for (Pathway pathway : otpTransitService.getAllPathways()) {
+    for (Pathway pathway : dataImport.getAllPathways()) {
       StationElementVertex fromVertex = stationElementNodes.get(pathway.getFromStop());
       StationElementVertex toVertex = stationElementNodes.get(pathway.getToStop());
 
@@ -331,7 +331,7 @@ public class AddTransitEntitiesToGraph {
    */
   @Nullable
   public StopLevel findStopLevel(StationElementVertex vertex) {
-    var stop = otpTransitService.siteRepository().getRegularStop(vertex.getId());
+    var stop = dataImport.siteRepository().getRegularStop(vertex.getId());
     if (stop == null || stop.level() == null) {
       return null;
     } else {

@@ -5,7 +5,7 @@ import java.util.List;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.ConfiguredCompositeDataSource;
-import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
+import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.netex.NetexBundle;
 import org.opentripplanner.netex.NetexModule;
 import org.opentripplanner.netex.config.NetexFeedParameters;
@@ -48,7 +48,7 @@ public class NetexConfigure {
     List<NetexBundle> netexBundles = new ArrayList<>();
 
     for (ConfiguredCompositeDataSource<NetexFeedParameters> it : netexSources) {
-      var transitServiceBuilder = new OtpTransitServiceBuilder(
+      var transitServiceBuilder = new TransitDataImportBuilder(
         timetableRepository.getSiteRepository(),
         issueStore
       );
@@ -70,7 +70,7 @@ public class NetexConfigure {
 
   /** public to enable testing */
   public NetexBundle netexBundle(
-    OtpTransitServiceBuilder transitServiceBuilder,
+    TransitDataImportBuilder transitServiceBuilder,
     ConfiguredCompositeDataSource<NetexFeedParameters> configuredDataSource
   ) {
     var source = configuredDataSource.dataSource();

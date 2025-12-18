@@ -25,7 +25,7 @@ import org.opentripplanner.graph_builder.module.transfer.DirectTransferGenerator
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
-import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
+import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.netex.NetexBundle;
 import org.opentripplanner.netex.configure.NetexConfigure;
 import org.opentripplanner.osm.DefaultOsmProvider;
@@ -111,7 +111,7 @@ public class ConstantsForTests {
       dataSource,
       buildConfig.netexDefaults
     );
-    var transitService = new OtpTransitServiceBuilder(
+    var transitService = new TransitDataImportBuilder(
       new SiteRepository(),
       DataImportIssueStore.NOOP
     );
@@ -129,7 +129,7 @@ public class ConstantsForTests {
       dataSource,
       buildConfig.netexDefaults
     );
-    var transitService = new OtpTransitServiceBuilder(
+    var transitService = new TransitDataImportBuilder(
       new SiteRepository(),
       DataImportIssueStore.NOOP
     );

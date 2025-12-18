@@ -9,11 +9,11 @@ import org.opentripplanner.graph_builder.module.AddTransitEntitiesToGraph;
 import org.opentripplanner.graph_builder.module.AddTransitEntitiesToTimetable;
 import org.opentripplanner.graph_builder.module.TransitWithFutureDateValidator;
 import org.opentripplanner.graph_builder.module.ValidateAndInterpolateStopTimesForEachTrip;
-import org.opentripplanner.model.OtpTransitService;
+import org.opentripplanner.model.TransitDataImport;
 import org.opentripplanner.model.TripStopTimes;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
-import org.opentripplanner.model.impl.OtpTransitServiceBuilder;
+import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
@@ -77,7 +77,7 @@ public class NetexModule implements GraphBuilderModule {
       for (NetexBundle netexBundle : netexBundles) {
         netexBundle.checkInputs();
 
-        OtpTransitServiceBuilder transitBuilder = netexBundle.loadBundle(deduplicator, issueStore);
+        TransitDataImportBuilder transitBuilder = netexBundle.loadBundle(deduplicator, issueStore);
         transitBuilder.limitServiceDays(transitPeriodLimit);
         calendarServiceData.add(transitBuilder.buildCalendarServiceData());
 
@@ -89,7 +89,7 @@ public class NetexModule implements GraphBuilderModule {
 
         validateStopTimesForEachTrip(transitBuilder.getStopTimesSortedByTrip());
 
-        OtpTransitService otpService = transitBuilder.build();
+        TransitDataImport otpService = transitBuilder.build();
 
         AddTransitEntitiesToTimetable.addToTimetable(otpService, timetableRepository);
         AddTransitEntitiesToGraph.addToGraph(
