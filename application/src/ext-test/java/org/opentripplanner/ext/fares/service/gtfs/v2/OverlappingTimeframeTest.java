@@ -13,45 +13,22 @@ import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.model.plan.TestItinerary;
 import org.opentripplanner.model.plan.TestTransitLeg;
 
-class TimeframeTest implements PlanTestConstants, FareTestConstants {
+class OverlappingTimeframeTest implements PlanTestConstants, FareTestConstants {
 
   @Test
   void oneLeg() {
     var leg = TestTransitLeg.of()
-      .withStartTime("12:00")
-      .withEndTime("12:10")
-      .withServiceId(TIMEFRAME_TWELVE_TO_TWO.serviceId())
+      .withStartTime("15:00")
+      .withEndTime("15:10")
+      .withServiceId(TIMEFRAME_THREE_TO_FIVE.serviceId())
       .build();
     var it = TestItinerary.of(leg).build();
     var result = buildService(leg.serviceDate()).calculateFares(it);
 
     assertThat(result.itineraryProducts()).isEmpty();
     assertThat(result.offersForLeg(leg)).containsExactly(
-      FareOffer.of(leg.startTime(), FARE_PRODUCT_A)
-    );
-  }
-
-  @Test
-  void twoLegs() {
-    var leg1 = TestTransitLeg.of()
-      .withStartTime("12:00")
-      .withEndTime("12:10")
-      .withServiceId(TIMEFRAME_TWELVE_TO_TWO.serviceId())
-      .build();
-    var leg2 = TestTransitLeg.of()
-      .withStartTime("15:20")
-      .withEndTime("15:30")
-      .withServiceId(TIMEFRAME_THREE_TO_FIVE.serviceId())
-      .build();
-    var it = TestItinerary.of(leg1, leg2).build();
-    var result = buildService(leg1.serviceDate()).calculateFares(it);
-
-    assertThat(result.itineraryProducts()).isEmpty();
-    assertThat(result.offersForLeg(leg1)).containsExactly(
-      FareOffer.of(leg1.startTime(), FARE_PRODUCT_A)
-    );
-    assertThat(result.offersForLeg(leg2)).containsExactly(
-      FareOffer.of(leg2.startTime(), FARE_PRODUCT_B)
+      FareOffer.of(leg.startTime(), FARE_PRODUCT_A),
+      FareOffer.of(leg.startTime(), FARE_PRODUCT_B)
     );
   }
 
@@ -60,7 +37,7 @@ class TimeframeTest implements PlanTestConstants, FareTestConstants {
       .withLegRules(
         List.of(
           FareLegRule.of(id("r1"), FARE_PRODUCT_A)
-            .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
+            .withFromTimeframes(List.of(TIMEFRAME_ALL_DAY))
             .build(),
           FareLegRule.of(id("r2"), FARE_PRODUCT_B)
             .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
@@ -68,7 +45,7 @@ class TimeframeTest implements PlanTestConstants, FareTestConstants {
         )
       )
       .addServiceId(TIMEFRAME_THREE_TO_FIVE.serviceId(), serviceDate)
-      .addServiceId(TIMEFRAME_TWELVE_TO_TWO.serviceId(), serviceDate)
+      .addServiceId(TIMEFRAME_ALL_DAY.serviceId(), serviceDate)
       .build();
   }
 }

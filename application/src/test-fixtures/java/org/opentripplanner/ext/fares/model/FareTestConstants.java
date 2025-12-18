@@ -32,4 +32,10 @@ public interface FareTestConstants {
     .withStart(LocalTime.of(15, 0))
     .withEnd(LocalTime.of(17, 0))
     .build();
+
+  Timeframe TIMEFRAME_ALL_DAY = Timeframe.of()
+    .withServiceId(FeedScopedIdForTestFactory.id("s2"))
+    .withStart(LocalTime.MIN)
+    .withEnd(LocalTime.MAX)
+    .build();
 }

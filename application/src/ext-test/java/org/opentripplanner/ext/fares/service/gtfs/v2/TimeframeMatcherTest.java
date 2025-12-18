@@ -60,10 +60,9 @@ class TimeframeMatcherTest implements FareTestConstants {
   @ParameterizedTest
   @MethodSource("withinTimeframeCases")
   void withinTimeframes(String startTime, String endTime) {
+    var serviceId = TIMEFRAME_TWELVE_TO_TWO.serviceId();
     var leg = TestTransitLeg.of().withStartTime(startTime).withEndTime(endTime).build();
-    var matcher = new TimeframeMatcher(
-      ImmutableMultimap.of(TIMEFRAME_TWELVE_TO_TWO.serviceId(), leg.serviceDate())
-    );
+    var matcher = new TimeframeMatcher(ImmutableMultimap.of(serviceId, leg.serviceDate()));
     assertTrue(matcher.matchesTimeframes(leg, RULE));
   }
 

@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.fares.service.gtfs.v2;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import java.time.LocalDate;
@@ -13,7 +14,7 @@ public class GtfsFaresV2ServiceBuilder {
   private List<FareLegRule> legRules = List.of();
   private List<FareTransferRule> fareTransferRules = List.of();
   private Multimap<FeedScopedId, FeedScopedId> stopAreas = ImmutableMultimap.of();
-  private Multimap<FeedScopedId, LocalDate> serviceDatesForServiceId = ImmutableMultimap.of();
+  private Multimap<FeedScopedId, LocalDate> serviceDatesForServiceId = HashMultimap.create();
 
   public GtfsFaresV2ServiceBuilder withLegRules(List<FareLegRule> legRules) {
     this.legRules = legRules;
@@ -34,6 +35,11 @@ public class GtfsFaresV2ServiceBuilder {
     Multimap<FeedScopedId, LocalDate> serviceDatesForServiceId
   ) {
     this.serviceDatesForServiceId = serviceDatesForServiceId;
+    return this;
+  }
+
+  public GtfsFaresV2ServiceBuilder addServiceId(FeedScopedId serviceId, LocalDate... dates) {
+    this.serviceDatesForServiceId.putAll(serviceId, List.of(dates));
     return this;
   }
 
