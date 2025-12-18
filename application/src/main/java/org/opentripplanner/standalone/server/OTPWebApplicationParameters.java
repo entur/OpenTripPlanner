@@ -1,7 +1,6 @@
 package org.opentripplanner.standalone.server;
 
 import java.util.List;
-import java.util.Set;
 import org.opentripplanner.ext.clientrequestmetrics.ClientMetricsParameters;
 
 /**

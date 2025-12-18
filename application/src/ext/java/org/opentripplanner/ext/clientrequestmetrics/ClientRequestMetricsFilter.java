@@ -8,12 +8,14 @@ import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -25,10 +27,14 @@ import javax.annotation.Nullable;
  * <p>
  * The metric {@code http.client.requests} is recorded as a Timer with percentile histograms,
  * allowing analysis of response time distribution per client.
+ * <p>
+ * All timers are pre-created at startup for each combination of monitored client and endpoint
+ * to ensure predictable metric cardinality.
  */
 public class ClientRequestMetricsFilter implements ContainerRequestFilter, ContainerResponseFilter {
 
   private static final String START_TIME_PROPERTY = "metrics.startTime";
+  private static final String ENDPOINT_PROPERTY = "metrics.endpoint";
   private static final String OTHER_CLIENT = "other";
   private static final String CLIENT_TAG = "client";
   private static final String URI_TAG = "uri";
@@ -36,13 +42,9 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
   private final String clientHeader;
   private final Set<String> monitoredClients;
   private final Set<String> monitoredEndpoints;
-  private final String metricName;
-  private final Duration minExpectedResponseTime;
-  private final Duration maxExpectedResponseTime;
-  private final MeterRegistry registry;
-  private final ConcurrentHashMap<TimerKey, Timer> timerCache;
+  private final Map<TimerKey, Timer> timers;
 
-  private record TimerKey(String client, String uri) {}
+  private record TimerKey(String client, String endpoint) {}
 
   /**
    * Creates a filter for recording client request metrics.
@@ -70,11 +72,12 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
       .map(s -> s.toLowerCase(Locale.ROOT))
       .collect(Collectors.toUnmodifiableSet());
     this.monitoredEndpoints = Set.copyOf(monitoredEndpoints);
-    this.metricName = metricName;
-    this.minExpectedResponseTime = Objects.requireNonNull(minExpectedResponseTime);
-    this.maxExpectedResponseTime = Objects.requireNonNull(maxExpectedResponseTime);
-    this.registry = registry;
-    this.timerCache = new ConcurrentHashMap<>();
+    this.timers = createTimers(
+      metricName,
+      Objects.requireNonNull(minExpectedResponseTime),
+      Objects.requireNonNull(maxExpectedResponseTime),
+      registry
+    );
   }
 
   /**
@@ -106,16 +109,51 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
     );
   }
 
+  private Map<TimerKey, Timer> createTimers(
+    String metricName,
+    Duration minExpectedResponseTime,
+    Duration maxExpectedResponseTime,
+    MeterRegistry registry
+  ) {
+    var allClients = Stream.concat(monitoredClients.stream(), Stream.of(OTHER_CLIENT)).toList();
+    var result = new HashMap<TimerKey, Timer>();
+
+    for (String client : allClients) {
+      for (String endpoint : monitoredEndpoints) {
+        var key = new TimerKey(client, endpoint);
+        var timer = Timer.builder(metricName)
+          .description("HTTP request response time by client")
+          .tag(CLIENT_TAG, client)
+          .tag(URI_TAG, endpoint)
+          .publishPercentileHistogram()
+          .minimumExpectedValue(minExpectedResponseTime)
+          .maximumExpectedValue(maxExpectedResponseTime)
+          .register(registry);
+        result.put(key, timer);
+      }
+    }
+    return Map.copyOf(result);
+  }
+
   @Override
   public void filter(ContainerRequestContext requestContext) {
-    if (!isMonitoredEndpoint(getRequestPath(requestContext))) {
+    String path = getRequestPath(requestContext);
+    String matchedEndpoint = findMatchingEndpoint(path);
+    if (matchedEndpoint == null) {
       return;
     }
     requestContext.setProperty(START_TIME_PROPERTY, System.nanoTime());
+    requestContext.setProperty(ENDPOINT_PROPERTY, matchedEndpoint);
   }
 
-  private boolean isMonitoredEndpoint(String path) {
-    return monitoredEndpoints.stream().anyMatch(path::endsWith);
+  @Nullable
+  private String findMatchingEndpoint(String path) {
+    for (String endpoint : monitoredEndpoints) {
+      if (path.endsWith(endpoint)) {
+        return endpoint;
+      }
+    }
+    return null;
   }
 
   private static String getRequestPath(ContainerRequestContext requestContext) {
@@ -132,27 +170,14 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
       return;
     }
 
+    String endpoint = (String) requestContext.getProperty(ENDPOINT_PROPERTY);
     String clientName = requestContext.getHeaderString(clientHeader);
     String clientTag = resolveClientTag(clientName);
-    String uri = getRequestPath(requestContext);
 
     long duration = System.nanoTime() - startTime;
 
-    Timer timer = getTimer(clientTag, uri);
+    Timer timer = timers.get(new TimerKey(clientTag, endpoint));
     timer.record(duration, TimeUnit.NANOSECONDS);
-  }
-
-  private Timer getTimer(String clientTag, String uri) {
-    return timerCache.computeIfAbsent(new TimerKey(clientTag, uri), key ->
-      Timer.builder(metricName)
-        .description("HTTP request response time by client")
-        .tag(CLIENT_TAG, key.client())
-        .tag(URI_TAG, key.uri())
-        .publishPercentileHistogram()
-        .minimumExpectedValue(minExpectedResponseTime)
-        .maximumExpectedValue(maxExpectedResponseTime)
-        .register(registry)
-    );
   }
 
   private String resolveClientTag(@Nullable String clientName) {
