@@ -20,14 +20,5 @@ public interface OTPWebApplicationParameters {
   /**
    * Configuration for client request metrics.
    */
-  default ClientMetricsParameters clientMetricsParameters() {
-    return new ClientMetricsParameters(
-      ClientMetricsParameters.DEFAULT_CLIENT_HEADER,
-      Set.of(),
-      ClientMetricsParameters.DEFAULT_MONITORED_ENDPOINTS,
-      ClientMetricsParameters.DEFAULT_METRIC_NAME,
-      ClientMetricsParameters.DEFAULT_MIN_EXPECTED_RESPONSE_TIME,
-      ClientMetricsParameters.DEFAULT_MAX_EXPECTED_RESPONSE_TIME
-    );
-  }
+  ClientMetricsParameters clientMetricsParameters();
 }
