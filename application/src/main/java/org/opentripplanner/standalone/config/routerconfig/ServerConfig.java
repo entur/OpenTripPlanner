@@ -6,7 +6,6 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Set;
 import org.opentripplanner.apis.support.graphql.injectdoc.ApiDocumentationProfile;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -109,92 +108,7 @@ public class ServerConfig implements OTPWebApplicationParameters {
         )
       );
 
-    var clientMetricsNode = c
-      .of("clientMetrics")
-      .since(V2_7)
-      .summary("Configuration for HTTP client request metrics.")
-      .description(
-        """
-        When enabled, records response time metrics per client. The client is identified by a
-        configurable HTTP header (`clientHeader`). Only clients in the `monitoredClients` list are
-        tracked individually; unknown clients are grouped under "other" to prevent metric
-        cardinality explosion. Requires the ActuatorAPI feature to be enabled.
-        """
-      )
-      .asObject();
-
-    String clientHeader = clientMetricsNode
-      .of("clientHeader")
-      .since(V2_7)
-      .summary("HTTP header name used to identify the client.")
-      .asString(ClientMetricsConfig.DEFAULT_CLIENT_HEADER);
-
-    Set<String> monitoredClients = Set.copyOf(
-      clientMetricsNode
-        .of("monitoredClients")
-        .since(V2_7)
-        .summary("List of client names to track individually.")
-        .description(
-          """
-          Clients not in this list will be grouped under "other". This prevents high cardinality
-          metrics when unknown clients send requests.
-          """
-        )
-        .asStringList(List.of())
-    );
-
-    Set<String> monitoredEndpoints = Set.copyOf(
-      clientMetricsNode
-        .of("monitoredEndpoints")
-        .since(V2_7)
-        .summary("List of endpoint paths to monitor for metrics.")
-        .description(
-          """
-          Only requests to these endpoints will be tracked. Endpoint paths are matched using
-          suffix matching (request path must end with one of these values).
-          """
-        )
-        .asStringList(ClientMetricsConfig.DEFAULT_MONITORED_ENDPOINTS.stream().toList())
-    );
-
-    String metricName = clientMetricsNode
-      .of("metricName")
-      .since(V2_7)
-      .summary("Name of the metric to record.")
-      .asString(ClientMetricsConfig.DEFAULT_METRIC_NAME);
-
-    Duration minExpectedResponseTime = clientMetricsNode
-      .of("minExpectedResponseTime")
-      .since(V2_7)
-      .summary("Minimum expected response time for histogram buckets.")
-      .description(
-        """
-        Use duration format with units: `s` (seconds), `m` (minutes), `h` (hours).
-        For milliseconds, use fractional seconds (e.g., `0.01s` for 10ms, `0.05s` for 50ms).
-        """
-      )
-      .asDuration(ClientMetricsConfig.DEFAULT_MIN_EXPECTED_RESPONSE_TIME);
-
-    Duration maxExpectedResponseTime = clientMetricsNode
-      .of("maxExpectedResponseTime")
-      .since(V2_7)
-      .summary("Maximum expected response time for histogram buckets.")
-      .description(
-        """
-        Use duration format with units: `s` (seconds), `m` (minutes), `h` (hours).
-        For milliseconds, use fractional seconds (e.g., `0.01s` for 10ms, `0.05s` for 50ms).
-        """
-      )
-      .asDuration(ClientMetricsConfig.DEFAULT_MAX_EXPECTED_RESPONSE_TIME);
-
-    this.clientMetrics = new ClientMetricsConfig(
-      clientHeader,
-      monitoredClients,
-      monitoredEndpoints,
-      metricName,
-      minExpectedResponseTime,
-      maxExpectedResponseTime
-    );
+    this.clientMetrics = ClientMetricsConfig.mapClientMetrics("clientMetrics", c);
   }
 
   public Duration apiProcessingTimeout() {
