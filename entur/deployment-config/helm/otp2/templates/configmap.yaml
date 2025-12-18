@@ -18,8 +18,7 @@ data:
               "logKey": "etClientName"
             }
           ],
-          "clientMetrics": {
-            "enabled": true,
+          "httpResponseTimeMetrics": {
             "clientHeader": "et-client-name",
             "monitoredClients": ["ruter-tetApp", "ruter-travel-api", "entur-search", "vy-itinerary-high-priority", "atb-bff", "entur-client-app", "skyss-ios", "troms-bff", "kolumbus-reisevenn"],
             "monitoredEndpoints": ["/transmodel/index/graphql"],
