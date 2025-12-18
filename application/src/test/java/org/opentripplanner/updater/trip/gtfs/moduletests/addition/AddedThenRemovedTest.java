@@ -37,7 +37,7 @@ class AddedThenRemovedTest implements RealtimeTestConstants {
     "Can be enabled when https://github.com/opentripplanner/OpenTripPlanner/pull/6280 is merged"
   )
   void addedThenRemoved() {
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[SCHEDULED]");
 
     var tripUpdate = rt
       .tripUpdate(ADDED_TRIP_ID, NEW)

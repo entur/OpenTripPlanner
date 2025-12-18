@@ -111,7 +111,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
 
     assertFalse(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertFalse(env.tripData(TRIP_2_ID).tripPattern().isCreatedByRealtimeUpdater());
-    assertEquals(List.of("F:Pattern1"), env.raptorData().summarizePatterns());
+    assertEquals(List.of("F:Pattern1[SCHEDULED,SCHEDULED]"), env.raptorData().summarizePatterns());
 
     var rt = GtfsRtTestHelper.of(env);
     var tripUpdate1 = rt
@@ -135,7 +135,10 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     );
     assertTrue(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertFalse(env.tripData(TRIP_2_ID).tripPattern().isCreatedByRealtimeUpdater());
-    assertEquals(List.of("F:Pattern1", "F:Route1::rt#1"), env.raptorData().summarizePatterns());
+    assertEquals(
+      List.of("F:Pattern1[SCHEDULED]", "F:Route1::rt#1[UPDATED]"),
+      env.raptorData().summarizePatterns()
+    );
 
     assertSuccess(rt.applyTripUpdates(List.of(tripUpdate1, tripUpdate2)));
     assertEquals(
@@ -148,7 +151,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     );
     assertTrue(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertTrue(env.tripData(TRIP_2_ID).tripPattern().isCreatedByRealtimeUpdater());
-    assertEquals(List.of("F:Route1::rt#1"), env.raptorData().summarizePatterns());
+    assertEquals(List.of("F:Route1::rt#1[UPDATED,UPDATED]"), env.raptorData().summarizePatterns());
 
     assertSuccess(rt.applyTripUpdate(tripUpdate2));
     assertEquals(
@@ -161,7 +164,10 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     );
     assertFalse(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertTrue(env.tripData(TRIP_2_ID).tripPattern().isCreatedByRealtimeUpdater());
-    assertEquals(List.of("F:Pattern1", "F:Route1::rt#1"), env.raptorData().summarizePatterns());
+    assertEquals(
+      List.of("F:Pattern1[SCHEDULED]", "F:Route1::rt#1[UPDATED]"),
+      env.raptorData().summarizePatterns()
+    );
 
     assertSuccess(
       rt.applyTripUpdates(
@@ -173,7 +179,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     );
     assertFalse(env.tripData(TRIP_1_ID).tripPattern().isCreatedByRealtimeUpdater());
     assertFalse(env.tripData(TRIP_2_ID).tripPattern().isCreatedByRealtimeUpdater());
-    assertEquals(List.of("F:Pattern1"), env.raptorData().summarizePatterns());
+    assertEquals(List.of("F:Pattern1[UPDATED,UPDATED]"), env.raptorData().summarizePatterns());
   }
 
   @Test
@@ -191,8 +197,14 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertFalse(
       env.tripData(TRIP_2_ID, SERVICE_DATE_PLUS).tripPattern().isCreatedByRealtimeUpdater()
     );
-    assertEquals(List.of("F:Pattern1"), env.raptorData(SERVICE_DATE).summarizePatterns());
-    assertEquals(List.of("F:Pattern1"), env.raptorData(SERVICE_DATE_PLUS).summarizePatterns());
+    assertEquals(
+      List.of("F:Pattern1[SCHEDULED,SCHEDULED]"),
+      env.raptorData(SERVICE_DATE).summarizePatterns()
+    );
+    assertEquals(
+      List.of("F:Pattern1[SCHEDULED,SCHEDULED]"),
+      env.raptorData(SERVICE_DATE_PLUS).summarizePatterns()
+    );
 
     var rt = GtfsRtTestHelper.of(env);
     var tripUpdate11 = rt
@@ -238,8 +250,14 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertFalse(
       env.tripData(TRIP_2_ID, SERVICE_DATE_PLUS).tripPattern().isCreatedByRealtimeUpdater()
     );
-    assertEquals(List.of("F:Route1::rt#1"), env.raptorData(SERVICE_DATE).summarizePatterns());
-    assertEquals(List.of("F:Pattern1"), env.raptorData(SERVICE_DATE_PLUS).summarizePatterns());
+    assertEquals(
+      List.of("F:Route1::rt#1[UPDATED,UPDATED]"),
+      env.raptorData(SERVICE_DATE).summarizePatterns()
+    );
+    assertEquals(
+      List.of("F:Pattern1[SCHEDULED,SCHEDULED]"),
+      env.raptorData(SERVICE_DATE_PLUS).summarizePatterns()
+    );
 
     assertSuccess(
       rt.applyTripUpdates(List.of(tripUpdate11, tripUpdate12, tripUpdate21, tripUpdate22))
@@ -268,8 +286,14 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertTrue(
       env.tripData(TRIP_2_ID, SERVICE_DATE_PLUS).tripPattern().isCreatedByRealtimeUpdater()
     );
-    assertEquals(List.of("F:Route1::rt#1"), env.raptorData(SERVICE_DATE).summarizePatterns());
-    assertEquals(List.of("F:Route1::rt#1"), env.raptorData(SERVICE_DATE_PLUS).summarizePatterns());
+    assertEquals(
+      List.of("F:Route1::rt#1[UPDATED,UPDATED]"),
+      env.raptorData(SERVICE_DATE).summarizePatterns()
+    );
+    assertEquals(
+      List.of("F:Route1::rt#1[UPDATED,UPDATED]"),
+      env.raptorData(SERVICE_DATE_PLUS).summarizePatterns()
+    );
 
     assertSuccess(rt.applyTripUpdates(List.of(tripUpdate21, tripUpdate22)));
     assertEquals(
@@ -296,8 +320,14 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertTrue(
       env.tripData(TRIP_2_ID, SERVICE_DATE_PLUS).tripPattern().isCreatedByRealtimeUpdater()
     );
-    assertEquals(List.of("F:Pattern1"), env.raptorData(SERVICE_DATE).summarizePatterns());
-    assertEquals(List.of("F:Route1::rt#1"), env.raptorData(SERVICE_DATE_PLUS).summarizePatterns());
+    assertEquals(
+      List.of("F:Pattern1[SCHEDULED,SCHEDULED]"),
+      env.raptorData(SERVICE_DATE).summarizePatterns()
+    );
+    assertEquals(
+      List.of("F:Route1::rt#1[UPDATED,UPDATED]"),
+      env.raptorData(SERVICE_DATE_PLUS).summarizePatterns()
+    );
 
     assertSuccess(
       rt.applyTripUpdates(
@@ -317,8 +347,14 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     assertFalse(
       env.tripData(TRIP_2_ID, SERVICE_DATE_PLUS).tripPattern().isCreatedByRealtimeUpdater()
     );
-    assertEquals(List.of("F:Pattern1"), env.raptorData(SERVICE_DATE).summarizePatterns());
-    assertEquals(List.of("F:Pattern1"), env.raptorData(SERVICE_DATE_PLUS).summarizePatterns());
+    assertEquals(
+      List.of("F:Pattern1[UPDATED,UPDATED]"),
+      env.raptorData(SERVICE_DATE).summarizePatterns()
+    );
+    assertEquals(
+      List.of("F:Pattern1[UPDATED,UPDATED]"),
+      env.raptorData(SERVICE_DATE_PLUS).summarizePatterns()
+    );
   }
 
   @Test
