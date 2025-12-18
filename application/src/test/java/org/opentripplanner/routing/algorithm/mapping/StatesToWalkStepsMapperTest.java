@@ -48,8 +48,8 @@ class StatesToWalkStepsMapperTest {
     var elevatorStep = walkSteps.get(3);
     assertEquals(RelativeDirection.ELEVATOR, elevatorStep.getRelativeDirection());
     assertEquals(
-      elevatorStep.verticalTransportationUse().get().getClass().getName(),
-      ElevatorUse.class.getName()
+      ElevatorUse.class.getSimpleName(),
+      elevatorStep.verticalTransportationUse().get().getClass().getSimpleName()
     );
     assertTrue(elevatorStep.getAbsoluteDirection().isEmpty());
   }
@@ -61,8 +61,8 @@ class StatesToWalkStepsMapperTest {
     );
     assertEquals(RelativeDirection.DEPART, walkSteps.get(0).getRelativeDirection());
     assertEquals(
-      walkSteps.get(1).verticalTransportationUse().get().getClass().getName(),
-      StairsUse.class.getName()
+      StairsUse.class.getSimpleName(),
+      walkSteps.get(1).verticalTransportationUse().get().getClass().getSimpleName()
     );
     assertEquals(RelativeDirection.CONTINUE, walkSteps.get(2).getRelativeDirection());
   }
@@ -74,8 +74,8 @@ class StatesToWalkStepsMapperTest {
     );
     assertEquals(RelativeDirection.DEPART, walkSteps.get(0).getRelativeDirection());
     assertEquals(
-      walkSteps.get(1).verticalTransportationUse().get().getClass().getName(),
-      EscalatorUse.class.getName()
+      EscalatorUse.class.getSimpleName(),
+      walkSteps.get(1).verticalTransportationUse().get().getClass().getSimpleName()
     );
     assertEquals(RelativeDirection.CONTINUE, walkSteps.get(2).getRelativeDirection());
   }
