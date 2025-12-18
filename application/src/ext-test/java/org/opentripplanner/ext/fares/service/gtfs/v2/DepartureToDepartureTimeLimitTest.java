@@ -21,9 +21,7 @@ class DepartureToDepartureTimeLimitTest implements PlanTestConstants, FareTestCo
   private static final FeedScopedId LEG_GROUP = id("leg-group-a");
 
   private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
-    .withLegRules(
-      List.of(FareLegRule.of(id("r1"), FARE_PRODUCT_A).withLegGroupId(LEG_GROUP).build())
-    )
+    .withLegRules(FareLegRule.of(id("r1"), FARE_PRODUCT_A).withLegGroupId(LEG_GROUP).build())
     .withTransferRules(
       List.of(
         FareTransferRule.of()

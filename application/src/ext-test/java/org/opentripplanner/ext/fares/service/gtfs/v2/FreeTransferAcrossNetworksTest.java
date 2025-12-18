@@ -25,16 +25,14 @@ class FreeTransferAcrossNetworksTest implements PlanTestConstants, FareTestConst
 
   GtfsFaresV2Service service = GtfsFaresV2Service.of()
     .withLegRules(
-      List.of(
-        FareLegRule.of(LEG_GROUP_A, FARE_PRODUCT_A)
-          .withLegGroupId(LEG_GROUP_A)
-          .withNetworkId(NETWORK_A.getId())
-          .build(),
-        FareLegRule.of(LEG_GROUP_B, FARE_PRODUCT_B)
-          .withLegGroupId(LEG_GROUP_B)
-          .withNetworkId(NETWORK_B.getId())
-          .build()
-      )
+      FareLegRule.of(LEG_GROUP_A, FARE_PRODUCT_A)
+        .withLegGroupId(LEG_GROUP_A)
+        .withNetworkId(NETWORK_A.getId())
+        .build(),
+      FareLegRule.of(LEG_GROUP_B, FARE_PRODUCT_B)
+        .withLegGroupId(LEG_GROUP_B)
+        .withNetworkId(NETWORK_B.getId())
+        .build()
     )
     .withTransferRules(
       List.of(

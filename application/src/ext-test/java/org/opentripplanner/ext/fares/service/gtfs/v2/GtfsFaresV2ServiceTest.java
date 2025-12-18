@@ -7,7 +7,6 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -61,21 +60,19 @@ class GtfsFaresV2ServiceTest implements PlanTestConstants {
 
   private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
     .withLegRules(
-      List.of(
-        FareLegRule.of(id("1"), ALL_NETWORKS_SINGLE).withLegGroupId(LEG_GROUP1).build(),
-        FareLegRule.of(id("4"), ALL_NETWORKS_DAY_PASS).withLegGroupId(LEG_GROUP1).build(),
-        FareLegRule.of(id("5"), EXPRESS_DAY_PASS)
-          .withLegGroupId(LEG_GROUP1)
-          .withNetworkId(expressNetwork)
-          .build(),
-        FareLegRule.of(id("5"), LOCAL_DAY_PASS)
-          .withLegGroupId(LEG_GROUP1)
-          .withNetworkId(localNetwork)
-          .build(),
-        FareLegRule.of(MONTHLY_PASS.id(), MONTHLY_PASS)
-          .withLegGroupId(id("another-leg-group"))
-          .build()
-      )
+      FareLegRule.of(id("1"), ALL_NETWORKS_SINGLE).withLegGroupId(LEG_GROUP1).build(),
+      FareLegRule.of(id("4"), ALL_NETWORKS_DAY_PASS).withLegGroupId(LEG_GROUP1).build(),
+      FareLegRule.of(id("5"), EXPRESS_DAY_PASS)
+        .withLegGroupId(LEG_GROUP1)
+        .withNetworkId(expressNetwork)
+        .build(),
+      FareLegRule.of(id("5"), LOCAL_DAY_PASS)
+        .withLegGroupId(LEG_GROUP1)
+        .withNetworkId(localNetwork)
+        .build(),
+      FareLegRule.of(MONTHLY_PASS.id(), MONTHLY_PASS)
+        .withLegGroupId(id("another-leg-group"))
+        .build()
     )
     .build();
 

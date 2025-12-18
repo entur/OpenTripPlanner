@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
@@ -19,6 +20,10 @@ public class GtfsFaresV2ServiceBuilder {
   public GtfsFaresV2ServiceBuilder withLegRules(List<FareLegRule> legRules) {
     this.legRules = legRules;
     return this;
+  }
+
+  public GtfsFaresV2ServiceBuilder withLegRules(FareLegRule... legRules) {
+    return withLegRules(Arrays.stream(legRules).toList());
   }
 
   public GtfsFaresV2ServiceBuilder withTransferRules(List<FareTransferRule> fareTransferRules) {

@@ -27,12 +27,10 @@ class FreeTransferTimeLimitTest implements PlanTestConstants, FareTestConstants 
 
   private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
     .withLegRules(
-      List.of(
-        FareLegRule.of(id("r1"), FARE_PRODUCT_A)
-          .withLegGroupId(LEG_GROUP)
-          .withNetworkId(NETWORK_A.getId())
-          .build()
-      )
+      FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+        .withLegGroupId(LEG_GROUP)
+        .withNetworkId(NETWORK_A.getId())
+        .build()
     )
     .withTransferRules(
       List.of(

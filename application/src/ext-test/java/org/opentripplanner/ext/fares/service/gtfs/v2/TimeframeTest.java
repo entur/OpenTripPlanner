@@ -58,14 +58,12 @@ class TimeframeTest implements PlanTestConstants, FareTestConstants {
   private static GtfsFaresV2Service buildService(LocalDate serviceDate) {
     return GtfsFaresV2Service.of()
       .withLegRules(
-        List.of(
-          FareLegRule.of(id("r1"), FARE_PRODUCT_A)
-            .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
-            .build(),
-          FareLegRule.of(id("r2"), FARE_PRODUCT_B)
-            .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
-            .build()
-        )
+        FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+          .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
+          .build(),
+        FareLegRule.of(id("r2"), FARE_PRODUCT_B)
+          .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
+          .build()
       )
       .addServiceId(TIMEFRAME_THREE_TO_FIVE.serviceId(), serviceDate)
       .addServiceId(TIMEFRAME_TWELVE_TO_TWO.serviceId(), serviceDate)

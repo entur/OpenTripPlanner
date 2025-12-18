@@ -35,12 +35,10 @@ class FreeTransferInNetworkTest implements PlanTestConstants {
 
   GtfsFaresV2Service service = GtfsFaresV2Service.of()
     .withLegRules(
-      List.of(
-        FareLegRule.of(id("6"), REGULAR)
-          .withLegGroupId(LEG_GROUP)
-          .withNetworkId(NETWORK.getId())
-          .build()
-      )
+      FareLegRule.of(id("6"), REGULAR)
+        .withLegGroupId(LEG_GROUP)
+        .withNetworkId(NETWORK.getId())
+        .build()
     )
     .withTransferRules(
       List.of(

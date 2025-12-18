@@ -13,10 +13,10 @@ import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.model.plan.TestItinerary;
 import org.opentripplanner.model.plan.TestTransitLeg;
 
-class OverlappingTimeframeTest implements PlanTestConstants, FareTestConstants {
+class OverlappingTimeframesWithPriorityTest implements PlanTestConstants, FareTestConstants {
 
   @Test
-  void oneLeg() {
+  void priorityLeadsToSingleResult() {
     var leg = TestTransitLeg.of()
       .withStartTime("15:00")
       .withEndTime("15:10")
@@ -27,8 +27,7 @@ class OverlappingTimeframeTest implements PlanTestConstants, FareTestConstants {
 
     assertThat(result.itineraryProducts()).isEmpty();
     assertThat(result.offersForLeg(leg)).containsExactly(
-      FareOffer.of(leg.startTime(), FARE_PRODUCT_A),
-      FareOffer.of(leg.startTime(), FARE_PRODUCT_B)
+      FareOffer.of(leg.startTime(), FARE_PRODUCT_A)
     );
   }
 
@@ -37,9 +36,11 @@ class OverlappingTimeframeTest implements PlanTestConstants, FareTestConstants {
       .withLegRules(
         FareLegRule.of(id("r1"), FARE_PRODUCT_A)
           .withFromTimeframes(List.of(TIMEFRAME_ALL_DAY))
+          .withPriority(1)
           .build(),
         FareLegRule.of(id("r2"), FARE_PRODUCT_B)
           .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
+          .withPriority(0)
           .build()
       )
       .addServiceId(TIMEFRAME_THREE_TO_FIVE.serviceId(), serviceDate)

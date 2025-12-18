@@ -6,7 +6,6 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import com.google.common.collect.Multimaps;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -54,21 +53,19 @@ class AreasTest implements PlanTestConstants {
 
   private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
     .withLegRules(
-      List.of(
-        FareLegRule.of(id("2"), SINGLE_TO_OUTER)
-          .withLegGroupId(LEG_GROUP1)
-          .withToAreaId(OUTER_ZONE)
-          .build(),
-        FareLegRule.of(id("3"), SINGLE_FROM_OUTER)
-          .withLegGroupId(LEG_GROUP1)
-          .withFromAreaId(OUTER_ZONE)
-          .build(),
-        FareLegRule.of(id("6"), INNER_TO_OUTER_ZONE_SINGLE)
-          .withLegGroupId(LEG_GROUP1)
-          .withFromAreaId(INNER_ZONE)
-          .withToAreaId(OUTER_ZONE)
-          .build()
-      )
+      FareLegRule.of(id("2"), SINGLE_TO_OUTER)
+        .withLegGroupId(LEG_GROUP1)
+        .withToAreaId(OUTER_ZONE)
+        .build(),
+      FareLegRule.of(id("3"), SINGLE_FROM_OUTER)
+        .withLegGroupId(LEG_GROUP1)
+        .withFromAreaId(OUTER_ZONE)
+        .build(),
+      FareLegRule.of(id("6"), INNER_TO_OUTER_ZONE_SINGLE)
+        .withLegGroupId(LEG_GROUP1)
+        .withFromAreaId(INNER_ZONE)
+        .withToAreaId(OUTER_ZONE)
+        .build()
     )
     .withStopAreas(
       Multimaps.forMap(
