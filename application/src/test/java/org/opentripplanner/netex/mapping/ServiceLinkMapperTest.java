@@ -282,14 +282,21 @@ class ServiceLinkMapperTest {
       .withProjections(projections_relStructure);
   }
 
-  private ServiceLink createAlternativeServiceLink(String id, String from, String to, Double[] coordinates) {
+  private ServiceLink createAlternativeServiceLink(
+    String id,
+    String from,
+    String to,
+    Double[] coordinates
+  ) {
     var posOrPoints = new ArrayList<>();
     for (int i = 0; i < coordinates.length; i += 2) {
       posOrPoints.add(new DirectPositionType().withValue(coordinates[i], coordinates[i + 1]));
     }
     var lineString = new LineStringType().withPosOrPointProperty(posOrPoints);
     var linkSequenceProjection = new LinkSequenceProjection().withLineString(lineString);
-    var linkSequenceProjection_versionStructure = MappingSupport.createJaxbElement(linkSequenceProjection);
+    var linkSequenceProjection_versionStructure = MappingSupport.createJaxbElement(
+      linkSequenceProjection
+    );
     var projections_relStructure = new Projections_RelStructure()
       .withProjectionRefOrProjection(linkSequenceProjection_versionStructure);
 
