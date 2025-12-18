@@ -2,7 +2,9 @@ package org.opentripplanner.gtfs.mapping;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import java.time.LocalTime;
 import java.util.Collection;
+import java.util.Objects;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.Timeframe;
 
@@ -22,8 +24,9 @@ class TimeframeMapper {
     );
     var t = Timeframe.of()
       .withServiceId(serviceId)
-      .withStart(rhs.getStartTime())
-      .withEnd(rhs.getEndTime())
+      .withStart(Objects.requireNonNullElse(rhs.getStartTime(), LocalTime.MIN))
+      // LocalTime.MAX is 23:59.9999999
+      .withEnd(Objects.requireNonNullElse(rhs.getEndTime(), LocalTime.MAX))
       .build();
     var groupId = idFactory.createId(rhs.getTimeframeGroupId(), "timeframe's group id");
     mappedTimeframes.put(groupId, t);
