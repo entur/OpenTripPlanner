@@ -21,7 +21,11 @@ data:
           "clientMetrics": {
             "enabled": true,
             "clientHeader": "et-client-name",
-            "knownClients": ["ruter-tetApp", "ruter-travel-api", "entur-search", "vy-itinerary-high-priority", "atb-bff", "entur-client-app", "skyss-ios", "troms-bff", "kolumbus-reisevenn"]
+            "monitoredClients": ["ruter-tetApp", "ruter-travel-api", "entur-search", "vy-itinerary-high-priority", "atb-bff", "entur-client-app", "skyss-ios", "troms-bff", "kolumbus-reisevenn"],
+            "monitoredEndpoints": ["/transmodel/index/graphql"],
+            "metricName": "otp_http_server_requests",
+            "minExpectedResponseTime": "0.05s",
+            "maxExpectedResponseTime": "10s"
           }
         },
         "routingDefaults": {
