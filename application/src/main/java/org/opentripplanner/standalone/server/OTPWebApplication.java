@@ -20,7 +20,7 @@ import org.opentripplanner.api.common.OTPExceptionMapper;
 import org.opentripplanner.apis.APIEndpoints;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
-import org.opentripplanner.standalone.config.routerconfig.ClientMetricsConfig;
+import org.opentripplanner.standalone.config.routerconfig.ClientMetricsParameters;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
@@ -37,7 +37,7 @@ public class OTPWebApplication extends Application {
   private final Supplier<OtpServerRequestContext> contextProvider;
 
   private final List<Class<? extends ContainerResponseFilter>> customFilters;
-  private final ClientMetricsConfig clientMetricsConfig;
+  private final ClientMetricsParameters clientMetricsParameters;
 
   static {
     // Remove existing handlers attached to the j.u.l root logger
@@ -53,7 +53,7 @@ public class OTPWebApplication extends Application {
   ) {
     this.contextProvider = contextProvider;
     this.customFilters = createCustomFilters(parameters.traceParameters());
-    this.clientMetricsConfig = parameters.clientMetrics();
+    this.clientMetricsParameters = parameters.clientMetricsParameters();
   }
 
   /**
@@ -116,12 +116,12 @@ public class OTPWebApplication extends Application {
       if (OTPFeature.ClientRequestMetrics.isOn()) {
         singletons.add(
           new ClientRequestMetricsFilter(
-            clientMetricsConfig.clientHeader(),
-            clientMetricsConfig.monitoredClients(),
-            clientMetricsConfig.monitoredEndpoints(),
-            clientMetricsConfig.metricName(),
-            clientMetricsConfig.minExpectedResponseTime(),
-            clientMetricsConfig.maxExpectedResponseTime()
+            clientMetricsParameters.clientHeader(),
+            clientMetricsParameters.monitoredClients(),
+            clientMetricsParameters.monitoredEndpoints(),
+            clientMetricsParameters.metricName(),
+            clientMetricsParameters.minExpectedResponseTime(),
+            clientMetricsParameters.maxExpectedResponseTime()
           )
         );
       }

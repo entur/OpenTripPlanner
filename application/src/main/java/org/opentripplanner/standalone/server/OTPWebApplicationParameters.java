@@ -2,7 +2,7 @@ package org.opentripplanner.standalone.server;
 
 import java.util.List;
 import java.util.Set;
-import org.opentripplanner.standalone.config.routerconfig.ClientMetricsConfig;
+import org.opentripplanner.standalone.config.routerconfig.ClientMetricsParameters;
 
 /**
  * Parameters used to configure the {@link OTPWebApplication}.
@@ -20,14 +20,14 @@ public interface OTPWebApplicationParameters {
   /**
    * Configuration for client request metrics.
    */
-  default ClientMetricsConfig clientMetrics() {
-    return new ClientMetricsConfig(
-      ClientMetricsConfig.DEFAULT_CLIENT_HEADER,
+  default ClientMetricsParameters clientMetricsParameters() {
+    return new ClientMetricsParameters(
+      ClientMetricsParameters.DEFAULT_CLIENT_HEADER,
       Set.of(),
-      ClientMetricsConfig.DEFAULT_MONITORED_ENDPOINTS,
-      ClientMetricsConfig.DEFAULT_METRIC_NAME,
-      ClientMetricsConfig.DEFAULT_MIN_EXPECTED_RESPONSE_TIME,
-      ClientMetricsConfig.DEFAULT_MAX_EXPECTED_RESPONSE_TIME
+      ClientMetricsParameters.DEFAULT_MONITORED_ENDPOINTS,
+      ClientMetricsParameters.DEFAULT_METRIC_NAME,
+      ClientMetricsParameters.DEFAULT_MIN_EXPECTED_RESPONSE_TIME,
+      ClientMetricsParameters.DEFAULT_MAX_EXPECTED_RESPONSE_TIME
     );
   }
 }

@@ -2,44 +2,18 @@ package org.opentripplanner.standalone.config.routerconfig;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 
 /**
- * Configuration for HTTP client request metrics.
- *
- * @param clientHeader the HTTP header name used to identify the client
- * @param monitoredClients the set of client names to track individually
- * @param monitoredEndpoints the set of endpoint paths to monitor for metrics
- * @param metricName the name of the metric to record
- * @param minExpectedResponseTime minimum expected response time for histogram buckets
- * @param maxExpectedResponseTime maximum expected response time for histogram buckets
+ * This class is responsible for mapping client metrics JSON configuration into parameters.
  */
-public record ClientMetricsConfig(
-  String clientHeader,
-  Set<String> monitoredClients,
-  Set<String> monitoredEndpoints,
-  String metricName,
-  Duration minExpectedResponseTime,
-  Duration maxExpectedResponseTime
-) {
-  public static final String DEFAULT_CLIENT_HEADER = "x-client-name";
-  public static final Set<String> DEFAULT_MONITORED_ENDPOINTS = Set.of(
-    "/transmodel/v3",
-    "/gtfs/v1/"
-  );
-  public static final String DEFAULT_METRIC_NAME = "otp_http_server_requests";
-  public static final Duration DEFAULT_MIN_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10);
-  public static final Duration DEFAULT_MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10000);
+public class ClientMetricsConfig {
 
-  public ClientMetricsConfig {
-    monitoredClients = Set.copyOf(monitoredClients);
-    monitoredEndpoints = Set.copyOf(monitoredEndpoints);
-  }
+  private ClientMetricsConfig() {}
 
-  public static ClientMetricsConfig mapClientMetrics(String parameterName, NodeAdapter root) {
+  public static ClientMetricsParameters mapClientMetrics(String parameterName, NodeAdapter root) {
     var c = root
       .of(parameterName)
       .since(V2_7)
@@ -53,12 +27,12 @@ public record ClientMetricsConfig(
         """
       )
       .asObject();
-    return new ClientMetricsConfig(
+    return new ClientMetricsParameters(
       c
         .of("clientHeader")
         .since(V2_7)
         .summary("HTTP header name used to identify the client.")
-        .asString(DEFAULT_CLIENT_HEADER),
+        .asString(ClientMetricsParameters.DEFAULT_CLIENT_HEADER),
       Set.copyOf(
         c
           .of("monitoredClients")
@@ -83,13 +57,13 @@ public record ClientMetricsConfig(
             suffix matching (request path must end with one of these values).
             """
           )
-          .asStringList(DEFAULT_MONITORED_ENDPOINTS.stream().toList())
+          .asStringList(ClientMetricsParameters.DEFAULT_MONITORED_ENDPOINTS.stream().toList())
       ),
       c
         .of("metricName")
         .since(V2_7)
         .summary("Name of the metric to record.")
-        .asString(DEFAULT_METRIC_NAME),
+        .asString(ClientMetricsParameters.DEFAULT_METRIC_NAME),
       c
         .of("minExpectedResponseTime")
         .since(V2_7)
@@ -100,7 +74,7 @@ public record ClientMetricsConfig(
           For milliseconds, use fractional seconds (e.g., `0.01s` for 10ms, `0.05s` for 50ms).
           """
         )
-        .asDuration(DEFAULT_MIN_EXPECTED_RESPONSE_TIME),
+        .asDuration(ClientMetricsParameters.DEFAULT_MIN_EXPECTED_RESPONSE_TIME),
       c
         .of("maxExpectedResponseTime")
         .since(V2_7)
@@ -111,7 +85,7 @@ public record ClientMetricsConfig(
           For milliseconds, use fractional seconds (e.g., `0.01s` for 10ms, `0.05s` for 50ms).
           """
         )
-        .asDuration(DEFAULT_MAX_EXPECTED_RESPONSE_TIME)
+        .asDuration(ClientMetricsParameters.DEFAULT_MAX_EXPECTED_RESPONSE_TIME)
     );
   }
 }

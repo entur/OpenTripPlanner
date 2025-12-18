@@ -17,7 +17,7 @@ public class ServerConfig implements OTPWebApplicationParameters {
   private final Duration apiProcessingTimeout;
   private final List<RequestTraceParameter> traceParameters;
   private final ApiDocumentationProfile apiDocumentationProfile;
-  private final ClientMetricsConfig clientMetrics;
+  private final ClientMetricsParameters clientMetrics;
 
   public ServerConfig(String parameterName, NodeAdapter root) {
     NodeAdapter c = root
@@ -125,7 +125,7 @@ public class ServerConfig implements OTPWebApplicationParameters {
   }
 
   @Override
-  public ClientMetricsConfig clientMetrics() {
+  public ClientMetricsParameters clientMetricsParameters() {
     return clientMetrics;
   }
 
