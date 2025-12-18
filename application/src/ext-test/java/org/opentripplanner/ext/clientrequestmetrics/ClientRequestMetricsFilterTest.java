@@ -1,4 +1,4 @@
-package org.opentripplanner.standalone.server;
+package org.opentripplanner.ext.clientrequestmetrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

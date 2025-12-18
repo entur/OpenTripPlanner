@@ -1,4 +1,4 @@
-package org.opentripplanner.standalone.server;
+package org.opentripplanner.ext.clientrequestmetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;

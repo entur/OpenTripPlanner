@@ -1,4 +1,4 @@
-package org.opentripplanner.standalone.config.routerconfig;
+package org.opentripplanner.ext.clientrequestmetrics;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
 

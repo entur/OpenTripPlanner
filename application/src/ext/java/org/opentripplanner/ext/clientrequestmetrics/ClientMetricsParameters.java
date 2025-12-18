@@ -1,4 +1,4 @@
-package org.opentripplanner.standalone.config.routerconfig;
+package org.opentripplanner.ext.clientrequestmetrics;
 
 import java.time.Duration;
 import java.util.Set;

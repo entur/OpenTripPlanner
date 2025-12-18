@@ -7,6 +7,8 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.apis.support.graphql.injectdoc.ApiDocumentationProfile;
+import org.opentripplanner.ext.clientrequestmetrics.ClientMetricsConfig;
+import org.opentripplanner.ext.clientrequestmetrics.ClientMetricsParameters;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.standalone.server.OTPWebApplicationParameters;

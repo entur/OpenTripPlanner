@@ -2,7 +2,7 @@ package org.opentripplanner.standalone.server;
 
 import java.util.List;
 import java.util.Set;
-import org.opentripplanner.standalone.config.routerconfig.ClientMetricsParameters;
+import org.opentripplanner.ext.clientrequestmetrics.ClientMetricsParameters;
 
 /**
  * Parameters used to configure the {@link OTPWebApplication}.
