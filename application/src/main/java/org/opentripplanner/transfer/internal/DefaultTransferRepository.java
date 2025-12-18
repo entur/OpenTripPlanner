@@ -54,7 +54,7 @@ public class DefaultTransferRepository implements TransferRepository {
       if (OTPFeature.FlexRouting.isOn()) {
         index = new FlexTransferIndex(this);
       } else {
-        index = new DefaultTransferIndex();
+        index = new TransferIndex();
       }
       LOG.info("Transfer repository index init complete.");
     }

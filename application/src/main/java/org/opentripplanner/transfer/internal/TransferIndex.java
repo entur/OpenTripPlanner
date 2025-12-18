@@ -4,8 +4,13 @@ import java.util.Collection;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 
-public interface TransferIndex {
-  Collection<PathTransfer> findWalkTransfersToStop(StopLocation stopLocation);
+public class TransferIndex {
 
-  Collection<PathTransfer> findWalkTransfersFromStop(StopLocation stopLocation);
+  public Collection<PathTransfer> findWalkTransfersToStop(StopLocation stopLocation) {
+    throw new UnsupportedOperationException("The transfer index used does not support this method");
+  }
+
+  public Collection<PathTransfer> findWalkTransfersFromStop(StopLocation stopLocation) {
+    throw new UnsupportedOperationException("The transfer index used does not support this method");
+  }
 }
