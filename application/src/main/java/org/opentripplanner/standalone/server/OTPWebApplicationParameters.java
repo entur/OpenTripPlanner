@@ -1,7 +1,7 @@
 package org.opentripplanner.standalone.server;
 
 import java.util.List;
-import org.opentripplanner.ext.clientrequestmetrics.ClientMetricsParameters;
+import org.opentripplanner.ext.httpresponsetimemetrics.HttpResponseTimeMetricsParameters;
 
 /**
  * Parameters used to configure the {@link OTPWebApplication}.
@@ -17,7 +17,7 @@ public interface OTPWebApplicationParameters {
   }
 
   /**
-   * Configuration for client request metrics.
+   * Configuration for HTTP response time metrics.
    */
-  ClientMetricsParameters clientMetricsParameters();
+  HttpResponseTimeMetricsParameters httpResponseTimeMetricsParameters();
 }

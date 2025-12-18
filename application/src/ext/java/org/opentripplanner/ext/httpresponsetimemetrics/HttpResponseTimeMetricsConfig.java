@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.clientrequestmetrics;
+package org.opentripplanner.ext.httpresponsetimemetrics;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
 
@@ -7,17 +7,20 @@ import java.util.Set;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 
 /**
- * This class is responsible for mapping client metrics JSON configuration into parameters.
+ * This class is responsible for mapping HTTP response time metrics JSON configuration into parameters.
  */
-public class ClientMetricsConfig {
+public class HttpResponseTimeMetricsConfig {
 
-  private ClientMetricsConfig() {}
+  private HttpResponseTimeMetricsConfig() {}
 
-  public static ClientMetricsParameters mapClientMetrics(String parameterName, NodeAdapter root) {
+  public static HttpResponseTimeMetricsParameters mapHttpResponseTimeMetrics(
+    String parameterName,
+    NodeAdapter root
+  ) {
     var c = root
       .of(parameterName)
       .since(V2_7)
-      .summary("Configuration for HTTP client request metrics.")
+      .summary("Configuration for HTTP response time metrics.")
       .description(
         """
         When enabled, records response time metrics per client. The client is identified by a
@@ -27,12 +30,12 @@ public class ClientMetricsConfig {
         """
       )
       .asObject();
-    return new ClientMetricsParameters(
+    return new HttpResponseTimeMetricsParameters(
       c
         .of("clientHeader")
         .since(V2_7)
         .summary("HTTP header name used to identify the client.")
-        .asString(ClientMetricsParameters.DEFAULT_CLIENT_HEADER),
+        .asString(HttpResponseTimeMetricsParameters.DEFAULT_CLIENT_HEADER),
       Set.copyOf(
         c
           .of("monitoredClients")
@@ -57,13 +60,15 @@ public class ClientMetricsConfig {
             suffix matching (request path must end with one of these values).
             """
           )
-          .asStringList(ClientMetricsParameters.DEFAULT_MONITORED_ENDPOINTS.stream().toList())
+          .asStringList(
+            HttpResponseTimeMetricsParameters.DEFAULT_MONITORED_ENDPOINTS.stream().toList()
+          )
       ),
       c
         .of("metricName")
         .since(V2_7)
         .summary("Name of the metric to record.")
-        .asString(ClientMetricsParameters.DEFAULT_METRIC_NAME),
+        .asString(HttpResponseTimeMetricsParameters.DEFAULT_METRIC_NAME),
       c
         .of("minExpectedResponseTime")
         .since(V2_7)
@@ -74,7 +79,7 @@ public class ClientMetricsConfig {
           For milliseconds, use fractional seconds (e.g., `0.01s` for 10ms, `0.05s` for 50ms).
           """
         )
-        .asDuration(ClientMetricsParameters.DEFAULT_MIN_EXPECTED_RESPONSE_TIME),
+        .asDuration(HttpResponseTimeMetricsParameters.DEFAULT_MIN_EXPECTED_RESPONSE_TIME),
       c
         .of("maxExpectedResponseTime")
         .since(V2_7)
@@ -85,7 +90,7 @@ public class ClientMetricsConfig {
           For milliseconds, use fractional seconds (e.g., `0.01s` for 10ms, `0.05s` for 50ms).
           """
         )
-        .asDuration(ClientMetricsParameters.DEFAULT_MAX_EXPECTED_RESPONSE_TIME)
+        .asDuration(HttpResponseTimeMetricsParameters.DEFAULT_MAX_EXPECTED_RESPONSE_TIME)
     );
   }
 }

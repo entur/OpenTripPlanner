@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.clientrequestmetrics;
+package org.opentripplanner.ext.httpresponsetimemetrics;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  * A Jersey filter that records HTTP request response times with client identification.
  * <p>
  * The client is identified by a configurable HTTP header. Only monitored clients
- * (configured via {@code server.clientMetrics.monitoredClients}) are tracked individually;
+ * (configured via {@code server.httpResponseTimeMetrics.monitoredClients}) are tracked individually;
  * unknown or missing client names are grouped under the "other" tag to prevent cardinality explosion.
  * <p>
  * The metric {@code http.client.requests} is recorded as a Timer with percentile histograms,
@@ -31,7 +31,8 @@ import javax.annotation.Nullable;
  * All timers are pre-created at startup for each combination of monitored client and endpoint
  * to ensure predictable metric cardinality.
  */
-public class ClientRequestMetricsFilter implements ContainerRequestFilter, ContainerResponseFilter {
+public class HttpResponseTimeMetricsFilter
+  implements ContainerRequestFilter, ContainerResponseFilter {
 
   private static final String START_TIME_PROPERTY = "metrics.startTime";
   private static final String ENDPOINT_PROPERTY = "metrics.endpoint";
@@ -47,7 +48,7 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
   private record TimerKey(String client, String endpoint) {}
 
   /**
-   * Creates a filter for recording client request metrics.
+   * Creates a filter for recording HTTP response time metrics.
    *
    * @param clientHeader the HTTP header name used to identify the client
    * @param monitoredClients the set of client names to track individually (case-insensitive)
@@ -57,7 +58,7 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
    * @param maxExpectedResponseTime maximum expected response time for histogram buckets
    * @param registry the meter registry to record metrics to
    */
-  public ClientRequestMetricsFilter(
+  public HttpResponseTimeMetricsFilter(
     String clientHeader,
     Set<String> monitoredClients,
     Set<String> monitoredEndpoints,
@@ -90,7 +91,7 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
    * @param minExpectedResponseTime minimum expected response time for histogram buckets
    * @param maxExpectedResponseTime maximum expected response time for histogram buckets
    */
-  public ClientRequestMetricsFilter(
+  public HttpResponseTimeMetricsFilter(
     String clientHeader,
     Set<String> monitoredClients,
     Set<String> monitoredEndpoints,

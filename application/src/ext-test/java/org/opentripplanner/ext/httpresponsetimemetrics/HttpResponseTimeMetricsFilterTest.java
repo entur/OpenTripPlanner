@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.clientrequestmetrics;
+package org.opentripplanner.ext.httpresponsetimemetrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,7 +16,7 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class ClientRequestMetricsFilterTest {
+class HttpResponseTimeMetricsFilterTest {
 
   private static final String CLIENT_HEADER = "et-client-name";
   private static final String MONITORED_ENDPOINT = "/transmodel/v3";
@@ -26,12 +26,12 @@ class ClientRequestMetricsFilterTest {
   private static final Duration MIN_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10);
   private static final Duration MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10000);
   private SimpleMeterRegistry registry;
-  private ClientRequestMetricsFilter filter;
+  private HttpResponseTimeMetricsFilter filter;
 
   @BeforeEach
   void setUp() {
     registry = new SimpleMeterRegistry();
-    filter = new ClientRequestMetricsFilter(
+    filter = new HttpResponseTimeMetricsFilter(
       CLIENT_HEADER,
       Set.of("app1", "app2", "web-client"),
       MONITORED_ENDPOINTS,

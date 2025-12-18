@@ -42,7 +42,7 @@ A full list of them can be found in the [RouteRequest](RouteRequest.md).
 | [server](#server)                                                                         |        `object`       | Configuration for router server.                                                                                                                                                                                     | *Optional* |               |  2.4  |
 |    [apiDocumentationProfile](#server_apiDocumentationProfile)                             |         `enum`        | List of available custom documentation profiles. A profile is used to inject custom documentation like type and field description or a deprecated reason.  Currently, ONLY the Transmodel API supports this feature. | *Optional* | `"default"`   |  2.7  |
 |    [apiProcessingTimeout](#server_apiProcessingTimeout)                                   |       `duration`      | Maximum processing time for an API request                                                                                                                                                                           | *Optional* | `"PT-1S"`     |  2.4  |
-|    [clientMetrics](#server_clientMetrics)                                                 |        `object`       | Configuration for HTTP client request metrics.                                                                                                                                                                       | *Optional* |               |  2.7  |
+|    [httpResponseTimeMetrics](#server_httpResponseTimeMetrics)                             |        `object`       | Configuration for HTTP response time metrics.                                                                                                                                                                        | *Optional* |               |  2.7  |
 |    [traceParameters](#server_traceParameters)                                             |       `object[]`      | Trace OTP request using HTTP request/response parameter(s) combined with logging.                                                                                                                                    | *Optional* |               |  2.4  |
 |          generateIdIfMissing                                                              |       `boolean`       | If `true` a unique value is generated if no http request header is provided, or the value is missing.                                                                                                                | *Optional* | `false`       |  2.4  |
 |          httpRequestHeader                                                                |        `string`       | The header-key to use when fetching the trace parameter value                                                                                                                                                        | *Optional* |               |  2.4  |
@@ -149,12 +149,12 @@ network latency nor waiting time in the HTTP server thread pool. The default val
 The timeout is not enforced when the parallel routing OTP feature is in use.
 
 
-<h3 id="server_clientMetrics">clientMetrics</h3>
+<h3 id="server_httpResponseTimeMetrics">httpResponseTimeMetrics</h3>
 
 **Since version:** `2.7` ∙ **Type:** `object` ∙ **Cardinality:** `Optional`   
 **Path:** /server 
 
-Configuration for HTTP client request metrics.
+Configuration for HTTP response time metrics.
 
 When enabled, records response time metrics per client. The client is identified by a
 configurable HTTP header (`clientHeader`). Only clients in the `monitoredClients` list are

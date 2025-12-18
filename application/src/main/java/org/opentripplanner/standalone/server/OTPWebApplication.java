@@ -18,8 +18,8 @@ import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
 import org.opentripplanner.api.common.OTPExceptionMapper;
 import org.opentripplanner.apis.APIEndpoints;
-import org.opentripplanner.ext.clientrequestmetrics.ClientMetricsParameters;
-import org.opentripplanner.ext.clientrequestmetrics.ClientRequestMetricsFilter;
+import org.opentripplanner.ext.httpresponsetimemetrics.HttpResponseTimeMetricsFilter;
+import org.opentripplanner.ext.httpresponsetimemetrics.HttpResponseTimeMetricsParameters;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -38,7 +38,7 @@ public class OTPWebApplication extends Application {
   private final Supplier<OtpServerRequestContext> contextProvider;
 
   private final List<Class<? extends ContainerResponseFilter>> customFilters;
-  private final ClientMetricsParameters clientMetricsParameters;
+  private final HttpResponseTimeMetricsParameters httpResponseTimeMetricsParameters;
 
   static {
     // Remove existing handlers attached to the j.u.l root logger
@@ -54,7 +54,7 @@ public class OTPWebApplication extends Application {
   ) {
     this.contextProvider = contextProvider;
     this.customFilters = createCustomFilters(parameters.traceParameters());
-    this.clientMetricsParameters = parameters.clientMetricsParameters();
+    this.httpResponseTimeMetricsParameters = parameters.httpResponseTimeMetricsParameters();
   }
 
   /**
@@ -113,16 +113,16 @@ public class OTPWebApplication extends Application {
     if (OTPFeature.ActuatorAPI.isOn()) {
       singletons.add(getBoundPrometheusRegistry());
 
-      // Add client request metrics filter if enabled
-      if (OTPFeature.ClientRequestMetrics.isOn()) {
+      // Add HTTP response time metrics filter if enabled
+      if (OTPFeature.HttpResponseTimeMetrics.isOn()) {
         singletons.add(
-          new ClientRequestMetricsFilter(
-            clientMetricsParameters.clientHeader(),
-            clientMetricsParameters.monitoredClients(),
-            clientMetricsParameters.monitoredEndpoints(),
-            clientMetricsParameters.metricName(),
-            clientMetricsParameters.minExpectedResponseTime(),
-            clientMetricsParameters.maxExpectedResponseTime()
+          new HttpResponseTimeMetricsFilter(
+            httpResponseTimeMetricsParameters.clientHeader(),
+            httpResponseTimeMetricsParameters.monitoredClients(),
+            httpResponseTimeMetricsParameters.monitoredEndpoints(),
+            httpResponseTimeMetricsParameters.metricName(),
+            httpResponseTimeMetricsParameters.minExpectedResponseTime(),
+            httpResponseTimeMetricsParameters.maxExpectedResponseTime()
           )
         );
       }

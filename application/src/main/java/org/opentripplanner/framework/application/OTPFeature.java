@@ -106,7 +106,7 @@ public enum OTPFeature {
   /* Sandbox extension features - Must be turned OFF by default */
 
   ActuatorAPI(false, true, "Endpoint for actuators (service health status)."),
-  ClientRequestMetrics(
+  HttpResponseTimeMetrics(
     false,
     true,
     "Record HTTP response time metrics per client. Requires ActuatorAPI to be enabled."
