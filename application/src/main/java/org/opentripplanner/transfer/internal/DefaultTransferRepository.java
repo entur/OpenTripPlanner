@@ -4,8 +4,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.Collection;
 import java.util.List;
-import org.opentripplanner.ext.flex.FlexTransferIndex;
-import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.transfer.TransferRepository;
@@ -19,7 +17,11 @@ public class DefaultTransferRepository implements TransferRepository {
 
   private final Multimap<StopLocation, PathTransfer> transfersByStop = HashMultimap.create();
 
-  private transient TransferIndex index;
+  private final TransferIndex index;
+
+  public DefaultTransferRepository(TransferIndex index) {
+    this.index = index;
+  }
 
   @Override
   public Collection<PathTransfer> findTransfersByStop(StopLocation stop) {
@@ -43,40 +45,24 @@ public class DefaultTransferRepository implements TransferRepository {
 
   @Override
   public void addAllTransfersByStops(Multimap<StopLocation, PathTransfer> transfersByStop) {
-    invalidateIndex();
+    index.invalidate();
     this.transfersByStop.putAll(transfersByStop);
   }
 
   @Override
   public void index() {
-    if (index == null) {
-      LOG.info("Transfer repository index init...");
-      if (OTPFeature.FlexRouting.isOn()) {
-        index = new FlexTransferIndex(this);
-      } else {
-        index = new TransferIndex();
-      }
-      LOG.info("Transfer repository index init complete.");
-    }
+    LOG.info("Transfer repository indexing...");
+    index.index(this);
+    LOG.info("Transfer repository indexing complete.");
   }
 
   @Override
   public Collection<PathTransfer> findWalkTransfersToStop(StopLocation toStop) {
-    if (index == null) {
-      throw new IllegalStateException("The transfer index is needed but not initialized");
-    }
     return index.findWalkTransfersToStop(toStop);
   }
 
   @Override
   public Collection<PathTransfer> findWalkTransfersFromStop(StopLocation fromStop) {
-    if (index == null) {
-      throw new IllegalStateException("The transfer index is needed but not initialized");
-    }
     return index.findWalkTransfersFromStop(fromStop);
-  }
-
-  private void invalidateIndex() {
-    index = null;
   }
 }
