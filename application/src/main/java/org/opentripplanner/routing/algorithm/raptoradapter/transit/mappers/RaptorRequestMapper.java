@@ -154,6 +154,17 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       if (pt.isRelaxTransitGroupPrioritySet() && !hasPassThroughOnly()) {
         mapRelaxTransitGroupPriority(mcBuilder, pt);
       }
+
+      var rel = pt.relaxedLimitedTransferSearch();
+      if (rel.enabled()) {
+        mcBuilder.withRelaxedLimitedTransferRequest(relaxedSearch ->
+          relaxedSearch
+            .withEnabled(true)
+            .withCostRelaxFunction(mapRelaxCost(rel.costRelaxFunction()))
+            .withDisableAccessEgress(rel.disableAccessEgress())
+            .withExtraAccessEgressCostFactor(rel.extraAccessEgressCostFactor())
+        );
+      }
     });
 
     for (Optimization optimization : preferences.transit().raptor().optimizations()) {
