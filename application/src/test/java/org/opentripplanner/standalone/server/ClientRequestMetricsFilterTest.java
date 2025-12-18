@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.opentripplanner.standalone.server.ClientRequestMetricsFilter.disabled;
 
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -26,7 +25,7 @@ class ClientRequestMetricsFilterTest {
   private static final String CLIENT_HEADER = "et-client-name";
   private static final String MONITORED_ENDPOINT = "/transmodel/v3";
   private static final Set<String> MONITORED_ENDPOINTS = Set.of(MONITORED_ENDPOINT, "/gtfs/v1/");
-  private static final String METRIC_NAME = "http_server_requests";
+  private static final String METRIC_NAME = "otp_http_server_requests";
   private static final Duration MIN_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10);
   private static final Duration MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10000);
   private SimpleMeterRegistry registry;
@@ -179,21 +178,6 @@ class ClientRequestMetricsFilterTest {
     when(requestContext.getHeaderString(CLIENT_HEADER)).thenReturn(clientName);
 
     filter.filter(requestContext, responseContext);
-  }
-
-  @Test
-  void disabledFilterDoesNotRecordMetrics() throws Exception {
-    // Create disabled filter (empty known clients set means disabled)
-    var disabledFilter = disabled();
-
-    var requestContext = mock(ContainerRequestContext.class);
-    var responseContext = mock(ContainerResponseContext.class);
-
-    disabledFilter.filter(requestContext);
-    disabledFilter.filter(requestContext, responseContext);
-
-    // No timers should be registered
-    assertNull(registry.find(METRIC_NAME).timer());
   }
 
   @Test

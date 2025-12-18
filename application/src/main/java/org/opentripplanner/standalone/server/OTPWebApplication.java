@@ -113,7 +113,7 @@ public class OTPWebApplication extends Application {
       singletons.add(getBoundPrometheusRegistry());
 
       // Add client request metrics filter if enabled
-      if (clientMetricsConfig.enabled()) {
+      if (OTPFeature.ClientRequestMetrics.isOn()) {
         singletons.add(
           new ClientRequestMetricsFilter(
             clientMetricsConfig.clientHeader(),

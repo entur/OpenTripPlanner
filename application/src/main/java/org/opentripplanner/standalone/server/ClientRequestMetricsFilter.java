@@ -14,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * A Jersey filter that records HTTP request response times with client identification.
@@ -29,8 +30,6 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
 
   private static final String START_TIME_PROPERTY = "metrics.startTime";
   private static final String OTHER_CLIENT = "other";
-
-  private static final ClientRequestMetricsFilter DISABLED = new ClientRequestMetricsFilter();
   private static final String CLIENT_TAG = "client";
   private static final String URI_TAG = "uri";
 
@@ -41,7 +40,6 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
   private final Duration minExpectedResponseTime;
   private final Duration maxExpectedResponseTime;
   private final MeterRegistry registry;
-  private final boolean enabled;
   private final ConcurrentHashMap<TimerKey, Timer> timerCache;
 
   private record TimerKey(String client, String uri) {}
@@ -76,7 +74,6 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
     this.minExpectedResponseTime = Objects.requireNonNull(minExpectedResponseTime);
     this.maxExpectedResponseTime = Objects.requireNonNull(maxExpectedResponseTime);
     this.registry = registry;
-    this.enabled = true;
     this.timerCache = new ConcurrentHashMap<>();
   }
 
@@ -109,37 +106,11 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
     );
   }
 
-  /**
-   * Private constructor for disabled filter.
-   */
-  private ClientRequestMetricsFilter() {
-    this.clientHeader = null;
-    this.monitoredClients = Set.of();
-    this.monitoredEndpoints = Set.of();
-    this.metricName = null;
-    this.minExpectedResponseTime = null;
-    this.maxExpectedResponseTime = null;
-    this.registry = null;
-    this.enabled = false;
-    this.timerCache = null;
-  }
-
-  /**
-   * Returns a disabled filter that does nothing.
-   */
-  static ClientRequestMetricsFilter disabled() {
-    return DISABLED;
-  }
-
   @Override
   public void filter(ContainerRequestContext requestContext) {
-    if (!enabled) {
-      return;
-    }
     if (!isMonitoredEndpoint(getRequestPath(requestContext))) {
       return;
     }
-
     requestContext.setProperty(START_TIME_PROPERTY, System.nanoTime());
   }
 
@@ -156,10 +127,6 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
     ContainerRequestContext requestContext,
     ContainerResponseContext responseContext
   ) {
-    if (!enabled) {
-      return;
-    }
-
     Long startTime = (Long) requestContext.getProperty(START_TIME_PROPERTY);
     if (startTime == null) {
       return;
@@ -188,7 +155,7 @@ public class ClientRequestMetricsFilter implements ContainerRequestFilter, Conta
     );
   }
 
-  private String resolveClientTag(String clientName) {
+  private String resolveClientTag(@Nullable String clientName) {
     if (clientName != null) {
       String lowercaseName = clientName.toLowerCase(Locale.ROOT);
       if (monitoredClients.contains(lowercaseName)) {

@@ -123,12 +123,6 @@ public class ServerConfig implements OTPWebApplicationParameters {
       )
       .asObject();
 
-    boolean clientMetricsEnabled = clientMetricsNode
-      .of("enabled")
-      .since(V2_7)
-      .summary("Enable client request metrics.")
-      .asBoolean(false);
-
     String clientHeader = clientMetricsNode
       .of("clientHeader")
       .since(V2_7)
@@ -193,17 +187,14 @@ public class ServerConfig implements OTPWebApplicationParameters {
       )
       .asDuration(ClientMetricsConfig.DEFAULT_MAX_EXPECTED_RESPONSE_TIME);
 
-    this.clientMetrics = clientMetricsEnabled
-      ? new ClientMetricsConfig(
-        true,
-        clientHeader,
-        monitoredClients,
-        monitoredEndpoints,
-        metricName,
-        minExpectedResponseTime,
-        maxExpectedResponseTime
-      )
-      : ClientMetricsConfig.DISABLED;
+    this.clientMetrics = new ClientMetricsConfig(
+      clientHeader,
+      monitoredClients,
+      monitoredEndpoints,
+      metricName,
+      minExpectedResponseTime,
+      maxExpectedResponseTime
+    );
   }
 
   public Duration apiProcessingTimeout() {
