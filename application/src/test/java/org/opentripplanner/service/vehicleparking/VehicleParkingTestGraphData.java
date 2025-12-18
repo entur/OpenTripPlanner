@@ -1,8 +1,8 @@
 package org.opentripplanner.service.vehicleparking;
 
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.transit.service.SiteRepository;

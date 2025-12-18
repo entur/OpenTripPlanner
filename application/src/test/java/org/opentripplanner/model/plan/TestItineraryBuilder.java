@@ -30,7 +30,7 @@ import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLegBuilder;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
 import org.opentripplanner.transfer.constrained.model.TransferConstraint;

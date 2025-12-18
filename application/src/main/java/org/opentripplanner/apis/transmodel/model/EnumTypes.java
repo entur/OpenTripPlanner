@@ -20,7 +20,6 @@ import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.transfer.constrained.model.TransferPriority;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.site.StopTransferPriority;

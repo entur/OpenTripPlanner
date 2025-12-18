@@ -2,7 +2,7 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelForTest.intersectionVertex;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -13,7 +13,7 @@ import org.opentripplanner._support.geometry.Coordinates;
 import org.opentripplanner.raptor.api.model.RaptorCostConverter;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 

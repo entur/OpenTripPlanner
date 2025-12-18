@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.SplitterVertex;

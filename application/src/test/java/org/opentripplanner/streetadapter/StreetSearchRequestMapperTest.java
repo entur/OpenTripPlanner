@@ -1,4 +1,4 @@
-package org.opentripplanner.street.search.request;
+package org.opentripplanner.streetadapter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,7 +22,6 @@ import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
-import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 
 class StreetSearchRequestMapperTest {

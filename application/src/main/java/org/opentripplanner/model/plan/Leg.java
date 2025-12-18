@@ -22,7 +22,6 @@ import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.street.model.note.StreetNote;
 import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;

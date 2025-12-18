@@ -23,7 +23,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.edge.BoardingLocationToStopLink;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetTransitStopLink;

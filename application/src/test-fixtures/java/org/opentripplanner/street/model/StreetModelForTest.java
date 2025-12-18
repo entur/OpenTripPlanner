@@ -1,4 +1,4 @@
-package org.opentripplanner.street.model._data;
+package org.opentripplanner.street.model;
 
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
@@ -16,7 +16,6 @@ import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.geometry.SplitLineString;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.AreaEdgeBuilder;
 import org.opentripplanner.street.model.edge.AreaGroup;
 import org.opentripplanner.street.model.edge.Edge;

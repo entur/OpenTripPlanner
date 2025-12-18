@@ -2,17 +2,17 @@ package org.opentripplanner.street.search.strategy;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
 
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateData;
+import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
+import org.opentripplanner.street.model.StreetModelFactory;
 
 public class DominanceFunctionTest {
 
@@ -53,7 +53,7 @@ public class DominanceFunctionTest {
     State outsideZone = new State(fromVertex, Instant.EPOCH, stateData, req);
     assertFalse(outsideZone.isInsideNoRentalDropOffArea());
 
-    var edge = StreetModelForTest.streetEdge(fromVertex, toVertex);
+    var edge = StreetModelFactory.streetEdge(fromVertex, toVertex);
 
     var editor = outsideZone.edit(edge);
     editor.enterNoRentalDropOffArea();

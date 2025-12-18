@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -18,7 +18,7 @@ import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 public class StateEditorTest {
 
-  static Vertex vertex = StreetModelForTest.intersectionVertex(1, 1);
+  static Vertex vertex = StreetModelFactory.intersectionVertex(1, 1);
 
   @Test
   public final void testIncrementTimeInMilliseconds() {
@@ -63,9 +63,9 @@ public class StateEditorTest {
   @Nested
   class GeofencingZones {
 
-    StreetVertex v1 = StreetModelForTest.intersectionVertex(0, 0);
-    StreetVertex v2 = StreetModelForTest.intersectionVertex(1, 1);
-    StreetEdge edge1 = StreetModelForTest.streetEdge(v1, v2);
+    StreetVertex v1 = StreetModelFactory.intersectionVertex(0, 0);
+    StreetVertex v2 = StreetModelFactory.intersectionVertex(1, 1);
+    StreetEdge edge1 = StreetModelFactory.streetEdge(v1, v2);
 
     @Test
     void forwardEnterZone() {
@@ -103,9 +103,9 @@ public class StateEditorTest {
   @Nested
   class ParkAndRide {
 
-    StreetVertex v1 = StreetModelForTest.intersectionVertex(0, 0);
-    StreetVertex v2 = StreetModelForTest.intersectionVertex(1, 1);
-    StreetEdge edge1 = StreetModelForTest.streetEdge(v1, v2);
+    StreetVertex v1 = StreetModelFactory.intersectionVertex(0, 0);
+    StreetVertex v2 = StreetModelFactory.intersectionVertex(1, 1);
+    StreetEdge edge1 = StreetModelFactory.streetEdge(v1, v2);
 
     @Test
     void resetNoThroughAfterParkAndRide() {

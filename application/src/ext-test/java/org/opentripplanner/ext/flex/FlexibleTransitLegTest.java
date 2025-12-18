@@ -19,7 +19,7 @@ import org.opentripplanner.model.plan.Emission;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.street.geometry.GeometryUtils;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelForTest;
 
 class FlexibleTransitLegTest implements PlanTestConstants {
 

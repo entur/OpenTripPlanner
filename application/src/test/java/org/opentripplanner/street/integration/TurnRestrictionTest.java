@@ -2,7 +2,7 @@ package org.opentripplanner.street.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelForTest.intersectionVertex;
 
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,10 +19,10 @@ import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.TurnRestriction;
 import org.opentripplanner.street.model.TurnRestrictionType;
-import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;

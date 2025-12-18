@@ -1,11 +1,10 @@
-package org.opentripplanner.routing.util.elevation;
+package org.opentripplanner.street.model.elevation;
 
 import static java.util.Locale.ROOT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.routing.util.elevation.ToblersHikingFunctionTest.TestCase.tc;
+import static org.opentripplanner.street.model.elevation.ToblersHikingFunctionTest.TestCase.tc;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.street.model.elevation.ToblersHikingFunction;
 
 public class ToblersHikingFunctionTest {
 

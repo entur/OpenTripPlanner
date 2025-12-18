@@ -5,7 +5,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelForTest;
 
 public class VehicleParkingTestUtil {
 
