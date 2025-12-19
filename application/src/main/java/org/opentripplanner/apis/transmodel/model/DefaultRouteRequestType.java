@@ -135,15 +135,6 @@ public class DefaultRouteRequestType {
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("elevatorBoardTime")
-          .deprecate("Use elevatorBoardSlack instead.")
-          .description("How long it takes to get on an elevator, on average.")
-          .type(Scalars.GraphQLInt)
-          .dataFetcher(env -> preferences.street().elevator().boardSlack().toSeconds())
-          .build()
-      )
-      .field(
-        GraphQLFieldDefinition.newFieldDefinition()
-          .name("elevatorBoardSlack")
           .description("How long it takes to get on an elevator, on average.")
           .type(Scalars.GraphQLInt)
           .dataFetcher(env -> preferences.street().elevator().boardSlack().toSeconds())

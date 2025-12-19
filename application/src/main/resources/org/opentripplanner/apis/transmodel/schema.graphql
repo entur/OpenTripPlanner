@@ -1101,9 +1101,7 @@ type RoutingParameters {
   "What is the cost of boarding a elevator?"
   elevatorBoardCost: Int
   "How long it takes to get on an elevator, on average."
-  elevatorBoardSlack: Int
-  "How long it takes to get on an elevator, on average."
-  elevatorBoardTime: Int @deprecated(reason : "Use elevatorBoardSlack instead.")
+  elevatorBoardTime: Int
   "What is the cost of travelling one floor on an elevator?"
   elevatorHopCost: Int @deprecated(reason : "Use elevatorReluctance to set cost instead.")
   "How long it takes to advance one floor on an elevator, on average."
