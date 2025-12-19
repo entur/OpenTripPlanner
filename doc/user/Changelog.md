@@ -59,6 +59,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 -   Add native scooter preference parameters to TransModel GraphQL API [#7035](https://github.com/opentripplanner/OpenTripPlanner/pull/7035)
 - Normalize ServiceJourney/DatedServiceJourney ID prefixes in SIRI updates [#7128](https://github.com/opentripplanner/OpenTripPlanner/pull/7128)
 - Add information about the use of elevators, escalators, and stairs to queries with steps in the GTFS GraphQL API [#6897](https://github.com/opentripplanner/OpenTripPlanner/pull/6897)
+- Support gml:LineString format with list of gml:pos elements [#7135](https://github.com/opentripplanner/OpenTripPlanner/pull/7135)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
