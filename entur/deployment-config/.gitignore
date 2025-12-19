@@ -1,0 +1,5 @@
+
+.idea
+.DS_Store
+/terraform/.terraform/
+/terraform-gcp2/.terraform/
