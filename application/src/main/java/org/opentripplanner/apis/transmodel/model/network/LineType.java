@@ -226,7 +226,9 @@ public class LineType {
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("isReplacementLine")
-          .description("Is this line replacing some other line.")
+          .description(
+            "Is this a replacement Line. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
+          )
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .dataFetcher(environment ->
             GqlUtil.getTransitService(environment)
@@ -238,7 +240,7 @@ public class LineType {
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("replacementsExist")
-          .description("Are there replacement DatedServiceJourneys for this Line")
+          .description("Are there replacement DatedServiceJourneys for this Line.")
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .dataFetcher(environment ->
             GqlUtil.getTransitService(environment)

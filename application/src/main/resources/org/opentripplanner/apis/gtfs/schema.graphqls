@@ -2090,7 +2090,13 @@ type Route implements Node {
   gtfsId: String!
   "Global object ID provided by Relay. This value can be used to refetch this object using **node** query."
   id: ID!
-  "Is this a replacement route for some other route on some dates."
+  """
+  Is this a replacement route.
+  Only true for GTFS-sourced data if set by the extended GTFS type, because GTFS does not implement
+  replacement links, so replacement trips in GTFS cannot mechanically state their original trip.
+  In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement
+  link in a DatedServiceJourney.
+  """
   isReplacementRoute: Boolean!
   "Long name of the route, e.g. Helsinki-Leppävaara"
   longName(
@@ -2113,7 +2119,11 @@ type Route implements Node {
     """
     serviceDates: LocalDateRangeInput
   ): [Pattern]
-  "Do replacements exist for this route on some dates."
+  """
+  Do any trips of this route have any linked replacements.
+  Only ever true with NeTEx or SIRI, because GTFS does not implement replacement
+  links, so replacement trips in GTFS cannot mechanically state their original trip.
+  """
   replacementsExist: Boolean!
   "Short name of the route, usually a line number, e.g. 550"
   shortName: String
@@ -2585,7 +2595,13 @@ type Trip implements Node {
   gtfsId: String!
   "Global object ID provided by Relay. This value can be used to refetch this object using **node** query."
   id: ID!
-  "Is this a replacement trip for some other trip on some dates."
+  """
+  Is this a replacement trip.
+  Only true for GTFS-sourced data if set by the extended GTFS type, because GTFS does not implement
+  replacement links, so replacement trips in GTFS cannot mechanically state their original trip.
+  In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement
+  link in a DatedServiceJourney.
+  """
   isReplacementTrip: Boolean!
   """
   The latest real-time occupancy information for the latest occurance of this
@@ -2594,7 +2610,11 @@ type Trip implements Node {
   occupancy: TripOccupancy
   "The pattern the trip is running on"
   pattern: Pattern
-  "Do replacements exist which replace this trip on some dates."
+  """
+  Does this trip have any linked replacements.
+  Only ever true with NeTEx or SIRI, because GTFS does not implement replacement
+  links, so replacement trips in GTFS cannot mechanically state their original trip.
+  """
   replacementsExist: Boolean!
   "The route the trip is running on"
   route: Route!

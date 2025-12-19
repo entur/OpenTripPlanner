@@ -433,7 +433,7 @@ type Line {
   "Groups of lines that line is a part of."
   groupOfLines: [GroupOfLines]!
   id: ID!
-  "Is this line replacing some other line."
+  "Is this a replacement Line. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
   isReplacementLine: Boolean!
   journeyPatterns: [JourneyPattern]
   name: String
@@ -443,7 +443,7 @@ type Line {
   "Publicly announced code for line, differentiating it from other lines for the same operator."
   publicCode: String
   quays: [Quay]!
-  "Are there replacement DatedServiceJourneys for this Line"
+  "Are there replacement DatedServiceJourneys for this Line."
   replacementsExist: Boolean!
   serviceJourneys: [ServiceJourney]!
   "Get all situations active for the line."
@@ -1228,7 +1228,7 @@ type ServiceJourney {
     date: Date
   ): [EstimatedCall!]! @timingData
   id: ID!
-  "Is this a replacement ServiceJourney for some other ServiceJourney on some dates"
+  "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
   isReplacementServiceJourney: Boolean!
   "JourneyPattern for the service journey, according to scheduled data. If the ServiceJourney is not included in the scheduled data, null is returned."
   journeyPattern: JourneyPattern

@@ -309,7 +309,7 @@ public class ServiceJourneyType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("isReplacementServiceJourney")
           .description(
-            "Is this a replacement ServiceJourney for some other ServiceJourney on some dates"
+            "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
           )
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .dataFetcher(environment ->
