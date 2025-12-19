@@ -17,6 +17,10 @@ on:
         description: 'Force bumping the ser.ver.id'
         default: false
         type: boolean
+      hotfix:
+        description: '🌶️ Hotfix! Specify the "as is" branch to release. No changes applied.'
+        default: false
+        type: boolean
   workflow_call:
     inputs:
       log_level:
@@ -72,7 +76,10 @@ jobs:
           if [ "${{inputs.bump_ser_ver_id}}" == "true" ]; then
             SER_VER="--serVerId"
           fi
-          script/custom-release.py --summary $SER_VER otp/dev-2.x
+          if [ "${{inputs.hotfix}}" == "true" ]; then
+            HOTFIX="--release"
+          fi
+          script/custom-release.py --summary $HOTFIX $SER_VER otp/dev-2.x
       - name: Set version (Git repository Tag)
         id: set_version
         run: |
