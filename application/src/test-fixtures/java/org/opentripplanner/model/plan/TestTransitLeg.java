@@ -1,18 +1,12 @@
 package org.opentripplanner.model.plan;
 
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
-
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
-import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.leg.LegCallTime;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
@@ -20,7 +14,6 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.site.StopType;
 import org.opentripplanner.transit.model.timetable.Trip;
 
 /**
@@ -29,11 +22,15 @@ import org.opentripplanner.transit.model.timetable.Trip;
  */
 public class TestTransitLeg implements TransitLeg {
 
+  private final StopLocation from;
+  private final StopLocation to;
   private final ZonedDateTime startTime;
   private final ZonedDateTime endTime;
   private final Trip trip;
 
   public TestTransitLeg(TestTransitLegBuilder builder) {
+    this.from = builder.from;
+    this.to = builder.to;
     this.startTime = builder.startTime;
     this.endTime = builder.endTime;
     this.trip = builder.trip;
@@ -97,12 +94,12 @@ public class TestTransitLeg implements TransitLeg {
 
   @Override
   public Place from() {
-    return Place.forStop(new TestStopLocation());
+    return Place.forStop(from);
   }
 
   @Override
   public Place to() {
-    return Place.forStop(new TestStopLocation());
+    return Place.forStop(to);
   }
 
   @Override
@@ -144,56 +141,4 @@ public class TestTransitLeg implements TransitLeg {
     return new TestTransitLegBuilder();
   }
 
-  class TestStopLocation implements StopLocation {
-
-    @Override
-    public FeedScopedId getId() {
-      return id("s1");
-    }
-
-    @Override
-    public int getIndex() {
-      return -999;
-    }
-
-    @Override
-    public @Nullable I18NString getName() {
-      return null;
-    }
-
-    @Override
-    public @Nullable I18NString getDescription() {
-      return null;
-    }
-
-    @Override
-    public @Nullable I18NString getUrl() {
-      return null;
-    }
-
-    @Override
-    public StopType getStopType() {
-      return null;
-    }
-
-    @Override
-    public WgsCoordinate getCoordinate() {
-      return null;
-    }
-
-    @Override
-    public @Nullable Geometry getGeometry() {
-      return null;
-    }
-
-    @Override
-    public boolean isPartOfStation() {
-      return false;
-    }
-
-    @Override
-    public boolean isPartOfSameStationAs(StopLocation alternativeStop) {
-      return false;
-    }
-  }
 }
