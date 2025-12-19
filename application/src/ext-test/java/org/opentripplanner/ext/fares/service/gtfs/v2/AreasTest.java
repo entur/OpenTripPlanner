@@ -2,8 +2,7 @@ package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.FEED_ID;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import com.google.common.collect.Multimaps;
 import java.util.Map;
@@ -27,17 +26,17 @@ class AreasTest implements PlanTestConstants {
   private static final int ID = 100;
 
   private static final FareProduct SINGLE_TO_OUTER = FareProduct.of(
-    new FeedScopedId(FEED_ID, "single_to_outer"),
+    id("single_to_outer"),
     "Single one-way ticket to outer zone",
     Money.euros(1)
   ).build();
   private static final FareProduct SINGLE_FROM_OUTER = FareProduct.of(
-    new FeedScopedId(FEED_ID, "single_from_outer"),
+    id("single_from_outer"),
     "Single one-way ticket from outer zone to anywhere",
     Money.euros(1)
   ).build();
   private static final FareProduct INNER_TO_OUTER_ZONE_SINGLE = FareProduct.of(
-    new FeedScopedId(FEED_ID, "zone_ab_single"),
+    id("zone_ab_single"),
     "Day Pass",
     Money.euros(5)
   ).build();
