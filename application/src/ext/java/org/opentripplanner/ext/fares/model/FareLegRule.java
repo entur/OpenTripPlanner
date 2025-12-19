@@ -50,9 +50,9 @@ public final class FareLegRule implements Serializable {
       throw new IllegalArgumentException("fareProducts must contain at least one value");
     }
     builder.fareProducts.forEach(Objects::requireNonNull);
+    this.legGroupId = Objects.requireNonNull(builder.legGroupId);
     this.id = Objects.requireNonNull(builder.id);
     this.fareProducts = builder.fareProducts;
-    this.legGroupId = builder.legGroupId;
     this.networkId = builder.networkId;
     this.fromAreaId = builder.fromAreaId;
     this.toAreaId = builder.toAreaId;

@@ -2,6 +2,7 @@ package org.opentripplanner.gtfs.mapping;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.onebusaway.gtfs.model.AgencyAndIdFactory.obaId;
 
 import java.time.LocalTime;
 import java.util.Collection;
@@ -67,7 +68,7 @@ class FareLegRuleMapperTest {
     fp.setFareProductId(productId);
     var internalProduct = productMapper.map(fp);
 
-    var obaRule = new FareLegRule();
+    final var obaRule = baseRule();
     obaRule.setFareProductId(fp.getFareProductId());
     obaRule.setDistanceType(tc.distanceType);
     obaRule.setMinDistance(tc.minDistance);
@@ -107,7 +108,7 @@ class FareLegRuleMapperTest {
     final var creditProduct = cashProduct(cashMedium);
     var internalCreditProduct = productMapper.map(creditProduct);
 
-    var obaRule = new FareLegRule();
+    var obaRule = baseRule();
     obaRule.setFareProductId(cashProduct.getFareProductId());
 
     var mappedRules = List.copyOf(ruleMapper.map(List.of(obaRule)));
@@ -129,7 +130,7 @@ class FareLegRuleMapperTest {
     var product = cashProduct(null);
     productMapper.map(product);
 
-    var obaRule = new FareLegRule();
+    final var obaRule = baseRule();
     obaRule.setFareProductId(product.getFareProductId());
     obaRule.setRulePriority(55);
 
@@ -149,7 +150,7 @@ class FareLegRuleMapperTest {
     );
 
     var obaRule = new FareLegRule();
-    obaRule.setFareProductId(new AgencyAndId("1", "notfound"));
+    obaRule.setFareProductId(obaId("notfound"));
     obaRule.setRulePriority(55);
 
     var mapped = ruleMapper.map(List.of(obaRule));
@@ -182,7 +183,7 @@ class FareLegRuleMapperTest {
     tf.setServiceId("s1");
     timeframeMapper.map(tf);
 
-    var obaRule = new FareLegRule();
+    var obaRule = baseRule();
     obaRule.setFareProductId(product.getFareProductId());
     obaRule.setFromTimeframeGroupId(tfId);
     obaRule.setToTimeframeGroupId(tfId);
@@ -212,5 +213,11 @@ class FareLegRuleMapperTest {
 
   private static TimeframeMapper timeframeMapper() {
     return new TimeframeMapper(ID_FACTORY);
+  }
+
+  private static FareLegRule baseRule() {
+    var obaRule = new FareLegRule();
+    obaRule.setLegGroupId(obaId("1"));
+    return obaRule;
   }
 }

@@ -18,6 +18,7 @@ import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 class TimeframeMatcherTest implements FareTestConstants {
 
   public static final FareLegRule RULE = FareLegRule.of(id("1"), FARE_PRODUCT_A)
+    .withLegGroupId(id("1"))
     .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
     .withToTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
     .build();

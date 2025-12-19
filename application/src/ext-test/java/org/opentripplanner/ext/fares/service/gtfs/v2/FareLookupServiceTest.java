@@ -2,7 +2,7 @@ package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
@@ -41,8 +41,9 @@ class FareLookupServiceTest implements FareTestConstants {
     STOP2_ID,
     A_1
   );
-  private static final FeedScopedId R_1 = TimetableRepositoryForTest.id("r1");
-  private static final FeedScopedId R_2 = TimetableRepositoryForTest.id("r2");
+  private static final FeedScopedId R_1 = id("r1");
+  private static final FeedScopedId R_2 = id("r2");
+  private static final FeedScopedId GROUP_ID = id("group");
 
   private final TimetableRepositoryForTest testModel = TimetableRepositoryForTest.of();
   private final RegularStop STOP_1 = testModel.stop(STOP1_ID.getId()).build();
@@ -116,7 +117,7 @@ class FareLookupServiceTest implements FareTestConstants {
 
   @ParameterizedTest
   @MethodSource("cases")
-  void twoRules(TestCase tc) {
+  void priority(TestCase tc) {
     var r1 = tc.rule1Customiser.apply(rule1()).build();
     var r2 = tc.rule2Customiser.apply(rule2()).build();
     var service = new FareLookupService(
@@ -132,11 +133,11 @@ class FareLookupServiceTest implements FareTestConstants {
   }
 
   private static FareLegRuleBuilder rule1() {
-    return FareLegRule.of(R_1, List.of(FARE_PRODUCT_A));
+    return FareLegRule.of(R_1, List.of(FARE_PRODUCT_A)).withLegGroupId(GROUP_ID);
   }
 
   private static FareLegRuleBuilder rule2() {
-    return FareLegRule.of(R_2, List.of(FARE_PRODUCT_B));
+    return FareLegRule.of(R_2, List.of(FARE_PRODUCT_B)).withLegGroupId(GROUP_ID);
   }
 
   private TransitLeg leg() {

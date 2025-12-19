@@ -71,11 +71,21 @@ class FareLookupService implements Serializable {
       this.legRules.stream()
         .filter(r -> legMatchesRule(leg, r))
         .collect(Collectors.toUnmodifiableSet());
+    return rules
+      .stream()
+      .collect(Collectors.groupingBy(FareLegRule::legGroupId))
+      .entrySet()
+      .stream()
+      .flatMap(r -> getFareLegRules(r.getValue()).stream())
+      .collect(Collectors.toSet());
+  }
+
+  private static Set<FareLegRule> getFareLegRules(Collection<FareLegRule> rules) {
     var containsPriorities = rules.stream().anyMatch(r -> r.priority().isPresent());
     if (containsPriorities) {
       return findHighestPriority(rules);
     } else {
-      return rules;
+      return Set.copyOf(rules);
     }
   }
 
@@ -263,7 +273,7 @@ class FareLookupService implements Serializable {
    *
    * @link <a href="https://gtfs.org/documentation/schedule/reference/#fare_leg_rulestxt">spec</a>
    */
-  private static Set<FareLegRule> findHighestPriority(Set<FareLegRule> rules) {
+  private static Set<FareLegRule> findHighestPriority(Collection<FareLegRule> rules) {
     var maxPriority = rules.stream().mapToInt(r -> r.priority().orElse(0)).max().orElse(0);
     return rules
       .stream()

@@ -35,10 +35,12 @@ class OverlappingTimeframesWithPriorityTest implements PlanTestConstants, FareTe
     return GtfsFaresV2Service.of()
       .withLegRules(
         FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+          .withLegGroupId(id("r1"))
           .withFromTimeframes(List.of(TIMEFRAME_ALL_DAY))
           .withPriority(1)
           .build(),
         FareLegRule.of(id("r2"), FARE_PRODUCT_B)
+          .withLegGroupId(id("r1"))
           .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
           .withPriority(0)
           .build()

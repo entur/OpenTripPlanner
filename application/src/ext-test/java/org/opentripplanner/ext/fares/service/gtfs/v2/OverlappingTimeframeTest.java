@@ -36,9 +36,11 @@ class OverlappingTimeframeTest implements PlanTestConstants, FareTestConstants {
     return GtfsFaresV2Service.of()
       .withLegRules(
         FareLegRule.of(id("r1"), FARE_PRODUCT_A)
+          .withLegGroupId(id("r1"))
           .withFromTimeframes(List.of(TIMEFRAME_ALL_DAY))
           .build(),
         FareLegRule.of(id("r2"), FARE_PRODUCT_B)
+          .withLegGroupId(id("r2"))
           .withFromTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
           .build()
       )

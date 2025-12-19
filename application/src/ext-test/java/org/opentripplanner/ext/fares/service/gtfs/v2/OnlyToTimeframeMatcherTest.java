@@ -16,6 +16,7 @@ import org.opentripplanner.model.plan.TestTransitLeg;
 class OnlyToTimeframeMatcherTest implements FareTestConstants {
 
   public static final FareLegRule RULE = FareLegRule.of(id("1"), FARE_PRODUCT_A)
+    .withLegGroupId(id("1"))
     .withToTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
     .build();
 

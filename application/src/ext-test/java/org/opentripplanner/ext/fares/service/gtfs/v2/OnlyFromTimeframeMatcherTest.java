@@ -67,6 +67,9 @@ class OnlyFromTimeframeMatcherTest implements FareTestConstants {
   }
 
   private static FareLegRule legRule(Timeframe tf) {
-    return FareLegRule.of(id("1"), FARE_PRODUCT_A).withFromTimeframes(List.of(tf)).build();
+    return FareLegRule.of(id("1"), FARE_PRODUCT_A)
+      .withLegGroupId(id("1"))
+      .withFromTimeframes(List.of(tf))
+      .build();
   }
 }

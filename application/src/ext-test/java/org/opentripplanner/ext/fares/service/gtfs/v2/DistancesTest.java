@@ -84,18 +84,22 @@ class DistancesTest {
 
   List<FareLegRule> stopRules = List.of(
     FareLegRule.of(DISTANCE_ID, threeStopProduct)
+      .withLegGroupId(DISTANCE_ID)
       .withFareDistance(new FareDistance.Stops(0, 3))
       .build(),
     FareLegRule.of(DISTANCE_ID, fiveStopProduct)
+      .withLegGroupId(DISTANCE_ID)
       .withFareDistance(new FareDistance.Stops(5, 10))
       .build(),
     FareLegRule.of(DISTANCE_ID, twelveStopProduct)
+      .withLegGroupId(DISTANCE_ID)
       .withFareDistance(new FareDistance.Stops(12, 20))
       .build()
   );
 
   List<FareLegRule> distanceRules = List.of(
     FareLegRule.of(DISTANCE_ID, tenKmProduct)
+      .withLegGroupId(DISTANCE_ID)
       .withFareDistance(
         new FareDistance.LinearDistance(
           Distance.ofKilometersBoxed(7d, ignore -> {}).orElse(null),
@@ -104,6 +108,7 @@ class DistancesTest {
       )
       .build(),
     FareLegRule.of(DISTANCE_ID, threeKmProduct)
+      .withLegGroupId(DISTANCE_ID)
       .withFareDistance(
         new FareDistance.LinearDistance(
           Distance.ofKilometersBoxed(3d, ignore -> {}).orElse(null),
@@ -112,6 +117,7 @@ class DistancesTest {
       )
       .build(),
     FareLegRule.of(DISTANCE_ID, twoKmProduct)
+      .withLegGroupId(DISTANCE_ID)
       .withFareDistance(
         new FareDistance.LinearDistance(
           Distance.ofMetersBoxed(0d, ignore -> {}).orElse(null),
