@@ -258,8 +258,13 @@ class AccessEgressRouterTest extends GraphRoutingTest {
     try (var verticesContainer = new TemporaryVerticesContainer()) {
       var vertexLinker = VertexLinkerTestFactory.of(graph);
       var vertexCreationService = new VertexCreationService(vertexLinker);
-      var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService, id ->
-        new DefaultTransitService(timetableRepository).findStopOrChildIds(id)
+      var transitService = new DefaultTransitService(timetableRepository);
+      var linkingContextFactory = new LinkingContextFactory(
+        graph,
+        vertexCreationService,
+        transitService::findStopOrChildIds,
+        transitService::getStation,
+        transitService::getMultiModalStation
       );
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(verticesContainer, linkingRequest);

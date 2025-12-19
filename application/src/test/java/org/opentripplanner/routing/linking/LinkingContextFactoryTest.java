@@ -109,7 +109,9 @@ class LinkingContextFactoryTest {
     var stopLinkingContextFactory = new LinkingContextFactory(
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
-      Set::of
+      Set::of,
+      id -> null,
+      id -> null
     );
     var container = new TemporaryVerticesContainer();
     var from = stopToLocation(stopA);
@@ -132,7 +134,9 @@ class LinkingContextFactoryTest {
     var stopLinkingContextFactory = new LinkingContextFactory(
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
-      mapping::get
+      mapping::get,
+      id -> null,
+      id -> null
     );
     var container = new TemporaryVerticesContainer();
     var from = GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId());
@@ -143,6 +147,50 @@ class LinkingContextFactoryTest {
       .build();
     var linkingContext = stopLinkingContextFactory.create(container, request);
     assertThat(toStops(linkingContext.findVertices(from))).containsExactly(stopC, stopD);
+  }
+
+  @Test
+  void stationCentroidForCar() {
+    var multiModalStation = testModel
+      .multiModalStation("MultiModal")
+      .withCoordinate(CENTER.moveEastMeters(DISTANCE))
+      .withChildStations(List.of(stationAlpha))
+      .build();
+    var stopLinkingContextFactory = new LinkingContextFactory(
+      graph,
+      new VertexCreationService(VertexLinkerTestFactory.of(graph)),
+      id -> Set.of(),
+      id -> id.equals(stationAlpha.getId()) ? stationAlpha : null,
+      id -> id.equals(multiModalStation.getId()) ? multiModalStation : null
+    );
+    var container = new TemporaryVerticesContainer();
+    var from = GenericLocation.fromStopId(
+      stationAlpha.getName().toString(),
+      stationAlpha.getId().getFeedId(),
+      stationAlpha.getId().getId()
+    );
+    var to = GenericLocation.fromStopId(
+      multiModalStation.getName().toString(),
+      multiModalStation.getId().getFeedId(),
+      multiModalStation.getId().getId()
+    );
+    var request = LinkingContextRequest.of()
+      .withFrom(from)
+      .withTo(to)
+      .withDirectMode(StreetMode.CAR)
+      .build();
+    var linkingContext = stopLinkingContextFactory.create(container, request);
+    var fromVertices = linkingContext.findVertices(from);
+    var fromVertex = fromVertices.iterator().next();
+    assertEquals(stationAlpha.getCoordinate(), fromVertex.toWgsCoordinate());
+    var fromOutgoing = fromVertex.getOutgoing();
+    assertTrue(outgoingEdgeIsTraversableWith(fromOutgoing, TraverseMode.CAR));
+
+    var toVertices = linkingContext.findVertices(to);
+    var toVertex = toVertices.iterator().next();
+    assertEquals(multiModalStation.getCoordinate(), toVertex.toWgsCoordinate());
+    var toIncoming = toVertex.getIncoming();
+    assertTrue(incomingEdgeIsTraversableWith(toIncoming, TraverseMode.CAR));
   }
 
   @Test

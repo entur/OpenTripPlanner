@@ -193,7 +193,9 @@ public class TestServerContext {
     return new LinkingContextFactory(
       graph,
       new VertexCreationService(vertexLinker),
-      transitService::findStopOrChildIds
+      transitService::findStopOrChildIds,
+      transitService::getStation,
+      transitService::getMultiModalStation
     );
   }
 }

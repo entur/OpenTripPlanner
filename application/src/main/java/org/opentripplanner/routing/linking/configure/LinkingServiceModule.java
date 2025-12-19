@@ -40,7 +40,9 @@ public class LinkingServiceModule {
     return new LinkingContextFactory(
       graph,
       vertexCreationService,
-      transitService::findStopOrChildIds
+      transitService::findStopOrChildIds,
+      transitService::getStation,
+      transitService::getMultiModalStation
     );
   }
 }

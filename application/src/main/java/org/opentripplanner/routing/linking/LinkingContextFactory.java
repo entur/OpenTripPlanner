@@ -31,6 +31,8 @@ import org.opentripplanner.routing.linking.internal.VertexCreationService.Locati
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
+import org.opentripplanner.transit.model.site.MultiModalStation;
+import org.opentripplanner.transit.model.site.Station;
 
 /**
  * This is a factory that is responsible for linking origin, destination and visit via locations
@@ -44,6 +46,8 @@ public class LinkingContextFactory {
   private final Graph graph;
   private final VertexCreationService vertexCreationService;
   private final Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds;
+  private final Function<FeedScopedId, Station> getStationById;
+  private final Function<FeedScopedId, MultiModalStation> getMultiModalStationById;
 
   /**
    * Construct a factory when stop locations are potentially used for locations.
@@ -51,18 +55,22 @@ public class LinkingContextFactory {
   public LinkingContextFactory(
     Graph graph,
     VertexCreationService vertexCreationService,
-    Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds
+    Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds,
+    Function<FeedScopedId, Station> getStationById,
+    Function<FeedScopedId, MultiModalStation> getMultiModalStationById
   ) {
     this.graph = graph;
     this.vertexCreationService = vertexCreationService;
     this.resolveSiteIds = resolveSiteIds;
+    this.getStationById = getStationById;
+    this.getMultiModalStationById = getMultiModalStationById;
   }
 
   /**
    * Construct a factory when stop locations are not used for locations.
    */
   public LinkingContextFactory(Graph graph, VertexCreationService vertexCreationService) {
-    this(graph, vertexCreationService, id -> Set.of());
+    this(graph, vertexCreationService, id -> Set.of(), id -> null, id -> null);
   }
 
   /**
@@ -340,6 +348,28 @@ public class LinkingContextFactory {
           c.latitude(),
           c.longitude()
         );
+      } else {
+        // For car routing, we use station's coordinate instead of child stops' if stop location is
+        // a station.
+        var station = getStationById.apply(location.stopId);
+        if (station != null) {
+          location = new GenericLocation(
+            location.label,
+            location.stopId,
+            station.getLat(),
+            station.getLon()
+          );
+        } else {
+          var multiModalStation = getMultiModalStationById.apply(location.stopId);
+          if (multiModalStation != null) {
+            location = new GenericLocation(
+              location.label,
+              location.stopId,
+              multiModalStation.getLat(),
+              multiModalStation.getLon()
+            );
+          }
+        }
       }
     }
     return location.getCoordinate() != null

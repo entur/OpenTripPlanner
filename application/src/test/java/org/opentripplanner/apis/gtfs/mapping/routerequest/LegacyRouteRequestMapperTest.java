@@ -66,7 +66,9 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     var linkingContextFactory = new LinkingContextFactory(
       graph,
       vertexCreationService,
-      transitService::findStopOrChildIds
+      transitService::findStopOrChildIds,
+      transitService::getStation,
+      transitService::getMultiModalStation
     );
     context = new GraphQLRequestContext(
       new TestRoutingService(List.of()),
