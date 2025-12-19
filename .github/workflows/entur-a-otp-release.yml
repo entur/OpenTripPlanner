@@ -77,9 +77,10 @@ jobs:
             SER_VER="--serVerId"
           fi
           if [ "${{inputs.hotfix}}" == "true" ]; then
-            HOTFIX="--release"
+            script/custom-release.py --summary --release $SER_VER
+          else
+            script/custom-release.py --summary $SER_VER otp/dev-2.x
           fi
-          script/custom-release.py --summary $HOTFIX $SER_VER otp/dev-2.x
       - name: Set version (Git repository Tag)
         id: set_version
         run: |
