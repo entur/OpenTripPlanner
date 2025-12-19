@@ -71,21 +71,11 @@ class FareLookupService implements Serializable {
       this.legRules.stream()
         .filter(r -> legMatchesRule(leg, r))
         .collect(Collectors.toUnmodifiableSet());
-    return rules
-      .stream()
-      .collect(Collectors.groupingBy(FareLegRule::legGroupId))
-      .entrySet()
-      .stream()
-      .flatMap(r -> getFareLegRules(r.getValue()).stream())
-      .collect(Collectors.toSet());
-  }
-
-  private static Set<FareLegRule> getFareLegRules(Collection<FareLegRule> rules) {
     var containsPriorities = rules.stream().anyMatch(r -> r.priority().isPresent());
     if (containsPriorities) {
       return findHighestPriority(rules);
     } else {
-      return Set.copyOf(rules);
+      return rules;
     }
   }
 
