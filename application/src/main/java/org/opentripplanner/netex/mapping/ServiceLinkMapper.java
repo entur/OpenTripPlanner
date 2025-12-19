@@ -227,7 +227,7 @@ class ServiceLinkMapper {
     return true;
   }
 
-  private static List<Double> getLineStringCoordinates(LineStringType lineString) {
+  private List<Double> getLineStringCoordinates(LineStringType lineString) {
     if (lineString.getPosList() != null) {
       return lineString.getPosList().getValue();
     }
@@ -236,12 +236,15 @@ class ServiceLinkMapper {
       if (o instanceof DirectPositionType directPosition) {
         var values = directPosition.getValue();
         if (values == null || values.size() != 2) {
-          System.out.println("bad lineString element value " + values);
           continue;
         }
         list.addAll(values);
       } else {
-        System.out.println("unhandled lineString element type " + o.getClass().getName());
+        issueStore.add(
+          "BadLineStringElementType",
+          "Unhandled and unknown lineString element type: %s",
+          o.getClass().getName()
+        );
       }
     }
     return list;
