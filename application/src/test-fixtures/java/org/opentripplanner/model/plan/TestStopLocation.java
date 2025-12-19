@@ -28,13 +28,13 @@ class TestStopLocation implements StopLocation {
 
   @Override
   @Nullable
-  public  I18NString getName() {
+  public I18NString getName() {
     return I18NString.of(id.toString());
   }
 
   @Override
   @Nullable
-  public  I18NString getDescription() {
+  public I18NString getDescription() {
     return null;
   }
 

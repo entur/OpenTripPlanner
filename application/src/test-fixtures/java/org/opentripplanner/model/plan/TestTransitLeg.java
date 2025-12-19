@@ -140,5 +140,4 @@ public class TestTransitLeg implements TransitLeg {
   public static TestTransitLegBuilder of() {
     return new TestTransitLegBuilder();
   }
-
 }

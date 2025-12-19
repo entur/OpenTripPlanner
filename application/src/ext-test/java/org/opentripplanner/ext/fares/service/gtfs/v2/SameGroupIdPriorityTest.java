@@ -9,10 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
@@ -135,10 +133,6 @@ class SameGroupIdPriorityTest implements FareTestConstants {
   }
 
   private TransitLeg leg() {
-    return TestTransitLeg.of()
-      .withFrom(STOP1_ID)
-      .withTo(STOP2_ID)
-      .withRoute(ROUTE)
-      .build();
+    return TestTransitLeg.of().withFrom(STOP1_ID).withTo(STOP2_ID).withRoute(ROUTE).build();
   }
 }

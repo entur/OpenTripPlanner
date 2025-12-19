@@ -7,10 +7,8 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
-import org.opentripplanner.transit.model.network.TripPatternBuilder;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -62,6 +60,7 @@ public class TestTransitLegBuilder {
     this.to = new TestStopLocation(id);
     return this;
   }
+
   public TestTransitLegBuilder withRoute(Route route) {
     this.trip = this.trip.copy().withRoute(route).build();
     return this;
@@ -70,7 +69,4 @@ public class TestTransitLegBuilder {
   public TestTransitLeg build() {
     return new TestTransitLeg(this);
   }
-
-
-
 }
