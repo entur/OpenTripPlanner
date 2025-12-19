@@ -2,6 +2,7 @@ package org.opentripplanner.street.model._data;
 
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
@@ -133,6 +134,23 @@ public class StreetModelForTest {
   }
 
   public static VehicleRentalPlaceVertex rentalVertex(RentalFormFactor formFactor) {
+    var rentalVehicleBuilder = getTestRentalVehicleBuilder(formFactor);
+    return new VehicleRentalPlaceVertex(rentalVehicleBuilder.build());
+  }
+
+  public static VehicleRentalPlaceVertex rentalVertex(
+    RentalFormFactor formFactor,
+    Instant availableUntil
+  ) {
+    TestFreeFloatingRentalVehicleBuilder vehicleBuilder = getTestRentalVehicleBuilder(
+      formFactor
+    ).withAvailableUntil(availableUntil);
+    return new VehicleRentalPlaceVertex(vehicleBuilder.build());
+  }
+
+  private static TestFreeFloatingRentalVehicleBuilder getTestRentalVehicleBuilder(
+    RentalFormFactor formFactor
+  ) {
     var rentalVehicleBuilder = TestFreeFloatingRentalVehicleBuilder.of()
       .withLatitude(-122.575133)
       .withLongitude(45.456773);
@@ -143,7 +161,7 @@ public class StreetModelForTest {
     } else if (formFactor == RentalFormFactor.CAR) {
       rentalVehicleBuilder.withVehicleCar();
     }
-    return new VehicleRentalPlaceVertex(rentalVehicleBuilder.build());
+    return rentalVehicleBuilder;
   }
 
   public static VehicleParking.VehicleParkingBuilder vehicleParking() {
