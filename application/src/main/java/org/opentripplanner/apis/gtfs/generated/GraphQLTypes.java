@@ -5704,6 +5704,13 @@ public class GraphQLTypes {
     TRANSIT,
   }
 
+  /** The vertical direction e.g. for a set of stairs. */
+  public enum GraphQLVerticalDirection {
+    DOWN,
+    UNKNOWN,
+    UP,
+  }
+
   /** Categorization for via locations. */
   public enum GraphQLViaLocationType {
     PASS_THROUGH,

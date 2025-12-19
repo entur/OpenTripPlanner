@@ -15,6 +15,7 @@ import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingHelper;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -35,6 +36,7 @@ public class NetexModule implements GraphBuilderModule {
   private final DeduplicatorService deduplicator;
   private final TimetableRepository timetableRepository;
   private final VehicleParkingRepository parkingRepository;
+  private final StreetDetailsRepository streetDetailsRepository;
   private final DataImportIssueStore issueStore;
 
   /**
@@ -50,6 +52,7 @@ public class NetexModule implements GraphBuilderModule {
     DeduplicatorService deduplicator,
     TimetableRepository timetableRepository,
     VehicleParkingRepository parkingRepository,
+    StreetDetailsRepository streetDetailsRepository,
     DataImportIssueStore issueStore,
     int subwayAccessTime,
     ServiceDateInterval transitPeriodLimit,
@@ -59,6 +62,7 @@ public class NetexModule implements GraphBuilderModule {
     this.deduplicator = deduplicator;
     this.timetableRepository = timetableRepository;
     this.parkingRepository = parkingRepository;
+    this.streetDetailsRepository = streetDetailsRepository;
     this.issueStore = issueStore;
     this.subwayAccessTime = subwayAccessTime;
     this.transitPeriodLimit = transitPeriodLimit;
@@ -88,7 +92,12 @@ public class NetexModule implements GraphBuilderModule {
         TransitDataImport otpService = transitBuilder.build();
 
         AddTransitEntitiesToTimetable.addToTimetable(otpService, timetableRepository);
-        AddTransitEntitiesToGraph.addToGraph(otpService, subwayAccessTime, graph);
+        AddTransitEntitiesToGraph.addToGraph(
+          otpService,
+          subwayAccessTime,
+          graph,
+          streetDetailsRepository
+        );
 
         var lots = transitBuilder.vehicleParkings();
         parkingRepository.updateVehicleParking(lots, List.of());
