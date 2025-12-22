@@ -6,6 +6,7 @@ import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -92,6 +93,7 @@ public class ConstructApplication {
     DataImportIssueSummary issueSummary,
     EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
+    @Nullable GbfsGeofencingRepository gbfsGeofencingRepository,
     VehicleParkingRepository vehicleParkingRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetRepository streetRepository,
@@ -117,6 +119,7 @@ public class ConstructApplication {
       .vehicleParkingRepository(vehicleParkingRepository)
       .emissionRepository(emissionRepository)
       .empiricalDelayRepository(empiricalDelayRepository)
+      .gbfsGeofencingRepository(gbfsGeofencingRepository)
       .dataImportIssueSummary(issueSummary)
       .stopConsolidationRepository(stopConsolidationRepository)
       .streetStreetRepository(streetRepository)
@@ -160,6 +163,7 @@ public class ConstructApplication {
       factory.vehicleParkingRepository(),
       factory.emissionRepository(),
       factory.empiricalDelayRepository(),
+      factory.gbfsGeofencingRepository(),
       factory.stopConsolidationRepository(),
       cli.doLoadStreetGraph(),
       cli.doSaveStreetGraph()
@@ -387,6 +391,11 @@ public class ConstructApplication {
   @Nullable
   public EmpiricalDelayRepository empiricalDelayRepository() {
     return factory.empiricalDelayRepository();
+  }
+
+  @Nullable
+  public GbfsGeofencingRepository gbfsGeofencingRepository() {
+    return factory.gbfsGeofencingRepository();
   }
 
   public FareServiceFactory fareServiceFactory() {
