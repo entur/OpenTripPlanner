@@ -1,5 +1,6 @@
 package org.opentripplanner.street.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import org.opentripplanner.service.vehiclerental.street.CompositeRentalRestrictionExtension;
@@ -9,7 +10,7 @@ import org.opentripplanner.street.search.state.State;
 /**
  * An extension which defines rules for how rental vehicles may or may not traverse a vertex.
  */
-public interface RentalRestrictionExtension {
+public interface RentalRestrictionExtension extends Serializable {
   /**
    * The static default instance which doesn't have any restrictions at all.
    */

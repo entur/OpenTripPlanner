@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.graph_builder.GraphBuilderDataSources;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
@@ -69,6 +70,7 @@ public class LoadApplication {
       obj.issueSummary,
       obj.emissionRepository,
       obj.empiricalDelayRepository,
+      obj.gbfsGeofencingRepository,
       obj.stopConsolidationRepository,
       obj.streetRepository,
       obj.fareServiceFactory
@@ -87,6 +89,7 @@ public class LoadApplication {
       DataImportIssueSummary.empty(),
       factory.emptyEmissionsDataModel(),
       factory.emptyEmpiricalDelayRepository(),
+      factory.gbfsGeofencingRepository(),
       factory.emptyStopConsolidationRepository(),
       factory.emptyStreetRepository(),
       factory.emptyFareServiceFactory()
@@ -114,6 +117,7 @@ public class LoadApplication {
     DataImportIssueSummary issueSummary,
     @Nullable EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
+    @Nullable GbfsGeofencingRepository gbfsGeofencingRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetRepository streetRepository,
     FareServiceFactory fareServiceFactory
@@ -130,6 +134,7 @@ public class LoadApplication {
       issueSummary,
       emissionRepository,
       empiricalDelayRepository,
+      gbfsGeofencingRepository,
       parkingRepository,
       stopConsolidationRepository,
       streetRepository,
