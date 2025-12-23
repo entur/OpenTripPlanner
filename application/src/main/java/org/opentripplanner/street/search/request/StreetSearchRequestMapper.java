@@ -29,7 +29,7 @@ public class StreetSearchRequestMapper {
   public static StreetSearchRequestBuilder mapInternal(RouteRequest request) {
     var time = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
     final RoutingPreferences preferences = request.preferences();
-    return StreetSearchRequest.of()
+    var streetSearchRequestBuilder = StreetSearchRequest.of()
       .withStartTime(time)
       .withArriveBy(request.arriveBy())
       .withFrom(mapGenericLocation(request.from()))
@@ -43,6 +43,16 @@ public class StreetSearchRequestMapper {
       .withCar(b -> mapCar(b, preferences.car()))
       .withScooter(b -> mapScooter(b, preferences.scooter()))
       .withElevator(b -> mapElevator(b, preferences.street().elevator()));
+
+    var rentalDuration = request.journey().direct().rentalDuration();
+    if (rentalDuration != null) {
+      var rentalPeriod = request.arriveBy()
+        ? RentalPeriod.createFromLatestArrivalTime(time, rentalDuration)
+        : RentalPeriod.createFromEarliestDepartureTime(time, rentalDuration);
+      return streetSearchRequestBuilder.withRentalPeriod(rentalPeriod);
+    }
+
+    return streetSearchRequestBuilder;
   }
 
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
@@ -104,18 +114,26 @@ public class StreetSearchRequestMapper {
     b
       .withReluctance(preferences.reluctance())
       .withSpeed(preferences.speed())
-      .withBoardCost(preferences.boardCost())
       .withParking(b2 -> mapParking(b2, preferences.parking()))
       .withRental(b2 -> mapRental(b2, preferences.rental()))
       .withOptimizeType(preferences.optimizeType())
-      .withOptimizeTriangle(preferences.optimizeTriangle())
+      .withOptimizeTriangle(mapTriangle(preferences.optimizeTriangle()))
       .withWalking(b2 -> mapVehicleWalking(b2, preferences.walking()));
+  }
+
+  private static TimeSlopeSafetyTriangle mapTriangle(
+    org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle original
+  ) {
+    return TimeSlopeSafetyTriangle.of()
+      .withTime(original.time())
+      .withSlope(original.slope())
+      .withSafety(original.safety())
+      .build();
   }
 
   private static void mapCar(CarRequest.Builder b, CarPreferences car) {
     b
       .withReluctance(car.reluctance())
-      .withBoardCost(car.boardCost())
       .withParking(b2 -> mapParking(b2, car.parking()))
       .withRental(b2 -> mapRental(b2, car.rental()))
       .withPickupTime(car.pickupTime())
@@ -130,7 +148,7 @@ public class StreetSearchRequestMapper {
       .withReluctance(scooter.reluctance())
       .withRental(b2 -> mapRental(b2, scooter.rental()))
       .withOptimizeType(scooter.optimizeType())
-      .withOptimizeTriangle(scooter.optimizeTriangle())
+      .withOptimizeTriangle(mapTriangle(scooter.optimizeTriangle()))
       .build();
   }
 
@@ -160,7 +178,8 @@ public class StreetSearchRequestMapper {
         rental.arrivingInRentalVehicleAtDestinationCost()
       )
       .withBannedNetworks(rental.bannedNetworks())
-      .withAllowedNetworks(rental.allowedNetworks());
+      .withAllowedNetworks(rental.allowedNetworks())
+      .withElectricAssistSlopeSensitivity(rental.electricAssistSlopeSensitivity());
   }
 
   private static void mapParking(ParkingRequest.Builder b, VehicleParkingPreferences pref) {

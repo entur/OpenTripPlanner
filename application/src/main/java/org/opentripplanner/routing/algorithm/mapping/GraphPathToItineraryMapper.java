@@ -13,11 +13,11 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.astar.model.GraphPath;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.framework.time.ZoneIdFallback;
 import org.opentripplanner.model.plan.Itinerary;
@@ -31,6 +31,7 @@ import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graphfinder.SiteResolver;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.edge.BoardingLocationToStopLink;
@@ -57,17 +58,20 @@ public class GraphPathToItineraryMapper {
   private final SiteResolver siteResolver;
   private final ZoneId timeZone;
   private final StreetNotesService streetNotesService;
+  private final StreetDetailsService streetDetailsService;
   private final double ellipsoidToGeoidDifference;
 
   public GraphPathToItineraryMapper(
     SiteResolver siteResolver,
     ZoneId timeZone,
     StreetNotesService streetNotesService,
+    StreetDetailsService streetDetailsService,
     double ellipsoidToGeoidDifference
   ) {
     this.siteResolver = siteResolver;
     this.timeZone = ZoneIdFallback.zoneId(timeZone);
     this.streetNotesService = streetNotesService;
+    this.streetDetailsService = streetDetailsService;
     this.ellipsoidToGeoidDifference = ellipsoidToGeoidDifference;
   }
 
@@ -388,6 +392,7 @@ public class GraphPathToItineraryMapper {
       states,
       previousStep,
       streetNotesService,
+      streetDetailsService,
       siteResolver,
       ellipsoidToGeoidDifference
     );
