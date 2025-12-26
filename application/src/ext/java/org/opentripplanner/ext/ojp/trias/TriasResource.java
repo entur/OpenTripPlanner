@@ -20,6 +20,7 @@ import javax.xml.transform.TransformerException;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.api.model.transit.HideFeedIdMapper;
+import org.opentripplanner.ext.ojp.RequestHandler;
 import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
 import org.opentripplanner.ext.ojp.service.OjpService;
 import org.opentripplanner.ext.ojp.service.OjpServiceMapper;
@@ -36,7 +37,7 @@ public class TriasResource {
     "stop-event-stop-point.xml"
   );
 
-  private final OjpRequestHandler handler;
+  private final RequestHandler handler;
 
   public TriasResource(@Context OtpServerRequestContext context) {
     var transitService = context.transitService();
@@ -44,7 +45,7 @@ public class TriasResource {
     var service = new OjpService(transitService, context.graphFinder());
     var idMapper = idMapper(context.triasApiParameters());
     var serviceMapper = new OjpServiceMapper(service, idMapper, zoneId);
-    this.handler = new OjpRequestHandler(serviceMapper, TriasResource::ojpToTrias, "TRIAS");
+    this.handler = new RequestHandler(serviceMapper, TriasResource::ojpToTrias, "TRIAS");
   }
 
   @POST

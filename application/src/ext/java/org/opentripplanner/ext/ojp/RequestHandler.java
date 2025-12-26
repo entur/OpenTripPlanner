@@ -1,4 +1,6 @@
-package org.opentripplanner.ext.ojp.trias;
+package org.opentripplanner.ext.ojp;
+
+import static java.util.Objects.requireNonNull;
 
 import de.vdv.ojp20.OJP;
 import de.vdv.ojp20.OJPStopEventRequestStructure;
@@ -15,21 +17,47 @@ import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class OjpRequestHandler {
+public class RequestHandler {
 
-  private static final Logger LOG = LoggerFactory.getLogger(OjpRequestHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RequestHandler.class);
   private final OjpServiceMapper ojpService;
   private final Function<OJP, StreamingOutput> responseMapper;
   private final String apiName;
 
-  OjpRequestHandler(
+  public RequestHandler(
     OjpServiceMapper ojpService,
     Function<OJP, StreamingOutput> responseMapper,
     String apiName
   ) {
-    this.ojpService = ojpService;
-    this.responseMapper = responseMapper;
-    this.apiName = apiName;
+    this.ojpService = requireNonNull(ojpService);
+    this.responseMapper = requireNonNull(responseMapper);
+    this.apiName = requireNonNull(apiName);
+  }
+
+  public Response handleRequest(OJP ojp) {
+    try {
+      var request = findRequest(ojp);
+
+      if (request instanceof OJPStopEventRequestStructure ser) {
+        var ojpResponse = ojpService.handleStopEventRequest(ser);
+        StreamingOutput stream = responseMapper.apply(ojpResponse);
+        return Response.ok(stream).build();
+      } else {
+        return error(
+          "Request type '%s' is not supported".formatted(request.getClass().getSimpleName())
+        );
+      }
+    } catch (EntityNotFoundException | RoutingValidationException e) {
+      return error(e.getMessage());
+    } catch (Exception e) {
+      LOG.error("Error processing %s request".formatted(apiName), e);
+      return error(e.getMessage());
+    }
+  }
+
+  public Response error(String value) {
+    var output = responseMapper.apply(ErrorMapper.error(value, ZonedDateTime.now()));
+    return Response.status(Response.Status.BAD_REQUEST).entity(output).build();
   }
 
   private AbstractFunctionalServiceRequestStructure findRequest(OJP ojp) {
@@ -42,31 +70,5 @@ public class OjpRequestHandler {
         new IllegalArgumentException("No request found in %s XML body.".formatted(apiName))
       )
       .getValue();
-  }
-
-  Response handleRequest(OJP ojp) {
-    try {
-      var request = findRequest(ojp);
-
-      if (request instanceof OJPStopEventRequestStructure ser) {
-        var ojpResponse = ojpService.handleStopEventRequest(ser);
-        final StreamingOutput stream = responseMapper.apply(ojpResponse);
-        return Response.ok(stream).build();
-      } else {
-        return error(
-          "Request type '%s' is not supported".formatted(request.getClass().getSimpleName())
-        );
-      }
-    } catch (EntityNotFoundException | RoutingValidationException e) {
-      return error(e.getMessage());
-    } catch (Exception e) {
-      LOG.error("Error processing TRIAS request", e);
-      return error(e.getMessage());
-    }
-  }
-
-  Response error(String value) {
-    var output = responseMapper.apply(ErrorMapper.error(value, ZonedDateTime.now()));
-    return Response.status(Response.Status.BAD_REQUEST).entity(output).build();
   }
 }
