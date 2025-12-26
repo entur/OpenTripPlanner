@@ -2,7 +2,8 @@ package org.opentripplanner.ext.ojp.service;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.transit.model.basic.TransitMode.BUS;
 import static org.opentripplanner.transit.model.basic.TransitMode.FERRY;
 
@@ -30,7 +31,7 @@ class OjpServiceMapperTest {
 
   private static final ZonedDateTime ZDT = ZonedDateTime.parse("2025-02-17T14:24:02+01:00");
   private static final DefaultFeedIdMapper FEED_ID_MAPPER = new DefaultFeedIdMapper();
-  private static final OjpServiceMapper SERVICE = new OjpServiceMapper(
+  private static final OjpServiceMapper MAPPER = new OjpServiceMapper(
     null,
     FEED_ID_MAPPER,
     ZoneIds.BERLIN
@@ -40,7 +41,7 @@ class OjpServiceMapperTest {
 
   @Test
   void defaultCase() {
-    var params = SERVICE.extractStopEventParams(stopEvent(new StopEventParamStructure()));
+    var params = MAPPER.extractStopEventParams(stopEvent(new StopEventParamStructure()));
     assertThat(params.includedAgencies()).isEmpty();
     assertThat(params.excludedAgencies()).isEmpty();
     assertThat(params.includedRoutes()).isEmpty();
@@ -53,7 +54,7 @@ class OjpServiceMapperTest {
 
   @Test
   void maxDistance() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       new OJPStopEventRequestStructure().withLocation(
         new PlaceContextStructure()
           .withDepArrTime(new XmlDateTime(ZDT))
@@ -71,7 +72,7 @@ class OjpServiceMapperTest {
 
   @Test
   void numDepartures() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       stopEvent(new StopEventParamStructure().withNumberOfResults(BigInteger.TWO))
     );
     assertEquals(2, params.numDepartures());
@@ -79,7 +80,7 @@ class OjpServiceMapperTest {
 
   @Test
   void lineFilterImplicitExclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       lineFilter(
         new LineDirectionFilterStructure().withLine(
           new LineDirectionStructure().withLineRef(
@@ -98,7 +99,7 @@ class OjpServiceMapperTest {
 
   @Test
   void lineFilterInclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       lineFilter(
         new LineDirectionFilterStructure()
           .withExclude(true)
@@ -119,7 +120,7 @@ class OjpServiceMapperTest {
 
   @Test
   void lineFilterExclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       lineFilter(
         new LineDirectionFilterStructure()
           .withExclude(false)
@@ -140,7 +141,7 @@ class OjpServiceMapperTest {
 
   @Test
   void modeFilter() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       stopEvent(
         new StopEventParamStructure().withModeFilter(
           new ModeFilterStructure().withPtMode(
@@ -160,7 +161,7 @@ class OjpServiceMapperTest {
 
   @Test
   void modeFilterExclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       stopEvent(
         new StopEventParamStructure().withModeFilter(
           new ModeFilterStructure()
@@ -175,6 +176,17 @@ class OjpServiceMapperTest {
     assertThat(params.excludedRoutes()).isEmpty();
     assertEquals(Set.of(BUS), params.includedModes());
     assertThat(params.excludedModes()).isEmpty();
+  }
+
+  /**
+   * When a depArrTime is not specified, the current time should be used.
+   */
+  @Test
+  void noDateTime() {
+    var ser = new OJPStopEventRequestStructure().withLocation(new PlaceContextStructure());
+
+    var params = MAPPER.extractStopEventParams(ser);
+    assertNotNull(params.time());
   }
 
   private static OJPStopEventRequestStructure lineFilter(LineDirectionFilterStructure value) {

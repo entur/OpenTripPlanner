@@ -19,6 +19,7 @@ import de.vdv.ojp20.UseRealtimeDataEnumeration;
 import de.vdv.ojp20.siri.StopPointRefStructure;
 import java.math.BigInteger;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashSet;
@@ -78,9 +79,9 @@ public class OjpServiceMapper {
   protected OjpService.StopEventRequestParams extractStopEventParams(
     OJPStopEventRequestStructure ser
   ) {
-    var time = Optional.ofNullable(ser.getLocation().getDepArrTime().atZone(zoneId)).orElse(
-      ZonedDateTime.now(zoneId)
-    );
+    var time = Optional.ofNullable(ser.getLocation().getDepArrTime())
+      .map(t -> t.atZone(zoneId).toInstant())
+      .orElse(Instant.now());
     int numResults = params(ser)
       .map(s -> s.getNumberOfResults())
       .map(i -> i.intValue())
@@ -109,7 +110,7 @@ public class OjpServiceMapper {
       .orElse(DEFAULT_RADIUS_METERS);
 
     return new OjpService.StopEventRequestParams(
-      time.toInstant(),
+      time,
       arrivalDeparture,
       timeWindow,
       maxWalkDistance,
