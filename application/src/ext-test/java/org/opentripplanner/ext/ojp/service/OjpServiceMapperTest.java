@@ -31,10 +31,9 @@ class OjpServiceMapperTest {
 
   private static final ZonedDateTime ZDT = ZonedDateTime.parse("2025-02-17T14:24:02+01:00");
   private static final DefaultFeedIdMapper FEED_ID_MAPPER = new DefaultFeedIdMapper();
-  private static final OjpServiceMapper MAPPER = new OjpServiceMapper(
-    null,
-    FEED_ID_MAPPER,
-    ZoneIds.BERLIN
+  private static final StopEventParamsMapper MAPPER = new StopEventParamsMapper(
+    ZoneIds.BERLIN,
+    FEED_ID_MAPPER
   );
 
   private static final FeedScopedId LINE_ID = id("line1");
@@ -48,8 +47,8 @@ class OjpServiceMapperTest {
     assertThat(params.excludedAgencies()).isEmpty();
     assertThat(params.includedModes()).isEmpty();
     assertThat(params.excludedModes()).isEmpty();
-    assertEquals(OjpServiceMapper.DEFAULT_RADIUS_METERS, params.maximumWalkDistance());
-    assertEquals(OjpServiceMapper.DEFAULT_NUM_DEPARTURES, params.numDepartures());
+    assertEquals(StopEventParamsMapper.DEFAULT_RADIUS_METERS, params.maximumWalkDistance());
+    assertEquals(StopEventParamsMapper.DEFAULT_NUM_DEPARTURES, params.numDepartures());
   }
 
   @Test

@@ -15,12 +15,10 @@ class OjpCodec {
   private static final JAXBContext CONTEXT = jaxbContext();
 
   static OJP deserialize(String trias) throws JAXBException, TransformerException {
-    var xmlSource = new StreamSource(
-      new ByteArrayInputStream(trias.getBytes(StandardCharsets.UTF_8))
-    );
+    var source = new StreamSource(new ByteArrayInputStream(trias.getBytes(StandardCharsets.UTF_8)));
 
     var unmarshaller = CONTEXT.createUnmarshaller();
-    return (OJP) unmarshaller.unmarshal(xmlSource);
+    return (OJP) unmarshaller.unmarshal(source);
   }
 
   private static JAXBContext jaxbContext() {

@@ -30,7 +30,7 @@ public class OjpResource {
     var transitService = context.transitService();
     var service = new OjpService(transitService, context.graphFinder());
     var idMapper = idMapper(context.triasApiParameters());
-    var serviceMapper = new OjpServiceMapper(service, idMapper, transitService.getTimeZone());
+    var serviceMapper = new OjpServiceMapper(service, context.routingService(), idMapper, transitService.getTimeZone());
     this.handler = new RequestHandler(serviceMapper, OjpCodec::serialize, "OJP");
   }
 
@@ -41,7 +41,7 @@ public class OjpResource {
       var ojp = OjpCodec.deserialize(xmlString);
       return handler.handleRequest(ojp);
     } catch (JAXBException | TransformerException e) {
-      LOG.error("Error reading TRIAS request", e);
+      LOG.error("Error reading OJP request", e);
       return handler.error("Could not read TRIAS request.");
     }
   }

@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import de.vdv.ojp20.OJP;
 import de.vdv.ojp20.OJPStopEventRequestStructure;
+import de.vdv.ojp20.OJPTripRequestStructure;
 import de.vdv.ojp20.siri.AbstractFunctionalServiceRequestStructure;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.StreamingOutput;
@@ -40,6 +41,10 @@ public class RequestHandler {
 
       if (request instanceof OJPStopEventRequestStructure ser) {
         var ojpResponse = ojpService.handleStopEventRequest(ser);
+        StreamingOutput stream = responseMapper.apply(ojpResponse);
+        return Response.ok(stream).build();
+      } else if (request instanceof OJPTripRequestStructure tr) {
+        var ojpResponse = ojpService.handleTripRequest(tr);
         StreamingOutput stream = responseMapper.apply(ojpResponse);
         return Response.ok(stream).build();
       } else {

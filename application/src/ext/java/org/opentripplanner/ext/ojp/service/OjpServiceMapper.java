@@ -1,176 +1,83 @@
 package org.opentripplanner.ext.ojp.service;
 
-import static java.lang.Boolean.TRUE;
-import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.OptionalFeature.ONWARD_CALLS;
-import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.OptionalFeature.PREVIOUS_CALLS;
-import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.OptionalFeature.REALTIME_DATA;
-
-import de.vdv.ojp20.LineDirectionFilterStructure;
-import de.vdv.ojp20.ModeFilterStructure;
 import de.vdv.ojp20.OJP;
 import de.vdv.ojp20.OJPStopEventRequestStructure;
-import de.vdv.ojp20.OperatorFilterStructure;
-import de.vdv.ojp20.PersonalModesEnumeration;
+import de.vdv.ojp20.OJPTripRequestStructure;
 import de.vdv.ojp20.PlaceContextStructure;
 import de.vdv.ojp20.PlaceRefStructure;
-import de.vdv.ojp20.StopEventParamStructure;
-import de.vdv.ojp20.StopEventTypeEnumeration;
-import de.vdv.ojp20.UseRealtimeDataEnumeration;
+import de.vdv.ojp20.siri.LocationStructure;
 import de.vdv.ojp20.siri.StopPointRefStructure;
-import java.math.BigInteger;
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.ojp.mapping.PtModeMapper;
 import org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.service.ArrivalDeparture;
+import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.api.RoutingService;
+import org.opentripplanner.routing.api.request.RouteRequest;
 
 /**
  * Takes raw OJP types, extracts information and forwards it to the underlying services.
  */
 public class OjpServiceMapper {
 
-  public static final int DEFAULT_RADIUS_METERS = 1000;
-  public static final int DEFAULT_NUM_DEPARTURES = 1;
-  private static final Duration DEFAULT_TIME_WINDOW = Duration.ofHours(2);
-  private final OjpService vdvService;
+  private final OjpService ojpService;
+  private final RoutingService routingService;
   private final FeedScopedIdMapper idMapper;
   private final ZoneId zoneId;
+  private final StopEventParamsMapper seMapper;
 
-  public OjpServiceMapper(OjpService vdvService, FeedScopedIdMapper idMapper, ZoneId zoneId) {
-    this.vdvService = vdvService;
+  public OjpServiceMapper(OjpService ojpService, RoutingService routingService, FeedScopedIdMapper idMapper, ZoneId zoneId) {
+    this.ojpService = ojpService;
+    this.routingService = routingService;
     this.idMapper = idMapper;
     this.zoneId = zoneId;
+    this.seMapper = new StopEventParamsMapper(zoneId, idMapper);
   }
 
   public OJP handleStopEventRequest(OJPStopEventRequestStructure ser) {
     var stopId = stopPointRef(ser);
     var coordinate = coordinate(ser);
 
-    final var params = extractStopEventParams(ser);
+    final var params = seMapper.extractStopEventParams(ser);
 
     List<CallAtStop> callsAtStop = List.of();
     if (stopId.isPresent()) {
-      callsAtStop = vdvService.findCallsAtStop(stopId.get(), params);
+      callsAtStop = ojpService.findCallsAtStop(stopId.get(), params);
     } else if (coordinate.isPresent()) {
-      callsAtStop = vdvService.findCallsAtStop(coordinate.get(), params);
+      callsAtStop = ojpService.findCallsAtStop(coordinate.get(), params);
     }
-    var optional = mapOptionalFeatures(ser.getParams());
+    var optional = StopEventParamsMapper.mapOptionalFeatures(ser.getParams());
     var mapper = new StopEventResponseMapper(
       optional,
       zoneId,
       idMapper,
-      vdvService::resolveLanguage
+      ojpService::resolveLanguage
     );
     return mapper.mapCalls(callsAtStop, ZonedDateTime.now());
   }
 
-  protected OjpService.StopEventRequestParams extractStopEventParams(
-    OJPStopEventRequestStructure ser
-  ) {
-    var time = Optional.ofNullable(ser.getLocation().getDepArrTime())
-      .map(t -> t.atZone(zoneId).toInstant())
-      .orElse(Instant.now());
-    int numResults = params(ser)
-      .map(s -> s.getNumberOfResults())
-      .map(i -> i.intValue())
-      .orElse(DEFAULT_NUM_DEPARTURES);
+  public OJP handleTripRequest(OJPTripRequestStructure tr) {
+    if (tr.getDestination().size() == 1 && tr.getOrigin().size() == 1) {
+      var from = toGenericLocation(tr.getOrigin().getFirst().getPlaceRef().getGeoPosition());
+      var to = toGenericLocation(tr.getDestination().getFirst().getPlaceRef().getGeoPosition());
+      var req  = RouteRequest.defaultValue().copyOf().withFrom(from).withTo(to).buildRequest();
+      var tripPlan = routingService.route(req);
+      if (tripPlan == null) {
+        return new OJP();
+      }
+    }
+    return new OJP();
+  }
 
-    var arrivalDeparture = arrivalDeparture(ser);
-    var timeWindow = timeWindow(ser);
-    Set<FeedScopedId> includedAgencies = agencyFilter(ser, o -> !isExclude(o.isExclude()));
-    Set<FeedScopedId> includedRoutes = lineFilter(ser, o -> !isExclude(o.isExclude()));
-    Set<FeedScopedId> excludedAgencies = agencyFilter(ser, f -> isExclude(f.isExclude()));
-    Set<FeedScopedId> excludedRoutes = lineFilter(ser, f -> isExclude(f.isExclude()));
-    Set<TransitMode> includedModes = modeFilter(ser, m -> !isExclude(m.isExclude()));
-    Set<TransitMode> excludedModes = modeFilter(ser, m -> isExclude(m.isExclude()));
-    int maxWalkDistance = Optional.ofNullable(ser.getLocation())
-      .flatMap(l ->
-        l
-          .getIndividualTransportOption()
-          .stream()
-          .filter(
-            o -> o.getItModeAndModeOfOperation().getPersonalMode() == PersonalModesEnumeration.FOOT
-          )
-          .findFirst()
-          .flatMap(o -> Optional.ofNullable(o.getMaxDistance()))
-      )
-      .map(BigInteger::intValue)
-      .orElse(DEFAULT_RADIUS_METERS);
-
-    return new OjpService.StopEventRequestParams(
-      time,
-      arrivalDeparture,
-      timeWindow,
-      maxWalkDistance,
-      numResults,
-      includedAgencies,
-      includedRoutes,
-      excludedAgencies,
-      excludedRoutes,
-      includedModes,
-      excludedModes
+  private GenericLocation toGenericLocation(LocationStructure geoPosition) {
+    return GenericLocation.fromCoordinate(
+      geoPosition.getLatitude().doubleValue(),
+      geoPosition.getLongitude().doubleValue()
     );
-  }
-
-  private static boolean isExclude(Boolean b) {
-    return b == null || TRUE.equals(b);
-  }
-
-  private Set<TransitMode> modeFilter(
-    OJPStopEventRequestStructure ser,
-    Predicate<ModeFilterStructure> predicate
-  ) {
-    return params(ser)
-      .map(StopEventParamStructure::getModeFilter)
-      .filter(predicate)
-      .map(ModeFilterStructure::getPtMode)
-      .stream()
-      .flatMap(m -> m.stream().map(PtModeMapper::map))
-      .collect(Collectors.toSet());
-  }
-
-  private Set<FeedScopedId> agencyFilter(
-    OJPStopEventRequestStructure ser,
-    Predicate<OperatorFilterStructure> predicate
-  ) {
-    return params(ser)
-      .map(p -> p.getOperatorFilter())
-      .filter(predicate)
-      .map(o -> o.getOperatorRef())
-      .stream()
-      .flatMap(r -> r.stream().map(ref -> ref.getValue()))
-      .map(idMapper::parse)
-      .collect(Collectors.toSet());
-  }
-
-  private Set<FeedScopedId> lineFilter(
-    OJPStopEventRequestStructure ser,
-    Predicate<LineDirectionFilterStructure> predicate
-  ) {
-    return params(ser)
-      .map(p -> p.getLineFilter())
-      .filter(predicate)
-      .map(o -> o.getLine())
-      .stream()
-      .flatMap(r -> r.stream().map(l -> l.getLineRef().getValue()))
-      .map(idMapper::parse)
-      .collect(Collectors.toSet());
-  }
-
-  private static Optional<StopEventParamStructure> params(OJPStopEventRequestStructure ser) {
-    return Optional.ofNullable(ser.getParams());
   }
 
   private Optional<FeedScopedId> stopPointRef(OJPStopEventRequestStructure ser) {
@@ -186,43 +93,7 @@ public class OjpServiceMapper {
       .map(c -> new WgsCoordinate(c.getLatitude().doubleValue(), c.getLongitude().doubleValue()));
   }
 
-  private static Set<StopEventResponseMapper.OptionalFeature> mapOptionalFeatures(
-    StopEventParamStructure params
-  ) {
-    var res = new HashSet<StopEventResponseMapper.OptionalFeature>();
-
-    if (TRUE.equals(params.isIncludePreviousCalls())) {
-      res.add(PREVIOUS_CALLS);
-    }
-    if (TRUE.equals(params.isIncludeOnwardCalls())) {
-      res.add(ONWARD_CALLS);
-    }
-    if (UseRealtimeDataEnumeration.NONE != params.getUseRealtimeData()) {
-      res.add(REALTIME_DATA);
-    }
-    return res;
-  }
-
   private static Optional<PlaceRefStructure> placeRefStructure(OJPStopEventRequestStructure ser) {
     return Optional.ofNullable(ser.getLocation()).map(PlaceContextStructure::getPlaceRef);
-  }
-
-  private static ArrivalDeparture arrivalDeparture(OJPStopEventRequestStructure ser) {
-    return params(ser)
-      .map(StopEventParamStructure::getStopEventType)
-      .map(OjpServiceMapper::mapType)
-      .orElse(ArrivalDeparture.BOTH);
-  }
-
-  private static ArrivalDeparture mapType(StopEventTypeEnumeration t) {
-    return switch (t) {
-      case DEPARTURE -> ArrivalDeparture.DEPARTURES;
-      case ARRIVAL -> ArrivalDeparture.ARRIVALS;
-      case BOTH -> ArrivalDeparture.BOTH;
-    };
-  }
-
-  private static Duration timeWindow(OJPStopEventRequestStructure ser) {
-    return params(ser).map(StopEventParamStructure::getTimeWindow).orElse(DEFAULT_TIME_WINDOW);
   }
 }
