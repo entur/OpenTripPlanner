@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.function.Function;
 import org.opentripplanner.ext.ojp.mapping.ErrorMapper;
-import org.opentripplanner.ext.ojp.service.OjpServiceMapper;
+import org.opentripplanner.ext.ojp.service.OjpService;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -21,12 +21,12 @@ import org.slf4j.LoggerFactory;
 public class RequestHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestHandler.class);
-  private final OjpServiceMapper ojpService;
+  private final OjpService ojpService;
   private final Function<OJP, StreamingOutput> responseMapper;
   private final String apiName;
 
   public RequestHandler(
-    OjpServiceMapper ojpService,
+    OjpService ojpService,
     Function<OJP, StreamingOutput> responseMapper,
     String apiName
   ) {

@@ -16,17 +16,8 @@ class OjpCodec {
 
   static OJP deserialize(String trias) throws JAXBException, TransformerException {
     var source = new StreamSource(new ByteArrayInputStream(trias.getBytes(StandardCharsets.UTF_8)));
-
     var unmarshaller = CONTEXT.createUnmarshaller();
     return (OJP) unmarshaller.unmarshal(source);
-  }
-
-  private static JAXBContext jaxbContext() {
-    try {
-      return JAXBContext.newInstance(OJP.class);
-    } catch (JAXBException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   static StreamingOutput serialize(OJP ojpOutput) {
@@ -40,5 +31,13 @@ class OjpCodec {
         throw new RuntimeException(e);
       }
     };
+  }
+
+  private static JAXBContext jaxbContext() {
+    try {
+      return JAXBContext.newInstance(OJP.class);
+    } catch (JAXBException e) {
+      throw new RuntimeException(e);
+    }
   }
 }

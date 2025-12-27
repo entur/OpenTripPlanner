@@ -42,7 +42,7 @@ class StopEventParamsMapper {
     this.idMapper = idMapper;
   }
 
-  protected OjpService.StopEventRequestParams extractStopEventParams(
+  protected CallAtStopService.StopEventRequestParams extractStopEventParams(
     OJPStopEventRequestStructure ser
   ) {
     var time = Optional.ofNullable(ser.getLocation().getDepArrTime())
@@ -75,7 +75,7 @@ class StopEventParamsMapper {
       .map(BigInteger::intValue)
       .orElse(DEFAULT_RADIUS_METERS);
 
-    return new OjpService.StopEventRequestParams(
+    return new CallAtStopService.StopEventRequestParams(
       time,
       arrivalDeparture,
       timeWindow,

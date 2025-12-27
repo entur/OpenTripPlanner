@@ -13,8 +13,8 @@ import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.api.model.transit.HideFeedIdMapper;
 import org.opentripplanner.ext.ojp.RequestHandler;
 import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
+import org.opentripplanner.ext.ojp.service.CallAtStopService;
 import org.opentripplanner.ext.ojp.service.OjpService;
-import org.opentripplanner.ext.ojp.service.OjpServiceMapper;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,9 +28,14 @@ public class OjpResource {
 
   public OjpResource(@Context OtpServerRequestContext context) {
     var transitService = context.transitService();
-    var service = new OjpService(transitService, context.graphFinder());
+    var service = new CallAtStopService(transitService, context.graphFinder());
     var idMapper = idMapper(context.triasApiParameters());
-    var serviceMapper = new OjpServiceMapper(service, context.routingService(), idMapper, transitService.getTimeZone());
+    var serviceMapper = new OjpService(
+      service,
+      context.routingService(),
+      idMapper,
+      transitService.getTimeZone()
+    );
     this.handler = new RequestHandler(serviceMapper, OjpCodec::serialize, "OJP");
   }
 
