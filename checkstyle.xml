@@ -8,10 +8,10 @@
         <module name="AvoidStarImport"/>
         <module name="NeedBraces"/>
         <module name="RedundantImport"/>
-        <module name="UnusedImports"/>
-        <module name="UnusedLocalVariable"/>
         <module name="TrailingComment">
             <property name="format" value="^\s*$"/>
         </module>
+        <module name="UnusedImports"/>
+        <module name="UnusedLocalVariable"/>
     </module>
 </module>
