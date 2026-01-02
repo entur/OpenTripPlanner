@@ -37,15 +37,15 @@ public class AtlantaFareService extends DefaultFareService {
   private static final String FEED_ID = "atlanta";
 
   private enum TransferType {
-    // Ends this transfer entirely.
+    /// Ends this transfer entirely.
     END_TRANSFER,
-    // Effectively no transfer, but don't invalidate this transfer
+    /// Effectively no transfer, but don't invalidate this transfer
     NO_TRANSFER,
-    // Transfer is free
+    /// Transfer is free
     FREE_TRANSFER,
-    // Transfer has a set upcharge
+    /// Transfer has a set upcharge
     TRANSFER_WITH_UPCHARGE,
-    // Transfer pays difference between default fares
+    /// Transfer pays difference between default fares
     TRANSFER_PAY_DIFFERENCE,
   }
 

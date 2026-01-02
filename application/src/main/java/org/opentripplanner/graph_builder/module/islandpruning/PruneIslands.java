@@ -189,9 +189,7 @@ public class PruneIslands implements GraphBuilderModule {
     /* collect unreachable edges to a map */
     processIslands(islands, isolated, true, traverseMode);
 
-    // let old map go
     extgraphs = new HashMap<>();
-    // reset this too
     islands = new ArrayList<>();
 
     /* Recompute expanded subgraphs by accepting noThruTraffic edges in graph expansion.

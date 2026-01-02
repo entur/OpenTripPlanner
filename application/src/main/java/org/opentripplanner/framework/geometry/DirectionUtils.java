@@ -66,9 +66,8 @@ public final class DirectionUtils {
     Coordinate coord0 = line.getCoordinateN(numPoints - 2);
     Coordinate coord1 = line.getCoordinateN(numPoints - 1);
     int i = numPoints - 3;
-    // Meters
-    int minDistance = 10;
-    while (SphericalDistanceLibrary.fastDistance(coord0, coord1) < minDistance && i >= 0) {
+    int minDistance_m = 10;
+    while (SphericalDistanceLibrary.fastDistance(coord0, coord1) < minDistance_m && i >= 0) {
       coord0 = line.getCoordinateN(i--);
     }
 
@@ -94,10 +93,9 @@ public final class DirectionUtils {
     Coordinate coord0 = line.getCoordinateN(0);
     Coordinate coord1 = line.getCoordinateN(1);
     int i = 2;
-    // Meters
-    int minDistance = 10;
+    int minDistance_m = 10;
     while (
-      SphericalDistanceLibrary.fastDistance(coord0, coord1) < minDistance && i < line.getNumPoints()
+      SphericalDistanceLibrary.fastDistance(coord0, coord1) < minDistance_m && i < line.getNumPoints()
     ) {
       coord1 = line.getCoordinateN(i++);
     }

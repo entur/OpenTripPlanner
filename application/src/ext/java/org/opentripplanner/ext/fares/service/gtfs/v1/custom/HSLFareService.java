@@ -130,7 +130,6 @@ public class HSLFareService extends DefaultFareService {
         }
       }
 
-      // the special case
       if (ruleZones != null) {
         // evaluate boolean ride.zones AND rule.zones
         Set<String> zoneIntersection = new HashSet<String>(

@@ -74,7 +74,6 @@ class SiriAzureUpdaterTest {
     when(mockConfig.getTopicName()).thenReturn("testTopic");
     when(mockConfig.getDataInitializationUrl()).thenReturn("http://testurl.com");
     when(mockConfig.getTimeout()).thenReturn(5000);
-    // 30 seconds for tests
     when(mockConfig.getStartupTimeout()).thenReturn(Duration.ofSeconds(30));
     when(mockConfig.feedId()).thenReturn("testFeedId");
     when(mockConfig.getAutoDeleteOnIdle()).thenReturn(Duration.ofHours(1));
