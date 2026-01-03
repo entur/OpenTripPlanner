@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.ojp.mapping;
 
+import static org.opentripplanner.ext.ojp.mapping.JaxbElementMapper.jaxbElement;
 import static org.opentripplanner.ext.ojp.mapping.TextMapper.internationalText;
 
 import de.vdv.ojp20.ContinuousLegStructure;
@@ -16,9 +17,9 @@ import de.vdv.ojp20.ServiceDepartureStructure;
 import de.vdv.ojp20.TimedLegStructure;
 import de.vdv.ojp20.TripResultStructure;
 import de.vdv.ojp20.TripStructure;
-import de.vdv.ojp20.siri.LocationStructure;
 import jakarta.xml.bind.JAXBElement;
-import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,25 +38,27 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 public class TripResponseMapper {
 
   private final StopPointRefMapper stopPointRefMapper;
+  private final TripResponseContextMapper contextMapper;
 
   public TripResponseMapper(FeedScopedIdMapper idMapper) {
     this.stopPointRefMapper = new StopPointRefMapper(idMapper);
+    this.contextMapper = new TripResponseContextMapper(stopPointRefMapper);
   }
 
   public OJP mapTripPlan(RoutingResponse otpResponse, ZonedDateTime timestamp) {
-    var tripDelivery = new OJPTripDeliveryStructure();
-    List<JAXBElement<?>> tripResult = otpResponse
+    List<JAXBElement<?>> tripResults = otpResponse
       .getTripPlan()
       .itineraries.stream()
       .map(this::mapItinerary)
       .map(JaxbElementMapper::jaxbElement)
       .collect(Collectors.toList());
 
-    tripDelivery.withRest(tripResult);
+    var context = jaxbElement(contextMapper.map(otpResponse.getTripPlan()));
+    var tripDelivery = new OJPTripDeliveryStructure().withRest(context).withRest(tripResults);
 
     var serviceDelivery = ServiceDeliveryMapper.serviceDelivery(
       timestamp
-    ).withAbstractFunctionalServiceDelivery(JaxbElementMapper.jaxbElement(tripDelivery));
+    ).withAbstractFunctionalServiceDelivery(jaxbElement(tripDelivery));
 
     return new OJP()
       .withOJPResponse(new OJPResponseStructure().withServiceDelivery(serviceDelivery));
@@ -65,7 +68,12 @@ public class TripResponseMapper {
     var tr = new TripResultStructure();
 
     var legs = itinerary.legs().stream().map(this::mapLeg).toList();
-    tr.withTrip(new TripStructure().withLeg(legs));
+    tr.withTrip(
+      new TripStructure()
+        .withDuration(Duration.between(itinerary.startTime(), itinerary.endTime()))
+        .withTransfers(BigInteger.valueOf(itinerary.legs().size() - 1))
+        .withLeg(legs)
+    );
     return tr;
   }
 
@@ -80,15 +88,16 @@ public class TripResponseMapper {
   }
 
   private LegStructure mapStreetLeg(StreetLeg sl) {
-    var leg = baseLeg(sl);
-    return leg.withContinuousLeg(new ContinuousLegStructure()
-      .withLegStart(placeRef(sl.from()))
-      .withLegEnd(placeRef(sl.to()))
-      .withDuration(sl.duration())
+    return baseLeg(sl).withContinuousLeg(
+      new ContinuousLegStructure()
+        .withLegStart(placeRef(sl.from()))
+        .withLegEnd(placeRef(sl.to()))
+        .withTimeWindowStart(new XmlDateTime(sl.startTime()))
+        .withTimeWindowEnd(new XmlDateTime(sl.endTime()))
+        .withDuration(sl.duration())
+        .withLength(BigInteger.valueOf((long) sl.distanceMeters()))
     );
   }
-
-
 
   private LegStructure mapTransitLeg(ScheduledTransitLeg tl) {
     var scheduledDeparture = new XmlDateTime(tl.start().scheduledTime());
@@ -140,12 +149,16 @@ public class TripResponseMapper {
       )
       .toList();
   }
+
   private PlaceRefStructure placeRef(Place place) {
     var ref = new PlaceRefStructure();
-    if(place.stop != null){
-      ref.withStopPointRef(stopPointRefMapper.stopPointRef(place.stop));
+    if (place.stop != null) {
+      return ref.withStopPointRef(stopPointRefMapper.stopPointRef(place.stop));
+    } else {
+      return ref
+        .withName(internationalText(place.name))
+        .withGeoPosition(LocationStructureMapper.map(place.coordinate));
     }
-    return ref.withGeoPosition(new LocationStructure().withLatitude(new BigDecimal(place.coordinate.latitude())).withLongitude(new BigDecimal(place.coordinate.longitude())));
   }
 
   @Nullable

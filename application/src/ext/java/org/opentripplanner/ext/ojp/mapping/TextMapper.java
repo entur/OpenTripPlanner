@@ -11,6 +11,15 @@ class TextMapper {
     return internationalText(name, null);
   }
 
+  @Nullable
+  public static InternationalTextStructure internationalText(@Nullable String name) {
+    if (name == null) {
+      return null;
+    } else {
+      return internationalText(name, null);
+    }
+  }
+
   static InternationalTextStructure internationalText(I18NString string, @Nullable String lang) {
     if (string == null) {
       return null;

@@ -80,10 +80,7 @@ public class OjpService {
   }
 
   private GenericLocation toGenericLocation(LocationStructure geoPosition) {
-    return GenericLocation.fromCoordinate(
-      geoPosition.getLatitude().doubleValue(),
-      geoPosition.getLongitude().doubleValue()
-    );
+    return GenericLocation.fromCoordinate(geoPosition.getLatitude(), geoPosition.getLongitude());
   }
 
   private Optional<FeedScopedId> stopPointRef(OJPStopEventRequestStructure ser) {
@@ -96,7 +93,7 @@ public class OjpService {
   private Optional<WgsCoordinate> coordinate(OJPStopEventRequestStructure ser) {
     return placeRefStructure(ser)
       .map(PlaceRefStructure::getGeoPosition)
-      .map(c -> new WgsCoordinate(c.getLatitude().doubleValue(), c.getLongitude().doubleValue()));
+      .map(c -> new WgsCoordinate(c.getLatitude(), c.getLongitude()));
   }
 
   private static Optional<PlaceRefStructure> placeRefStructure(OJPStopEventRequestStructure ser) {
