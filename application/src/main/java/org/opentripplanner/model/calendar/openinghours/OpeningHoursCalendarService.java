@@ -7,17 +7,17 @@ import java.time.ZoneId;
 import java.util.Objects;
 import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.standalone.config.api.TransitServicePeriod;
-import org.opentripplanner.transit.model.framework.Deduplicator;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 
 public class OpeningHoursCalendarService implements Serializable {
 
-  private final Deduplicator deduplicator;
+  private final DeduplicatorService deduplicator;
   private final LocalDate startOfPeriod;
   private final int daysInPeriod;
 
   @Inject
   public OpeningHoursCalendarService(
-    Deduplicator deduplicator,
+    DeduplicatorService deduplicator,
     @TransitServicePeriod LocalDateInterval transitServicePeriod
   ) {
     this.deduplicator = deduplicator;
@@ -26,7 +26,7 @@ public class OpeningHoursCalendarService implements Serializable {
   }
 
   public OpeningHoursCalendarService(
-    Deduplicator deduplicator,
+    DeduplicatorService deduplicator,
     LocalDate startOfPeriod,
     LocalDate endOfPeriod
   ) {
