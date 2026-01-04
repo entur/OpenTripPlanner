@@ -5,20 +5,13 @@ import static org.opentripplanner.ext.ojp.mapping.TextMapper.internationalText;
 
 import de.vdv.ojp20.CallAtNearStopStructure;
 import de.vdv.ojp20.CallAtStopStructure;
-import de.vdv.ojp20.DatedJourneyStructure;
-import de.vdv.ojp20.JourneyRefStructure;
-import de.vdv.ojp20.ModeStructure;
 import de.vdv.ojp20.OJP;
 import de.vdv.ojp20.OJPResponseStructure;
 import de.vdv.ojp20.OJPStopEventDeliveryStructure;
-import de.vdv.ojp20.OperatingDayRefStructure;
 import de.vdv.ojp20.ServiceArrivalStructure;
 import de.vdv.ojp20.ServiceDepartureStructure;
 import de.vdv.ojp20.StopEventResultStructure;
 import de.vdv.ojp20.StopEventStructure;
-import de.vdv.ojp20.siri.DirectionRefStructure;
-import de.vdv.ojp20.siri.LineRefStructure;
-import de.vdv.ojp20.siri.OperatorRefStructure;
 import jakarta.xml.bind.JAXBElement;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
@@ -35,7 +28,6 @@ import org.opentripplanner.ext.ojp.service.CallAtStop;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.ojp.time.XmlDateTime;
-import org.opentripplanner.transit.model.network.Route;
 
 /**
  * Maps the OTP-internal data types into OJP responses.
@@ -91,9 +83,10 @@ public class StopEventResponseMapper {
       .withCallAtStop(callAtStop(call.tripTimeOnDate()))
       .withWalkDuration(call.walkTime());
 
+    var mapper = new DatedJourneyMapper(idMapper);
     var stopEvent = new StopEventStructure()
       .withThisCall(callAtNearStop)
-      .withService(datedJourney(call.tripTimeOnDate()));
+      .withService(mapper.datedJourney(call.tripTimeOnDate(), lang(call.tripTimeOnDate())));
     if (optionalFeatures.contains(OptionalFeature.PREVIOUS_CALLS)) {
       call
         .tripTimeOnDate()
@@ -115,34 +108,6 @@ public class StopEventResponseMapper {
     var bytes = (tripTimeOnDate.getStopTimeKey().toString() +
       tripTimeOnDate.getServiceDay()).getBytes(StandardCharsets.UTF_8);
     return UUID.nameUUIDFromBytes(bytes).toString();
-  }
-
-  private DatedJourneyStructure datedJourney(TripTimeOnDate tripTimeOnDate) {
-    final Route route = tripTimeOnDate.getTrip().getRoute();
-    var firstStop = tripTimeOnDate.pattern().getStops().getFirst();
-    var lastStop = tripTimeOnDate.pattern().getStops().getLast();
-    return new DatedJourneyStructure()
-      .withJourneyRef(
-        new JourneyRefStructure().withValue(idMapper.mapToApi(tripTimeOnDate.getTrip().getId()))
-      )
-      .withOperatingDayRef(
-        new OperatingDayRefStructure().withValue(tripTimeOnDate.getServiceDay().toString())
-      )
-      .withLineRef(new LineRefStructure().withValue(idMapper.mapToApi(route.getId())))
-      .withMode(new ModeStructure().withPtMode(PtModeMapper.map(route.getMode())))
-      .withPublishedServiceName(internationalText(route.getName(), lang(tripTimeOnDate)))
-      .withOperatorRef(
-        new OperatorRefStructure().withValue(idMapper.mapToApi(route.getAgency().getId()))
-      )
-      .withOriginStopPointRef(stopPointRefMapper.stopPointRef(firstStop))
-      .withOriginText(internationalText(firstStop.getName(), lang(tripTimeOnDate)))
-      .withDestinationStopPointRef(stopPointRefMapper.stopPointRef(lastStop))
-      .withDestinationText(internationalText(tripTimeOnDate.getHeadsign(), lang(tripTimeOnDate)))
-      .withRouteDescription(internationalText(route.getDescription(), lang(tripTimeOnDate)))
-      .withCancelled(tripTimeOnDate.getTripTimes().isCanceled())
-      .withDirectionRef(
-        new DirectionRefStructure().withValue(tripTimeOnDate.pattern().getDirection().toString())
-      );
   }
 
   private CallAtStopStructure callAtStop(TripTimeOnDate tripTimeOnDate) {

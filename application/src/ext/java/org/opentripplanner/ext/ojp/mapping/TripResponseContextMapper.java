@@ -41,7 +41,7 @@ class TripResponseContextMapper {
           .withStopPointName(TextMapper.internationalText(stopLocation.getName()))
           .withPlannedQuay(TextMapper.internationalText(stopLocation.getPlatformCode()))
       )
-      .withGeoPosition(LocationStructureMapper.map(stopLocation.getCoordinate()));
+      .withGeoPosition(LocationMapper.map(stopLocation.getCoordinate()));
   }
 
   private static Stream<StopLocation> stopLocations(Itinerary itinerary) {

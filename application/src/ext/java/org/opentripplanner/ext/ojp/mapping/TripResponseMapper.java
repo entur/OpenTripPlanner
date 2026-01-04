@@ -39,10 +39,12 @@ public class TripResponseMapper {
 
   private final StopPointRefMapper stopPointRefMapper;
   private final TripResponseContextMapper contextMapper;
+  private final DatedJourneyMapper journeyMapper;
 
   public TripResponseMapper(FeedScopedIdMapper idMapper) {
     this.stopPointRefMapper = new StopPointRefMapper(idMapper);
     this.contextMapper = new TripResponseContextMapper(stopPointRefMapper);
+    this.journeyMapper = new DatedJourneyMapper(idMapper);
   }
 
   public OJP mapTripPlan(RoutingResponse otpResponse, ZonedDateTime timestamp) {
@@ -128,6 +130,7 @@ public class TripResponseMapper {
                 .withEstimatedTime(realtimeArrival)
             )
         )
+        .withService(journeyMapper.datedJourney(tl.trip(), tl.tripPattern(), tl.serviceDate()))
     );
   }
 
@@ -157,7 +160,7 @@ public class TripResponseMapper {
     } else {
       return ref
         .withName(internationalText(place.name))
-        .withGeoPosition(LocationStructureMapper.map(place.coordinate));
+        .withGeoPosition(LocationMapper.map(place.coordinate));
     }
   }
 
