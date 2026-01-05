@@ -13,7 +13,6 @@ import de.vdv.ojp20.ServiceDepartureStructure;
 import de.vdv.ojp20.StopEventResultStructure;
 import de.vdv.ojp20.StopEventStructure;
 import jakarta.xml.bind.JAXBElement;
-import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -36,7 +35,7 @@ public class StopEventResponseMapper {
 
   private final Function<String, Optional<String>> resolveFeedLanguage;
   private final FeedScopedIdMapper idMapper;
-  private final StopPointRefMapper stopPointRefMapper;
+  private final StopRefMapper stopPointRefMapper;
 
   public enum OptionalFeature {
     PREVIOUS_CALLS,
@@ -56,7 +55,7 @@ public class StopEventResponseMapper {
     this.optionalFeatures = optionalFeatures;
     this.zoneId = zoneId;
     this.idMapper = idMapper;
-    this.stopPointRefMapper = new StopPointRefMapper(idMapper);
+    this.stopPointRefMapper = new StopRefMapper(idMapper);
     this.resolveFeedLanguage = resolveFeedLanguage;
   }
 
@@ -118,7 +117,7 @@ public class StopEventResponseMapper {
       .withStopPointName(internationalText(stop.getName(), lang(tripTimeOnDate)))
       .withServiceArrival(serviceArrival(tripTimeOnDate))
       .withServiceDeparture(serviceDeparture(tripTimeOnDate))
-      .withOrder(BigInteger.valueOf(tripTimeOnDate.getGtfsSequence()))
+      .withOrder(tripTimeOnDate.getGtfsSequence())
       .withNoBoardingAtStop(isNone(tripTimeOnDate.getPickupType()))
       .withNoAlightingAtStop(isNone(tripTimeOnDate.getDropoffType()))
       .withPlannedQuay(internationalText(stop.getPlatformCode(), lang(tripTimeOnDate)))

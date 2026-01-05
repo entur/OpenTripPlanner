@@ -18,7 +18,6 @@ import de.vdv.ojp20.StopEventParamStructure;
 import de.vdv.ojp20.siri.LineDirectionStructure;
 import de.vdv.ojp20.siri.LineRefStructure;
 import de.vdv.ojp20.siri.VehicleModesOfTransportEnumeration;
-import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ojp.time.XmlDateTime;
 
-class OjpServiceMapperTest {
+class StopEventParamsMapperTest {
 
   private static final ZonedDateTime ZDT = ZonedDateTime.parse("2025-02-17T14:24:02+01:00");
   private static final DefaultFeedIdMapper FEED_ID_MAPPER = new DefaultFeedIdMapper();
@@ -62,7 +61,7 @@ class OjpServiceMapperTest {
               .withItModeAndModeOfOperation(
                 new ItModesStructure().withPersonalMode(PersonalModesEnumeration.FOOT)
               )
-              .withMaxDistance(BigInteger.TEN)
+                .withMaxDistance(10)
           )
       )
     );
@@ -72,7 +71,7 @@ class OjpServiceMapperTest {
   @Test
   void numDepartures() {
     var params = MAPPER.extractStopEventParams(
-      stopEvent(new StopEventParamStructure().withNumberOfResults(BigInteger.TWO))
+      stopEvent(new StopEventParamStructure().withNumberOfResults(2))
     );
     assertEquals(2, params.numDepartures());
   }

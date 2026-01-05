@@ -3,7 +3,7 @@ package org.opentripplanner.ext.ojp.mapping;
 import de.vdv.ojp20.PlaceStructure;
 import de.vdv.ojp20.PlacesStructure;
 import de.vdv.ojp20.ResponseContextStructure;
-import de.vdv.ojp20.StopPointStructure;
+import de.vdv.ojp20.StopPlaceStructure;
 import java.util.Objects;
 import java.util.stream.Stream;
 import org.opentripplanner.model.plan.Itinerary;
@@ -14,9 +14,9 @@ import org.opentripplanner.utils.collection.StreamUtils;
 
 class TripResponseContextMapper {
 
-  private final StopPointRefMapper stopPointRefMapper;
+  private final StopRefMapper stopPointRefMapper;
 
-  TripResponseContextMapper(StopPointRefMapper stopPointRefMapper) {
+  TripResponseContextMapper(StopRefMapper stopPointRefMapper) {
     this.stopPointRefMapper = stopPointRefMapper;
   }
 
@@ -35,11 +35,10 @@ class TripResponseContextMapper {
 
   private PlaceStructure location(StopLocation stopLocation) {
     return new PlaceStructure()
-      .withStopPoint(
-        new StopPointStructure()
-          .withStopPointRef(stopPointRefMapper.stopPointRef(stopLocation))
-          .withStopPointName(TextMapper.internationalText(stopLocation.getName()))
-          .withPlannedQuay(TextMapper.internationalText(stopLocation.getPlatformCode()))
+      .withStopPlace(
+        new StopPlaceStructure()
+          .withStopPlaceRef(stopPointRefMapper.stopPlaceRef(stopLocation))
+          .withStopPlaceName(TextMapper.internationalText(stopLocation.getName()))
       )
       .withGeoPosition(LocationMapper.map(stopLocation.getCoordinate()));
   }

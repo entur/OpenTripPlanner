@@ -13,7 +13,6 @@ import de.vdv.ojp20.PersonalModesEnumeration;
 import de.vdv.ojp20.StopEventParamStructure;
 import de.vdv.ojp20.StopEventTypeEnumeration;
 import de.vdv.ojp20.UseRealtimeDataEnumeration;
-import java.math.BigInteger;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -72,7 +71,6 @@ class StopEventParamsMapper {
           .findFirst()
           .flatMap(o -> Optional.ofNullable(o.getMaxDistance()))
       )
-      .map(BigInteger::intValue)
       .orElse(DEFAULT_RADIUS_METERS);
 
     return new CallAtStopService.StopEventRequestParams(

@@ -29,7 +29,7 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.ArrivalDeparture;
 import org.opentripplanner.transit.service.TransitService;
 
-class StopEventServiceTest {
+class CallAtStopServiceTest {
 
   private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
 

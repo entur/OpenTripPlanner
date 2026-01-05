@@ -18,10 +18,10 @@ import de.vdv.ojp20.TimedLegStructure;
 import de.vdv.ojp20.TripResultStructure;
 import de.vdv.ojp20.TripStructure;
 import jakarta.xml.bind.JAXBElement;
-import java.math.BigInteger;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
@@ -37,21 +37,29 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 
 public class TripResponseMapper {
 
-  private final StopPointRefMapper stopPointRefMapper;
+  public enum OptionalFeature {
+    INTERMEDIATE_STOPS,
+  }
+
+  private final StopRefMapper stopPointRefMapper;
   private final TripResponseContextMapper contextMapper;
   private final DatedJourneyMapper journeyMapper;
 
   public TripResponseMapper(FeedScopedIdMapper idMapper) {
-    this.stopPointRefMapper = new StopPointRefMapper(idMapper);
+    this.stopPointRefMapper = new StopRefMapper(idMapper);
     this.contextMapper = new TripResponseContextMapper(stopPointRefMapper);
     this.journeyMapper = new DatedJourneyMapper(idMapper);
   }
 
-  public OJP mapTripPlan(RoutingResponse otpResponse, ZonedDateTime timestamp) {
+  public OJP mapTripPlan(
+    RoutingResponse otpResponse,
+    Set<OptionalFeature> optionalFeatures,
+    ZonedDateTime timestamp
+  ) {
     List<JAXBElement<?>> tripResults = otpResponse
       .getTripPlan()
       .itineraries.stream()
-      .map(this::mapItinerary)
+      .map(i -> mapItinerary(i, optionalFeatures))
       .map(JaxbElementMapper::jaxbElement)
       .collect(Collectors.toList());
 
@@ -66,22 +74,24 @@ public class TripResponseMapper {
       .withOJPResponse(new OJPResponseStructure().withServiceDelivery(serviceDelivery));
   }
 
-  private TripResultStructure mapItinerary(Itinerary itinerary) {
+  private TripResultStructure mapItinerary(
+    Itinerary itinerary,
+    Set<OptionalFeature> optionalFeatures
+  ) {
     var tr = new TripResultStructure();
 
-    var legs = itinerary.legs().stream().map(this::mapLeg).toList();
-    tr.withTrip(
+    var legs = itinerary.legs().stream().map(l -> mapLeg(l, optionalFeatures)).toList();
+    return tr.withTrip(
       new TripStructure()
         .withDuration(Duration.between(itinerary.startTime(), itinerary.endTime()))
-        .withTransfers(BigInteger.valueOf(itinerary.legs().size() - 1))
+        .withTransfers(itinerary.legs().size() - 1)
         .withLeg(legs)
     );
-    return tr;
   }
 
-  private LegStructure mapLeg(Leg leg) {
+  private LegStructure mapLeg(Leg leg, Set<OptionalFeature> optionalFeatures) {
     return switch (leg) {
-      case ScheduledTransitLeg tl -> mapTransitLeg(tl);
+      case ScheduledTransitLeg tl -> mapTransitLeg(tl, optionalFeatures);
       case StreetLeg sl -> mapStreetLeg(sl);
       default -> throw new IllegalStateException(
         "Unexpected leg type : " + leg.getClass().getSimpleName()
@@ -97,44 +107,48 @@ public class TripResponseMapper {
         .withTimeWindowStart(new XmlDateTime(sl.startTime()))
         .withTimeWindowEnd(new XmlDateTime(sl.endTime()))
         .withDuration(sl.duration())
-        .withLength(BigInteger.valueOf((long) sl.distanceMeters()))
+        .withLength((int) sl.distanceMeters())
     );
   }
 
-  private LegStructure mapTransitLeg(ScheduledTransitLeg tl) {
+  private LegStructure mapTransitLeg(
+    ScheduledTransitLeg tl,
+    Set<OptionalFeature> optionalFeatures
+  ) {
     var scheduledDeparture = new XmlDateTime(tl.start().scheduledTime());
     var realtimeDeparture = estimatedTime(tl.start());
     var scheduledArrival = new XmlDateTime(tl.end().scheduledTime());
     var realtimeArrival = estimatedTime(tl.end());
 
-    return baseLeg(tl).withTimedLeg(
-      new TimedLegStructure()
-        .withLegBoard(
-          new LegBoardStructure()
-            .withStopPointRef(stopPointRefMapper.stopPointRef(tl.from().stop))
-            .withStopPointName(internationalText(tl.from().stop.getName()))
-            .withServiceDeparture(
-              new ServiceDepartureStructure()
-                .withTimetabledTime(scheduledDeparture)
-                .withEstimatedTime(realtimeDeparture)
-            )
-        )
-        .withLegIntermediate(mapIntermediateStop(tl.listIntermediateStops()))
-        .withLegAlight(
-          new LegAlightStructure()
-            .withStopPointRef(stopPointRefMapper.stopPointRef(tl.to().stop))
-            .withStopPointName(internationalText(tl.to().stop.getName()))
-            .withServiceArrival(
-              new ServiceArrivalStructure()
-                .withTimetabledTime(scheduledArrival)
-                .withEstimatedTime(realtimeArrival)
-            )
-        )
-        .withService(journeyMapper.datedJourney(tl.trip(), tl.tripPattern(), tl.serviceDate()))
-    );
+    var timedLeg = new TimedLegStructure()
+      .withLegBoard(
+        new LegBoardStructure()
+          .withStopPointRef(stopPointRefMapper.stopPointRef(tl.from().stop))
+          .withStopPointName(internationalText(tl.from().stop.getName()))
+          .withServiceDeparture(
+            new ServiceDepartureStructure()
+              .withTimetabledTime(scheduledDeparture)
+              .withEstimatedTime(realtimeDeparture)
+          )
+      )
+      .withLegAlight(
+        new LegAlightStructure()
+          .withStopPointRef(stopPointRefMapper.stopPointRef(tl.to().stop))
+          .withStopPointName(internationalText(tl.to().stop.getName()))
+          .withServiceArrival(
+            new ServiceArrivalStructure()
+              .withTimetabledTime(scheduledArrival)
+              .withEstimatedTime(realtimeArrival)
+          )
+      )
+      .withService(journeyMapper.datedJourney(tl.trip(), tl.tripPattern(), tl.serviceDate()));
+    if (optionalFeatures.contains(OptionalFeature.INTERMEDIATE_STOPS)) {
+      timedLeg.withLegIntermediate(mapIntermediateStops(tl.listIntermediateStops()));
+    }
+    return baseLeg(tl).withTimedLeg(timedLeg);
   }
 
-  private List<LegIntermediateStructure> mapIntermediateStop(List<StopArrival> sas) {
+  private List<LegIntermediateStructure> mapIntermediateStops(List<StopArrival> sas) {
     return sas
       .stream()
       .map(sa ->

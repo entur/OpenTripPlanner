@@ -21,11 +21,11 @@ import org.opentripplanner.transit.model.timetable.Trip;
 class DatedJourneyMapper {
 
   private final FeedScopedIdMapper idMapper;
-  private final StopPointRefMapper stopPointRefMapper;
+  private final StopRefMapper stopPointRefMapper;
 
   DatedJourneyMapper(FeedScopedIdMapper idMapper) {
     this.idMapper = idMapper;
-    this.stopPointRefMapper = new StopPointRefMapper(idMapper);
+    this.stopPointRefMapper = new StopRefMapper(idMapper);
   }
 
   DatedJourneyStructure datedJourney(TripTimeOnDate tripTimeOnDate, String lang) {
