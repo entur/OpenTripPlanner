@@ -5,6 +5,9 @@ import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.free;
 import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
+import static org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator.GROUP_A;
+import static org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator.GROUP_B;
+import static org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator.GROUP_C;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,8 +18,8 @@ import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
+import org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator;
 import org.opentripplanner.raptor.configure.RaptorConfig;
-import org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator;
 
 /**
  * FEATURE UNDER TEST
@@ -54,12 +57,10 @@ public class I02_C2DestinationPruningTest implements RaptorTestConstants {
   @Test
   @DisplayName("C2 destination pruning with transit priority groups")
   void c2DestinationPruningWithTransitPriority() {
-    var data = new TestTransitData();
-
-    var r1 = routeA2B("R1", TestGroupPriorityCalculator.GROUP_B, "00:05 00:10:01");
-    var r2 = routeA2B("R2", TestGroupPriorityCalculator.GROUP_B, "00:05 00:10:02");
-    var r3 = routeA2B("R3", TestGroupPriorityCalculator.GROUP_C, "00:05 00:10:31");
-    var r4 = routeA2B("R4", TestGroupPriorityCalculator.GROUP_A, "00:05 00:10:32");
+    var r1 = routeA2B("R1", GROUP_B, "00:05 00:10:01");
+    var r2 = routeA2B("R2", GROUP_B, "00:05 00:10:02");
+    var r3 = routeA2B("R3", GROUP_C, "00:05 00:10:31");
+    var r4 = routeA2B("R4", GROUP_A, "00:05 00:10:32");
 
     data.withRoutes(r1, r2, r3, r4).withBoardCost(0);
 

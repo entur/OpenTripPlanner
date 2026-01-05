@@ -9,9 +9,9 @@ import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
-import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_A;
-import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_B;
-import static org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator.GROUP_C;
+import static org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator.GROUP_A;
+import static org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator.GROUP_B;
+import static org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator.GROUP_C;
 
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +24,8 @@ import org.opentripplanner.raptor.api.model.RaptorCostConverter;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.api.request.RaptorTransitGroupPriorityCalculator;
+import org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator;
 import org.opentripplanner.raptor.configure.RaptorConfig;
-import org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculator;
 
 /**
  * FEATURE UNDER TEST
@@ -35,7 +35,7 @@ import org.opentripplanner.raptor.moduletests.support.TestGroupPriorityCalculato
 public class K01_TransitPriorityTest {
 
   private static final RaptorTransitGroupPriorityCalculator PRIORITY_GROUP_CALCULATOR =
-    TestGroupPriorityCalculator.PRIORITY_CALCULATOR;
+    new TestGroupPriorityCalculator();
   private static final int C1_SLACK_90s = RaptorCostConverter.toRaptorCost(90);
 
   private final TestTransitData data = new TestTransitData();
