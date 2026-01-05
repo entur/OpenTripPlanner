@@ -582,26 +582,20 @@ public class TimetableSnapshot {
       .filter(entry -> feedId.equals(entry.getKey().getFeedId()))
       .collect(Collectors.toSet());
     for (var entry : entriesToBeRemoved) {
-      if (!entry.getValue().isEmpty()) {
+      SortedSet<Timetable> timetablesOfPattern = entry.getValue();
+      FeedScopedId patternId = entry.getKey();
+      if (!timetablesOfPattern.isEmpty()) {
         scheduledTimetables.put(
-          entry.getKey(),
-          entry.getValue().first().getPattern().getScheduledTimetable()
+          patternId,
+          timetablesOfPattern.first().getPattern().getScheduledTimetable()
+        );
+      }
+      for (var timetable : timetablesOfPattern) {
+        patternAndServiceDatesToBeRestored.add(
+          new TripPatternAndServiceDate(patternId, timetable.getServiceDate())
         );
       }
     }
-    patternAndServiceDatesToBeRestored.addAll(
-      entriesToBeRemoved
-        .stream()
-        .flatMap(entry ->
-          entry
-            .getValue()
-            .stream()
-            .map(timetable ->
-              new TripPatternAndServiceDate(entry.getKey(), timetable.getServiceDate())
-            )
-        )
-        .toList()
-    );
     return timetables.entrySet().removeAll(entriesToBeRemoved);
   }
 
