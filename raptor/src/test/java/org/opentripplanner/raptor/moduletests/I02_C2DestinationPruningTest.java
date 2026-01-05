@@ -19,7 +19,7 @@ import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.api.request.TestGroupPriorityCalculator;
-import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.raptor.configure.RaptorTestFactory;
 
 /**
  * FEATURE UNDER TEST
@@ -36,9 +36,7 @@ public class I02_C2DestinationPruningTest implements RaptorTestConstants {
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
     new RaptorRequestBuilder<>();
-  private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
-    RaptorConfig.defaultConfigForTest()
-  );
+  private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
   /**
    * <pre>
@@ -80,8 +78,8 @@ public class I02_C2DestinationPruningTest implements RaptorTestConstants {
     // Verify that R1 and R3 are included (R2 is dominated by R1, R4 is dominated by R1)
     assertEquals(
       """
-      A ~ BUS R1 0:05 0:10:01 ~ B [0:05 0:10:01 5m1s Tₓ0 C₁301 C₂2]
-      A ~ BUS R3 0:05 0:10:31 ~ B [0:05 0:10:31 5m31s Tₓ0 C₁331 C₂4]""",
+      A ~ BUS R1 0:05 0:10:01 ~ B [0:05 0:10:01 5m1s Tₙ0 C₁301 C₂2]
+      A ~ BUS R3 0:05 0:10:31 ~ B [0:05 0:10:31 5m31s Tₙ0 C₁331 C₂4]""",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }
