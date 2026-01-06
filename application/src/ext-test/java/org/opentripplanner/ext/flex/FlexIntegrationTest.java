@@ -26,7 +26,7 @@ import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModuleTestFactory;
 import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.model.calendar.ServiceDateInterval;
+import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -197,7 +197,7 @@ public class FlexIntegrationTest {
       gtfsBundles,
       timetableRepository,
       graph,
-      ServiceDateInterval.unbounded()
+      LocalDateInterval.unbounded()
     );
     gtfsModule.buildGraph();
 

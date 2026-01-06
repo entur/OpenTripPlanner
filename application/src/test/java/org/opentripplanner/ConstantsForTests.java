@@ -24,7 +24,7 @@ import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.graph_builder.module.transfer.DirectTransferGenerator;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
-import org.opentripplanner.model.calendar.ServiceDateInterval;
+import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.netex.NetexBundle;
 import org.opentripplanner.netex.configure.NetexConfigure;
@@ -339,7 +339,7 @@ public class ConstantsForTests {
       graph,
       new Deduplicator(),
       DataImportIssueStore.NOOP,
-      ServiceDateInterval.unbounded(),
+      LocalDateInterval.unbounded(),
       fareServiceFactory,
       150.0,
       DurationUtils.durationInSeconds("2m")
