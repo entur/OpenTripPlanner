@@ -8,7 +8,6 @@ public class OjpApiDocTest {
 
   @Test
   public void update() {
-    new DocTest("OjpApi.md", "ojp-config.json", "ojpApi");
+    new DocTest("OjpApi.md", "ojp-config.json", "ojpApi").build();
   }
-
 }

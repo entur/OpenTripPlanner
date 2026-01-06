@@ -22,24 +22,22 @@ import org.opentripplanner.test.support.ResourceLoader;
 
 class DocTest {
 
-  private final String markdownFile;
-  private final String configFile;
+  private static final SkipNodes SKIP_NODES = SkipNodes.of().build();
+
   private final String configParam;
 
   private final File template;
   private final File outFile;
 
-  private final File ROUTER_CONFIG_FILE = ResourceLoader.of(
-    DocTest.class
-  ).extTestResourceFile("ojp-config.json");
-  private static final SkipNodes SKIP_NODES = SkipNodes.of().build();
+  private final File routerConfigFile;
 
   DocTest(String markdownFile, String configFile, String configParam) {
-    this.markdownFile = markdownFile;
-    this.configFile = configFile;
     this.configParam = configParam;
     this.template = new File(SANDBOX_TEMPLATE_PATH, markdownFile);
     this.outFile = new File(SANDBOX_USER_DOC_PATH, markdownFile);
+    this.routerConfigFile= ResourceLoader.of(DocTest.class).extTestResourceFile(
+      configFile
+    );
   }
 
   void build() {
@@ -47,7 +45,7 @@ class DocTest {
 
     // Read and close input file (same as output file)
     String template = readFile(this.template);
-    String original = readFile(outFile);
+    String original = readFile(this.outFile);
 
     template = replaceSection(template, "config", updaterDoc(node));
 
@@ -56,8 +54,8 @@ class DocTest {
   }
 
   private NodeAdapter readConfig() {
-    var json = jsonNodeFromPath(ROUTER_CONFIG_FILE.toPath());
-    var conf = new RouterConfig(json, ROUTER_CONFIG_FILE.getName(), false);
+    var json = jsonNodeFromPath(routerConfigFile.toPath());
+    var conf = new RouterConfig(json, routerConfigFile.getName(), false);
     return conf.asNodeAdapter().child(configParam);
   }
 
@@ -82,7 +80,7 @@ class DocTest {
   }
 
   private void addExample(DocBuilder buf, NodeAdapter node) {
-    var root = TemplateUtil.jsonExampleBuilder(node.rawNode()).wrapInObject(configFile).build();
+    var root = TemplateUtil.jsonExampleBuilder(node.rawNode()).wrapInObject(configParam).build();
     buf.header(3, "Example configuration", null).addExample(ROUTER_CONFIG_FILENAME, root);
   }
 }
