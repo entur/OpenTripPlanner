@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.ojp.ojp;
 
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -24,6 +25,21 @@ public class OjpResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(OjpResource.class);
 
+  private static final String EXPLORER_HTML =
+    """
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8"/>
+          <meta name="viewport" content="width=device-width,initial-scale=1"/>
+          <title>OJP Explorer</title>
+          <script defer="defer" src="https://leonardehrenfried.github.io/ojp-mini-client/static/js/main.8a2fad60.js"></script>
+          <link href="https://leonardehrenfried.github.io/ojp-mini-client/static/css/main.320826b9.css" rel="stylesheet">
+        </head>
+        <body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body>
+      </html>
+    """;
+
   private final RequestHandler handler;
 
   public OjpResource(@Context OtpServerRequestContext context) {
@@ -47,8 +63,15 @@ public class OjpResource {
       return handler.handleRequest(ojp);
     } catch (JAXBException | TransformerException e) {
       LOG.error("Error reading OJP request", e);
-      return handler.error("Could not read TRIAS request.");
+      return handler.error("Could not read OJP request.");
     }
+  }
+
+  @GET
+  @Path("/explorer")
+  @Produces(MediaType.TEXT_HTML)
+  public Response index() {
+    return Response.ok(EXPLORER_HTML).build();
   }
 
   private static FeedScopedIdMapper idMapper(OjpApiParameters ojpParams) {

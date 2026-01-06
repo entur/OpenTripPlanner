@@ -35,9 +35,7 @@ class DocTest {
     this.configParam = configParam;
     this.template = new File(SANDBOX_TEMPLATE_PATH, markdownFile);
     this.outFile = new File(SANDBOX_USER_DOC_PATH, markdownFile);
-    this.routerConfigFile= ResourceLoader.of(DocTest.class).extTestResourceFile(
-      configFile
-    );
+    this.routerConfigFile = ResourceLoader.of(DocTest.class).extTestResourceFile(configFile);
   }
 
   void build() {
