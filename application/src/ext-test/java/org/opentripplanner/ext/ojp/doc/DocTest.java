@@ -11,9 +11,7 @@ import static org.opentripplanner.standalone.config.framework.json.JsonSupport.j
 import static org.opentripplanner.utils.text.MarkdownFormatter.HEADER_4;
 
 import java.io.File;
-import org.junit.jupiter.api.Test;
 import org.opentripplanner.generate.doc.framework.DocBuilder;
-import org.opentripplanner.generate.doc.framework.GeneratesDocumentation;
 import org.opentripplanner.generate.doc.framework.ParameterDetailsList;
 import org.opentripplanner.generate.doc.framework.ParameterSummaryTable;
 import org.opentripplanner.generate.doc.framework.SkipNodes;
@@ -22,36 +20,45 @@ import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.test.support.ResourceLoader;
 
-@GeneratesDocumentation
-public class TriasApiDocTest {
+class DocTest {
 
-  private static final File TEMPLATE = new File(SANDBOX_TEMPLATE_PATH, "TriasApi.md");
-  private static final File OUT_FILE = new File(SANDBOX_USER_DOC_PATH, "TriasApi.md");
+  private final String markdownFile;
+  private final String configFile;
+  private final String configParam;
 
-  private static final File ROUTER_CONFIG_FILE = ResourceLoader.of(
-    TriasApiDocTest.class
-  ).extTestResourceFile("trias-config.json");
+  private final File template;
+  private final File outFile;
+
+  private final File ROUTER_CONFIG_FILE = ResourceLoader.of(
+    DocTest.class
+  ).extTestResourceFile("ojp-config.json");
   private static final SkipNodes SKIP_NODES = SkipNodes.of().build();
-  public static final String CONFIG_PARAM = "triasApi";
 
-  @Test
-  public void update() {
-    NodeAdapter node = readTriasConfig();
+  DocTest(String markdownFile, String configFile, String configParam) {
+    this.markdownFile = markdownFile;
+    this.configFile = configFile;
+    this.configParam = configParam;
+    this.template = new File(SANDBOX_TEMPLATE_PATH, markdownFile);
+    this.outFile = new File(SANDBOX_USER_DOC_PATH, markdownFile);
+  }
+
+  void build() {
+    NodeAdapter node = readConfig();
 
     // Read and close input file (same as output file)
-    String template = readFile(TEMPLATE);
-    String original = readFile(OUT_FILE);
+    String template = readFile(this.template);
+    String original = readFile(outFile);
 
     template = replaceSection(template, "config", updaterDoc(node));
 
-    writeFile(OUT_FILE, template);
-    assertFileEquals(original, OUT_FILE);
+    writeFile(outFile, template);
+    assertFileEquals(original, outFile);
   }
 
-  private NodeAdapter readTriasConfig() {
+  private NodeAdapter readConfig() {
     var json = jsonNodeFromPath(ROUTER_CONFIG_FILE.toPath());
     var conf = new RouterConfig(json, ROUTER_CONFIG_FILE.getName(), false);
-    return conf.asNodeAdapter().child(CONFIG_PARAM);
+    return conf.asNodeAdapter().child(configParam);
   }
 
   private String updaterDoc(NodeAdapter node) {
@@ -75,7 +82,7 @@ public class TriasApiDocTest {
   }
 
   private void addExample(DocBuilder buf, NodeAdapter node) {
-    var root = TemplateUtil.jsonExampleBuilder(node.rawNode()).wrapInObject(CONFIG_PARAM).build();
+    var root = TemplateUtil.jsonExampleBuilder(node.rawNode()).wrapInObject(configFile).build();
     buf.header(3, "Example configuration", null).addExample(ROUTER_CONFIG_FILENAME, root);
   }
 }

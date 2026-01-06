@@ -127,6 +127,7 @@ public class SpeedTest {
       graph,
       TestServerContext.createLinkingContextFactory(graph, vertexLinker, transitService),
       timer.getRegistry(),
+      null,
       raptorConfig,
       TestServerContext.createRealtimeVehicleService(transitService),
       List.of(),

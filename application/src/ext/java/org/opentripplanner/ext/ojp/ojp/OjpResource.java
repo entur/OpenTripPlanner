@@ -12,7 +12,7 @@ import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.api.model.transit.HideFeedIdMapper;
 import org.opentripplanner.ext.ojp.RequestHandler;
-import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
+import org.opentripplanner.ext.ojp.parameters.OjpApiParameters;
 import org.opentripplanner.ext.ojp.service.CallAtStopService;
 import org.opentripplanner.ext.ojp.service.OjpService;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
@@ -29,7 +29,7 @@ public class OjpResource {
   public OjpResource(@Context OtpServerRequestContext context) {
     var transitService = context.transitService();
     var service = new CallAtStopService(transitService, context.graphFinder());
-    var idMapper = idMapper(context.triasApiParameters());
+    var idMapper = idMapper(context.ojpApiParameters());
     var serviceMapper = new OjpService(
       service,
       context.routingService(),
@@ -51,9 +51,9 @@ public class OjpResource {
     }
   }
 
-  private static FeedScopedIdMapper idMapper(TriasApiParameters triasApiConfig) {
-    if (triasApiConfig.hideFeedId()) {
-      return new HideFeedIdMapper(triasApiConfig.hardcodedInputFeedId());
+  private static FeedScopedIdMapper idMapper(OjpApiParameters ojpParams) {
+    if (ojpParams.hideFeedId()) {
+      return new HideFeedIdMapper(ojpParams.hardcodedInputFeedId());
     } else {
       return new DefaultFeedIdMapper();
     }
