@@ -130,7 +130,7 @@ class SearchParamsTest {
         .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
         .build()
     );
-    assertEquals("Access/Egress cannot have negative via visits: -1", ex.getMessage());
+    assertEquals("Access cannot have negative via visits: -1", ex.getMessage());
   }
 
   @Test
@@ -142,19 +142,19 @@ class SearchParamsTest {
         .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
         .build()
     );
-    assertEquals("Access/Egress visits 2 via locations, but only 1 are defined", ex.getMessage());
+    assertEquals("Access visits 2 via locations, but only 1 are defined", ex.getMessage());
   }
 
   @Test
   void viaVisitEgressExceedingTotalViaLocationsIsRejected() {
     var ex = assertThrows(IllegalArgumentException.class, () ->
       searchParamBuilder()
-        .addAccessPaths(walk(1, 30).withViaLocationsVisited(1))
-        .addEgressPaths(walk(7, 30).withViaLocationsVisited(1))
+        .addAccessPaths(walk(1, 30))
+        .addEgressPaths(walk(7, 30).withViaLocationsVisited(2))
         .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
         .build()
     );
-    assertEquals("Access/Egress visits 2 via locations, but only 1 are defined", ex.getMessage());
+    assertEquals("Egress visits 2 via locations, but only 1 are defined", ex.getMessage());
   }
 
   void assertParamNotValid(SearchParamsBuilder<TestTripSchedule> p, String msg) {

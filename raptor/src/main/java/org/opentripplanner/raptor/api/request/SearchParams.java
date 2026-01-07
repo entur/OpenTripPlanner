@@ -332,10 +332,10 @@ public class SearchParams {
 
     // Validate individual access and egress paths
     for (var access : accessPaths) {
-      access.validateAccessEgressVisitVia(numberOfViaVisits);
+      access.validateAccessEgressVisitVia("Access", numberOfViaVisits);
     }
     for (var egress : egressPaths) {
-      egress.validateAccessEgressVisitVia(numberOfViaVisits);
+      egress.validateAccessEgressVisitVia("Egress", numberOfViaVisits);
     }
   }
 }

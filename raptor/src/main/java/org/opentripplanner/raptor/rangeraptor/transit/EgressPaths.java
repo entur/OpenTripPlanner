@@ -75,7 +75,7 @@ public class EgressPaths {
   }
 
   public EgressPaths filterOnSegment(int segment) {
-    return new EgressPaths(AccessPaths.filter(pathsByStop, segment));
+    return new EgressPaths(AccessEgressFunctions.filterOnSegment(pathsByStop, segment));
   }
 
   /**

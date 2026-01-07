@@ -126,13 +126,33 @@ public final class AccessEgressFunctions {
     return groupBy(input, RaptorAccessEgress::stop);
   }
 
+  static TIntObjectMap<List<RaptorAccessEgress>> filterOnSegment(
+    TIntObjectMap<List<RaptorAccessEgress>> map,
+    int segment
+  ) {
+    TIntObjectMap<List<RaptorAccessEgress>> result = new TIntObjectHashMap<>();
+    for (int nRides : map.keys()) {
+      for (var it : map.get(nRides)) {
+        if (it != null && it.numberOfViaLocationsVisited() == segment) {
+          var list = result.get(nRides);
+          if (list == null) {
+            list = new ArrayList<>();
+            result.put(nRides, list);
+          }
+          list.add(it);
+        }
+      }
+    }
+    return result;
+  }
+
   /* private methods */
 
   /**
    * Remove relevant access/egress paths. The given set of paths are grouped by stop and
    * the filtered based on the given pareto comparator.
    */
-  static Collection<RaptorAccessEgress> removeNonOptimalPaths(
+  private static Collection<RaptorAccessEgress> removeNonOptimalPaths(
     Collection<RaptorAccessEgress> paths,
     ParetoComparator<RaptorAccessEgress> comparator
   ) {
@@ -144,7 +164,7 @@ public final class AccessEgressFunctions {
       var list = mapByStop.get(stop);
       set.clear();
       set.addAll(list);
-      result.addAll(set.stream().toList());
+      result.addAll(set);
     }
     return result;
   }

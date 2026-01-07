@@ -5,8 +5,6 @@ import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctio
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForStandardRaptor;
 
 import gnu.trove.map.TIntObjectMap;
-import gnu.trove.map.hash.TIntObjectHashMap;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -88,16 +86,6 @@ public class AccessPaths {
     );
   }
 
-  public AccessPaths copyEmpty() {
-    return new AccessPaths(
-      iterationStep,
-      iterationOp,
-      new TIntObjectHashMap<>(),
-      new TIntObjectHashMap<>(),
-      maxTimePenalty
-    );
-  }
-
   /**
    * Return the transfer arriving at the stop on-street(walking) grouped by Raptor round. The Raptor
    * round is calculated from the number of rides in the transfer.
@@ -168,30 +156,10 @@ public class AccessPaths {
     return new AccessPaths(
       iterationStep,
       iterationOp,
-      filter(arrivedOnStreetByNumOfRides, segment),
-      filter(arrivedOnBoardByNumOfRides, segment),
+      AccessEgressFunctions.filterOnSegment(arrivedOnStreetByNumOfRides, segment),
+      AccessEgressFunctions.filterOnSegment(arrivedOnBoardByNumOfRides, segment),
       maxTimePenalty
     );
-  }
-
-  static TIntObjectMap<List<RaptorAccessEgress>> filter(
-    TIntObjectMap<List<RaptorAccessEgress>> map,
-    int segment
-  ) {
-    TIntObjectMap<List<RaptorAccessEgress>> result = new TIntObjectHashMap<>();
-    for (int nRides : map.keys()) {
-      for (var it : map.get(nRides)) {
-        if (it != null && it.numberOfViaLocationsVisited() == segment) {
-          var list = result.get(nRides);
-          if (list == null) {
-            list = new ArrayList<>();
-            result.put(nRides, list);
-          }
-          list.add(it);
-        }
-      }
-    }
-    return result;
   }
 
   /* private methods */

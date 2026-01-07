@@ -129,7 +129,7 @@ public interface RaptorAccessEgress {
 
   /**
    * In a via-search (both pass-through and visit-via) the access/egress may contain one
-   * ore more via-locations. If so, Raptor needs to know how many via-locations are included
+   * or more via-locations. If so, Raptor needs to know how many via-locations are included
    * so it can skip these.
    * <p>
    * If the access/egress {@code stop} is a via-location then this method should include
@@ -149,18 +149,17 @@ public interface RaptorAccessEgress {
    * @param numberOfViaLocations the total number of via locations in the search
    * @throws IllegalArgumentException if the via visits are invalid
    */
-  default void validateAccessEgressVisitVia(int numberOfViaLocations) {
+  default void validateAccessEgressVisitVia(String type, int numberOfViaLocations) {
     int viaVisits = numberOfViaLocationsVisited();
 
     if (viaVisits < 0) {
-      throw new IllegalArgumentException(
-        "Access/Egress cannot have negative via visits: " + viaVisits
-      );
+      throw new IllegalArgumentException(type + " cannot have negative via visits: " + viaVisits);
     }
 
     if (viaVisits > numberOfViaLocations) {
       throw new IllegalArgumentException(
-        "Access/Egress visits " +
+        type +
+        " visits " +
         viaVisits +
         " via locations, but only " +
         numberOfViaLocations +

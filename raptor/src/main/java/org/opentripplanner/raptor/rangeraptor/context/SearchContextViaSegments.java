@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.context;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
@@ -23,19 +24,18 @@ public class SearchContextViaSegments<T extends RaptorTripSchedule> {
   @Nullable
   private final ViaConnections viaConnections;
 
-  @Nullable
   private final EgressPaths egressPaths;
 
   public SearchContextViaSegments(
     SearchContext<T> parent,
     AccessPaths accessPaths,
     @Nullable ViaConnections viaConnections,
-    @Nullable EgressPaths egressPaths
+    EgressPaths egressPaths
   ) {
-    this.parent = parent;
-    this.accessPaths = accessPaths;
+    this.parent = Objects.requireNonNull(parent);
+    this.accessPaths = Objects.requireNonNull(accessPaths);
     this.viaConnections = viaConnections;
-    this.egressPaths = egressPaths;
+    this.egressPaths = Objects.requireNonNull(egressPaths);
   }
 
   /**
