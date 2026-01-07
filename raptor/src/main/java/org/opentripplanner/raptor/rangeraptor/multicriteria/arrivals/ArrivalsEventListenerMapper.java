@@ -44,7 +44,7 @@ public class ArrivalsEventListenerMapper<T extends RaptorTripSchedule> {
 
   public static <T extends RaptorTripSchedule> TIntObjectMap<
     ParetoSetEventListener<ArrivalView<T>>
-  > of(
+  > map(
     DebugHandlerFactory<T> debugHandlerFactory,
     TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> connectionListeners,
     EgressPaths egressPaths,
