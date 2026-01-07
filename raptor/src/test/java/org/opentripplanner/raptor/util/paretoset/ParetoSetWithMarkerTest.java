@@ -129,17 +129,15 @@ public class ParetoSetWithMarkerTest {
     StringJoiner buf = new StringJoiner(", ");
 
     if (firstVectorAfterMarker == null) {
-      set.stream().forEach(it -> buf.add(it.toString()));
+      set.forEach(it -> buf.add(it.toString()));
       buf.add("<M>");
     } else {
-      set
-        .stream()
-        .forEach(it -> {
-          if (it == firstVectorAfterMarker) {
-            buf.add("<M>");
-          }
-          buf.add(it.toString());
-        });
+      set.forEach(it -> {
+        if (it == firstVectorAfterMarker) {
+          buf.add("<M>");
+        }
+        buf.add(it.toString());
+      });
     }
     return buf.toString();
   }

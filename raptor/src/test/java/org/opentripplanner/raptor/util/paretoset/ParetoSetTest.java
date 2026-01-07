@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.util.paretoset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -68,6 +69,15 @@ public class ParetoSetTest {
 
     // And we can retrieve it at index 0
     assertEquals("V0[5, 5, 5]", set.get(0).toString());
+  }
+
+  @Test
+  public void testRemove() {
+    // Given a empty set
+    var set = ParetoSet.of(LESS_THEN);
+    var vector = new TestVector("V0", 5, 5, 5);
+    set.add(vector);
+    assertThrows(UnsupportedOperationException.class, () -> set.remove(vector));
   }
 
   @Test

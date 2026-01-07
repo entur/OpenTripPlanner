@@ -16,22 +16,16 @@ public final class ParetoSetWithListener<T> extends ParetoSet<T> {
 
   @Override
   protected final void notifyElementAccepted(T newElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementAccepted(newElement);
-    }
+    eventListener.notifyElementAccepted(newElement);
   }
 
   @Override
   protected final void notifyElementDropped(T element, T droppedByElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementDropped(element, droppedByElement);
-    }
+    eventListener.notifyElementDropped(element, droppedByElement);
   }
 
   @Override
   protected final void notifyElementRejected(T element, T rejectByElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementRejected(element, rejectByElement);
-    }
+    eventListener.notifyElementRejected(element, rejectByElement);
   }
 }

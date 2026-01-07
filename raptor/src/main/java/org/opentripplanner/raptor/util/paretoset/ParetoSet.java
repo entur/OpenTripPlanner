@@ -77,17 +77,6 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     return tailIterator(0);
   }
 
-  /*
-  public final Iterable iterable() {
-    return new Iterable() {
-      @Override
-      public Iterator iterator() {
-        return iterator();
-      }
-    };
-  }
-  */
-
   public final int size() {
     return size;
   }
@@ -95,12 +84,6 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
   public final boolean isEmpty() {
     return size == 0;
   }
-
-  /*
-  public Stream<T> stream() {
-    return Arrays.stream(elements, 0, size);
-  }
-   */
 
   public final boolean add(T newValue) {
     if (size == 0) {
@@ -147,13 +130,6 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     notifyElementRejected(newValue, elements[0]);
     return false;
   }
-
-  /*
-  public void addAll(Collection<T> elements) {
-    for (T element : elements) {
-      add(element);
-    }
-  }*/
 
   public final void clear() {
     size = 0;
@@ -234,7 +210,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
    * Notify subclasses about reindexing. This method is empty, and only exist for subclasses to
    * override it.
    */
-  private final void notifyElementMoved(int fromIndex, int toIndex) {
+  private void notifyElementMoved(int fromIndex, int toIndex) {
     if (fromIndex == marker) {
       marker = toIndex;
     }
@@ -263,7 +239,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
    * is changed the returned values of the iterator also changes. Do not update on this collection
    * while using this iterator.
    */
-  private final Iterator<T> tailIterator(final int startInclusive) {
+  private Iterator<T> tailIterator(final int startInclusive) {
     return new Iterator<>() {
       int i = startInclusive;
 
@@ -283,7 +259,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
    * Remove all elements dominated by the {@code newValue} starting from {@code index + 1}. The
    * element at {@code index} is dropped.
    */
-  private final void removeDominatedElementsFromRestOfSetAndAddNewElement(
+  private void removeDominatedElementsFromRestOfSetAndAddNewElement(
     final T newValue,
     final int index
   ) {
@@ -312,26 +288,26 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     size = i + 1;
   }
 
-  private final boolean leftVectorDominatesRightVector(T left, T right) {
+  private boolean leftVectorDominatesRightVector(T left, T right) {
     return leftDominanceExist(left, right) && !rightDominanceExist(left, right);
   }
 
-  private final void acceptAndAppendValue(T newValue) {
+  private void acceptAndAppendValue(T newValue) {
     notifyElementAccepted(newValue);
     elements[size++] = newValue;
   }
 
-  private final void assertEnoughSpaceInSet() {
+  private void assertEnoughSpaceInSet() {
     if (size == elements.length) {
       elements = Arrays.copyOf(elements, elements.length * 2);
     }
   }
 
-  private final boolean leftDominanceExist(T left, T right) {
+  private boolean leftDominanceExist(T left, T right) {
     return comparator.leftDominanceExist(left, right);
   }
 
-  private final boolean rightDominanceExist(T left, T right) {
+  private boolean rightDominanceExist(T left, T right) {
     return comparator.leftDominanceExist(right, left);
   }
 
