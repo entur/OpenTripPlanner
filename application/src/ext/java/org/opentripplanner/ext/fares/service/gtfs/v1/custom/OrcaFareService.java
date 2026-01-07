@@ -5,7 +5,6 @@ import static org.opentripplanner.transit.model.basic.Money.usDollars;
 
 import com.google.common.collect.Lists;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -193,7 +192,6 @@ public class OrcaFareService extends DefaultFareService {
   static RideType getRideType(Leg leg) {
     var agencyId = leg.agency().getId().getId();
     var route = leg.route();
-    var tripId = leg.trip().getId().getId();
     return switch (agencyId) {
       case COMM_TRANS_AGENCY_ID, COMM_TRANS_FLEX_AGENCY_ID -> {
         try {
