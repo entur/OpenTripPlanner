@@ -273,4 +273,16 @@ public class TimeUtils {
   public static int toTransitTimeSeconds(ZonedDateTime transitSearchTimeZero, Instant time) {
     return (int) ChronoUnit.SECONDS.between(transitSearchTimeZero.toInstant(), time);
   }
+
+  /**
+   * The given {@code dateTime} will be set to a whole number of seconds. We don't do sub-second
+   * accuracy, and if we set the millisecond part to a non-zero value, rounding will not be
+   * guaranteed to be the same for departAt and arriveBy queries.
+   *
+   * If the given {@code dateTime} is {@code null}, then {@code null} is returned
+   */
+  @Nullable
+  public static Instant normalizeDateTime(@Nullable Instant dateTime) {
+    return dateTime == null ? null : dateTime.truncatedTo(ChronoUnit.SECONDS);
+  }
 }
