@@ -34,8 +34,12 @@ export function FeatureSelectPopup({
             let levelInfo = feature.properties.levels || 'N/A'
             if (feature.properties.levelValue) {
               levelInfo = `${feature.properties.levelValue} "${feature.properties.levelName}"`
-            } else if (feature.properties.lowerLevelValue || feature.properties.upperLEvelValue) {
-              levelInfo = `${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}" -> ${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}"`
+            } else if (feature.properties.lowerLevelValue && feature.properties.upperLevelValue) {
+              if (feature.properties.lowerVertexLabel === feature.properties.fromNodeLabel) {
+                levelInfo = `${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}" -> ${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}"`
+              } else {
+                levelInfo = `${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}" -> ${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}"`
+              }
             }
             return (
               <tr

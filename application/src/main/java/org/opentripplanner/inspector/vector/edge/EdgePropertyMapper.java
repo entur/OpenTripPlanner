@@ -18,6 +18,7 @@ import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
 import org.opentripplanner.street.model.edge.EscalatorEdge;
 import org.opentripplanner.street.model.edge.StreetEdge;
+import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.utils.collection.ListUtils;
 
 public class EdgePropertyMapper extends PropertyMapper<Edge> {
@@ -73,7 +74,7 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
     );
     var inclinedEdgeLevelInfoOptional = streetDetailsService.findInclinedEdgeLevelInfo(ee);
     if (inclinedEdgeLevelInfoOptional.isPresent()) {
-      props.addAll(getLevelInfoList(inclinedEdgeLevelInfoOptional.get()));
+      props.addAll(getLevelInfoList(ee, inclinedEdgeLevelInfoOptional.get()));
     }
     return props;
   }
@@ -98,15 +99,24 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
       props.add(kv("isStairs", true));
       var inclinedEdgeLevelInfoOptional = streetDetailsService.findInclinedEdgeLevelInfo(se);
       if (inclinedEdgeLevelInfoOptional.isPresent()) {
-        props.addAll(getLevelInfoList(inclinedEdgeLevelInfoOptional.get()));
+        props.addAll(getLevelInfoList(se, inclinedEdgeLevelInfoOptional.get()));
       }
     }
     return props;
   }
 
-  private List<KeyValue> getLevelInfoList(InclinedEdgeLevelInfo inclinedEdgeLevelInfo) {
+  private List<KeyValue> getLevelInfoList(Edge edge, InclinedEdgeLevelInfo inclinedEdgeLevelInfo) {
+    String lowerVertexLabel = edge.getToVertex().getLabel().toString();
+    String upperVertexLabel = edge.getFromVertex().getLabel().toString();
+    if (
+      edge.getFromVertex() instanceof OsmVertex fromVertex &&
+      fromVertex.nodeId() == inclinedEdgeLevelInfo.lowerVertexInfo().osmNodeId()
+    ) {
+      lowerVertexLabel = edge.getFromVertex().getLabel().toString();
+      upperVertexLabel = edge.getToVertex().getLabel().toString();
+    }
     return List.of(
-      kv("lowerLevelNodeId", inclinedEdgeLevelInfo.lowerVertexInfo().osmNodeId()),
+      kv("lowerVertexLabel", lowerVertexLabel),
       kv(
         "lowerLevelValue",
         inclinedEdgeLevelInfo.lowerVertexInfo().level() != null
@@ -119,7 +129,7 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
           ? inclinedEdgeLevelInfo.lowerVertexInfo().level().name()
           : null
       ),
-      kv("upperLevelNodeId", inclinedEdgeLevelInfo.upperVertexInfo().osmNodeId()),
+      kv("upperVertexLabel", upperVertexLabel),
       kv(
         "upperLevelValue",
         inclinedEdgeLevelInfo.upperVertexInfo().level() != null
