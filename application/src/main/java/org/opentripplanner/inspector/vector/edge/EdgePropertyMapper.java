@@ -44,8 +44,14 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
           kv("toNodeLabel", e.getToVertex().getLabel().toString())
         );
         case ElevatorBoardEdge e -> List.of(
-          kv("levelValue", streetDetailsService.findHorizontalEdgeLevelInfo(e).map(l -> l.level())),
-          kv("levelName", streetDetailsService.findHorizontalEdgeLevelInfo(e).map(l -> l.name())),
+          kv(
+            "levelValue",
+            streetDetailsService.findHorizontalEdgeLevelInfo(e).map(l -> l.level()).orElse(null)
+          ),
+          kv(
+            "levelName",
+            streetDetailsService.findHorizontalEdgeLevelInfo(e).map(l -> l.name()).orElse(null)
+          ),
           kv("fromNodeLabel", e.getFromVertex().getLabel().toString()),
           kv("toNodeLabel", e.getToVertex().getLabel().toString())
         );
@@ -61,7 +67,9 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
   private List<KeyValue> mapEscalatorEdge(EscalatorEdge ee) {
     var props = Lists.newArrayList(
       kv("distance", ee.getDistanceMeters()),
-      kv("duration", ee.getDuration().map(Duration::toString).orElse(null))
+      kv("duration", ee.getDuration().map(Duration::toString).orElse(null)),
+      kv("fromNodeLabel", ee.getFromVertex().getLabel().toString()),
+      kv("toNodeLabel", ee.getToVertex().getLabel().toString())
     );
     var inclinedEdgeLevelInfoOptional = streetDetailsService.findInclinedEdgeLevelInfo(ee);
     if (inclinedEdgeLevelInfoOptional.isPresent()) {
@@ -77,7 +85,9 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
       kv("walkSafetyFactor", roundTo2Decimals(se.getWalkSafetyFactor())),
       kv("noThruTraffic", noThruTrafficAsString(se)),
       kv("wheelchairAccessible", se.isWheelchairAccessible()),
-      kv("maximumSlope", roundTo2Decimals(se.getMaxSlope()))
+      kv("maximumSlope", roundTo2Decimals(se.getMaxSlope())),
+      kv("fromNodeLabel", se.getFromVertex().getLabel().toString()),
+      kv("toNodeLabel", se.getToVertex().getLabel().toString())
     );
     if (se.nameIsDerived()) {
       props.addFirst(kv("name", "%s (generated)".formatted(se.getName().toString())));
