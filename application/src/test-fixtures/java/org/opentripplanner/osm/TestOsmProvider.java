@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.moduletests._support;
+package org.opentripplanner.osm;
 
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
-import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmRelation;
