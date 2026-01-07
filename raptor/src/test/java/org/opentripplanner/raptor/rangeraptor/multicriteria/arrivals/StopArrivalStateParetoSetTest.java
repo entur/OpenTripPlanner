@@ -3,11 +3,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Arrays;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -64,35 +60,22 @@ public class StopArrivalStateParetoSetTest {
     20,
     BASE_C1
   );
-  public static final ArrivalParetoSetComparatorFactory<
+  private static final ArrivalParetoSetComparatorFactory<
     McStopArrival<RaptorTripSchedule>
   > COMPARATOR_FACTORY = ArrivalParetoSetComparatorFactory.factory(RelaxFunction.NORMAL, null);
 
-  private static Stream<Arguments> testCases() {
-    ParetoComparator<McStopArrival<RaptorTripSchedule>> comparator =
-      COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost();
-    return Stream.of(
-      Arguments.of("Stop Arrival - regular", ParetoSet.of(comparator)),
-      Arguments.of("Stop Arrival - w/egress", ParetoSet.of(comparator))
-    );
-  }
+  private ParetoSet<McStopArrival<RaptorTripSchedule>> subject = ParetoSet.of(
+    COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost()
+  );
 
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("testCases")
-  public void addOneElementToSet(
-    String testCaseName,
-    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
-  ) {
+  @Test
+  public void addOneElementToSet() {
     subject.add(newAccessStopState(STOP_1, 10, ANY));
     assertStopsInSet(subject, STOP_1);
   }
 
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("testCases")
-  public void testTimeDominance(
-    String testCaseName,
-    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
-  ) {
+  @Test
+  public void testTimeDominance() {
     subject.add(newAccessStopState(STOP_1, 10, ANY));
     subject.add(newAccessStopState(STOP_2, 9, ANY));
     subject.add(newAccessStopState(STOP_3, 9, ANY));
@@ -100,34 +83,22 @@ public class StopArrivalStateParetoSetTest {
     assertStopsInSet(subject, STOP_2);
   }
 
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("testCases")
-  public void testRoundDominance(
-    String testCaseName,
-    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
-  ) {
+  @Test
+  public void testRoundDominance() {
     subject.add(newTransferStopState(ROUND_1, STOP_1, 10, ANY));
     subject.add(newTransferStopState(ROUND_2, STOP_2, 10, ANY));
     assertStopsInSet(subject, STOP_1);
   }
 
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("testCases")
-  public void testCostDominance(
-    String testCaseName,
-    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
-  ) {
+  @Test
+  public void testCostDominance() {
     subject.add(newTransferStopState(ROUND_1, STOP_1, ANY, 20));
     subject.add(newTransferStopState(ROUND_1, STOP_2, ANY, 10));
     assertStopsInSet(subject, STOP_2);
   }
 
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("testCases")
-  public void testRoundAndTimeDominance(
-    String testCaseName,
-    ParetoSet<McStopArrival<RaptorTripSchedule>> subject
-  ) {
+  @Test
+  public void testRoundAndTimeDominance() {
     subject.add(newTransferStopState(ROUND_1, STOP_1, 10, ANY));
     subject.add(newTransferStopState(ROUND_1, STOP_2, 8, ANY));
 
