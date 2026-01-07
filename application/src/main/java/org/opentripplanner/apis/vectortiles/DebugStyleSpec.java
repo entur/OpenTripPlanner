@@ -24,6 +24,8 @@ import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.BoardingLocationToStopLink;
 import org.opentripplanner.street.model.edge.Edge;
+import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
+import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.model.edge.ElevatorHopEdge;
 import org.opentripplanner.street.model.edge.EscalatorEdge;
 import org.opentripplanner.street.model.edge.PathwayEdge;
@@ -107,6 +109,8 @@ public class DebugStyleSpec {
     EscalatorEdge.class,
     PathwayEdge.class,
     ElevatorHopEdge.class,
+    ElevatorBoardEdge.class,
+    ElevatorAlightEdge.class,
     TemporaryPartialStreetEdge.class,
     TemporaryFreeEdge.class,
   };
@@ -270,6 +274,28 @@ public class DebugStyleSpec {
         .typeLine()
         .vectorSourceLayer(edges)
         .edgeFilter(ElevatorHopEdge.class)
+        .lineColor(ORANGE)
+        .lineWidth(LINE_WIDTH)
+        .lineOffset(LINE_OFFSET)
+        .minZoom(6)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("elevator-board-edge")
+        .group(ELEVATORS_GROUP)
+        .typeLine()
+        .vectorSourceLayer(edges)
+        .edgeFilter(ElevatorBoardEdge.class)
+        .lineColor(ORANGE)
+        .lineWidth(LINE_WIDTH)
+        .lineOffset(LINE_OFFSET)
+        .minZoom(6)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("elevator-alight-edge")
+        .group(ELEVATORS_GROUP)
+        .typeLine()
+        .vectorSourceLayer(edges)
+        .edgeFilter(ElevatorAlightEdge.class)
         .lineColor(ORANGE)
         .lineWidth(LINE_WIDTH)
         .lineOffset(LINE_OFFSET)

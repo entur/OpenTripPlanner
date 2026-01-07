@@ -643,6 +643,8 @@
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
+        "ElevatorBoardEdge",
+        "ElevatorAlightEdge",
         "TemporaryPartialStreetEdge",
         "TemporaryFreeEdge"
       ],
@@ -787,6 +789,8 @@
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
+        "ElevatorBoardEdge",
+        "ElevatorAlightEdge",
         "TemporaryPartialStreetEdge",
         "TemporaryFreeEdge"
       ],
@@ -931,6 +935,8 @@
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
+        "ElevatorBoardEdge",
+        "ElevatorAlightEdge",
         "TemporaryPartialStreetEdge",
         "TemporaryFreeEdge"
       ],
@@ -1265,6 +1271,8 @@
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
+        "ElevatorBoardEdge",
+        "ElevatorAlightEdge",
         "TemporaryPartialStreetEdge",
         "TemporaryFreeEdge"
       ],
@@ -1346,6 +1354,8 @@
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
+        "ElevatorBoardEdge",
+        "ElevatorAlightEdge",
         "TemporaryPartialStreetEdge",
         "TemporaryFreeEdge"
       ],
@@ -1378,6 +1388,8 @@
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
+        "ElevatorBoardEdge",
+        "ElevatorAlightEdge",
         "TemporaryPartialStreetEdge",
         "TemporaryFreeEdge"
       ],
@@ -1626,6 +1638,104 @@
         "in",
         "class",
         "ElevatorHopEdge"
+      ],
+      "layout" : {
+        "line-cap" : "round",
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Elevators"
+      }
+    },
+    {
+      "id" : "elevator-board-edge",
+      "type" : "line",
+      "source" : "vectorSource",
+      "source-layer" : "edges",
+      "minzoom" : 6,
+      "maxzoom" : 23,
+      "paint" : {
+        "line-color" : "#ffa500",
+        "line-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.2,
+          23,
+          8.0
+        ],
+        "line-offset" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.4,
+          23,
+          7.0
+        ]
+      },
+      "filter" : [
+        "in",
+        "class",
+        "ElevatorBoardEdge"
+      ],
+      "layout" : {
+        "line-cap" : "round",
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Elevators"
+      }
+    },
+    {
+      "id" : "elevator-alight-edge",
+      "type" : "line",
+      "source" : "vectorSource",
+      "source-layer" : "edges",
+      "minzoom" : 6,
+      "maxzoom" : 23,
+      "paint" : {
+        "line-color" : "#ffa500",
+        "line-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.2,
+          23,
+          8.0
+        ],
+        "line-offset" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.4,
+          23,
+          7.0
+        ]
+      },
+      "filter" : [
+        "in",
+        "class",
+        "ElevatorAlightEdge"
       ],
       "layout" : {
         "line-cap" : "round",
