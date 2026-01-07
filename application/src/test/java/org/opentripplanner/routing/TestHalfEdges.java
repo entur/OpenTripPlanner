@@ -176,7 +176,7 @@ public class TestHalfEdges {
     // the shortest half-edge from the start vertex takes you down, but the shortest total path
     // is up and over
 
-    DisposableEdgeCollection tempEdges = new DisposableEdgeCollection(graph);
+    var tempEdges = new DisposableEdgeCollection(graph);
 
     int nVertices = graph.getVertices().size();
     int nEdges = graph.getEdges().size();
