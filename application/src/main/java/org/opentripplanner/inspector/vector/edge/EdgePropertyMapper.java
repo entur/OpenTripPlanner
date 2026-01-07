@@ -85,6 +85,7 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
       props.addFirst(kv("name", se.getName().toString()));
     }
     if (se.isStairs()) {
+      props.add(kv("isStairs", true));
       var inclinedEdgeLevelInfoOptional = streetDetailsService.findInclinedEdgeLevelInfo(se);
       if (inclinedEdgeLevelInfoOptional.isPresent()) {
         props.addAll(getLevelInfoList(inclinedEdgeLevelInfoOptional.get()));

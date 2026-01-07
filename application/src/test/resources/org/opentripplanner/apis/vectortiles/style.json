@@ -1644,7 +1644,7 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Elevators"
+        "group" : "Vertical transportation"
       }
     },
     {
@@ -1693,7 +1693,7 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Elevators"
+        "group" : "Vertical transportation"
       }
     },
     {
@@ -1742,11 +1742,11 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Elevators"
+        "group" : "Vertical transportation"
       }
     },
     {
-      "id" : "elevator-vertex",
+      "id" : "elevator-hop-vertex",
       "type" : "circle",
       "source" : "vectorSource",
       "source-layer" : "vertices",
@@ -1791,7 +1791,154 @@
         "visibility" : "none"
       },
       "metadata" : {
-        "group" : "Elevators"
+        "group" : "Vertical transportation"
+      }
+    },
+    {
+      "id" : "osm-elevator-vertex",
+      "type" : "circle",
+      "source" : "vectorSource",
+      "source-layer" : "vertices",
+      "minzoom" : 15,
+      "maxzoom" : 23,
+      "paint" : {
+        "circle-stroke-color" : "#140d0e",
+        "circle-stroke-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.2,
+          23,
+          3.0
+        ],
+        "circle-radius" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          1.0,
+          23,
+          7.0
+        ],
+        "circle-color" : "#ffa500"
+      },
+      "filter" : [
+        "in",
+        "class",
+        "OsmElevatorVertex"
+      ],
+      "layout" : {
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Vertical transportation"
+      }
+    },
+    {
+      "id" : "escalator-edge",
+      "type" : "line",
+      "source" : "vectorSource",
+      "source-layer" : "edges",
+      "minzoom" : 6,
+      "maxzoom" : 23,
+      "paint" : {
+        "line-color" : "#ffa500",
+        "line-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.2,
+          23,
+          8.0
+        ],
+        "line-offset" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.4,
+          23,
+          7.0
+        ]
+      },
+      "filter" : [
+        "in",
+        "class",
+        "EscalatorEdge"
+      ],
+      "layout" : {
+        "line-cap" : "round",
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Vertical transportation"
+      }
+    },
+    {
+      "id" : "stairs-edge",
+      "type" : "line",
+      "source" : "vectorSource",
+      "source-layer" : "edges",
+      "minzoom" : 6,
+      "maxzoom" : 23,
+      "paint" : {
+        "line-color" : "#ffa500",
+        "line-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.2,
+          23,
+          8.0
+        ],
+        "line-offset" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.4,
+          23,
+          7.0
+        ]
+      },
+      "filter" : [
+        "==",
+        "isStairs",
+        true
+      ],
+      "layout" : {
+        "line-cap" : "round",
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Vertical transportation"
       }
     },
     {
