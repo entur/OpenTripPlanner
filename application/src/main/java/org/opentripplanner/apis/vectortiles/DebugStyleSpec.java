@@ -36,6 +36,8 @@ import org.opentripplanner.street.model.edge.StreetTransitStopLink;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
 import org.opentripplanner.street.model.edge.TemporaryPartialStreetEdge;
+import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
+import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.OsmElevatorVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
@@ -262,6 +264,28 @@ public class DebugStyleSpec {
         .circleStroke(BLACK, CIRCLE_STROKE)
         .circleRadius(MEDIUM_CIRCLE_RADIUS)
         .circleColor(DARK_GREEN)
+        .minZoom(13)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("barrier-vertex")
+        .group(VERTICES_GROUP)
+        .typeCircle()
+        .vectorSourceLayer(vertices)
+        .vertexFilter(BarrierVertex.class)
+        .circleStroke(BLACK, CIRCLE_STROKE)
+        .circleRadius(MEDIUM_CIRCLE_RADIUS)
+        .circleColor(DARK_RED)
+        .minZoom(13)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("barrier-passthrough-vertex")
+        .group(VERTICES_GROUP)
+        .typeCircle()
+        .vectorSourceLayer(vertices)
+        .vertexFilter(BarrierPassThroughVertex.class)
+        .circleStroke(BLACK, CIRCLE_STROKE)
+        .circleRadius(MEDIUM_CIRCLE_RADIUS)
+        .circleColor(DARK_BLUE)
         .minZoom(13)
         .maxZoom(MAX_ZOOM)
         .intiallyHidden()

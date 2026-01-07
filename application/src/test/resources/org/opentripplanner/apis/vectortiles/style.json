@@ -2035,6 +2035,104 @@
       }
     },
     {
+      "id" : "barrier-vertex",
+      "type" : "circle",
+      "source" : "vectorSource",
+      "source-layer" : "vertices",
+      "minzoom" : 13,
+      "maxzoom" : 23,
+      "paint" : {
+        "circle-stroke-color" : "#140d0e",
+        "circle-stroke-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.2,
+          23,
+          3.0
+        ],
+        "circle-radius" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          1.4,
+          23,
+          10.0
+        ],
+        "circle-color" : "#cc0000"
+      },
+      "filter" : [
+        "in",
+        "class",
+        "BarrierVertex"
+      ],
+      "layout" : {
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Vertices"
+      }
+    },
+    {
+      "id" : "barrier-passthrough-vertex",
+      "type" : "circle",
+      "source" : "vectorSource",
+      "source-layer" : "vertices",
+      "minzoom" : 13,
+      "maxzoom" : 23,
+      "paint" : {
+        "circle-stroke-color" : "#140d0e",
+        "circle-stroke-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          15,
+          0.2,
+          23,
+          3.0
+        ],
+        "circle-radius" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          1.4,
+          23,
+          10.0
+        ],
+        "circle-color" : "#0066cc"
+      },
+      "filter" : [
+        "in",
+        "class",
+        "BarrierPassThroughVertex"
+      ],
+      "layout" : {
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Vertices"
+      }
+    },
+    {
       "id" : "area-stop",
       "type" : "fill",
       "source" : "vectorSource",
