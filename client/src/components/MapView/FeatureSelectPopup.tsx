@@ -26,19 +26,19 @@ export function FeatureSelectPopup({
         </thead>
         <tbody>
           {features.map((feature, index) => {
-            let labelInfo = feature.properties.name || feature.properties.label || 'N/A'
+            let labelInfo = feature.properties.name || feature.properties.label || 'N/A';
             if (feature.properties.fromNodeLabel && feature.properties.toNodeLabel) {
-              labelInfo = `${feature.properties.fromNodeLabel} -> ${feature.properties.toNodeLabel}`
+              labelInfo = `${feature.properties.fromNodeLabel} -> ${feature.properties.toNodeLabel}`;
             }
 
-            let levelInfo = feature.properties.levels || 'N/A'
+            let levelInfo = feature.properties.levels || 'N/A';
             if (feature.properties.levelValue) {
-              levelInfo = `${feature.properties.levelValue} "${feature.properties.levelName}"`
+              levelInfo = `${feature.properties.levelValue} "${feature.properties.levelName}"`;
             } else if (feature.properties.lowerLevelValue && feature.properties.upperLevelValue) {
               if (feature.properties.lowerVertexLabel === feature.properties.fromNodeLabel) {
-                levelInfo = `${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}" -> ${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}"`
+                levelInfo = `${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}" -> ${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}"`;
               } else {
-                levelInfo = `${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}" -> ${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}"`
+                levelInfo = `${feature.properties.upperLevelValue} "${feature.properties.upperLevelName}" -> ${feature.properties.lowerLevelValue} "${feature.properties.lowerLevelName}"`;
               }
             }
             return (
@@ -55,7 +55,8 @@ export function FeatureSelectPopup({
                 <td>{labelInfo}</td>
                 <td>{levelInfo}</td>
               </tr>
-          )})}
+            );
+          })}
         </tbody>
       </Table>
     </Popup>
