@@ -61,6 +61,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add information about the use of elevators, escalators, and stairs to queries with steps in the GTFS GraphQL API [#6897](https://github.com/opentripplanner/OpenTripPlanner/pull/6897)
 - Support gml:LineString format with list of gml:pos elements [#7135](https://github.com/opentripplanner/OpenTripPlanner/pull/7135)
 - Add Entur specific link on Emission type in transmodel API [#7148](https://github.com/opentripplanner/OpenTripPlanner/pull/7148)
+- Simplify handling of safety values [#6767](https://github.com/opentripplanner/OpenTripPlanner/pull/6767)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
