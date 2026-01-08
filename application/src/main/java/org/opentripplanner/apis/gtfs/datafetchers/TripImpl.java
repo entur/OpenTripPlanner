@@ -253,7 +253,9 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   @Override
   public DataFetcher<Boolean> isReplacementTrip() {
     return environment ->
-      getSource(environment).getNetexSubMode().toString().toLowerCase().contains("replacement");
+      getTransitService(environment)
+        .getReplacementHelper()
+        .isReplacementTrip(getSource(environment));
   }
 
   @Override
