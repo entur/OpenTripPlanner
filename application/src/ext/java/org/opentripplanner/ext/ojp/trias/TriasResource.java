@@ -24,6 +24,7 @@ import org.opentripplanner.ext.ojp.RequestHandler;
 import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
 import org.opentripplanner.ext.ojp.service.CallAtStopService;
 import org.opentripplanner.ext.ojp.service.OjpService;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +54,7 @@ public class TriasResource {
   public Response index(String triasInput) {
     try {
       var ojp = OjpToTriasTransformer.triasToOjp(triasInput);
-      return handler.handleRequest(ojp);
+      return handler.handleRequest(ojp, RouteRequest.defaultValue());
     } catch (JAXBException | TransformerException e) {
       LOG.error("Error reading TRIAS request", e);
       return handler.error("Could not read TRIAS request.");

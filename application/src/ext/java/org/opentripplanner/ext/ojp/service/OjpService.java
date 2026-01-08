@@ -17,6 +17,7 @@ import org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper;
 import org.opentripplanner.ext.ojp.mapping.TripResponseMapper;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.routing.api.RoutingService;
+import org.opentripplanner.routing.api.request.RouteRequest;
 
 /**
  * Takes raw OJP requests, extracts information and forwards it to the underlying services.
@@ -63,9 +64,9 @@ public class OjpService {
     return mapper.mapCalls(callsAtStop, ZonedDateTime.now());
   }
 
-  public OJP handleTripRequest(OJPTripRequestStructure tr) {
+  public OJP handleTripRequest(OJPTripRequestStructure tr, RouteRequest routeRequest) {
     var optionalFeatures = RouteRequestMapper.optionalFeatures(tr);
-    var rr = new RouteRequestMapper(idMapper).map(tr);
+    var rr = new RouteRequestMapper(idMapper, routeRequest).map(tr);
     var tripPlan = routingService.route(rr);
     var mapper = new TripResponseMapper(idMapper, optionalFeatures);
     return mapper.mapTripPlan(tripPlan, ZonedDateTime.now());

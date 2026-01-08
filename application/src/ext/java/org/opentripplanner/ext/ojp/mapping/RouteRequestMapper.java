@@ -9,6 +9,7 @@ import de.vdv.ojp20.OJPTripRequestStructure;
 import de.vdv.ojp20.PlaceContextStructure;
 import de.vdv.ojp20.TripParamStructure;
 import de.vdv.ojp20.UseRealtimeDataEnumeration;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -24,9 +25,11 @@ import org.opentripplanner.transit.model.basic.MainAndSubMode;
 public class RouteRequestMapper {
 
   private final FeedScopedIdMapper idMapper;
+  private final RouteRequest defaultRequest;
 
-  public RouteRequestMapper(FeedScopedIdMapper idMapper) {
+  public RouteRequestMapper(FeedScopedIdMapper idMapper, RouteRequest defaultRequest) {
     this.idMapper = idMapper;
+    this.defaultRequest = defaultRequest;
   }
 
   public RouteRequest map(OJPTripRequestStructure tr) {
@@ -36,12 +39,17 @@ public class RouteRequestMapper {
       var from = toGenericLocation(origin, "origin");
       var to = toGenericLocation(destination, "destination");
 
-      var builder = RouteRequest.defaultValue()
+      var builder = defaultRequest
         .copyOf()
         .withFrom(from)
         .withTo(to)
         .withNumItineraries(numItineraries(tr))
-        .withPreferences(p -> p.withTransit(t -> t.withIgnoreRealtimeUpdates(ignoreRealtime(tr))));
+        .withPreferences(p -> {
+          p.withTransit(t -> t.withIgnoreRealtimeUpdates(ignoreRealtime(tr)));
+          transferSlack(tr).ifPresent(slack ->
+            p.withTransfer(transfer -> transfer.withSlack(slack))
+          );
+        });
 
       addTime(origin, destination, builder);
       addExcludedModes(tr, builder);
@@ -50,6 +58,10 @@ public class RouteRequestMapper {
       return builder.buildRequest();
     }
     throw new IllegalArgumentException("TripRequest must have one origin and one destination.");
+  }
+
+  private Optional<Duration> transferSlack(OJPTripRequestStructure tr) {
+    return Optional.ofNullable(tr.getParams()).map(TripParamStructure::getAdditionalTransferTime);
   }
 
   private GenericLocation toGenericLocation(PlaceContextStructure place, String name) {

@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import org.opentripplanner.ext.ojp.mapping.ErrorMapper;
 import org.opentripplanner.ext.ojp.service.OjpService;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -35,7 +36,7 @@ public class RequestHandler {
     this.apiName = requireNonNull(apiName);
   }
 
-  public Response handleRequest(OJP ojp) {
+  public Response handleRequest(OJP ojp, RouteRequest routeRequest) {
     try {
       var request = findRequest(ojp);
 
@@ -44,7 +45,7 @@ public class RequestHandler {
         StreamingOutput stream = responseMapper.apply(ojpResponse);
         return Response.ok(stream).build();
       } else if (request instanceof OJPTripRequestStructure tr) {
-        var ojpResponse = ojpService.handleTripRequest(tr);
+        var ojpResponse = ojpService.handleTripRequest(tr, routeRequest);
         StreamingOutput stream = responseMapper.apply(ojpResponse);
         return Response.ok(stream).build();
       } else {

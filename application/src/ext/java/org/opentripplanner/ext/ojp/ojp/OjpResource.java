@@ -16,6 +16,7 @@ import org.opentripplanner.ext.ojp.RequestHandler;
 import org.opentripplanner.ext.ojp.parameters.OjpApiParameters;
 import org.opentripplanner.ext.ojp.service.CallAtStopService;
 import org.opentripplanner.ext.ojp.service.OjpService;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +42,7 @@ public class OjpResource {
     """;
 
   private final RequestHandler handler;
+  private final RouteRequest defaultRouteRequest;
 
   public OjpResource(@Context OtpServerRequestContext context) {
     var transitService = context.transitService();
@@ -53,6 +55,7 @@ public class OjpResource {
       transitService.getTimeZone()
     );
     this.handler = new RequestHandler(serviceMapper, OjpCodec::serialize, "OJP");
+    this.defaultRouteRequest = context.defaultRouteRequest();
   }
 
   @POST
@@ -60,7 +63,7 @@ public class OjpResource {
   public Response index(String xmlString) {
     try {
       var ojp = OjpCodec.deserialize(xmlString);
-      return handler.handleRequest(ojp);
+      return handler.handleRequest(ojp, defaultRouteRequest);
     } catch (JAXBException | TransformerException e) {
       LOG.error("Error reading OJP request", e);
       return handler.error("Could not read OJP request.");

@@ -15,13 +15,17 @@ import de.vdv.ojp20.TripParamStructure;
 import de.vdv.ojp20.siri.LocationStructure;
 import de.vdv.ojp20.siri.StopPointRefStructure;
 import de.vdv.ojp20.siri.VehicleModesOfTransportEnumeration;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
 
 class RouteRequestMapperTest {
 
-  private final RouteRequestMapper mapper = new RouteRequestMapper(new DefaultFeedIdMapper());
+  private final RouteRequestMapper mapper = new RouteRequestMapper(
+    new DefaultFeedIdMapper(),
+    RouteRequest.defaultValue()
+  );
 
   @Test
   void mapWithCoordinates() {
@@ -158,6 +162,16 @@ class RouteRequestMapperTest {
     var routeRequest = mapper.map(tripRequest);
 
     assertTransitFilters(routeRequest, "[(not: [(transportModes: [RAIL])])]");
+  }
+
+  @Test
+  void mapAdditionalTransferTime() {
+    var tripRequest = baseRequest()
+      .withParams(new TripParamStructure().withAdditionalTransferTime(Duration.ofMinutes(10)));
+
+    var routeRequest = mapper.map(tripRequest);
+
+    assertEquals(Duration.ofMinutes(10), routeRequest.preferences().transfer().slack());
   }
 
   private static OJPTripRequestStructure baseRequest() {
