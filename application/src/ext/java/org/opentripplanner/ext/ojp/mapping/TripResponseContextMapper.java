@@ -1,9 +1,12 @@
 package org.opentripplanner.ext.ojp.mapping;
 
+import static org.opentripplanner.ext.ojp.mapping.TextMapper.internationalText;
+
 import de.vdv.ojp20.PlaceStructure;
 import de.vdv.ojp20.PlacesStructure;
 import de.vdv.ojp20.ResponseContextStructure;
 import de.vdv.ojp20.StopPlaceStructure;
+import de.vdv.ojp20.StopPointStructure;
 import java.util.Objects;
 import java.util.stream.Stream;
 import org.opentripplanner.model.plan.Itinerary;
@@ -21,26 +24,46 @@ class TripResponseContextMapper {
   }
 
   ResponseContextStructure map(TripPlan tripPlan) {
-    var stopLocations = tripPlan.itineraries
+    var places = stopLocations(tripPlan).flatMap(this::place).toList();
+    return new ResponseContextStructure().withPlaces(new PlacesStructure().withPlace(places));
+  }
+
+  private Stream<PlaceStructure> place(StopLocation stopLocation) {
+    var stopPointStructure = new StopPointStructure()
+      .withStopPointRef(stopPointRefMapper.stopPointRef(stopLocation))
+      .withStopPointName(internationalText(stopLocation.getName()))
+      .withPlannedQuay(internationalText(stopLocation.getPlatformCode()));
+    if (stopLocation.isPartOfStation()) {
+      stopPointStructure.withParentRef(
+        stopPointRefMapper.stopPlaceRef(stopLocation.getParentStation())
+      );
+    }
+
+    var stopPoint = new PlaceStructure()
+      .withStopPoint(stopPointStructure)
+      .withGeoPosition(LocationMapper.map(stopLocation.getCoordinate()));
+
+    if (stopLocation.isPartOfStation()) {
+      var stopPlace = new PlaceStructure()
+        .withStopPlace(
+          new StopPlaceStructure()
+            .withStopPlaceRef(stopPointRefMapper.stopPlaceRef(stopLocation.getParentStation()))
+            .withStopPlaceName(internationalText(stopLocation.getName()))
+        )
+        .withGeoPosition(LocationMapper.map(stopLocation.getCoordinate()));
+
+      return Stream.of(stopPlace, stopPoint);
+    } else {
+      return Stream.of(stopPoint);
+    }
+  }
+
+  private static Stream<StopLocation> stopLocations(TripPlan tripPlan) {
+    return tripPlan.itineraries
       .stream()
       .flatMap(TripResponseContextMapper::stopLocations)
       .filter(Objects::nonNull)
-      .distinct()
-      .map(this::location)
-      .toList();
-
-    return new ResponseContextStructure()
-      .withPlaces(new PlacesStructure().withPlace(stopLocations));
-  }
-
-  private PlaceStructure location(StopLocation stopLocation) {
-    return new PlaceStructure()
-      .withStopPlace(
-        new StopPlaceStructure()
-          .withStopPlaceRef(stopPointRefMapper.stopPlaceRef(stopLocation))
-          .withStopPlaceName(TextMapper.internationalText(stopLocation.getName()))
-      )
-      .withGeoPosition(LocationMapper.map(stopLocation.getCoordinate()));
+      .distinct();
   }
 
   private static Stream<StopLocation> stopLocations(Itinerary itinerary) {

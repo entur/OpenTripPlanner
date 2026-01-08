@@ -67,8 +67,8 @@ public class OjpService {
     var optionalFeatures = RouteRequestMapper.optionalFeatures(tr);
     var rr = new RouteRequestMapper(idMapper).map(tr);
     var tripPlan = routingService.route(rr);
-    var mapper = new TripResponseMapper(idMapper);
-    return mapper.mapTripPlan(tripPlan, optionalFeatures, ZonedDateTime.now());
+    var mapper = new TripResponseMapper(idMapper, optionalFeatures);
+    return mapper.mapTripPlan(tripPlan, ZonedDateTime.now());
   }
 
   private Optional<FeedScopedId> stopPointRef(OJPStopEventRequestStructure ser) {

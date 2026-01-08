@@ -3,6 +3,7 @@ package org.opentripplanner.ext.ojp.mapping;
 import de.vdv.ojp20.StopPlaceRefStructure;
 import de.vdv.ojp20.siri.StopPointRefStructure;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
+import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 class StopRefMapper {
@@ -17,7 +18,7 @@ class StopRefMapper {
     return new StopPointRefStructure().withValue(idMapper.mapToApi(stop.getId()));
   }
 
-  StopPlaceRefStructure stopPlaceRef(StopLocation stop) {
+  StopPlaceRefStructure stopPlaceRef(Station stop) {
     return new StopPlaceRefStructure().withValue(idMapper.mapToApi(stop.getId()));
   }
 }

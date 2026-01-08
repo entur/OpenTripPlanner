@@ -69,6 +69,7 @@ class DatedJourneyMapper {
   private DatedJourneyStructure ofRoute(Route route, @Nullable String lang) {
     return new DatedJourneyStructure()
       .withLineRef(new LineRefStructure().withValue(idMapper.mapToApi(route.getId())))
+      .withPublicCode(route.getName())
       .withMode(new ModeStructure().withPtMode(PtModeMapper.map(route.getMode())))
       .withPublishedServiceName(internationalText(route.getName(), lang))
       .withOperatorRef(

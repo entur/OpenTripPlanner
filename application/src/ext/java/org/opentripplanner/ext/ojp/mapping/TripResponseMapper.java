@@ -34,6 +34,7 @@ import org.opentripplanner.model.plan.leg.StopArrival;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.ojp.time.XmlDateTime;
 import org.opentripplanner.routing.api.response.RoutingResponse;
+import org.opentripplanner.utils.collection.ListUtils;
 
 public class TripResponseMapper {
 
@@ -42,24 +43,22 @@ public class TripResponseMapper {
   }
 
   private final StopRefMapper stopPointRefMapper;
+  private final Set<OptionalFeature> optionalFeatures;
   private final TripResponseContextMapper contextMapper;
   private final DatedJourneyMapper journeyMapper;
 
-  public TripResponseMapper(FeedScopedIdMapper idMapper) {
+  public TripResponseMapper(FeedScopedIdMapper idMapper, Set<OptionalFeature> optionalFeatures) {
     this.stopPointRefMapper = new StopRefMapper(idMapper);
+    this.optionalFeatures = optionalFeatures;
     this.contextMapper = new TripResponseContextMapper(stopPointRefMapper);
     this.journeyMapper = new DatedJourneyMapper(idMapper);
   }
 
-  public OJP mapTripPlan(
-    RoutingResponse otpResponse,
-    Set<OptionalFeature> optionalFeatures,
-    ZonedDateTime timestamp
-  ) {
+  public OJP mapTripPlan(RoutingResponse otpResponse, ZonedDateTime timestamp) {
     List<JAXBElement<?>> tripResults = otpResponse
       .getTripPlan()
       .itineraries.stream()
-      .map(i -> mapItinerary(i, optionalFeatures))
+      .map(i -> mapItinerary(i))
       .map(JaxbElementMapper::jaxbElement)
       .collect(Collectors.toList());
 
@@ -74,13 +73,13 @@ public class TripResponseMapper {
       .withOJPResponse(new OJPResponseStructure().withServiceDelivery(serviceDelivery));
   }
 
-  private TripResultStructure mapItinerary(
-    Itinerary itinerary,
-    Set<OptionalFeature> optionalFeatures
-  ) {
+  private TripResultStructure mapItinerary(Itinerary itinerary) {
     var tr = new TripResultStructure();
 
-    var legs = itinerary.legs().stream().map(l -> mapLeg(l, optionalFeatures)).toList();
+    var legs = ListUtils.indexedList(itinerary.legs())
+      .stream()
+      .map(l -> mapLeg(l.index(), l.element()))
+      .toList();
     return tr.withTrip(
       new TripStructure()
         .withDuration(Duration.between(itinerary.startTime(), itinerary.endTime()))
@@ -89,18 +88,18 @@ public class TripResponseMapper {
     );
   }
 
-  private LegStructure mapLeg(Leg leg, Set<OptionalFeature> optionalFeatures) {
+  private LegStructure mapLeg(int index, Leg leg) {
     return switch (leg) {
-      case ScheduledTransitLeg tl -> mapTransitLeg(tl, optionalFeatures);
-      case StreetLeg sl -> mapStreetLeg(sl);
+      case ScheduledTransitLeg tl -> mapTransitLeg(index, tl);
+      case StreetLeg sl -> mapStreetLeg(index, sl);
       default -> throw new IllegalStateException(
         "Unexpected leg type : " + leg.getClass().getSimpleName()
       );
     };
   }
 
-  private LegStructure mapStreetLeg(StreetLeg sl) {
-    return baseLeg(sl).withContinuousLeg(
+  private LegStructure mapStreetLeg(int index, StreetLeg sl) {
+    return baseLeg(index, sl).withContinuousLeg(
       new ContinuousLegStructure()
         .withLegStart(placeRef(sl.from()))
         .withLegEnd(placeRef(sl.to()))
@@ -111,10 +110,7 @@ public class TripResponseMapper {
     );
   }
 
-  private LegStructure mapTransitLeg(
-    ScheduledTransitLeg tl,
-    Set<OptionalFeature> optionalFeatures
-  ) {
+  private LegStructure mapTransitLeg(int index, ScheduledTransitLeg tl) {
     var scheduledDeparture = new XmlDateTime(tl.start().scheduledTime());
     var realtimeDeparture = estimatedTime(tl.start());
     var scheduledArrival = new XmlDateTime(tl.end().scheduledTime());
@@ -145,7 +141,7 @@ public class TripResponseMapper {
     if (optionalFeatures.contains(OptionalFeature.INTERMEDIATE_STOPS)) {
       timedLeg.withLegIntermediate(mapIntermediateStops(tl.listIntermediateStops()));
     }
-    return baseLeg(tl).withTimedLeg(timedLeg);
+    return baseLeg(index, tl).withTimedLeg(timedLeg);
   }
 
   private List<LegIntermediateStructure> mapIntermediateStops(List<StopArrival> sas) {
@@ -187,7 +183,7 @@ public class TripResponseMapper {
     }
   }
 
-  private static LegStructure baseLeg(Leg leg) {
-    return new LegStructure().withDuration(leg.duration());
+  private static LegStructure baseLeg(int index, Leg leg) {
+    return new LegStructure().withDuration(leg.duration()).withId(String.valueOf(index));
   }
 }
