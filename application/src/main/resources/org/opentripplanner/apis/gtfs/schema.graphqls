@@ -2017,8 +2017,11 @@ type RentalVehicleTypeCount {
   vehicleType: RentalVehicleType!
 }
 
+"Container for replacement properties for a TripOnServiceDate."
 type Replacement {
+  "Is this trip a replacement?"
   isReplacement: Boolean!
+  "What TripOnServiceDates is this trip a replacement for? Only available for NeTEx-sourced data."
   replacementFor: [TripOnServiceDate!]
 }
 
@@ -2092,7 +2095,7 @@ type Route implements Node {
   id: ID!
   """
   Is this a replacement route.
-  Only true for GTFS-sourced data if set by the extended GTFS type, because GTFS does not implement
+  Only true for GTFS-sourced data if set by the extended GTFS route type, because GTFS does not implement
   replacement links, so replacement trips in GTFS cannot mechanically state their original trip.
   In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement
   link in a DatedServiceJourney.
@@ -2597,7 +2600,7 @@ type Trip implements Node {
   id: ID!
   """
   Is this a replacement trip.
-  Only true for GTFS-sourced data if set by the extended GTFS type, because GTFS does not implement
+  Only true for GTFS-sourced data if set by the extended GTFS route type, because GTFS does not implement
   replacement links, so replacement trips in GTFS cannot mechanically state their original trip.
   In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement
   link in a DatedServiceJourney.
@@ -2668,7 +2671,7 @@ type TripOnServiceDate {
   end: StopCall!
   "Replaced by these trips."
   replacedBy: [TripOnServiceDate!]!
-  "Is a replacement trip."
+  "Information on this trip's replacement status."
   replacement: Replacement!
   """
   The service date when the trip occurs.

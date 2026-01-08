@@ -18,17 +18,21 @@ public class ReplacementType {
   public GraphQLObjectType create() {
     return GraphQLObjectType.newObject()
       .name(NAME)
-      .description("Replacement")
+      .description("Container for replacement properties for a TripOnServiceDate.")
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("isReplacement")
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
+          .description("Is this trip a replacement?")
           .build()
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("replacementFor")
           .type(new GraphQLList(new GraphQLNonNull(DATED_SERVICE_JOURNEY_REF)))
+          .description(
+            "What TripOnServiceDates is this trip a replacement for? Only available for NeTEx-sourced data."
+          )
           .build()
       )
       .build();
