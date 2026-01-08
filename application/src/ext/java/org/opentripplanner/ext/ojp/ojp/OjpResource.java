@@ -34,7 +34,7 @@ public class OjpResource {
           <meta charset="utf-8"/>
           <meta name="viewport" content="width=device-width,initial-scale=1"/>
           <title>OJP Explorer</title>
-          <script defer="defer" src="https://leonardehrenfried.github.io/ojp-mini-client/static/js/main.8a2fad60.js"></script>
+          <script defer="defer" src="https://leonardehrenfried.github.io/ojp-mini-client/static/js/main.1a443aab.js"></script>
           <link href="https://leonardehrenfried.github.io/ojp-mini-client/static/css/main.320826b9.css" rel="stylesheet">
         </head>
         <body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div></body>

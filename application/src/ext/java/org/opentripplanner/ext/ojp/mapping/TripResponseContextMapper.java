@@ -40,11 +40,13 @@ class TripResponseContextMapper {
     }
 
     var stopPoint = new PlaceStructure()
+      .withName(internationalText(stopLocation.getName()))
       .withStopPoint(stopPointStructure)
       .withGeoPosition(LocationMapper.map(stopLocation.getCoordinate()));
 
     if (stopLocation.isPartOfStation()) {
       var stopPlace = new PlaceStructure()
+        .withName(internationalText(stopLocation.getParentStation().getName()))
         .withStopPlace(
           new StopPlaceStructure()
             .withStopPlaceRef(stopPointRefMapper.stopPlaceRef(stopLocation.getParentStation()))

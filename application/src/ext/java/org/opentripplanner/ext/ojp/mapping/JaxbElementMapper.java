@@ -10,8 +10,13 @@ class JaxbElementMapper {
 
   static <T> JAXBElement<T> jaxbElement(T value) {
     var xmlType = value.getClass().getAnnotation(XmlType.class);
+    var localPart = extractName(xmlType);
+    return jaxbElement(value, localPart);
+  }
+
+  static <T> JAXBElement<T> jaxbElement(T value, String localPart) {
     return new JAXBElement<>(
-      new QName(OJP_NAMESPACE, extractName(xmlType)),
+      new QName(OJP_NAMESPACE, localPart),
       (Class<T>) value.getClass(),
       value
     );
