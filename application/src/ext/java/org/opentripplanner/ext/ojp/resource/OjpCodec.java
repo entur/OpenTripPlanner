@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.ojp.ojp;
+package org.opentripplanner.ext.ojp.resource;
 
 import de.vdv.ojp20.OJP;
 import jakarta.ws.rs.core.StreamingOutput;

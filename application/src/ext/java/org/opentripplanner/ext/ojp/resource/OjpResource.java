@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.ojp.ojp;
+package org.opentripplanner.ext.ojp.resource;
 
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
