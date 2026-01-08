@@ -5,12 +5,14 @@ import static org.opentripplanner.utils.lang.DoubleUtils.roundTo2Decimals;
 
 import com.google.common.collect.Lists;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.apis.support.mapping.PropertyMapper;
 import org.opentripplanner.inspector.vector.KeyValue;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.streetdetails.model.InclinedEdgeLevelInfo;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
@@ -41,8 +43,8 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
           kv("levels", e.getLevels()),
           kv("wheelchairAccessible", e.isWheelchairAccessible()),
           kv("travelTime", e.getTravelTime().map(Duration::toString).orElse(null)),
-          kv("fromNodeLabel", e.getFromVertex().getLabel().toString()),
-          kv("toNodeLabel", e.getToVertex().getLabel().toString())
+          kv("fromVertexLabel", e.getFromVertex().getLabel().toString()),
+          kv("toVertexLabel", e.getToVertex().getLabel().toString())
         );
         case ElevatorBoardEdge e -> List.of(
           kv(
@@ -53,12 +55,12 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
             "levelName",
             streetDetailsService.findHorizontalEdgeLevelInfo(e).map(l -> l.name()).orElse(null)
           ),
-          kv("fromNodeLabel", e.getFromVertex().getLabel().toString()),
-          kv("toNodeLabel", e.getToVertex().getLabel().toString())
+          kv("fromVertexLabel", e.getFromVertex().getLabel().toString()),
+          kv("toVertexLabel", e.getToVertex().getLabel().toString())
         );
         case ElevatorAlightEdge e -> List.of(
-          kv("fromNodeLabel", e.getFromVertex().getLabel().toString()),
-          kv("toNodeLabel", e.getToVertex().getLabel().toString())
+          kv("fromVertexLabel", e.getFromVertex().getLabel().toString()),
+          kv("toVertexLabel", e.getToVertex().getLabel().toString())
         );
         default -> List.of();
       };
@@ -69,12 +71,12 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
     var props = Lists.newArrayList(
       kv("distance", ee.getDistanceMeters()),
       kv("duration", ee.getDuration().map(Duration::toString).orElse(null)),
-      kv("fromNodeLabel", ee.getFromVertex().getLabel().toString()),
-      kv("toNodeLabel", ee.getToVertex().getLabel().toString())
+      kv("fromVertexLabel", ee.getFromVertex().getLabel().toString()),
+      kv("toVertexLabel", ee.getToVertex().getLabel().toString())
     );
     var inclinedEdgeLevelInfoOptional = streetDetailsService.findInclinedEdgeLevelInfo(ee);
     if (inclinedEdgeLevelInfoOptional.isPresent()) {
-      props.addAll(getLevelInfoList(ee, inclinedEdgeLevelInfoOptional.get()));
+      addLevelInfo(props, ee, inclinedEdgeLevelInfoOptional.get());
     }
     return props;
   }
@@ -87,8 +89,8 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
       kv("noThruTraffic", noThruTrafficAsString(se)),
       kv("wheelchairAccessible", se.isWheelchairAccessible()),
       kv("maximumSlope", roundTo2Decimals(se.getMaxSlope())),
-      kv("fromNodeLabel", se.getFromVertex().getLabel().toString()),
-      kv("toNodeLabel", se.getToVertex().getLabel().toString())
+      kv("fromVertexLabel", se.getFromVertex().getLabel().toString()),
+      kv("toVertexLabel", se.getToVertex().getLabel().toString())
     );
     if (se.nameIsDerived()) {
       props.addFirst(kv("name", "%s (generated)".formatted(se.getName().toString())));
@@ -99,13 +101,17 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
       props.add(kv("isStairs", true));
       var inclinedEdgeLevelInfoOptional = streetDetailsService.findInclinedEdgeLevelInfo(se);
       if (inclinedEdgeLevelInfoOptional.isPresent()) {
-        props.addAll(getLevelInfoList(se, inclinedEdgeLevelInfoOptional.get()));
+        addLevelInfo(props, se, inclinedEdgeLevelInfoOptional.get());
       }
     }
     return props;
   }
 
-  private List<KeyValue> getLevelInfoList(Edge edge, InclinedEdgeLevelInfo inclinedEdgeLevelInfo) {
+  private void addLevelInfo(
+    ArrayList<KeyValue> props,
+    Edge edge,
+    InclinedEdgeLevelInfo inclinedEdgeLevelInfo
+  ) {
     String lowerVertexLabel = edge.getToVertex().getLabel().toString();
     String upperVertexLabel = edge.getFromVertex().getLabel().toString();
     if (
@@ -115,34 +121,20 @@ public class EdgePropertyMapper extends PropertyMapper<Edge> {
       lowerVertexLabel = edge.getFromVertex().getLabel().toString();
       upperVertexLabel = edge.getToVertex().getLabel().toString();
     }
-    return List.of(
-      kv("lowerVertexLabel", lowerVertexLabel),
-      kv(
-        "lowerLevelValue",
-        inclinedEdgeLevelInfo.lowerVertexInfo().level() != null
-          ? inclinedEdgeLevelInfo.lowerVertexInfo().level().level()
-          : null
-      ),
-      kv(
-        "lowerLevelName",
-        inclinedEdgeLevelInfo.lowerVertexInfo().level() != null
-          ? inclinedEdgeLevelInfo.lowerVertexInfo().level().name()
-          : null
-      ),
-      kv("upperVertexLabel", upperVertexLabel),
-      kv(
-        "upperLevelValue",
-        inclinedEdgeLevelInfo.upperVertexInfo().level() != null
-          ? inclinedEdgeLevelInfo.upperVertexInfo().level().level()
-          : null
-      ),
-      kv(
-        "upperLevelName",
-        inclinedEdgeLevelInfo.upperVertexInfo().level() != null
-          ? inclinedEdgeLevelInfo.upperVertexInfo().level().name()
-          : null
-      )
-    );
+
+    props.add(kv("lowerVertexLabel", lowerVertexLabel));
+    Level lowerLevel = inclinedEdgeLevelInfo.lowerVertexInfo().level();
+    if (lowerLevel != null) {
+      props.add(kv("lowerLevelValue", lowerLevel.level()));
+      props.add(kv("lowerLevelName", lowerLevel.name()));
+    }
+
+    props.add(kv("upperVertexLabel", upperVertexLabel));
+    Level upperLevel = inclinedEdgeLevelInfo.upperVertexInfo().level();
+    if (upperLevel != null) {
+      props.add(kv("upperLevelValue", upperLevel.level()));
+      props.add(kv("upperLevelName", upperLevel.name()));
+    }
   }
 
   public static String streetPermissionAsString(StreetTraversalPermission permission) {
