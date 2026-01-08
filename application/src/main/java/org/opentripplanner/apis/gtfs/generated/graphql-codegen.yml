@@ -90,7 +90,7 @@ config:
     PlanPageInfo: org.opentripplanner.apis.gtfs.model.PlanPageInfo#PlanPageInfo
     RealtimeState: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRealtimeState#GraphQLRealtimeState
     RelativeDirection: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRelativeDirection#GraphQLRelativeDirection
-    Replacement: org.opentripplanner.transit.model.network.Replacement
+    Replacement: org.opentripplanner.transit.model.network.Replacement#Replacement
     Route: org.opentripplanner.transit.model.network.Route#Route
     RoutingError: org.opentripplanner.routing.api.response.RoutingError#RoutingError
     RoutingErrorCode: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLRoutingErrorCode#GraphQLRoutingErrorCode

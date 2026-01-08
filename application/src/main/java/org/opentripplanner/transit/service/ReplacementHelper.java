@@ -1,5 +1,6 @@
 package org.opentripplanner.transit.service;
 
+import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.Replacement;
@@ -9,6 +10,14 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
 public class ReplacementHelper {
+
+  // Specially recognized standard GTFS extended route types
+  private static final int REPLACEMENT_RAIL_SERVICE = 110;
+  private static final int RAIL_REPLACEMENT_BUS_SERVICE = 714;
+  private static final List<Integer> REPLACEMENT_EXTENDED_TYPES = List.of(
+    REPLACEMENT_RAIL_SERVICE,
+    RAIL_REPLACEMENT_BUS_SERVICE
+  );
 
   private final TransitService transitService;
   private final TimetableRepository timetableRepository;
@@ -47,7 +56,7 @@ public class ReplacementHelper {
   }
 
   public boolean isReplacementRoute(Route route) {
-    if (route.getGtfsType() != null && route.getGtfsType() == 714) {
+    if (route.getGtfsType() != null && REPLACEMENT_EXTENDED_TYPES.contains(route.getGtfsType())) {
       return true;
     }
     return route.getNetexSubmode().toString().toLowerCase().contains("replacement");
@@ -55,7 +64,7 @@ public class ReplacementHelper {
 
   public boolean isReplacementTrip(Trip trip) {
     var route = trip.getRoute();
-    if (route.getGtfsType() != null && route.getGtfsType() == 714) {
+    if (route.getGtfsType() != null && REPLACEMENT_EXTENDED_TYPES.contains(route.getGtfsType())) {
       return true;
     }
     return trip.getNetexSubMode().toString().toLowerCase().contains("replacement");

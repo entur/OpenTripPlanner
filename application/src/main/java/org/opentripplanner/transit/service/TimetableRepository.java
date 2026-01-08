@@ -2,7 +2,9 @@ package org.opentripplanner.transit.service;
 
 import static org.opentripplanner.framework.application.OtpFileNames.BUILD_CONFIG_FILENAME;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
@@ -124,8 +126,8 @@ public class TimetableRepository implements Serializable {
 
   private final Map<FeedScopedId, TripPattern> tripPatternForId = new HashMap<>();
   private final Map<FeedScopedId, TripOnServiceDate> tripOnServiceDates = new HashMap<>();
-  private final Map<FeedScopedId, List<TripOnServiceDate>> replacedByTripOnServiceDates =
-    new HashMap<>();
+  private final ListMultimap<FeedScopedId, TripOnServiceDate> replacedByTripOnServiceDates =
+    ArrayListMultimap.create();
 
   private final Map<FeedScopedId, FlexTrip<?, ?>> flexTripsById = new HashMap<>();
 
@@ -399,14 +401,12 @@ public class TimetableRepository implements Serializable {
     invalidateIndex();
     tripOnServiceDates.put(tripOnServiceDate.getId(), tripOnServiceDate);
     for (var replacementFor : tripOnServiceDate.getReplacementFor()) {
-      replacedByTripOnServiceDates
-        .computeIfAbsent(replacementFor.getId(), k -> new ArrayList<>())
-        .add(tripOnServiceDate);
+      replacedByTripOnServiceDates.put(replacementFor.getId(), tripOnServiceDate);
     }
   }
 
   public List<TripOnServiceDate> getReplacedByTripOnServiceDate(FeedScopedId id) {
-    return replacedByTripOnServiceDates.getOrDefault(id, Collections.emptyList());
+    return replacedByTripOnServiceDates.get(id);
   }
 
   /**

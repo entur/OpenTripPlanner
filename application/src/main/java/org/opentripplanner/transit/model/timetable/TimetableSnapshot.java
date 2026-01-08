@@ -2,9 +2,12 @@ package org.opentripplanner.transit.model.timetable;
 
 import static org.opentripplanner.utils.collection.CollectionUtils.getByNullableKey;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import java.time.LocalDate;
@@ -135,9 +138,9 @@ public class TimetableSnapshot {
   private final Map<Trip, TripPattern> realTimeAddedPatternForTrip;
   private final Multimap<Route, TripPattern> realTimeAddedPatternsForRoute;
   private final Map<FeedScopedId, TripOnServiceDate> realTimeAddedTripOnServiceDateById;
-  private final Map<
+  private final ListMultimap<
     FeedScopedId,
-    List<TripOnServiceDate>
+    TripOnServiceDate
   > realTimeAddedReplacedByTripOnServiceDateById;
   private final Map<
     TripIdAndServiceDate,
@@ -165,7 +168,7 @@ public class TimetableSnapshot {
       new HashMap<>(),
       HashMultimap.create(),
       new HashMap<>(),
-      new HashMap<>(),
+      ArrayListMultimap.create(),
       new HashMap<>(),
       HashMultimap.create(),
       false
@@ -180,7 +183,7 @@ public class TimetableSnapshot {
     Map<Trip, TripPattern> realTimeAddedPatternForTrip,
     Multimap<Route, TripPattern> realTimeAddedPatternsForRoute,
     Map<FeedScopedId, TripOnServiceDate> realTimeAddedTripOnServiceDateById,
-    Map<FeedScopedId, List<TripOnServiceDate>> realTimeAddedReplacedByTripOnServiceDateById,
+    ListMultimap<FeedScopedId, TripOnServiceDate> realTimeAddedReplacedByTripOnServiceDateById,
     Map<TripIdAndServiceDate, TripOnServiceDate> realTimeAddedTripOnServiceDateForTripAndDay,
     SetMultimap<StopLocation, TripPattern> patternsForStop,
     boolean readOnly
@@ -352,9 +355,10 @@ public class TimetableSnapshot {
       if (tripOnServiceDate != null) {
         realTimeAddedTripOnServiceDateById.put(tripOnServiceDate.getId(), tripOnServiceDate);
         for (var replacementFor : tripOnServiceDate.getReplacementFor()) {
-          realTimeAddedReplacedByTripOnServiceDateById
-            .computeIfAbsent(replacementFor.getId(), k -> new ArrayList<>())
-            .add(tripOnServiceDate);
+          realTimeAddedReplacedByTripOnServiceDateById.put(
+            replacementFor.getId(),
+            tripOnServiceDate
+          );
         }
         realTimeAddedTripOnServiceDateForTripAndDay.put(
           new TripIdAndServiceDate(tripId, serviceDate),
@@ -395,12 +399,7 @@ public class TimetableSnapshot {
       Map.copyOf(realTimeAddedPatternForTrip),
       ImmutableSetMultimap.copyOf(realTimeAddedPatternsForRoute),
       Map.copyOf(realTimeAddedTripOnServiceDateById),
-      realTimeAddedReplacedByTripOnServiceDateById
-        .entrySet()
-        .stream()
-        .collect(
-          Collectors.toUnmodifiableMap(Entry::getKey, entry -> List.copyOf(entry.getValue()))
-        ),
+      ImmutableListMultimap.copyOf(realTimeAddedReplacedByTripOnServiceDateById),
       Map.copyOf(realTimeAddedTripOnServiceDateForTripAndDay),
       ImmutableSetMultimap.copyOf(patternsForStop),
       true
@@ -541,7 +540,7 @@ public class TimetableSnapshot {
   }
 
   public Collection<TripOnServiceDate> getReplacedByTripOnServiceDate(FeedScopedId id) {
-    return realTimeAddedReplacedByTripOnServiceDateById.getOrDefault(id, Collections.emptyList());
+    return realTimeAddedReplacedByTripOnServiceDateById.get(id);
   }
 
   public boolean isDirty() {
