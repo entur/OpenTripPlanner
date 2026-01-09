@@ -182,11 +182,7 @@ public class EdgeLevelInfoTest {
 
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("highway", "corridor"), n1, n2)
-      .addWayFromNodes(
-        way -> way.addTag("highway", "elevator").addTag("level", "0;1"),
-        n2,
-        n3
-      )
+      .addWayFromNodes(way -> way.addTag("highway", "elevator").addTag("level", "0;1"), n2, n3)
       .addWayFromNodes(way -> way.addTag("highway", "corridor"), n3, n4)
       .build();
     var graph = new Graph();
@@ -214,11 +210,7 @@ public class EdgeLevelInfoTest {
 
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("highway", "corridor"), n1, n2)
-      .addWayFromNodes(
-        way -> way.addTag("highway", "elevator").addTag("level", "1;1"),
-        n2,
-        n3
-      )
+      .addWayFromNodes(way -> way.addTag("highway", "elevator").addTag("level", "1;1"), n2, n3)
       .addWayFromNodes(way -> way.addTag("highway", "corridor"), n3, n4)
       .build();
     var graph = new Graph();
