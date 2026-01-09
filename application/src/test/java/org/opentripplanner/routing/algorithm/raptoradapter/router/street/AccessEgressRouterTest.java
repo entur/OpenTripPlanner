@@ -263,8 +263,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
         graph,
         vertexCreationService,
         transitService::findStopOrChildIds,
-        transitService::getStation,
-        transitService::getMultiModalStation
+        transitService::getStationOrMultiModalStationCentroid
       );
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(verticesContainer, linkingRequest);

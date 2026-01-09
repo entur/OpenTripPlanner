@@ -110,7 +110,6 @@ class LinkingContextFactoryTest {
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       Set::of,
-      id -> null,
       id -> null
     );
     var container = new TemporaryVerticesContainer();
@@ -135,7 +134,6 @@ class LinkingContextFactoryTest {
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       mapping::get,
-      id -> null,
       id -> null
     );
     var container = new TemporaryVerticesContainer();
@@ -160,8 +158,12 @@ class LinkingContextFactoryTest {
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       id -> Set.of(),
-      id -> id.equals(stationAlpha.getId()) ? stationAlpha : null,
-      id -> id.equals(multiModalStation.getId()) ? multiModalStation : null
+      id -> {
+        if (id.equals(stationAlpha.getId())) {
+          return stationAlpha.getCoordinate();
+        }
+        return id.equals(multiModalStation.getId()) ? multiModalStation.getCoordinate() : null;
+      }
     );
     var container = new TemporaryVerticesContainer();
     var from = GenericLocation.fromStopId(

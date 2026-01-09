@@ -64,8 +64,7 @@ class _RouteRequestTestContext {
       graph,
       vertexCreationService,
       transitService::findStopOrChildIds,
-      transitService::getStation,
-      transitService::getMultiModalStation
+      transitService::getStationOrMultiModalStationCentroid
     );
     this.context = new GraphQLRequestContext(
       new TestRoutingService(List.of()),
