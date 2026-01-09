@@ -64,6 +64,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Simplify handling of safety values [#6767](https://github.com/opentripplanner/OpenTripPlanner/pull/6767)
 - Change elevator cost calculation, add `reluctance` for elevators, and deprecate `elevatorHopCost` [#7111](https://github.com/opentripplanner/OpenTripPlanner/pull/7111)
 - Fix elevator ways with multiple intersection nodes [#7181](https://github.com/opentripplanner/OpenTripPlanner/pull/7181)
+- Improve indoor routing information in debug UI [#7174](https://github.com/opentripplanner/OpenTripPlanner/pull/7174)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
