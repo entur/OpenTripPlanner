@@ -189,7 +189,13 @@ class ElevatorProcessor {
 
     if (nodeLevels.size() != nodes.size()) {
       issueStore.add(
-        new CouldNotApplyMultiLevelInfoToElevatorWay(elevatorWay, nodeLevels.size(), nodes.size())
+        new CouldNotApplyMultiLevelInfoToElevatorWay(
+          elevatorWay,
+          osmdb.getNode(nodes.getFirst()).getCoordinate(),
+          osmdb.getNode(nodes.getLast()).getCoordinate(),
+          nodeLevels.size(),
+          nodes.size()
+        )
       );
       nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
     }
