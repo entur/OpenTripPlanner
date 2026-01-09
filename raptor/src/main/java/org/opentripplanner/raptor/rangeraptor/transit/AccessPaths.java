@@ -71,17 +71,17 @@ public class AccessPaths {
     }
 
     paths = decorateWithTimePenaltyLogic(paths);
-    var arrivedOnBoardByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedByWalking);
-    var arrivedOnStreetByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedOnBoard);
+    var arrivedOnStreetByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedByWalking);
+    var arrivedOnBoardByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedOnBoard);
 
     return new AccessPaths(
       iterationStep,
       iterationOp(searchDirection),
-      arrivedOnBoardByNumOfRides,
       arrivedOnStreetByNumOfRides,
+      arrivedOnBoardByNumOfRides,
       Math.max(
-        maxTimePenalty(arrivedOnBoardByNumOfRides),
-        maxTimePenalty(arrivedOnStreetByNumOfRides)
+        maxTimePenalty(arrivedOnStreetByNumOfRides),
+        maxTimePenalty(arrivedOnBoardByNumOfRides)
       )
     );
   }
