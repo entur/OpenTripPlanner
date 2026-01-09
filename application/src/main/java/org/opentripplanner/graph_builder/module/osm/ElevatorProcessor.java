@@ -13,6 +13,7 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
 import org.opentripplanner.graph_builder.issues.AllWaysOfElevatorNodeOnSameLevel;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToElevatorWay;
+import org.opentripplanner.graph_builder.issues.MoreThanTwoIntersectionNodesInElevatorWay;
 import org.opentripplanner.graph_builder.issues.OnlyOneConnectionToElevatorNode;
 import org.opentripplanner.graph_builder.issues.OnlyOneIntersectionNodeInElevatorWay;
 import org.opentripplanner.osm.model.OsmLevel;
@@ -138,9 +139,9 @@ class ElevatorProcessor {
       Map<OsmElevatorKey, OsmElevatorVertex> vertices = vertexGenerator.elevatorNodes().get(nodeId);
       Map<OsmElevatorKey, OsmLevel> verticeLevels = vertexGenerator.elevatorNodeLevels();
 
-      // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (vertices.size() < 2) {
         issueStore.add(new OnlyOneConnectionToElevatorNode(node));
+        // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
         continue;
       }
 
@@ -198,10 +199,19 @@ class ElevatorProcessor {
         .boxed()
         .toList();
 
-      // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (nodes.size() < 2) {
         issueStore.add(new OnlyOneIntersectionNodeInElevatorWay(way));
+        // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
         continue;
+      } else if (nodes.size() > 2) {
+        issueStore.add(
+          new MoreThanTwoIntersectionNodesInElevatorWay(
+            way,
+            osmdb.getNode(nodes.getFirst()).getCoordinate(),
+            osmdb.getNode(nodes.getLast()).getCoordinate(),
+            nodes.size()
+          )
+        );
       }
 
       if (nodeLevels.size() != nodes.size()) {
