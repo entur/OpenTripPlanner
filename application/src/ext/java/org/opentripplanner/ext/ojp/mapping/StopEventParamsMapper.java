@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.ojp.service;
+package org.opentripplanner.ext.ojp.mapping;
 
 import static java.lang.Boolean.TRUE;
 import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.OptionalFeature.ONWARD_CALLS;
@@ -23,12 +23,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.ojp.mapping.PtModeMapper;
-import org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper;
+import org.opentripplanner.ext.ojp.service.CallAtStopService;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.service.ArrivalDeparture;
 
-class StopEventParamsMapper {
+public class StopEventParamsMapper {
 
   private static final Duration DEFAULT_TIME_WINDOW = Duration.ofHours(2);
   public static final int DEFAULT_RADIUS_METERS = 1000;
@@ -36,12 +35,12 @@ class StopEventParamsMapper {
   private final ZoneId zoneId;
   private final FeedScopedIdMapper idMapper;
 
-  StopEventParamsMapper(ZoneId zoneId, FeedScopedIdMapper idMapper) {
+  public StopEventParamsMapper(ZoneId zoneId, FeedScopedIdMapper idMapper) {
     this.zoneId = zoneId;
     this.idMapper = idMapper;
   }
 
-  protected CallAtStopService.StopEventRequestParams extractStopEventParams(
+  public CallAtStopService.StopEventRequestParams extractStopEventParams(
     OJPStopEventRequestStructure ser
   ) {
     var time = Optional.ofNullable(ser.getLocation().getDepArrTime())
@@ -92,7 +91,7 @@ class StopEventParamsMapper {
     return b == null || TRUE.equals(b);
   }
 
-  static Set<StopEventResponseMapper.OptionalFeature> mapOptionalFeatures(
+  public static Set<StopEventResponseMapper.OptionalFeature> mapOptionalFeatures(
     StopEventParamStructure params
   ) {
     var res = new HashSet<StopEventResponseMapper.OptionalFeature>();

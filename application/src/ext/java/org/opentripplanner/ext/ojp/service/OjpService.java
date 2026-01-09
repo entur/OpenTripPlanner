@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.ojp.mapping.RouteRequestMapper;
+import org.opentripplanner.ext.ojp.mapping.StopEventParamsMapper;
 import org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper;
 import org.opentripplanner.ext.ojp.mapping.TripResponseMapper;
 import org.opentripplanner.framework.geometry.WgsCoordinate;

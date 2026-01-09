@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.ojp.mapping.StopEventParamsMapper;
 import org.opentripplanner.ojp.time.XmlDateTime;
 
 class StopEventParamsMapperTest {
