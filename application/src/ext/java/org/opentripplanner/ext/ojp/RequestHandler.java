@@ -19,6 +19,9 @@ import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Handles incoming OJP requests and routes them to the appropriate OJP service.
+ */
 public class RequestHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(RequestHandler.class);
@@ -36,7 +39,7 @@ public class RequestHandler {
     this.apiName = requireNonNull(apiName);
   }
 
-  public Response handleRequest(OJP ojp, RouteRequest routeRequest) {
+  public Response handleRequest(OJP ojp, RouteRequest defaultRequest) {
     try {
       var request = findRequest(ojp);
 
@@ -45,7 +48,7 @@ public class RequestHandler {
         StreamingOutput stream = responseMapper.apply(ojpResponse);
         return Response.ok(stream).build();
       } else if (request instanceof OJPTripRequestStructure tr) {
-        var ojpResponse = ojpService.handleTripRequest(tr, routeRequest);
+        var ojpResponse = ojpService.handleTripRequest(tr, defaultRequest);
         StreamingOutput stream = responseMapper.apply(ojpResponse);
         return Response.ok(stream).build();
       } else {

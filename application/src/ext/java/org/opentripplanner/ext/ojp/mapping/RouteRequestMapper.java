@@ -10,6 +10,7 @@ import de.vdv.ojp20.PlaceContextStructure;
 import de.vdv.ojp20.TripParamStructure;
 import de.vdv.ojp20.UseRealtimeDataEnumeration;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -17,8 +18,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
+import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.filter.SelectRequest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 
@@ -26,9 +29,11 @@ public class RouteRequestMapper {
 
   private final FeedScopedIdMapper idMapper;
   private final RouteRequest defaultRequest;
+  private final FilterMapper filterMapper;
 
   public RouteRequestMapper(FeedScopedIdMapper idMapper, RouteRequest defaultRequest) {
     this.idMapper = idMapper;
+    this.filterMapper = new FilterMapper(idMapper);
     this.defaultRequest = defaultRequest;
   }
 
@@ -44,6 +49,7 @@ public class RouteRequestMapper {
         .withFrom(from)
         .withTo(to)
         .withNumItineraries(numItineraries(tr))
+        .withJourney(j -> j.withModes(extractAccessAndEgressModes(tr)))
         .withPreferences(p -> {
           p.withTransit(t -> t.withIgnoreRealtimeUpdates(ignoreRealtime(tr)));
           transferSlack(tr).ifPresent(slack ->
@@ -54,10 +60,49 @@ public class RouteRequestMapper {
       addTime(origin, destination, builder);
       addExcludedModes(tr, builder);
       addIncludedModes(tr, builder);
+      addTransitFilters(tr, builder);
 
       return builder.buildRequest();
     }
     throw new IllegalArgumentException("TripRequest must have one origin and one destination.");
+  }
+
+  private void addTransitFilters(OJPTripRequestStructure tr, RouteRequestBuilder builder) {
+    var includedAgencies = filterMapper.includedAgencies(tr);
+    if (!includedAgencies.isEmpty()) {
+      builder.withJourney(j ->
+        j.withTransit(t ->
+          t.withFilter(b -> b.addSelect(SelectRequest.of().withAgencies(includedAgencies).build()))
+        )
+      );
+    }
+
+    var excludedAgencies = filterMapper.excludedAgencies(tr);
+    if (!excludedAgencies.isEmpty()) {
+      builder.withJourney(j ->
+        j.withTransit(t ->
+          t.withFilter(b -> b.addNot(SelectRequest.of().withAgencies(excludedAgencies).build()))
+        )
+      );
+    }
+
+    var includedRoutes = filterMapper.includedRoutes(tr);
+    if (!includedRoutes.isEmpty()) {
+      builder.withJourney(j ->
+        j.withTransit(t ->
+          t.withFilter(b -> b.addSelect(SelectRequest.of().withRoutes(includedRoutes).build()))
+        )
+      );
+    }
+
+    var excludedRoutes = filterMapper.excludedRoutes(tr);
+    if (!excludedRoutes.isEmpty()) {
+      builder.withJourney(j ->
+        j.withTransit(t ->
+          t.withFilter(b -> b.addNot(SelectRequest.of().withRoutes(excludedRoutes).build()))
+        )
+      );
+    }
   }
 
   private Optional<Duration> transferSlack(OJPTripRequestStructure tr) {
@@ -115,6 +160,35 @@ public class RouteRequestMapper {
     }
   }
 
+  private static RequestModes extractAccessAndEgressModes(OJPTripRequestStructure tr) {
+    var filters = modeFilter(tr)
+      .stream()
+      .flatMap(Collection::stream)
+      .filter(f -> !f.getPersonalMode().isEmpty())
+      .toList();
+
+    if (filters.isEmpty()) {
+      return RequestModes.defaultRequestModes();
+    } else if (filters.stream().anyMatch(f -> !FALSE.equals(f.isExclude()))) {
+      throw new IllegalArgumentException(
+        "Excluding personal modes is not supported (exclusion is default, set exclude=false)."
+      );
+    } else if (filters.size() != 1 || filters.getFirst().getPersonalMode().size() != 1) {
+      throw new IllegalArgumentException("Can only select a single personal mode.");
+    } else {
+      var mode = filters.getFirst().getPersonalMode().getFirst();
+      var streetMode = PersonalModeMapper.toStreetMode(mode);
+
+      return RequestModes.defaultRequestModes()
+        .copyOf()
+        .withAccessMode(streetMode)
+        .withTransferMode(StreetMode.WALK)
+        .withEgressMode(streetMode)
+        .withDirectMode(streetMode)
+        .build();
+    }
+  }
+
   private static boolean ignoreRealtime(OJPTripRequestStructure tr) {
     return Optional.ofNullable(tr.getParams())
       .map(TripParamStructure::getUseRealtimeData)
@@ -156,8 +230,7 @@ public class RouteRequestMapper {
     OJPTripRequestStructure tr,
     Predicate<ModeAndModeOfOperationFilterStructure> filterPredicate
   ) {
-    return Optional.ofNullable(tr.getParams())
-      .map(TripParamStructure::getModeAndModeOfOperationFilter)
+    return modeFilter(tr)
       .stream()
       .flatMap(List::stream)
       .filter(filterPredicate)
@@ -165,5 +238,13 @@ public class RouteRequestMapper {
       .map(PtModeMapper::map)
       .map(MainAndSubMode::new)
       .collect(Collectors.toList());
+  }
+
+  private static Optional<List<ModeAndModeOfOperationFilterStructure>> modeFilter(
+    OJPTripRequestStructure tr
+  ) {
+    return Optional.ofNullable(tr.getParams()).map(
+      TripParamStructure::getModeAndModeOfOperationFilter
+    );
   }
 }

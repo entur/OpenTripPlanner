@@ -6,19 +6,31 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import de.vdv.ojp20.LineDirectionFilterStructure;
 import de.vdv.ojp20.ModeAndModeOfOperationFilterStructure;
 import de.vdv.ojp20.OJPTripRequestStructure;
+import de.vdv.ojp20.OperatorFilterStructure;
+import de.vdv.ojp20.PersonalModesEnumeration;
 import de.vdv.ojp20.PlaceContextStructure;
 import de.vdv.ojp20.PlaceRefStructure;
 import de.vdv.ojp20.StopPlaceRefStructure;
 import de.vdv.ojp20.TripParamStructure;
+import de.vdv.ojp20.siri.LineDirectionStructure;
+import de.vdv.ojp20.siri.LineRefStructure;
 import de.vdv.ojp20.siri.LocationStructure;
+import de.vdv.ojp20.siri.OperatorRefStructure;
 import de.vdv.ojp20.siri.StopPointRefStructure;
 import de.vdv.ojp20.siri.VehicleModesOfTransportEnumeration;
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.StreetMode;
 
 class RouteRequestMapperTest {
 
@@ -37,7 +49,9 @@ class RouteRequestMapperTest {
     assertEquals(8.5417, routeRequest.from().lng);
     assertEquals(46.9480, routeRequest.to().lat);
     assertEquals(7.4474, routeRequest.to().lng);
-    assertTransitFilters(routeRequest, "[ALLOW_ALL]");
+    assertTransitFilters("[ALLOW_ALL]", routeRequest);
+
+    assertEquals(StreetMode.WALK, routeRequest.journey().access().mode());
   }
 
   @Test
@@ -161,7 +175,76 @@ class RouteRequestMapperTest {
 
     var routeRequest = mapper.map(tripRequest);
 
-    assertTransitFilters(routeRequest, "[(not: [(transportModes: [RAIL])])]");
+    assertTransitFilters("[(not: [(transportModes: [RAIL])])]", routeRequest);
+  }
+
+  private static List<Arguments> transitFilterCases() {
+    return List.of(
+      Arguments.of(
+        "[(select: [(transportModes: EMPTY, agencies: [F:agency1])])]",
+        new TripParamStructure()
+          .withOperatorFilter(
+            new OperatorFilterStructure()
+              .withExclude(false)
+              .withOperatorRef(List.of(new OperatorRefStructure().withValue("F:agency1")))
+          )
+      ),
+      Arguments.of(
+        "[(not: [(transportModes: EMPTY, agencies: [F:agency1])])]",
+        new TripParamStructure()
+          .withOperatorFilter(
+            new OperatorFilterStructure()
+              .withExclude(true)
+              .withOperatorRef(List.of(new OperatorRefStructure().withValue("F:agency1")))
+          )
+      ),
+      Arguments.of(
+        "[(select: [(transportModes: EMPTY, routes: [F:route1])])]",
+        new TripParamStructure()
+          .withLineFilter(
+            new LineDirectionFilterStructure()
+              .withExclude(false)
+              .withLine(
+                (new LineDirectionStructure()
+                    .withLineRef(new LineRefStructure().withValue("F:route1")))
+              )
+          )
+      ),
+      Arguments.of(
+        "[(not: [(transportModes: EMPTY, routes: [F:agency1])])]",
+        new TripParamStructure()
+          .withLineFilter(
+            new LineDirectionFilterStructure()
+              .withExclude(true)
+              .withLine(
+                (new LineDirectionStructure()
+                    .withLineRef(new LineRefStructure().withValue("F:agency1")))
+              )
+          )
+      ),
+      Arguments.of(
+        "[(not: [(transportModes: EMPTY, routes: [B:route2, A:route1])])]",
+        new TripParamStructure()
+          .withLineFilter(
+            new LineDirectionFilterStructure()
+              .withExclude(true)
+              .withLine(
+                new LineDirectionStructure()
+                  .withLineRef(new LineRefStructure().withValue("A:route1")),
+                new LineDirectionStructure()
+                  .withLineRef(new LineRefStructure().withValue("B:route2"))
+              )
+          )
+      )
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("transitFilterCases")
+  void transitFilter(String expectedFilter, TripParamStructure tripParamStructure) {
+    var tripRequest = baseRequest().withParams(tripParamStructure);
+    var routeRequest = mapper.map(tripRequest);
+    assertTransitFilters(expectedFilter, routeRequest);
   }
 
   @Test
@@ -174,13 +257,72 @@ class RouteRequestMapperTest {
     assertEquals(Duration.ofMinutes(10), routeRequest.preferences().transfer().slack());
   }
 
+  private static List<Arguments> personalModeCase() {
+    return List.of(
+      Arguments.of(PersonalModesEnumeration.FOOT, StreetMode.WALK),
+      Arguments.of(PersonalModesEnumeration.CAR, StreetMode.CAR)
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("personalModeCase")
+  void personalMode(PersonalModesEnumeration personalMode, StreetMode expectedMode) {
+    var tripRequest = baseRequest()
+      .withParams(
+        new TripParamStructure()
+          .withModeAndModeOfOperationFilter(
+            new ModeAndModeOfOperationFilterStructure()
+              .withExclude(false)
+              .withPersonalMode(personalMode)
+          )
+      );
+
+    var routeRequest = mapper.map(tripRequest);
+
+    assertEquals(expectedMode, routeRequest.journey().access().mode());
+  }
+
+  private static Stream<TripParamStructure> invalidPersonalModeCases() {
+    return Stream.of(
+      new TripParamStructure()
+        .withModeAndModeOfOperationFilter(
+          new ModeAndModeOfOperationFilterStructure()
+            .withExclude(true)
+            .withPersonalMode(PersonalModesEnumeration.BICYCLE)
+        ),
+      new TripParamStructure()
+        .withModeAndModeOfOperationFilter(
+          new ModeAndModeOfOperationFilterStructure()
+            .withExclude(false)
+            .withPersonalMode(PersonalModesEnumeration.BICYCLE, PersonalModesEnumeration.CAR)
+        ),
+      new TripParamStructure()
+        .withModeAndModeOfOperationFilter(
+          new ModeAndModeOfOperationFilterStructure()
+            .withExclude(false)
+            .withPersonalMode(PersonalModesEnumeration.BICYCLE),
+          new ModeAndModeOfOperationFilterStructure()
+            .withExclude(false)
+            .withPersonalMode(PersonalModesEnumeration.FOOT)
+        )
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("invalidPersonalModeCases")
+  void throwsExceptionForUnsupportedPersonalMode(TripParamStructure tripParamStructure) {
+    var tripRequest = baseRequest().withParams(tripParamStructure);
+
+    assertThrows(IllegalArgumentException.class, () -> mapper.map(tripRequest));
+  }
+
   private static OJPTripRequestStructure baseRequest() {
     return new OJPTripRequestStructure()
       .withOrigin(geoPosition(47.3769, 8.5417))
       .withDestination(geoPosition(46.9480, 7.4474));
   }
 
-  private static void assertTransitFilters(RouteRequest routeRequest, String expected) {
+  private static void assertTransitFilters(String expected, RouteRequest routeRequest) {
     assertEquals(expected, routeRequest.journey().transit().filters().toString());
   }
 

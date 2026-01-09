@@ -5,10 +5,8 @@ import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.Option
 import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.OptionalFeature.PREVIOUS_CALLS;
 import static org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper.OptionalFeature.REALTIME_DATA;
 
-import de.vdv.ojp20.LineDirectionFilterStructure;
 import de.vdv.ojp20.ModeFilterStructure;
 import de.vdv.ojp20.OJPStopEventRequestStructure;
-import de.vdv.ojp20.OperatorFilterStructure;
 import de.vdv.ojp20.PersonalModesEnumeration;
 import de.vdv.ojp20.StopEventParamStructure;
 import de.vdv.ojp20.StopEventTypeEnumeration;
@@ -33,11 +31,11 @@ public class StopEventParamsMapper {
   public static final int DEFAULT_RADIUS_METERS = 1000;
   public static final int DEFAULT_NUM_DEPARTURES = 1;
   private final ZoneId zoneId;
-  private final FeedScopedIdMapper idMapper;
+  private final FilterMapper filterMapper;
 
   public StopEventParamsMapper(ZoneId zoneId, FeedScopedIdMapper idMapper) {
     this.zoneId = zoneId;
-    this.idMapper = idMapper;
+    this.filterMapper = new FilterMapper(idMapper);
   }
 
   public CallAtStopService.StopEventRequestParams extractStopEventParams(
@@ -53,10 +51,10 @@ public class StopEventParamsMapper {
 
     var arrivalDeparture = arrivalDeparture(ser);
     var timeWindow = timeWindow(ser);
-    Set<FeedScopedId> includedAgencies = agencyFilter(ser, o -> !isExclude(o.isExclude()));
-    Set<FeedScopedId> includedRoutes = lineFilter(ser, o -> !isExclude(o.isExclude()));
-    Set<FeedScopedId> excludedAgencies = agencyFilter(ser, f -> isExclude(f.isExclude()));
-    Set<FeedScopedId> excludedRoutes = lineFilter(ser, f -> isExclude(f.isExclude()));
+    Set<FeedScopedId> includedAgencies = filterMapper.includedAgencies(ser);
+    Set<FeedScopedId> includedRoutes = filterMapper.includedRoutes(ser);
+    Set<FeedScopedId> excludedAgencies = filterMapper.excludedAgencies(ser);
+    Set<FeedScopedId> excludedRoutes = filterMapper.excludedRoutes(ser);
     Set<TransitMode> includedModes = modeFilter(ser, m -> !isExclude(m.isExclude()));
     Set<TransitMode> excludedModes = modeFilter(ser, m -> isExclude(m.isExclude()));
     int maxWalkDistance = Optional.ofNullable(ser.getLocation())
@@ -121,38 +119,6 @@ public class StopEventParamsMapper {
       .collect(Collectors.toSet());
   }
 
-  private Set<FeedScopedId> agencyFilter(
-    OJPStopEventRequestStructure ser,
-    Predicate<OperatorFilterStructure> predicate
-  ) {
-    return params(ser)
-      .map(p -> p.getOperatorFilter())
-      .filter(predicate)
-      .map(o -> o.getOperatorRef())
-      .stream()
-      .flatMap(r -> r.stream().map(ref -> ref.getValue()))
-      .map(idMapper::parse)
-      .collect(Collectors.toSet());
-  }
-
-  private Set<FeedScopedId> lineFilter(
-    OJPStopEventRequestStructure ser,
-    Predicate<LineDirectionFilterStructure> predicate
-  ) {
-    return params(ser)
-      .map(p -> p.getLineFilter())
-      .filter(predicate)
-      .map(o -> o.getLine())
-      .stream()
-      .flatMap(r -> r.stream().map(l -> l.getLineRef().getValue()))
-      .map(idMapper::parse)
-      .collect(Collectors.toSet());
-  }
-
-  private static Optional<StopEventParamStructure> params(OJPStopEventRequestStructure ser) {
-    return Optional.ofNullable(ser.getParams());
-  }
-
   private static ArrivalDeparture arrivalDeparture(OJPStopEventRequestStructure ser) {
     return params(ser)
       .map(StopEventParamStructure::getStopEventType)
@@ -170,5 +136,9 @@ public class StopEventParamsMapper {
 
   private static Duration timeWindow(OJPStopEventRequestStructure ser) {
     return params(ser).map(StopEventParamStructure::getTimeWindow).orElse(DEFAULT_TIME_WINDOW);
+  }
+
+  private static Optional<StopEventParamStructure> params(OJPStopEventRequestStructure ser) {
+    return Optional.ofNullable(ser.getParams());
   }
 }

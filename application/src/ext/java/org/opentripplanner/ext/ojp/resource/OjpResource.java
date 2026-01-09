@@ -46,15 +46,15 @@ public class OjpResource {
 
   public OjpResource(@Context OtpServerRequestContext context) {
     var transitService = context.transitService();
-    var service = new CallAtStopService(transitService, context.graphFinder());
+    var callAtStopService = new CallAtStopService(transitService, context.graphFinder());
     var idMapper = idMapper(context.ojpApiParameters());
-    var serviceMapper = new OjpService(
-      service,
+    var ojpService = new OjpService(
+      callAtStopService,
       context.routingService(),
       idMapper,
       transitService.getTimeZone()
     );
-    this.handler = new RequestHandler(serviceMapper, OjpCodec::serialize, "OJP");
+    this.handler = new RequestHandler(ojpService, OjpCodec::serialize, "OJP");
     this.defaultRouteRequest = context.defaultRouteRequest();
   }
 
