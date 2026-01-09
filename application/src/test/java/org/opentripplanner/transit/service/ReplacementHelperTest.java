@@ -1,5 +1,6 @@
 package org.opentripplanner.transit.service;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -80,11 +81,11 @@ public class ReplacementHelperTest implements RealtimeTestConstants {
     // Because we don't generate synthetic TripOnServiceDates, replacementFor is
     // going to be empty here! Have to generate another realtime trip to actually
     // get something in the replacementFor list.
-    // assertEquals(1, addedTripOnServiceDate.getReplacementFor().size());
+    // assertThat(addedTripOnServiceDate.getReplacementFor()).hasSize(1);
 
     var addedTripOnServiceDate2 = createReplacementTrip(ADDED_TRIP_ID, ADDED_TRIP_2_ID, "2");
     assertNotNull(addedTripOnServiceDate2);
-    assertEquals(1, addedTripOnServiceDate2.getReplacementFor().size());
+    assertThat(addedTripOnServiceDate2.getReplacementFor()).hasSize(1);
     assertEquals(addedTripOnServiceDate, addedTripOnServiceDate2.getReplacementFor().get(0));
 
     var transitService = env.transitService();
@@ -92,7 +93,7 @@ public class ReplacementHelperTest implements RealtimeTestConstants {
 
     assertTrue(replacementHelper.replacementsExist(transitService.getRoute(id(ROUTE_1_ID))));
 
-    // fails because there is no syntetic TOSD for TRIP_1_ID
+    // fails because there is no synthetic TOSD for TRIP_1_ID
     // assertTrue(replacementHelper.replacementsExist(transitService.getTrip(id(TRIP_1_ID))));
 
     assertEquals(
