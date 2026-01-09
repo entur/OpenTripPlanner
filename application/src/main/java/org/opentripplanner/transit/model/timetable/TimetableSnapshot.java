@@ -14,12 +14,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Predicate;
@@ -105,13 +103,6 @@ public class TimetableSnapshot {
    * TripPattern and date.
    */
   private final Map<FeedScopedId, SortedSet<Timetable>> timetables;
-  private final Set<TripPatternAndServiceDate> patternAndServiceDatesToBeRestored = new HashSet<>();
-
-  /**
-   * The scheduled timetables for patterns, required to restore the scheduled timetable when a
-   * pattern does not appear in real-time updates.
-   */
-  private final Map<FeedScopedId, Timetable> scheduledTimetables = new HashMap<>();
 
   /**
    * For cases where the trip pattern (sequence of stops visited) has been changed by a realtime
@@ -397,21 +388,9 @@ public class TimetableSnapshot {
     );
 
     if (updatesEventListener != null) {
-      for (var patternAndServiceDate : patternAndServiceDatesToBeRestored) {
-        if (!dirtyTimetables.containsKey(patternAndServiceDate)) {
-          var scheduledTimetable = scheduledTimetables.get(patternAndServiceDate.patternId());
-          dirtyTimetables.put(
-            patternAndServiceDate,
-            scheduledTimetable.copyForServiceDate(patternAndServiceDate.serviceDate)
-          );
-        }
-      }
-
       updatesEventListener.update(dirtyTimetables.values(), timetables::get);
     }
 
-    patternAndServiceDatesToBeRestored.clear();
-    scheduledTimetables.clear();
     dirtyTimetables.clear();
     dirty = false;
 
@@ -584,16 +563,14 @@ public class TimetableSnapshot {
     for (var entry : entriesToBeRemoved) {
       SortedSet<Timetable> timetablesOfPattern = entry.getValue();
       FeedScopedId patternId = entry.getKey();
-      if (!timetablesOfPattern.isEmpty()) {
-        scheduledTimetables.put(
-          patternId,
-          timetablesOfPattern.first().getPattern().getScheduledTimetable()
-        );
-      }
       for (var timetable : timetablesOfPattern) {
-        patternAndServiceDatesToBeRestored.add(
-          new TripPatternAndServiceDate(patternId, timetable.getServiceDate())
-        );
+        var serviceDate = timetable.getServiceDate();
+        var patternAndServiceDate = new TripPatternAndServiceDate(patternId, serviceDate);
+        var scheduledTimetable = timetable
+          .getPattern()
+          .getScheduledTimetable()
+          .copyForServiceDate(serviceDate);
+        dirtyTimetables.put(patternAndServiceDate, scheduledTimetable);
       }
     }
     return timetables.entrySet().removeAll(entriesToBeRemoved);
