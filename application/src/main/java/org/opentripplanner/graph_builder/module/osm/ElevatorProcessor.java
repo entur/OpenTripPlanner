@@ -200,7 +200,13 @@ class ElevatorProcessor {
         .toList();
 
       if (nodes.size() < 2) {
-        issueStore.add(new OnlyOneIntersectionNodeInElevatorWay(way));
+        issueStore.add(
+          new OnlyOneIntersectionNodeInElevatorWay(
+            way,
+            osmdb.getNode(nodes.getFirst()).getCoordinate(),
+            osmdb.getNode(nodes.getLast()).getCoordinate()
+          )
+        );
         // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
         continue;
       } else if (nodes.size() > 2) {
