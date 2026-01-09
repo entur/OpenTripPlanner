@@ -194,18 +194,14 @@ class ElevatorProcessor {
       }
       List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(way);
       List<Long> nodes = Arrays.stream(way.getNodeRefs().toArray())
-        .filter(
-          nodeRef ->
-            vertexGenerator.intersectionNodes().containsKey(nodeRef) &&
-            vertexGenerator.intersectionNodes().get(nodeRef) != null
-        )
+        .filter(nodeRef -> vertexGenerator.intersectionNodes().get(nodeRef) != null)
         .boxed()
         .toList();
 
       // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (nodes.size() < 2) {
         issueStore.add(new OnlyOneIntersectionNodeInElevatorWay(way));
-        return;
+        continue;
       }
 
       if (nodeLevels.size() != nodes.size()) {
