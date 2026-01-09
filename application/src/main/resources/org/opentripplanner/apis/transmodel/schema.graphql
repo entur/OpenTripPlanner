@@ -1055,11 +1055,11 @@ type RentalVehicleType {
   vehicleTypeId: String!
 }
 
-"Container for replacement properties for a TripOnServiceDate."
+"Container for replacement properties for a DatedServiceJourney."
 type Replacement {
-  "Is this trip a replacement?"
+  "Is this ServiceJourney a replacement?"
   isReplacement: Boolean!
-  "What TripOnServiceDates is this trip a replacement for? Only available for NeTEx-sourced data."
+  "What TripOnServiceDates is this ServiceJourney a replacement for? Only available for NeTEx-sourced data."
   replacementFor: [DatedServiceJourney!]
 }
 

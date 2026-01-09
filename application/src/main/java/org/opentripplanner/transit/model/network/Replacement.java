@@ -21,7 +21,7 @@ public class Replacement {
     this.replacementFor = List.copyOf(replacementFor);
   }
 
-  public boolean getIsReplacement() {
+  public boolean isReplacement() {
     return isReplacement;
   }
 

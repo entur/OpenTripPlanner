@@ -10,7 +10,7 @@ public class ReplacementImpl implements GraphQLDataFetchers.GraphQLReplacement {
 
   @Override
   public DataFetcher<Boolean> isReplacement() {
-    return environment -> getSource(environment).getIsReplacement();
+    return environment -> getSource(environment).isReplacement();
   }
 
   @Override

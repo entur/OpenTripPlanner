@@ -3,6 +3,7 @@ package org.opentripplanner.transit.service;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.network.Replacement;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
@@ -55,50 +56,50 @@ public class ReplacementHelper {
     );
   }
 
+  private boolean submodeIsReplacement(SubMode submode) {
+    return submode.toString().toLowerCase().contains("replacement");
+  }
+
+  private boolean isReplacementGtfsType(Route route) {
+    var type = route.getGtfsType();
+    return type != null && REPLACEMENT_EXTENDED_TYPES.contains(type);
+  }
+
   public boolean isReplacementRoute(Route route) {
-    if (route.getGtfsType() != null && REPLACEMENT_EXTENDED_TYPES.contains(route.getGtfsType())) {
-      return true;
-    }
-    return route.getNetexSubmode().toString().toLowerCase().contains("replacement");
+    return isReplacementGtfsType(route) || submodeIsReplacement(route.getNetexSubmode());
   }
 
   public boolean isReplacementTrip(Trip trip) {
-    var route = trip.getRoute();
-    if (route.getGtfsType() != null && REPLACEMENT_EXTENDED_TYPES.contains(route.getGtfsType())) {
-      return true;
-    }
-    return trip.getNetexSubMode().toString().toLowerCase().contains("replacement");
+    return isReplacementGtfsType(trip.getRoute()) || submodeIsReplacement(trip.getNetexSubMode());
+  }
+
+  private boolean haveReplacedByTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {
+    var id = tripOnServiceDate.getId();
+    return (
+      !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
+      (timetableSnapshot != null && timetableSnapshot.getReplacedByTripOnServiceDate(id).isEmpty())
+    );
   }
 
   public boolean replacementsExist(Route route) {
-    for (var tripOnServiceDate : transitService.listTripsOnServiceDate()) {
-      if (tripOnServiceDate.getTrip().getRoute().getId().equals(route.getId())) {
-        var id = tripOnServiceDate.getId();
-        if (
-          !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
-          (timetableSnapshot != null &&
-            !timetableSnapshot.getReplacedByTripOnServiceDate(id).isEmpty())
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return transitService
+      .listTripsOnServiceDate()
+      .stream()
+      .anyMatch(
+        tripOnServiceDate ->
+          tripOnServiceDate.getTrip().getRoute().getId().equals(route.getId()) &&
+          haveReplacedByTripOnServiceDate(tripOnServiceDate)
+      );
   }
 
   public boolean replacementsExist(Trip trip) {
-    for (var tripOnServiceDate : transitService.listTripsOnServiceDate()) {
-      if (tripOnServiceDate.getTrip().getId().equals(trip.getId())) {
-        var id = tripOnServiceDate.getId();
-        if (
-          !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
-          (timetableSnapshot != null &&
-            !timetableSnapshot.getReplacedByTripOnServiceDate(id).isEmpty())
-        ) {
-          return true;
-        }
-      }
-    }
-    return false;
+    return transitService
+      .listTripsOnServiceDate()
+      .stream()
+      .anyMatch(
+        tripOnServiceDate ->
+          tripOnServiceDate.getTrip().getId().equals(trip.getId()) &&
+          haveReplacedByTripOnServiceDate(tripOnServiceDate)
+      );
   }
 }
