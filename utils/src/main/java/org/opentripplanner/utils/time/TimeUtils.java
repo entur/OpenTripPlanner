@@ -276,14 +276,12 @@ public class TimeUtils {
   }
 
   /**
-   * The given {@code dateTime} will be set to a whole number of seconds. We don't do sub-second
-   * accuracy, and if we set the millisecond part to a non-zero value, rounding will not be
-   * guaranteed to be the same for departAt and arriveBy queries.
-   *
-   * If the given {@code dateTime} is {@code null}, then {@code null} is returned
+
+   * Truncates the time to the nearest second. If the given {@code dateTime} is {@code null},
+   * then {@code null} is returned
    */
   @Nullable
-  public static Instant normalizeDateTime(@Nullable Instant dateTime) {
+  public static Instant truncateToSeconds(@Nullable Instant dateTime) {
     return dateTime == null ? null : dateTime.truncatedTo(ChronoUnit.SECONDS);
   }
 }

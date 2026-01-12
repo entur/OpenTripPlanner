@@ -83,7 +83,7 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
-    this.startTime = TimeUtils.normalizeDateTime(builder.startTimeOrNow());
+    this.startTime = TimeUtils.truncateToSeconds(builder.startTimeOrNow());
     this.mode = builder.mode;
     this.arriveBy = builder.arriveBy;
     this.wheelchair = builder.wheelchairEnabled;

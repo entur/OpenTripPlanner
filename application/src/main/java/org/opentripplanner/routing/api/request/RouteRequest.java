@@ -94,9 +94,12 @@ public class RouteRequest implements Serializable {
     this.to = builder.to;
     this.via = builder.via;
 
+    // The given dateTime will be set to a whole number of seconds. We don't do sub-second
+    // accuracy, and if we set the millisecond part to a non-zero value, rounding will not be
+    // guaranteed to be the same for departAt and arriveBy queries.
     this.dateTime = (!builder.defaultRequest && builder.dateTime == null)
       ? normalizeNow()
-      : TimeUtils.normalizeDateTime(builder.dateTime);
+      : TimeUtils.truncateToSeconds(builder.dateTime);
 
     this.arriveBy = builder.arriveBy;
     this.timetableView = builder.timetableView;
@@ -121,7 +124,7 @@ public class RouteRequest implements Serializable {
   }
 
   public static Instant normalizeNow() {
-    return TimeUtils.normalizeDateTime(Instant.now());
+    return TimeUtils.truncateToSeconds(Instant.now());
   }
 
   public RouteRequestBuilder copyOf() {
