@@ -173,7 +173,7 @@ public final class TransitPreferences implements Serializable {
     return raptor;
   }
 
-  public Optional<DirectTransitPreferences> relaxedLimitedTransferSearch() {
+  public Optional<DirectTransitPreferences> directTransit() {
     return directTransitPreferences.enabled()
       ? Optional.of(directTransitPreferences)
       : Optional.empty();

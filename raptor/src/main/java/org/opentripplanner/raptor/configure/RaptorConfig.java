@@ -6,8 +6,6 @@ import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorEnvironment;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
-import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
-import org.opentripplanner.raptor.direct.service.DirectTransitSearch;
 import org.opentripplanner.raptor.rangeraptor.ConcurrentCompositeRaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.DefaultRangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.RangeRaptor;
@@ -95,39 +93,6 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
       threadPool(),
       environment::mapInterruptedException
     );
-  }
-
-  public DirectTransitSearch<T> createRelaxedLimitedTransferSearch(
-    RaptorTransitDataProvider<T> transitData,
-    RaptorDirectTransitRequest request
-  ) {
-    /*
-    var disableAccessEgress = rltRequest.disableAccessEgress();
-    var extraAccessEgressCostFactor = rltRequest.extraAccessEgressCostFactor();
-    var accesses = prepareAccessEgressForRelaxedLimitedTransferSearch(
-      request.searchParams().accessPaths(),
-      disableAccessEgress,
-      extraAccessEgressCostFactor
-    );
-    var egresses = prepareAccessEgressForRelaxedLimitedTransferSearch(
-      request.searchParams().egressPaths(),
-      disableAccessEgress,
-      extraAccessEgressCostFactor
-    );
-
-    var context = context(transitData, request);
-    return new RelaxedLimitedTransferSearch<>(
-      accesses,
-      egresses,
-      transitData,
-      request.earliestDepartureTime(),
-      request.searchWindowInSeconds(),
-      context.calculator(),
-      request.relaxC1()
-    );
-
-     */
-    return null;
   }
 
   private RaptorRouter<T> createRangeRaptorWithMcWorker(
@@ -239,20 +204,4 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
       environment.timeoutHook()
     );
   }
-
-  /*
-  ///  Filter and map the access/egresses according to the needs of the direct transit search.
-  private static Collection<RaptorAccessEgress> prepareAccessEgressForRelaxedLimitedTransferSearch(
-    Collection<RaptorAccessEgress> list,
-    boolean disableAccessEgress,
-    double extraCostFactor
-  ) {
-    return list
-      .stream()
-      .filter(ae -> !ae.hasRides() && !ae.hasOpeningHours())
-      .filter(ae -> !disableAccessEgress || ae.isFree())
-      .map(ae -> (RaptorAccessEgress) new AccessEgressWithExtraCost(ae, extraCostFactor))
-      .toList();
-  }*/
-
 }

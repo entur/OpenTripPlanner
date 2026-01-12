@@ -7,10 +7,7 @@ import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 
 public class DirectTransitRequestConfig {
 
-  static void map(
-    NodeAdapter root,
-    DirectTransitPreferences.Builder builder
-  ) {
+  static void map(NodeAdapter root, DirectTransitPreferences.Builder builder) {
     NodeAdapter c = root
       .of("directTransitSearch")
       .since(V2_9)
@@ -20,7 +17,7 @@ public class DirectTransitRequestConfig {
         The direct transit search finds paths using a single transit leg, limited to a specified
         cost window. It will find paths even if they are not optimal in regard to the criteria in
         the main raptor search.
-        
+
         This featue is off by default!
         """
       )
@@ -39,7 +36,7 @@ public class DirectTransitRequestConfig {
           .summary("The generalized-cost window for which paths to include.")
           .description(
             """
-            A generalized-cost relax function of `2x + 10m` will include paths that have a cost up 
+            A generalized-cost relax function of `2x + 10m` will include paths that have a cost up
             to 2 times plus 10 minutes compared to the cheapest path. I.e. if the cheapest path has
             a cost of 100m the results will include paths with a cost 210m.
             """
@@ -76,5 +73,4 @@ public class DirectTransitRequestConfig {
           .asBoolean(dft.disableAccessEgress())
       );
   }
-
 }

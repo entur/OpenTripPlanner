@@ -257,7 +257,7 @@ class RaptorRequestMapperTest {
   }
 
   private static RaptorRequest<TestTripSchedule> map(RouteRequest request) {
-    return RaptorRequestMapper.of(
+    return RaptorRequestMapper.<TestTripSchedule>of(
       request,
       ZonedDateTime.now(),
       false,
@@ -274,7 +274,7 @@ class RaptorRequestMapperTest {
         Set.of(),
         Set.of()
       )
-    );
+    ).mapRaptorRequest();
   }
 
   private static void assertFeatureSet(

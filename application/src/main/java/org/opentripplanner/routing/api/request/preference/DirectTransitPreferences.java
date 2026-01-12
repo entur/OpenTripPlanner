@@ -9,23 +9,33 @@ public class DirectTransitPreferences {
   /* The next constants are package-local to we readable in the unit-test. */
   static final double NOT_SET = -999.999;
   static final double DEFAULT_FACTOR = 1.0;
-  static final CostLinearFunction DEFAULT_COST_RELAX_FUNCTION =
-    CostLinearFunction.of(Cost.costOfMinutes(15), 1.5);
+  static final CostLinearFunction DEFAULT_COST_RELAX_FUNCTION = CostLinearFunction.of(
+    Cost.costOfMinutes(15),
+    1.5
+  );
 
-  public static final DirectTransitPreferences OFF =
-    new DirectTransitPreferences(CostLinearFunction.ZERO, NOT_SET, false);
+  public static final DirectTransitPreferences OFF = new DirectTransitPreferences(
+    CostLinearFunction.ZERO,
+    NOT_SET,
+    false
+  );
 
   public static final DirectTransitPreferences DEFAULT = new DirectTransitPreferences(
     DEFAULT_COST_RELAX_FUNCTION,
     DEFAULT_FACTOR,
-    false);
+    false
+  );
 
   private final CostLinearFunction costRelaxFunction;
   private final double extraAccessEgressCostFactor;
   // TODO: Find a better name. A Free access/egress, is also an access/egress...
   private final boolean disableAccessEgress;
 
-  public DirectTransitPreferences(CostLinearFunction costRelaxFunction, double extraAccessEgressCostFactor, boolean disableAccessEgress) {
+  public DirectTransitPreferences(
+    CostLinearFunction costRelaxFunction,
+    double extraAccessEgressCostFactor,
+    boolean disableAccessEgress
+  ) {
     this.costRelaxFunction = costRelaxFunction;
     this.extraAccessEgressCostFactor = extraAccessEgressCostFactor;
     this.disableAccessEgress = disableAccessEgress;
@@ -56,7 +66,6 @@ public class DirectTransitPreferences {
     return extraAccessEgressCostFactor != DEFAULT_FACTOR;
   }
 
-
   /// If access egress is disabled the search will only include results that require no access or
   /// egress. I.e. a stop-to-stop search.
   public boolean disableAccessEgress() {
@@ -82,11 +91,7 @@ public class DirectTransitPreferences {
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-      costRelaxFunction,
-      extraAccessEgressCostFactor,
-      disableAccessEgress
-    );
+    return Objects.hash(costRelaxFunction, extraAccessEgressCostFactor, disableAccessEgress);
   }
 
   private static <T> T valueOrDefault(T value, T notSet, T defaultValue) {
@@ -125,7 +130,11 @@ public class DirectTransitPreferences {
     public DirectTransitPreferences build() {
       var value = new DirectTransitPreferences(
         valueOrDefault(costRelaxFunction, OFF.costRelaxFunction, DEFAULT.costRelaxFunction),
-        valueOrDefault(extraAccessEgressCostFactor, OFF.extraAccessEgressCostFactor, DEFAULT.extraAccessEgressCostFactor),
+        valueOrDefault(
+          extraAccessEgressCostFactor,
+          OFF.extraAccessEgressCostFactor,
+          DEFAULT.extraAccessEgressCostFactor
+        ),
         valueOrDefault(disableAccessEgress, OFF.disableAccessEgress, DEFAULT.disableAccessEgress)
       );
       return original.equals(value) ? original : value;
