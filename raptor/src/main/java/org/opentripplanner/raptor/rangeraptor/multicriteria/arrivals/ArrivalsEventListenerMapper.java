@@ -63,8 +63,6 @@ public class ArrivalsEventListenerMapper<T extends RaptorTripSchedule> {
    * the "glue" make sure new destination arrivals are added to the destination arrivals.
    */
   private TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> map() {
-    // debugListener, nextSearchListener, egressListener
-
     for (int stop : nextConnectionListener.keys()) {
       append(stop, nextConnectionListener.get(stop));
     }

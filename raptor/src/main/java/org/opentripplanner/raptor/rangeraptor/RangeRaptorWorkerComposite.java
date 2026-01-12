@@ -11,9 +11,15 @@ import org.opentripplanner.raptor.util.composite.CompositeUtil;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 
 /**
- * Iterate over two RR workers. The head should process the access and the tail should produce the
- * result. Paths from the head needs to propagate to the tail - this is NOT part of the
- * responsibilities for this class.
+ * Iterates over a list of {@link RangeRaptorWorker} children. Each * {@code RangeRaptorWorker}
+ * method is called in order for all children. The final results are collected from all children
+ * and merged into a single {@link RaptorRouterResult}. Propagating state from one worker to
+ * another is deliberately kept outside the responsibility of this class.
+ * <p>
+ * This is used in via searches where each segment in the via search has its own
+ * worker. See
+ * {@link org.opentripplanner.raptor.rangeraptor.context.SearchContextViaSegments}
+ * for more information.
  */
 public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   implements RangeRaptorWorker<T> {

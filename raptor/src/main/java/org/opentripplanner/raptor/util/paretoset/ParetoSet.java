@@ -206,10 +206,6 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     );
   }
 
-  /**
-   * Notify subclasses about reindexing. This method is empty, and only exist for subclasses to
-   * override it.
-   */
   private void notifyElementMoved(int fromIndex, int toIndex) {
     if (fromIndex == marker) {
       marker = toIndex;
