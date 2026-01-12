@@ -163,15 +163,19 @@ public class TransitRouter {
 
     debugTimingAggregator.finishedRaptorSearch();
 
-
     // Route Direct transit
-    // TODO: Add performance mesurring for direct search
-    if(request.preferences().transit().relaxedLimitedTransferSearch().isPresent()) {
+    if (request.preferences().transit().directTransit().isPresent()) {
+      debugTimingAggregator.startedDirectTransitSearch();
       var directRequest = mapper.mapToDirectRequest(transitResponse.requestUsed().searchParams());
-      var directPaths = raptorService.findAllDirectTransit(directRequest, requestTransitDataProvider);
+      var directPaths = raptorService.findAllDirectTransit(
+        directRequest,
+        requestTransitDataProvider
+      );
       paths = new ArrayList<>(paths);
       paths.addAll(directPaths);
+      debugTimingAggregator.finishedDirectTransitSearch();
     }
+    debugTimingAggregator.startedItineraryCreation();
 
     // TODO VIA - Temporarily turn OptimizeTransfers OFF for VIA search until the service support via
     //            Remove '&& !request.isViaSearch()'
