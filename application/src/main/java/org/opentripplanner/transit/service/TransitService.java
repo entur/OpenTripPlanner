@@ -228,7 +228,8 @@ public interface TransitService {
   MultiModalStation findMultiModalStation(Station station);
 
   /**
-   * Return the centroid coordinate of a station or a multi-modal station.
+   * Return a representative coordinate (most likely the centroid) of a station,
+   * a multi-modal station or group of stations.
    */
   @Nullable
   Optional<WgsCoordinate> findStopLocationsGroupCoordinate(FeedScopedId id);

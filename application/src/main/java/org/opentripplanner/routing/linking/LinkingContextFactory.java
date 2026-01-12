@@ -46,7 +46,7 @@ public class LinkingContextFactory {
   private final VertexCreationService vertexCreationService;
   private final Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds;
   /**
-   * This can be either a normal or a multi-modal station.
+   * This can be either a station, a multi-modal station or a group of stations.
    */
   private final Function<FeedScopedId, Optional<WgsCoordinate>> findStopLocationsGroupCentroid;
 
