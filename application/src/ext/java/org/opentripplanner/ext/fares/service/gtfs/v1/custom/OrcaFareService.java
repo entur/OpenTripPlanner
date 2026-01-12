@@ -197,7 +197,8 @@ public class OrcaFareService extends DefaultFareService {
         try {
           int routeId = Integer.parseInt(route.getShortName());
           if (routeId >= 500 && routeId < 600) {
-            yield RideType.SOUND_TRANSIT_BUS; // CommTrans operates some ST routes.
+            // CommTrans operates some ST routes.
+            yield RideType.SOUND_TRANSIT_BUS;
           }
           yield RideType.COMM_TRANS_LOCAL_SWIFT;
         } catch (NumberFormatException e) {

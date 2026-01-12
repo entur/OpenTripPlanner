@@ -449,7 +449,8 @@ public class OsmModule implements GraphBuilderModule {
         }
 
         /* generate endpoints */
-        if (fromVertex == null) { // first iteration on this way
+        if (fromVertex == null) {
+          // first iteration on this way
           // make or get a shared vertex for flat intersections,
           // one vertex per level for multilevel nodes like elevators
           fromVertex = vertexGenerator.getVertexForOsmNode(osmStartNode, way, NORMAL);
@@ -460,7 +461,8 @@ public class OsmModule implements GraphBuilderModule {
               elevationData.put(fromVertex, elevation);
             }
           }
-        } else { // subsequent iterations
+        } else {
+          // subsequent iterations
           fromVertex = toVertex;
         }
 
@@ -535,7 +537,7 @@ public class OsmModule implements GraphBuilderModule {
       //Keep lambda! A method-ref would log incorrect class and line number
       //noinspection Convert2MethodRef
       progress.step(m -> LOG.info(m));
-    } // END loop over OSM ways
+    }
 
     LOG.info(progress.completeMessage());
   }
