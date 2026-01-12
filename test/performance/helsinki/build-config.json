@@ -40,13 +40,13 @@
   "transitFeeds": [
     {
       "type": "gtfs",
-      "source": "https://otp-performance.leonard.io/data/helsinki/hsl-gtfs-2026-1-12.zip",
+      "source": "https://otp-performance.leonard.io/data/helsinki/hsl-gtfs-2026-01-12.zip",
       "feedId": "HSL"
     }
   ],
   "osm": [
     {
-      "source": "https://otp-performance.leonard.io/data/helsinki/hsl-2026-1-12.osm.pbf"
+      "source": "https://otp-performance.leonard.io/data/helsinki/hsl-2026-01-12.osm.pbf"
     }
   ]
 }
