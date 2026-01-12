@@ -4,8 +4,8 @@ import com.google.common.collect.Multimap;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.transfer.regular.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 /**

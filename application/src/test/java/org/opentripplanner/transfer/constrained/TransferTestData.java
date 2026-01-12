@@ -1,4 +1,4 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.network.Route;

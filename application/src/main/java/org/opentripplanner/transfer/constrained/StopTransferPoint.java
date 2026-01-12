@@ -1,4 +1,4 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import java.io.Serializable;
 import org.opentripplanner.transit.model.site.StopLocation;

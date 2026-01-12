@@ -1,4 +1,4 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import java.util.HashMap;
 import java.util.List;

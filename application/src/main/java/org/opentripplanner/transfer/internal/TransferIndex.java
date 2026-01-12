@@ -1,8 +1,8 @@
 package org.opentripplanner.transfer.internal;
 
 import java.util.Collection;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.regular.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 /**

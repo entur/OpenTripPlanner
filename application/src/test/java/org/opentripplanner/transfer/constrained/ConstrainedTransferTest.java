@@ -1,17 +1,17 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.model.transfer.TransferTestData.ROUTE_POINT_1A;
-import static org.opentripplanner.model.transfer.TransferTestData.ROUTE_POINT_1S;
-import static org.opentripplanner.model.transfer.TransferTestData.ROUTE_POINT_2B;
-import static org.opentripplanner.model.transfer.TransferTestData.ROUTE_POINT_2S;
-import static org.opentripplanner.model.transfer.TransferTestData.STATION_POINT;
-import static org.opentripplanner.model.transfer.TransferTestData.STOP_POINT_A;
-import static org.opentripplanner.model.transfer.TransferTestData.STOP_POINT_B;
-import static org.opentripplanner.model.transfer.TransferTestData.TRIP_POINT_11_1;
-import static org.opentripplanner.model.transfer.TransferTestData.TRIP_POINT_21_3;
+import static org.opentripplanner.transfer.constrained.TransferTestData.ROUTE_POINT_1A;
+import static org.opentripplanner.transfer.constrained.TransferTestData.ROUTE_POINT_1S;
+import static org.opentripplanner.transfer.constrained.TransferTestData.ROUTE_POINT_2B;
+import static org.opentripplanner.transfer.constrained.TransferTestData.ROUTE_POINT_2S;
+import static org.opentripplanner.transfer.constrained.TransferTestData.STATION_POINT;
+import static org.opentripplanner.transfer.constrained.TransferTestData.STOP_POINT_A;
+import static org.opentripplanner.transfer.constrained.TransferTestData.STOP_POINT_B;
+import static org.opentripplanner.transfer.constrained.TransferTestData.TRIP_POINT_11_1;
+import static org.opentripplanner.transfer.constrained.TransferTestData.TRIP_POINT_21_3;
 
 import org.junit.jupiter.api.Test;
 

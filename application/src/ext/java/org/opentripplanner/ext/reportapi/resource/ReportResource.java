@@ -12,9 +12,9 @@ import org.opentripplanner.ext.reportapi.model.GraphReportBuilder;
 import org.opentripplanner.ext.reportapi.model.GraphReportBuilder.GraphStats;
 import org.opentripplanner.ext.reportapi.model.TransfersReport;
 import org.opentripplanner.ext.reportapi.model.TransitGroupPriorityReport;
-import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
+import org.opentripplanner.transfer.constrained.TransferService;
 import org.opentripplanner.transit.service.TransitService;
 
 @Path("/report")

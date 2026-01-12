@@ -1,12 +1,12 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.framework.application.OTPFeature.MinimumTransferTimeIsDefinitive;
-import static org.opentripplanner.model.transfer.TransferPriority.ALLOWED;
 import static org.opentripplanner.raptor.api.model.SearchDirection.FORWARD;
 import static org.opentripplanner.raptor.api.model.SearchDirection.REVERSE;
+import static org.opentripplanner.transfer.constrained.TransferPriority.ALLOWED;
 
 import java.util.function.IntSupplier;
 import org.junit.jupiter.api.Test;

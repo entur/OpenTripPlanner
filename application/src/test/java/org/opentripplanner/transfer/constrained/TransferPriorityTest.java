@@ -1,12 +1,12 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.model.transfer.TransferPriority.ALLOWED;
-import static org.opentripplanner.model.transfer.TransferPriority.NOT_ALLOWED;
-import static org.opentripplanner.model.transfer.TransferPriority.PREFERRED;
-import static org.opentripplanner.model.transfer.TransferPriority.RECOMMENDED;
+import static org.opentripplanner.transfer.constrained.TransferPriority.ALLOWED;
+import static org.opentripplanner.transfer.constrained.TransferPriority.NOT_ALLOWED;
+import static org.opentripplanner.transfer.constrained.TransferPriority.PREFERRED;
+import static org.opentripplanner.transfer.constrained.TransferPriority.RECOMMENDED;
 
 import org.junit.jupiter.api.Test;
 

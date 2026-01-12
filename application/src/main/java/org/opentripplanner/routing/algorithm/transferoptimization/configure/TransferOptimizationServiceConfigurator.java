@@ -3,7 +3,6 @@ package org.opentripplanner.routing.algorithm.transferoptimization.configure;
 import java.util.List;
 import java.util.function.IntFunction;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
@@ -19,6 +18,7 @@ import org.opentripplanner.routing.algorithm.transferoptimization.model.passthro
 import org.opentripplanner.routing.algorithm.transferoptimization.services.OptimizePathDomainService;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.TransferGenerator;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.TransferServiceAdaptor;
+import org.opentripplanner.transfer.constrained.TransferService;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 /**

@@ -1,4 +1,4 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 import static java.util.Comparator.comparingInt;
 

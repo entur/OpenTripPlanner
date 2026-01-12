@@ -1,4 +1,4 @@
-package org.opentripplanner.model.transfer;
+package org.opentripplanner.transfer.constrained;
 
 /**
  * Prioritize transfers between to trips. The priority goes from the lowest value NOT_ALLOWED to the
