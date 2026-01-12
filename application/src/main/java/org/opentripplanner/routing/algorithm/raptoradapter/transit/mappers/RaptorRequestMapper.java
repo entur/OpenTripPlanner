@@ -214,9 +214,12 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
   }
 
   public RaptorDirectTransitRequest mapToDirectRequest(SearchParams searchParamsUsed) {
-    var rel = request.preferences().transit().relaxedLimitedTransferSearch().orElseThrow();
+    var rel = request.preferences().transit().directTransit().orElseThrow();
     Collection<? extends RaptorAccessEgress> access = searchParamsUsed.accessPaths();
     Collection<? extends RaptorAccessEgress> egress = searchParamsUsed.egressPaths();
+
+    access = filterAccessEgressNoOpeningHours(access);
+    egress = filterAccessEgressNoOpeningHours(egress);
 
     if (rel.disableAccessEgress()) {
       access = filterAccessEgressKeepFree(access);
@@ -358,7 +361,13 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
   private List<? extends RaptorAccessEgress> filterAccessEgressKeepFree(
     Collection<? extends RaptorAccessEgress> list
   ) {
-    return list.stream().filter(it -> it.isFree()).toList();
+    return list.stream().filter(RaptorAccessEgress::isFree).toList();
+  }
+
+  private List<? extends RaptorAccessEgress> filterAccessEgressNoOpeningHours(
+    Collection<? extends RaptorAccessEgress> list
+  ) {
+    return list.stream().filter(it -> !it.hasOpeningHours()).toList();
   }
 
   private List<? extends RaptorAccessEgress> decorateAccessEgressWithExtraCost(
