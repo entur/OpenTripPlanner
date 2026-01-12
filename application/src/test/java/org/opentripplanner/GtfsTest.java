@@ -27,7 +27,7 @@ import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundle;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
 import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
-import org.opentripplanner.model.calendar.ServiceDateInterval;
+import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
@@ -213,7 +213,7 @@ public abstract class GtfsTest {
       gtfsBundleList,
       timetableRepository,
       graph,
-      ServiceDateInterval.unbounded()
+      LocalDateInterval.unbounded()
     );
 
     gtfsGraphBuilderImpl.buildGraph();
