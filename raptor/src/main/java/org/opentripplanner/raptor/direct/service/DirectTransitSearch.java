@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.relaxedlimitedtransfer;
+package org.opentripplanner.raptor.direct.service;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -8,9 +8,9 @@ import java.util.Optional;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
+import org.opentripplanner.raptor.api.model.SearchDirection;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.path.PathBuilder;
-import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.spi.BoardAndAlightTime;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorRoute;
@@ -19,44 +19,41 @@ import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 
-/// The relaxed limited transfer search finds paths using a single transit leg, limited to a
+/// The direct transit search finds paths using a single transit leg, limited to a
 /// specified cost window. It will find paths even if they are not optimal in regard to the criteria
 /// in the main raptor search.
-public class RelaxedLimitedTransferSearch<T extends RaptorTripSchedule> {
+public class DirectTransitSearch<T extends RaptorTripSchedule> {
 
-  private final RaptorTransitDataProvider<T> data;
-  private final RaptorTransitCalculator<T> transitCalculator;
   private final int earliestDepartureTime;
   private final int latestDepartureTime;
+  private final RelaxFunction relaxC1;
   private final Collection<RaptorAccessEgress> accesses;
   private final Collection<RaptorAccessEgress> egresses;
-  private final RelaxFunction relaxFunction;
+  private final RaptorTransitDataProvider<T> data;
 
   /* Variables used during the search (mutable) */
 
   private int currentRouteBoardSlack = 0;
 
-  public RelaxedLimitedTransferSearch(
-    Collection<RaptorAccessEgress> accesses,
-    Collection<RaptorAccessEgress> egresses,
-    RaptorTransitDataProvider<T> data,
+  public DirectTransitSearch(
     int earliestDepartureTime,
     int searchWindowInSeconds,
-    RaptorTransitCalculator<T> transitCalculator,
-    RelaxFunction costRelaxFunction
+    RelaxFunction relaxC1,
+    Collection<RaptorAccessEgress> accesses,
+    Collection<RaptorAccessEgress> egresses,
+    RaptorTransitDataProvider<T> data
   ) {
-    this.data = data;
-    this.transitCalculator = transitCalculator;
     this.earliestDepartureTime = earliestDepartureTime;
     this.latestDepartureTime = earliestDepartureTime + searchWindowInSeconds;
+    this.relaxC1 = relaxC1;
     this.accesses = accesses;
     this.egresses = egresses;
-    this.relaxFunction = costRelaxFunction;
+    this.data = data;
   }
 
   /// Run the search
   public Collection<RaptorPath<T>> route() {
-    var results = new ParetoSet<RaptorPath<T>>(new DestinationArrivalComparator<>(relaxFunction));
+    var results = new ParetoSet<RaptorPath<T>>(new DestinationArrivalComparator<>(relaxC1));
 
     var routes = data.routeIndexIterator(findAllAccessStopIndexes());
 
@@ -122,7 +119,7 @@ public class RelaxedLimitedTransferSearch<T extends RaptorTripSchedule> {
     int alightPos
   ) {
     var timetable = route.timetable();
-    var search = transitCalculator.createTripSearch(timetable);
+    var search = timetable.tripSearch(SearchDirection.FORWARD);
     int boardTime = earliestDepartureTime + access.durationInSeconds() + currentRouteBoardSlack;
 
     // find the first possible trip

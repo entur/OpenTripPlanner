@@ -7,24 +7,23 @@ import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
 import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
-import org.opentripplanner.raptor.api.model.GeneralizedCostRelaxFunction;
-import org.opentripplanner.raptor.api.request.RaptorRequest;
-import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
-import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.raptor.configure.RaptorTestFactory;
+import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
 
 /**
  * FEATURE UNDER TEST
  * <p>
- * The relaxed limited transfer search should include trips within the cost limit
+ * The direct transit search should include trips within the cost limit
  */
 public class M04_RelaxedCostLimit implements RaptorTestConstants {
 
-  private final RaptorConfig<TestTripSchedule> config = RaptorTestFactory.configForTest();
+  private final TestTransitData data = new TestTransitData();
+  private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
   ///  Expensive trips should be included if they are optimal on arrival or departure
   @Test
@@ -39,7 +38,7 @@ public class M04_RelaxedCostLimit implements RaptorTestConstants {
         )
       );
 
-    var result = config.createRelaxedLimitedTransferSearch(data, createRequest()).route();
+    var result = raptorService.findAllDirectTransit(createRequest(), data);
     assertEquals(
       "A ~ BUS SLOW 0:05 1:05 ~ B [0:05 1:05 1h Tₙ0 C₁4_200]\n" +
       "A ~ BUS FAST 1:00 1:10 ~ B [1:00 1:10 10m Tₙ0 C₁1_200]\n" +
@@ -57,7 +56,7 @@ public class M04_RelaxedCostLimit implements RaptorTestConstants {
       .withRoute(route(pattern("SLOWER", STOP_A, STOP_B)).withTimetable(schedule("01:00, 01:29")))
       .withRoute(route(pattern("SLOWEST", STOP_A, STOP_B)).withTimetable(schedule("01:00, 01:30")));
 
-    var result = config.createRelaxedLimitedTransferSearch(data, createRequest()).route();
+    var result = raptorService.findAllDirectTransit(createRequest(), data);
     assertEquals(
       "A ~ BUS FAST 1:00 1:10 ~ B [1:00 1:10 10m Tₙ0 C₁1_200]\n" +
       "A ~ BUS SLOWER 1:00 1:29 ~ B [1:00 1:29 29m Tₙ0 C₁2_340]",
@@ -65,19 +64,12 @@ public class M04_RelaxedCostLimit implements RaptorTestConstants {
     );
   }
 
-  private RaptorRequest<TestTripSchedule> createRequest() {
-    RaptorRequestBuilder<TestTripSchedule> requestBuilder = new RaptorRequestBuilder<>();
-    requestBuilder
-      .searchParams()
+  private RaptorDirectTransitRequest createRequest() {
+    return RaptorDirectTransitRequest.of()
+      .earliestDepartureTime(T00_00)
+      .searchWindowInSeconds(D24h)
       .addAccessPaths(TestAccessEgress.free(STOP_A))
       .addEgressPaths(TestAccessEgress.free(STOP_B))
-      .earliestDepartureTime(T00_00)
-      .searchWindowInSeconds(D24h);
-    requestBuilder.withMultiCriteria(mc ->
-      mc.withRelaxedLimitedTransferRequest(rlt ->
-        rlt.withEnabled(true).withCostRelaxFunction(GeneralizedCostRelaxFunction.of(2))
-      )
-    );
-    return requestBuilder.build();
+      .build();
   }
 }

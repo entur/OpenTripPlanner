@@ -26,8 +26,11 @@ import org.opentripplanner.raptor.api.request.Optimization;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
+import org.opentripplanner.raptor.api.request.SearchParams;
+import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
 import org.opentripplanner.raptor.rangeraptor.SystemErrDebugLogger;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.performance.PerformanceTimersForRaptor;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.AccessEgressWithExtraCost;
 import org.opentripplanner.routing.api.request.DebugEventType;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
@@ -76,7 +79,7 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     this.linkingContext = Objects.requireNonNull(linkingContext);
   }
 
-  public static <T extends RaptorTripSchedule> RaptorRequest<T> mapRequest(
+  public static <T extends RaptorTripSchedule> RaptorRequestMapper<T> of(
     RouteRequest request,
     ZonedDateTime transitSearchTimeZero,
     boolean isMultiThreaded,
@@ -97,10 +100,10 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       viaTransferResolver,
       lookUpStopIndex,
       linkingContext
-    ).doMap();
+    );
   }
 
-  private RaptorRequest<T> doMap() {
+  public RaptorRequest<T> mapRaptorRequest() {
     var builder = new RaptorRequestBuilder<T>();
     var searchParams = builder.searchParams();
     var preferences = request.preferences();
@@ -153,17 +156,6 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       // relax transit group priority can be used with via-visit-stop, but not with pass-through
       if (pt.isRelaxTransitGroupPrioritySet() && !hasPassThroughOnly()) {
         mapRelaxTransitGroupPriority(mcBuilder, pt);
-      }
-
-      var rel = pt.relaxedLimitedTransferSearch();
-      if (rel.enabled()) {
-        mcBuilder.withRelaxedLimitedTransferRequest(relaxedSearch ->
-          relaxedSearch
-            .withEnabled(true)
-            .withCostRelaxFunction(mapRelaxCost(rel.costRelaxFunction()))
-            .withDisableAccessEgress(rel.disableAccessEgress())
-            .withExtraAccessEgressCostFactor(rel.extraAccessEgressCostFactor())
-        );
       }
     });
 
@@ -219,6 +211,31 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       );
     }
     return builder.build();
+  }
+
+  public RaptorDirectTransitRequest mapToDirectRequest(SearchParams searchParamsUsed) {
+    var rel = request.preferences().transit().relaxedLimitedTransferSearch().orElseThrow();
+    Collection<? extends RaptorAccessEgress> access = searchParamsUsed.accessPaths();
+    Collection<? extends RaptorAccessEgress> egress = searchParamsUsed.egressPaths();
+
+    if (rel.disableAccessEgress()) {
+      access = filterAccessEgressKeepFree(access);
+      egress = filterAccessEgressKeepFree(egress);
+    }
+    if (rel.addExtraGeneralizedCostToAccessAndEgress()) {
+      double f = rel.extraAccessEgressCostFactor();
+      access = decorateAccessEgressWithExtraCost(access, f);
+      egress = decorateAccessEgressWithExtraCost(egress, f);
+    }
+
+    var directRequest = RaptorDirectTransitRequest.of()
+      .addAccessPaths(access)
+      .addEgressPaths(egress)
+      .searchWindowInSeconds(searchParamsUsed.searchWindowInSeconds())
+      .earliestDepartureTime(searchParamsUsed.earliestDepartureTime())
+      .withRelaxC1(mapRelaxCost(rel.costRelaxFunction()))
+      .build();
+    return directRequest;
   }
 
   private boolean hasPassThroughOnly() {
@@ -334,5 +351,20 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       }
     }
     return result;
+  }
+
+  /* Direct transit private methods */
+
+  private List<? extends RaptorAccessEgress> filterAccessEgressKeepFree(
+    Collection<? extends RaptorAccessEgress> list
+  ) {
+    return list.stream().filter(it -> it.isFree()).toList();
+  }
+
+  private List<? extends RaptorAccessEgress> decorateAccessEgressWithExtraCost(
+    Collection<? extends RaptorAccessEgress> list,
+    double costFactor
+  ) {
+    return list.stream().map(it -> new AccessEgressWithExtraCost(it, costFactor)).toList();
   }
 }

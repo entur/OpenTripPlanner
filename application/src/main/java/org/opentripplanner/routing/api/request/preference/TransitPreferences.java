@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
@@ -31,7 +32,7 @@ public final class TransitPreferences implements Serializable {
   private final boolean includePlannedCancellations;
   private final boolean includeRealtimeCancellations;
   private final RaptorPreferences raptor;
-  private final RelaxedLimitedTransferPreferences relaxedLimitedTransferSearch;
+  private final DirectTransitPreferences directTransitPreferences;
 
   private TransitPreferences() {
     this.boardSlack = this.alightSlack = DurationForEnum.of(TransitMode.class).build();
@@ -43,7 +44,7 @@ public final class TransitPreferences implements Serializable {
     this.includePlannedCancellations = false;
     this.includeRealtimeCancellations = false;
     this.raptor = RaptorPreferences.DEFAULT;
-    this.relaxedLimitedTransferSearch = RelaxedLimitedTransferPreferences.DEFAULT;
+    this.directTransitPreferences = DirectTransitPreferences.OFF;
   }
 
   private TransitPreferences(Builder builder) {
@@ -57,7 +58,7 @@ public final class TransitPreferences implements Serializable {
     this.includePlannedCancellations = builder.includePlannedCancellations;
     this.includeRealtimeCancellations = builder.includeRealtimeCancellations;
     this.raptor = requireNonNull(builder.raptor);
-    this.relaxedLimitedTransferSearch = requireNonNull(builder.relaxedLimitedTransferSearch);
+    this.directTransitPreferences = requireNonNull(builder.directTransitPreferences);
   }
 
   public static Builder of() {
@@ -172,8 +173,10 @@ public final class TransitPreferences implements Serializable {
     return raptor;
   }
 
-  public RelaxedLimitedTransferPreferences relaxedLimitedTransferSearch() {
-    return relaxedLimitedTransferSearch;
+  public Optional<DirectTransitPreferences> relaxedLimitedTransferSearch() {
+    return directTransitPreferences.enabled()
+      ? Optional.of(directTransitPreferences)
+      : Optional.empty();
   }
 
   @Override
@@ -196,7 +199,7 @@ public final class TransitPreferences implements Serializable {
       includePlannedCancellations == that.includePlannedCancellations &&
       includeRealtimeCancellations == that.includeRealtimeCancellations &&
       raptor.equals(that.raptor) &&
-      relaxedLimitedTransferSearch.equals(that.relaxedLimitedTransferSearch)
+      directTransitPreferences.equals(that.directTransitPreferences)
     );
   }
 
@@ -213,7 +216,7 @@ public final class TransitPreferences implements Serializable {
       includePlannedCancellations,
       includeRealtimeCancellations,
       raptor,
-      relaxedLimitedTransferSearch
+      directTransitPreferences
     );
   }
 
@@ -261,7 +264,7 @@ public final class TransitPreferences implements Serializable {
     private boolean includePlannedCancellations;
     private boolean includeRealtimeCancellations;
     private RaptorPreferences raptor;
-    private RelaxedLimitedTransferPreferences relaxedLimitedTransferSearch;
+    private DirectTransitPreferences directTransitPreferences;
 
     public Builder(TransitPreferences original) {
       this.original = original;
@@ -275,7 +278,7 @@ public final class TransitPreferences implements Serializable {
       this.includePlannedCancellations = original.includePlannedCancellations;
       this.includeRealtimeCancellations = original.includeRealtimeCancellations;
       this.raptor = original.raptor;
-      this.relaxedLimitedTransferSearch = original.relaxedLimitedTransferSearch;
+      this.directTransitPreferences = original.directTransitPreferences;
     }
 
     public TransitPreferences original() {
@@ -345,12 +348,10 @@ public final class TransitPreferences implements Serializable {
       return this;
     }
 
-    public Builder withRelaxedLimitedTransferSearch(
-      Consumer<RelaxedLimitedTransferPreferences.Builder> body
-    ) {
-      var builder = relaxedLimitedTransferSearch.copyOf();
+    public Builder withDirectTransitPreferences(Consumer<DirectTransitPreferences.Builder> body) {
+      var builder = directTransitPreferences.copyOf();
       body.accept(builder);
-      this.relaxedLimitedTransferSearch = builder.build();
+      this.directTransitPreferences = builder.build();
       return this;
     }
 

@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.transit;
+package org.opentripplanner.routing.algorithm.raptoradapter.transit;
 
 import org.opentripplanner.raptor.api.model.AbstractAccessEgressDecorator;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;

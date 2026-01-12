@@ -1,13 +1,13 @@
 package org.opentripplanner.raptor.configure;
 
-import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorEnvironment;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
+import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
+import org.opentripplanner.raptor.direct.service.DirectTransitSearch;
 import org.opentripplanner.raptor.rangeraptor.ConcurrentCompositeRaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.DefaultRangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.RangeRaptor;
@@ -24,9 +24,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.configure.McRangeRaptorConfig;
 import org.opentripplanner.raptor.rangeraptor.standard.configure.StdRangeRaptorConfig;
-import org.opentripplanner.raptor.rangeraptor.transit.AccessEgressWithExtraCost;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorSearchWindowCalculator;
-import org.opentripplanner.raptor.relaxedlimitedtransfer.RelaxedLimitedTransferSearch;
 import org.opentripplanner.raptor.spi.ExtraMcRouterSearch;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 
@@ -99,11 +97,11 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     );
   }
 
-  public RelaxedLimitedTransferSearch<T> createRelaxedLimitedTransferSearch(
+  public DirectTransitSearch<T> createRelaxedLimitedTransferSearch(
     RaptorTransitDataProvider<T> transitData,
-    RaptorRequest<T> request
+    RaptorDirectTransitRequest request
   ) {
-    var rltRequest = request.multiCriteria().relaxedLimitedTransferRequest();
+    /*
     var disableAccessEgress = rltRequest.disableAccessEgress();
     var extraAccessEgressCostFactor = rltRequest.extraAccessEgressCostFactor();
     var accesses = prepareAccessEgressForRelaxedLimitedTransferSearch(
@@ -122,11 +120,14 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
       accesses,
       egresses,
       transitData,
-      request.searchParams().earliestDepartureTime(),
-      request.searchParams().searchWindowInSeconds(),
+      request.earliestDepartureTime(),
+      request.searchWindowInSeconds(),
       context.calculator(),
-      rltRequest.costRelaxFunction()
+      request.relaxC1()
     );
+
+     */
+    return null;
   }
 
   private RaptorRouter<T> createRangeRaptorWithMcWorker(
@@ -239,7 +240,8 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     );
   }
 
-  ///  Filter and map the access egresses according to the needs of the relaxed limited transfer search.
+  /*
+  ///  Filter and map the access/egresses according to the needs of the direct transit search.
   private static Collection<RaptorAccessEgress> prepareAccessEgressForRelaxedLimitedTransferSearch(
     Collection<RaptorAccessEgress> list,
     boolean disableAccessEgress,
@@ -251,5 +253,6 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
       .filter(ae -> !disableAccessEgress || ae.isFree())
       .map(ae -> (RaptorAccessEgress) new AccessEgressWithExtraCost(ae, extraCostFactor))
       .toList();
-  }
+  }*/
+
 }

@@ -136,7 +136,8 @@ public class TransitRouter {
     );
 
     // Prepare transit search
-    var raptorRequest = RaptorRequestMapper.<TripSchedule>mapRequest(
+
+    var mapper = RaptorRequestMapper.<TripSchedule>of(
       request,
       transitSearchTimeZero,
       serverContext.raptorConfig().isMultiThreaded(),
@@ -147,8 +148,9 @@ public class TransitRouter {
       this::listStopIndexes,
       linkingContext
     );
+    var raptorRequest = mapper.mapRaptorRequest();
 
-    // Route transit
+    // Route McRangeRaptor transit
     var raptorService = new RaptorService<>(
       serverContext.raptorConfig(),
       createExtraMcRouterSearch(accessEgresses, raptorTransitData)
@@ -157,9 +159,19 @@ public class TransitRouter {
 
     checkIfTransitConnectionExists(transitResponse);
 
+    Collection<RaptorPath<TripSchedule>> paths = transitResponse.paths();
+
     debugTimingAggregator.finishedRaptorSearch();
 
-    Collection<RaptorPath<TripSchedule>> paths = transitResponse.paths();
+
+    // Route Direct transit
+    // TODO: Add performance mesurring for direct search
+    if(request.preferences().transit().relaxedLimitedTransferSearch().isPresent()) {
+      var directRequest = mapper.mapToDirectRequest(transitResponse.requestUsed().searchParams());
+      var directPaths = raptorService.findAllDirectTransit(directRequest, requestTransitDataProvider);
+      paths = new ArrayList<>(paths);
+      paths.addAll(directPaths);
+    }
 
     // TODO VIA - Temporarily turn OptimizeTransfers OFF for VIA search until the service support via
     //            Remove '&& !request.isViaSearch()'

@@ -361,7 +361,9 @@
                 <configuration>
                     <configLocation>${maven.multiModuleProjectDirectory}/checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
+                    <!--logViolationsToConsole>true</logViolationsToConsole -->
                     <failsOnError>true</failsOnError>
+                    <!--violationSeverity>warning</violationSeverity -->
                     <linkXRef>false</linkXRef>
                     <skip>${plugin.checkstyle.skip}</skip>
                     <includeTestSourceDirectory>true</includeTestSourceDirectory>

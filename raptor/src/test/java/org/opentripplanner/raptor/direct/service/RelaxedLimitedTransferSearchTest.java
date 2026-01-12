@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.relaxedlimitedtransfer;
+package org.opentripplanner.raptor.direct.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -21,7 +21,7 @@ class RelaxedLimitedTransferSearchTest {
   }
 
   private int iterationDeparture(int accessDuration, int boardTime, int boardSlack) {
-    return RelaxedLimitedTransferSearch.calculateIterationDepartureTime(
+    return DirectTransitSearch.calculateIterationDepartureTime(
       accessDuration,
       boardTime,
       boardSlack

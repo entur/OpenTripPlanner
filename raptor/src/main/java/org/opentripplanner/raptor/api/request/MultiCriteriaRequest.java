@@ -2,7 +2,6 @@ package org.opentripplanner.raptor.api.request;
 
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
@@ -20,18 +19,14 @@ public class MultiCriteriaRequest<T extends RaptorTripSchedule> {
   @Nullable
   private final RaptorTransitGroupPriorityCalculator transitPriorityCalculator;
 
-  private final RelaxedLimitedTransferRequest relaxedLimitedTransferRequest;
-
   private MultiCriteriaRequest() {
     this.relaxC1 = RelaxFunction.NORMAL;
     this.transitPriorityCalculator = null;
-    this.relaxedLimitedTransferRequest = RelaxedLimitedTransferRequest.of().build();
   }
 
   public MultiCriteriaRequest(Builder<T> builder) {
     this.relaxC1 = Objects.requireNonNull(builder.relaxC1());
     this.transitPriorityCalculator = builder.transitPriorityCalculator();
-    this.relaxedLimitedTransferRequest = builder.relaxedLimitedTransferRequest();
   }
 
   public static <S extends RaptorTripSchedule> Builder<S> of() {
@@ -62,11 +57,6 @@ public class MultiCriteriaRequest<T extends RaptorTripSchedule> {
     return Optional.ofNullable(transitPriorityCalculator);
   }
 
-  ///  The Request for configuring relaxed limited transfer search
-  public RelaxedLimitedTransferRequest relaxedLimitedTransferRequest() {
-    return relaxedLimitedTransferRequest;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -78,14 +68,13 @@ public class MultiCriteriaRequest<T extends RaptorTripSchedule> {
     MultiCriteriaRequest<?> that = (MultiCriteriaRequest<?>) o;
     return (
       Objects.equals(relaxC1, that.relaxC1) &&
-      Objects.equals(transitPriorityCalculator, that.transitPriorityCalculator) &&
-      Objects.equals(relaxedLimitedTransferRequest, that.relaxedLimitedTransferRequest)
+      Objects.equals(transitPriorityCalculator, that.transitPriorityCalculator)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(relaxC1, transitPriorityCalculator, relaxedLimitedTransferRequest);
+    return Objects.hash(relaxC1, transitPriorityCalculator);
   }
 
   @Override
@@ -101,13 +90,11 @@ public class MultiCriteriaRequest<T extends RaptorTripSchedule> {
     private final MultiCriteriaRequest<T> original;
     private RelaxFunction relaxC1;
     private RaptorTransitGroupPriorityCalculator transitPriorityCalculator;
-    private RelaxedLimitedTransferRequest relaxedLimitedTransferRequest;
 
     public Builder(MultiCriteriaRequest<T> original) {
       this.original = original;
       this.relaxC1 = original.relaxC1;
       this.transitPriorityCalculator = original.transitPriorityCalculator;
-      this.relaxedLimitedTransferRequest = original.relaxedLimitedTransferRequest;
     }
 
     @Nullable
@@ -127,19 +114,6 @@ public class MultiCriteriaRequest<T extends RaptorTripSchedule> {
 
     public Builder<T> withTransitPriorityCalculator(RaptorTransitGroupPriorityCalculator value) {
       transitPriorityCalculator = value;
-      return this;
-    }
-
-    public RelaxedLimitedTransferRequest relaxedLimitedTransferRequest() {
-      return relaxedLimitedTransferRequest;
-    }
-
-    public Builder<T> withRelaxedLimitedTransferRequest(
-      Consumer<RelaxedLimitedTransferRequest.Builder> body
-    ) {
-      var builder = this.relaxedLimitedTransferRequest.copyOf();
-      body.accept(builder);
-      this.relaxedLimitedTransferRequest = builder.build();
       return this;
     }
 
