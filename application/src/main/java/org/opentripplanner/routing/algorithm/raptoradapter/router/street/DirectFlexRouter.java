@@ -55,6 +55,7 @@ public class DirectFlexRouter {
       serverContext.graph(),
       serverContext.transitService(),
       serverContext.transferService(),
+      serverContext.streetDetailsService(),
       serverContext.flexParameters(),
       FilterMapper.map(request.journey().transit().filters()),
       request.dateTime(),

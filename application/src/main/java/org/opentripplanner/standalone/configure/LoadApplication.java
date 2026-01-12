@@ -11,6 +11,7 @@ import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.standalone.config.CommandLineParameters;
@@ -62,6 +63,7 @@ public class LoadApplication {
     return createAppConstruction(
       obj.graph,
       obj.osmInfoGraphBuildRepository,
+      obj.streetDetailsRepository,
       obj.timetableRepository,
       obj.transferRepository,
       obj.worldEnvelopeRepository,
@@ -80,6 +82,7 @@ public class LoadApplication {
     return createAppConstruction(
       factory.emptyGraph(),
       factory.emptyOsmInfoGraphBuildRepository(),
+      factory.emptyStreetDetailsRepository(),
       factory.emptyTimetableRepository(),
       factory.emptyTransferRepository(),
       factory.emptyWorldEnvelopeRepository(),
@@ -107,6 +110,7 @@ public class LoadApplication {
   private ConstructApplication createAppConstruction(
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
+    StreetDetailsRepository streetDetailsRepository,
     TimetableRepository timetableRepository,
     TransferRepository transferRepository,
     WorldEnvelopeRepository worldEnvelopeRepository,
@@ -122,6 +126,7 @@ public class LoadApplication {
       cli,
       graph,
       osmInfoGraphBuildRepository,
+      streetDetailsRepository,
       timetableRepository,
       transferRepository,
       worldEnvelopeRepository,

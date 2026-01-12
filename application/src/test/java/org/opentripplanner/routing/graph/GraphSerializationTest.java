@@ -40,6 +40,8 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
 import org.opentripplanner.model.plan.Emission;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
@@ -93,6 +95,7 @@ public class GraphSerializationTest {
     TestOtpModel model = ConstantsForTests.buildNewPortlandGraph(true);
     var streetRepository = createStreetRepository();
     var osmGraphBuildRepository = new DefaultOsmInfoGraphBuildRepository();
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
     var weRepo = new DefaultWorldEnvelopeRepository();
     var emissionRepository = createEmissionRepository();
     var empiricalDelayRepository = empiricalDelayRepository();
@@ -100,6 +103,7 @@ public class GraphSerializationTest {
     testRoundTrip(
       model.graph(),
       osmGraphBuildRepository,
+      streetDetailsRepository,
       streetRepository,
       model.timetableRepository(),
       model.transferRepository(),
@@ -124,6 +128,7 @@ public class GraphSerializationTest {
     TestOtpModel model = ConstantsForTests.buildNewMinimalNetexGraph();
     var streetRepository = createStreetRepository();
     var osmGraphBuildRepository = new DefaultOsmInfoGraphBuildRepository();
+    var streetDetailsRepository = new DefaultStreetDetailsRepository();
     var worldEnvelopeRepository = new DefaultWorldEnvelopeRepository();
     var emissionRepository = createEmissionRepository();
     var empiricalDelayRepository = empiricalDelayRepository();
@@ -131,6 +136,7 @@ public class GraphSerializationTest {
     testRoundTrip(
       model.graph(),
       osmGraphBuildRepository,
+      streetDetailsRepository,
       streetRepository,
       model.timetableRepository(),
       model.transferRepository(),
@@ -238,6 +244,7 @@ public class GraphSerializationTest {
   private void testRoundTrip(
     Graph originalGraph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
+    StreetDetailsRepository streetDetailsRepository,
     StreetRepository streetRepository,
     TimetableRepository originalTimetableRepository,
     TransferRepository originalTransferRepository,
@@ -252,6 +259,7 @@ public class GraphSerializationTest {
     SerializedGraphObject serializedObj = new SerializedGraphObject(
       originalGraph,
       osmInfoGraphBuildRepository,
+      streetDetailsRepository,
       streetRepository,
       originalTimetableRepository,
       originalTransferRepository,

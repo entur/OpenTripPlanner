@@ -13,10 +13,10 @@ import org.opentripplanner.ext.dataoverlay.routing.DataOverlayContext;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
+import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
-import org.opentripplanner.ext.trias.parameters.TriasApiParameters;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.raptor.configure.RaptorConfig;
@@ -32,6 +32,7 @@ import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
@@ -170,6 +171,8 @@ public interface OtpServerRequestContext {
 
   @Nullable
   ItineraryDecorator emissionItineraryDecorator();
+
+  StreetDetailsService streetDetailsService();
 
   @Nullable
   EmpiricalDelayService empiricalDelayService();

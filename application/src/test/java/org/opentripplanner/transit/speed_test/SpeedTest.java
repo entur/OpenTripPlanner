@@ -145,6 +145,7 @@ public class SpeedTest {
       TestServerContext.createWorldEnvelopeService(),
       null,
       null,
+      TestServerContext.createStreetDetailsService(),
       null,
       null,
       null,

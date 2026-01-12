@@ -24,6 +24,9 @@ import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.service.DefaultViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -138,6 +141,7 @@ public class TestServerContext {
       createWorldEnvelopeService(),
       null,
       createEmissionsItineraryDecorator(),
+      createStreetDetailsService(),
       null,
       null,
       null,
@@ -180,6 +184,10 @@ public class TestServerContext {
     return new EmissionItineraryDecorator(
       new DefaultEmissionService(new DefaultEmissionRepository())
     );
+  }
+
+  public static StreetDetailsService createStreetDetailsService() {
+    return new DefaultStreetDetailsService(new DefaultStreetDetailsRepository());
   }
 
   public static StreetLimitationParametersService createStreetLimitationParametersService() {
