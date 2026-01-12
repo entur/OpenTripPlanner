@@ -31,26 +31,11 @@ public interface TransferRepository extends Serializable {
   void addAllTransfersByStops(Multimap<StopLocation, PathTransfer> transfersByStop);
 
   /**
-   * Initialize the index. This needs to be called before
-   * {@link #findWalkTransfersFromStop(StopLocation)} and {@link #findWalkTransfersToStop(StopLocation)}
+   * Initialize the index.
    */
   void index();
 
-  /**
-   * @param toStop {@code StopLocation} that is set as a to-stop
-   * @return all walk mode {@code PathTransfer}s with the specified {@code StopLocation} as a
-   * to-stop
-   * @throws UnsupportedOperationException if flex routing is not activated
-   * @throws IllegalStateException         if the index was not initialized
-   */
   Collection<PathTransfer> findWalkTransfersToStop(StopLocation toStop);
 
-  /**
-   * @param fromStop {@code StopLocation} that is set as a from-stop
-   * @return all walk mode {@code PathTransfer}s with the specified {@code StopLocation} as a
-   * from-stop
-   * @throws UnsupportedOperationException if flex routing is not activated
-   * @throws IllegalStateException         if the index was not initialized
-   */
   Collection<PathTransfer> findWalkTransfersFromStop(StopLocation fromStop);
 }

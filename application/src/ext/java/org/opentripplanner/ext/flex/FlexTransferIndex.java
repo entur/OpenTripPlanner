@@ -29,17 +29,13 @@ public class FlexTransferIndex extends TransferIndex {
 
   @Override
   public Collection<PathTransfer> findWalkTransfersToStop(StopLocation stopLocation) {
-    if (!indexed) {
-      throw new IllegalStateException("The transfer index is needed but not initialized");
-    }
+    checkIfIndexed();
     return transfersToStop.get(stopLocation);
   }
 
   @Override
   public Collection<PathTransfer> findWalkTransfersFromStop(StopLocation stopLocation) {
-    if (!indexed) {
-      throw new IllegalStateException("The transfer index is needed but not initialized");
-    }
+    checkIfIndexed();
     return transfersFromStop.get(stopLocation);
   }
 
@@ -49,5 +45,11 @@ public class FlexTransferIndex extends TransferIndex {
     super.invalidate();
     transfersToStop.clear();
     transfersFromStop.clear();
+  }
+
+  private void checkIfIndexed() {
+    if (!indexed) {
+      throw new IllegalStateException("The transfer index is needed but not initialized");
+    }
   }
 }

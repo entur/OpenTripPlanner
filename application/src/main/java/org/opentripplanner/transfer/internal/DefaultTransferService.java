@@ -23,8 +23,8 @@ public class DefaultTransferService implements TransferService {
     LOG.info("Initializing TransferService");
   }
 
-  public Collection<PathTransfer> findTransfersByStop(StopLocation stop) {
-    return transferRepository.findTransfersByStop(stop);
+  public Collection<PathTransfer> findTransfersByStop(StopLocation fromStop) {
+    return transferRepository.findTransfersByStop(fromStop);
   }
 
   public Collection<PathTransfer> findWalkTransfersToStop(StopLocation toStop) {
