@@ -41,7 +41,6 @@ import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transfer.constrained.internal.DefaultConstrainedTransferService;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -109,8 +108,6 @@ public class TimetableRepository implements Serializable {
   private final transient ConcurrentPublished<RaptorTransitData> realtimeRaptorTransitData =
     new ConcurrentPublished<>();
 
-  private final transient Deduplicator deduplicator;
-
   private final CalendarServiceData calendarServiceData = new CalendarServiceData();
 
   private transient TimetableRepositoryIndex index;
@@ -134,14 +131,13 @@ public class TimetableRepository implements Serializable {
   private final Map<FeedScopedId, RegularStop> stopsByScheduledStopPointRefs = new HashMap<>();
 
   @Inject
-  public TimetableRepository(SiteRepository siteRepository, Deduplicator deduplicator) {
+  public TimetableRepository(SiteRepository siteRepository) {
     this.siteRepository = Objects.requireNonNull(siteRepository);
-    this.deduplicator = deduplicator;
   }
 
   /** No-argument constructor, required for deserialization. */
   public TimetableRepository() {
-    this(new SiteRepository(), new Deduplicator());
+    this(new SiteRepository());
   }
 
   /**
@@ -475,6 +471,10 @@ public class TimetableRepository implements Serializable {
 
   public Deduplicator getDeduplicator() {
     return deduplicator;
+  }
+
+  public Collection<PathTransfer> getAllPathTransfers() {
+    return transfersByStop.values();
   }
 
   public Collection<FlexTrip<?, ?>> getAllFlexTrips() {

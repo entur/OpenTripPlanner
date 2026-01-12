@@ -34,6 +34,7 @@ import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.standalone.server.DefaultServerRequestContext;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.speed_test.model.SpeedTestProfile;
@@ -100,6 +101,7 @@ public class SpeedTest {
 
     UpdaterConfigurator.configure(
       graph,
+      DeduplicatorService.NOOP,
       VertexLinkerTestFactory.of(graph),
       new DefaultRealtimeVehicleService(transitService),
       new DefaultVehicleRentalService(),

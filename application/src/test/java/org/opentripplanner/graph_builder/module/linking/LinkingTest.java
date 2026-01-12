@@ -154,10 +154,9 @@ public class LinkingTest {
 
   /** Build a graph in Columbus, OH with no transit */
   public static TestOtpModel buildGraphNoTransit() {
-    var deduplicator = new Deduplicator();
     var siteRepository = new SiteRepository();
     var graph = new Graph();
-    var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
+    var timetableRepository = new TimetableRepository(siteRepository);
     var file = ResourceLoader.of(LinkingTest.class).file("columbus.osm.pbf");
     var provider = new DefaultOsmProvider(file, false);
 

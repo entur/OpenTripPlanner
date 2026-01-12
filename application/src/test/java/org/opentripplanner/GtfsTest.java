@@ -201,9 +201,8 @@ public abstract class GtfsTest {
     List<GtfsBundle> gtfsBundleList = List.of(gtfsBundle);
 
     alertsUpdateHandler = new AlertsUpdateHandler(false);
-    var deduplicator = new Deduplicator();
     graph = new Graph();
-    timetableRepository = new TimetableRepository(new SiteRepository(), deduplicator);
+    timetableRepository = new TimetableRepository(new SiteRepository());
     timetableRepository.setUpdaterManager(
       new GraphUpdaterManager(
         new DefaultRealTimeUpdateContext(new Graph(), timetableRepository, new TimetableSnapshot()),
@@ -236,6 +235,7 @@ public abstract class GtfsTest {
     );
     tripUpdateAdapter = new GtfsRealTimeTripUpdateAdapter(
       timetableRepository,
+      new Deduplicator(),
       snapshotManager,
       LocalDate::now
     );

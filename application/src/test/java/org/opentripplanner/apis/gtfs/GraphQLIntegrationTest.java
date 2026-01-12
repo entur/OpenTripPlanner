@@ -202,7 +202,7 @@ class GraphQLIntegrationTest {
     STOP_LOCATIONS.forEach(siteRepositoryBuilder::withRegularStop);
     siteRepositoryBuilder.withStation(OMEGA);
     var siteRepository = siteRepositoryBuilder.build();
-    var timetableRepository = new TimetableRepository(siteRepository, DEDUPLICATOR);
+    var timetableRepository = new TimetableRepository(siteRepository);
 
     var cal_id = TimetableRepositoryForTest.id("CAL_1");
     var trip = TimetableRepositoryForTest.trip("123")

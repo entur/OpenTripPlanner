@@ -38,6 +38,7 @@ import org.opentripplanner.standalone.server.GrizzlyServer;
 import org.opentripplanner.standalone.server.OTPWebApplication;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.model.elevation.ElevationUtils;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
@@ -200,6 +201,7 @@ public class ConstructApplication {
     /* Create updater modules from JSON config. */
     UpdaterConfigurator.configure(
       graph(),
+      deduplicatorService(),
       vertexLinker(),
       realtimeVehicleRepository(),
       vehicleRentalRepository(),
@@ -332,6 +334,10 @@ public class ConstructApplication {
 
   public VertexLinker vertexLinker() {
     return factory.vertexLinker();
+  }
+
+  public DeduplicatorService deduplicatorService() {
+    return factory.deduplicatorService();
   }
 
   public WorldEnvelopeRepository worldEnvelopeRepository() {

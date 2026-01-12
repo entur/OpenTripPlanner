@@ -35,7 +35,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.gtfs.mapping.TransitModeMapper;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.DataValidationException;
-import org.opentripplanner.transit.model.framework.Deduplicator;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
@@ -94,7 +94,7 @@ public class GtfsRealTimeTripUpdateAdapter {
    */
   private final TransitEditorService transitEditorService;
 
-  private final Deduplicator deduplicator;
+  private final DeduplicatorService deduplicator;
 
   private final TimetableSnapshotManager snapshotManager;
   private final Supplier<LocalDate> localDateNow;
@@ -104,6 +104,7 @@ public class GtfsRealTimeTripUpdateAdapter {
    */
   public GtfsRealTimeTripUpdateAdapter(
     TimetableRepository timetableRepository,
+    DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager,
     Supplier<LocalDate> localDateNow
   ) {
@@ -114,7 +115,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
     );
-    this.deduplicator = timetableRepository.getDeduplicator();
+    this.deduplicator = deduplicator;
     this.tripPatternCache = new SiriTripPatternCache(
       new SiriTripPatternIdGenerator(),
       transitEditorService::findPattern
