@@ -194,7 +194,7 @@ public class TestServerContext {
       graph,
       new VertexCreationService(vertexLinker),
       transitService::findStopOrChildIds,
-      transitService::getStationOrMultiModalStationCentroid
+      transitService::findStopLocationsGroupCoordinate
     );
   }
 }

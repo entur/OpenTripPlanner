@@ -3,7 +3,6 @@ package org.opentripplanner.transit.service;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 import static org.opentripplanner.transit.model.basic.TransitMode.BUS;
@@ -356,13 +355,11 @@ class DefaultTransitServiceTest {
   }
 
   @Test
-  void getStationOrMultiModalStationCentroid() {
-    var stationCoordinate = service.getStationOrMultiModalStationCentroid(STATION.getId());
-    assertEquals(STATION.getCoordinate(), stationCoordinate);
-    var multiModalStationCoordinate = service.getStationOrMultiModalStationCentroid(
-      MM_STATION.getId()
-    );
-    assertEquals(MM_STATION.getCoordinate(), multiModalStationCoordinate);
-    assertNull(service.getStationOrMultiModalStationCentroid(STOP_A.getId()));
+  void findStopLocationsGroupCoordinate() {
+    var stationCoordinate = service.findStopLocationsGroupCoordinate(STATION.getId());
+    assertEquals(STATION.getCoordinate(), stationCoordinate.get());
+    var multiModalStationCoordinate = service.findStopLocationsGroupCoordinate(MM_STATION.getId());
+    assertEquals(MM_STATION.getCoordinate(), multiModalStationCoordinate.get());
+    assertThat(service.findStopLocationsGroupCoordinate(STOP_A.getId())).isEmpty();
   }
 }

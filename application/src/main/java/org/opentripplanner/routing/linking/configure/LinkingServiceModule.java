@@ -41,7 +41,7 @@ public class LinkingServiceModule {
       graph,
       vertexCreationService,
       transitService::findStopOrChildIds,
-      transitService::getStationOrMultiModalStationCentroid
+      transitService::findStopLocationsGroupCoordinate
     );
   }
 }

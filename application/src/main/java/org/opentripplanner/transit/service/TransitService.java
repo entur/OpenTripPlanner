@@ -231,7 +231,7 @@ public interface TransitService {
    * Return the centroid coordinate of a station or a multi-modal station.
    */
   @Nullable
-  WgsCoordinate getStationOrMultiModalStationCentroid(FeedScopedId id);
+  Optional<WgsCoordinate> findStopLocationsGroupCoordinate(FeedScopedId id);
 
   /**
    * Fetch upcoming vehicle departures from a stop. It goes though all patterns passing the stop for

@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -110,7 +111,7 @@ class LinkingContextFactoryTest {
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       Set::of,
-      id -> null
+      id -> Optional.empty()
     );
     var container = new TemporaryVerticesContainer();
     var from = stopToLocation(stopA);
@@ -134,7 +135,7 @@ class LinkingContextFactoryTest {
       graph,
       new VertexCreationService(VertexLinkerTestFactory.of(graph)),
       mapping::get,
-      id -> null
+      id -> Optional.empty()
     );
     var container = new TemporaryVerticesContainer();
     var from = GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId());
@@ -160,9 +161,11 @@ class LinkingContextFactoryTest {
       id -> Set.of(),
       id -> {
         if (id.equals(stationAlpha.getId())) {
-          return stationAlpha.getCoordinate();
+          return Optional.of(stationAlpha.getCoordinate());
         }
-        return id.equals(multiModalStation.getId()) ? multiModalStation.getCoordinate() : null;
+        return id.equals(multiModalStation.getId())
+          ? Optional.of(multiModalStation.getCoordinate())
+          : Optional.empty();
       }
     );
     var container = new TemporaryVerticesContainer();

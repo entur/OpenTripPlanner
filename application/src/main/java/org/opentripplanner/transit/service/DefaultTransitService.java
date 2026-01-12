@@ -409,13 +409,9 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   @Nullable
-  public WgsCoordinate getStationOrMultiModalStationCentroid(FeedScopedId id) {
-    var station = this.timetableRepository.getSiteRepository().getStationById(id);
-    if (station != null) {
-      return station.getCoordinate();
-    }
-    var multiModalStation = this.timetableRepository.getSiteRepository().getMultiModalStation(id);
-    return multiModalStation != null ? multiModalStation.getCoordinate() : null;
+  public Optional<WgsCoordinate> findStopLocationsGroupCoordinate(FeedScopedId id) {
+    var locationsGroup = timetableRepository.getSiteRepository().getStopLocationsGroup(id);
+    return Optional.ofNullable(locationsGroup).map(StopLocationsGroup::getCoordinate);
   }
 
   @Override

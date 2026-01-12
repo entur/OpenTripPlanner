@@ -67,7 +67,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
       graph,
       vertexCreationService,
       transitService::findStopOrChildIds,
-      transitService::getStationOrMultiModalStationCentroid
+      transitService::findStopLocationsGroupCoordinate
     );
     context = new GraphQLRequestContext(
       new TestRoutingService(List.of()),

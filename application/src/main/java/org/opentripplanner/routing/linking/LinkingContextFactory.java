@@ -48,7 +48,7 @@ public class LinkingContextFactory {
   /**
    * This can be either a normal or a multi-modal station.
    */
-  private final Function<FeedScopedId, WgsCoordinate> getStationCentroidCoordinate;
+  private final Function<FeedScopedId, Optional<WgsCoordinate>> findStopLocationsGroupCentroid;
 
   /**
    * Construct a factory when stop locations are potentially used for locations.
@@ -57,19 +57,19 @@ public class LinkingContextFactory {
     Graph graph,
     VertexCreationService vertexCreationService,
     Function<FeedScopedId, Collection<FeedScopedId>> resolveSiteIds,
-    Function<FeedScopedId, WgsCoordinate> getStationCentroidCoordinate
+    Function<FeedScopedId, Optional<WgsCoordinate>> findStopLocationsGroupCentroid
   ) {
     this.graph = graph;
     this.vertexCreationService = vertexCreationService;
     this.resolveSiteIds = resolveSiteIds;
-    this.getStationCentroidCoordinate = getStationCentroidCoordinate;
+    this.findStopLocationsGroupCentroid = findStopLocationsGroupCentroid;
   }
 
   /**
    * Construct a factory when stop locations are not used for locations.
    */
   public LinkingContextFactory(Graph graph, VertexCreationService vertexCreationService) {
-    this(graph, vertexCreationService, id -> Set.of(), id -> null);
+    this(graph, vertexCreationService, id -> Set.of(), id -> Optional.empty());
   }
 
   /**
@@ -350,13 +350,14 @@ public class LinkingContextFactory {
       } else {
         // For car routing, we use station's coordinate instead of child stops' if stop location is
         // a station.
-        var coordinate = getStationCentroidCoordinate.apply(location.stopId);
-        if (coordinate != null) {
+        var coordinate = findStopLocationsGroupCentroid.apply(location.stopId);
+        if (coordinate.isPresent()) {
+          var c = coordinate.get();
           location = new GenericLocation(
             location.label,
             location.stopId,
-            coordinate.latitude(),
-            coordinate.longitude()
+            c.latitude(),
+            c.longitude()
           );
         }
       }
