@@ -1,6 +1,6 @@
 package org.opentripplanner.ext.httpresponsetimemetrics;
 
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import java.util.List;
 import java.util.Set;
@@ -19,7 +19,7 @@ public class HttpResponseTimeMetricsConfig {
   ) {
     var c = root
       .of(parameterName)
-      .since(V2_7)
+      .since(V2_9)
       .summary("Configuration for HTTP response time metrics.")
       .description(
         """
@@ -33,13 +33,13 @@ public class HttpResponseTimeMetricsConfig {
     return new HttpResponseTimeMetricsParameters(
       c
         .of("clientHeader")
-        .since(V2_7)
+        .since(V2_9)
         .summary("HTTP header name used to identify the client.")
         .asString(HttpResponseTimeMetricsParameters.DEFAULT_CLIENT_HEADER),
       Set.copyOf(
         c
           .of("monitoredClients")
-          .since(V2_7)
+          .since(V2_9)
           .summary("List of client names to track individually.")
           .description(
             """
@@ -52,7 +52,7 @@ public class HttpResponseTimeMetricsConfig {
       Set.copyOf(
         c
           .of("monitoredEndpoints")
-          .since(V2_7)
+          .since(V2_9)
           .summary("List of endpoint paths to monitor for metrics.")
           .description(
             """
@@ -66,12 +66,12 @@ public class HttpResponseTimeMetricsConfig {
       ),
       c
         .of("metricName")
-        .since(V2_7)
+        .since(V2_9)
         .summary("Name of the metric to record.")
         .asString(HttpResponseTimeMetricsParameters.DEFAULT_METRIC_NAME),
       c
         .of("minExpectedResponseTime")
-        .since(V2_7)
+        .since(V2_9)
         .summary("Minimum expected response time for histogram buckets.")
         .description(
           """
@@ -82,7 +82,7 @@ public class HttpResponseTimeMetricsConfig {
         .asDuration(HttpResponseTimeMetricsParameters.DEFAULT_MIN_EXPECTED_RESPONSE_TIME),
       c
         .of("maxExpectedResponseTime")
-        .since(V2_7)
+        .since(V2_9)
         .summary("Maximum expected response time for histogram buckets.")
         .description(
           """
