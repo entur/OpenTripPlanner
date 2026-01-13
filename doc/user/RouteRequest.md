@@ -110,6 +110,7 @@ and in the [transferRequests in build-config.json](BuildConfiguration.md#transfe
 |       useAvailabilityInformation                                                                             |        `boolean`       | Whether or not vehicle rental availability information will be used to plan vehicle rental trips.                                                        | *Optional* | `false`          |  2.0  |
 |       [allowedNetworks](#rd_car_rental_allowedNetworks)                                                      |       `string[]`       | The vehicle rental networks which may be used. If empty all networks may be used.                                                                        | *Optional* |                  |  2.1  |
 |       [bannedNetworks](#rd_car_rental_bannedNetworks)                                                        |       `string[]`       | The vehicle rental networks which may not be used. If empty, no networks are banned.                                                                     | *Optional* |                  |  2.1  |
+| [directTransitSearch](#rd_directTransitSearch)                                                               |        `object`        | Extend the search result with extra paths using a direct transit search                                                                                  | *Optional* |                  |  2.9  |
 | [itineraryFilters](#rd_itineraryFilters)                                                                     |        `object`        | Configure itinerary filters that may modify itineraries, sort them, and filter away less preferable results.                                             | *Optional* |                  |  2.0  |
 |    [accessibilityScore](#rd_if_accessibilityScore)                                                           |        `boolean`       | An experimental feature contributed by IBI which adds a sandbox accessibility *score* between 0 and 1 for each leg and itinerary.                        | *Optional* | `false`          |  2.2  |
 |    [bikeRentalDistanceRatio](#rd_if_bikeRentalDistanceRatio)                                                 |        `double`        | Filter routes that consist of bike-rental and walking by the minimum fraction of the bike-rental leg using _distance_.                                   | *Optional* | `0.0`            |  2.1  |
@@ -128,7 +129,6 @@ and in the [transferRequests in build-config.json](BuildConfiguration.md#transfe
 |       [costLimitFunction](#rd_if_transitGeneralizedCostLimit_costLimitFunction)                              | `cost-linear-function` | The base function used by the filter.                                                                                                                    | *Optional* | `"15m + 1.50 t"` |  2.2  |
 |       [intervalRelaxFactor](#rd_if_transitGeneralizedCostLimit_intervalRelaxFactor)                          |        `double`        | How much the filter should be relaxed for itineraries that do not overlap in time.                                                                       | *Optional* | `0.4`            |  2.2  |
 | [maxDirectStreetDurationForMode](#rd_maxDirectStreetDurationForMode)                                         | `enum map of duration` | Limit direct route duration per street mode.                                                                                                             | *Optional* |                  |  2.2  |
-| [relaxedLimitedTransferSearch](#rd_relaxedLimitedTransferSearch)                                             |        `object`        | Extend the search result with extra paths using a limited number of transit legs                                                                         | *Optional* |                  |  2.9  |
 | scooter                                                                                                      |        `object`        | Scooter preferences.                                                                                                                                     | *Optional* |                  |  2.5  |
 |    [optimization](#rd_scooter_optimization)                                                                  |         `enum`         | The set of characteristics that the user wants to optimize for.                                                                                          | *Optional* | `"safe-streets"` |  2.0  |
 |    reluctance                                                                                                |        `double`        | A multiplier for how bad scooter travel is, compared to being in transit for equal lengths of time.                                                      | *Optional* | `2.0`            |  2.0  |
@@ -692,6 +692,20 @@ The vehicle rental networks which may be used. If empty all networks may be used
 
 The vehicle rental networks which may not be used. If empty, no networks are banned.
 
+<h3 id="rd_directTransitSearch">directTransitSearch</h3>
+
+**Since version:** `2.9` ∙ **Type:** `object` ∙ **Cardinality:** `Optional`   
+**Path:** /routingDefaults 
+
+Extend the search result with extra paths using a direct transit search
+
+The direct transit search finds paths using a single transit leg, limited to a specified
+cost window. It will find paths even if they are not optimal in regard to the criteria in
+the main raptor search.
+
+This featue is off by default!
+
+
 <h3 id="rd_itineraryFilters">itineraryFilters</h3>
 
 **Since version:** `2.0` ∙ **Type:** `object` ∙ **Cardinality:** `Optional`   
@@ -922,18 +936,6 @@ Limit direct route duration per street mode.
 
 Override the settings in `maxDirectStreetDuration` for specific street modes. This is
 done because some street modes searches are much more resource intensive than others.
-
-
-<h3 id="rd_relaxedLimitedTransferSearch">relaxedLimitedTransferSearch</h3>
-
-**Since version:** `2.9` ∙ **Type:** `object` ∙ **Cardinality:** `Optional`   
-**Path:** /routingDefaults 
-
-Extend the search result with extra paths using a limited number of transit legs
-
-The relaxed limited transfer search finds paths using a single transit leg, limited to a
-specified cost window. It will find paths even if they are not optimal in regard to the
-criteria in the main raptor search.
 
 
 <h3 id="rd_scooter_optimization">optimization</h3>
