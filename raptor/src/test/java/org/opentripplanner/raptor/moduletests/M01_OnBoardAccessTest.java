@@ -1,7 +1,9 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_A;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_B;
+import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_C;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
@@ -37,7 +39,7 @@ class M01_OnBoardAccessTest {
 
     builder
       .searchParams()
-      .earliestDepartureTime(T00_00) // What should this be?
+      .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
       .searchWindow(Duration.ofMinutes(2))
       .timetable(true);
@@ -176,5 +178,40 @@ class M01_OnBoardAccessTest {
     // Since we try to do on-board access starting from B at 0:16, but the latest trip passes B at
     // 0:15, the result contains no paths
     assertEquals("", pathsToString(raptorResponse));
+  }
+
+  @Test
+  @DisplayName("Multiple on-board accesses")
+  void multipleAccesses() {
+    data
+      .access(
+        new TestRaptorOnBoardAccess(STOP_B, 10 * 60, 0, 0), // Dominated by C@0:15
+        new TestRaptorOnBoardAccess(STOP_C, 15 * 60, 0, 0),
+        new TestRaptorOnBoardAccess(STOP_A, 2 * 60, 1, 0)
+      )
+      .withRoutes()
+      .withTimetables(
+        """
+        -- R1
+        A     B     C     D
+        0:00  0:05  0:10  0:15
+        0:05  0:10  0:15  0:20
+        -- R2
+        A     B
+        0:02  0:04
+        """)
+      .egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    var raptorResponse = raptorService.route(requestBuilder.build(), data);
+
+    // Only accesses that yield a non-dominated path are included in the result
+    assertEquals(
+      """
+        A ~ BUS R2 0:02 0:04 ~ B ~ BUS R1 0:05 0:15 ~ D ~ Walk 30s [0:02 0:15:30 13m30s Tₙ1 C₁2_040]
+        C ~ BUS R1 0:15 0:20 ~ D ~ Walk 30s [0:15 0:20:30 5m30s Tₙ0 C₁960]""",
+      pathsToString(raptorResponse)
+    );
   }
 }

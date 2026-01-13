@@ -187,79 +187,76 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   @Override
   public void performOnBoardAccessForTransit() {
-    // TODO not how we like to do this
-    if (accessPaths.onBoardAccesses().isEmpty()) {
-      return;
-    }
-
     // TODO check(Thomas) should we remove? we should not have access to stop, only to route.
     // TODO But is this still relevant after deciding that a boarding event is necessary after all?
     addAccessPaths(accessPaths.onBoardAccesses());
 
-    // TODO we could refactor to a single access. or handle and test multiple accesses
-    var accessPath = (RaptorOnBoardAccess)accessPaths.onBoardAccesses().getFirst();
+    for (var it : accessPaths.onBoardAccesses()) {
+      // TODO Make type of accessPaths.onBoardAccesses explicit to avoid cast?
+      var accessPath = (RaptorOnBoardAccess)it;
 
-    RaptorRoute<T> route;
-    try {
-      route = transitData.getRouteForIndex(accessPath.routeIndex());
-    } catch (IndexOutOfBoundsException e) {
-      // No route with the given index exists, thus there is nothing to do
-      return;
-    }
-    var pattern = route.pattern();
-    var txSearch = enableTransferConstraints
-      ? calculator.transferConstraintsSearch(transitData, accessPath.routeIndex())
-      : null;
-
-    int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
-    int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
-
-    transitWorker.prepareForTransitWith(route);
-
-    IntIterator stop = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
-
-    var pastInitialStop = false;
-
-    while (stop.hasNext()) {
-      int stopPos = stop.next();
-      int stopIndex = pattern.stopIndex(stopPos);
-
-      if (stopIndex == accessPath.stop()) {
-        pastInitialStop = true;
+      RaptorRoute<T> route;
+      try {
+        route = transitData.getRouteForIndex(accessPath.routeIndex());
+      } catch (IndexOutOfBoundsException e) {
+        // No route with the given index exists, thus there is nothing to do
+        return;
       }
+      var pattern = route.pattern();
+      var txSearch = enableTransferConstraints
+        ? calculator.transferConstraintsSearch(transitData, accessPath.routeIndex())
+        : null;
 
-      // Skip all stops leading up to the initial on-board access stop
-      // We will only consider boarding and alighting on stops with position starting with this one
-      if (!pastInitialStop) {
-        continue;
-      }
+      int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
+      int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
 
-      transitWorker.prepareForNextStop(stopIndex, stopPos);
+      transitWorker.prepareForTransitWith(route);
 
-      // attempt to alight if we're on board, this is done above the board search
-      // so that we don't alight on first stop boarded
-      if (calculator.alightingPossibleAt(pattern, stopPos)) {
-        if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
-          transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
-        } else {
-          transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
+      IntIterator stop = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
+
+      var pastInitialStop = false;
+
+      while (stop.hasNext()) {
+        int stopPos = stop.next();
+        int stopIndex = pattern.stopIndex(stopPos);
+
+        if (stopIndex == accessPath.stop()) {
+          pastInitialStop = true;
         }
-      }
 
-      if (calculator.boardingPossibleAt(pattern, stopPos)) {
-        // Don't attempt to board if this stop was not reached in the last round.
-        // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
-        if (state.isStopReachedInPreviousRound(stopIndex)) {
-          // has constrained transfers
-          if (enableTransferConstraints && txSearch.transferExistTargetStop(stopPos)) {
-            transitWorker.boardWithConstrainedTransfer(
-              stopIndex,
-              stopPos,
-              boardSlack,
-              txSearch
-            );
+        // Skip all stops leading up to the initial on-board access stop
+        // We will only consider boarding and alighting on stops with position starting with this one
+        if (!pastInitialStop) {
+          continue;
+        }
+
+        transitWorker.prepareForNextStop(stopIndex, stopPos);
+
+        // attempt to alight if we're on board, this is done above the board search
+        // so that we don't alight on first stop boarded
+        if (calculator.alightingPossibleAt(pattern, stopPos)) {
+          if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
+            transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
           } else {
-            transitWorker.boardWithRegularTransfer(stopIndex, stopPos, boardSlack);
+            transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
+          }
+        }
+
+        if (calculator.boardingPossibleAt(pattern, stopPos)) {
+          // Don't attempt to board if this stop was not reached in the last round.
+          // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
+          if (state.isStopReachedInPreviousRound(stopIndex)) {
+            // has constrained transfers
+            if (enableTransferConstraints && txSearch.transferExistTargetStop(stopPos)) {
+              transitWorker.boardWithConstrainedTransfer(
+                stopIndex,
+                stopPos,
+                boardSlack,
+                txSearch
+              );
+            } else {
+              transitWorker.boardWithRegularTransfer(stopIndex, stopPos, boardSlack);
+            }
           }
         }
       }
