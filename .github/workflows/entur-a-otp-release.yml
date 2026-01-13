@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: '33 0 * * 1-5'
   workflow_dispatch:
+    branches:
+      - main
     inputs:
       log_level:
         description: 'Log level'
@@ -36,6 +38,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    # This condition ensures the job only runs if the branch is 'main'
+    if: github.ref == 'refs/heads/main'
     outputs:
       version: ${{ steps.set_version.outputs.version }}
       ser_ver_id: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
