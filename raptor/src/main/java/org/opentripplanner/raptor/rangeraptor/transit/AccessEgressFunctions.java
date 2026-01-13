@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 import org.slf4j.Logger;
@@ -120,6 +121,16 @@ public final class AccessEgressFunctions {
 
   static TIntObjectMap<List<RaptorAccessEgress>> groupByStop(Collection<RaptorAccessEgress> input) {
     return groupBy(input, RaptorAccessEgress::stop);
+  }
+
+  /**
+   * Collect all on-board accesses ({@link RaptorOnBoardAccess}) from an input collection of
+   * {@link RaptorAccessEgress}.
+   */
+  static List<RaptorAccessEgress> collectOnBoardAccesses(Collection<RaptorAccessEgress> input) {
+    return input.stream()
+      .filter(RaptorOnBoardAccess.class::isInstance)
+      .toList();
   }
 
   /* private methods */

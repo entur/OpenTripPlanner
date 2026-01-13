@@ -25,6 +25,11 @@ public interface RangeRaptorWorker<T extends RaptorTripSchedule> {
   void findTransitForRound();
 
   /**
+   * Handle on-board accesses for transit (accesses on-board an already started trip)
+   */
+  void performOnBoardAccessForTransit();
+
+  /**
    * Apply transfers for the current round.
    */
   void findTransfersForRound();

@@ -1,11 +1,13 @@
 package org.opentripplanner.raptor.rangeraptor.transit;
 
+import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.collectOnBoardAccesses;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.groupByRound;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForMcRaptor;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForStandardRaptor;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +35,7 @@ public class AccessPaths {
   private final IntUnaryOperator iterationOp;
   private final TIntObjectMap<List<RaptorAccessEgress>> arrivedOnStreetByNumOfRides;
   private final TIntObjectMap<List<RaptorAccessEgress>> arrivedOnBoardByNumOfRides;
+  private final List<RaptorAccessEgress> onBoardAccesses;
   private int iterationTimePenaltyLimit = RaptorConstants.TIME_NOT_SET;
 
   private AccessPaths(
@@ -40,12 +43,14 @@ public class AccessPaths {
     IntUnaryOperator iterationOp,
     TIntObjectMap<List<RaptorAccessEgress>> arrivedOnStreetByNumOfRides,
     TIntObjectMap<List<RaptorAccessEgress>> arrivedOnBoardByNumOfRides,
+    List<RaptorAccessEgress> onBoardAccesses,
     int maxTimePenalty
   ) {
     this.iterationStep = iterationStep;
     this.iterationOp = iterationOp;
     this.arrivedOnStreetByNumOfRides = arrivedOnStreetByNumOfRides;
     this.arrivedOnBoardByNumOfRides = arrivedOnBoardByNumOfRides;
+    this.onBoardAccesses = onBoardAccesses;
     this.maxTimePenalty = maxTimePenalty;
   }
 
@@ -74,12 +79,14 @@ public class AccessPaths {
     paths = decorateWithTimePenaltyLogic(paths);
     var arrivedOnStreetByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedByWalking);
     var arrivedOnBoardByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedOnBoard);
+    var onBoardAccesses = collectOnBoardAccesses(paths);
 
     return new AccessPaths(
       iterationStep,
       iterationOp(searchDirection),
       arrivedOnStreetByNumOfRides,
       arrivedOnBoardByNumOfRides,
+      onBoardAccesses,
       Math.max(
         maxTimePenalty(arrivedOnStreetByNumOfRides),
         maxTimePenalty(arrivedOnBoardByNumOfRides)
@@ -93,6 +100,7 @@ public class AccessPaths {
       iterationOp,
       new TIntObjectHashMap<>(),
       new TIntObjectHashMap<>(),
+      new ArrayList<>(),
       maxTimePenalty
     );
   }
@@ -117,11 +125,23 @@ public class AccessPaths {
     return filterOnTimePenaltyLimitIfExist(arrivedOnBoardByNumOfRides.get(round));
   }
 
+  public List<RaptorAccessEgress> onBoardAccesses() {
+    return onBoardAccesses;
+  }
+
   public int calculateMaxNumberOfRides() {
-    return Math.max(
+    var maxRidesWithOnStreetOrOnBoardArrival = Math.max(
       Arrays.stream(arrivedOnStreetByNumOfRides.keys()).max().orElse(0),
       Arrays.stream(arrivedOnBoardByNumOfRides.keys()).max().orElse(0)
     );
+
+    // If we have no on-street or on-board arrivals, but we do have on-board access,
+    // then a single ride is necessary
+    if (maxRidesWithOnStreetOrOnBoardArrival == 0 && !onBoardAccesses.isEmpty()) {
+      return 1;
+    }
+
+    return maxRidesWithOnStreetOrOnBoardArrival;
   }
 
   /**

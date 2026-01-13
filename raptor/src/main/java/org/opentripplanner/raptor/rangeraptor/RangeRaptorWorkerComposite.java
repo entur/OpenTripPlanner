@@ -57,6 +57,13 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
+  public void performOnBoardAccessForTransit() {
+    for (RangeRaptorWorker<T> child : children) {
+      child.performOnBoardAccessForTransit();
+    }
+  }
+
+  @Override
   public void findTransfersForRound() {
     for (RangeRaptorWorker<T> child : children) {
       child.findTransfersForRound();
