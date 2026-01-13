@@ -469,14 +469,6 @@ public class TimetableRepository implements Serializable {
     return updaterManager;
   }
 
-  public Deduplicator getDeduplicator() {
-    return deduplicator;
-  }
-
-  public Collection<PathTransfer> getAllPathTransfers() {
-    return transfersByStop.values();
-  }
-
   public Collection<FlexTrip<?, ?>> getAllFlexTrips() {
     return flexTripsById.values();
   }

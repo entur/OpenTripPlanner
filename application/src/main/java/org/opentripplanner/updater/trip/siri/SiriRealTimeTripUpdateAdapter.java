@@ -144,7 +144,7 @@ public class SiriRealTimeTripUpdateAdapter {
         case REPLACEMENT_DEPARTURE -> new AddedTripBuilder(
           journey,
           transitService,
-            deduplicator,
+          deduplicator,
           entityResolver,
           tripPatternIdGenerator::generateUniqueTripPatternId
         ).build();
