@@ -130,4 +130,51 @@ class M01_OnBoardAccessTest {
     );
   }
 
+  @Test
+  @DisplayName("On-board access to a non-existing route")
+  void nonExistentRoute() {
+    data
+      .access(new TestRaptorOnBoardAccess(STOP_B, 5 * 60, 1, 0))
+      .withTimetables(
+        """
+        -- R1
+        A     B     C     D
+        0:00  0:02  0:05  0:10
+        0:00  0:05  0:10  0:20
+        0:00  0:10  0:15  0:25
+        """)
+      .egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    var raptorResponse = raptorService.route(requestBuilder.build(), data);
+
+    // Since we're trying to board a route with routeIndex 1, but the only existing route pattern
+    // has routeIndex 0, the result contains no paths
+    assertEquals("", pathsToString(raptorResponse));
+  }
+
+  @Test
+  @DisplayName("On-board access to a non-existing trip in route")
+  void nonExistentTrip() {
+    data
+      .access(new TestRaptorOnBoardAccess(STOP_B, 16 * 60, 0, 0))
+      .withTimetables(
+        """
+        -- R1
+        A     B     D
+        0:00  0:05  0:10
+        0:00  0:10  0:20
+        0:00  0:15  0:25
+        """)
+      .egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    var raptorResponse = raptorService.route(requestBuilder.build(), data);
+
+    // Since we try to do on-board access starting from B at 0:16, but the latest trip passes B at
+    // 0:15, the result contains no paths
+    assertEquals("", pathsToString(raptorResponse));
+  }
 }

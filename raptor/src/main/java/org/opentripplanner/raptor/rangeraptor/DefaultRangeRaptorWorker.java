@@ -16,6 +16,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
 import org.opentripplanner.raptor.rangeraptor.transit.AccessPaths;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.spi.IntIterator;
+import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 
 /**
@@ -191,13 +192,20 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
       return;
     }
 
-    // TODO check(Thomas) should we remove? we should not have access to stop, only to route. also after deciding that a boarding event is necessary?
+    // TODO check(Thomas) should we remove? we should not have access to stop, only to route.
+    // TODO But is this still relevant after deciding that a boarding event is necessary after all?
     addAccessPaths(accessPaths.onBoardAccesses());
 
     // TODO we could refactor to a single access. or handle and test multiple accesses
     var accessPath = (RaptorOnBoardAccess)accessPaths.onBoardAccesses().getFirst();
 
-    var route = transitData.getRouteForIndex(accessPath.routeIndex());
+    RaptorRoute<T> route;
+    try {
+      route = transitData.getRouteForIndex(accessPath.routeIndex());
+    } catch (IndexOutOfBoundsException e) {
+      // No route with the given index exists, thus there is nothing to do
+      return;
+    }
     var pattern = route.pattern();
     var txSearch = enableTransferConstraints
       ? calculator.transferConstraintsSearch(transitData, accessPath.routeIndex())
