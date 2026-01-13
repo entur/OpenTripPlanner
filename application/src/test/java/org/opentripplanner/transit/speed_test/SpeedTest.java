@@ -132,7 +132,7 @@ public class SpeedTest {
       List.of(),
       config.request,
       TestServerContext.createStreetLimitationParametersService(),
-      TransferServiceTestFactory.defaultTransferService(),
+      TransferServiceTestFactory.transferService(transferRepository),
       config.transitRoutingParams,
       new DefaultTransitService(timetableRepository),
       null,
