@@ -12,6 +12,7 @@ import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
+import org.opentripplanner.raptor.api.model.GeneralizedCostRelaxFunction;
 import org.opentripplanner.raptor.configure.RaptorTestFactory;
 import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
 
@@ -66,6 +67,7 @@ public class M04_RelaxedCostLimit implements RaptorTestConstants {
 
   private RaptorDirectTransitRequest createRequest() {
     return RaptorDirectTransitRequest.of()
+      .withRelaxC1(GeneralizedCostRelaxFunction.of(2))
       .earliestDepartureTime(T00_00)
       .searchWindowInSeconds(D24h)
       .addAccessPaths(TestAccessEgress.free(STOP_A))
