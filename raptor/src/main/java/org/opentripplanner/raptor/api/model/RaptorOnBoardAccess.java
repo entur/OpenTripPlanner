@@ -7,6 +7,13 @@ public interface RaptorOnBoardAccess extends RaptorAccessEgress {
   int routeIndex();
 
   /**
+   * The time of boarding {@link #stop}. Since this is an on-board access, the actual ride may have
+   * started already before {@link #stop} and at a time earlier than this boarding time. However,
+   * raptor will consider this as a boarding event on {@link #stop} at this time.
+   */
+  int boardingTime();
+
+  /**
    * The first stop in the journey, where the access path just arrived at. Since this is an on-board
    * access, this stop represents the most recently visited stop on the currently boarded trip.
    * The next stop position after this is the first you can alight.
@@ -26,7 +33,11 @@ public interface RaptorOnBoardAccess extends RaptorAccessEgress {
 
   @Override
   default int earliestDepartureTime(int requestedDepartureTime) {
-    return requestedDepartureTime;
+    if (requestedDepartureTime > boardingTime()) {
+      // TODO. Maybe just ignore requestedDepartureTime and fall back to boardingTime()
+      throw new RuntimeException("I think this doesn't make sense. Throwing might not be appropriate though.");
+    }
+    return boardingTime();
   }
 
   @Override

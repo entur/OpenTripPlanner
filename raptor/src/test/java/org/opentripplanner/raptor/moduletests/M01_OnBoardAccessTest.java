@@ -9,6 +9,8 @@ import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -47,17 +49,16 @@ class M01_OnBoardAccessTest {
   @DisplayName("On-board access with two routes boards the correct route")
   void onBoardAccess() {
     data
-      .access(new TestRaptorOnBoardAccess(STOP_B, 0, 0))
+      .access(new TestRaptorOnBoardAccess(STOP_B, 5 * 60, 0, 0))
       .withRoutes()
       .withTimetables(
       """
       -- R1
       A     B     C     D
       0:00  0:05  0:10  0:20
-      0:00  0:10  0:15  0:25
       -- R2
       A     B           D
-      0:00  0:05        0:15
+      0:00  0:06        0:15
       """)
       .egress("D ~ Walk 30s");
 
@@ -75,14 +76,13 @@ class M01_OnBoardAccessTest {
   @DisplayName("On-board access with two routes boards the correct route, then transfers at the first valid stop")
   void transfer() {
     data
-      .access(new TestRaptorOnBoardAccess(STOP_B, 0, 0))
+      .access(new TestRaptorOnBoardAccess(STOP_B, 5 * 60, 0, 0))
       .withRoutes()
       .withTimetables(
         """
         -- R1
         A     B     C     D
         0:00  0:05  0:10  0:20
-        0:00  0:10  0:15  0:25
         -- R2
         A     B     C     D
         0:00  0:06  0:12  0:15
@@ -100,4 +100,34 @@ class M01_OnBoardAccessTest {
       pathsToString(raptorResponse)
     );
   }
+
+  @ParameterizedTest(name = "Boarding at {0} minutes")
+  @ValueSource(ints = { 4, 5 })
+  @DisplayName("On-board access with a route with several trips boards the correct trip given by the first possible timestamp")
+  void correctTrip(int departureTimeMinutes) {
+    data
+      .access(new TestRaptorOnBoardAccess(STOP_B, departureTimeMinutes * 60, 0, 0))
+      .withRoutes()
+      .withTimetables(
+        """
+        -- R1
+        A     B     C     D
+        0:00  0:02  0:05  0:10
+        0:00  0:05  0:10  0:20
+        0:00  0:10  0:15  0:25
+        """)
+      .egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    var raptorResponse = raptorService.route(requestBuilder.build(), data);
+
+    // Since the access has a boarding time of 0:05 at B, we select the second trip in the pattern
+    assertEquals(
+      """
+      B ~ BUS R1 0:05 0:20 ~ D ~ Walk 30s [0:05 0:20:30 15m30s Tₙ0 C₁1_560]""",
+      pathsToString(raptorResponse)
+    );
+  }
+
 }

@@ -4,11 +4,13 @@ import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 
 public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
   private final int stop;
+  private final int boardingTime;
   private final int routeIndex;
   private final int generalizedCost;
 
-  public TestRaptorOnBoardAccess(int stop, int routeIndex, int generalizedCost) {
+  public TestRaptorOnBoardAccess(int stop, int boardingTime, int routeIndex, int generalizedCost) {
     this.stop = stop;
+    this.boardingTime = boardingTime;
     this.routeIndex = routeIndex;
     this.generalizedCost = generalizedCost;
   }
@@ -16,6 +18,11 @@ public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
   @Override
   public int routeIndex() {
     return routeIndex;
+  }
+
+  @Override
+  public int boardingTime() {
+    return boardingTime;
   }
 
   @Override
