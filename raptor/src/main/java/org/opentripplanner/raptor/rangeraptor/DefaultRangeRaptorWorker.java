@@ -187,11 +187,13 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   @Override
   public void performOnBoardAccessForTransit() {
+    var onBoardAccessPaths = accessPaths.onBoardAccessesByRound(round);
+
     // TODO check(Thomas) should we remove? we should not have access to stop, only to route.
     // TODO But is this still relevant after deciding that a boarding event is necessary after all?
-    addAccessPaths(accessPaths.onBoardAccesses());
+    addAccessPaths(onBoardAccessPaths);
 
-    for (var it : accessPaths.onBoardAccesses()) {
+    for (var it : onBoardAccessPaths) {
       // TODO Make type of accessPaths.onBoardAccesses explicit to avoid cast?
       var accessPath = (RaptorOnBoardAccess)it;
 

@@ -124,13 +124,19 @@ public final class AccessEgressFunctions {
   }
 
   /**
-   * Collect all on-board accesses ({@link RaptorOnBoardAccess}) from an input collection of
-   * {@link RaptorAccessEgress}.
+   * Filter the given input keeping all on-board accesses satisfying the given include predicate.
+   * If the {@code keepOne} flag is set only one access is kept for each group of numOfRides.
    */
-  static List<RaptorAccessEgress> collectOnBoardAccesses(Collection<RaptorAccessEgress> input) {
-    return input.stream()
-      .filter(RaptorOnBoardAccess.class::isInstance)
-      .toList();
+  static TIntObjectMap<List<RaptorAccessEgress>> groupOnBoardAccessesByRound(
+    Collection<RaptorAccessEgress> input,
+    Predicate<RaptorAccessEgress> include
+  ) {
+    // For an on-board access, we don't count a ride until we alight, meaning that we will have
+    // n rides in round n + 1.
+    return groupBy(
+      input.stream().filter(include).collect(Collectors.toList()),
+      x -> x.numberOfRides() + 1
+    );
   }
 
   /* private methods */
