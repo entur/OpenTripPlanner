@@ -14,6 +14,7 @@ import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.FileType;
 import org.opentripplanner.datastore.file.DirectoryDataSource;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareServiceFactory;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.ConfiguredCompositeDataSource;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
@@ -49,6 +50,8 @@ import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.test.support.ResourceLoader;
+import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -176,9 +179,11 @@ public class ConstantsForTests {
 
       addPortlandVehicleRentals(graph);
 
+      var transferRepository = TransferServiceTestFactory.defaultTransferRepository();
       new DirectTransferGenerator(
         graph,
         timetableRepository,
+        transferRepository,
         DataImportIssueStore.NOOP,
         Duration.ofMinutes(30),
         List.of(RouteRequest.defaultValue())
@@ -186,7 +191,7 @@ public class ConstantsForTests {
 
       graph.index();
 
-      return new TestOtpModel(graph, timetableRepository, fareFactory);
+      return new TestOtpModel(graph, timetableRepository, transferRepository, fareFactory);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -217,7 +222,13 @@ public class ConstantsForTests {
         osmInfoRepository
       );
       turnRestrictionModule.buildGraph();
-      return new TestOtpModel(graph, timetableRepository);
+      TransferRepository transferRepository;
+      if (OTPFeature.FlexRouting.isOn()) {
+        transferRepository = TransferServiceTestFactory.withFlex();
+      } else {
+        transferRepository = TransferServiceTestFactory.defaultTransferRepository();
+      }
+      return new TestOtpModel(graph, timetableRepository, transferRepository);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
@@ -249,8 +260,9 @@ public class ConstantsForTests {
     var siteRepository = new SiteRepository();
     var graph = new Graph();
     var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
+    var transferRepository = TransferServiceTestFactory.defaultTransferRepository();
     addGtfsToGraph(graph, timetableRepository, gtfsFile, fareServiceFactory, null);
-    return new TestOtpModel(graph, timetableRepository, fareServiceFactory);
+    return new TestOtpModel(graph, timetableRepository, transferRepository, fareServiceFactory);
   }
 
   public static TestOtpModel buildNewMinimalNetexGraph() {
@@ -297,30 +309,14 @@ public class ConstantsForTests {
       // Link transit stops to streets
       TestStreetLinkerModule.link(graph, timetableRepository);
 
-      return new TestOtpModel(graph, timetableRepository);
+      return new TestOtpModel(
+        graph,
+        timetableRepository,
+        TransferServiceTestFactory.defaultTransferRepository()
+      );
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
-  }
-
-  /**
-   * Returns a cached copy of the Portland graph, which may have been initialized.
-   */
-  public synchronized TestOtpModel getCachedPortlandGraph() {
-    if (portlandGraph == null) {
-      portlandGraph = buildNewPortlandGraph(false);
-    }
-    return portlandGraph;
-  }
-
-  /**
-   * Returns a cached copy of the Portland graph, which may have been initialized.
-   */
-  public synchronized TestOtpModel getCachedPortlandGraphWithElevation() {
-    if (portlandGraphWithElevation == null) {
-      portlandGraphWithElevation = buildNewPortlandGraph(true);
-    }
-    return portlandGraphWithElevation;
   }
 
   public static void addGtfsToGraph(
@@ -349,6 +345,26 @@ public class ConstantsForTests {
 
     timetableRepository.index();
     graph.index();
+  }
+
+  /**
+   * Returns a cached copy of the Portland graph, which may have been initialized.
+   */
+  public synchronized TestOtpModel getCachedPortlandGraph() {
+    if (portlandGraph == null) {
+      portlandGraph = buildNewPortlandGraph(false);
+    }
+    return portlandGraph;
+  }
+
+  /**
+   * Returns a cached copy of the Portland graph, which may have been initialized.
+   */
+  public synchronized TestOtpModel getCachedPortlandGraphWithElevation() {
+    if (portlandGraphWithElevation == null) {
+      portlandGraphWithElevation = buildNewPortlandGraph(true);
+    }
+    return portlandGraphWithElevation;
   }
 
   private static void addPortlandVehicleRentals(Graph graph) {

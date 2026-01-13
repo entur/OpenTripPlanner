@@ -30,6 +30,8 @@ import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.configure.LoadConfigModule;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.configure.StreetRepositoryModule;
+import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.configure.TransferRepositoryModule;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 /**
@@ -48,6 +50,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
     EmpiricalDelayRepositoryModule.class,
     StopConsolidationRepositoryModule.class,
     StreetRepositoryModule.class,
+    TransferRepositoryModule.class,
     VehicleParkingRepositoryModule.class,
     FareModule.class,
   }
@@ -68,6 +71,9 @@ public interface LoadApplicationFactory {
 
   @Singleton
   TimetableRepository emptyTimetableRepository();
+
+  @Singleton
+  TransferRepository emptyTransferRepository();
 
   @Singleton
   WorldEnvelopeRepository emptyWorldEnvelopeRepository();
