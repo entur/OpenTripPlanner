@@ -18,7 +18,7 @@ import org.opentripplanner.routing.algorithm.transferoptimization.model.passthro
 import org.opentripplanner.routing.algorithm.transferoptimization.services.OptimizePathDomainService;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.TransferGenerator;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.TransferServiceAdaptor;
-import org.opentripplanner.transfer.constrained.TransferService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 /**
@@ -28,7 +28,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
 
   private final IntFunction<StopLocation> stopLookup;
   private final RaptorStopNameResolver stopNameResolver;
-  private final TransferService transferService;
+  private final ConstrainedTransferService transferService;
   private final RaptorTransitDataProvider<T> transitDataProvider;
 
   @Nullable
@@ -40,7 +40,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
   private TransferOptimizationServiceConfigurator(
     IntFunction<StopLocation> stopLookup,
     RaptorStopNameResolver stopNameResolver,
-    TransferService transferService,
+    ConstrainedTransferService transferService,
     RaptorTransitDataProvider<T> transitDataProvider,
     int[] stopBoardAlightTransferCosts,
     TransferOptimizationParameters config,
@@ -63,7 +63,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
   > createOptimizeTransferService(
     IntFunction<StopLocation> stopLookup,
     RaptorStopNameResolver stopNameResolver,
-    TransferService transferService,
+    ConstrainedTransferService transferService,
     RaptorTransitDataProvider<T> transitDataProvider,
     @Nullable int[] stopBoardAlightTransferCosts,
     TransferOptimizationParameters config,

@@ -29,7 +29,7 @@ import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
-import org.opentripplanner.transfer.TransferService;
+import org.opentripplanner.transfer.RegularTransferService;
 import org.opentripplanner.transfer.regular.PathTransfer;
 import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
@@ -46,7 +46,7 @@ public class FlexRouter {
 
   private final Graph graph;
   private final TransitService transitService;
-  private final TransferService transferService;
+  private final RegularTransferService transferService;
   private final FlexParameters flexParameters;
   private final Collection<NearbyStop> streetAccesses;
   private final Collection<NearbyStop> streetEgresses;
@@ -66,7 +66,7 @@ public class FlexRouter {
   public FlexRouter(
     Graph graph,
     TransitService transitService,
-    TransferService transferService,
+    RegularTransferService transferService,
     StreetDetailsService streetDetailsService,
     FlexParameters flexParameters,
     TripRequest filterRequest,

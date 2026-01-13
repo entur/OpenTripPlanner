@@ -1,11 +1,14 @@
 package org.opentripplanner.transfer.constrained;
 
+import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 
-public interface TransferService {
+public interface ConstrainedTransferService {
+  void addAll(Collection<ConstrainedTransfer> transfers);
+
   List<ConstrainedTransfer> listAll();
 
   @Nullable

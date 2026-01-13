@@ -7,11 +7,11 @@ import org.opentripplanner.transfer.internal.TransferIndex;
 
 public class TransferServiceTestFactory {
 
-  public static TransferService defaultTransferService() {
+  public static RegularTransferService defaultTransferService() {
     return new DefaultTransferService(defaultTransferRepository());
   }
 
-  public static TransferService transferService(TransferRepository transferRepository) {
+  public static RegularTransferService transferService(TransferRepository transferRepository) {
     return new DefaultTransferService(transferRepository);
   }
 

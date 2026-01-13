@@ -18,7 +18,7 @@ import org.opentripplanner.graph_builder.issues.InterliningTeleport;
 import org.opentripplanner.gtfs.mapping.StaySeatedNotAllowed;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.transfer.constrained.ConstrainedTransfer;
-import org.opentripplanner.transfer.constrained.DefaultTransferService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transfer.constrained.TransferConstraint;
 import org.opentripplanner.transfer.constrained.TransferPriority;
 import org.opentripplanner.transfer.constrained.TripTransferPoint;
@@ -33,7 +33,7 @@ import org.slf4j.LoggerFactory;
 public class InterlineProcessor {
 
   private static final Logger LOG = LoggerFactory.getLogger(InterlineProcessor.class);
-  private final DefaultTransferService transferService;
+  private final ConstrainedTransferService transferService;
   private final int maxInterlineDistance;
   private final DataImportIssueStore issueStore;
   private final List<StaySeatedNotAllowed> staySeatedNotAllowed;
@@ -43,7 +43,7 @@ public class InterlineProcessor {
   private final Map<FeedScopedId, BitSet> daysOfServices = new HashMap<>();
 
   public InterlineProcessor(
-    DefaultTransferService transferService,
+    ConstrainedTransferService transferService,
     List<StaySeatedNotAllowed> staySeatedNotAllowed,
     int maxInterlineDistance,
     DataImportIssueStore issueStore,

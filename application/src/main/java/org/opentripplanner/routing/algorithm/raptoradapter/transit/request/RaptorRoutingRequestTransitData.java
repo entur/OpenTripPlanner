@@ -26,7 +26,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtr
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.GeneralizedCostParametersMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.transfer.constrained.TransferService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -40,7 +40,7 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
 
   private final RaptorTransitData raptorTransitData;
 
-  private final TransferService transferService;
+  private final ConstrainedTransferService transferService;
 
   /**
    * Active route indices by stop index

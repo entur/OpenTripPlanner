@@ -19,7 +19,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
  * THIS CLASS IS NOT THREAD_SAFE. This class is loaded with plan data only, and read-only during
  * routing. No real-time update should touch this class; Hence it do not need to be thread-safe.
  */
-public class DefaultTransferService implements Serializable, TransferService {
+public class DefaultConstrainedTransferService implements Serializable, ConstrainedTransferService {
 
   private final List<ConstrainedTransfer> transfersList;
 
@@ -31,11 +31,12 @@ public class DefaultTransferService implements Serializable, TransferService {
    */
   private final TransferPointMap<TransferPointMap<ConstrainedTransfer>> transfersMap;
 
-  public DefaultTransferService() {
+  public DefaultConstrainedTransferService() {
     this.transfersList = new ArrayList<>();
     this.transfersMap = new TransferPointMap<>();
   }
 
+  @Override
   public void addAll(Collection<ConstrainedTransfer> transfers) {
     Set<ConstrainedTransfer> set = new HashSet<>(transfersList);
 

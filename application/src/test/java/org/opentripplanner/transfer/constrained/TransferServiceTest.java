@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 public class TransferServiceTest {
 
-  private final DefaultTransferService subject = new DefaultTransferService();
+  private final DefaultConstrainedTransferService subject = new DefaultConstrainedTransferService();
 
   @Test
   public void findTransfer() {

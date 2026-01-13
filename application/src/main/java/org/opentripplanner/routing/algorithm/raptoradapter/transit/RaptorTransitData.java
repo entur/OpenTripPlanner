@@ -12,7 +12,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtr
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.TransferIndexGenerator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRequestTransferCache;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.transfer.constrained.TransferService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.SiteRepository;
 
@@ -41,7 +41,7 @@ public class RaptorTransitData {
   /**
    * Trip to trip transfers like with properties like guaranteedTransfer, staySeated and priority.
    */
-  private final TransferService transferService;
+  private final ConstrainedTransferService transferService;
 
   private final SiteRepository siteRepository;
 
@@ -75,7 +75,7 @@ public class RaptorTransitData {
   public RaptorTransitData(
     Map<LocalDate, List<TripPatternForDate>> tripPatternsRunningOnDate,
     List<List<Transfer>> transfersByStopIndex,
-    TransferService transferService,
+    ConstrainedTransferService transferService,
     SiteRepository siteRepository,
     RaptorRequestTransferCache transferCache,
     ConstrainedTransfersForPatterns constrainedTransfers,
@@ -136,7 +136,7 @@ public class RaptorTransitData {
       .collect(Collectors.toList());
   }
 
-  public TransferService getTransferService() {
+  public ConstrainedTransferService getTransferService() {
     return transferService;
   }
 

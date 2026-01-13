@@ -34,7 +34,8 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransit
 import org.opentripplanner.routing.impl.DelegatingTransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.routing.util.ConcurrentPublished;
-import org.opentripplanner.transfer.constrained.DefaultTransferService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
+import org.opentripplanner.transfer.constrained.DefaultConstrainedTransferService;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.transit.model.framework.Deduplicator;
@@ -85,7 +86,8 @@ public class TimetableRepository implements Serializable {
   private final Map<String, FeedInfo> feedInfoForId = new HashMap<>();
 
   private final Multimap<AbstractTransitEntity, Notice> noticesByElement = HashMultimap.create();
-  private final DefaultTransferService transferService = new DefaultTransferService();
+  private final ConstrainedTransferService transferService =
+    new DefaultConstrainedTransferService();
 
   private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
 
@@ -182,7 +184,7 @@ public class TimetableRepository implements Serializable {
     return realtimeRaptorTransitData != null;
   }
 
-  public DefaultTransferService getTransferService() {
+  public ConstrainedTransferService getTransferService() {
     return transferService;
   }
 
