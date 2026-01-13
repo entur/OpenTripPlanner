@@ -2,7 +2,7 @@ package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.graph_builder.module.osm.moduletests._support.NodeBuilder.node;
+import static org.opentripplanner.osm.model.NodeBuilder.node;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -15,7 +15,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
-import org.opentripplanner.graph_builder.module.osm.moduletests._support.TestOsmProvider;
+import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.street.model.StreetTraversalPermission;
