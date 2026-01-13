@@ -6,6 +6,7 @@ import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -15,6 +16,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
 import org.opentripplanner.raptor.rangeraptor.transit.AccessPaths;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.spi.IntIterator;
+import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 
 /**
@@ -184,6 +186,56 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
+  public void findOnBoardAccessForRound() {
+    for (var accessPath : accessPaths.onBoardAccessPaths()) {
+      RaptorRoute<T> route;
+      try {
+        route = transitData.getRouteForIndex(accessPath.routeIndex());
+      } catch (IndexOutOfBoundsException e) {
+        // No route with the given index exists, thus there is nothing to do
+        return;
+      }
+
+      T trip;
+      try {
+        trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
+      } catch (IndexOutOfBoundsException e) {
+        // No trip with the given index exists in the route, thus there is nothing to do
+        return;
+      }
+
+      var boardTime = trip.arrival(accessPath.stopPositionInPattern());
+      transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime, trip);
+    }
+  }
+
+  @Override
+  public void findOnBoardAccessTransitForRound() {
+    var onBoardStopArrivals = transitWorker.listOnBoardStopArrivals().iterator();
+    while (onBoardStopArrivals.hasNext()) {
+      var onBoardStopArrival = onBoardStopArrivals.next();
+      RaptorRoute<T> route;
+      try {
+        route = transitData.getRouteForIndex(
+          onBoardStopArrival.onBoardTripConstraint().routeIndex()
+        );
+      } catch (IndexOutOfBoundsException e) {
+        // No route with the given index exists, thus there is nothing to do for this stop arrival
+        continue;
+      }
+
+      transitWorker.prepareForTransitWith(route);
+
+      var boarded = tryBoardOnBoardAccess(onBoardStopArrival, route);
+
+      if (boarded) {
+        alightOnBoardAccess(onBoardStopArrival, route);
+        onBoardStopArrivals.remove();
+      }
+    }
+  }
+
+  @Override
   public void findTransfersForRound() {
     timers.findTransfersForRound(() -> {
       IntIterator it = state.stopsTouchedByTransitCurrentRound();
@@ -223,6 +275,57 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
       // Access must be available after the iteration departure time
       if (departureTime != RaptorConstants.TIME_NOT_SET) {
         transitWorker.setAccessToStop(it, departureTime);
+      }
+    }
+  }
+
+  private boolean tryBoardOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
+    var onBoardTripConstraint = onBoardStopArrival.onBoardTripConstraint();
+
+    T trip;
+    try {
+      trip = route.timetable().getTripSchedule(onBoardTripConstraint.tripScheduleIndex());
+    } catch (IndexOutOfBoundsException e) {
+      // No trip with the given index exists in the route, thus there is nothing to do
+      return false;
+    }
+
+    return transitWorker.boardAsOnBoardAccess(
+      onBoardStopArrival,
+      onBoardTripConstraint.stopPositionInPattern(),
+      trip
+    );
+  }
+
+  private void alightOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
+    var onBoardTripConstraint = onBoardStopArrival.onBoardTripConstraint();
+
+    var pattern = route.pattern();
+    IntIterator stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
+
+    while (
+      stopPositions.hasNext() &&
+      stopPositions.next() != onBoardTripConstraint.stopPositionInPattern()
+    ) {
+      // Skip past the initial on-board access stop
+      // We will only consider alighting on stops after this one
+    }
+
+    while (stopPositions.hasNext()) {
+      var stopPos = stopPositions.next();
+      var stopIndex = pattern.stopIndex(stopPos);
+
+      var txSearch = enableTransferConstraints
+        ? calculator.transferConstraintsSearch(transitData, onBoardTripConstraint.routeIndex())
+        : null;
+      int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
+
+      if (calculator.alightingPossibleAt(pattern, stopPos)) {
+        if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
+          transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
+        } else {
+          transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
+        }
       }
     }
   }
