@@ -6,6 +6,7 @@
       startCursor
       endCursor
     }
+    totalCount
     edges {
       node {
         serviceDate
