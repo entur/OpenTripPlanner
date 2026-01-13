@@ -1,9 +1,9 @@
-package org.opentripplanner.transfer;
+package org.opentripplanner.transfer.regular;
 
 import org.opentripplanner.ext.flex.FlexTransferIndex;
-import org.opentripplanner.transfer.internal.DefaultTransferRepository;
-import org.opentripplanner.transfer.internal.DefaultTransferService;
-import org.opentripplanner.transfer.internal.TransferIndex;
+import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
+import org.opentripplanner.transfer.regular.internal.DefaultTransferService;
+import org.opentripplanner.transfer.regular.internal.TransferIndex;
 
 public class TransferServiceTestFactory {
 

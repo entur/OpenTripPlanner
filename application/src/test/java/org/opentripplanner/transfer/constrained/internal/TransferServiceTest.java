@@ -1,4 +1,4 @@
-package org.opentripplanner.transfer.constrained;
+package org.opentripplanner.transfer.constrained.internal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.transfer.constrained.TransferTestData.ANY_POS;
@@ -23,6 +23,9 @@ import static org.opentripplanner.transfer.constrained.TransferTestData.TRIP_POI
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
+import org.opentripplanner.transfer.constrained.model.TransferPoint;
 
 public class TransferServiceTest {
 

@@ -3,10 +3,10 @@ package org.opentripplanner.routing.algorithm.transferoptimization.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.opentripplanner.routing.algorithm.transferoptimization.services.TransferGeneratorDummy.dummyTransferGenerator;
-import static org.opentripplanner.transfer.constrained.TransferPriority.ALLOWED;
-import static org.opentripplanner.transfer.constrained.TransferPriority.NOT_ALLOWED;
-import static org.opentripplanner.transfer.constrained.TransferPriority.PREFERRED;
-import static org.opentripplanner.transfer.constrained.TransferPriority.RECOMMENDED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.ALLOWED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.NOT_ALLOWED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.PREFERRED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.RECOMMENDED;
 import static org.opentripplanner.utils.time.TimeUtils.time;
 
 import java.util.List;
@@ -14,8 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptorlegacy._data.RaptorTestConstants;
 import org.opentripplanner.raptorlegacy._data.api.PathUtils;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripSchedule;
-import org.opentripplanner.transfer.constrained.ConstrainedTransfer;
-import org.opentripplanner.transfer.constrained.TransferPriority;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
+import org.opentripplanner.transfer.constrained.model.TransferPriority;
 
 /**
  * <pre>

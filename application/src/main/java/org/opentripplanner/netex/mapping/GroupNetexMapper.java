@@ -8,7 +8,7 @@ import java.util.Map;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.impl.TransitDataImportBuilder;
 import org.opentripplanner.netex.mapping.support.FeedScopedIdFactory;
-import org.opentripplanner.transfer.constrained.ConstrainedTransfer;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
 import org.rutebanken.netex.model.ServiceJourneyInterchange;
 
 /**

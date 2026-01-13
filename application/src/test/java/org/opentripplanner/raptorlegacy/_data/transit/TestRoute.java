@@ -9,7 +9,7 @@ import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleSearch;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.TripScheduleSearchFactory;
-import org.opentripplanner.transfer.constrained.TransferConstraint;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

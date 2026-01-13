@@ -17,7 +17,7 @@ import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
-import org.opentripplanner.transfer.regular.PathTransfer;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.filter.expr.Matcher;

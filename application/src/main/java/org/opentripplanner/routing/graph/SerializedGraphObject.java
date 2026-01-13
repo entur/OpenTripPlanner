@@ -36,7 +36,7 @@ import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.service.TimetableRepository;

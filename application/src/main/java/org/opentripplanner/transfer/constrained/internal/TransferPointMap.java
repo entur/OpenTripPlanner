@@ -1,4 +1,4 @@
-package org.opentripplanner.transfer.constrained;
+package org.opentripplanner.transfer.constrained.internal;
 
 import java.util.HashMap;
 import java.util.List;
@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.opentripplanner.transfer.constrained.model.TransferPoint;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;

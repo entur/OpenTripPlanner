@@ -1,6 +1,6 @@
 package org.opentripplanner.raptorlegacy._data.transit;
 
-import org.opentripplanner.transfer.constrained.TransferPoint;
+import org.opentripplanner.transfer.constrained.model.TransferPoint;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

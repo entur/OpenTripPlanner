@@ -14,7 +14,7 @@ import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.OptimizedPath;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferOptimized;
-import org.opentripplanner.transfer.constrained.TransferConstraint;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
 
 /**

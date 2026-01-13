@@ -1,12 +1,12 @@
-package org.opentripplanner.transfer.internal;
+package org.opentripplanner.transfer.regular.internal;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.transfer.TransferRepository;
-import org.opentripplanner.transfer.regular.PathTransfer;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

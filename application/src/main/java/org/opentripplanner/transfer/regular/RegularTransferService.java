@@ -1,7 +1,7 @@
-package org.opentripplanner.transfer;
+package org.opentripplanner.transfer.regular;
 
 import java.util.Collection;
-import org.opentripplanner.transfer.regular.PathTransfer;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 /**

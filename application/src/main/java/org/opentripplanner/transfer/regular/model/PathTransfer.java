@@ -1,11 +1,11 @@
-package org.opentripplanner.transfer.regular;
+package org.opentripplanner.transfer.regular.model;
 
 import java.io.Serializable;
 import java.util.EnumSet;
 import java.util.List;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.transfer.constrained.ConstrainedTransfer;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 

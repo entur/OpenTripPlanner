@@ -1,4 +1,4 @@
-package org.opentripplanner.transfer.constrained;
+package org.opentripplanner.transfer.constrained.model;
 
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.Route;

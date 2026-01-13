@@ -1,13 +1,13 @@
-package org.opentripplanner.transfer.configure;
+package org.opentripplanner.transfer.regular.configure;
 
 import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
 import org.opentripplanner.ext.flex.FlexTransferIndex;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.transfer.TransferRepository;
-import org.opentripplanner.transfer.internal.DefaultTransferRepository;
-import org.opentripplanner.transfer.internal.TransferIndex;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
+import org.opentripplanner.transfer.regular.internal.TransferIndex;
 
 @Module
 public class TransferRepositoryModule {

@@ -1,9 +1,9 @@
-package org.opentripplanner.transfer.constrained;
+package org.opentripplanner.transfer.constrained.model;
 
-import static org.opentripplanner.transfer.constrained.TransferPriority.ALLOWED;
-import static org.opentripplanner.transfer.constrained.TransferPriority.NOT_ALLOWED;
-import static org.opentripplanner.transfer.constrained.TransferPriority.PREFERRED;
-import static org.opentripplanner.transfer.constrained.TransferPriority.RECOMMENDED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.ALLOWED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.NOT_ALLOWED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.PREFERRED;
+import static org.opentripplanner.transfer.constrained.model.TransferPriority.RECOMMENDED;
 
 import java.io.Serializable;
 import java.util.Objects;

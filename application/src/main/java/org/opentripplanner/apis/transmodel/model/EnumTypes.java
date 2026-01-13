@@ -18,7 +18,7 @@ import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transfer.constrained.TransferPriority;
+import org.opentripplanner.transfer.constrained.model.TransferPriority;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.BikeAccess;

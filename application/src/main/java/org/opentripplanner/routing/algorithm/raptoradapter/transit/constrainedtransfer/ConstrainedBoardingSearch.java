@@ -7,7 +7,7 @@ import org.opentripplanner.raptor.spi.RaptorBoardOrAlightEvent;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
-import org.opentripplanner.transfer.constrained.TransferConstraint;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 import org.opentripplanner.transit.model.timetable.Trip;
 
 /**

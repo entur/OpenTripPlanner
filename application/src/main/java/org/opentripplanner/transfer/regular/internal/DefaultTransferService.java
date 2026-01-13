@@ -1,9 +1,9 @@
-package org.opentripplanner.transfer.internal;
+package org.opentripplanner.transfer.regular.internal;
 
 import java.util.Collection;
-import org.opentripplanner.transfer.RegularTransferService;
-import org.opentripplanner.transfer.TransferRepository;
-import org.opentripplanner.transfer.regular.PathTransfer;
+import org.opentripplanner.transfer.regular.RegularTransferService;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

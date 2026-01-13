@@ -1,4 +1,4 @@
-package org.opentripplanner.transfer.constrained;
+package org.opentripplanner.transfer.constrained.internal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.transfer.constrained.TransferTestData.ANY_STOP;

@@ -1,4 +1,4 @@
-package org.opentripplanner.transfer.constrained;
+package org.opentripplanner.transfer.constrained.model;
 
 import java.io.Serializable;
 import org.opentripplanner.transit.model.network.Route;

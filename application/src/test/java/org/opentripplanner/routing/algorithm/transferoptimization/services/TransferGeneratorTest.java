@@ -26,7 +26,7 @@ import org.opentripplanner.raptorlegacy._data.transit.TestTransitData;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripPattern;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TestSlackProvider;
-import org.opentripplanner.transfer.constrained.TransferConstraint;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 import org.opentripplanner.utils.time.TimeUtils;
 
 public class TransferGeneratorTest implements RaptorTestConstants {

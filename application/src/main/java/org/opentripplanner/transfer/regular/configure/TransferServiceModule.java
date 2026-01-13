@@ -1,11 +1,11 @@
-package org.opentripplanner.transfer.configure;
+package org.opentripplanner.transfer.regular.configure;
 
 import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
-import org.opentripplanner.transfer.RegularTransferService;
-import org.opentripplanner.transfer.TransferRepository;
-import org.opentripplanner.transfer.internal.DefaultTransferService;
+import org.opentripplanner.transfer.regular.RegularTransferService;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.internal.DefaultTransferService;
 
 @Module
 public class TransferServiceModule {

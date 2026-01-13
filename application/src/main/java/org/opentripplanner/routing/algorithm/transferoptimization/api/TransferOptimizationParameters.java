@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.api;
 
 import org.opentripplanner.raptor.api.path.RaptorPath;
-import org.opentripplanner.transfer.constrained.TransferConstraint;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 
 /**
  * @see org.opentripplanner.routing.algorithm.transferoptimization package documantation.

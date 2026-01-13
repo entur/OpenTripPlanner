@@ -15,7 +15,7 @@ import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.StopTime;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.TripStopTime;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.TripToTripTransfer;
-import org.opentripplanner.transfer.constrained.ConstrainedTransfer;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
 
 /**
  * This class is responsible for finding all possible transfers between each pair of transit legs
