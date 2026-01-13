@@ -7,31 +7,31 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.osm.model.OsmWay;
 
-public record CouldNotApplyMultiLevelInfoToWay(
+public record MoreThanTwoIntersectionNodesInElevatorWay(
   OsmWay way,
   Coordinate from,
   Coordinate to,
-  int nodes
+  int intersectionNodes
 )
   implements DataImportIssue {
   private static final String FMT =
-    "Multi-level info for way %s can not be used because node references did not match. " +
-    "This is probably caused by more than 2 intersection nodes in the way. " +
-    "The way has %s nodes in total.";
+    "Elevator way %s has more than two intersection nodes: %s. " +
+    "This is likely a tagging mistake, but can be correct in rare cases. " +
+    "Please check whether the elevator way is correctly modeled.";
 
   private static final String HTMLFMT =
-    "Multi-level info for <a href='%s'>way %s</a> can not be used because node references did not match. " +
-    "This is probably caused by more than 2 intersection nodes in the way. " +
-    "The way has %s nodes in total.";
+    "<a href='%s'>Elevator way %s</a> has more than two intersection nodes: %s. " +
+    "This is likely a tagging mistake, but can be correct in rare cases. " +
+    "Please check whether the elevator way is correctly modeled.";
 
   @Override
   public String getMessage() {
-    return String.format(FMT, way.getId(), nodes);
+    return String.format(FMT, way.getId(), intersectionNodes);
   }
 
   @Override
   public String getHTMLMessage() {
-    return String.format(HTMLFMT, way.url(), way.getId(), nodes);
+    return String.format(HTMLFMT, way.url(), way.getId(), intersectionNodes);
   }
 
   @Override
