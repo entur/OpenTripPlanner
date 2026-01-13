@@ -4,7 +4,9 @@ import static org.opentripplanner.raptor.api.model.PathLegType.ACCESS;
 
 import java.util.Objects;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.internalapi.PassThroughPointsService;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
@@ -114,6 +116,40 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     for (McStopArrival<T> prevArrival : state.listStopArrivalsPreviousRound(stopIndex)) {
       boardWithConstrainedTransfer(prevArrival, stopIndex, stopPos, boardSlack, txSearch);
     }
+  }
+
+  @Override
+  public void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime, T trip) {
+    state.addOnBoardAccessStopArrival(access, boardTime);
+  }
+
+  @Override
+  public Iterable<? extends McStopArrival<T>> listOnBoardStopArrivals() {
+    return state.listOnBoardStopArrivals();
+  }
+
+  @Override
+  public boolean boardAsOnBoardAccess(
+    ArrivalView<T> prevArrival,
+    int stopPositionInPattern,
+    T trip
+  ) {
+    if (!(prevArrival instanceof McStopArrival<T> prevMcArrival)) {
+      throw new UnsupportedOperationException();
+    }
+
+    var boarding = boardingSupport.searchRegularTransfer(
+      prevArrival.arrivalTime(),
+      stopPositionInPattern,
+      slackProvider.boardSlack(trip.pattern().slackIndex())
+    );
+
+    if (boarding.empty()) {
+      return false;
+    }
+
+    board(prevMcArrival, prevArrival.stop(), boarding);
+    return true;
   }
 
   private void board(

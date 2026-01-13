@@ -1,7 +1,10 @@
 package org.opentripplanner.raptor.rangeraptor.internalapi;
 
+import java.util.List;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.RangeRaptor;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorRoute;
@@ -71,4 +74,27 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
     int boardSlack,
     RaptorConstrainedBoardingSearch<T> txSearch
   );
+
+  default void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime, T trip) {
+    throw new UnsupportedOperationException(
+      "On-board access is not yet supported for this routing strategy"
+    );
+  }
+
+  default Iterable<? extends ArrivalView<T>> listOnBoardStopArrivals() {
+    return List.of();
+  }
+
+  /**
+   * @return true if boarding successful, false otherwise
+   */
+  default boolean boardAsOnBoardAccess(
+    ArrivalView<T> prevArrival,
+    int stopPositionInPattern,
+    T trip
+  ) {
+    throw new UnsupportedOperationException(
+      "On-board access is not yet supported for this routing strategy"
+    );
+  }
 }
