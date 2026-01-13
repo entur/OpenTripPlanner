@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.api.model.FilterValues;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.timetable.TripAlteration;
 
 public class TripOnServiceDateRequestBuilder {
@@ -29,11 +30,15 @@ public class TripOnServiceDateRequestBuilder {
     "alterations",
     List.of()
   );
-  private final FilterValues<LocalDate> serviceDates;
-
-  TripOnServiceDateRequestBuilder(FilterValues<LocalDate> serviceDates) {
-    this.serviceDates = serviceDates;
-  }
+  private FilterValues<LocalDate> serviceDates = FilterValues.ofEmptyIsEverything(
+    "serviceDates",
+    List.of()
+  );
+  private FilterValues<TransitMode> modes = FilterValues.ofEmptyIsEverything("modes", List.of());
+  private FilterValues<TransitMode> excludeModes = FilterValues.ofEmptyIsEverything(
+    "excludeModes",
+    List.of()
+  );
 
   public TripOnServiceDateRequestBuilder withAgencies(FilterValues<FeedScopedId> agencies) {
     this.agencies = agencies;
@@ -71,6 +76,21 @@ public class TripOnServiceDateRequestBuilder {
     return this;
   }
 
+  public TripOnServiceDateRequestBuilder withServiceDates(FilterValues<LocalDate> serviceDates) {
+    this.serviceDates = serviceDates;
+    return this;
+  }
+
+  public TripOnServiceDateRequestBuilder withModes(FilterValues<TransitMode> modes) {
+    this.modes = modes;
+    return this;
+  }
+
+  public TripOnServiceDateRequestBuilder withExcludeModes(FilterValues<TransitMode> modes) {
+    this.excludeModes = modes;
+    return this;
+  }
+
   public TripOnServiceDateRequest build() {
     return new TripOnServiceDateRequest(
       serviceDates,
@@ -79,7 +99,9 @@ public class TripOnServiceDateRequestBuilder {
       serviceJourneys,
       replacementFor,
       netexInternalPlanningCodes,
-      alterations
+      alterations,
+      modes,
+      excludeModes
     );
   }
 }

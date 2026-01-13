@@ -3,6 +3,7 @@ package org.opentripplanner.transit.api.request;
 import java.time.LocalDate;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.api.model.FilterValues;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.timetable.TripAlteration;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
@@ -21,6 +22,8 @@ public class TripOnServiceDateRequest {
   private final FilterValues<FeedScopedId> replacementFor;
   private final FilterValues<String> netexInternalPlanningCodes;
   private final FilterValues<TripAlteration> alterations;
+  private final FilterValues<TransitMode> modes;
+  private final FilterValues<TransitMode> excludeModes;
 
   TripOnServiceDateRequest(
     FilterValues<LocalDate> serviceDates,
@@ -29,7 +32,9 @@ public class TripOnServiceDateRequest {
     FilterValues<FeedScopedId> serviceJourneys,
     FilterValues<FeedScopedId> replacementFor,
     FilterValues<String> netexInternalPlanningCodes,
-    FilterValues<TripAlteration> alterations
+    FilterValues<TripAlteration> alterations,
+    FilterValues<TransitMode> modes,
+    FilterValues<TransitMode> excludeModes
   ) {
     this.serviceDates = serviceDates;
     this.agencies = agencies;
@@ -38,10 +43,12 @@ public class TripOnServiceDateRequest {
     this.replacementFor = replacementFor;
     this.netexInternalPlanningCodes = netexInternalPlanningCodes;
     this.alterations = alterations;
+    this.modes = modes;
+    this.excludeModes = excludeModes;
   }
 
-  public static TripOnServiceDateRequestBuilder of(FilterValues<LocalDate> serviceDates) {
-    return new TripOnServiceDateRequestBuilder(serviceDates);
+  public static TripOnServiceDateRequestBuilder of() {
+    return new TripOnServiceDateRequestBuilder();
   }
 
   public FilterValues<FeedScopedId> agencies() {
@@ -70,5 +77,13 @@ public class TripOnServiceDateRequest {
 
   public FilterValues<LocalDate> serviceDates() {
     return serviceDates;
+  }
+
+  public FilterValues<TransitMode> modes() {
+    return modes;
+  }
+
+  public FilterValues<TransitMode> excludeModes() {
+    return excludeModes;
   }
 }
