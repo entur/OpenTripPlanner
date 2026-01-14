@@ -46,7 +46,7 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  *   routing; it is essential to optimizations in routing algorithms like Raptor. We may be
  *   conflating a domain model grouping with an internal routing grouping.
  * TODO RT_TG In addition to AB comment: this does not map cleanly to NeTEx JourneyPattern, the
- *   consept does not exist in GTFS. The TripPattern ID is unfortunatly exposed in the OTP APIs.
+ *   concept does not exist in GTFS. The TripPattern ID is unfortunatly exposed in the OTP APIs.
  *   This class has a 1-to-1 relationship with RoutingTripPattern. To support a more flexible
  *   system and more use-cases we should consider keeping "routing-tables" apart from the bussiness
  *   domain model. One example, if the wheelchair accessability differ between trips within the
@@ -153,8 +153,8 @@ public final class TripPattern
   }
 
   /**
-   * Uae this to alter an existing pattern BEFORE it is added the model. This method will keep all
-   * field as is.
+   * Use this to alter an existing pattern BEFORE it is added to the model. This method will keep
+   * all fields as is.
    */
   @Override
   public TripPatternBuilder copy() {
@@ -449,7 +449,7 @@ public final class TripPattern
   }
 
   /**
-   * @deprecated This method is not clearly defined. Use {@link #isStopPatternModifiedInRealTime()}
+   * @deprecated This method is not clearly defined. Use {@link #isStopPatternChangedInRealTime()}
    * or {@link #isRealTimeTripPattern()} if possible, or clarify what this is needed for.
    */
   @Deprecated

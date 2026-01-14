@@ -594,7 +594,7 @@ public class TimetableSnapshot {
   }
 
   /**
-   * Add the patterns to the stop index, only if they come from a modified pattern
+   * Add the patterns to the stop index, only if they come from a real-time pattern.
    */
   private void addPatternToIndex(TripPattern tripPattern) {
     if (tripPattern.isRealTimeTripPattern()) {
