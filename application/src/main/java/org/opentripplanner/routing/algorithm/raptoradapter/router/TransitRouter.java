@@ -195,7 +195,7 @@ public class TransitRouter {
         request.preferences().transfer().optimization(),
         raptorRequest.searchParams().viaLocations()
       );
-      paths = service.optimize(transitResponse.paths());
+      paths = service.optimize(paths);
     }
 
     // Create itineraries
