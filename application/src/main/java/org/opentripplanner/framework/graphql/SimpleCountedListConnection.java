@@ -20,6 +20,7 @@ public class SimpleCountedListConnection<T>
     this.data = Objects.requireNonNull(data);
   }
 
+  @Override
   public CountedConnection<T> get(DataFetchingEnvironment environment) {
     var simpleListConnection = new SimpleListConnection<>(data);
     var connection = simpleListConnection.get(environment);
