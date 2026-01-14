@@ -1,7 +1,6 @@
 package org.opentripplanner.framework.graphql;
 
 import graphql.TrivialDataFetcher;
-import graphql.relay.DefaultConnection;
 import graphql.relay.SimpleListConnection;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;

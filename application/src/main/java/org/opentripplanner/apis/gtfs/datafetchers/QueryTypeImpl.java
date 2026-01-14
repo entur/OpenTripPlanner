@@ -30,7 +30,7 @@ import org.opentripplanner.apis.gtfs.GraphQLUtils;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLQueryTypeStopsByRadiusArgs;
-import org.opentripplanner.apis.gtfs.mapping.CanceledTripsFilterInputMapper;
+import org.opentripplanner.apis.gtfs.mapping.CanceledTripsFilterMapper;
 import org.opentripplanner.apis.gtfs.mapping.routerequest.LegacyRouteRequestMapper;
 import org.opentripplanner.apis.gtfs.mapping.routerequest.RouteRequestMapper;
 import org.opentripplanner.apis.gtfs.support.filter.PatternByDateFilterUtil;
@@ -65,8 +65,6 @@ import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
-import org.opentripplanner.transit.api.model.FilterValues;
-import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -78,7 +76,6 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
-import org.opentripplanner.utils.collection.CollectionUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
@@ -826,21 +823,7 @@ public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
   @Override
   public DataFetcher<CountedConnection<TripOnServiceDate>> canceledTrips() {
     return environment -> {
-      var filter = new GraphQLTypes.GraphQLQueryTypeCanceledTripsArgs(
-        environment.getArguments()
-      ).getGraphQLFilters();
-      var includes = filter.getGraphQLInclude();
-      var excludes = filter.getGraphQLExclude();
-      CollectionUtils.requireNullOrNonEmpty(includes, "filters.include");
-      CollectionUtils.requireNullOrNonEmpty(excludes, "filters.exclude");
-      var modesToInclude = CanceledTripsFilterInputMapper.toTransitModes(includes);
-      var modesToExclude = CanceledTripsFilterInputMapper.toTransitModes(excludes);
-      var modesToIncludeFilter = FilterValues.ofNullIsEverything("modesToInclude", modesToInclude);
-      var modesToExcludeFilter = FilterValues.ofNullIsEverything("modesToExclude", modesToExclude);
-      var request = TripOnServiceDateRequest.of()
-        .withModes(modesToIncludeFilter)
-        .withExcludeModes(modesToExcludeFilter)
-        .build();
+      var request = CanceledTripsFilterMapper.mapToTripOnServiceDateRequest(environment);
       var trips = getTransitService(environment).findCanceledTrips(request);
       return new SimpleCountedListConnection<>(trips).get(environment);
     };
