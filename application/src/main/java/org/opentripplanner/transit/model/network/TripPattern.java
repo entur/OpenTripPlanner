@@ -107,7 +107,7 @@ public final class TripPattern
   private final TripPattern originalTripPattern;
 
   private final boolean realTimeTripPattern;
-  private final boolean stopPatternChangedInRealTime;
+  private final boolean stopPatternModifiedInRealTime;
 
   private final RoutingTripPattern routingTripPattern;
 
@@ -117,7 +117,7 @@ public final class TripPattern
     this.route = builder.getRoute();
     this.stopPattern = requireNonNull(builder.getStopPattern());
     this.realTimeTripPattern = builder.isRealTimeTripPattern();
-    this.stopPatternChangedInRealTime = builder.isStopPatternChangedInRealTime();
+    this.stopPatternModifiedInRealTime = builder.isStopPatternModifiedInRealTime();
     this.mode = requireNonNull(builder.getMode());
     this.netexSubMode = requireNonNull(builder.getNetexSubmode());
     this.containsMultipleModes = builder.getContainsMultipleModes();
@@ -143,7 +143,7 @@ public final class TripPattern
 
     getId().requireSameFeedId(route.getId());
 
-    if (stopPatternChangedInRealTime && !realTimeTripPattern) {
+    if (stopPatternModifiedInRealTime && !realTimeTripPattern) {
       throw new IllegalStateException();
     }
   }
@@ -435,8 +435,8 @@ public final class TripPattern
    * If this method returns {@code false}, this TripPattern is either a scheduled TripPattern or
    * a TripPattern generated from scratch in real-time (GTFS ADDED/NeTEx ExtraJourney).
    */
-  public boolean isStopPatternChangedInRealTime() {
-    return stopPatternChangedInRealTime;
+  public boolean isStopPatternModifiedInRealTime() {
+    return stopPatternModifiedInRealTime;
   }
 
   /**
@@ -449,7 +449,7 @@ public final class TripPattern
   }
 
   /**
-   * @deprecated This method is not clearly defined. Use {@link #isStopPatternChangedInRealTime()}
+   * @deprecated This method is not clearly defined. Use {@link #isStopPatternModifiedInRealTime()}
    * or {@link #isRealTimeTripPattern()} if possible, or clarify what this is needed for.
    */
   @Deprecated

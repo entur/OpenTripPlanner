@@ -23,7 +23,7 @@ public final class TripPatternBuilder
 
   private String name;
   private boolean realTimeTripPattern;
-  private boolean stopPatternChangedInRealTime;
+  private boolean stopPatternModifiedInRealTime;
   private boolean containsMultipleModes;
   private Route route;
   private TransitMode mode;
@@ -51,7 +51,7 @@ public final class TripPatternBuilder
     this.containsMultipleModes = original.getContainsMultipleModes();
     this.stopPattern = original.getStopPattern();
     this.scheduledTimetable = original.getScheduledTimetable();
-    this.stopPatternChangedInRealTime = original.isStopPatternChangedInRealTime();
+    this.stopPatternModifiedInRealTime = original.isStopPatternModifiedInRealTime();
     this.realTimeTripPattern = original.isRealTimeTripPattern();
     this.originalTripPattern = original.getOriginalTripPattern();
     this.hopGeometries = original.getGeometry() == null
@@ -118,8 +118,8 @@ public final class TripPatternBuilder
    * Indicate that this TripPattern is created in RealTime, and that the stop pattern of the
    * original scheduled trip is changed.
    * <p>
-   *  TODO - ENCAPSULATE realTimeTripPattern & stopPatternChangedInRealTime initialization
-   *    The next 2 methods (withRealTimeTripPattern() and withStopPatternChangedInRealTime()) are
+   *  TODO - ENCAPSULATE realTimeTripPattern & stopPatternModifiedInRealTime initialization
+   *    The next 2 methods (withRealTimeTripPattern() and withStopPatternModifiedInRealTime()) are
    *    internal domain business rules, and should be enforced by the aggregate root, not delegated
    *    to the creators(updaters) and unit-tests. A better solution to this would be to make static
    *    factory methods, but it does not make the problem go away. If, e.g. the Route is chosen as
@@ -128,25 +128,25 @@ public final class TripPatternBuilder
    *
    * @see #withRealTimeAddedTrip() as an alternative
    * @see TripPattern#isRealTimeTripPattern()
-   * @see TripPattern#isStopPatternChangedInRealTime()
+   * @see TripPattern#isStopPatternModifiedInRealTime()
    *
    */
-  public TripPatternBuilder withRealTimeStopPatternChanged() {
+  public TripPatternBuilder withRealTimeStopPatternModified() {
     this.realTimeTripPattern = true;
-    this.stopPatternChangedInRealTime = true;
+    this.stopPatternModifiedInRealTime = true;
     return this;
   }
 
   /**
    * Indicate that this TripPattern is created in RealTime for a new trip (GTFS ADDED trip/NeTEx
    * ExtraJourney).
-   * @see #withRealTimeStopPatternChanged() as an alternative
+   * @see #withRealTimeStopPatternModified() as an alternative
    * @see TripPattern#isRealTimeTripPattern()
-   * @see TripPattern#isStopPatternChangedInRealTime()
+   * @see TripPattern#isStopPatternModifiedInRealTime()
    */
   public TripPatternBuilder withRealTimeAddedTrip() {
     this.realTimeTripPattern = true;
-    this.stopPatternChangedInRealTime = false;
+    this.stopPatternModifiedInRealTime = false;
     return this;
   }
 
@@ -213,8 +213,8 @@ public final class TripPatternBuilder
     return realTimeTripPattern;
   }
 
-  boolean isStopPatternChangedInRealTime() {
-    return stopPatternChangedInRealTime;
+  boolean isStopPatternModifiedInRealTime() {
+    return stopPatternModifiedInRealTime;
   }
 
   public byte[][] hopGeometries() {

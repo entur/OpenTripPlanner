@@ -241,7 +241,7 @@ public class TransferIndexGenerator {
     var patternsByRealtimeOrScheduled = patterns
       .stream()
       .collect(
-        Collectors.groupingBy(pattern -> pattern.getPattern().isStopPatternChangedInRealTime())
+        Collectors.groupingBy(pattern -> pattern.getPattern().isStopPatternModifiedInRealTime())
       );
 
     // Process first the pattern for which stopPosInPattern was calculated for

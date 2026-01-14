@@ -319,7 +319,7 @@ public class TimetableSnapshot {
     swapTimetable(pattern, tt, updated);
 
     Trip trip = updatedTripTimes.getTrip();
-    if (pattern.isStopPatternChangedInRealTime()) {
+    if (pattern.isStopPatternModifiedInRealTime()) {
       // Remember this pattern for the added trip id and service date
       FeedScopedId tripId = trip.getId();
       TripIdAndServiceDate tripIdAndServiceDate = new TripIdAndServiceDate(tripId, serviceDate);
