@@ -20,8 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.fares.model.FareModelForTest;
 import org.opentripplanner.ext.fares.model.FareRuleSet;
-import org.opentripplanner.ext.fares.service._support.FareModelForTest;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
@@ -309,7 +309,8 @@ public class AtlantaFareServiceTest implements PlanTestConstants {
         case "102" -> DEFAULT_TEST_RIDE_PRICE.plus(usDollars(2));
         case "atlsc" -> DEFAULT_TEST_RIDE_PRICE.minus(usDollars(1));
         case "blue" -> Money.ZERO_USD;
-        default -> DEFAULT_TEST_RIDE_PRICE; // free circulator
+        // free circulator
+        default -> DEFAULT_TEST_RIDE_PRICE;
       };
     }
   }

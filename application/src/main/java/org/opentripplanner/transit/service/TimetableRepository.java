@@ -19,7 +19,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,13 +29,11 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.model.FeedInfo;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.impl.CalendarServiceImpl;
 import org.opentripplanner.model.transfer.DefaultTransferService;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.impl.DelegatingTransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.routing.util.ConcurrentPublished;
@@ -93,8 +90,6 @@ public class TimetableRepository implements Serializable {
   private final DefaultTransferService transferService = new DefaultTransferService();
 
   private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
-
-  private final Multimap<StopLocation, PathTransfer> transfersByStop = HashMultimap.create();
 
   private SiteRepository siteRepository;
 
@@ -418,20 +413,6 @@ public class TimetableRepository implements Serializable {
     return serviceCodes;
   }
 
-  /** Pre-generated transfers between all stops. */
-  public Collection<PathTransfer> getTransfersByStop(StopLocation stop) {
-    return transfersByStop.get(stop);
-  }
-
-  /** Pre-generated transfers between all stops filtered based on the modes in the PathTransfer. */
-  public List<PathTransfer> findTransfers(StreetMode mode) {
-    return transfersByStop
-      .values()
-      .stream()
-      .filter(pathTransfer -> pathTransfer.getModes().contains(mode))
-      .toList();
-  }
-
   public SiteRepository getSiteRepository() {
     return siteRepository;
   }
@@ -493,10 +474,6 @@ public class TimetableRepository implements Serializable {
     return deduplicator;
   }
 
-  public Collection<PathTransfer> getAllPathTransfers() {
-    return transfersByStop.values();
-  }
-
   public Collection<FlexTrip<?, ?>> getAllFlexTrips() {
     return flexTripsById.values();
   }
@@ -534,11 +511,6 @@ public class TimetableRepository implements Serializable {
   public void setUpdaterManager(GraphUpdaterManager updaterManager) {
     this.updaterManager = updaterManager;
     this.transitAlertService = null;
-  }
-
-  public void addAllTransfersByStops(Multimap<StopLocation, PathTransfer> transfersByStop) {
-    invalidateIndex();
-    this.transfersByStop.putAll(transfersByStop);
   }
 
   /**

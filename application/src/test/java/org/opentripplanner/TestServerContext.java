@@ -24,6 +24,9 @@ import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.service.DefaultViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
@@ -41,6 +44,8 @@ import org.opentripplanner.standalone.server.DefaultServerRequestContext;
 import org.opentripplanner.street.internal.DefaultStreetRepository;
 import org.opentripplanner.street.service.DefaultStreetLimitationParametersService;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.transfer.TransferRepository;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -55,15 +60,24 @@ public class TestServerContext {
   public static OtpServerRequestContext createServerContext(
     Graph graph,
     TimetableRepository timetableRepository,
+    TransferRepository transferRepository,
     FareService fareService
   ) {
-    return createServerContext(graph, timetableRepository, fareService, null, null);
+    return createServerContext(
+      graph,
+      timetableRepository,
+      transferRepository,
+      fareService,
+      null,
+      null
+    );
   }
 
   /** Create a context for unit testing */
   public static OtpServerRequestContext createServerContext(
     Graph graph,
     TimetableRepository timetableRepository,
+    TransferRepository transferRepository,
     FareService fareService,
     @Nullable TimetableSnapshotManager snapshotManager,
     @Nullable RouteRequest request
@@ -82,7 +96,11 @@ public class TestServerContext {
     }
 
     timetableRepository.index();
-    createRaptorTransitData(timetableRepository, routerConfig.transitTuningConfig());
+    createRaptorTransitData(
+      timetableRepository,
+      transferRepository,
+      routerConfig.transitTuningConfig()
+    );
 
     snapshotManager.purgeAndCommit();
 
@@ -110,6 +128,7 @@ public class TestServerContext {
       List.of(),
       request,
       createStreetLimitationParametersService(),
+      TransferServiceTestFactory.transferService(transferRepository),
       routerConfig.transitTuningConfig(),
       transitService,
       routerConfig.triasApiParameters(),
@@ -122,6 +141,7 @@ public class TestServerContext {
       createWorldEnvelopeService(),
       null,
       createEmissionsItineraryDecorator(),
+      createStreetDetailsService(),
       null,
       null,
       null,
@@ -164,6 +184,10 @@ public class TestServerContext {
     return new EmissionItineraryDecorator(
       new DefaultEmissionService(new DefaultEmissionRepository())
     );
+  }
+
+  public static StreetDetailsService createStreetDetailsService() {
+    return new DefaultStreetDetailsService(new DefaultStreetDetailsRepository());
   }
 
   public static StreetLimitationParametersService createStreetLimitationParametersService() {

@@ -7,6 +7,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
@@ -37,7 +38,7 @@ import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParamet
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParametersList;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.gtfs.config.GtfsDefaultParameters;
-import org.opentripplanner.model.calendar.ServiceDateInterval;
+import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.netex.config.NetexFeedParameters;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -179,6 +180,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   public final TransitFeeds transitFeeds;
   public final boolean staticParkAndRide;
   public final boolean staticBikeParkAndRide;
+  public final boolean includeInclinedEdgeLevelInfo;
   public final double distanceBetweenElevationSamples;
   public final double maxElevationPropagationMeters;
   public final boolean readCachedElevations;
@@ -346,16 +348,23 @@ public class BuildConfig implements OtpDataStoreConfig {
         """
       )
       .asBoolean(true);
-    staticBikeParkAndRide = root
-      .of("staticBikeParkAndRide")
-      .since(V1_5)
-      .summary("Whether we should create bike P+R stations from OSM data.")
-      .asBoolean(false);
     staticParkAndRide = root
       .of("staticParkAndRide")
       .since(V1_5)
       .summary("Whether we should create car P+R stations from OSM data.")
       .asBoolean(true);
+    staticBikeParkAndRide = root
+      .of("staticBikeParkAndRide")
+      .since(V1_5)
+      .summary("Whether we should create bike P+R stations from OSM data.")
+      .asBoolean(false);
+    includeInclinedEdgeLevelInfo = root
+      .of("includeInclinedEdgeLevelInfo")
+      .since(V2_9)
+      .summary(
+        "Whether level info for inclined edges should be stored in the graph for use during runtime."
+      )
+      .asBoolean(false);
     subwayAccessTime = root
       .of("subwayAccessTime")
       .since(V1_5)
@@ -709,8 +718,8 @@ public class BuildConfig implements OtpDataStoreConfig {
     return root.isEmpty() ? "" : root.toJson();
   }
 
-  public ServiceDateInterval getTransitServicePeriod() {
-    return new ServiceDateInterval(transitServiceStart, transitServiceEnd);
+  public LocalDateInterval getTransitServicePeriod() {
+    return new LocalDateInterval(transitServiceStart, transitServiceEnd);
   }
 
   public List<FeedScopedId> transitRouteToStationCentroid() {

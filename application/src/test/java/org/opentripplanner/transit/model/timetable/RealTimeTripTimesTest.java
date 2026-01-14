@@ -318,7 +318,8 @@ class RealTimeTripTimesTest {
   public void testNonIncreasingUpdateCrossingMidnight() {
     var builder = createInitialTripTimes().createRealTimeFromScheduledTimes();
 
-    builder.withArrivalTime(0, -300); //"Yesterday"
+    // "Yesterday"
+    builder.withArrivalTime(0, -300);
     builder.withDepartureTime(0, 50);
 
     builder.build();
@@ -381,14 +382,14 @@ class RealTimeTripTimesTest {
 
     @Test
     void stopIndexOfGtfsSequence() {
-      var stopIndex = createInitialTripTimes().stopIndexOfGtfsSequence(40);
+      var stopIndex = createInitialTripTimes().stopPositionForGtfsSequence(40);
       assertTrue(stopIndex.isPresent());
       assertEquals(4, stopIndex.getAsInt());
     }
 
     @Test
     void unknownGtfsSequence() {
-      var stopIndex = createInitialTripTimes().stopIndexOfGtfsSequence(4);
+      var stopIndex = createInitialTripTimes().stopPositionForGtfsSequence(4);
       assertTrue(stopIndex.isEmpty());
     }
   }

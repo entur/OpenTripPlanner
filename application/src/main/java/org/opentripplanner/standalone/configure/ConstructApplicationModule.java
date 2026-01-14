@@ -28,6 +28,7 @@ import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
+import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
@@ -36,6 +37,7 @@ import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.server.DefaultServerRequestContext;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.transfer.TransferService;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.visualizer.GraphVisualizer;
 
@@ -51,6 +53,7 @@ public class ConstructApplicationModule {
     LinkingContextFactory linkingContextFactory,
     VertexLinker vertexLinker,
     TransitService transitService,
+    TransferService transferService,
     WorldEnvelopeService worldEnvelopeService,
     RealtimeVehicleService realtimeVehicleService,
     VehicleRentalService vehicleRentalService,
@@ -62,6 +65,7 @@ public class ConstructApplicationModule {
     StreetLimitationParametersService streetLimitationParametersService,
     @Nullable TraverseVisitor<?, ?> traverseVisitor,
     @Nullable @EmissionDecorator ItineraryDecorator emissionItineraryDecorator,
+    StreetDetailsService streetDetailsService,
     @Nullable @GtfsSchema GraphQLSchema gtfsSchema,
     @Nullable @TransmodelSchema GraphQLSchema transmodelSchema,
     @Nullable EmpiricalDelayService empiricalDelayService,
@@ -91,6 +95,7 @@ public class ConstructApplicationModule {
       rideHailingServices,
       defaultRequest,
       streetLimitationParametersService,
+      transferService,
       transitRoutingConfig,
       transitService,
       triasApiParameters,
@@ -104,6 +109,7 @@ public class ConstructApplicationModule {
       // Optional Sandbox services
       carpoolingService,
       emissionItineraryDecorator,
+      streetDetailsService,
       empiricalDelayService,
       luceneIndex,
       gtfsSchema,
