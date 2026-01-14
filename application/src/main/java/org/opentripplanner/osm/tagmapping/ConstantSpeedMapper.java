@@ -23,10 +23,13 @@ class ConstantSpeedMapper extends FinlandMapper {
   }
 
   @Override
-  public void populateProperties(WayPropertySet props) {
+  public WayPropertySet buildWayPropertySet() {
+    var props = WayPropertySet.of();
     props.setCarSpeed("highway=*", speed);
-    super.populateProperties(props);
-    props.maxPossibleCarSpeed = speed;
+    var s = super.buildWayPropertySet();
+    props.addPickers(s);
+    props.setMaxPossibleCarSpeed(speed);
+    return props.build();
   }
 
   @Override
@@ -34,14 +37,6 @@ class ConstantSpeedMapper extends FinlandMapper {
     /*
      * Set the same 80 km/h speed for all roads, so that car routing finds shortest path
      */
-    return speed;
-  }
-
-  @Override
-  public Float getMaxUsedCarSpeed(WayPropertySet wayPropertySet) {
-    // This is needed because the way property set uses normal speed limits from Finland mapper
-    // to set the walk safety limits which resets the maximum used car speed to be something else
-    // than what is used for the street edge car speeds.
     return speed;
   }
 }

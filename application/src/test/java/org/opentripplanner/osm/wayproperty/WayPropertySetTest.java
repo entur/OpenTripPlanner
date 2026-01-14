@@ -14,7 +14,6 @@ import org.opentripplanner.graph_builder.module.osm.StreetTraversalPermissionPai
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmEntityForTest;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.osm.tagmapping.OsmTagMapper;
 import org.opentripplanner.osm.wayproperty.specifier.ExactMatchSpecifier;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 import org.opentripplanner.street.model.StreetTraversalPermission;
@@ -35,12 +34,12 @@ class WayPropertySetTest {
     public void carMaxSpeed() {
       var delta = 0.001f;
       var motorWaySpeed = 35f;
-      WayPropertySet wps = wps();
-      wps.setCarSpeed("highway=motorway", motorWaySpeed);
+      WayPropertySetBuilder builder = WayPropertySet.of();
+      builder.setCarSpeed("highway=motorway", motorWaySpeed);
+      WayPropertySet wps = builder.build();
 
       // Test that there are default values
-      assertEquals(38f, wps.maxPossibleCarSpeed, delta);
-      assertEquals(0f, wps.maxUsedCarSpeed, delta);
+      assertEquals(38f, wps.getMaxPossibleCarSpeed(), delta);
 
       // Speed limit that is within limits should be used as the max used car speed
       OsmEntity streetWithSpeedLimit = new OsmEntityForTest();
@@ -48,7 +47,6 @@ class WayPropertySetTest {
       streetWithSpeedLimit.addTag("maxspeed", "120");
       var waySpeed = wps.getCarSpeedForWay(streetWithSpeedLimit, FORWARD);
       assertEquals(33.33336, waySpeed, delta);
-      assertEquals(33.33336, wps.maxUsedCarSpeed, delta);
 
       // Speed limit that is higher than maxPossibleCarSpeed should be ignored and regular motorway
       // speed limit should be used instead
@@ -57,7 +55,6 @@ class WayPropertySetTest {
       streetWithTooHighSpeedLimit.addTag("maxspeed", "200");
       waySpeed = wps.getCarSpeedForWay(streetWithTooHighSpeedLimit, FORWARD);
       assertEquals(motorWaySpeed, waySpeed, delta);
-      assertEquals(motorWaySpeed, wps.maxUsedCarSpeed, delta);
 
       // Speed limit that is too low should be ignored and regular motorway speed limit should
       // be used instead
@@ -66,7 +63,6 @@ class WayPropertySetTest {
       streetWithTooLowSpeedLimit.addTag("maxspeed", "0");
       waySpeed = wps.getCarSpeedForWay(streetWithTooLowSpeedLimit, FORWARD);
       assertEquals(motorWaySpeed, waySpeed, delta);
-      assertEquals(motorWaySpeed, wps.maxUsedCarSpeed, delta);
     }
 
     @Test
@@ -85,20 +81,14 @@ class WayPropertySetTest {
     }
 
     private static WayPropertySet wps() {
-      var wps = new WayPropertySet();
-      var source = new OsmTagMapper() {
-        @Override
-        public void populateProperties(WayPropertySet props) {
-          props.setProperties("highway=primary", withModes(CAR));
-          props.setProperties(
-            new ExactMatchSpecifier("highway=footway;layer=-1;tunnel=yes;indoor=yes"),
-            withModes(NONE)
-          );
-          props.setMixinProperties("cycleway=lane", ofBicycleSafety(5));
-        }
-      };
-      source.populateProperties(wps);
-      return wps;
+      var props = WayPropertySet.of();
+      props.setProperties("highway=primary", withModes(CAR));
+      props.setProperties(
+        new ExactMatchSpecifier("highway=footway;layer=-1;tunnel=yes;indoor=yes"),
+        withModes(NONE)
+      );
+      props.setMixinProperties("cycleway=lane", ofBicycleSafety(5));
+      return props.build();
     }
   }
 
@@ -256,7 +246,7 @@ class WayPropertySetTest {
     }
 
     private StreetTraversalPermissionPair getWayProperties(OsmWay way) {
-      WayPropertySet wayPropertySet = new WayPropertySet();
+      WayPropertySet wayPropertySet = WayPropertySet.of().build();
       WayPropertiesPair wayData = wayPropertySet.getDataForWay(way);
 
       return new StreetTraversalPermissionPair(

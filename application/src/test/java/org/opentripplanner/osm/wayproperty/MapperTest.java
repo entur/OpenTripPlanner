@@ -11,7 +11,6 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
 import static org.opentripplanner.street.model.StreetTraversalPermission.CAR;
 import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmEntityForTest;
@@ -22,18 +21,9 @@ import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 
 public class MapperTest {
 
-  private WayPropertySet wps;
-  private OsmTagMapper mapper;
+  private OsmTagMapper mapper = new OsmTagMapper();
+  private WayPropertySet wps = mapper.buildWayPropertySet();
   float epsilon = 0.01f;
-
-  @BeforeEach
-  public void setup() {
-    var wps = new WayPropertySet();
-    var source = new OsmTagMapper();
-    source.populateProperties(wps);
-    this.wps = wps;
-    this.mapper = source;
-  }
 
   /**
    * Test that car speeds are calculated accurately
@@ -73,11 +63,12 @@ public class MapperTest {
     assertTrue(within(kmhAsMs(35 * 1.609f), wps.getCarSpeedForWay(way, BACKWARD), epsilon));
 
     // test with no maxspeed tags
-    wps = new WayPropertySet();
-    wps.addSpeedPicker(getSpeedPicker("highway=motorway", kmhAsMs(100)));
-    wps.addSpeedPicker(getSpeedPicker("highway=*", kmhAsMs(35)));
-    wps.addSpeedPicker(getSpeedPicker("surface=gravel", kmhAsMs(10)));
-    wps.defaultCarSpeed = kmhAsMs(25);
+    WayPropertySetBuilder builder = WayPropertySet.of();
+    builder.addSpeedPicker(getSpeedPicker("highway=motorway", kmhAsMs(100)));
+    builder.addSpeedPicker(getSpeedPicker("highway=*", kmhAsMs(35)));
+    builder.addSpeedPicker(getSpeedPicker("surface=gravel", kmhAsMs(10)));
+    builder.setDefaultCarSpeed(kmhAsMs(25));
+    wps = builder.build();
 
     way = new OsmEntityForTest();
 
@@ -116,8 +107,6 @@ public class MapperTest {
     assertSpeed(4.305559158325195, "15.5 km/h");
     assertSpeed(22.347200393676758, "50 mph");
     assertSpeed(22.347200393676758, "50.0 mph");
-
-    assertEquals(wps.maxUsedCarSpeed, mapper.getMaxUsedCarSpeed(wps));
   }
 
   @Test
@@ -223,8 +212,10 @@ public class MapperTest {
 
   @Test
   public void mixin() {
-    wps.setProperties("tag=imaginary", withModes(CAR).bicycleSafety(2));
-    wps.setMixinProperties("foo=bar", ofBicycleSafety(0.5));
+    WayPropertySetBuilder builder = WayPropertySet.of();
+    builder.setProperties("tag=imaginary", withModes(CAR).bicycleSafety(2));
+    builder.setMixinProperties("foo=bar", ofBicycleSafety(0.5));
+    wps = builder.build();
 
     var withoutFoo = new OsmEntityForTest();
     withoutFoo.addTag("tag", "imaginary");
@@ -258,10 +249,7 @@ public class MapperTest {
    * @param speed     The speed, in meters per second
    */
   private SpeedPicker getSpeedPicker(String specifier, float speed) {
-    SpeedPicker sp = new SpeedPicker();
-    sp.specifier = new BestMatchSpecifier(specifier);
-    sp.speed = speed;
-    return sp;
+    return new SpeedPicker(new BestMatchSpecifier(specifier), speed);
   }
 
   private void assertSpeed(double v, String s) {

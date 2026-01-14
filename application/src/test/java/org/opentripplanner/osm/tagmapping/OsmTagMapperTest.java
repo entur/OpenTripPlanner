@@ -25,12 +25,7 @@ import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 class OsmTagMapperTest {
 
   private static final Locale FI = Locale.of("FI");
-  private static final WayPropertySet wps = new WayPropertySet();
-
-  static {
-    var source = new OsmTagMapper();
-    source.populateProperties(wps);
-  }
+  private static final WayPropertySet wps = new OsmTagMapper().buildWayPropertySet();
 
   @Test
   void isMotorThroughTrafficExplicitlyDisallowed() {
@@ -370,9 +365,6 @@ class OsmTagMapperTest {
   }
 
   private static WayPropertySet wayProperySet() {
-    OsmTagMapper osmTagMapper = new OsmTagMapper();
-    WayPropertySet wps = new WayPropertySet();
-    osmTagMapper.populateProperties(wps);
-    return wps;
+    return new OsmTagMapper().buildWayPropertySet();
   }
 }

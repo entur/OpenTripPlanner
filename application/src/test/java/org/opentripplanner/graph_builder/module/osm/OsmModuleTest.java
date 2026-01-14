@@ -29,6 +29,7 @@ import org.opentripplanner.osm.wayproperty.WayProperties;
 import org.opentripplanner.osm.wayproperty.WayPropertiesBuilder;
 import org.opentripplanner.osm.wayproperty.WayPropertiesPair;
 import org.opentripplanner.osm.wayproperty.WayPropertySet;
+import org.opentripplanner.osm.wayproperty.WayPropertySetBuilder;
 import org.opentripplanner.osm.wayproperty.specifier.BestMatchSpecifier;
 import org.opentripplanner.osm.wayproperty.specifier.OsmSpecifier;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -177,9 +178,10 @@ public class OsmModuleTest {
     way.addTag("cycleway", "lane");
     way.addTag("surface", "gravel");
 
-    WayPropertySet wayPropertySet = new WayPropertySet();
+    WayPropertySetBuilder builder = WayPropertySet.of();
 
     // where there are no way specifiers, the default is used
+    var wayPropertySet = builder.build();
     var wayData = wayPropertySet.getDataForWay(way);
     assertEquals(ALL, wayData.forward().getPermission());
     assertEquals(1.0, wayData.forward().walkSafety());
@@ -192,15 +194,16 @@ public class OsmModuleTest {
 
     WayProperties lane_is_safer = withModes(ALL).bicycleSafety(1.5).walkSafety(1.0).build();
 
-    wayPropertySet.addProperties(lane_only, lane_is_safer);
+    builder.addProperties(lane_only, lane_is_safer);
 
     // and footway only
     OsmSpecifier footway_only = new BestMatchSpecifier("highway=footway");
 
     WayProperties footways_allow_peds = new WayPropertiesBuilder(PEDESTRIAN).build();
 
-    wayPropertySet.addProperties(footway_only, footways_allow_peds);
+    builder.addProperties(footway_only, footways_allow_peds);
 
+    wayPropertySet = builder.build();
     var dataForWay = wayPropertySet.getDataForWay(way);
     // the first one is found
     assertEquals(lane_is_safer, dataForWay.forward());
@@ -214,15 +217,17 @@ public class OsmModuleTest {
       .walkSafety(1.0)
       .build();
 
-    wayPropertySet.addProperties(lane_and_footway, safer_and_peds);
+    builder.addProperties(lane_and_footway, safer_and_peds);
+    wayPropertySet = builder.build();
     dataForWay = wayPropertySet.getDataForWay(way);
     assertEquals(new WayPropertiesPair(safer_and_peds, safer_and_peds), dataForWay);
 
     // add a mixin
     BestMatchSpecifier gravel = new BestMatchSpecifier("surface=gravel");
     var gravel_is_dangerous = MixinPropertiesBuilder.ofBicycleSafety(2);
-    wayPropertySet.setMixinProperties(gravel, gravel_is_dangerous);
+    builder.setMixinProperties(gravel, gravel_is_dangerous);
 
+    wayPropertySet = builder.build();
     dataForWay = wayPropertySet.getDataForWay(way);
     assertEquals(1.5, dataForWay.forward().bicycleSafety());
 
@@ -238,7 +243,8 @@ public class OsmModuleTest {
       .walkSafety(1.0)
       .build();
 
-    wayPropertySet.addProperties(track_only, track_is_safest);
+    builder.addProperties(track_only, track_is_safest);
+    wayPropertySet = builder.build();
     dataForWay = wayPropertySet.getDataForWay(way);
     // right (with traffic) comes from track
     assertEquals(0.25, dataForWay.forward().bicycleSafety());
@@ -249,14 +255,15 @@ public class OsmModuleTest {
     way.addTag("highway", "footway");
     way.addTag("footway", "sidewalk");
     way.addTag("RLIS:reviewed", "no");
-    WayPropertySet propset = new WayPropertySet();
+    WayPropertySetBuilder builder2 = WayPropertySet.of();
     CreativeNamer namer = new CreativeNamer("platform");
-    propset.addCreativeNamer(
+    builder2.addCreativeNamer(
       new BestMatchSpecifier("railway=platform;highway=footway;footway=sidewalk"),
       namer
     );
     namer = new CreativeNamer("sidewalk");
-    propset.addCreativeNamer(new BestMatchSpecifier("highway=footway;footway=sidewalk"), namer);
+    builder2.addCreativeNamer(new BestMatchSpecifier("highway=footway;footway=sidewalk"), namer);
+    WayPropertySet propset = builder2.build();
     assertEquals("sidewalk", propset.getCreativeName(way).toString());
   }
 

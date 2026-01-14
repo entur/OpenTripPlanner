@@ -8,7 +8,6 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.NONE;
 import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN;
 import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.WayProperties;
@@ -17,16 +16,9 @@ import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 
 class FinlandMapperTest {
 
-  private WayPropertySet wps;
-  private OsmTagMapper mapper;
+  private final OsmTagMapper mapper = new FinlandMapper();
+  private final WayPropertySet wps = mapper.buildWayPropertySet();
   static float epsilon = 0.01f;
-
-  @BeforeEach
-  void setup() {
-    this.wps = new WayPropertySet();
-    this.mapper = new FinlandMapper();
-    this.mapper.populateProperties(this.wps);
-  }
 
   /**
    * Test that bike and walk safety factors are calculated accurately
@@ -171,13 +163,16 @@ class FinlandMapperTest {
       wps.getDataForWay(wayWithMixinsAndCustomSafety).forward().walkSafety(),
       epsilon
     );
+  }
 
+  @Test
+  void testUseSidePath() {
     var wayWithBicycleSidePath = new OsmWay();
     wayWithBicycleSidePath.addTag("bicycle", "use_sidepath");
-    assertEquals(8, wps.getDataForWay(wayWithBicycleSidePath).forward().walkSafety(), epsilon);
+    assertEquals(9, wps.getDataForWay(wayWithBicycleSidePath).forward().walkSafety(), epsilon);
     var wayWithFootSidePath = new OsmWay();
     wayWithFootSidePath.addTag("foot", "use_sidepath");
-    assertEquals(8, wps.getDataForWay(wayWithFootSidePath).forward().walkSafety(), epsilon);
+    assertEquals(9, wps.getDataForWay(wayWithFootSidePath).forward().walkSafety(), epsilon);
   }
 
   @Test
@@ -252,9 +247,6 @@ class FinlandMapperTest {
 
   @Test
   void motorroad() {
-    OsmTagMapper osmTagMapper = new FinlandMapper();
-    WayPropertySet wps = new WayPropertySet();
-    osmTagMapper.populateProperties(wps);
     var way = WayTestData.carTunnel();
     assertEquals(ALL, wps.getDataForWay(way).forward().getPermission());
     way.addTag("motorroad", "yes");

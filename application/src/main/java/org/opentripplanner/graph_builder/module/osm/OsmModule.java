@@ -738,10 +738,12 @@ public class OsmModule implements GraphBuilderModule {
 
   private float getMaxCarSpeed() {
     float maxSpeed = 0f;
-    for (var provider : providers) {
-      var carSpeed = provider.getOsmTagMapper().getMaxUsedCarSpeed(provider.getWayPropertySet());
-      if (carSpeed > maxSpeed) {
-        maxSpeed = carSpeed;
+    for (var e : graph.getEdges()) {
+      if (e instanceof StreetEdge se) {
+        var carSpeed = se.getCarSpeed();
+        if (carSpeed > maxSpeed) {
+          maxSpeed = carSpeed;
+        }
       }
     }
     return maxSpeed;

@@ -21,9 +21,10 @@ public class TestOsmProvider implements OsmProvider {
   private final List<OsmNode> nodes;
   private final List<OsmRelation> relations;
   private final OsmTagMapper osmTagMapper = new OsmTagMapper();
-  private final WayPropertySet wayPropertySet = new WayPropertySet();
+  private final WayPropertySet wayPropertySet;
 
   public TestOsmProvider(List<OsmRelation> relations, List<OsmWay> ways, List<OsmNode> nodes) {
+    this.wayPropertySet = osmTagMapper.buildWayPropertySet();
     // this was originally peek() but Joel insisted that it's "for debugging"
     for (OsmRelation relation : relations) {
       relation.setOsmProvider(this);
