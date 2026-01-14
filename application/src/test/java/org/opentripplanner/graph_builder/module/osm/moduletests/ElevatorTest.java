@@ -13,6 +13,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
+import org.opentripplanner.graph_builder.issues.FewerThanTwoIntersectionNodesInElevatorWay;
 import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmWay;
@@ -373,6 +375,43 @@ class ElevatorTest {
       .stream()
       .map(vertex -> vertex.getLabelString());
     assertThat(elevatorHopVertices).containsNoDuplicates();
+  }
+
+  /**
+   * If the connected nodes of an elevator way have been modeled as elevators, they do not appear
+   * as intersection nodes. OTP should create an issue, but it should not cause errors.
+   */
+  @Test
+  void elevatorWayWithFewerThanTwoIntersectionNodes() {
+    var n1 = node(1, new WgsCoordinate(1, 1));
+    n1.addTag("highway", "elevator");
+    var n2 = node(2, new WgsCoordinate(2, 2));
+    n2.addTag("highway", "elevator");
+
+    var provider = TestOsmProvider.of()
+      .addWayFromNodes(way -> way.addTag("highway", "elevator"), n1, n2)
+      .build();
+    var graph = new Graph();
+    var issueStore = new DefaultDataImportIssueStore();
+
+    OsmModuleTestFactory.of(provider)
+      .withGraph(graph)
+      .builder()
+      .withIssueStore(issueStore)
+      .build()
+      .buildGraph();
+
+    var elevatorHopEdges = graph.getEdgesOfType(ElevatorHopEdge.class);
+    assertThat(elevatorHopEdges).hasSize(0);
+
+    var issues = issueStore
+      .listIssues()
+      .stream()
+      .filter(issue -> issue instanceof FewerThanTwoIntersectionNodesInElevatorWay)
+      .map(FewerThanTwoIntersectionNodesInElevatorWay.class::cast)
+      .toList();
+    assertEquals(1, issues.size());
+    assertEquals(0, issues.getFirst().intersectionNodes());
   }
 
   private void addElevatorBoardAndAlightEdges(
