@@ -97,7 +97,6 @@ class ElevatorProcessor {
   private final Consumer<String> osmEntityDurationIssueConsumer;
   private final DataImportIssueStore issueStore;
   private final StreetDetailsRepository streetDetailsRepository;
-  private final List<OsmWay> elevatorWays = new ArrayList<>();
 
   public ElevatorProcessor(
     DataImportIssueStore issueStore,
@@ -192,20 +191,23 @@ class ElevatorProcessor {
    * - elevator ways have been collected
    */
   private void buildElevatorEdgesFromElevatorWays() {
-    for (OsmWay elevatorWay : elevatorWays) {
-      List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(elevatorWay);
-      List<Long> nodes = Arrays.stream(elevatorWay.getNodeRefs().toArray())
+    for (OsmWay way : osmdb.getWays()) {
+      if (!isElevatorWay(way)) {
+        continue;
+      }
+      List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(way);
+      List<Long> nodes = Arrays.stream(way.getNodeRefs().toArray())
         .filter(nodeRef -> vertexGenerator.intersectionNodes().get(nodeRef) != null)
         .boxed()
         .toList();
 
       if (nodes.size() < 2) {
-        var nodeRefs = elevatorWay.getNodeRefs();
+        var nodeRefs = way.getNodeRefs();
         long firstNodeRef = nodeRefs.get(0);
         long lastNodeRef = nodeRefs.get(nodeRefs.size() - 1);
         issueStore.add(
           new FewerThanTwoIntersectionNodesInElevatorWay(
-            elevatorWay,
+            way,
             osmdb.getNode(firstNodeRef).getCoordinate(),
             osmdb.getNode(lastNodeRef).getCoordinate(),
             nodes.size()
@@ -216,7 +218,7 @@ class ElevatorProcessor {
       } else if (nodes.size() > 2) {
         issueStore.add(
           new MoreThanTwoIntersectionNodesInElevatorWay(
-            elevatorWay,
+            way,
             osmdb.getNode(nodes.getFirst()).getCoordinate(),
             osmdb.getNode(nodes.getLast()).getCoordinate(),
             nodes.size()
@@ -227,7 +229,7 @@ class ElevatorProcessor {
       if (nodeLevels.size() != nodes.size()) {
         issueStore.add(
           new CouldNotApplyMultiLevelInfoToElevatorWay(
-            elevatorWay,
+            way,
             osmdb.getNode(nodes.getFirst()).getCoordinate(),
             osmdb.getNode(nodes.getLast()).getCoordinate(),
             nodeLevels.size(),
@@ -245,13 +247,13 @@ class ElevatorProcessor {
         createElevatorVertices(
           elevatorHopVertices,
           sourceVertex,
-          elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
+          way.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
           level
         );
       }
 
-      var wheelchair = elevatorWay.explicitWheelchairAccessibility();
-      long travelTime = elevatorWay
+      var wheelchair = way.explicitWheelchairAccessibility();
+      long travelTime = way
         .getDuration(osmEntityDurationIssueConsumer)
         .map(Duration::toSeconds)
         .orElse(-1L);
@@ -259,10 +261,10 @@ class ElevatorProcessor {
         elevatorHopVertices,
         nodeLevels,
         wheelchair,
-        !elevatorWay.isBicycleDenied(),
+        !way.isBicycleDenied(),
         (int) travelTime
       );
-      LOG.debug("Created elevator edges for way {}", elevatorWay.getId());
+      LOG.debug("Created elevator edges for way {}", way.getId());
     }
   }
 
@@ -337,9 +339,5 @@ class ElevatorProcessor {
     // https://www.openstreetmap.org/way/503412863
     // https://www.openstreetmap.org/way/187719215
     return nodeRefs.get(0) != nodeRefs.get(nodeRefs.size() - 1);
-  }
-
-  public void addElevatorWay(OsmWay way) {
-    elevatorWays.add(way);
   }
 }

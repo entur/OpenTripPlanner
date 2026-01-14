@@ -16,10 +16,12 @@ public record FewerThanTwoIntersectionNodesInElevatorWay(
   implements DataImportIssue {
   private static final String FMT =
     "Elevator way %s has fewer than two intersection nodes: %s. " +
+    "This makes the elevator unusable. " +
     "Please check whether the elevator way is correctly modeled.";
 
   private static final String HTMLFMT =
     "<a href='%s'>Elevator way %s</a> has fewer than two intersection nodes: %s. " +
+    "This makes the elevator unusable. " +
     "Please check whether the elevator way is correctly modeled.";
 
   @Override

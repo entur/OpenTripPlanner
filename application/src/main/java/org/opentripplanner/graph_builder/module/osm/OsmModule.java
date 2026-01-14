@@ -475,7 +475,6 @@ public class OsmModule implements GraphBuilderModule {
         if (elevatorProcessor.isElevatorWay(way)) {
           // Elevator way processing is done after the basic graph has been built.
           // However, intersection vertices are created in this loop.
-          elevatorProcessor.addElevatorWay(way);
           continue;
         } else if (way.isEscalator()) {
           var length = getGeometryLengthMeters(geometry);
