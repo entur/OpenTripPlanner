@@ -4,7 +4,8 @@ import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.basic.SubMode;
-import org.opentripplanner.transit.model.network.Replacement;
+import org.opentripplanner.transit.model.network.ReplacedByRelation;
+import org.opentripplanner.transit.model.network.ReplacementForRelation;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -36,24 +37,23 @@ public class ReplacementHelper {
     this.timetableSnapshot = timetableSnapshot;
   }
 
-  public Iterable<TripOnServiceDate> getReplacedBy(TripOnServiceDate tripOnServiceDate) {
+  public Iterable<ReplacedByRelation> getReplacedBy(TripOnServiceDate tripOnServiceDate) {
     var id = tripOnServiceDate.getId();
     var replacedBy = timetableRepository.getReplacedByTripOnServiceDate(id);
+    Stream<TripOnServiceDate> tripsOnServiceDate;
     if (timetableSnapshot != null) {
-      return Stream.concat(
+      tripsOnServiceDate = Stream.concat(
         replacedBy.stream(),
         timetableSnapshot.getReplacedByTripOnServiceDate(id).stream()
-      ).toList();
+      );
+    } else {
+      tripsOnServiceDate = replacedBy.stream();
     }
-    return replacedBy;
+    return tripsOnServiceDate.map(ReplacedByRelation::new).toList();
   }
 
-  public Replacement getReplacement(TripOnServiceDate tripOnServiceDate) {
-    var replacementFor = tripOnServiceDate.getReplacementFor();
-    return new Replacement(
-      !replacementFor.isEmpty() || isReplacementTrip(tripOnServiceDate.getTrip()),
-      replacementFor
-    );
+  public Iterable<ReplacementForRelation> getReplacementFor(TripOnServiceDate tripOnServiceDate) {
+    return tripOnServiceDate.getReplacementFor().stream().map(ReplacementForRelation::new).toList();
   }
 
   private boolean submodeIsReplacement(SubMode submode) {
@@ -71,6 +71,13 @@ public class ReplacementHelper {
 
   public boolean isReplacementTrip(Trip trip) {
     return isReplacementGtfsType(trip.getRoute()) || submodeIsReplacement(trip.getNetexSubMode());
+  }
+
+  public boolean isReplacementTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {
+    return (
+      !tripOnServiceDate.getReplacementFor().isEmpty() ||
+      isReplacementTrip(tripOnServiceDate.getTrip())
+    );
   }
 
   private boolean haveReplacedByTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {

@@ -171,6 +171,8 @@ type Contact {
 type DatedServiceJourney {
   "Returns scheduled passingTimes for this dated service journey, updated with real-time-updates (if available). "
   estimatedCalls: [EstimatedCall!]! @timingData
+  "Dated service journeys this dated service journeys replaces with full replacement information"
+  fullReplacementFor: [ReplacementForRelation!]!
   id: ID!
   "JourneyPattern for the dated service journey."
   journeyPattern: JourneyPattern
@@ -183,10 +185,8 @@ type DatedServiceJourney {
     "Only fetch the last n quays on the service journey"
     last: Int
   ): [Quay!]!
-  "Replaced by these trips"
-  replacedBy: [DatedServiceJourney!]!
-  "Is a replacement trip"
-  replacement: Replacement!
+  "Dated service journeys this dated service journey is replaced by"
+  replacedBy: [ReplacedByRelation!]!
   "List of the dated service journeys this dated service journeys replaces"
   replacementFor: [DatedServiceJourney!]!
   "The service journey this Dated Service Journey is based on"
@@ -1055,12 +1055,22 @@ type RentalVehicleType {
   vehicleTypeId: String!
 }
 
-"Container for replacement properties for a DatedServiceJourney."
-type Replacement {
-  "Is this ServiceJourney a replacement?"
-  isReplacement: Boolean!
-  "What TripOnServiceDates is this ServiceJourney a replacement for? Only available for NeTEx-sourced data."
-  replacementFor: [DatedServiceJourney!]
+"""
+Relation for indicating the TripOnServiceDate which is replacing an older one. Exists as a
+place to put additional information on the replacement when we get SIRI 2.1 support.
+"""
+type ReplacedByRelation {
+  "The replacing TripOnServiceDate."
+  datedServiceJourney: DatedServiceJourney
+}
+
+"""
+Relation for indicating the TripOnServiceDate which is replaced by a newer one. Exists as a
+place to put additional information on the replacement when we get SIRI 2.1 support.
+"""
+type ReplacementForRelation {
+  "The replaced TripOnServiceDate."
+  datedServiceJourney: DatedServiceJourney
 }
 
 "Description of the reason, why the planner did not return any results"

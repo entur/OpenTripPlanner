@@ -7,10 +7,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import java.util.stream.StreamSupport;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.network.ReplacedByRelation;
+import org.opentripplanner.transit.model.network.ReplacementForRelation;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
@@ -96,16 +99,22 @@ public class ReplacementHelperTest implements RealtimeTestConstants {
     // fails because there is no synthetic TOSD for TRIP_1_ID
     // assertTrue(replacementHelper.replacementsExist(transitService.getTrip(id(TRIP_1_ID))));
 
-    assertEquals(
-      addedTripOnServiceDate2,
-      replacementHelper.getReplacedBy(addedTripOnServiceDate).iterator().next()
-    );
-    assertTrue(
-      replacementHelper
-        .getReplacement(addedTripOnServiceDate2)
-        .getReplacementFor()
-        .contains(addedTripOnServiceDate)
-    );
+    assertThat(
+      StreamSupport.stream(
+        replacementHelper.getReplacedBy(addedTripOnServiceDate).spliterator(),
+        false
+      )
+        .map(ReplacedByRelation::getTripOnServiceDate)
+        .toList()
+    ).contains(addedTripOnServiceDate2);
+    assertThat(
+      StreamSupport.stream(
+        replacementHelper.getReplacementFor(addedTripOnServiceDate2).spliterator(),
+        false
+      )
+        .map(ReplacementForRelation::getTripOnServiceDate)
+        .toList()
+    ).contains(addedTripOnServiceDate);
   }
 
   private TripOnServiceDate createReplacementTrip(String oldId, String newId, String min) {

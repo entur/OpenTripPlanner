@@ -9,7 +9,8 @@ import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.model.TripTimeOnDate;
-import org.opentripplanner.transit.model.network.Replacement;
+import org.opentripplanner.transit.model.network.ReplacedByRelation;
+import org.opentripplanner.transit.model.network.ReplacementForRelation;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -41,15 +42,25 @@ public class TripOnServiceDateImpl implements GraphQLDataFetchers.GraphQLTripOnS
   }
 
   @Override
-  public DataFetcher<Replacement> replacement() {
+  public DataFetcher<Boolean> isReplacement() {
     return environment ->
-      getTransitService(environment).getReplacementHelper().getReplacement(getSource(environment));
+      getTransitService(environment)
+        .getReplacementHelper()
+        .isReplacementTripOnServiceDate(getSource(environment));
   }
 
   @Override
-  public DataFetcher<Iterable<TripOnServiceDate>> replacedBy() {
+  public DataFetcher<Iterable<ReplacedByRelation>> replacedBy() {
     return environment ->
       getTransitService(environment).getReplacementHelper().getReplacedBy(getSource(environment));
+  }
+
+  @Override
+  public DataFetcher<Iterable<ReplacementForRelation>> replacementFor() {
+    return environment ->
+      getTransitService(environment)
+        .getReplacementHelper()
+        .getReplacementFor(getSource(environment));
   }
 
   @Override

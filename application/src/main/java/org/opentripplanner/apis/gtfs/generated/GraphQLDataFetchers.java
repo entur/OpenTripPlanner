@@ -68,6 +68,8 @@ import org.opentripplanner.service.vehiclerental.model.VehicleRentalStationUris;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalSystem;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.transit.model.basic.Money;
+import org.opentripplanner.transit.model.network.ReplacedByRelation;
+import org.opentripplanner.transit.model.network.ReplacementForRelation;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
@@ -1021,10 +1023,20 @@ public class GraphQLDataFetchers {
     public DataFetcher<RentalVehicleType> vehicleType();
   }
 
-  public interface GraphQLReplacement {
-    public DataFetcher<Boolean> isReplacement();
+  /**
+   * Relation for indicating the TripOnServiceDate which is replacing an older one. Exists as a
+   * place to put additional information on the replacement when we get SIRI 2.1 support.
+   */
+  public interface GraphQLReplacedByRelation {
+    public DataFetcher<TripOnServiceDate> tripOnServiceDate();
+  }
 
-    public DataFetcher<Iterable<TripOnServiceDate>> replacementFor();
+  /**
+   * Relation for indicating the TripOnServiceDate which is being replaced by a newer one. Exists
+   * as a place to put additional information on the replacement when we get SIRI 2.1 support.
+   */
+  public interface GraphQLReplacementForRelation {
+    public DataFetcher<TripOnServiceDate> tripOnServiceDate();
   }
 
   /** An estimate for a ride on a hailed vehicle, like an Uber car. */
@@ -1386,9 +1398,11 @@ public class GraphQLDataFetchers {
   public interface GraphQLTripOnServiceDate {
     public DataFetcher<TripTimeOnDate> end();
 
-    public DataFetcher<Iterable<TripOnServiceDate>> replacedBy();
+    public DataFetcher<Boolean> isReplacement();
 
-    public DataFetcher<org.opentripplanner.transit.model.network.Replacement> replacement();
+    public DataFetcher<Iterable<ReplacedByRelation>> replacedBy();
+
+    public DataFetcher<Iterable<ReplacementForRelation>> replacementFor();
 
     public DataFetcher<java.time.LocalDate> serviceDate();
 

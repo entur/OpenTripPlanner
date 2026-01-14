@@ -50,7 +50,6 @@ import org.opentripplanner.apis.gtfs.datafetchers.RentalPlaceTypeResolver;
 import org.opentripplanner.apis.gtfs.datafetchers.RentalVehicleFuelImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RentalVehicleImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RentalVehicleTypeImpl;
-import org.opentripplanner.apis.gtfs.datafetchers.ReplacementImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RideHailingEstimateImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RiderCategoryImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RouteImpl;
@@ -167,7 +166,6 @@ public class SchemaFactory {
         .type(typeWiring.build(PlanConnectionImpl.class))
         .type(typeWiring.build(PlanImpl.class))
         .type(typeWiring.build(QueryTypeImpl.class))
-        .type(typeWiring.build(ReplacementImpl.class))
         .type(typeWiring.build(RouteImpl.class))
         .type(typeWiring.build(serviceTimeRangeImpl.class))
         .type(typeWiring.build(stepImpl.class))

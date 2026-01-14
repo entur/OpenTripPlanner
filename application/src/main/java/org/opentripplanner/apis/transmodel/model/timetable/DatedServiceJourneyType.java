@@ -42,7 +42,8 @@ public class DatedServiceJourneyType {
     GraphQLOutputType journeyPatternType,
     GraphQLType estimatedCallType,
     GraphQLType quayType,
-    GraphQLOutputType replacementType
+    GraphQLOutputType replacedByType,
+    GraphQLOutputType replacementForType
   ) {
     return GraphQLObjectType.newObject()
       .name(NAME)
@@ -81,6 +82,30 @@ public class DatedServiceJourneyType {
           .description("List of the dated service journeys this dated service journeys replaces")
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(REF))))
           .dataFetcher(environment -> tripOnServiceDate(environment).getReplacementFor())
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("fullReplacementFor")
+          .description(
+            "Dated service journeys this dated service journeys replaces with full replacement information"
+          )
+          .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(replacementForType))))
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .getReplacementFor(tripOnServiceDate(environment))
+          )
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
+          .name("replacedBy")
+          .description("Dated service journeys this dated service journey is replaced by")
+          .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(replacedByType))))
+          .dataFetcher(environment ->
+            GqlUtil.getTransitService(environment)
+              .getReplacementHelper()
+              .getReplacedBy(tripOnServiceDate(environment))
+          )
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
@@ -152,30 +177,6 @@ public class DatedServiceJourneyType {
               .findTripTimesOnDate(tripOnServiceDate.getTrip(), tripOnServiceDate.getServiceDate())
               .orElse(List.of());
           })
-          .build()
-      )
-      .field(
-        GraphQLFieldDefinition.newFieldDefinition()
-          .name("replacement")
-          .type(new GraphQLNonNull(replacementType))
-          .description("Is a replacement trip")
-          .dataFetcher(environment ->
-            GqlUtil.getTransitService(environment)
-              .getReplacementHelper()
-              .getReplacement(tripOnServiceDate(environment))
-          )
-          .build()
-      )
-      .field(
-        GraphQLFieldDefinition.newFieldDefinition()
-          .name("replacedBy")
-          .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(REF))))
-          .description("Replaced by these trips")
-          .dataFetcher(environment ->
-            GqlUtil.getTransitService(environment)
-              .getReplacementHelper()
-              .getReplacedBy(tripOnServiceDate(environment))
-          )
           .build()
       )
       .build();

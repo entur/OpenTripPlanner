@@ -2017,12 +2017,22 @@ type RentalVehicleTypeCount {
   vehicleType: RentalVehicleType!
 }
 
-"Container for replacement properties for a TripOnServiceDate."
-type Replacement {
-  "Is this trip a replacement?"
-  isReplacement: Boolean!
-  "What TripOnServiceDates is this trip a replacement for? Only available for NeTEx-sourced data."
-  replacementFor: [TripOnServiceDate!]
+"""
+Relation for indicating the TripOnServiceDate which is replacing an older one. Exists as a
+place to put additional information on the replacement when we get SIRI 2.1 support.
+"""
+type ReplacedByRelation {
+  "The replacing TripOnServiceDate."
+  tripOnServiceDate: TripOnServiceDate
+}
+
+"""
+Relation for indicating the TripOnServiceDate which is being replaced by a newer one. Exists
+as a place to put additional information on the replacement when we get SIRI 2.1 support.
+"""
+type ReplacementForRelation {
+  "The TripOnServiceDate being replaced."
+  tripOnServiceDate: TripOnServiceDate
 }
 
 "An estimate for a ride on a hailed vehicle, like an Uber car."
@@ -2669,10 +2679,12 @@ type TripOccupancy {
 type TripOnServiceDate {
   "Information related to trip's scheduled arrival to the final stop location. Can contain real-time information."
   end: StopCall!
-  "Replaced by these trips."
-  replacedBy: [TripOnServiceDate!]!
-  "Information on this trip's replacement status."
-  replacement: Replacement!
+  "Is this TripOnServiceDate a replacement? For GTFS-sourced data this might be all we know."
+  isReplacement: Boolean
+  "Replaced by these TripOnServiceDates."
+  replacedBy: [ReplacedByRelation!]!
+  "Replacement for these TripOnServiceDates."
+  replacementFor: [ReplacementForRelation!]!
   """
   The service date when the trip occurs.
     
