@@ -23,8 +23,10 @@ import org.opentripplanner.raptor.configure.RaptorTestFactory;
 
 /**
  * FEATURE UNDER TEST
- *
- * Raptor should handle access from on-board a transit vehicle.
+ * Raptor should handle access from on-board a transit vehicle. When given such access as input,
+ * resulting paths should include a boarding at the stop given in the access, but only for the
+ * specific route and trip. Apart from boarding cost, the cost of the access leg should be
+ * considered 'free'.
  */
 class M01_OnBoardAccessTest {
   private final TestTransitData data = new TestTransitData();
@@ -133,7 +135,7 @@ class M01_OnBoardAccessTest {
   }
 
   @Test
-  @DisplayName("On-board access to a non-existing route")
+  @DisplayName("On-board access to a non-existing route results in no paths")
   void nonExistentRoute() {
     data
       .access(new TestRaptorOnBoardAccess(STOP_B, 5 * 60, 1, 0))
@@ -157,7 +159,7 @@ class M01_OnBoardAccessTest {
   }
 
   @Test
-  @DisplayName("On-board access to a non-existing trip in route")
+  @DisplayName("On-board access to a non-existing trip in route results in no paths")
   void nonExistentTrip() {
     data
       .access(new TestRaptorOnBoardAccess(STOP_B, 16 * 60, 0, 0))
@@ -181,7 +183,7 @@ class M01_OnBoardAccessTest {
   }
 
   @Test
-  @DisplayName("Multiple on-board accesses")
+  @DisplayName("Multiple on-board accesses yields a pareto set of non-dominated paths")
   void multipleAccesses() {
     data
       .access(

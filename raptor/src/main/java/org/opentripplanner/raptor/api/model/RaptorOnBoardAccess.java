@@ -1,5 +1,10 @@
 package org.opentripplanner.raptor.api.model;
 
+/**
+ * An 'access' that happens on-board, meaning that one is already on the vehicle when the path
+ * starts. This access is defined by a specific trip within a specific route, starting at a specific
+ * stop. The trip and route is identified with the {@link #routeIndex} and {@link #boardingTime}.
+ */
 public interface RaptorOnBoardAccess extends RaptorAccessEgress {
   /**
    * The index of the boarded route
