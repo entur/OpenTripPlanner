@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.routing.api.request.preference.DirectTransitPreferences.DEFAULT;
-import static org.opentripplanner.routing.api.request.preference.DirectTransitPreferences.OFF;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
@@ -21,6 +20,7 @@ class DirectTransitPreferencesTest {
   private static final boolean DISABLE_ACCESS_EGRESS = true;
 
   private DirectTransitPreferences subject = DirectTransitPreferences.of()
+    .withEnabled(true)
     .withCostRelaxFunction(COST_RELAX_FUNCTION)
     .withExtraAccessEgressCostFactor(EXTRA_ACCESS_EGRESS_COST_FACTOR)
     .withDisableAccessEgress(DISABLE_ACCESS_EGRESS)
@@ -28,21 +28,18 @@ class DirectTransitPreferencesTest {
 
   @Test
   void enabled() {
-    assertFalse(OFF.enabled());
-    assertTrue(DEFAULT.enabled());
+    assertFalse(DEFAULT.enabled());
     assertTrue(subject.enabled());
   }
 
   @Test
   void costRelaxFunction() {
-    assertEquals(CostLinearFunction.ZERO, OFF.costRelaxFunction());
     assertEquals(DirectTransitPreferences.DEFAULT_COST_RELAX_FUNCTION, DEFAULT.costRelaxFunction());
     assertEquals(COST_RELAX_FUNCTION, subject.costRelaxFunction());
   }
 
   @Test
   void extraAccessEgressCostFactor() {
-    assertEquals(DirectTransitPreferences.NOT_SET, OFF.extraAccessEgressCostFactor());
     assertEquals(DirectTransitPreferences.DEFAULT_FACTOR, DEFAULT.extraAccessEgressCostFactor());
     assertEquals(EXTRA_ACCESS_EGRESS_COST_FACTOR, subject.extraAccessEgressCostFactor());
   }
@@ -60,11 +57,12 @@ class DirectTransitPreferencesTest {
   @Test
   void testEqualsAndHashCode() {
     var sameAs = DirectTransitPreferences.of()
+      .withEnabled(true)
       .withCostRelaxFunction(COST_RELAX_FUNCTION)
       .withExtraAccessEgressCostFactor(EXTRA_ACCESS_EGRESS_COST_FACTOR)
       .withDisableAccessEgress(DISABLE_ACCESS_EGRESS)
       .build();
 
-    AssertEqualsAndHashCode.verify(subject).differentFrom(OFF, DEFAULT).sameAs(sameAs);
+    AssertEqualsAndHashCode.verify(subject).differentFrom(DEFAULT).sameAs(sameAs);
   }
 }

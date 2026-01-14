@@ -6,48 +6,45 @@ import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 
 public class DirectTransitPreferences {
 
-  /* The next constants are package-local to we readable in the unit-test. */
-  static final double NOT_SET = -999.999;
+  /* The next constants are package-local to be readable in the unit-test. */
   static final double DEFAULT_FACTOR = 1.0;
   static final CostLinearFunction DEFAULT_COST_RELAX_FUNCTION = CostLinearFunction.of(
     Cost.costOfMinutes(15),
     1.5
   );
 
-  public static final DirectTransitPreferences OFF = new DirectTransitPreferences(
-    CostLinearFunction.ZERO,
-    NOT_SET,
-    false
-  );
-
   public static final DirectTransitPreferences DEFAULT = new DirectTransitPreferences(
+    false,
     DEFAULT_COST_RELAX_FUNCTION,
     DEFAULT_FACTOR,
     false
   );
 
+  private final boolean enabled;
   private final CostLinearFunction costRelaxFunction;
   private final double extraAccessEgressCostFactor;
   // TODO: Find a better name. A Free access/egress, is also an access/egress...
   private final boolean disableAccessEgress;
 
-  public DirectTransitPreferences(
+  private DirectTransitPreferences(
+    boolean enabled,
     CostLinearFunction costRelaxFunction,
     double extraAccessEgressCostFactor,
     boolean disableAccessEgress
   ) {
+    this.enabled = enabled;
     this.costRelaxFunction = costRelaxFunction;
     this.extraAccessEgressCostFactor = extraAccessEgressCostFactor;
     this.disableAccessEgress = disableAccessEgress;
   }
 
   public static Builder of() {
-    return new Builder(OFF);
+    return new Builder(DEFAULT);
   }
 
   /// Whether to enable direct transit search
   public boolean enabled() {
-    return !OFF.equals(this);
+    return enabled;
   }
 
   /// This is used to limit the results from the search. Paths are compared with the cheapest path
@@ -83,6 +80,7 @@ public class DirectTransitPreferences {
     }
     DirectTransitPreferences that = (DirectTransitPreferences) o;
     return (
+      enabled == that.enabled &&
       Double.compare(extraAccessEgressCostFactor, that.extraAccessEgressCostFactor) == 0 &&
       disableAccessEgress == that.disableAccessEgress &&
       Objects.equals(costRelaxFunction, that.costRelaxFunction)
@@ -91,15 +89,17 @@ public class DirectTransitPreferences {
 
   @Override
   public int hashCode() {
-    return Objects.hash(costRelaxFunction, extraAccessEgressCostFactor, disableAccessEgress);
-  }
-
-  private static <T> T valueOrDefault(T value, T notSet, T defaultValue) {
-    return value == notSet ? defaultValue : value;
+    return Objects.hash(
+      enabled,
+      costRelaxFunction,
+      extraAccessEgressCostFactor,
+      disableAccessEgress
+    );
   }
 
   public static class Builder {
 
+    private boolean enabled;
     private CostLinearFunction costRelaxFunction;
     private double extraAccessEgressCostFactor;
     private boolean disableAccessEgress;
@@ -107,9 +107,15 @@ public class DirectTransitPreferences {
 
     public Builder(DirectTransitPreferences original) {
       this.original = original;
+      this.enabled = original.enabled;
       this.costRelaxFunction = original.costRelaxFunction;
       this.extraAccessEgressCostFactor = original.extraAccessEgressCostFactor;
       this.disableAccessEgress = original.disableAccessEgress;
+    }
+
+    public Builder withEnabled(boolean enabled) {
+      this.enabled = enabled;
+      return this;
     }
 
     public Builder withCostRelaxFunction(CostLinearFunction costRelaxFunction) {
@@ -129,13 +135,10 @@ public class DirectTransitPreferences {
 
     public DirectTransitPreferences build() {
       var value = new DirectTransitPreferences(
-        valueOrDefault(costRelaxFunction, OFF.costRelaxFunction, DEFAULT.costRelaxFunction),
-        valueOrDefault(
-          extraAccessEgressCostFactor,
-          OFF.extraAccessEgressCostFactor,
-          DEFAULT.extraAccessEgressCostFactor
-        ),
-        valueOrDefault(disableAccessEgress, OFF.disableAccessEgress, DEFAULT.disableAccessEgress)
+        enabled,
+        costRelaxFunction,
+        extraAccessEgressCostFactor,
+        disableAccessEgress
       );
       return original.equals(value) ? original : value;
     }

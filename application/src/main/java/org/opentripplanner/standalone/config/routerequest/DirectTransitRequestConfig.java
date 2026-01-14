@@ -29,6 +29,13 @@ public class DirectTransitRequestConfig {
     var dft = DirectTransitPreferences.DEFAULT;
 
     builder
+      .withEnabled(
+        c
+          .of("enabled")
+          .since(V2_9)
+          .summary("Enable the direct transit search")
+          .asBoolean(dft.enabled())
+      )
       .withCostRelaxFunction(
         c
           .of("costRelaxFunction")

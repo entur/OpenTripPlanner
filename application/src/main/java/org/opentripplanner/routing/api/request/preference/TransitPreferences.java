@@ -44,7 +44,7 @@ public final class TransitPreferences implements Serializable {
     this.includePlannedCancellations = false;
     this.includeRealtimeCancellations = false;
     this.raptor = RaptorPreferences.DEFAULT;
-    this.directTransitPreferences = DirectTransitPreferences.OFF;
+    this.directTransitPreferences = DirectTransitPreferences.DEFAULT;
   }
 
   private TransitPreferences(Builder builder) {
