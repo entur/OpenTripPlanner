@@ -1,7 +1,7 @@
 package org.opentripplanner.gtfs.graphbuilder;
 
 import java.util.List;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareServiceFactory;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareServiceFactory;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.calendar.ServiceDateInterval;
 import org.opentripplanner.routing.graph.Graph;
