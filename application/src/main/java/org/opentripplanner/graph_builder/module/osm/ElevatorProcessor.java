@@ -15,7 +15,6 @@ import org.opentripplanner.graph_builder.issues.AllWaysOfElevatorNodeOnSameLevel
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToElevatorWay;
 import org.opentripplanner.graph_builder.issues.MoreThanTwoIntersectionNodesInElevatorWay;
 import org.opentripplanner.graph_builder.issues.OnlyOneConnectionToElevatorNode;
-import org.opentripplanner.graph_builder.issues.OnlyOneIntersectionNodeInElevatorWay;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelFactory;
 import org.opentripplanner.osm.model.OsmLevelSource;
@@ -97,6 +96,7 @@ class ElevatorProcessor {
   private final Consumer<String> osmEntityDurationIssueConsumer;
   private final DataImportIssueStore issueStore;
   private final StreetDetailsRepository streetDetailsRepository;
+  private final List<OsmWay> elevatorWays = new ArrayList<>();
 
   public ElevatorProcessor(
     DataImportIssueStore issueStore,
@@ -186,33 +186,26 @@ class ElevatorProcessor {
   /**
    * Add way with tag highway=elevator to graph as elevator.
    * <p>
-   * Needs to be called after intersection vertices have been created in vertexGenerator.
+   * Needs to be called after:
+   * - intersection vertices have been created in vertexGenerator
+   * - elevator ways have been collected
    */
   private void buildElevatorEdgesFromElevatorWays() {
-    for (OsmWay way : osmdb.getWays()) {
-      if (!isElevatorWay(way)) {
-        continue;
-      }
-      List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(way);
-      List<Long> nodes = Arrays.stream(way.getNodeRefs().toArray())
+    for (OsmWay elevatorWay : elevatorWays) {
+      List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(elevatorWay);
+      List<Long> nodes = Arrays.stream(elevatorWay.getNodeRefs().toArray())
         .filter(nodeRef -> vertexGenerator.intersectionNodes().get(nodeRef) != null)
         .boxed()
         .toList();
 
       if (nodes.size() < 2) {
-        issueStore.add(
-          new OnlyOneIntersectionNodeInElevatorWay(
-            way,
-            osmdb.getNode(nodes.getFirst()).getCoordinate(),
-            osmdb.getNode(nodes.getLast()).getCoordinate()
-          )
+        throw new IllegalStateException(
+          "Elevator way does not have at least two intersection vertices"
         );
-        // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
-        continue;
       } else if (nodes.size() > 2) {
         issueStore.add(
           new MoreThanTwoIntersectionNodesInElevatorWay(
-            way,
+            elevatorWay,
             osmdb.getNode(nodes.getFirst()).getCoordinate(),
             osmdb.getNode(nodes.getLast()).getCoordinate(),
             nodes.size()
@@ -223,7 +216,7 @@ class ElevatorProcessor {
       if (nodeLevels.size() != nodes.size()) {
         issueStore.add(
           new CouldNotApplyMultiLevelInfoToElevatorWay(
-            way,
+            elevatorWay,
             osmdb.getNode(nodes.getFirst()).getCoordinate(),
             osmdb.getNode(nodes.getLast()).getCoordinate(),
             nodeLevels.size(),
@@ -241,13 +234,13 @@ class ElevatorProcessor {
         createElevatorVertices(
           elevatorHopVertices,
           sourceVertex,
-          way.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
+          elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
           level
         );
       }
 
-      var wheelchair = way.explicitWheelchairAccessibility();
-      long travelTime = way
+      var wheelchair = elevatorWay.explicitWheelchairAccessibility();
+      long travelTime = elevatorWay
         .getDuration(osmEntityDurationIssueConsumer)
         .map(Duration::toSeconds)
         .orElse(-1L);
@@ -255,10 +248,10 @@ class ElevatorProcessor {
         elevatorHopVertices,
         nodeLevels,
         wheelchair,
-        !way.isBicycleDenied(),
+        !elevatorWay.isBicycleDenied(),
         (int) travelTime
       );
-      LOG.debug("Created elevator edges for way {}", way.getId());
+      LOG.debug("Created elevator edges for way {}", elevatorWay.getId());
     }
   }
 
@@ -333,5 +326,9 @@ class ElevatorProcessor {
     // https://www.openstreetmap.org/way/503412863
     // https://www.openstreetmap.org/way/187719215
     return nodeRefs.get(0) != nodeRefs.get(nodeRefs.size() - 1);
+  }
+
+  public void addElevatorWay(OsmWay way) {
+    elevatorWays.add(way);
   }
 }

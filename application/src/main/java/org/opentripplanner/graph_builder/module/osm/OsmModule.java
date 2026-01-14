@@ -343,9 +343,7 @@ public class OsmModule implements GraphBuilderModule {
 
       if (
         !way.isRoutable() ||
-        (forwardPermission.allowsNothing() && backwardPermission.allowsNothing()) ||
-        // Elevator way processing is done after the basic graph has been built.
-        elevatorProcessor.isElevatorWay(way)
+        (forwardPermission.allowsNothing() && backwardPermission.allowsNothing())
       ) {
         continue;
       }
@@ -474,7 +472,12 @@ public class OsmModule implements GraphBuilderModule {
             elevationData.put(toVertex, elevation);
           }
         }
-        if (way.isEscalator()) {
+        if (elevatorProcessor.isElevatorWay(way)) {
+          // Elevator way processing is done after the basic graph has been built.
+          // However, intersection vertices are created in this loop.
+          elevatorProcessor.addElevatorWay(way);
+          continue;
+        } else if (way.isEscalator()) {
           var length = getGeometryLengthMeters(geometry);
           EscalatorEdgePair escalatorEdgePair = escalatorProcessor.buildEscalatorEdge(
             way,
