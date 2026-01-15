@@ -12,8 +12,8 @@ import org.opentripplanner.ext.emission.configure.EmissionRepositoryModule;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayRepositoryModule;
 import org.opentripplanner.ext.fares.configure.FareModule;
-import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
 import org.opentripplanner.ext.gbfsgeofencing.configure.GbfsGeofencingRepositoryModule;
+import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.ext.stopconsolidation.configure.StopConsolidationRepositoryModule;
 import org.opentripplanner.graph_builder.GraphBuilderDataSources;
@@ -95,7 +95,7 @@ public interface LoadApplicationFactory {
 
   @Singleton
   @Nullable
-  GbfsGeofencingRepository gbfsGeofencingRepository();
+  GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder();
 
   @Singleton
   StopConsolidationRepository emptyStopConsolidationRepository();
