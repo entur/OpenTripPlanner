@@ -88,7 +88,7 @@ public class DatedServiceJourneyType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("replacementForRelation")
           .description(
-            "Dated service journeys this dated service journeys replaces with full replacement information"
+            "Dated service journeys this dated service journey replaces with full replacement information"
           )
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(replacementForType))))
           .dataFetcher(environment ->

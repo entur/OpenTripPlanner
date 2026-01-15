@@ -187,7 +187,7 @@ type DatedServiceJourney {
   replacedByRelation: [ReplacedByRelation!]!
   "List of the dated service journeys this dated service journeys replaces"
   replacementFor: [DatedServiceJourney!]! @deprecated(reason : "Use replacementForRelation")
-  "Dated service journeys this dated service journeys replaces with full replacement information"
+  "Dated service journeys this dated service journey replaces with full replacement information"
   replacementForRelation: [ReplacementForRelation!]!
   "The service journey this Dated Service Journey is based on"
   serviceJourney: ServiceJourney!
