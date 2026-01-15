@@ -8,9 +8,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.functional.FunctionUtils.TriFunction;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -20,8 +17,6 @@ import org.opentripplanner.osm.model.TraverseDirection;
 import org.opentripplanner.osm.wayproperty.specifier.OsmSpecifier;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.note.StreetNoteAndMatcher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Information given to the GraphBuilder about how to assign permissions, safety values, names, etc.
@@ -33,8 +28,6 @@ import org.slf4j.LoggerFactory;
  */
 public class WayPropertySet {
 
-  private static final Logger LOG = LoggerFactory.getLogger(WayPropertySet.class);
-
   /** Sets 1.0 as default safety value for all permissions. */
   public static final TriFunction<
     StreetTraversalPermission,
@@ -42,14 +35,6 @@ public class WayPropertySet {
     OsmEntity,
     Double
   > DEFAULT_SAFETY_RESOLVER = ((permission, speedLimit, osmWay) -> 1.0);
-
-  /**
-   * regex courtesy http://wiki.openstreetmap.org/wiki/Key:maxspeed
-   * and edited
-   */
-  private static final Pattern MAX_SPEED_PATTERN = Pattern.compile(
-    "^([0-9][.0-9]*)\\s*(kmh|km/h|kmph|kph|mph|knots)?$"
-  );
 
   private final List<WayPropertyPicker> wayProperties;
 
@@ -219,20 +204,20 @@ public class WayPropertySet {
     Float currentSpeed;
 
     if (way.hasTag("maxspeed:motorcar")) {
-      speed = getMetersSecondFromSpeed(way.getTag("maxspeed:motorcar"));
+      speed = SpeedParser.getMetersSecondFromSpeed(way.getTag("maxspeed:motorcar"));
     }
 
     if (speed == null && direction == FORWARD && way.hasTag("maxspeed:forward")) {
-      speed = getMetersSecondFromSpeed(way.getTag("maxspeed:forward"));
+      speed = SpeedParser.getMetersSecondFromSpeed(way.getTag("maxspeed:forward"));
     }
 
     if (speed == null && direction == BACKWARD && way.hasTag("maxspeed:backward")) {
-      speed = getMetersSecondFromSpeed(way.getTag("maxspeed:backward"));
+      speed = SpeedParser.getMetersSecondFromSpeed(way.getTag("maxspeed:backward"));
     }
 
     if (speed == null && way.hasTag("maxspeed:lanes")) {
       for (String lane : way.getTag("maxspeed:lanes").split("\\|")) {
-        currentSpeed = getMetersSecondFromSpeed(lane);
+        currentSpeed = SpeedParser.getMetersSecondFromSpeed(lane);
         // Pick the largest speed from the tag
         // currentSpeed might be null if it was invalid, for instance 10|fast|20
         if (currentSpeed != null && (speed == null || currentSpeed > speed)) {
@@ -242,7 +227,7 @@ public class WayPropertySet {
     }
 
     if (way.hasTag("maxspeed") && speed == null) {
-      speed = getMetersSecondFromSpeed(way.getTag("maxspeed"));
+      speed = SpeedParser.getMetersSecondFromSpeed(way.getTag("maxspeed"));
     }
 
     if (speed != null) {
@@ -336,51 +321,6 @@ public class WayPropertySet {
       );
     }
     return false;
-  }
-
-  @Nullable
-  static Float getMetersSecondFromSpeed(String speed) {
-    Matcher m = MAX_SPEED_PATTERN.matcher(speed.trim());
-    if (!m.matches()) {
-      return null;
-    }
-
-    float originalUnits;
-    try {
-      originalUnits = (float) Double.parseDouble(m.group(1));
-    } catch (NumberFormatException e) {
-      LOG.warn("Could not parse max speed {}", m.group(1));
-      return null;
-    }
-
-    String units = m.group(2);
-    if (units == null || units.isEmpty()) {
-      units = "kmh";
-    }
-
-    // we'll be doing quite a few string comparisons here
-    units = units.intern();
-
-    float metersSecond;
-
-    switch (units) {
-      case "kmh":
-      case "km/h":
-      case "kmph":
-      case "kph":
-        metersSecond = 0.277778f * originalUnits;
-        break;
-      case "mph":
-        metersSecond = 0.446944f * originalUnits;
-        break;
-      case "knots":
-        metersSecond = 0.514444f * originalUnits;
-        break;
-      default:
-        return null;
-    }
-
-    return metersSecond;
   }
 
   public List<WayPropertyPicker> listWayProperties() {

@@ -8,7 +8,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class SpeedParsingTest {
+public class SpeedParserTest {
 
   private static final float DELTA = 0.01f;
 
@@ -31,6 +31,6 @@ public class SpeedParsingTest {
   @ParameterizedTest
   @MethodSource("speedParsingTestCases")
   void speedParsing(double expected, String input) {
-    assertEquals(expected, WayPropertySet.getMetersSecondFromSpeed(input), DELTA);
+    assertEquals(expected, SpeedParser.getMetersSecondFromSpeed(input), DELTA);
   }
 }
