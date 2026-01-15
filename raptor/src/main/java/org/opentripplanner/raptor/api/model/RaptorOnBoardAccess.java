@@ -11,6 +11,25 @@ public interface RaptorOnBoardAccess extends RaptorAccessEgress {
    */
   int routeIndex();
 
+  /*
+    Jeg tror vi bør bruke følgende til å finne boarding:
+
+    int routeIndex();
+    // Ny
+    int stopPosisionInPattern();
+    // Ny
+    int tipScheduleIndex();
+
+    Tror earliestDepartureTime() or latestArrivalTime() kan kaste UnsupportedOperationException,
+    disse metodene skal kun brukes dersom man time-shifter access/egress og det skal ikke skje for
+    RaptorOnBoardAccess.
+
+    We bør støtte `numberOfRides()`, men det legger vi må i neste iterasjon/støtte for via søk.
+    Ser at du har gjort noe på det, så da er det bare å beholde det du har gjort.
+   */
+
+
+
   /**
    * The time of boarding {@link #stop}. Since this is an on-board access, the actual ride may have
    * started already before {@link #stop} and at a time earlier than this boarding time. However,

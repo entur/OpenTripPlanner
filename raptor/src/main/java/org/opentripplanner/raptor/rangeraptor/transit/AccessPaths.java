@@ -76,10 +76,17 @@ public class AccessPaths {
       paths = removeNonOptimalPathsForStandardRaptor(paths);
     }
 
+    // TODO RBA - Should we split the paths into "regular" and onBoard paths here?
+
     paths = decorateWithTimePenaltyLogic(paths);
     var arrivedOnStreetByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedByWalking);
     var arrivedOnBoardByNumOfRides = groupByRound(paths, RaptorAccessEgress::stopReachedOnBoard);
-    var onBoardAccessesByRound = groupOnBoardAccessesByRound(paths, path -> path instanceof RaptorOnBoardAccess);
+
+    // TODO RBA - Maybe handle the +1 offset in the algorithm and reuse the `groupByRound` here?
+    //          - or change `groupByRound(.., .., int roundOffset = 0/1)`
+    var onBoardAccessesByRound = groupOnBoardAccessesByRound(paths, path ->
+      path instanceof RaptorOnBoardAccess
+    );
 
     return new AccessPaths(
       iterationStep,
