@@ -7,7 +7,7 @@ data:
         "server": {
           "apiProcessingTimeout" : "{{ .Values.configuration.apiProcessingTimeout }}",
           // The Schema decoration causes the Siri-SX to fail
-          // "apiDocumentationProfile" : "ENTUR",  
+          // "apiDocumentationProfile" : "ENTUR",
           "traceParameters": [
             {
               "httpRequestHeader": "X-Correlation-ID",
