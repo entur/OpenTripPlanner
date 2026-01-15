@@ -180,7 +180,7 @@ spec:
           subPath: otp-config.json
         - mountPath: /etc/otp2/logback.xml
           name: logback-config-volume
-          subPath: logback.xml  
+          subPath: logback.xml
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -203,5 +203,5 @@ spec:
       - configMap:
           defaultMode: 420
           name: otp2-logback-config
-        name: logback-config-volume  
+        name: logback-config-volume
 {{- end }}

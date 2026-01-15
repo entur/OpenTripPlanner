@@ -93,7 +93,7 @@ spec:
               readOnly: true
             - mountPath: /etc/otp2/logback.xml
               name: logback-config-volume
-              subPath: logback.xml  
+              subPath: logback.xml
           dnsPolicy: ClusterFirst
           restartPolicy: Never
           schedulerName: default-scheduler
@@ -112,7 +112,7 @@ spec:
           - configMap:
               defaultMode: 420
               name: otp2-logback-config-graph-builder-candidate
-            name: logback-config-volume  
+            name: logback-config-volume
       backoffLimit: 0
   # the cron job should never run as it is used only as a template for creating new jobs.
   schedule: 0 0 1 1 0
