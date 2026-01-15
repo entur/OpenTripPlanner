@@ -9,9 +9,7 @@ import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-/**
- * All input parameters to do a direct search.
- */
+/// All input parameters to do a direct search.
 public final class RaptorDirectTransitRequest {
 
   private final int earliestDepartureTime;
@@ -52,13 +50,11 @@ public final class RaptorDirectTransitRequest {
     verify();
   }
 
-  /**
-   * The earliest a journey can depart from the origin. The unit is seconds since midnight.
-   * Inclusive.
-   * <p>
-   * In the case of a 'depart after' search this is a required. In the case of a 'arrive by' search
-   * this is optional, but it will improve performance if it is set.
-   */
+  /// The earliest a journey can depart from the origin. The unit is seconds since midnight.
+  /// Inclusive.
+  ///
+  /// In the case of a 'depart after' search this is a required. In the case of a 'arrive by' search
+  /// this is optional, but it will improve performance if it is set.
   public int earliestDepartureTime() {
     return earliestDepartureTime;
   }
@@ -67,19 +63,18 @@ public final class RaptorDirectTransitRequest {
     return earliestDepartureTime != RaptorConstants.TIME_NOT_SET;
   }
 
-  /**
-   * The time window used to search. The unit is seconds.
-   * <p>
-   * For a *depart-by-search*, this is added to the 'earliestDepartureTime' to find the
-   * 'latestDepartureTime'.
-   * <p>
-   * For an *arrive-by-search* this is used to calculate the 'earliestArrivalTime'. The algorithm
-   * will find all optimal travels within the given time window.
-   * <p>
-   * Set the search window to 0 (zero) to run 1 iteration.
-   * <p>
-   * Required. Must be a positive integer or 0(zero).
-   */
+
+  /// The time window used to search. The unit is seconds.
+  ///
+  /// For a *depart-by-search*, this is added to the 'earliestDepartureTime' to find the
+  /// 'latestDepartureTime'.
+  ///
+  /// For an *arrive-by-search* this is used to calculate the 'earliestArrivalTime'. The algorithm
+  /// will find all optimal travels within the given time window.
+  ///
+  /// Set the search window to 0 (zero) to run 1 iteration.
+  ///
+  /// Required. Must be a positive integer or 0(zero).
   public int searchWindowInSeconds() {
     return searchWindowInSeconds;
   }
@@ -92,38 +87,33 @@ public final class RaptorDirectTransitRequest {
     return searchWindowInSeconds == 0;
   }
 
-  /**
-   * TODO: JavaDoc
-   * @return
-   */
+  /// The relax function specifies which paths to include.
+  ///
+  /// A relax function of `2x + 10m` will include paths that have a c1 cost up to 2 times plus 10
+  /// minutes compared to the cheapest path. I.e. if the cheapest path has a cost of 100 min the
+  /// results will include paths with a cost 210 min.
   public RelaxFunction relaxC1() {
     return relaxC1;
   }
 
-  /**
-   * List of access paths from the origin to all transit stops using the street network.
-   * <p/>
-   * Required, at least one access path must exist.
-   */
+  /// List of access paths from the origin to all transit stops using the street network.
+  ///
+  /// Required, at least one access path must exist.
   public Collection<RaptorAccessEgress> accessPaths() {
     return accessPaths;
   }
 
-  /**
-   * List of all possible egress paths to reach the destination using the street network.
-   * <p>
-   * NOTE! The {@link RaptorTransfer#stop()} is the stop where the egress path start, NOT the
-   * destination - think of it as a reversed path.
-   * <p/>
-   * Required, at least one egress path must exist.
-   */
+  /// List of all possible egress paths to reach the destination using the street network.
+  ///
+  /// NOTE! The {@link RaptorTransfer#stop()} is the stop where the egress path start, NOT the
+  /// destination - think of it as a reversed path.
+  ///
+  /// Required, at least one egress path must exist.
   public Collection<RaptorAccessEgress> egressPaths() {
     return egressPaths;
   }
 
-  /**
-   * Get the maximum duration of any access or egress path in seconds.
-   */
+  /// Get the maximum duration of any access or egress path in seconds.
   public int accessEgressMaxDurationSeconds() {
     return Math.max(
       accessPaths.stream().mapToInt(RaptorAccessEgress::durationInSeconds).max().orElse(0),
