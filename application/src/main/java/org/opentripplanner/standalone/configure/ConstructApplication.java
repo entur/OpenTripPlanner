@@ -7,6 +7,7 @@ import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
+import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -74,6 +75,14 @@ public class ConstructApplication {
    * the application context.
    */
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
+
+  /**
+   * The GBFS geofencing repository builder is used during graph build to create the repository.
+   * Null when loading from a serialized graph (repository comes from deserialized object).
+   */
+  @Nullable
+  private final GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder;
+
   private final ConstructApplicationFactory factory;
 
   /**
@@ -92,6 +101,7 @@ public class ConstructApplication {
     EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     @Nullable GbfsGeofencingRepository gbfsGeofencingRepository,
+    @Nullable GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder,
     VehicleParkingRepository vehicleParkingRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetRepository streetRepository,
@@ -100,6 +110,7 @@ public class ConstructApplication {
     this.cli = cli;
     this.graphBuilderDataSources = graphBuilderDataSources;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
+    this.gbfsGeofencingRepositoryBuilder = gbfsGeofencingRepositoryBuilder;
 
     // We create the optional GraphVisualizer here, because it would be significant more complex to
     // use Dagger DI to do it - passing in a parameter to enable it or not.
@@ -159,7 +170,7 @@ public class ConstructApplication {
       factory.vehicleParkingRepository(),
       factory.emissionRepository(),
       factory.empiricalDelayRepository(),
-      factory.gbfsGeofencingRepository(),
+      gbfsGeofencingRepositoryBuilder,
       factory.stopConsolidationRepository(),
       cli.doLoadStreetGraph(),
       cli.doSaveStreetGraph()
