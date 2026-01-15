@@ -17,6 +17,8 @@ public record GbfsGeofencingFeedParameters(
     }
     if (httpHeaders == null) {
       httpHeaders = Map.of();
+    } else {
+      httpHeaders = Map.copyOf(httpHeaders);
     }
   }
 }
