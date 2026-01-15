@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.routing.api.request.preference.DirectTransitPreferences.DEFAULT;
 
+import java.time.Duration;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
 import org.opentripplanner.framework.model.Cost;
@@ -17,13 +19,13 @@ class DirectTransitPreferencesTest {
     3.0
   );
   private static final double EXTRA_ACCESS_EGRESS_COST_FACTOR = 5.0;
-  private static final boolean DISABLE_ACCESS_EGRESS = true;
+  private static final Duration MAX_ACCESS_EGRESS_DURATION = Duration.ZERO;
 
   private DirectTransitPreferences subject = DirectTransitPreferences.of()
     .withEnabled(true)
     .withCostRelaxFunction(COST_RELAX_FUNCTION)
     .withExtraAccessEgressCostFactor(EXTRA_ACCESS_EGRESS_COST_FACTOR)
-    .withDisableAccessEgress(DISABLE_ACCESS_EGRESS)
+    .withMaxAccessEgressDuration(MAX_ACCESS_EGRESS_DURATION)
     .build();
 
   @Test
@@ -45,10 +47,9 @@ class DirectTransitPreferencesTest {
   }
 
   @Test
-  void disableAccessEgress() {
-    // Skip OFF - we do not care
-    assertFalse(DEFAULT.disableAccessEgress());
-    assertTrue(subject.disableAccessEgress());
+  void maxAccessEgressDuration() {
+    assertEquals(Optional.empty(), DEFAULT.maxAccessEgressDuration());
+    assertEquals(Optional.of(Duration.ZERO), subject.maxAccessEgressDuration());
   }
 
   @Test
@@ -60,7 +61,7 @@ class DirectTransitPreferencesTest {
       .withEnabled(true)
       .withCostRelaxFunction(COST_RELAX_FUNCTION)
       .withExtraAccessEgressCostFactor(EXTRA_ACCESS_EGRESS_COST_FACTOR)
-      .withDisableAccessEgress(DISABLE_ACCESS_EGRESS)
+      .withMaxAccessEgressDuration(Duration.ZERO)
       .build();
 
     AssertEqualsAndHashCode.verify(subject).differentFrom(DEFAULT).sameAs(sameAs);

@@ -3,6 +3,7 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers;
 import static org.opentripplanner.raptor.api.request.Optimization.PARALLEL;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -221,9 +222,10 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     access = filterAccessEgressNoOpeningHours(access);
     egress = filterAccessEgressNoOpeningHours(egress);
 
-    if (rel.disableAccessEgress()) {
-      access = filterAccessEgressKeepFree(access);
-      egress = filterAccessEgressKeepFree(egress);
+    if (rel.maxAccessEgressDuration().isPresent()) {
+      var maxDuration = rel.maxAccessEgressDuration().get();
+      access = filterAccessEgressByDuration(access, maxDuration);
+      egress = filterAccessEgressByDuration(egress, maxDuration);
     }
     if (rel.addExtraGeneralizedCostToAccessAndEgress()) {
       double f = rel.extraAccessEgressCostFactor();
@@ -358,10 +360,11 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
 
   /* Direct transit private methods */
 
-  private List<? extends RaptorAccessEgress> filterAccessEgressKeepFree(
-    Collection<? extends RaptorAccessEgress> list
+  private List<? extends RaptorAccessEgress> filterAccessEgressByDuration(
+    Collection<? extends RaptorAccessEgress> list,
+    Duration maxDuration
   ) {
-    return list.stream().filter(RaptorAccessEgress::isFree).toList();
+    return list.stream().filter(ae -> ae.durationInSeconds() <= maxDuration.toSeconds()).toList();
   }
 
   private List<? extends RaptorAccessEgress> filterAccessEgressNoOpeningHours(

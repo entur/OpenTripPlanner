@@ -63,21 +63,23 @@ public class DirectTransitRequestConfig {
           )
           .asDouble(dft.extraAccessEgressCostFactor())
       )
-      .withDisableAccessEgress(
+      .withMaxAccessEgressDuration(
         c
-          // TODO Should this be maximumAccessEgressDuration instead - then 0s is the same as
-          //      turning this off, and 10m ca be used to limit it to nearby stops? No setting
-          //      it should use the defaults for the regular request.
-          .of("disableAccessEgress")
+          .of("maxAccessEgressDuration")
           .since(V2_9)
-          .summary("Only add paths for stop to stop searches")
+          .summary("A limit on the duration of access/egress for the direct transit search")
           .description(
             """
-            Don't include paths where access or egress is necessary. In this case the search will
-            only be used when searching to and from a stop or station.
+            This will limit the duration of access/egress for this search only. The default is the
+            as for the regular search. Setting this to a higher value than what is used for the regular
+            search will have have no effect.
+
+            If set to zero, the search won't include paths where access or egress is necessary. In
+            this case the direct transit search will only be used when searching to and from a stop
+            or station.
             """
           )
-          .asBoolean(dft.disableAccessEgress())
+          .asDuration(dft.maxAccessEgressDuration().orElse(null))
       );
   }
 }
