@@ -171,8 +171,6 @@ type Contact {
 type DatedServiceJourney {
   "Returns scheduled passingTimes for this dated service journey, updated with real-time-updates (if available). "
   estimatedCalls: [EstimatedCall!]! @timingData
-  "Dated service journeys this dated service journeys replaces with full replacement information"
-  fullReplacementFor: [ReplacementForRelation!]!
   id: ID!
   "JourneyPattern for the dated service journey."
   journeyPattern: JourneyPattern
@@ -186,9 +184,11 @@ type DatedServiceJourney {
     last: Int
   ): [Quay!]!
   "Dated service journeys this dated service journey is replaced by"
-  replacedBy: [ReplacedByRelation!]!
+  replacedByRelation: [ReplacedByRelation!]!
   "List of the dated service journeys this dated service journeys replaces"
-  replacementFor: [DatedServiceJourney!]!
+  replacementFor: [DatedServiceJourney!]! @deprecated(reason : "Use replacementForRelation")
+  "Dated service journeys this dated service journeys replaces with full replacement information"
+  replacementForRelation: [ReplacementForRelation!]!
   "The service journey this Dated Service Journey is based on"
   serviceJourney: ServiceJourney!
   "Alterations specified on the Trip in the planned data"

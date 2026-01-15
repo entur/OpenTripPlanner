@@ -2136,7 +2136,7 @@ type Route implements Node {
   In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement
   link in a DatedServiceJourney.
   """
-  isReplacementRoute: Boolean!
+  isReplacement: Boolean!
   "Long name of the route, e.g. Helsinki-Leppävaara"
   longName(
     """
@@ -2650,7 +2650,7 @@ type Trip implements Node {
   In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement
   link in a DatedServiceJourney.
   """
-  isReplacementTrip: Boolean!
+  isReplacement: Boolean!
   """
   The latest real-time occupancy information for the latest occurance of this
   trip.

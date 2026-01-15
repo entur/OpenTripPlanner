@@ -41,7 +41,7 @@
           "realtimeDeparture": 900
         }
       ],
-      "isReplacementTrip": false
+      "isReplacement": false
     },
     "replacementTrip": {
       "gtfsId": "F:REPLACEMENT_TRIP",
@@ -110,7 +110,7 @@
           "realtimeDeparture": 900
         }
       ],
-      "isReplacementTrip": false
+      "isReplacement": false
     }
   }
 }

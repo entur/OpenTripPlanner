@@ -26,7 +26,7 @@ fragment TripSummary on Trip {
   stoptimesForDate(serviceDate: "20240101") {
     ...StoptimeSummary
   }
-  isReplacementTrip
+  isReplacement
 }
 
 query GtfsExampleQuery {

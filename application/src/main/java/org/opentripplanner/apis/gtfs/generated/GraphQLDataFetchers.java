@@ -1114,7 +1114,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
 
-    public DataFetcher<Boolean> isReplacementRoute();
+    public DataFetcher<Boolean> isReplacement();
 
     public DataFetcher<String> longName();
 
@@ -1387,7 +1387,7 @@ public class GraphQLDataFetchers {
 
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
 
-    public DataFetcher<Boolean> isReplacementTrip();
+    public DataFetcher<Boolean> isReplacement();
 
     public DataFetcher<TripOccupancy> occupancy();
 

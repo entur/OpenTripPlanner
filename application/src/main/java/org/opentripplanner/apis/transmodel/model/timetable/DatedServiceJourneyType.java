@@ -80,12 +80,13 @@ public class DatedServiceJourneyType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("replacementFor")
           .description("List of the dated service journeys this dated service journeys replaces")
+          .deprecate("Use replacementForRelation")
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(REF))))
           .dataFetcher(environment -> tripOnServiceDate(environment).getReplacementFor())
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("fullReplacementFor")
+          .name("replacementForRelation")
           .description(
             "Dated service journeys this dated service journeys replaces with full replacement information"
           )
@@ -98,7 +99,7 @@ public class DatedServiceJourneyType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("replacedBy")
+          .name("replacedByRelation")
           .description("Dated service journeys this dated service journey is replaced by")
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(replacedByType))))
           .dataFetcher(environment ->

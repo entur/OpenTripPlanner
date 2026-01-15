@@ -163,7 +163,7 @@ public class RouteImpl implements GraphQLDataFetchers.GraphQLRoute {
   }
 
   @Override
-  public DataFetcher<Boolean> isReplacementRoute() {
+  public DataFetcher<Boolean> isReplacement() {
     return environment -> {
       var route = getSource(environment);
       var replacementHelper = getTransitService(environment).getReplacementHelper();

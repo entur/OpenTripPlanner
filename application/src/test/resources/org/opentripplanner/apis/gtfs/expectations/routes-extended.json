@@ -13,7 +13,7 @@
         "sortOrder": 6,
         "bikesAllowed": "ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for BUS",
@@ -27,7 +27,7 @@
         "sortOrder": 3,
         "bikesAllowed": "ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for CABLE_CAR",
@@ -41,7 +41,7 @@
         "sortOrder": 7,
         "bikesAllowed": "NOT_ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for CARPOOL",
@@ -55,7 +55,7 @@
         "sortOrder": 12,
         "bikesAllowed": "ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for COACH",
@@ -69,7 +69,7 @@
         "sortOrder": 1,
         "bikesAllowed": "NOT_ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for FERRY",
@@ -83,7 +83,7 @@
         "sortOrder": 5,
         "bikesAllowed": "NO_INFORMATION",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for FUNICULAR",
@@ -97,7 +97,7 @@
         "sortOrder": 9,
         "bikesAllowed": "ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for GONDOLA",
@@ -111,7 +111,7 @@
         "sortOrder": 8,
         "bikesAllowed": "NO_INFORMATION",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for MONORAIL",
@@ -125,7 +125,7 @@
         "sortOrder": 11,
         "bikesAllowed": "NO_INFORMATION",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for RAIL",
@@ -139,7 +139,7 @@
         "sortOrder": null,
         "bikesAllowed": "ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for SNOW_AND_ICE",
@@ -153,7 +153,7 @@
         "sortOrder": 14,
         "bikesAllowed": "NO_INFORMATION",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for SUBWAY",
@@ -167,7 +167,7 @@
         "sortOrder": 2,
         "bikesAllowed": "NO_INFORMATION",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for TAXI",
@@ -181,7 +181,7 @@
         "sortOrder": 13,
         "bikesAllowed": "NOT_ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for TRAM",
@@ -195,7 +195,7 @@
         "sortOrder": 4,
         "bikesAllowed": "NOT_ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for TROLLEYBUS",
@@ -209,7 +209,7 @@
         "sortOrder": 10,
         "bikesAllowed": "NOT_ALLOWED",
         "patterns": [],
-        "isReplacementRoute": false
+        "isReplacement": false
       },
       {
         "longName": "Long name for replacement bus",
@@ -223,7 +223,7 @@
         "sortOrder": null,
         "bikesAllowed": "NO_INFORMATION",
         "patterns": [],
-        "isReplacementRoute": true
+        "isReplacement": true
       }
     ]
   }
