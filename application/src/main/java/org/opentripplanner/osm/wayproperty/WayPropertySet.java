@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.functional.FunctionUtils.TriFunction;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -111,10 +112,6 @@ public class WayPropertySet {
 
   public static WayPropertySetBuilder of() {
     return new WayPropertySetBuilder();
-  }
-
-  public List<MixinProperties> listMixins() {
-    return mixins;
   }
 
   public Float defaultCarSpeed() {
@@ -317,6 +314,7 @@ public class WayPropertySet {
     return result;
   }
 
+  @Override
   public int hashCode() {
     return (
       defaultProperties.hashCode() +
@@ -326,6 +324,7 @@ public class WayPropertySet {
     );
   }
 
+  @Override
   public boolean equals(Object o) {
     if (o instanceof WayPropertySet other) {
       return (
@@ -339,7 +338,8 @@ public class WayPropertySet {
     return false;
   }
 
-  public Float getMetersSecondFromSpeed(String speed) {
+  @Nullable
+  static Float getMetersSecondFromSpeed(String speed) {
     Matcher m = MAX_SPEED_PATTERN.matcher(speed.trim());
     if (!m.matches()) {
       return null;
@@ -385,6 +385,10 @@ public class WayPropertySet {
 
   public List<WayPropertyPicker> listWayProperties() {
     return wayProperties;
+  }
+
+  public List<MixinProperties> listMixins() {
+    return mixins;
   }
 
   public List<CreativeNamerPicker> listCreativeNamers() {

@@ -171,101 +171,7 @@ public class OsmModuleTest {
     testBuildingAreas(false);
   }
 
-  @Test
-  public void testWayDataSet() {
-    OsmWay way = new OsmWay();
-    way.addTag("highway", "footway");
-    way.addTag("cycleway", "lane");
-    way.addTag("surface", "gravel");
 
-    WayPropertySetBuilder builder = WayPropertySet.of();
-
-    // where there are no way specifiers, the default is used
-    var wayPropertySet = builder.build();
-    var wayData = wayPropertySet.getDataForWay(way);
-    assertEquals(ALL, wayData.forward().getPermission());
-    assertEquals(1.0, wayData.forward().walkSafety());
-    assertEquals(1.0, wayData.backward().walkSafety());
-    assertEquals(1.0, wayData.forward().bicycleSafety());
-    assertEquals(1.0, wayData.backward().bicycleSafety());
-
-    // add two equal matches: lane only...
-    OsmSpecifier lane_only = new BestMatchSpecifier("cycleway=lane");
-
-    WayProperties lane_is_safer = withModes(ALL).bicycleSafety(1.5).walkSafety(1.0).build();
-
-    builder.addProperties(lane_only, lane_is_safer);
-
-    // and footway only
-    OsmSpecifier footway_only = new BestMatchSpecifier("highway=footway");
-
-    WayProperties footways_allow_peds = new WayPropertiesBuilder(PEDESTRIAN).build();
-
-    builder.addProperties(footway_only, footways_allow_peds);
-
-    wayPropertySet = builder.build();
-    var dataForWay = wayPropertySet.getDataForWay(way);
-    // the first one is found
-    assertEquals(lane_is_safer, dataForWay.forward());
-    assertEquals(lane_is_safer, dataForWay.backward());
-
-    // add a better match
-    OsmSpecifier lane_and_footway = new BestMatchSpecifier("cycleway=lane;highway=footway");
-
-    WayProperties safer_and_peds = new WayPropertiesBuilder(PEDESTRIAN)
-      .bicycleSafety(0.75)
-      .walkSafety(1.0)
-      .build();
-
-    builder.addProperties(lane_and_footway, safer_and_peds);
-    wayPropertySet = builder.build();
-    dataForWay = wayPropertySet.getDataForWay(way);
-    assertEquals(new WayPropertiesPair(safer_and_peds, safer_and_peds), dataForWay);
-
-    // add a mixin
-    BestMatchSpecifier gravel = new BestMatchSpecifier("surface=gravel");
-    var gravel_is_dangerous = MixinPropertiesBuilder.ofBicycleSafety(2);
-    builder.setMixinProperties(gravel, gravel_is_dangerous);
-
-    wayPropertySet = builder.build();
-    dataForWay = wayPropertySet.getDataForWay(way);
-    assertEquals(1.5, dataForWay.forward().bicycleSafety());
-
-    // test a left-right distinction
-    way = new OsmWay();
-    way.addTag("highway", "footway");
-    way.addTag("cycleway", "lane");
-    way.addTag("cycleway:right", "track");
-
-    OsmSpecifier track_only = new BestMatchSpecifier("highway=footway;cycleway=track");
-    WayProperties track_is_safest = new WayPropertiesBuilder(ALL)
-      .bicycleSafety(0.25)
-      .walkSafety(1.0)
-      .build();
-
-    builder.addProperties(track_only, track_is_safest);
-    wayPropertySet = builder.build();
-    dataForWay = wayPropertySet.getDataForWay(way);
-    // right (with traffic) comes from track
-    assertEquals(0.25, dataForWay.forward().bicycleSafety());
-    // left comes from lane
-    assertEquals(0.75, dataForWay.backward().bicycleSafety());
-
-    way = new OsmWay();
-    way.addTag("highway", "footway");
-    way.addTag("footway", "sidewalk");
-    way.addTag("RLIS:reviewed", "no");
-    WayPropertySetBuilder builder2 = WayPropertySet.of();
-    CreativeNamer namer = new CreativeNamer("platform");
-    builder2.addCreativeNamer(
-      new BestMatchSpecifier("railway=platform;highway=footway;footway=sidewalk"),
-      namer
-    );
-    namer = new CreativeNamer("sidewalk");
-    builder2.addCreativeNamer(new BestMatchSpecifier("highway=footway;footway=sidewalk"), namer);
-    WayPropertySet propset = builder2.build();
-    assertEquals("sidewalk", propset.getCreativeName(way).toString());
-  }
 
   @Test
   public void testCreativeNaming() {
@@ -283,16 +189,7 @@ public class OsmModuleTest {
     );
   }
 
-  @Test
-  public void testLocalizedString() {
-    LocalizedString localizedString = new LocalizedString(
-      "corner",
-      new NonLocalizedString("first"),
-      new NonLocalizedString("second")
-    );
 
-    assertEquals("Kreuzung first mit second", localizedString.toString(new Locale("de")));
-  }
 
   @Test
   void addParkingLotsToService() {

@@ -112,11 +112,7 @@ class FinlandMapperTest {
       wps.getDataForWay(cyclewayFootwayCrossingWithTrafficLights).forward().walkSafety(),
       DELTA
     );
-    assertEquals(
-      1.2,
-      wps.getDataForWay(cyclewaySegregatedCrossing).forward().walkSafety(),
-      DELTA
-    );
+    assertEquals(1.2, wps.getDataForWay(cyclewaySegregatedCrossing).forward().walkSafety(), DELTA);
     assertEquals(
       1.2,
       wps.getDataForWay(cyclewaySegregatedFootwayCrossing).forward().walkSafety(),
@@ -176,9 +172,9 @@ class FinlandMapperTest {
   }
 
   @Test
-  void testMaxCarSpeed(){
-    assertEquals(33.34,wps.maxPossibleCarSpeed(), DELTA);
-    assertEquals(22.21,wps.defaultCarSpeed(), DELTA);
+  void testMaxCarSpeed() {
+    assertEquals(33.34, wps.maxPossibleCarSpeed(), DELTA);
+    assertEquals(22.21, wps.defaultCarSpeed(), DELTA);
   }
 
   @Test
