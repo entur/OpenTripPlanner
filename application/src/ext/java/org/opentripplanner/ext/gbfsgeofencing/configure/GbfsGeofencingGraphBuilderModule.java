@@ -4,7 +4,7 @@ import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
-import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
+import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.gbfsgeofencing.internal.graphbuilder.GbfsGeofencingGraphBuilder;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -17,13 +17,13 @@ public class GbfsGeofencingGraphBuilderModule {
   @Nullable
   static GbfsGeofencingGraphBuilder provideGbfsGeofencingGraphBuilder(
     BuildConfig config,
-    @Nullable GbfsGeofencingRepository repository,
+    @Nullable GbfsGeofencingRepositoryBuilder repositoryBuilder,
     Graph graph
   ) {
-    if (repository == null || !config.gbfsGeofencing.hasFeeds()) {
+    if (repositoryBuilder == null || !config.gbfsGeofencing.hasFeeds()) {
       return null;
     }
 
-    return new GbfsGeofencingGraphBuilder(config.gbfsGeofencing, repository, graph);
+    return new GbfsGeofencingGraphBuilder(config.gbfsGeofencing, repositoryBuilder, graph);
   }
 }

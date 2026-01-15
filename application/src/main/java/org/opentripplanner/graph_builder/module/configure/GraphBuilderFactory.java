@@ -15,8 +15,8 @@ import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayGraphBuilderModule;
 import org.opentripplanner.ext.empiricaldelay.internal.graphbuilder.EmpiricalDelayGraphBuilder;
 import org.opentripplanner.ext.flex.AreaStopsToVerticesMapper;
-import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
 import org.opentripplanner.ext.gbfsgeofencing.configure.GbfsGeofencingGraphBuilderModule;
+import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.gbfsgeofencing.internal.graphbuilder.GbfsGeofencingGraphBuilder;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
@@ -160,6 +160,8 @@ public interface GraphBuilderFactory {
     Builder empiricalDelayRepository(@Nullable EmpiricalDelayRepository empiricalDelayRepository);
 
     @BindsInstance
-    Builder gbfsGeofencingRepository(@Nullable GbfsGeofencingRepository gbfsGeofencingRepository);
+    Builder gbfsGeofencingRepositoryBuilder(
+      @Nullable GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder
+    );
   }
 }
