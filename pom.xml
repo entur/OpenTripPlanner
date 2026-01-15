@@ -99,6 +99,7 @@
     </distributionManagement>
 
     <modules>
+        <module>entur</module>
         <module>utils</module>
         <module>raptor</module>
         <module>gtfs-realtime-protobuf</module>
