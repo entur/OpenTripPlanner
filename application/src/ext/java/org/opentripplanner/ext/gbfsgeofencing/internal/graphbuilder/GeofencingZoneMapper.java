@@ -48,9 +48,28 @@ class GeofencingZoneMapper {
       .getFeatures()
       .stream()
       .filter(f -> f.getGeometry() != null)
+      .filter(this::hasValidRules)
       .map(this::toInternalModel)
       .filter(Objects::nonNull)
       .toList();
+  }
+
+  /**
+   * Checks if a feature has valid rules for mapping.
+   * A feature needs at least one rule to determine drop-off and pass-through permissions.
+   */
+  private boolean hasValidRules(GBFSFeature feature) {
+    var properties = feature.getProperties();
+    if (properties == null) {
+      LOG.warn("Skipping geofencing zone with null properties");
+      return false;
+    }
+    var rules = properties.getRules();
+    if (rules == null || rules.isEmpty()) {
+      LOG.warn("Skipping geofencing zone with null or empty rules: {}", featureName(feature));
+      return false;
+    }
+    return true;
   }
 
   @Nullable
