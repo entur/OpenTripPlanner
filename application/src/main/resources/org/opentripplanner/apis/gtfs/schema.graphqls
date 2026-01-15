@@ -2706,7 +2706,7 @@ type TripOnServiceDateConnection {
   pages). Note, this number might not stay the same throughout the paging as trips might be added or
   removed.
   """
-  totalCount: Int
+  totalCount: Int!
 }
 
 """

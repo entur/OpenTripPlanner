@@ -5,7 +5,6 @@ import graphql.relay.Edge;
 import graphql.relay.PageInfo;
 import java.util.List;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -24,8 +23,7 @@ public class DefaultCountedConnection<T>
   }
 
   @Override
-  @Nullable
-  public Integer getTotalCount() {
+  public int getTotalCount() {
     return totalCount;
   }
 
