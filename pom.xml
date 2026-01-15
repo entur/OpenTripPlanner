@@ -103,6 +103,7 @@
         <module>otp-shaded</module>
         <module>test/integration</module>
         <module>domain-core</module>
+        <module>street</module>
     </modules>
 
 

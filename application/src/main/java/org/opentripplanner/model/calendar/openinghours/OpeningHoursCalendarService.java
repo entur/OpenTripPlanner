@@ -8,6 +8,7 @@ import java.util.Objects;
 import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.standalone.config.api.TransitServicePeriod;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 
 public class OpeningHoursCalendarService implements Serializable {
 
