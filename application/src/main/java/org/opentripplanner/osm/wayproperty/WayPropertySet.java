@@ -78,8 +78,6 @@ public class WayPropertySet {
   /** The WayProperties applied to all ways that do not match any WayPropertyPicker. */
   private final WayProperties defaultProperties;
 
-  private final DataImportIssueStore issueStore;
-
   WayPropertySet(WayPropertySetBuilder builder) {
     this.wayProperties = List.copyOf(builder.wayProperties);
     this.creativeNamers = List.copyOf(builder.creativeNamers);
@@ -92,7 +90,6 @@ public class WayPropertySet {
     this.defaultWalkSafetyForPermission = builder.defaultWalkSafetyForPermission;
     this.defaultBicycleSafetyForPermission = builder.defaultBicycleSafetyForPermission;
     this.defaultProperties = builder.defaultProperties;
-    this.issueStore = builder.issueStore;
   }
 
   public static WayPropertySetBuilder of() {
@@ -195,10 +192,18 @@ public class WayPropertySet {
     return bestNamer.generateCreativeName(entity);
   }
 
+  public float getCarSpeedForWay(OsmEntity way, TraverseDirection direction) {
+    return getCarSpeedForWay(way, direction, DataImportIssueStore.NOOP);
+  }
+
   /**
    * Calculate the automobile speed, in meters per second, for this way.
    */
-  public float getCarSpeedForWay(OsmEntity way, TraverseDirection direction) {
+  public float getCarSpeedForWay(
+    OsmEntity way,
+    TraverseDirection direction,
+    DataImportIssueStore issueStore
+  ) {
     // first, check for maxspeed tags
     Float speed = null;
     Float currentSpeed;

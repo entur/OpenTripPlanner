@@ -1,5 +1,6 @@
 package org.opentripplanner.osm.tagmapping;
 
+import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.TraverseDirection;
 import org.opentripplanner.osm.wayproperty.WayPropertySet;
@@ -33,7 +34,11 @@ class ConstantSpeedMapper extends FinlandMapper {
   }
 
   @Override
-  public float getCarSpeedForWay(OsmEntity way, TraverseDirection direction) {
+  public float getCarSpeedForWay(
+    OsmEntity way,
+    TraverseDirection direction,
+    DataImportIssueStore issueStore
+  ) {
     /*
      * Set the same 80 km/h speed for all roads, so that car routing finds shortest path
      */

@@ -6,7 +6,6 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
 import java.util.ArrayList;
 import java.util.List;
 import org.opentripplanner.framework.functional.FunctionUtils;
-import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.wayproperty.specifier.BestMatchSpecifier;
 import org.opentripplanner.osm.wayproperty.specifier.OsmSpecifier;
@@ -24,7 +23,6 @@ public class WayPropertySetBuilder {
   final List<SpeedPicker> speedPickers = new ArrayList<>();
   final List<NotePicker> notes = new ArrayList<>();
   final List<MixinProperties> mixins = new ArrayList<>();
-  final DataImportIssueStore issueStore;
   FunctionUtils.TriFunction<
     StreetTraversalPermission,
     Float,
@@ -38,13 +36,7 @@ public class WayPropertySetBuilder {
     Double
   > defaultBicycleSafetyForPermission = WayPropertySet.DEFAULT_SAFETY_RESOLVER;
 
-  public WayPropertySetBuilder() {
-    this(DataImportIssueStore.NOOP);
-  }
-
-  public WayPropertySetBuilder(DataImportIssueStore issueStore) {
-    this.issueStore = issueStore;
-  }
+  WayPropertySetBuilder() {}
 
   public void addMixin(MixinProperties mixin) {
     mixins.add(mixin);
