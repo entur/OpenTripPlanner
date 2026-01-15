@@ -404,9 +404,27 @@ public class ConstructApplication {
     return factory.empiricalDelayRepository();
   }
 
+  /**
+   * Get the GBFS geofencing repository.
+   * <p>
+   * During a fresh graph build, the repository is created by the {@link GbfsGeofencingRepositoryBuilder}
+   * and we retrieve it from there. When loading from a serialized graph, the repository comes
+   * directly from the Dagger factory (injected during construction).
+   *
+   * @return the repository, or null if GBFS geofencing is not enabled
+   */
   @Nullable
   public GbfsGeofencingRepository gbfsGeofencingRepository() {
-    return factory.gbfsGeofencingRepository();
+    // First check if we have a repository from Dagger (loaded from serialized graph)
+    var repository = factory.gbfsGeofencingRepository();
+    if (repository != null) {
+      return repository;
+    }
+    // During fresh build, get the repository from the builder after graph build completes
+    if (gbfsGeofencingRepositoryBuilder != null) {
+      return gbfsGeofencingRepositoryBuilder.getBuiltRepository();
+    }
+    return null;
   }
 
   public FareServiceFactory fareServiceFactory() {
