@@ -29,20 +29,26 @@ public class TripOnServiceDateMatcherFactory {
   public static Matcher<TripOnServiceDate> of(TripOnServiceDateRequest request) {
     ExpressionBuilder<TripOnServiceDate> expr = ExpressionBuilder.of();
 
-    expr.atLeastOneMatch(request.serviceDates(), TripOnServiceDateMatcherFactory::serviceDate);
-    expr.atLeastOneMatch(request.agencies(), TripOnServiceDateMatcherFactory::agencyId);
-    expr.atLeastOneMatch(request.routes(), TripOnServiceDateMatcherFactory::routeId);
     expr.atLeastOneMatch(
-      request.serviceJourneys(),
+      request.includeServiceDates(),
+      TripOnServiceDateMatcherFactory::serviceDate
+    );
+    expr.atLeastOneMatch(request.includeAgencies(), TripOnServiceDateMatcherFactory::agencyId);
+    expr.atLeastOneMatch(request.includeRoutes(), TripOnServiceDateMatcherFactory::routeId);
+    expr.atLeastOneMatch(
+      request.includeServiceJourneys(),
       TripOnServiceDateMatcherFactory::serviceJourneyId
     );
-    expr.atLeastOneMatch(request.replacementFor(), TripOnServiceDateMatcherFactory::replacementFor);
     expr.atLeastOneMatch(
-      request.netexInternalPlanningCodes(),
+      request.includeReplacementFor(),
+      TripOnServiceDateMatcherFactory::replacementFor
+    );
+    expr.atLeastOneMatch(
+      request.includeNetexInternalPlanningCodes(),
       TripOnServiceDateMatcherFactory::netexInternalPlanningCode
     );
-    expr.atLeastOneMatch(request.alterations(), TripOnServiceDateMatcherFactory::alteration);
-    expr.atLeastOneMatch(request.modes(), TripOnServiceDateMatcherFactory::mode);
+    expr.atLeastOneMatch(request.includeAlterations(), TripOnServiceDateMatcherFactory::alteration);
+    expr.atLeastOneMatch(request.includeModes(), TripOnServiceDateMatcherFactory::mode);
     expr.matchesNone(request.excludeModes(), TripOnServiceDateMatcherFactory::mode);
     return expr.build();
   }

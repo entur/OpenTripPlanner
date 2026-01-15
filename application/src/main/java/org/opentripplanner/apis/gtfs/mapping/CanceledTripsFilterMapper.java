@@ -29,7 +29,7 @@ public class CanceledTripsFilterMapper {
     var modesToIncludeFilter = FilterValues.ofNullIsEverything("modesToInclude", modesToInclude);
     var modesToExcludeFilter = FilterValues.ofNullIsEverything("modesToExclude", modesToExclude);
     return TripOnServiceDateRequest.of()
-      .withModes(modesToIncludeFilter)
+      .withIncludeModes(modesToIncludeFilter)
       .withExcludeModes(modesToExcludeFilter)
       .build();
   }

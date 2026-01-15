@@ -263,7 +263,7 @@ class DefaultTransitServiceTest {
 
     // Find all canceled BUS trips
     var busFilter = FilterValues.ofEmptyIsEverything("modesToInclude", List.of(BUS));
-    var busRequest = TripOnServiceDateRequest.of().withModes(busFilter).build();
+    var busRequest = TripOnServiceDateRequest.of().withIncludeModes(busFilter).build();
     var busTrips = service.findCanceledTrips(busRequest);
     assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", busTrips.toString());
 

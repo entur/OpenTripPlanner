@@ -24,7 +24,7 @@ class CanceledTripsFilterMapperTest {
     );
     var environment = getEnvironment(args);
     var request = CanceledTripsFilterMapper.mapToTripOnServiceDateRequest(environment);
-    var modes = request.modes().get();
+    var modes = request.includeModes().get();
     assertThat(modes).hasSize(1);
     assertEquals(mode, modes.iterator().next());
     assertTrue(request.excludeModes().includeEverything());
@@ -42,7 +42,7 @@ class CanceledTripsFilterMapperTest {
     var modes = request.excludeModes().get();
     assertThat(modes).hasSize(1);
     assertEquals(mode, modes.iterator().next());
-    assertTrue(request.modes().includeEverything());
+    assertTrue(request.includeModes().includeEverything());
   }
 
   @Test
