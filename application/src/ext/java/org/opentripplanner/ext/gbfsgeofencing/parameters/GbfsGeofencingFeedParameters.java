@@ -9,7 +9,6 @@ import javax.annotation.Nullable;
 public record GbfsGeofencingFeedParameters(
   String url,
   @Nullable String network,
-  @Nullable String language,
   Map<String, String> httpHeaders
 ) {
   public GbfsGeofencingFeedParameters {
