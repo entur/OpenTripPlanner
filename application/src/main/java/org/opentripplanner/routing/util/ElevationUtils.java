@@ -2,6 +2,12 @@ package org.opentripplanner.routing.util;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.operation.MathTransform;
+import org.geotools.api.referencing.operation.TransformException;
+import org.geotools.geometry.Position3D;
+import org.geotools.referencing.operation.DefaultMathTransformFactory;
+import org.geotools.referencing.operation.transform.EarthGravitationalModel;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
@@ -35,7 +41,7 @@ public class ElevationUtils {
     MAX_SLOPE_WALK_EFFECTIVE_LENGTH_FACTOR
   );
   /** constants for slope computation */
-  static final double[] tx = {
+  private static final double[] tx = {
     0.0000000000000000E+00,
     0.0000000000000000E+00,
     0.0000000000000000E+00,
@@ -44,7 +50,7 @@ public class ElevationUtils {
     5.0000000000000000E+03,
     5.0000000000000000E+03,
   };
-  static final double[] ty = {
+  private static final double[] ty = {
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
@@ -56,7 +62,7 @@ public class ElevationUtils {
     3.4999999999999998E-01,
     3.4999999999999998E-01,
   };
-  static final double[] coeff = {
+  private static final double[] coeff = {
     4.3843513168660255E+00,
     3.6904323727375652E+00,
     1.6791850199667697E+00,
@@ -86,6 +92,18 @@ public class ElevationUtils {
     9.4846184210137130E-02,
     5.5464612133430242E-02,
   };
+  // Set up a MathTransform based on the EarthGravitationalModel
+  private static MathTransform mt;
+
+  static {
+    try {
+      mt = new DefaultMathTransformFactory().createParameterizedTransform(
+        new EarthGravitationalModel.Provider().getParameters().createValue()
+      );
+    } catch (FactoryException e) {
+      e.printStackTrace();
+    }
+  }
 
   /**
    * @param elev       The elevation profile, where each (x, y) is (distance along edge, elevation)
@@ -161,7 +179,121 @@ public class ElevationUtils {
     );
   }
 
-  public static double slopeSpeedCoefficient(double slope, double altitude) {
+  public static PackedCoordinateSequence getPartialElevationProfile(
+    PackedCoordinateSequence elevationProfile,
+    double start,
+    double end
+  ) {
+    if (elevationProfile == null) {
+      return null;
+    }
+
+    if (start < 0) {
+      start = 0;
+    }
+
+    Coordinate[] coordinateArray = elevationProfile.toCoordinateArray();
+    double length = coordinateArray[coordinateArray.length - 1].x;
+    if (end > length) {
+      end = length;
+    }
+
+    double newLength = end - start;
+
+    boolean started = false;
+    Coordinate lastCoord = null;
+    List<Coordinate> coordList = new LinkedList<>();
+    for (Coordinate coord : coordinateArray) {
+      if (coord.x >= start && !started) {
+        started = true;
+
+        if (lastCoord != null) {
+          double run = coord.x - lastCoord.x;
+          double p = (start - lastCoord.x) / run;
+          double rise = coord.y - lastCoord.y;
+          double newX = lastCoord.x + p * run - start;
+          double newY = lastCoord.y + p * rise;
+
+          if (p > 0 && p < 1) {
+            coordList.add(new Coordinate(newX, newY));
+          }
+        }
+      }
+
+      if (started && coord.x >= start && coord.x <= end) {
+        coordList.add(new Coordinate(coord.x - start, coord.y));
+      }
+
+      if (started && coord.x >= end) {
+        if (lastCoord != null && lastCoord.x < end && coord.x > end) {
+          double run = coord.x - lastCoord.x;
+          // interpolate end coordinate
+          double p = (end - lastCoord.x) / run;
+          double rise = coord.y - lastCoord.y;
+          double newY = lastCoord.y + p * rise;
+          coordList.add(new Coordinate(newLength, newY));
+        }
+        break;
+      }
+
+      lastCoord = coord;
+    }
+
+    if (coordList.size() < 2) {
+      return null;
+    }
+
+    Coordinate[] coordArr = new Coordinate[coordList.size()];
+    return new PackedCoordinateSequence.Float(coordList.toArray(coordArr), 2);
+  }
+
+  /** checks for units (m/ft) in an OSM ele tag value, and returns the value in meters */
+  public static Double parseEleTag(String ele) {
+    ele = ele.toLowerCase();
+    double unit = 1;
+    if (ele.endsWith("m")) {
+      ele = ele.replaceFirst("\\s*m", "");
+    } else if (ele.endsWith("ft")) {
+      ele = ele.replaceFirst("\\s*ft", "");
+      unit = 0.3048;
+    }
+    try {
+      return Double.parseDouble(ele) * unit;
+    } catch (NumberFormatException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Computes the difference between the ellipsoid and geoid at a specified lat/lon using Geotools
+   * EarthGravitationalModel. For unknown reasons, this method can produce incorrect results if
+   * called at the same time from multiple threads, so the method has been made synchronized.
+   *
+   * @return difference in meters
+   */
+  public static synchronized double computeEllipsoidToGeoidDifference(double lat, double lon)
+    throws TransformException {
+    // Compute the offset
+    Position3D dest = new Position3D();
+    mt.transform(new Position3D(lon, lat, 0), dest);
+    return dest.z;
+  }
+
+  /**
+   * <p>
+   * We use the Tobler function {@link ToblersHikingFunction} to calculate this.
+   * </p>
+   * <p>
+   * When testing this we get good results in general, but for some edges the elevation profile is
+   * not accurate. A (serpentine) road is usually build with a constant slope, but the elevation
+   * profile in OTP is not as smooth, resulting in an extra penalty for these roads.
+   * </p>
+   */
+  static double calculateEffectiveWalkLength(double run, double rise) {
+    return run * toblerWalkingFunction.calculateHorizontalWalkingDistanceMultiplier(run, rise);
+  }
+
+  private static double slopeSpeedCoefficient(double slope, double altitude) {
     /*
      * computed by asking ZunZun for a quadratic b-spline approximating some values from
      * http://www.analyticcycling.com/ForcesSpeed_Page.html fixme: should clamp to local speed
@@ -370,105 +502,6 @@ public class ElevationUtils {
     }
 
     return temp;
-  }
-
-  public static PackedCoordinateSequence getPartialElevationProfile(
-    PackedCoordinateSequence elevationProfile,
-    double start,
-    double end
-  ) {
-    if (elevationProfile == null) {
-      return null;
-    }
-
-    if (start < 0) {
-      start = 0;
-    }
-
-    Coordinate[] coordinateArray = elevationProfile.toCoordinateArray();
-    double length = coordinateArray[coordinateArray.length - 1].x;
-    if (end > length) {
-      end = length;
-    }
-
-    double newLength = end - start;
-
-    boolean started = false;
-    Coordinate lastCoord = null;
-    List<Coordinate> coordList = new LinkedList<>();
-    for (Coordinate coord : coordinateArray) {
-      if (coord.x >= start && !started) {
-        started = true;
-
-        if (lastCoord != null) {
-          double run = coord.x - lastCoord.x;
-          double p = (start - lastCoord.x) / run;
-          double rise = coord.y - lastCoord.y;
-          double newX = lastCoord.x + p * run - start;
-          double newY = lastCoord.y + p * rise;
-
-          if (p > 0 && p < 1) {
-            coordList.add(new Coordinate(newX, newY));
-          }
-        }
-      }
-
-      if (started && coord.x >= start && coord.x <= end) {
-        coordList.add(new Coordinate(coord.x - start, coord.y));
-      }
-
-      if (started && coord.x >= end) {
-        if (lastCoord != null && lastCoord.x < end && coord.x > end) {
-          double run = coord.x - lastCoord.x;
-          // interpolate end coordinate
-          double p = (end - lastCoord.x) / run;
-          double rise = coord.y - lastCoord.y;
-          double newY = lastCoord.y + p * rise;
-          coordList.add(new Coordinate(newLength, newY));
-        }
-        break;
-      }
-
-      lastCoord = coord;
-    }
-
-    if (coordList.size() < 2) {
-      return null;
-    }
-
-    Coordinate[] coordArr = new Coordinate[coordList.size()];
-    return new PackedCoordinateSequence.Float(coordList.toArray(coordArr), 2);
-  }
-
-  /** checks for units (m/ft) in an OSM ele tag value, and returns the value in meters */
-  public static Double parseEleTag(String ele) {
-    ele = ele.toLowerCase();
-    double unit = 1;
-    if (ele.endsWith("m")) {
-      ele = ele.replaceFirst("\\s*m", "");
-    } else if (ele.endsWith("ft")) {
-      ele = ele.replaceFirst("\\s*ft", "");
-      unit = 0.3048;
-    }
-    try {
-      return Double.parseDouble(ele) * unit;
-    } catch (NumberFormatException e) {
-      return null;
-    }
-  }
-
-  /**
-   * <p>
-   * We use the Tobler function {@link ToblersHikingFunction} to calculate this.
-   * </p>
-   * <p>
-   * When testing this we get good results in general, but for some edges the elevation profile is
-   * not accurate. A (serpentine) road is usually build with a constant slope, but the elevation
-   * profile in OTP is not as smooth, resulting in an extra penalty for these roads.
-   * </p>
-   */
-  static double calculateEffectiveWalkLength(double run, double rise) {
-    return run * toblerWalkingFunction.calculateHorizontalWalkingDistanceMultiplier(run, rise);
   }
 
   private static double[] getLengthsFromElevation(CoordinateSequence elev) {
