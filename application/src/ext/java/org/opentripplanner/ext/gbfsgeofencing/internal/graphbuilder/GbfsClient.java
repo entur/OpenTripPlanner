@@ -47,6 +47,11 @@ public class GbfsClient {
         GBFSGbfs.class
       );
 
+      if (gbfs == null) {
+        LOG.warn("GBFS discovery file returned null from {}", gbfsUri);
+        return Optional.empty();
+      }
+
       var data = gbfs.getData();
       if (data == null || data.getFeeds() == null) {
         return Optional.empty();
