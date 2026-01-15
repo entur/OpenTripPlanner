@@ -18,14 +18,14 @@ public class ReplacementForRelationType {
     return GraphQLObjectType.newObject()
       .name(NAME)
       .description(
-        "Relation for indicating the TripOnServiceDate which is replaced by a newer one. Exists as a\n" +
+        "Relation for indicating the DatedServiceJourney which is replaced by a newer one. Exists as a\n" +
         "place to put additional information on the replacement when we get SIRI 2.1 support."
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("datedServiceJourney")
           .type(DATED_SERVICE_JOURNEY_REF)
-          .description("The replaced TripOnServiceDate.")
+          .description("The replaced DatedServiceJourney.")
           .dataFetcher(environment -> replacementForRelation(environment).getTripOnServiceDate())
           .build()
       )

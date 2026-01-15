@@ -1060,20 +1060,20 @@ type RentalVehicleType {
 }
 
 """
-Relation for indicating the TripOnServiceDate which is replacing an older one. Exists as a
+Relation for indicating the DatedServiceJourney which is replacing an older one. Exists as a
 place to put additional information on the replacement when we get SIRI 2.1 support.
 """
 type ReplacedByRelation {
-  "The replacing TripOnServiceDate."
+  "The replacing DatedServiceJourney."
   datedServiceJourney: DatedServiceJourney
 }
 
 """
-Relation for indicating the TripOnServiceDate which is replaced by a newer one. Exists as a
+Relation for indicating the DatedServiceJourney which is replaced by a newer one. Exists as a
 place to put additional information on the replacement when we get SIRI 2.1 support.
 """
 type ReplacementForRelation {
-  "The replaced TripOnServiceDate."
+  "The replaced DatedServiceJourney."
   datedServiceJourney: DatedServiceJourney
 }
 
