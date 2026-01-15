@@ -5,7 +5,6 @@ import static org.opentripplanner.raptor.api.model.SearchDirection.REVERSE;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
 import static org.opentripplanner.raptor.service.HeuristicToRunResolver.resolveHeuristicToRunBasedOnOptimizationsAndSearchParameters;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
-import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.SearchParams;
 import org.opentripplanner.raptor.api.request.SearchParamsBuilder;
@@ -25,7 +23,6 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorSearchWindowCalculator;
 import org.opentripplanner.raptor.spi.ExtraMcRouterSearch;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
-import org.opentripplanner.utils.collection.ListUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -152,22 +149,12 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
       raptorRouter = config.createRangeRaptorWithStdWorker(transitData, request);
     }
 
-    Collection<RaptorPath<T>> relaxedLimitedTransferResult = null;
-    /**
-    if (request.multiCriteria().relaxedLimitedTransferRequest().enabled()) {
-      relaxedLimitedTransferResult = config
-        .createRelaxedLimitedTransferSearch(transitData, request)
-        .route();
-    }
-     */
     // Route
     var result = raptorRouter.route();
 
     // create and return response
     return new RaptorResponse<>(
-      relaxedLimitedTransferResult == null
-        ? result.extractPaths()
-        : ListUtils.combine(result.extractPaths(), relaxedLimitedTransferResult),
+      result.extractPaths(),
       new DefaultStopArrivals(result),
       request,
       // This method is not run unless the heuristic reached the destination
