@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
  * Utility class for parsing human speed values like "5km/h".
  */
 class SpeedParser {
+
   private static final Logger LOG = LoggerFactory.getLogger(SpeedParser.class);
   /**
    * regex courtesy http://wiki.openstreetmap.org/wiki/Key:maxspeed

@@ -5,39 +5,27 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.opentripplanner.osm.wayproperty.WayPropertiesBuilder.withModes;
 import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
-import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN;
 
 import java.io.File;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
-import org.opentripplanner.core.model.i18n.LocalizedString;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.osm.DefaultOsmProvider;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.CreativeNamer;
-import org.opentripplanner.osm.wayproperty.MixinPropertiesBuilder;
-import org.opentripplanner.osm.wayproperty.WayProperties;
-import org.opentripplanner.osm.wayproperty.WayPropertiesBuilder;
-import org.opentripplanner.osm.wayproperty.WayPropertiesPair;
-import org.opentripplanner.osm.wayproperty.WayPropertySet;
-import org.opentripplanner.osm.wayproperty.WayPropertySetBuilder;
-import org.opentripplanner.osm.wayproperty.specifier.BestMatchSpecifier;
-import org.opentripplanner.osm.wayproperty.specifier.OsmSpecifier;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
+import org.opentripplanner.street.internal.DefaultStreetRepository;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
@@ -122,8 +110,10 @@ public class OsmModuleTest {
     File file = RESOURCE_LOADER.file("NYC_small.osm.pbf");
     var provider = new DefaultOsmProvider(file, true);
 
+    var streetRepository = new DefaultStreetRepository();
     var osmModule = OsmModuleTestFactory.of(provider)
       .withGraph(gg)
+      .withStreetRepository(streetRepository)
       .builder()
       .withAreaVisibility(true)
       .build();
@@ -159,6 +149,8 @@ public class OsmModuleTest {
       }
       edgeEndpoints.add(endpoints);
     }
+
+    assertEquals(20, streetRepository.streetModelDetails().maxCarSpeed());
   }
 
   @Test
@@ -170,8 +162,6 @@ public class OsmModuleTest {
   public void testBuildAreaWithVisibility() {
     testBuildingAreas(false);
   }
-
-
 
   @Test
   public void testCreativeNaming() {
@@ -188,8 +178,6 @@ public class OsmModuleTest {
       namer.generateCreativeName(way).toString()
     );
   }
-
-
 
   @Test
   void addParkingLotsToService() {

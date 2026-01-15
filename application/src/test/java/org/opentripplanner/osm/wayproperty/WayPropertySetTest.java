@@ -74,6 +74,7 @@ class WayPropertySetTest {
     assertTrue(within(kmhAsMs(25), wps.getCarSpeedForWay(way, FORWARD)));
     assertTrue(within(kmhAsMs(25), wps.getCarSpeedForWay(way, BACKWARD)));
   }
+
   @Test
   public void testWayDataSet() {
     OsmWay way = new OsmWay();
