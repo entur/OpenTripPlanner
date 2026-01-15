@@ -53,11 +53,6 @@ public class GbfsGeofencingConfig {
         .summary("Network identifier. If not provided, extracted from GBFS system_id.")
         .asString(null),
       node
-        .of("language")
-        .since(V2_8)
-        .summary("Preferred language for GBFS feed (BCP-47 code).")
-        .asString(null),
-      node
         .of("httpHeaders")
         .since(V2_8)
         .summary("HTTP headers to include in GBFS requests.")
