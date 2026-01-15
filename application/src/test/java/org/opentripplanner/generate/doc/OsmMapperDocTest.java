@@ -105,7 +105,7 @@ public class OsmMapperDocTest {
       "walk safety"
     );
 
-    for (var prop : wps.getMixins()) {
+    for (var prop : wps.listMixins()) {
       propTable.addRow(
         "`%s`".formatted(prop.specifier().toDocString()),
         tableValues(

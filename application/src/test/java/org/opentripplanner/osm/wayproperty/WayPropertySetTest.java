@@ -39,7 +39,7 @@ class WayPropertySetTest {
       WayPropertySet wps = builder.build();
 
       // Test that there are default values
-      assertEquals(38f, wps.getMaxPossibleCarSpeed(), delta);
+      assertEquals(38f, wps.maxPossibleCarSpeed(), delta);
 
       // Speed limit that is within limits should be used as the max used car speed
       OsmEntity streetWithSpeedLimit = new OsmEntityForTest();

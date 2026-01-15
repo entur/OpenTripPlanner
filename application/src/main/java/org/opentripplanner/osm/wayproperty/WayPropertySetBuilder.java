@@ -189,7 +189,7 @@ public class WayPropertySetBuilder {
     this.slopeOverrides.addAll(other.listSlopeOverides());
     this.speedPickers.addAll(other.listSpeedPickers());
     this.notes.addAll(other.listNotes());
-    this.mixins.addAll(other.getMixins());
+    this.mixins.addAll(other.listMixins());
     return this;
   }
 

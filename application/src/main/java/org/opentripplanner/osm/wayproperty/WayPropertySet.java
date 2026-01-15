@@ -113,11 +113,15 @@ public class WayPropertySet {
     return new WayPropertySetBuilder();
   }
 
-  public List<MixinProperties> getMixins() {
+  public List<MixinProperties> listMixins() {
     return mixins;
   }
 
-  public Float getMaxPossibleCarSpeed() {
+  public Float defaultCarSpeed() {
+    return defaultCarSpeed;
+  }
+
+  public Float maxPossibleCarSpeed() {
     return maxPossibleCarSpeed;
   }
 
