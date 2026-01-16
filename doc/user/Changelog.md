@@ -69,6 +69,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Undeprecate car/bikepark nearest filters which were deprecated by accident [#7209](https://github.com/opentripplanner/OpenTripPlanner/pull/7209)
 - Fix SIRI-SX affects resolver [#7210](https://github.com/opentripplanner/OpenTripPlanner/pull/7210)
 - Add support for via-location visits in Raptor access and egress paths [#7101](https://github.com/opentripplanner/OpenTripPlanner/pull/7101)
+- Fix car routing using stations or multi-modal stations as locations [#7151](https://github.com/opentripplanner/OpenTripPlanner/pull/7151)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
