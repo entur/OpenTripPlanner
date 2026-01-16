@@ -33,16 +33,9 @@ import org.opentripplanner.osm.wayproperty.WayPropertySet;
 
 public class PortlandMapperTest {
 
-  private static final double DELTA = 0.1;
+  private static final double EPSILON = 0.1;
 
-  private static final WayPropertySet WPS = build();
-
-  private static WayPropertySet build() {
-    var wps = new WayPropertySet();
-    var source = new PortlandMapper();
-    source.populateProperties(wps);
-    return wps;
-  }
+  private static final WayPropertySet WPS = new PortlandMapper().buildWayPropertySet();
 
   static Stream<Arguments> cases() {
     return Stream.of(
@@ -74,8 +67,8 @@ public class PortlandMapperTest {
   void walkSafety(OsmWay way, double expected) {
     var props = WPS.getDataForWay(way);
 
-    assertEquals(expected, props.forward().walkSafety(), DELTA);
-    assertEquals(expected, props.backward().walkSafety(), DELTA);
+    assertEquals(expected, props.forward().walkSafety(), EPSILON);
+    assertEquals(expected, props.backward().walkSafety(), EPSILON);
   }
 
   public static List<OsmWay> pedestrianCases() {

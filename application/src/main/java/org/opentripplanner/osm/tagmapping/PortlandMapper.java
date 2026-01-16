@@ -36,7 +36,8 @@ class PortlandMapper extends OsmTagMapper {
   );
 
   @Override
-  public void populateProperties(WayPropertySet props) {
+  public WayPropertySet buildWayPropertySet() {
+    var props = WayPropertySet.of();
     props.setProperties(oneOfHighway("footway", "sidewalk", "pedestrian"), SAFE_PEDESTRIAN);
 
     props.setMixinProperties(
@@ -90,9 +91,9 @@ class PortlandMapper extends OsmTagMapper {
     props.setMixinProperties("CCGIS:bicycle:left=caution_area", ofBicycleSafety(1, 1, 1.45));
 
     // Max speed limit in Oregon is 70 mph ~= 113kmh ~= 31.3m/s
-    props.maxPossibleCarSpeed = 31.4f;
+    props.setMaxPossibleCarSpeed(31.4f);
 
-    super.populateProperties(props);
+    return props.addPickers(super.buildWayPropertySet()).build();
   }
 
   private static ExactMatchSpecifier highwaySidewalk(String value) {
