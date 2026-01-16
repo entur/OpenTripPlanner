@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.state.State;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -289,7 +289,8 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
       }
       copy[i] = existing[i];
     }
-    copy[i] = e; // append the new edge to the copy of the existing array
+    // append the new edge to the copy of the existing array
+    copy[i] = e;
     return copy;
   }
 

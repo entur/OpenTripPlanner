@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.model.GeneralizedCostRelaxFunction;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
@@ -35,7 +36,6 @@ import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.routing.api.request.via.VisitViaLocation;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.grouppriority.DefaultTransitGroupPriorityCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -149,15 +149,10 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
 
     builder.withMultiCriteria(mcBuilder -> {
       var pt = preferences.transit();
-      var r = pt.raptor();
 
       // relax transit group priority can be used with via-visit-stop, but not with pass-through
       if (pt.isRelaxTransitGroupPrioritySet() && !hasPassThroughOnly()) {
         mapRelaxTransitGroupPriority(mcBuilder, pt);
-      } else if (!request.isViaSearch()) {
-        // The deprecated relaxGeneralizedCostAtDestination is only enabled, if there is no
-        // via location and the relaxTransitGroupPriority is not used (Normal).
-        r.relaxGeneralizedCostAtDestination().ifPresent(mcBuilder::withRelaxCostAtDestination);
       }
     });
 
@@ -219,13 +214,6 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     return (
       request.isViaSearch() &&
       request.listViaLocations().stream().allMatch(ViaLocation::isPassThroughLocation)
-    );
-  }
-
-  private boolean hasViaLocationsOnly() {
-    return (
-      request.isViaSearch() &&
-      request.listViaLocations().stream().noneMatch(ViaLocation::isPassThroughLocation)
     );
   }
 

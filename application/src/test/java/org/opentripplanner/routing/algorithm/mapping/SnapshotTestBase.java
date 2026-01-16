@@ -52,7 +52,7 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.utils.time.TimeUtils;
+import org.opentripplanner.utils.time.DurationUtils;
 
 /**
  * A base class for creating snapshots test of itinerary generation using the Portland graph.
@@ -87,6 +87,7 @@ public abstract class SnapshotTestBase {
       serverContext = TestServerContext.createServerContext(
         model.graph(),
         model.timetableRepository(),
+        model.transferRepository(),
         model.fareServiceFactory().makeFareService()
       );
     }
@@ -136,9 +137,9 @@ public abstract class SnapshotTestBase {
       System.out.printf(
         "Itinerary %2d - duration: %s [%5s] (effective: %s [%5s]) - wait time: %s, transit time: %s \n",
         i,
-        TimeUtils.durationToStrCompact(itinerary.totalDuration()),
+        DurationUtils.durationToStr(itinerary.totalDuration()),
         itinerary.totalDuration(),
-        TimeUtils.durationToStrCompact(itinerary.effectiveDuration()),
+        DurationUtils.durationToStr(itinerary.effectiveDuration()),
         itinerary.effectiveDuration(),
         itinerary.totalWaitingDuration(),
         itinerary.totalTransitDuration()

@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
@@ -36,7 +36,8 @@ public class ReplacementTest implements RealtimeTestConstants {
       .tripUpdate(TRIP_1_ID, REPLACEMENT)
       .withTripProperties(
         "New Headsign",
-        "SW1234" // we can't change trip short name at real-time yet
+        // we can't change trip short name at real-time yet
+        "SW1234"
       )
       .addStopTime(STOP_A_ID, "00:30")
       .addStopTime(STOP_B_ID, "00:45", "Changed Headsign")

@@ -15,8 +15,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.functional.FunctionUtils.TriFunction;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmWay;
@@ -549,11 +549,20 @@ public class WayPropertySet {
   ) {
     double bicycle = result.bicycleSafety();
     double walk = result.walkSafety();
+    StreetTraversalPermission permission = result.getPermission();
     for (var mixin : mixins) {
       var properties = mixin.getDirectionalProperties(direction);
       bicycle *= properties.bicycleSafety();
       walk *= properties.walkSafety();
+      permission = permission
+        .add(properties.addedPermission())
+        .remove(properties.removedPermission());
     }
-    return result.mutate().bicycleSafety(bicycle).walkSafety(walk).build();
+    return result
+      .mutate()
+      .bicycleSafety(bicycle)
+      .walkSafety(walk)
+      .withPermission(permission)
+      .build();
   }
 }

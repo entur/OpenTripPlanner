@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.astar.spi.AStarRequest;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -16,6 +17,7 @@ import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
+import org.opentripplanner.utils.time.TimeUtils;
 
 /**
  * This class contains all information from the {@link RouteRequest} class required for an A* search
@@ -56,6 +58,9 @@ public class StreetSearchRequest implements AStarRequest {
 
   private List<ExtensionRequestContext> extensionRequestContexts;
 
+  @Nullable
+  private final RentalPeriod rentalPeriod;
+
   /**
    * Constructor only used for creating a default instance.
    */
@@ -74,10 +79,11 @@ public class StreetSearchRequest implements AStarRequest {
     this.car = CarRequest.DEFAULT;
     this.wheelchairRequest = WheelchairRequest.DEFAULT;
     this.elevator = ElevatorRequest.DEFAULT;
+    this.rentalPeriod = null;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
-    this.startTime = RouteRequest.normalizeDateTime(builder.startTimeOrNow());
+    this.startTime = TimeUtils.truncateToSeconds(builder.startTimeOrNow());
     this.mode = builder.mode;
     this.arriveBy = builder.arriveBy;
     this.wheelchair = builder.wheelchairEnabled;
@@ -91,6 +97,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.car = requireNonNull(builder.car);
     this.wheelchairRequest = requireNonNull(builder.wheelchair);
     this.elevator = requireNonNull(builder.elevator);
+    this.rentalPeriod = builder.rentalPeriod;
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -142,6 +149,15 @@ public class StreetSearchRequest implements AStarRequest {
 
   public boolean wheelchairEnabled() {
     return wheelchair;
+  }
+
+  /**
+   * An assumed rental period of a car rental trip, to make sure the vehicle is available during this period.
+   * The rentalPeriod only apply to free-floating vehicles in a direct search. Access and egress is not supported.
+   */
+  @Nullable
+  public RentalPeriod rentalPeriod() {
+    return rentalPeriod;
   }
 
   public IntersectionTraversalCalculator intersectionTraversalCalculator() {
@@ -243,5 +259,11 @@ public class StreetSearchRequest implements AStarRequest {
    */
   public ParkingRequest parking(TraverseMode mode) {
     return mode == TraverseMode.CAR ? car.parking() : bike.parking();
+  }
+
+  public double electricAssistSlopeSensitivity(TraverseMode mode) {
+    return mode == TraverseMode.BICYCLE
+      ? bike().rental().electricAssistSlopeSensitivity()
+      : scooter().rental().electricAssistSlopeSensitivity();
   }
 }

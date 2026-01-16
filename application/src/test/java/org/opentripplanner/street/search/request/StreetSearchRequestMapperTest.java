@@ -20,7 +20,9 @@ import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
+import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 
 class StreetSearchRequestMapperTest {
 
@@ -187,7 +189,6 @@ class StreetSearchRequestMapperTest {
     var bikeRequest = subject.bike();
     assertEquals(5.0, bikeRequest.speed());
     assertEquals(1.5, bikeRequest.reluctance());
-    assertEquals(200, bikeRequest.boardCost());
     assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
 
     var walking = bikeRequest.walking();
@@ -199,6 +200,27 @@ class StreetSearchRequestMapperTest {
     assertEquals(0.1, bikeRequest.optimizeTriangle().slope());
     assertEquals(0.1, bikeRequest.optimizeTriangle().safety());
     assertEquals(0.8, bikeRequest.optimizeTriangle().time());
+  }
+
+  @Test
+  void bikeTriangle() {
+    var builder = builder()
+      .withPreferences(pref ->
+        pref.withBike(bike ->
+          bike
+            .withOptimizeType(VehicleRoutingOptimizeType.TRIANGLE)
+            .withOptimizeTriangle(it -> it.withTime(1).withSafety(2).withSlope(3))
+        )
+      );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var bikeRequest = subject.bike();
+    assertEquals(VehicleRoutingOptimizeType.TRIANGLE, bikeRequest.optimizeType());
+    assertEquals(0.5, bikeRequest.optimizeTriangle().slope());
+    assertEquals(0.33, bikeRequest.optimizeTriangle().safety());
+    assertEquals(0.17, bikeRequest.optimizeTriangle().time());
   }
 
   @Test
@@ -283,6 +305,53 @@ class StreetSearchRequestMapperTest {
   }
 
   @Test
+  void mapCarRentalDepartureRequest() {
+    var builder = builder();
+
+    Instant dateTime = Instant.parse("2022-11-10T10:00:00Z");
+    var rentalDuration = Duration.ofHours(2);
+    builder.withDateTime(dateTime);
+    builder.withJourney(jb ->
+      jb
+        .withModes(RequestModes.of().withAllStreetModes(StreetMode.BIKE).build())
+        .withDirect(new StreetRequest(StreetMode.CAR_RENTAL, rentalDuration))
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    assertEquals(dateTime, subject.startTime());
+    assertEquals(dateTime, subject.rentalPeriod().start());
+    assertEquals(dateTime.plus(rentalDuration), subject.rentalPeriod().end());
+  }
+
+  /**
+   * test properties, which may differ on arrival route requests
+   */
+  @Test
+  void mapCarRentalArrivalRequest() {
+    var builder = builder().withArriveBy(true);
+
+    var dateTime = Instant.parse("2022-11-10T10:00:00Z");
+    var rentalDuration = Duration.ofHours(2);
+    builder.withDateTime(dateTime);
+    var from = new GenericLocation(null, TimetableRepositoryForTest.id("STOP"), null, null);
+    builder.withFrom(from);
+    var to = GenericLocation.fromCoordinate(60.0, 20.0);
+    builder.withTo(to);
+    builder.withJourney(jb ->
+      jb.withDirect(new StreetRequest(StreetMode.CAR_RENTAL, rentalDuration))
+    );
+
+    var request = builder.buildRequest();
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    assertEquals(dateTime, subject.startTime());
+    assertEquals(dateTime.minus(rentalDuration), subject.rentalPeriod().start());
+    assertEquals(dateTime, subject.rentalPeriod().end());
+  }
+
+  @Test
   void mapParkingRequest() {
     var builder = builder()
       .withPreferences(pref ->
@@ -351,7 +420,13 @@ class StreetSearchRequestMapperTest {
     var builder = builder()
       .withPreferences(pref ->
         pref.withStreet(s ->
-          s.withElevator(e -> e.withBoardTime(88).withBoardCost(77).withHopTime(66).withHopCost(55))
+          s.withElevator(e ->
+            e
+              .withBoardSlack(Duration.ofSeconds(88))
+              .withBoardCost(77)
+              .withHopTime(Duration.ofSeconds(66))
+              .withReluctance(2.0)
+          )
         )
       );
 
@@ -359,10 +434,10 @@ class StreetSearchRequestMapperTest {
     var subject = StreetSearchRequestMapper.mapInternal(request).build();
 
     var req = subject.elevator();
-    assertEquals(88, req.boardTime());
+    assertEquals(88, req.boardSlack().toSeconds());
     assertEquals(77, req.boardCost());
-    assertEquals(66, req.hopTime());
-    assertEquals(55, req.hopCost());
+    assertEquals(66, req.hopTime().toSeconds());
+    assertEquals(2.0, req.reluctance());
   }
 
   @Test

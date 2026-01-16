@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 
 /**
@@ -80,7 +80,7 @@ public class Timetable implements Serializable {
     // Repeated code... bad sign...
     frequencyEntries = frequencyEntries
       .stream()
-      .map(tt -> tt.withServiceCode(serviceCodes.get(tt.tripTimes.getTrip().getServiceId())))
+      .map(tt -> tt.withServiceCode(serviceCodes.get(tt.tripTimes().getTrip().getServiceId())))
       .toList();
   }
 
@@ -169,10 +169,22 @@ public class Timetable implements Serializable {
     if (!scheduledTripTimes.isEmpty()) {
       return scheduledTripTimes.iterator().next();
     } else if (!frequencies.isEmpty()) {
-      return frequencies.iterator().next().tripTimes;
+      return frequencies.iterator().next().tripTimes();
     } else {
       // Pattern is created only for real-time updates
       return null;
     }
+  }
+
+  /**
+   * Get a copy of the scheduled timetable valid for the specified service date only
+   */
+  public Timetable copyForServiceDate(LocalDate date) {
+    if (serviceDate != null) {
+      throw new RuntimeException(
+        "Can only copy scheduled timetable for a specific date if a date hasn't been specified yet."
+      );
+    }
+    return copyOf().withServiceDate(date).build();
   }
 }

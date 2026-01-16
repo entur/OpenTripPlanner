@@ -11,8 +11,8 @@ import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
 import org.opentripplanner.apis.transmodel.model.stop.StopPlaceType;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 
 public class AffectsType {
@@ -241,19 +241,22 @@ public class AffectsType {
       .typeResolver(env -> {
         var object = env.getObject();
 
+        // We resolve GraphQLObjectType by name and not by object reference since the GraphQL schema
+        // can be subsequently rebuilt (schema transformation), in which case the GraphQLObjectType
+        // references in this class are deregistered and replaced by other instances.
         if (object instanceof EntitySelector.Stop) {
-          return affectedStopPlace;
+          return env.getSchema().getObjectType("AffectedStopPlace");
         } else if (object instanceof EntitySelector.Route) {
-          return affectedLine;
+          return env.getSchema().getObjectType("AffectedLine");
         } else if (object instanceof EntitySelector.Trip) {
-          return affectedServiceJourney;
+          return env.getSchema().getObjectType("AffectedServiceJourney");
         } else if (object instanceof EntitySelector.StopAndRoute) {
-          return affectedStopPlaceOnLine;
+          return env.getSchema().getObjectType("AffectedStopPlaceOnLine");
         } else if (object instanceof EntitySelector.StopAndTrip) {
-          return affectedStopPlaceOnServiceJourney;
+          return env.getSchema().getObjectType("AffectedStopPlaceOnServiceJourney");
         }
 
-        return affectedUnknown;
+        return env.getSchema().getObjectType("AffectedUnknown");
       })
       .build();
   }

@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.plan.Emission;

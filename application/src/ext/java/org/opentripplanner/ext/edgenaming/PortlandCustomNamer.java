@@ -1,8 +1,8 @@
 package org.opentripplanner.ext.edgenaming;
 
 import java.util.HashSet;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
@@ -79,7 +79,8 @@ class PortlandCustomNamer implements EdgeNamer {
       .asIterable()
       .forEach(edge -> {
         if (!edge.nameIsDerived()) {
-          return; // this edge already has a real name so there is nothing to do
+          // this edge already has a real name so there is nothing to do
+          return;
         }
         if (isHighwayLink) {
           if (edge.isBack()) {

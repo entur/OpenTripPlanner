@@ -12,9 +12,9 @@ import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.model.FeedInfo;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.CalendarService;
@@ -31,7 +31,6 @@ import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -338,8 +337,6 @@ public interface TransitService {
   TripOnServiceDate getTripOnServiceDate(FeedScopedId id);
 
   Collection<TripOnServiceDate> listTripsOnServiceDate();
-
-  Collection<PathTransfer> findPathTransfers(StopLocation stop);
 
   RaptorTransitData getRaptorTransitData();
 

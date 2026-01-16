@@ -10,10 +10,10 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.GtfsTest;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
@@ -114,6 +114,7 @@ public class DefaultRoutingServiceTest extends GtfsTest {
     assertTrue(stops.contains(stopJ));
     assertTrue(stops.contains(stopL));
     assertTrue(stops.contains(stopM));
-    assertTrue(stops.size() >= 3); // Query can overselect
+    // Query can overselect
+    assertTrue(stops.size() >= 3);
   }
 }

@@ -19,8 +19,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
@@ -49,7 +49,7 @@ public class StreetEdgeTest {
 
   @BeforeEach
   void before() {
-    v0 = intersectionVertex("maple_0th", 0.0, 0.0); // label, X, Y
+    v0 = intersectionVertex("maple_0th", 0.0, 0.0);
     v1 = intersectionVertex("maple_1st", 2.0, 2.0);
     v2 = intersectionVertex("maple_2nd", 2.0, 1.0);
 
@@ -336,9 +336,11 @@ public class StreetEdgeTest {
       .buildAndConnect();
 
     Coordinate[] profile = new Coordinate[] {
-      new Coordinate(0, 0), // slope = 0.1
+      // slope = 0.1
+      new Coordinate(0, 0),
       new Coordinate(length / 2, length / 20.0),
-      new Coordinate(length, 0), // slope = -0.1
+      // slope = -0.1
+      new Coordinate(length, 0),
     };
     PackedCoordinateSequence elev = new PackedCoordinateSequence.Double(profile);
     StreetElevationExtensionBuilder.of(testStreet)

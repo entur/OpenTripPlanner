@@ -19,13 +19,13 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import javax.annotation.Nullable;
-import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
@@ -328,7 +328,8 @@ class TripTimesUpdater {
         }
         stopTime.setDepartureTime((int) departureTime);
       }
-      stopTime.setTimepoint(1); // Exact time
+      // Exact time
+      stopTime.setTimepoint(1);
       stopSequence.ifPresent(stopTime::setStopSequence);
       stopTime.setPickupType(update.effectivePickup());
       stopTime.setDropOffType(update.effectiveDropoff());

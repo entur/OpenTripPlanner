@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.LocalizedString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.LocalizedString;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
@@ -37,7 +37,7 @@ class CrosswalkNamer implements EdgeNamer {
 
   private static final Logger LOG = LoggerFactory.getLogger(CrosswalkNamer.class);
   private static final int BUFFER_METERS = 25;
-  private final BufferedEdgeProcessor processor; //=
+  private final BufferedEdgeProcessor processor;
 
   private StreetEdgeIndex streetIndex = new StreetEdgeIndex();
   private StreetEdgeIndex sidewalkIndex = new StreetEdgeIndex();

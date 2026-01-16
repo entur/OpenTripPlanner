@@ -60,6 +60,19 @@ public class EnumTypes {
     .value("both", ArrivalDeparture.BOTH, "Show both arrivals and departures")
     .build();
 
+  public static final GraphQLEnumType VEHICLE_OPTIMISATION_METHOD = GraphQLEnumType.newEnum()
+    .name("VehicleOptimisationMethod")
+    .description("Optimization methods for vehicle routing (bicycle, scooter, etc.).")
+    .value("quick", VehicleRoutingOptimizeType.SHORTEST_DURATION, "Prefer faster routes")
+    .value("safe", VehicleRoutingOptimizeType.SAFE_STREETS, "Prefer safer routes")
+    .value("flat", VehicleRoutingOptimizeType.FLAT_STREETS, "Prefer flat terrain")
+    .value(
+      "triangle",
+      VehicleRoutingOptimizeType.TRIANGLE,
+      "Custom optimization using triangle factors"
+    )
+    .build();
+
   public static final GraphQLEnumType BICYCLE_OPTIMISATION_METHOD = GraphQLEnumType.newEnum()
     .name("BicycleOptimisationMethod")
     .value("quick", VehicleRoutingOptimizeType.SHORTEST_DURATION)
@@ -103,8 +116,8 @@ public class EnumTypes {
     .value("quay", TransmodelPlaceType.QUAY, "Quay")
     .value("stopPlace", TransmodelPlaceType.STOP_PLACE, "StopPlace")
     .value("bicycleRent", TransmodelPlaceType.BICYCLE_RENT, "Bicycle rent stations")
-    .value("bikePark", TransmodelPlaceType.BIKE_PARK, "Bike parks", "Not supported")
-    .value("carPark", TransmodelPlaceType.CAR_PARK, "Car parks", "Not supported")
+    .value("bikePark", TransmodelPlaceType.BIKE_PARK, "Bike parks")
+    .value("carPark", TransmodelPlaceType.CAR_PARK, "Car parks")
     .build();
 
   public static final GraphQLEnumType INPUT_FIELD = GraphQLEnumType.newEnum()
@@ -177,6 +190,7 @@ public class EnumTypes {
     .value("funicular", TransitMode.FUNICULAR)
     .value("lift", TransitMode.GONDOLA)
     .value("rail", TransitMode.RAIL)
+    .value("snowAndIce", TransitMode.SNOW_AND_ICE)
     .value("metro", TransitMode.SUBWAY)
     .value("taxi", TransitMode.TAXI)
     .value("tram", TransitMode.TRAM)
@@ -278,8 +292,11 @@ public class EnumTypes {
     .value("followSigns", RelativeDirection.FOLLOW_SIGNS)
     .build();
 
+  /**
+   * SIRI - ReportTypeEnumeration
+   */
   public static final GraphQLEnumType REPORT_TYPE = GraphQLEnumType.newEnum()
-    .name("ReportType") //SIRI - ReportTypeEnumeration
+    .name("ReportType")
     .value("general", "general", "Indicates a general info-message that should not affect trip.")
     .value("incident", "incident", "Indicates an incident that may affect trip.")
     .build();
@@ -331,8 +348,11 @@ public class EnumTypes {
     .value("planned", TripAlteration.PLANNED)
     .build();
 
+  /**
+   * SIRI - SeverityEnumeration
+   */
   public static final GraphQLEnumType SEVERITY = GraphQLEnumType.newEnum()
-    .name("Severity") //SIRI - SeverityEnumeration
+    .name("Severity")
     .value("unknown", "unknown", "Situation has unknown impact on trips.")
     .value("noImpact", "noImpact", "Situation has no impact on trips.")
     .value("verySlight", "verySlight", "Situation has a very slight impact on trips.")
@@ -343,8 +363,11 @@ public class EnumTypes {
     .value("undefined", "undefined", "Severity is undefined.")
     .build();
 
+  /**
+   * SIRI - RoutePointTypeEnumeration
+   */
   public static final GraphQLEnumType STOP_CONDITION_ENUM = GraphQLEnumType.newEnum()
-    .name("StopCondition") //SIRI - RoutePointTypeEnumeration
+    .name("StopCondition")
     .value(
       "destination",
       StopCondition.DESTINATION,

@@ -14,9 +14,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.LocalizedString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.LocalizedString;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.Area;
@@ -436,11 +436,16 @@ public class LinkStopToPlatformTest {
   @Test
   void boundaryTest() {
     Coordinate[] platform = {
-      new Coordinate(-0.7360985, 51.9962091), // northwest
-      new Coordinate(-0.7360355, 51.9962165), // northeast
-      new Coordinate(-0.7357519, 51.9953057), // east exit
-      new Coordinate(-0.7356841, 51.9950911), // southeast
-      new Coordinate(-0.7357458, 51.9950836), // southwest
+      // northwest
+      new Coordinate(-0.7360985, 51.9962091),
+      // northeast
+      new Coordinate(-0.7360355, 51.9962165),
+      // east exit
+      new Coordinate(-0.7357519, 51.9953057),
+      // southeast
+      new Coordinate(-0.7356841, 51.9950911),
+      // southwest
+      new Coordinate(-0.7357458, 51.9950836),
     };
 
     // 1 visibility point at eastern exit

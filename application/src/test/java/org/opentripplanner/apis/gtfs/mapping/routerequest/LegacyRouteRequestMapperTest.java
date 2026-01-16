@@ -26,7 +26,7 @@ import org.opentripplanner.apis.gtfs.SchemaFactory;
 import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.TimeSlopeSafetyTriangle;
@@ -42,6 +42,7 @@ import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParking
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.street.search.TraverseMode;
+import org.opentripplanner.transfer.TransferServiceTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -60,6 +61,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     var timetableRepository = new TimetableRepository(stopModelBuilder.build(), new Deduplicator());
     timetableRepository.initTimeZone(ZoneIds.BERLIN);
     final DefaultTransitService transitService = new DefaultTransitService(timetableRepository);
+    var transferService = TransferServiceTestFactory.defaultTransferService();
     var routeRequest = RouteRequest.defaultValue();
     var vertexLinker = VertexLinkerTestFactory.of(graph);
     var vertexCreationService = new VertexCreationService(vertexLinker);
@@ -71,6 +73,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     context = new GraphQLRequestContext(
       new TestRoutingService(List.of()),
       transitService,
+      transferService,
       new DefaultFareService(),
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingService(new DefaultVehicleParkingRepository()),
