@@ -340,7 +340,7 @@ public class WayPropertySet {
     return creativeNamers;
   }
 
-  public List<SlopeOverridePicker> listSlopeOverides() {
+  public List<SlopeOverridePicker> listSlopeOverrides() {
     return slopeOverrides;
   }
 

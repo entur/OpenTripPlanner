@@ -178,7 +178,7 @@ public class WayPropertySetBuilder {
   public WayPropertySetBuilder addPickers(WayPropertySet other) {
     this.wayProperties.addAll(other.listWayProperties());
     this.creativeNamers.addAll(other.listCreativeNamers());
-    this.slopeOverrides.addAll(other.listSlopeOverides());
+    this.slopeOverrides.addAll(other.listSlopeOverrides());
     this.speedPickers.addAll(other.listSpeedPickers());
     this.notes.addAll(other.listNotes());
     this.mixins.addAll(other.listMixins());
