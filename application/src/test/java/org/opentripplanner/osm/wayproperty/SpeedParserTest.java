@@ -24,7 +24,8 @@ public class SpeedParserTest {
       of(4.3055, "15.5 kph"),
       of(4.3055, "15.5 km/h"),
       of(22.347, "50 mph"),
-      of(22.347, "50.0 mph")
+      of(22.347, "50.0 mph"),
+      of(25.722, "50 knots")
     );
   }
 
