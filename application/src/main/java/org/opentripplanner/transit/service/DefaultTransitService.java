@@ -24,7 +24,6 @@ import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.FeedInfo;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.StopTimesInPattern;
@@ -405,13 +404,6 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public MultiModalStation findMultiModalStation(Station station) {
     return this.timetableRepository.getSiteRepository().getMultiModalStationForStation(station);
-  }
-
-  @Override
-  @Nullable
-  public Optional<WgsCoordinate> findStopLocationsGroupCoordinate(FeedScopedId id) {
-    var locationsGroup = timetableRepository.getSiteRepository().getStopLocationsGroup(id);
-    return Optional.ofNullable(locationsGroup).map(StopLocationsGroup::getCoordinate);
   }
 
   @Override

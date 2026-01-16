@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.FeedInfo;
 import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.StopTimesInPattern;
@@ -226,13 +225,6 @@ public interface TransitService {
   Collection<TripPattern> findPatterns(Route route);
 
   MultiModalStation findMultiModalStation(Station station);
-
-  /**
-   * Return a representative coordinate (most likely the centroid) of a station,
-   * a multi-modal station or group of stations.
-   */
-  @Nullable
-  Optional<WgsCoordinate> findStopLocationsGroupCoordinate(FeedScopedId id);
 
   /**
    * Fetch upcoming vehicle departures from a stop. It goes though all patterns passing the stop for

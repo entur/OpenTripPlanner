@@ -353,13 +353,4 @@ class DefaultTransitServiceTest {
     var res = service.findStopOrChildIds(GO_STATIONS.getId());
     assertThat(res).containsExactly(STOP_A.getId(), STOP_B.getId());
   }
-
-  @Test
-  void findStopLocationsGroupCoordinate() {
-    var stationCoordinate = service.findStopLocationsGroupCoordinate(STATION.getId());
-    assertEquals(STATION.getCoordinate(), stationCoordinate.get());
-    var multiModalStationCoordinate = service.findStopLocationsGroupCoordinate(MM_STATION.getId());
-    assertEquals(MM_STATION.getCoordinate(), multiModalStationCoordinate.get());
-    assertThat(service.findStopLocationsGroupCoordinate(STOP_A.getId())).isEmpty();
-  }
 }
