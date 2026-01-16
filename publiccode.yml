@@ -5,7 +5,7 @@ url: "https://github.com/opentripplanner/OpenTripPlanner"
 landingURL: "https://opentripplanner.org"
 
 softwareVersion: "2.8.1"
-releaseDate: "2024-09-22"
+releaseDate: "2025-09-22"
 logo: "doc/user/images/otp-logo.svg"
 
 developmentStatus: stable
