@@ -85,12 +85,6 @@ class OverridePermissionsTest {
     way.addTag("foot", "no");
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
-    //normal road with specific mode of transport private only is doubtful
-    /*way.addTag("motorcar", "private");
-      way.addTag("bicycle", "private");
-      way.addTag("foot", "private");
-      permissionPair = getWayProperties(way);
-      assertTrue(permissionPair.main().allowsNothing());*/
   }
 
   /**
@@ -153,12 +147,6 @@ class OverridePermissionsTest {
     way.addTag("foot", "no");
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
-    //normal road with specific mode of transport private only is doubtful
-    /*way.addTag("motor_vehicle", "private");
-      way.addTag("bicycle", "private");
-      way.addTag("foot", "private");
-      permissionPair = getWayProperties(way);
-      assertTrue(permissionPair.main().allowsNothing());*/
   }
 
   private StreetTraversalPermissionPair getWayProperties(OsmWay way) {
