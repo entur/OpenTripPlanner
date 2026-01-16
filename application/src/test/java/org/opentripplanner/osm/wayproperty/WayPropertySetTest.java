@@ -18,7 +18,7 @@ import org.opentripplanner.osm.wayproperty.specifier.OsmSpecifier;
 
 class WayPropertySetTest {
 
-  private static final float DELTA = 0.01f;
+  private static final float EPSILON = 0.01f;
 
   @Test
   public void mixin() {
@@ -175,7 +175,7 @@ class WayPropertySetTest {
    * Test that two values are within epsilon of each other.
    */
   private boolean within(float val1, float val2) {
-    return (Math.abs(val1 - val2) < DELTA);
+    return (Math.abs(val1 - val2) < EPSILON);
   }
 
   /**

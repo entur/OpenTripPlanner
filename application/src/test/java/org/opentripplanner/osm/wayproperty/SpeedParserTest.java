@@ -10,7 +10,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class SpeedParserTest {
 
-  private static final float DELTA = 0.01f;
+  private static final float EPSILON = 0.01f;
 
   private static List<Arguments> speedParsingTestCases() {
     return List.of(
@@ -31,6 +31,6 @@ public class SpeedParserTest {
   @ParameterizedTest
   @MethodSource("speedParsingTestCases")
   void speedParsing(double expected, String input) {
-    assertEquals(expected, SpeedParser.getMetersSecondFromSpeed(input), DELTA);
+    assertEquals(expected, SpeedParser.getMetersSecondFromSpeed(input), EPSILON);
   }
 }
