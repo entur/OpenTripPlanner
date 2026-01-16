@@ -256,18 +256,22 @@ class DefaultTransitServiceTest {
   }
 
   @Test
-  void findCanceledTrips() {
+  void findAllCanceledTrips() {
     // No filters, should return all canceled trips
     var canceledTrips = service.findCanceledTrips(TripOnServiceDateRequest.of().build());
     assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", canceledTrips.toString());
+  }
 
-    // Find all canceled BUS trips
+  @Test
+  void findCanceledBusTrips() {
     var busFilter = FilterValues.ofEmptyIsEverything("modesToInclude", List.of(BUS));
     var busRequest = TripOnServiceDateRequest.of().withIncludeModes(busFilter).build();
     var busTrips = service.findCanceledTrips(busRequest);
     assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", busTrips.toString());
+  }
 
-    // Exclude all canceled BUS trips
+  @Test
+  void findCanceledNonBusTrips() {
     var busExcludeFilter = FilterValues.ofEmptyIsEverything("modesToExclude", List.of(BUS));
     var busExcludeRequest = TripOnServiceDateRequest.of()
       .withExcludeModes(busExcludeFilter)
