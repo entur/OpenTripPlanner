@@ -2702,8 +2702,9 @@ type TripOnServiceDateConnection {
   """
   pageInfo: PageInfo!
   """
-  The total number of trips on service dates in this connection (including the current and previous
-  pages). Note, this number might not stay the same throughout the paging as trips might be added or
+  The total number of trips on service dates in this connection at the time of query execution (including the current and previous
+  pages). 
+  Note, this number might not stay the same throughout the paging as trips might be added or
   removed.
   """
   totalCount: Int!
