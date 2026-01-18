@@ -33,7 +33,6 @@ class SetupHelper {
     TimetableRepository timetableRepository = serializedGraphObject.timetableRepository;
     TransferRepository transferRepository = serializedGraphObject.transferRepository;
     timetableRepository.index();
-    transferRepository.index();
     graph.index();
     return new LoadModel(
       graph,

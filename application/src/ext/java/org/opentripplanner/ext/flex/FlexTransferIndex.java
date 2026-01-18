@@ -19,7 +19,7 @@ public class FlexTransferIndex extends TransferIndex {
 
   public void index(TransferRepository transferRepository) {
     if (indexed) {
-      throw new IllegalStateException("Transfer index already populated");
+      throw new IllegalStateException("Transfer index is already initialized");
     }
     super.index(transferRepository);
     // Flex transfers should only use WALK mode transfers.
