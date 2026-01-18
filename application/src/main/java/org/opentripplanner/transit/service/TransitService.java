@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.ext.flex.FlexIndex;
@@ -76,7 +77,7 @@ public interface TransitService {
   /**
    * @return empty if the trip doesn't run on the date specified
    */
-  Optional<List<TripTimeOnDate>> getTripTimeOnDates(Trip trip, LocalDate serviceDate);
+  Optional<List<TripTimeOnDate>> findTripTimesOnDate(Trip trip, LocalDate serviceDate);
 
   Collection<String> listFeedIds();
 
@@ -156,9 +157,20 @@ public interface TransitService {
    * Return all stops associated with the given id. If a Station, a MultiModalStation, or a
    * GroupOfStations matches the id, then all child stops are returned. If the id matches a regular
    * stop, area stop or stop group, then a list with one item is returned.
-   * An empty list is if nothing is found.
+   * An empty collection is returned if nothing is found.
    */
   Collection<StopLocation> findStopOrChildStops(FeedScopedId id);
+
+  /**
+   * Return all stop ids associated with the given id.
+   * <p>
+   * If a Station, a MultiModalStation, or a GroupOfStations matches the id, then all child stops
+   * are returned. If the id matches a regular stop, area stop or stop group, then a list with one
+   * item is returned.
+   */
+  default List<FeedScopedId> findStopOrChildIds(FeedScopedId id) {
+    return findStopOrChildStops(id).stream().map(StopLocation::getId).distinct().toList();
+  }
 
   Collection<StopLocationsGroup> listStopLocationGroups();
 
@@ -317,8 +329,6 @@ public interface TransitService {
 
   Collection<TripOnServiceDate> listTripsOnServiceDate();
 
-  Set<TransitMode> listTransitModes();
-
   Collection<PathTransfer> findPathTransfers(StopLocation stop);
 
   RaptorTransitData getRaptorTransitData();
@@ -418,4 +428,10 @@ public interface TransitService {
    * Returns a list of {@link StopLocation}s that match the filtering defined in the request.
    */
   Collection<StopLocation> findStopLocations(FindStopLocationsRequest request);
+
+  /**
+   * Returns boolean indicating if there are scheduled services on or after the given date.
+   * This does not include real-time updates, so it only checks the scheduled service dates.
+   */
+  boolean hasScheduledServicesAfter(LocalDate date, StopLocation stop);
 }
