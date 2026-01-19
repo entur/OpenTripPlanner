@@ -1,5 +1,6 @@
 package org.opentripplanner.transit.model.site;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.jetbrains.annotations.Nullable;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -21,7 +22,7 @@ public class TestStopLocation implements StopLocation {
 
   @Override
   public int getIndex() {
-    return -999;
+    throw new NotImplementedException("Implementation doesn't support getIndex().");
   }
 
   @Override

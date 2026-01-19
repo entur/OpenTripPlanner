@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.flex;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
@@ -19,7 +20,7 @@ class FlexTransferIndexTest {
   public static final TestStopLocation S1 = new TestStopLocation(id("1"));
   public static final Multimap<StopLocation, PathTransfer> TRANSFERS = ImmutableMultimap.of(
     S1,
-    new PathTransfer(S1, S1, 100, List.of(), EnumSet.noneOf(StreetMode.class))
+    new PathTransfer(S1, S1, 100, List.of(), EnumSet.of(StreetMode.WALK))
   );
 
   @Test
@@ -27,6 +28,8 @@ class FlexTransferIndexTest {
     var index = new FlexTransferIndex();
     var repo = new DefaultTransferRepository(index);
     repo.addAllTransfersByStops(TRANSFERS);
+    repo.index();
+    assertThat(repo.findWalkTransfersToStop(S1)).isNotEmpty();
   }
 
   @Test
