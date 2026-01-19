@@ -187,6 +187,7 @@ public class OTPMain {
   private static void startOtpWebServer(CommandLineParameters params, ConstructApplication app) {
     // Index graph for travel search
     app.timetableRepository().index();
+    app.transferRepository().index();
     app.graph().index();
 
     // publishing the config version info make it available to the APIs
