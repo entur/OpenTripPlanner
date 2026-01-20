@@ -21,8 +21,7 @@ public final class RaptorDirectTransitRequest {
   private RaptorDirectTransitRequest() {
     this.earliestDepartureTime = RaptorConstants.TIME_NOT_SET;
     this.searchWindowInSeconds = RaptorConstants.NOT_SET;
-    // TODO: Is this the right place?
-    this.relaxC1 = GeneralizedCostRelaxFunction.of(2, 20 * 60 * 100);
+    this.relaxC1 = GeneralizedCostRelaxFunction.NORMAL;
     this.accessPaths = List.of();
     this.egressPaths = List.of();
   }
@@ -79,14 +78,6 @@ public final class RaptorDirectTransitRequest {
     return searchWindowInSeconds;
   }
 
-  public boolean isSearchWindowSet() {
-    return searchWindowInSeconds != RaptorConstants.NOT_SET;
-  }
-
-  public boolean searchOneIterationOnly() {
-    return searchWindowInSeconds == 0;
-  }
-
   /// The relax function specifies which paths to include.
   ///
   /// A relax function of `2x + 10m` will include paths that have a c1 cost up to 2 times plus 10
@@ -111,14 +102,6 @@ public final class RaptorDirectTransitRequest {
   /// Required, at least one egress path must exist.
   public Collection<RaptorAccessEgress> egressPaths() {
     return egressPaths;
-  }
-
-  /// Get the maximum duration of any access or egress path in seconds.
-  public int accessEgressMaxDurationSeconds() {
-    return Math.max(
-      accessPaths.stream().mapToInt(RaptorAccessEgress::durationInSeconds).max().orElse(0),
-      egressPaths.stream().mapToInt(RaptorAccessEgress::durationInSeconds).max().orElse(0)
-    );
   }
 
   @Override
