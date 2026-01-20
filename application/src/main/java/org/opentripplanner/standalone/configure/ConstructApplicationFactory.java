@@ -16,6 +16,7 @@ import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayServiceModule;
+import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
 import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
@@ -132,6 +133,9 @@ public interface ConstructApplicationFactory {
   EmpiricalDelayRepository empiricalDelayRepository();
 
   @Nullable
+  GbfsGeofencingRepository gbfsGeofencingRepository();
+
+  @Nullable
   GraphVisualizer graphVisualizer();
 
   TransitService transitService();
@@ -201,6 +205,9 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder empiricalDelayRepository(EmpiricalDelayRepository empiricalDelayRepository);
+
+    @BindsInstance
+    Builder gbfsGeofencingRepository(@Nullable GbfsGeofencingRepository gbfsGeofencingRepository);
 
     @BindsInstance
     Builder schema(RouteRequest defaultRouteRequest);
