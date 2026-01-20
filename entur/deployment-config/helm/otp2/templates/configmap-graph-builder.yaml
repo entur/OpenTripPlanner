@@ -105,13 +105,16 @@ data:
         },
         "gbfsGeofencing": {
           "feeds": [
+            {{- range $index, $feed := .Values.gbfsGeofencing.feeds }}
+            {{- if $index }},{{ end }}
             {
-              "url": "https://api.dev.entur.io/mobility/v2/gbfs/v3/voistavanger/gbfs",
-              "network": "voistavanger",
+              "url": "{{ $feed.url }}",
+              "network": "{{ $feed.network }}",
               "httpHeaders":{
                 "ET-Client-Name": "entur-otp2"
               }
             }
+            {{- end }}
           ]
         },
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",
