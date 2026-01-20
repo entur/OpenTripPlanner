@@ -271,6 +271,7 @@ public class GraphSerializationTest {
       emissionRepository,
       empiricalDelayRepository,
       null,
+      null,
       new DefaultFareServiceFactory()
     );
     serializedObj.save(new FileDataSource(tempFile, FileType.GRAPH));

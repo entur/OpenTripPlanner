@@ -1,5 +1,6 @@
 package org.opentripplanner.service.vehiclerental.model;
 
+import java.io.Serializable;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -15,7 +16,8 @@ public record GeofencingZone(
   Geometry geometry,
   boolean dropOffBanned,
   boolean traversalBanned
-) {
+)
+  implements Serializable {
   /**
    * Are there any restrictions in this zone. (It's possible that the data says there are none.)
    */
