@@ -20,7 +20,8 @@ data:
             // "IncludeStopsUsedRealTimeInTransfers" has been is production for a week
             "IncludeEmptyRailStopsInTransfers" : true,
             // Will be used when PR 7042 Missing transfers is merged
-            "IncludeStopsUsedRealTimeInTransfers" : true
+            "IncludeStopsUsedRealTimeInTransfers" : true,
+            "GbfsGeofencingBuildTime": {{ .Values.otpFeatures.gbfsGeofencingBuildTime }}
         }
       }
   build-config.json: |+
@@ -102,6 +103,17 @@ data:
             }
           ]
         },
+        "gbfsGeofencing": {
+          "feeds": [
+            {
+              "url": "https://api.dev.entur.io/mobility/v2/gbfs/v3/voistavanger/gbfs",
+              "network": "voistavanger",
+              "httpHeaders":{
+                "ET-Client-Name": "entur-otp2"
+              }
+            }
+          ]
+        }
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",
         "graph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/Graph-otp2-${otp.serialization.version.id}.obj",
         "buildReportDir": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/report"

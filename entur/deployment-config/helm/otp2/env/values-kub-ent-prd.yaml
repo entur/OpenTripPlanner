@@ -1,6 +1,7 @@
 otpFeatures:
   emission: true
   empiricalDelay: false
+  gbfsGeofencingBuildTime: false
 journeyPlanner:
   enabled: false
 cronjobRedeployGraphBuilder:
