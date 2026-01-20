@@ -136,7 +136,12 @@ public class BarrierTest {
     assertEquals(3, graph.getVerticesOfType(BarrierPassThroughVertex.class).size());
     assertEquals(
       2,
-      graph.getVerticesOfType(OsmVertex.class).stream().filter(v -> v.nodeId() == 1).toList().size()
+      graph
+        .getVerticesOfType(OsmVertex.class)
+        .stream()
+        .filter(v -> v.nodeId() == 1)
+        .toList()
+        .size()
     );
 
     // check traversal permission starting from node 2

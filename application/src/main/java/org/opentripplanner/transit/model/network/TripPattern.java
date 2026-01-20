@@ -196,13 +196,12 @@ public final class TripPattern
     if (hopGeometries != null) {
       return CompactLineStringUtils.uncompactLineString(hopGeometries[stopPosInPattern], false);
     } else {
-      return GeometryUtils.getGeometryFactory()
-        .createLineString(
-          new Coordinate[] {
-            coordinate(stopPattern.getStop(stopPosInPattern)),
-            coordinate(stopPattern.getStop(stopPosInPattern + 1)),
-          }
-        );
+      return GeometryUtils.getGeometryFactory().createLineString(
+        new Coordinate[] {
+          coordinate(stopPattern.getStop(stopPosInPattern)),
+          coordinate(stopPattern.getStop(stopPosInPattern + 1)),
+        }
+      );
     }
   }
 

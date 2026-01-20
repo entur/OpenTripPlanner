@@ -101,12 +101,12 @@ class WalkableAreaBuilder {
     this.boardingLocationRefTags = boardingLocationRefTags;
     this.platformLinkingPoints = platformEntriesLinking
       ? graph
-        .getVertices()
-        .stream()
-        .filter(OsmVertex.class::isInstance)
-        .map(OsmVertex.class::cast)
-        .filter(this::isPlatformLinkingPoint)
-        .collect(Collectors.toList())
+          .getVertices()
+          .stream()
+          .filter(OsmVertex.class::isInstance)
+          .map(OsmVertex.class::cast)
+          .filter(this::isPlatformLinkingPoint)
+          .collect(Collectors.toList())
       : List.of();
   }
 
