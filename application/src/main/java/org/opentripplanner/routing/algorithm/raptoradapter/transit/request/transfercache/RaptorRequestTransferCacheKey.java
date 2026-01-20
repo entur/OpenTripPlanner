@@ -13,7 +13,7 @@ import org.opentripplanner.street.search.request.WalkRequest;
 import org.opentripplanner.street.search.request.WheelchairRequest;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-public class RaptorRequestTransferCacheKey {
+class RaptorRequestTransferCacheKey {
 
   private final List<List<Transfer>> transfersByStopIndex;
   private final StreetSearchRequest request;
