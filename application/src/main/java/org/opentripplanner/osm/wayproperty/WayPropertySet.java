@@ -128,12 +128,11 @@ public class WayPropertySet {
     List<MixinProperties> matchedMixins = new ArrayList<>();
     for (WayPropertyPicker picker : wayProperties) {
       OsmSpecifier specifier = picker.specifier();
-      WayProperties wayProperties =
-        switch (direction) {
-          case DIRECTIONLESS -> picker.properties();
-          case FORWARD -> picker.forwardProperties();
-          case BACKWARD -> picker.backwardProperties();
-        };
+      WayProperties wayProperties = switch (direction) {
+        case DIRECTIONLESS -> picker.properties();
+        case FORWARD -> picker.forwardProperties();
+        case BACKWARD -> picker.backwardProperties();
+      };
       var score = specifier.matchScore(entity, direction);
       if (score > bestScore) {
         result = wayProperties;

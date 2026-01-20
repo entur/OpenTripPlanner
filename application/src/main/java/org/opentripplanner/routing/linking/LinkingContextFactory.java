@@ -364,14 +364,14 @@ public class LinkingContextFactory {
     }
     return location.getCoordinate() != null
       ? Optional.of(
-        vertexCreationService.createVertexFromCoordinate(
-          container,
-          location.getCoordinate(),
-          location.label,
-          List.of(TraverseMode.CAR),
-          type
+          vertexCreationService.createVertexFromCoordinate(
+            container,
+            location.getCoordinate(),
+            location.label,
+            List.of(TraverseMode.CAR),
+            type
+          )
         )
-      )
       : Optional.empty();
   }
 
@@ -438,12 +438,11 @@ public class LinkingContextFactory {
 
     // Not connected if linking did not create incoming/outgoing edges depending on the
     // location type.
-    Predicate<Vertex> isNotConnected =
-      switch (type) {
-        case FROM -> isNotTransit.and(hasNoOutgoing);
-        case TO -> isNotTransit.and(hasNoIncoming);
-        case VISIT_VIA_LOCATION -> hasNoIncoming.or(hasNoOutgoing);
-      };
+    Predicate<Vertex> isNotConnected = switch (type) {
+      case FROM -> isNotTransit.and(hasNoOutgoing);
+      case TO -> isNotTransit.and(hasNoIncoming);
+      case VISIT_VIA_LOCATION -> hasNoIncoming.or(hasNoOutgoing);
+    };
 
     return vertices.stream().allMatch(isNotTransit.and(isNotConnected));
   }

@@ -114,9 +114,9 @@ class SearchParamsTest {
     );
     assertEquals(
       "Combining pass-through and regular via-vist it is not allowed: [" +
-      "RaptorViaLocation{via Via : [(stop 5)]}, " +
-      "RaptorViaLocation{pass-through PassThrough : [(stop 5)]}" +
-      "].",
+        "RaptorViaLocation{via Via : [(stop 5)]}, " +
+        "RaptorViaLocation{pass-through PassThrough : [(stop 5)]}" +
+        "].",
       ex.getMessage()
     );
   }

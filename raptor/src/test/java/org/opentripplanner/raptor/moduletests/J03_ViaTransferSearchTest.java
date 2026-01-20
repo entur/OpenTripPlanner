@@ -73,7 +73,7 @@ class J03_ViaTransferSearchTest {
   @Test
   @DisplayName(
     "Basic via search with just one route. You should be forced to get off the " +
-    "first trip and wait for the next one at the specified via stop."
+      "first trip and wait for the next one at the specified via stop."
   )
   void viaSearchAlightingAtViaStop() {
     data.withTimetables(
@@ -108,7 +108,7 @@ class J03_ViaTransferSearchTest {
   @Test
   @DisplayName(
     "Basic via search with just two routes. You should be forced to use the provided via transfer " +
-    "even when a better regular transfer exists and an earlier departure could be reached. "
+      "even when a better regular transfer exists and an earlier departure could be reached. "
   )
   void viaSearchArrivingByTransferAtViaStop() {
     data.withTimetables(
@@ -135,7 +135,7 @@ class J03_ViaTransferSearchTest {
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ C ~ BUS R2 0:12 0:17 ~ E ~ Walk 30s " +
-      "[0:01:30 0:17:30 16m Tₙ1 C₁2_280]",
+        "[0:01:30 0:17:30 16m Tₙ1 C₁2_280]",
       pathsToString(result)
     );
   }
@@ -143,7 +143,7 @@ class J03_ViaTransferSearchTest {
   @Test
   @DisplayName(
     "Via search with via transfer should force the usage of a route at the destination " +
-    "avoiding using a via-transfer followed by a regular transfer."
+      "avoiding using a via-transfer followed by a regular transfer."
   )
   void viaTransferSearchNotFollowedByRegularTransfer() {
     data
@@ -176,10 +176,10 @@ class J03_ViaTransferSearchTest {
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
       "Walk 30s ~ A ~ " +
-      "BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ C ~ " +
-      "BUS R2 0:12 0:15 ~ D ~ Walk 1m ~ E ~ " +
-      "BUS R3 0:17 0:15 ~ F ~ Walk 30s " +
-      "[0:01:30 0:15:30 14m Tₙ2 C₁2_820]",
+        "BUS R1 0:02 0:10 ~ B ~ Walk 1m ~ C ~ " +
+        "BUS R2 0:12 0:15 ~ D ~ Walk 1m ~ E ~ " +
+        "BUS R3 0:17 0:15 ~ F ~ Walk 30s " +
+        "[0:01:30 0:15:30 14m Tₙ2 C₁2_820]",
       pathsToString(result)
     );
   }
@@ -218,7 +218,7 @@ class J03_ViaTransferSearchTest {
     // transfer slack is 60s.
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:04 ~ B ~ Walk 20s ~ B ~ BUS R2 0:05:45 0:11 ~ C ~ Walk 30s " +
-      "[0:01:30 0:11:30 10m Tₙ1 C₁1_880]",
+        "[0:01:30 0:11:30 10m Tₙ1 C₁1_880]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }

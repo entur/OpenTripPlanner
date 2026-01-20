@@ -57,8 +57,8 @@ public final class TripPatternBuilder
     this.hopGeometries = original.getGeometry() == null
       ? null
       : IntStream.range(0, original.numberOfStops() - 1)
-        .mapToObj(original::getHopGeometry)
-        .toList();
+          .mapToObj(original::getHopGeometry)
+          .toList();
   }
 
   public TripPatternBuilder withName(String name) {
@@ -269,13 +269,12 @@ public final class TripPatternBuilder
       } else {
         // Create new straight-line geometry for hop
         hopGeometries.add(
-          GeometryUtils.getGeometryFactory()
-            .createLineString(
-              new Coordinate[] {
-                stopPattern.getStop(i).getCoordinate().asJtsCoordinate(),
-                stopPattern.getStop(i + 1).getCoordinate().asJtsCoordinate(),
-              }
-            )
+          GeometryUtils.getGeometryFactory().createLineString(
+            new Coordinate[] {
+              stopPattern.getStop(i).getCoordinate().asJtsCoordinate(),
+              stopPattern.getStop(i + 1).getCoordinate().asJtsCoordinate(),
+            }
+          )
         );
       }
     }

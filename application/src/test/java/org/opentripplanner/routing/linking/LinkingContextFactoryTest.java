@@ -217,7 +217,7 @@ class LinkingContextFactoryTest {
 
   @Test
   void locationsShouldBeRoutableWithTheGivenModes() {
-    try (var container = new TemporaryVerticesContainer();) {
+    try (var container = new TemporaryVerticesContainer()) {
       var from = GenericLocation.fromCoordinate(0.5, 0.5);
       var to = GenericLocation.fromCoordinate(0.6, 0.4);
       var via = GenericLocation.fromCoordinate(0.4, 0.6);
@@ -278,7 +278,7 @@ class LinkingContextFactoryTest {
 
   @Test
   void verticesShouldInheritNamesFromLocations() {
-    try (var container = new TemporaryVerticesContainer();) {
+    try (var container = new TemporaryVerticesContainer()) {
       var from = new GenericLocation("First", null, 0.5, 0.5);
       var via = new GenericLocation("Second", null, 0.4, 0.6);
       var to = new GenericLocation("Third", null, 0.6, 0.4);
@@ -304,7 +304,7 @@ class LinkingContextFactoryTest {
 
   @Test
   void verticesShouldHaveDefaultNames() {
-    try (var container = new TemporaryVerticesContainer();) {
+    try (var container = new TemporaryVerticesContainer()) {
       var from = GenericLocation.fromCoordinate(0.5, 0.5);
       var to = GenericLocation.fromCoordinate(0.6, 0.4);
       var via = GenericLocation.fromCoordinate(0.4, 0.6);
