@@ -113,7 +113,7 @@ data:
               }
             }
           ]
-        }
+        },
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",
         "graph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/Graph-otp2-${otp.serialization.version.id}.obj",
         "buildReportDir": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/report"
