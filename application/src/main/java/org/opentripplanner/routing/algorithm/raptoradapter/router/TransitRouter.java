@@ -164,11 +164,11 @@ public class TransitRouter {
     debugTimingAggregator.finishedRaptorSearch();
 
     // Route Direct transit
-    if (request.preferences().transit().directTransit().isPresent()) {
+    var directRequest = mapper.mapToDirectRequest(transitResponse.requestUsed().searchParams());
+    if (directRequest.isPresent()) {
       debugTimingAggregator.startedDirectTransitSearch();
-      var directRequest = mapper.mapToDirectRequest(transitResponse.requestUsed().searchParams());
       var directPaths = raptorService.findAllDirectTransit(
-        directRequest,
+        directRequest.get(),
         requestTransitDataProvider
       );
       paths = new ArrayList<>(paths);

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -214,8 +215,14 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     return builder.build();
   }
 
-  public RaptorDirectTransitRequest mapToDirectRequest(SearchParams searchParamsUsed) {
-    var rel = request.preferences().transit().directTransit().orElseThrow();
+  ///  Map the request into a request object for the direct transit search. Will return empty if
+  /// the direct transit search shouldn't be run.
+  public Optional<RaptorDirectTransitRequest> mapToDirectRequest(SearchParams searchParamsUsed) {
+    var directTransitRequestOpt = request.preferences().transit().directTransit();
+    if (directTransitRequestOpt.isEmpty()) {
+      return Optional.empty();
+    }
+    var rel = directTransitRequestOpt.orElseThrow();
     Collection<? extends RaptorAccessEgress> access = searchParamsUsed.accessPaths();
     Collection<? extends RaptorAccessEgress> egress = searchParamsUsed.egressPaths();
 
@@ -232,7 +239,9 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       access = decorateAccessEgressWithExtraCost(access, f);
       egress = decorateAccessEgressWithExtraCost(egress, f);
     }
-
+    if (access.isEmpty() || egress.isEmpty()) {
+      return Optional.empty();
+    }
     var directRequest = RaptorDirectTransitRequest.of()
       .addAccessPaths(access)
       .addEgressPaths(egress)
@@ -240,7 +249,7 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       .earliestDepartureTime(searchParamsUsed.earliestDepartureTime())
       .withRelaxC1(mapRelaxCost(rel.costRelaxFunction()))
       .build();
-    return directRequest;
+    return Optional.of(directRequest);
   }
 
   private boolean hasPassThroughOnly() {

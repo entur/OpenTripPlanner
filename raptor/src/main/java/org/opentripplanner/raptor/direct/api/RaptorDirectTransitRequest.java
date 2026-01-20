@@ -62,7 +62,6 @@ public final class RaptorDirectTransitRequest {
     return earliestDepartureTime != RaptorConstants.TIME_NOT_SET;
   }
 
-
   /// The time window used to search. The unit is seconds.
   ///
   /// For a *depart-by-search*, this is added to the 'earliestDepartureTime' to find the
