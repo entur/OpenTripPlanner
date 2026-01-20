@@ -27,6 +27,7 @@ import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeRepositoryModule;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
+import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
 import org.opentripplanner.standalone.config.configure.LoadConfigModule;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.configure.StreetRepositoryModule;
@@ -42,6 +43,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
   modules = {
     LoadConfigModule.class,
     DataStoreModule.class,
+    DeduplicatorServiceModule.class,
     GsDataSourceModule.class,
     OsmInfoGraphBuildRepositoryModule.class,
     StreetDetailsRepositoryModule.class,

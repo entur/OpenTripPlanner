@@ -132,7 +132,7 @@ public class SpeedTest {
       List.of(),
       config.request,
       TestServerContext.createStreetLimitationParametersService(),
-      TransferServiceTestFactory.defaultTransferService(),
+      TransferServiceTestFactory.transferService(transferRepository),
       config.transitRoutingParams,
       new DefaultTransitService(timetableRepository),
       null,
@@ -170,11 +170,11 @@ public class SpeedTest {
 
   public static void main(String[] args) {
     try {
-      OtpStartupInfo.logInfo("Run Speed Test");
       // Given the following setup
       SpeedTestCmdLineOpts opts = new SpeedTestCmdLineOpts(args);
-      var config = SpeedTestConfig.config(opts.rootDir());
       SetupHelper.loadOtpFeatures(opts);
+      var config = SpeedTestConfig.config(opts.rootDir());
+      OtpStartupInfo.logInfo("Run Speed Test");
       var model = SetupHelper.loadGraph(opts.rootDir(), config.graph);
       var timetableRepository = model.timetableRepository();
       var transferRepository = model.transferRepository();
