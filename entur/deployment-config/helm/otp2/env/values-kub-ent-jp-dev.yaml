@@ -76,4 +76,4 @@ configuration:
     sourcesName: "systems"
     updaterUrlName: "url"
     updaterNetworkName: "id"
-    enableGeofencingZones: true
+    enableGeofencingZones: false
