@@ -21,7 +21,7 @@ data:
             "IncludeEmptyRailStopsInTransfers" : true,
             // Will be used when PR 7042 Missing transfers is merged
             "IncludeStopsUsedRealTimeInTransfers" : true,
-            "GbfsGeofencingBuildTime": {{ .Values.otpFeatures.gbfsGeofencingBuildTime }}
+            "GbfsGeofencingBuildTime": {{ .Values.otpFeatures.gbfsGeofencingBuildTime | default false }}
         }
       }
   build-config.json: |+
@@ -103,6 +103,7 @@ data:
             }
           ]
         },
+        {{- if and .Values.gbfsGeofencing .Values.gbfsGeofencing.feeds }}
         "gbfsGeofencing": {
           "feeds": [
             {{- range $index, $feed := .Values.gbfsGeofencing.feeds }}
@@ -117,6 +118,7 @@ data:
             {{- end }}
           ]
         },
+        {{- end }}
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",
         "graph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/Graph-otp2-${otp.serialization.version.id}.obj",
         "buildReportDir": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_WORK_DIR}/report"
