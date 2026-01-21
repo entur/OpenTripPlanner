@@ -789,7 +789,7 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 
 ### Phase 3: Common Applier Implementation
 
-**Status:** ✅ COMPLETE (including delay interpolation)
+**Status:** ✅ COMPLETE (including delay interpolation and TripPatternCache integration)
 
 **Class:** `org.opentripplanner.updater.trip.DefaultTripUpdateApplier`
 
@@ -800,9 +800,9 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 | `UPDATE_EXISTING` | ✅ Complete | ✅ 6 tests | Updates arrival/departure times on existing trips; supports stop cancellations, NO_DATA states, stop headsigns, occupancy, prediction flags, **and delay interpolation (forward/backward propagation)** |
 | `CANCEL_TRIP` | ✅ Complete | ✅ 2 tests | Marks entire trip as CANCELED |
 | `DELETE_TRIP` | ✅ Complete | ✅ 1 test | Marks entire trip as DELETED |
-| `ADD_NEW_TRIP` | ✅ Complete | ✅ 3 tests | Creates new trips with Trip/Route/Pattern/TripTimes from scratch; validates route exists and stop time updates present |
-| `MODIFY_TRIP` | ✅ Complete | ✅ 4 tests | Replaces trip stop pattern with modified sequence; creates new pattern if stops change, RealTimeState.MODIFIED for pattern changes, RealTimeState.UPDATED for time-only changes |
-| `ADD_EXTRA_CALLS` | ✅ Complete | ✅ 4 tests | Inserts extra stops into existing trip; validates original stop count matches pattern, creates new pattern with extra calls, marks as RealTimeState.MODIFIED |
+| `ADD_NEW_TRIP` | ✅ Complete | ✅ 3 tests | Creates new trips with Trip/Route/Pattern/TripTimes from scratch; validates route exists and stop time updates present; **uses TripPatternCache for pattern de-duplication** |
+| `MODIFY_TRIP` | ✅ Complete | ✅ 4 tests | Replaces trip stop pattern with modified sequence; creates new pattern if stops change, RealTimeState.MODIFIED for pattern changes, RealTimeState.UPDATED for time-only changes; **uses TripPatternCache for pattern de-duplication** |
+| `ADD_EXTRA_CALLS` | ✅ Complete | ✅ 4 tests | Inserts extra stops into existing trip; validates original stop count matches pattern, creates new pattern with extra calls, marks as RealTimeState.MODIFIED; **uses TripPatternCache for pattern de-duplication** |
 
 **Test Status:** ✅ 20/20 tests passing in `DefaultTripUpdateApplierTest`
 
@@ -819,6 +819,7 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 - Reuses original pattern if stop sequence unchanged
 - **ADD_EXTRA_CALLS**: Validates non-extra stops match original pattern positions, inserts extra stops at specified sequence, creates new pattern with combined stop list
 - **DELAY INTERPOLATION**: Supports forward/backward delay propagation via `TripUpdateOptions`; uses existing GTFS-RT interpolators; SIRI defaults to no interpolation (NONE/NONE); GTFS-RT configurable per updater
+- **TRIP PATTERN CACHE**: Uses `SiriTripPatternCache` for all pattern creation; de-duplicates patterns with same stop sequence; generates consistent RT pattern IDs (`F:Route1::001:RT` format); thread-safe caching
 
 **Delay Interpolation Implementation:**
 - **Forward Interpolation**: Propagates delays forward to stops without explicit times (configurable via `ForwardsDelayPropagationType`)
@@ -829,8 +830,16 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 - **Fallback**: When interpolation disabled (SIRI defaults), copies scheduled times for stops without updates
 - **Tests**: 3 new tests verify forward interpolation, backward interpolation, and no-interpolation scenarios
 
+**TripPatternCache Integration:**
+- **Implementation**: Uses `SiriTripPatternCache` from SIRI package (same cache used by GTFS-RT per PR #7219)
+- **Pattern De-duplication**: Multiple trips with same stop pattern reuse the same `TripPattern` instance
+- **Pattern ID Generation**: Uses `SiriTripPatternIdGenerator` for consistent RT pattern IDs (format: `{RouteId}:{DirectionId}:{Counter:003}:RT`)
+- **Original Pattern Handling**: Cache checks if new stop pattern matches original pattern before creating new one; handles null originalPattern for new trips
+- **Thread Safety**: Cache operations are synchronized for concurrent real-time updates
+- **Handlers Using Cache**: `ADD_NEW_TRIP`, `MODIFY_TRIP` (when pattern changes), `ADD_EXTRA_CALLS`
+- **Benefits**: Reduced memory usage, consistent pattern IDs across SIRI/GTFS-RT, unified pattern management
+
 **Additional Work for Future Phases:**
-- [ ] Integration with TripPatternCache - Phase 4
 - [ ] Wiring into SIRI-ET and GTFS-RT updaters - Phase 4
 
 ### Phase 4: Integration

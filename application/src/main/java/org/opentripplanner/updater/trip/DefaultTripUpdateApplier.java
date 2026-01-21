@@ -3,7 +3,6 @@ package org.opentripplanner.updater.trip;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.Result;
@@ -18,6 +17,8 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +35,14 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   private static final Logger LOG = LoggerFactory.getLogger(DefaultTripUpdateApplier.class);
 
   private final TransitEditorService transitService;
+  private final SiriTripPatternCache tripPatternCache;
 
   public DefaultTripUpdateApplier(TransitEditorService transitService) {
     this.transitService = Objects.requireNonNull(transitService);
+    this.tripPatternCache = new SiriTripPatternCache(
+      new SiriTripPatternIdGenerator(),
+      transitService::findPattern
+    );
   }
 
   @Override
@@ -443,16 +449,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     // Create scheduled trip times
     var scheduledTripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator());
 
-    // Create trip pattern
-    var patternId = tripRef.tripId().getId() + "-pattern";
-    var pattern = TripPattern.of(
-      new org.opentripplanner.core.model.id.FeedScopedId(context.feedId(), patternId)
-    )
-      .withRoute(route)
-      .withMode(route.getMode())
-      .withStopPattern(stopPattern)
-      .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(scheduledTripTimes))
-      .build();
+    // Get or create trip pattern using cache
+    var pattern = tripPatternCache.getOrCreateTripPattern(stopPattern, trip);
 
     // Create real-time trip times from scheduled
     var rtBuilder = scheduledTripTimes.createRealTimeFromScheduledTimes();
@@ -596,19 +594,11 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     // Create new scheduled trip times
     var scheduledTripTimes = TripTimesFactory.tripTimes(trip, newStopTimes, new Deduplicator());
 
-    // Create trip pattern (reuse original or create new)
+    // Get trip pattern (reuse original or create new using cache)
     TripPattern pattern;
     if (stopPatternChanged) {
-      // Create new pattern with modified stops
-      var patternId = tripRef.tripId().getId() + "-modified-pattern";
-      pattern = TripPattern.of(
-        new org.opentripplanner.core.model.id.FeedScopedId(context.feedId(), patternId)
-      )
-        .withRoute(trip.getRoute())
-        .withMode(trip.getMode())
-        .withStopPattern(newStopPattern)
-        .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(scheduledTripTimes))
-        .build();
+      // Get or create pattern with modified stops using cache
+      pattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
     } else {
       // Reuse original pattern if stops didn't change
       pattern = originalPattern;
@@ -726,16 +716,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     // Create new stop pattern
     var newStopPattern = new StopPattern(newStopTimes);
 
-    // Create new trip pattern with the modified stop pattern
-    var newPatternId = FeedScopedId.parse(trip.getId() + "-extra-calls-pattern");
-    var newPattern = TripPattern.of(newPatternId)
-      .withRoute(trip.getRoute())
-      .withMode(originalPattern.getMode())
-      .withStopPattern(newStopPattern)
-      .withScheduledTimeTableBuilder(builder ->
-        builder.addTripTimes(TripTimesFactory.tripTimes(trip, newStopTimes, new Deduplicator()))
-      )
-      .build();
+    // Get or create trip pattern with the modified stop pattern using cache
+    var newPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
 
     // Create scheduled trip times for the new pattern
     var scheduledTripTimes = TripTimesFactory.tripTimes(trip, newStopTimes, new Deduplicator());
