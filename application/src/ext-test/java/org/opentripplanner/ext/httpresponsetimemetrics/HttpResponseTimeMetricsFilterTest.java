@@ -18,6 +18,9 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Note: The unit tests relies on mocks to abstract out the micrometer API (request and response objects).
+ */
 class HttpResponseTimeMetricsFilterTest {
 
   private static final String CLIENT_HEADER = "et-client-name";
@@ -26,7 +29,7 @@ class HttpResponseTimeMetricsFilterTest {
   private static final Set<String> MONITORED_ENDPOINTS = Set.of(TRANSMODEL_ENDPOINT, GTFS_ENDPOINT);
   private static final String METRIC_NAME = "otp_http_server_requests";
   private static final Duration MIN_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10);
-  private static final Duration MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10000);
+  private static final Duration MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10_000);
   private SimpleMeterRegistry registry;
   private HttpResponseTimeMetricsFilter filter;
 

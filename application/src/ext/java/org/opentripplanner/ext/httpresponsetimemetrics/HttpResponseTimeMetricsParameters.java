@@ -28,7 +28,7 @@ public record HttpResponseTimeMetricsParameters(
   );
   public static final String DEFAULT_METRIC_NAME = "otp_http_server_requests";
   public static final Duration DEFAULT_MIN_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10);
-  public static final Duration DEFAULT_MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10000);
+  public static final Duration DEFAULT_MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10_000);
 
   public HttpResponseTimeMetricsParameters {
     monitoredClients = Set.copyOf(monitoredClients);
