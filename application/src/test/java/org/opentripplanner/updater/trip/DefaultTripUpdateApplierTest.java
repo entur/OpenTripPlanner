@@ -211,12 +211,92 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testAddNewTrip_notImplemented() {
+  void testAddNewTrip_success() {
+    var newTripId = new FeedScopedId(FEED_ID, "new-trip-1");
+    var routeId = new FeedScopedId(FEED_ID, "route1");
+    var stopRef1 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop1")
+    );
+    var stopRef2 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop2")
+    );
+
+    var stopTimeUpdate1 = org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+      stopRef1
+    )
+      .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(36000, null))
+      .withDepartureUpdate(
+        org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(36000, null)
+      )
+      .build();
+
+    var stopTimeUpdate2 = org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+      stopRef2
+    )
+      .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(36600, null))
+      .withDepartureUpdate(
+        org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(36600, null)
+      )
+      .build();
+
     var update = ParsedTripUpdate.builder(
       TripUpdateType.ADD_NEW_TRIP,
-      TripReference.builder().build(),
+      TripReference.builder().withTripId(newTripId).withRouteId(routeId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(stopTimeUpdate1)
+      .addStopTimeUpdate(stopTimeUpdate2)
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isSuccess());
+    var tripUpdate = result.successValue();
+    assertEquals(newTripId, tripUpdate.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.ADDED, tripUpdate.updatedTripTimes().getRealTimeState());
+  }
+
+  @Test
+  void testAddNewTrip_noStopTimeUpdates() {
+    var newTripId = new FeedScopedId(FEED_ID, "new-trip-2");
+    var routeId = new FeedScopedId(FEED_ID, "route1");
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.ADD_NEW_TRIP,
+      TripReference.builder().withTripId(newTripId).withRouteId(routeId).build(),
       SERVICE_DATE
     ).build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isFailure());
+    assertEquals(UpdateError.UpdateErrorType.NO_UPDATES, result.failureValue().errorType());
+  }
+
+  @Test
+  void testAddNewTrip_routeNotFound() {
+    var newTripId = new FeedScopedId(FEED_ID, "new-trip-3");
+    var unknownRouteId = new FeedScopedId(FEED_ID, "unknown-route");
+    var stopRef = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop1")
+    );
+
+    var stopTimeUpdate = org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+      stopRef
+    )
+      .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(36000, null))
+      .withDepartureUpdate(
+        org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(36000, null)
+      )
+      .build();
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.ADD_NEW_TRIP,
+      TripReference.builder().withTripId(newTripId).withRouteId(unknownRouteId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(stopTimeUpdate)
+      .build();
 
     var result = applier.apply(update, context);
 

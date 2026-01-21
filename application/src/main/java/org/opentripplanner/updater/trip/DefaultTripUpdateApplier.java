@@ -1,8 +1,17 @@
 package org.opentripplanner.updater.trip;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import org.opentripplanner.model.StopTime;
+import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.network.StopPattern;
+import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
+import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
@@ -305,8 +314,107 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {
-    // TODO: Implement
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    var tripRef = parsedUpdate.tripReference();
+    var serviceDate = parsedUpdate.serviceDate();
+    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+
+    // Validate we have stop time updates
+    if (stopTimeUpdates.isEmpty()) {
+      LOG.debug("No stop time updates for new trip {}", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_UPDATES,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Get the route
+    var route = transitService.getRoute(tripRef.routeId());
+    if (route == null) {
+      LOG.debug("Route {} not found for new trip {}", tripRef.routeId(), tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.UNKNOWN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Get or create service ID for the service date
+    var serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
+
+    // Create the trip
+    var trip = Trip.of(tripRef.tripId()).withRoute(route).withServiceId(serviceId).build();
+
+    // Create stop times from updates
+    List<StopTime> stopTimes = new ArrayList<>();
+    for (int i = 0; i < stopTimeUpdates.size(); i++) {
+      var stopUpdate = stopTimeUpdates.get(i);
+      var stop = transitService.getRegularStop(stopUpdate.stopReference().stopId());
+      if (stop == null) {
+        LOG.debug(
+          "Stop {} not found for new trip {}",
+          stopUpdate.stopReference(),
+          tripRef.tripId()
+        );
+        return Result.failure(
+          new UpdateError(
+            tripRef.tripId(),
+            UpdateError.UpdateErrorType.UNKNOWN,
+            null,
+            context.feedId()
+          )
+        );
+      }
+
+      var stopTime = new StopTime();
+      stopTime.setStop(stop);
+      stopTime.setStopSequence(i);
+
+      // Resolve arrival and departure times
+      int arrivalTime = stopUpdate.hasArrivalUpdate()
+        ? stopUpdate.arrivalUpdate().resolveTime(0)
+        : -1;
+      int departureTime = stopUpdate.hasDepartureUpdate()
+        ? stopUpdate.departureUpdate().resolveTime(0)
+        : -1;
+
+      stopTime.setArrivalTime(arrivalTime);
+      stopTime.setDepartureTime(departureTime);
+
+      stopTimes.add(stopTime);
+    }
+
+    // Create stop pattern
+    var stopPattern = new StopPattern(stopTimes);
+
+    // Create scheduled trip times
+    var scheduledTripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator());
+
+    // Create trip pattern
+    var patternId = tripRef.tripId().getId() + "-pattern";
+    var pattern = TripPattern.of(
+      new org.opentripplanner.core.model.id.FeedScopedId(context.feedId(), patternId)
+    )
+      .withRoute(route)
+      .withMode(route.getMode())
+      .withStopPattern(stopPattern)
+      .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(scheduledTripTimes))
+      .build();
+
+    // Create real-time trip times from scheduled
+    var rtBuilder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+    rtBuilder.withRealTimeState(RealTimeState.ADDED);
+    var realTimeTripTimes = rtBuilder.build();
+
+    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, realTimeTripTimes, serviceDate);
+    LOG.debug("Added new trip {} on {}", tripRef.tripId(), serviceDate);
+    return Result.success(realTimeTripUpdate);
   }
 
   private Result<RealTimeTripUpdate, UpdateError> handleModifyTrip(
