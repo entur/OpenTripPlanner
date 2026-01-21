@@ -421,8 +421,167 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {
-    // TODO: Implement
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    var tripRef = parsedUpdate.tripReference();
+    var serviceDate = parsedUpdate.serviceDate();
+    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+
+    // Validate we have stop time updates
+    if (stopTimeUpdates.isEmpty()) {
+      LOG.debug("No stop time updates for modified trip {}", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_UPDATES,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Resolve trip from ID
+    var trip = transitService.getTrip(tripRef.tripId());
+    if (trip == null) {
+      LOG.debug("Trip {} not found for modification", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Find the original trip pattern
+    var originalPattern = transitService.findPattern(trip, serviceDate);
+    if (originalPattern == null) {
+      LOG.debug("Pattern not found for trip {} on {}", tripRef.tripId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Resolve the current timetable to get existing trip times
+    var snapshotManager = context.snapshotManager();
+    var timetable = snapshotManager.resolve(originalPattern, serviceDate);
+    if (timetable == null) {
+      LOG.debug("No timetable found for pattern {} on {}", originalPattern.getId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Get the trip times for this specific trip
+    var tripTimes = timetable.getTripTimes(trip);
+    if (tripTimes == null) {
+      LOG.debug("No trip times found for trip {} on {}", tripRef.tripId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Create stop times from updates
+    List<StopTime> newStopTimes = new ArrayList<>();
+    for (int i = 0; i < stopTimeUpdates.size(); i++) {
+      var stopUpdate = stopTimeUpdates.get(i);
+      var stop = transitService.getRegularStop(stopUpdate.stopReference().stopId());
+      if (stop == null) {
+        LOG.debug(
+          "Stop {} not found for modified trip {}",
+          stopUpdate.stopReference(),
+          tripRef.tripId()
+        );
+        return Result.failure(
+          new UpdateError(
+            tripRef.tripId(),
+            UpdateError.UpdateErrorType.UNKNOWN_STOP,
+            null,
+            context.feedId()
+          )
+        );
+      }
+
+      var stopTime = new StopTime();
+      stopTime.setStop(stop);
+      stopTime.setStopSequence(i);
+
+      // Get scheduled time for this stop if it exists in original pattern
+      int scheduledArrival = i < tripTimes.getNumStops() ? tripTimes.getScheduledArrivalTime(i) : 0;
+      int scheduledDeparture = i < tripTimes.getNumStops()
+        ? tripTimes.getScheduledDepartureTime(i)
+        : 0;
+
+      // Resolve arrival and departure times
+      int arrivalTime = stopUpdate.hasArrivalUpdate()
+        ? stopUpdate.arrivalUpdate().resolveTime(scheduledArrival)
+        : -1;
+      int departureTime = stopUpdate.hasDepartureUpdate()
+        ? stopUpdate.departureUpdate().resolveTime(scheduledDeparture)
+        : -1;
+
+      stopTime.setArrivalTime(arrivalTime);
+      stopTime.setDepartureTime(departureTime);
+
+      newStopTimes.add(stopTime);
+    }
+
+    // Create new stop pattern
+    var newStopPattern = new StopPattern(newStopTimes);
+
+    // Check if stop pattern actually changed
+    boolean stopPatternChanged = !originalPattern.getStopPattern().equals(newStopPattern);
+
+    // Create new scheduled trip times
+    var scheduledTripTimes = TripTimesFactory.tripTimes(trip, newStopTimes, new Deduplicator());
+
+    // Create trip pattern (reuse original or create new)
+    TripPattern pattern;
+    if (stopPatternChanged) {
+      // Create new pattern with modified stops
+      var patternId = tripRef.tripId().getId() + "-modified-pattern";
+      pattern = TripPattern.of(
+        new org.opentripplanner.core.model.id.FeedScopedId(context.feedId(), patternId)
+      )
+        .withRoute(trip.getRoute())
+        .withMode(trip.getMode())
+        .withStopPattern(newStopPattern)
+        .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(scheduledTripTimes))
+        .build();
+    } else {
+      // Reuse original pattern if stops didn't change
+      pattern = originalPattern;
+    }
+
+    // Create real-time trip times from scheduled
+    var rtBuilder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+
+    // Set real-time state based on whether pattern changed
+    if (stopPatternChanged) {
+      rtBuilder.withRealTimeState(RealTimeState.MODIFIED);
+      LOG.debug("Modified trip {} with stop pattern change on {}", tripRef.tripId(), serviceDate);
+    } else {
+      rtBuilder.withRealTimeState(RealTimeState.UPDATED);
+      LOG.debug("Modified trip {} with only time changes on {}", tripRef.tripId(), serviceDate);
+    }
+
+    var realTimeTripTimes = rtBuilder.build();
+    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, realTimeTripTimes, serviceDate);
+    return Result.success(realTimeTripUpdate);
   }
 
   private Result<RealTimeTripUpdate, UpdateError> handleAddExtraCalls(

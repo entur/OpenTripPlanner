@@ -801,32 +801,33 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 | `CANCEL_TRIP` | ✅ Complete | ✅ 2 tests | Marks entire trip as CANCELED |
 | `DELETE_TRIP` | ✅ Complete | ✅ 1 test | Marks entire trip as DELETED |
 | `ADD_NEW_TRIP` | ✅ Complete | ✅ 3 tests | Creates new trips with Trip/Route/Pattern/TripTimes from scratch; validates route exists and stop time updates present |
+| `MODIFY_TRIP` | ✅ Complete | ✅ 4 tests | Replaces trip stop pattern with modified sequence; creates new pattern if stops change, RealTimeState.MODIFIED for pattern changes, RealTimeState.UPDATED for time-only changes |
 
 **Pending Handlers:**
 
 | Handler | Status | Description |
 |---------|--------|-------------|
-| `MODIFY_TRIP` | ⏳ TODO | Replaces existing trip pattern with modified stop sequence |
 | `ADD_EXTRA_CALLS` | ⏳ TODO | Inserts extra stops into existing trip (SIRI-specific) |
 
 **Additional Work Needed:**
-- [ ] Delay interpolation logic (forward and backward propagation)
-- [ ] Stop pattern modification handling for MODIFY_TRIP
 - [ ] Extra stop insertion for ADD_EXTRA_CALLS
+- [ ] Delay interpolation logic (forward and backward propagation)
 - [ ] Integration with TripPatternCache
-- [ ] Comprehensive test coverage for remaining handlers
+- [ ] Comprehensive test coverage for ADD_EXTRA_CALLS
 
-**Test Status:** 12/12 tests passing in `DefaultTripUpdateApplierTest`
+**Test Status:** 14/15 tests passing in `DefaultTripUpdateApplierTest` (1 placeholder test for unimplemented ADD_EXTRA_CALLS)
 
 **Key Implementation Details:**
 - Uses `RealTimeTripTimesBuilder` for creating real-time trip times
 - Integrates with `TimetableSnapshotManager` for buffered updates
 - Resolves trips/patterns via `TransitEditorService`
 - Applies time updates using `TimeUpdate.resolveTime()` from common model
-- Marks trips with appropriate `RealTimeState` (MODIFIED, CANCELED, DELETED, ADDED)
+- Marks trips with appropriate `RealTimeState` (MODIFIED, UPDATED, CANCELED, DELETED, ADDED)
 - Creates new Trip/Route/Pattern objects using builder pattern
 - Uses `TripTimesFactory` with `Deduplicator` for trip times creation
 - Validates route existence and stop availability for new trips
+- Compares stop patterns to determine MODIFIED vs UPDATED state
+- Reuses original pattern if stop sequence unchanged
 
 ### Phase 4: Integration
 
