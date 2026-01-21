@@ -82,8 +82,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.CANCEL_TRIP,
       TripReference.builder().withTripId(tripId).build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
@@ -100,8 +99,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.DELETE_TRIP,
       TripReference.builder().withTripId(tripId).build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
@@ -119,8 +117,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.CANCEL_TRIP,
       TripReference.builder().withTripId(nonExistentTripId).build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
@@ -135,8 +132,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.UPDATE_EXISTING,
       TripReference.builder().withTripId(tripId).build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
@@ -150,8 +146,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.ADD_NEW_TRIP,
       TripReference.builder().build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
@@ -165,8 +160,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.MODIFY_TRIP,
       TripReference.builder().withTripId(tripId).build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
@@ -180,8 +174,7 @@ class DefaultTripUpdateApplierTest {
       TripUpdateType.ADD_EXTRA_CALLS,
       TripReference.builder().withTripId(tripId).build(),
       SERVICE_DATE
-    )
-      .build();
+    ).build();
 
     var result = applier.apply(update, context);
 
