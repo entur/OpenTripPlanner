@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.Result;
@@ -588,7 +589,130 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {
-    // TODO: Implement
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+    if (stopTimeUpdates.isEmpty()) {
+      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_UPDATES));
+    }
+
+    var serviceDate = parsedUpdate.serviceDate();
+    var tripReference = parsedUpdate.tripReference();
+
+    // Resolve the trip
+    var trip = transitService.getTrip(tripReference.tripId());
+    if (trip == null) {
+      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
+    }
+
+    // Get the original pattern
+    var originalPattern = transitService.findPattern(trip, serviceDate);
+    if (originalPattern == null) {
+      return Result.failure(
+        UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
+      );
+    }
+
+    // Count extra calls
+    long numExtraCalls = stopTimeUpdates.stream().filter(u -> u.isExtraCall()).count();
+    int numOriginalStops = (int) (stopTimeUpdates.size() - numExtraCalls);
+
+    // Validate that non-extra calls match the original pattern
+    if (numOriginalStops != originalPattern.numberOfStops()) {
+      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    }
+
+    // Resolve the existing trip times to use as base for modifications
+    var timetable = context.snapshotManager().resolve(originalPattern, serviceDate);
+    var existingTripTimes = timetable.getTripTimes(trip);
+    if (existingTripTimes == null) {
+      return Result.failure(
+        UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
+      );
+    }
+
+    // Build new stop times list (original + extra)
+    List<StopTime> newStopTimes = new ArrayList<>();
+    int originalStopIndex = 0;
+
+    for (var stopTimeUpdate : stopTimeUpdates) {
+      var stopRef = stopTimeUpdate.stopReference();
+      var stop = transitService.getRegularStop(stopRef.stopId());
+
+      if (stop == null) {
+        return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN_STOP));
+      }
+
+      // Validate that non-extra stops match the original pattern
+      if (!stopTimeUpdate.isExtraCall()) {
+        var originalStop = originalPattern.getStop(originalStopIndex);
+        if (!stop.getId().equals(originalStop.getId())) {
+          return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+        }
+        originalStopIndex++;
+      }
+
+      var stopTime = new StopTime();
+      stopTime.setStop(stop);
+      stopTime.setTrip(trip);
+      stopTime.setStopSequence(newStopTimes.size());
+
+      // Resolve times
+      int arrivalTime;
+      int departureTime;
+
+      if (stopTimeUpdate.hasArrivalUpdate() && stopTimeUpdate.hasDepartureUpdate()) {
+        arrivalTime = stopTimeUpdate.arrivalUpdate().resolveTime(0);
+        departureTime = stopTimeUpdate.departureUpdate().resolveTime(0);
+      } else if (stopTimeUpdate.hasDepartureUpdate()) {
+        departureTime = stopTimeUpdate.departureUpdate().resolveTime(0);
+        arrivalTime = departureTime;
+      } else if (stopTimeUpdate.hasArrivalUpdate()) {
+        arrivalTime = stopTimeUpdate.arrivalUpdate().resolveTime(0);
+        departureTime = arrivalTime;
+      } else {
+        return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_UPDATES));
+      }
+
+      stopTime.setArrivalTime(arrivalTime);
+      stopTime.setDepartureTime(departureTime);
+      newStopTimes.add(stopTime);
+    }
+
+    // Create new stop pattern
+    var newStopPattern = new StopPattern(newStopTimes);
+
+    // Create new trip pattern with the modified stop pattern
+    var newPatternId = FeedScopedId.parse(trip.getId() + "-extra-calls-pattern");
+    var newPattern = TripPattern.of(newPatternId)
+      .withRoute(trip.getRoute())
+      .withMode(originalPattern.getMode())
+      .withStopPattern(newStopPattern)
+      .withScheduledTimeTableBuilder(builder ->
+        builder.addTripTimes(TripTimesFactory.tripTimes(trip, newStopTimes, new Deduplicator()))
+      )
+      .build();
+
+    // Create scheduled trip times for the new pattern
+    var scheduledTripTimes = TripTimesFactory.tripTimes(trip, newStopTimes, new Deduplicator());
+
+    // Create real-time trip times based on the scheduled times
+    var rtBuilder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+    rtBuilder.withRealTimeState(RealTimeState.MODIFIED);
+
+    // Apply real-time updates to the trip times
+    for (int i = 0; i < stopTimeUpdates.size(); i++) {
+      var stopTimeUpdate = stopTimeUpdates.get(i);
+
+      if (stopTimeUpdate.hasArrivalUpdate()) {
+        rtBuilder.withArrivalTime(i, stopTimeUpdate.arrivalUpdate().resolveTime(0));
+      }
+
+      if (stopTimeUpdate.hasDepartureUpdate()) {
+        rtBuilder.withDepartureTime(i, stopTimeUpdate.departureUpdate().resolveTime(0));
+      }
+    }
+
+    var realTimeTripTimes = rtBuilder.build();
+    var realTimeTripUpdate = new RealTimeTripUpdate(newPattern, realTimeTripTimes, serviceDate);
+    return Result.success(realTimeTripUpdate);
   }
 }

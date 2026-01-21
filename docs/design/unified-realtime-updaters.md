@@ -789,7 +789,7 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 
 ### Phase 3: Common Applier Implementation
 
-**Status:** ⏳ IN PROGRESS (Partial)
+**Status:** ✅ COMPLETE
 
 **Class:** `org.opentripplanner.updater.trip.DefaultTripUpdateApplier`
 
@@ -802,20 +802,9 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 | `DELETE_TRIP` | ✅ Complete | ✅ 1 test | Marks entire trip as DELETED |
 | `ADD_NEW_TRIP` | ✅ Complete | ✅ 3 tests | Creates new trips with Trip/Route/Pattern/TripTimes from scratch; validates route exists and stop time updates present |
 | `MODIFY_TRIP` | ✅ Complete | ✅ 4 tests | Replaces trip stop pattern with modified sequence; creates new pattern if stops change, RealTimeState.MODIFIED for pattern changes, RealTimeState.UPDATED for time-only changes |
+| `ADD_EXTRA_CALLS` | ✅ Complete | ✅ 4 tests | Inserts extra stops into existing trip; validates original stop count matches pattern, creates new pattern with extra calls, marks as RealTimeState.MODIFIED |
 
-**Pending Handlers:**
-
-| Handler | Status | Description |
-|---------|--------|-------------|
-| `ADD_EXTRA_CALLS` | ⏳ TODO | Inserts extra stops into existing trip (SIRI-specific) |
-
-**Additional Work Needed:**
-- [ ] Extra stop insertion for ADD_EXTRA_CALLS
-- [ ] Delay interpolation logic (forward and backward propagation)
-- [ ] Integration with TripPatternCache
-- [ ] Comprehensive test coverage for ADD_EXTRA_CALLS
-
-**Test Status:** 14/15 tests passing in `DefaultTripUpdateApplierTest` (1 placeholder test for unimplemented ADD_EXTRA_CALLS)
+**Test Status:** ✅ 17/17 tests passing in `DefaultTripUpdateApplierTest`
 
 **Key Implementation Details:**
 - Uses `RealTimeTripTimesBuilder` for creating real-time trip times
@@ -828,6 +817,12 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 - Validates route existence and stop availability for new trips
 - Compares stop patterns to determine MODIFIED vs UPDATED state
 - Reuses original pattern if stop sequence unchanged
+- **ADD_EXTRA_CALLS**: Validates non-extra stops match original pattern positions, inserts extra stops at specified sequence, creates new pattern with combined stop list
+
+**Additional Work for Future Phases:**
+- [ ] Delay interpolation logic (forward and backward propagation) - optional enhancement
+- [ ] Integration with TripPatternCache - Phase 4
+- [ ] Wiring into SIRI-ET and GTFS-RT updaters - Phase 4
 
 ### Phase 4: Integration
 

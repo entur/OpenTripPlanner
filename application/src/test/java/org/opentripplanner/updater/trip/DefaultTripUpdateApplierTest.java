@@ -435,12 +435,159 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testAddExtraCalls_notImplemented() {
+  void testAddExtraCalls_success() {
+    var stopRef1 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop1")
+    );
+    var stopRef2 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop2")
+    );
+    var stopRef3 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop3")
+    );
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.ADD_EXTRA_CALLS,
+      TripReference.builder().withTripId(tripId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef1)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(100, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(120, null)
+          )
+          .build()
+      )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef3)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(200, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(210, null)
+          )
+          .withIsExtraCall(true)
+          .build()
+      )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef2)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(300, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(320, null)
+          )
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isSuccess());
+    var tripUpdate = result.successValue();
+    assertEquals(3, tripUpdate.updatedTripTimes().getNumStops());
+    assertEquals(RealTimeState.MODIFIED, tripUpdate.updatedTripTimes().getRealTimeState());
+    assertEquals(new FeedScopedId(FEED_ID, "stop1"), tripUpdate.pattern().getStop(0).getId());
+    assertEquals(new FeedScopedId(FEED_ID, "stop3"), tripUpdate.pattern().getStop(1).getId());
+    assertEquals(new FeedScopedId(FEED_ID, "stop2"), tripUpdate.pattern().getStop(2).getId());
+  }
+
+  @Test
+  void testAddExtraCalls_noStopTimeUpdates() {
     var update = ParsedTripUpdate.builder(
       TripUpdateType.ADD_EXTRA_CALLS,
       TripReference.builder().withTripId(tripId).build(),
       SERVICE_DATE
     ).build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isFailure());
+    assertEquals(UpdateError.UpdateErrorType.NO_UPDATES, result.failureValue().errorType());
+  }
+
+  @Test
+  void testAddExtraCalls_tripNotFound() {
+    var nonExistentTripId = new FeedScopedId(FEED_ID, "nonexistent");
+    var stopRef1 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop1")
+    );
+    var stopRef2 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop2")
+    );
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.ADD_EXTRA_CALLS,
+      TripReference.builder().withTripId(nonExistentTripId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef1)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(100, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(120, null)
+          )
+          .build()
+      )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef2)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(200, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(220, null)
+          )
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isFailure());
+    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+  }
+
+  @Test
+  void testAddExtraCalls_originalStopCountMismatch() {
+    var stopRef1 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop1")
+    );
+    var stopRef3 = org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, "stop3")
+    );
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.ADD_EXTRA_CALLS,
+      TripReference.builder().withTripId(tripId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef1)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(100, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(120, null)
+          )
+          .build()
+      )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(stopRef3)
+          .withArrivalUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(200, null)
+          )
+          .withDepartureUpdate(
+            org.opentripplanner.updater.trip.model.TimeUpdate.ofAbsolute(210, null)
+          )
+          .withIsExtraCall(true)
+          .build()
+      )
+      .build();
 
     var result = applier.apply(update, context);
 
