@@ -656,12 +656,12 @@ public void applyEstimatedTimetable(
 
 ### Phase 2b: Parser Implementations
 
-**Status:** ✅ GTFS-RT Parser COMPLETE & TESTED | ⏳ SIRI Parser Next
+**Status:** ✅ BOTH PARSERS COMPLETE & TESTED
 
 | Parser | Status | Tests | Test Results |
 |--------|--------|-------|--------------|
 | `GtfsRtTripUpdateParser` | ✅ Complete | ✅ 16 tests | ✅ **ALL PASSING** |
-| `SiriTripUpdateParser` | ⏳ Ready to implement | ⏳ Tests to create | - |
+| `SiriTripUpdateParser` | ✅ Complete | ✅ 17 tests | ✅ **ALL PASSING** |
 
 **GTFS-RT Parser Implementation:**
 
@@ -719,14 +719,73 @@ Full implementation of `TripUpdateParser<GtfsRealtime.TripUpdate>` interface:
 3. Maps protobuf wheelchair accessibility values to OTP `Accessibility` enum
 4. Returns empty update lists for cancellations (no stop time processing needed)
 
-**Next Steps for SIRI Parser:**
-The SIRI parser will follow a similar structure but must handle:
-- `EstimatedVehicleJourney` input type
-- `CallWrapper` abstraction for RecordedCall/EstimatedCall
-- Three update types: REPLACEMENT_DEPARTURE, EXTRA_CALL, TRIP_UPDATE
-- Absolute times (SIRI always provides actual times, not delays)
-- SIRI-specific fields: prediction inaccuracy, extra calls, destination displays
-- Integration with `EntityResolver` for ID resolution
+**SIRI Parser Implementation:** ✅ COMPLETE
+
+**Class:** `org.opentripplanner.updater.trip.siri.SiriTripUpdateParser`
+
+Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
+
+- ✅ Handles all SIRI update types:
+  - `TRIP_UPDATE` → `TripUpdateType.UPDATE_EXISTING`
+  - `REPLACEMENT_DEPARTURE` (extra journey) → `TripUpdateType.ADD_NEW_TRIP`
+  - `EXTRA_CALL` → `TripUpdateType.ADD_EXTRA_CALLS`
+  - Cancellation → `TripUpdateType.CANCEL_TRIP`
+
+- ✅ Stop time update parsing:
+  - Absolute times (SIRI provides actual times, not delays)
+  - Both RecordedCall and EstimatedCall via `CallWrapper`
+  - Recorded vs. estimated flags
+  - Prediction inaccuracy flags
+  - Extra call detection
+  - Cancelled stop handling
+
+- ✅ Trip creation info parsing:
+  - Trip ID from `EstimatedVehicleJourneyCode`
+  - Route and operator resolution
+  - Transit mode and submode mapping
+  - Headsign and short name extraction
+  - Route creation info for new routes
+
+- ✅ SIRI-specific features:
+  - Entity resolution for IDs
+  - Destination displays → stop headsigns
+  - Occupancy mapping
+  - Pickup/dropoff activity mapping
+  - Service date resolution from multiple sources
+  - FramedVehicleJourneyRef support
+
+- ✅ Error handling:
+  - Empty stop point ref validation
+  - Not monitored journey detection (with cancellation exception)
+  - Missing service date handling
+  - Missing operator handling
+
+**Test Coverage:** `SiriTripUpdateParserTest` (17 test cases - ✅ ALL PASSING)
+- Update existing trip with expected times ✅
+- Cancelled trips ✅
+- Extra journeys (new trips) ✅
+- Extra calls (added stops) ✅
+- Cancelled stops ✅
+- Recorded vs. estimated calls ✅
+- Prediction inaccuracy ✅
+- Destination displays ✅
+- Not monitored handling ✅
+- Empty stop point ref errors ✅
+- Occupancy data ✅
+- Absolute time handling (not delays) ✅
+- SIRI default options (no delay propagation) ✅
+- FramedVehicleJourneyRef parsing ✅
+- Multiple stops ✅
+- Data source tracking ✅
+- Not monitored but cancelled exception ✅
+
+**Key Design Decisions:**
+1. SIRI provides absolute times, not delays - uses `TimeUpdate.ofAbsolute()`
+2. No delay propagation needed (explicit times provided)
+3. Trip ID resolution from multiple sources (FramedVehicleJourneyRef, DatedVehicleJourneyRef, EstimatedVehicleJourneyCode)
+4. Service date resolution from multiple sources with fallback to current date
+5. Recorded calls prioritize actual times over expected times
+6. Integration with existing SIRI infrastructure (EntityResolver, CallWrapper, mappers)
 
 ### Phase 3: Common Applier Implementation
 
