@@ -13,19 +13,13 @@ import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 public class EstimatedTimetableHandler {
 
   private final SiriRealTimeTripUpdateAdapter adapter;
-  private final boolean fuzzyTripMatching;
   /**
    * The ID for the static feed to which these real time updates are applied
    */
   private final String feedId;
 
-  public EstimatedTimetableHandler(
-    SiriRealTimeTripUpdateAdapter adapter,
-    boolean fuzzyTripMatching,
-    String feedId
-  ) {
+  public EstimatedTimetableHandler(SiriRealTimeTripUpdateAdapter adapter, String feedId) {
     this.adapter = adapter;
-    this.fuzzyTripMatching = fuzzyTripMatching;
     this.feedId = feedId;
   }
 
@@ -38,9 +32,7 @@ public class EstimatedTimetableHandler {
     RealTimeUpdateContext context
   ) {
     return adapter.applyEstimatedTimetable(
-      fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
       context.entityResolver(feedId),
-      feedId,
       updateMode,
       estimatedTimetableDeliveries
     );

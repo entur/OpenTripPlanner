@@ -18,6 +18,7 @@ import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
@@ -25,6 +26,7 @@ import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.TimetableSnapshotFlush;
+import org.opentripplanner.updater.trip.SiriTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
@@ -191,16 +193,31 @@ public class UpdaterConfigurator {
       updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          provideSiriAdapter(configItem.feedId(), configItem.fuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
       updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          provideSiriAdapter(configItem.feedId(), configItem.fuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
-      updaters.add(new SiriETGooglePubsubUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETGooglePubsubUpdater(
+          configItem,
+          provideSiriAdapter(configItem.feedId(), configItem.fuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriSXUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
@@ -229,20 +246,47 @@ public class UpdaterConfigurator {
       }
     }
     for (var configItem : updatersParameters.getSiriAzureETUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriAzureUpdater.createETUpdater(
+          configItem,
+          provideSiriAdapter(configItem.feedId(), configItem.isFuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriAzureSXUpdaterParameters()) {
       updaters.add(SiriAzureUpdater.createSXUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getMqttSiriETUpdaterParameters()) {
-      updaters.add(new SiriETMqttUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETMqttUpdater(
+          configItem,
+          provideSiriAdapter(configItem.feedId(), configItem.fuzzyTripMatching())
+        )
+      );
     }
 
     return updaters;
   }
 
-  private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
-    return new SiriRealTimeTripUpdateAdapter(timetableRepository, snapshotManager);
+  private SiriRealTimeTripUpdateAdapter provideSiriAdapter(
+    String feedId,
+    boolean fuzzyTripMatching
+  ) {
+    SiriTripMatcher tripMatcher = fuzzyTripMatching
+      ? new SiriTripMatcher(
+        new DefaultTransitService(
+          timetableRepository,
+          snapshotManager.getTimetableSnapshotBuffer()
+        ),
+        feedId
+      )
+      : null;
+    return new SiriRealTimeTripUpdateAdapter(
+      feedId,
+      timetableRepository,
+      snapshotManager,
+      tripMatcher
+    );
   }
 
   private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
