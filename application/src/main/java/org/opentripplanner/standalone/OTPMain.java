@@ -158,6 +158,7 @@ public class OTPMain {
         DataImportIssueSummary.combine(graphBuilder.issueSummary(), app.dataImportIssueSummary()),
         app.emissionRepository(),
         app.empiricalDelayRepository(),
+        app.gbfsGeofencingRepository(),
         app.stopConsolidationRepository(),
         app.fareServiceFactory()
       ).save(app.graphOutputDataSource());
