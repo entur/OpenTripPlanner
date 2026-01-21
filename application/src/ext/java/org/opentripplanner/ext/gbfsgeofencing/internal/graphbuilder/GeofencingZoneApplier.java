@@ -71,22 +71,27 @@ class GeofencingZoneApplier {
       // here we just take the boundary of the geometry since we want to add a "no pass through"
       // restriction to any edge intersecting it
 
-      var network = generalBusinessAreas.get(0).id().getFeedId();
-      var polygons = generalBusinessAreas
+      // group business areas by network to ensure each provider's vehicles are
+      // correctly restricted at their own business area boundaries
+      var byNetwork = generalBusinessAreas
         .stream()
-        .map(GeofencingZone::geometry)
-        .toArray(Geometry[]::new);
+        .collect(Collectors.groupingBy(z -> z.id().getFeedId()));
 
-      var unionOfBusinessAreas = GeometryUtils.getGeometryFactory()
-        .createGeometryCollection(polygons)
-        .union();
+      for (var entry : byNetwork.entrySet()) {
+        var network = entry.getKey();
+        var networkAreas = entry.getValue();
+        var polygons = networkAreas.stream().map(GeofencingZone::geometry).toArray(Geometry[]::new);
 
-      var updated = applyExtension(
-        unionOfBusinessAreas.getBoundary(),
-        new BusinessAreaBorder(network)
-      );
+        var unionOfNetworkAreas = GeometryUtils.getGeometryFactory()
+          .createGeometryCollection(polygons)
+          .union();
 
-      updates.putAll(updated);
+        var updated = applyExtension(
+          unionOfNetworkAreas.getBoundary(),
+          new BusinessAreaBorder(network)
+        );
+        updates.putAll(updated);
+      }
     }
 
     return Map.copyOf(updates);
