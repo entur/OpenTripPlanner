@@ -12,7 +12,7 @@ import org.opentripplanner.updater.trip.siri.TripAndPattern;
  * <p>
  * Implementations:
  * - {@link SiriTripMatcher}: Matches SIRI trips by vehicle ref, line ref, and stop pattern
- * - GtfsTripMatcher: Matches GTFS-RT trips by route, start time, and direction
+ * - {@link GtfsTripMatcher}: Matches GTFS-RT trips by route, start time, and direction
  */
 public interface TripMatcher {
   /**

@@ -5,6 +5,8 @@ public interface RealtimeTestConstants {
   String TRIP_2_ID = "TestTrip2";
   String ADDED_TRIP_ID = "AddedTrip";
 
+  String ROUTE_1_ID = "Route1";
+
   String STATION_OMEGA_ID = "Station-Omega";
   String STOP_A_ID = "A";
   String STOP_B_ID = "B";
