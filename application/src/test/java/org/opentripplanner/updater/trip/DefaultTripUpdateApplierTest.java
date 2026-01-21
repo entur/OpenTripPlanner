@@ -127,7 +127,52 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testUpdateExisting_notImplemented() {
+  void testUpdateExisting_success() {
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.UPDATE_EXISTING,
+      TripReference.builder().withTripId(tripId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+          org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+            new FeedScopedId(FEED_ID, "stop1")
+          )
+        )
+          .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(120))
+          .withDepartureUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(120))
+          .build()
+      )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+          org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+            new FeedScopedId(FEED_ID, "stop2")
+          )
+        )
+          .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(180))
+          .withDepartureUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(180))
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isSuccess());
+    var realTimeUpdate = result.successValue();
+    assertEquals(testPattern, realTimeUpdate.pattern());
+    assertEquals(SERVICE_DATE, realTimeUpdate.serviceDate());
+    assertEquals(RealTimeState.MODIFIED, realTimeUpdate.updatedTripTimes().getRealTimeState());
+
+    // Verify delays were applied
+    var tripTimes = realTimeUpdate.updatedTripTimes();
+    assertEquals(120, tripTimes.getArrivalDelay(0));
+    assertEquals(120, tripTimes.getDepartureDelay(0));
+    assertEquals(180, tripTimes.getArrivalDelay(1));
+    assertEquals(180, tripTimes.getDepartureDelay(1));
+  }
+
+  @Test
+  void testUpdateExisting_noUpdates() {
     var update = ParsedTripUpdate.builder(
       TripUpdateType.UPDATE_EXISTING,
       TripReference.builder().withTripId(tripId).build(),
@@ -137,7 +182,32 @@ class DefaultTripUpdateApplierTest {
     var result = applier.apply(update, context);
 
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
+    assertEquals(UpdateError.UpdateErrorType.NO_UPDATES, result.failureValue().errorType());
+  }
+
+  @Test
+  void testUpdateExisting_tripNotFound() {
+    var nonExistentTripId = new FeedScopedId(FEED_ID, "non-existent-trip");
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.UPDATE_EXISTING,
+      TripReference.builder().withTripId(nonExistentTripId).build(),
+      SERVICE_DATE
+    )
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+          org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+            new FeedScopedId(FEED_ID, "stop1")
+          )
+        )
+          .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(60))
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isFailure());
+    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
   }
 
   @Test

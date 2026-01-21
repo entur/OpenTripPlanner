@@ -51,8 +51,154 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {
-    // TODO: Implement
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    var tripRef = parsedUpdate.tripReference();
+    var serviceDate = parsedUpdate.serviceDate();
+
+    if (tripRef.tripId() == null) {
+      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_TRIP_ID));
+    }
+
+    // Resolve trip from ID
+    var trip = transitService.getTrip(tripRef.tripId());
+    if (trip == null) {
+      LOG.debug("Trip {} not found for update", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Find the trip pattern
+    var pattern = transitService.findPattern(trip, serviceDate);
+    if (pattern == null) {
+      LOG.debug("Pattern not found for trip {} on date {}", tripRef.tripId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Get the snapshot manager and resolve current timetable
+    var snapshotManager = context.snapshotManager();
+    if (snapshotManager == null) {
+      LOG.error("No snapshot manager available for update");
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.UNKNOWN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    var timetable = snapshotManager.resolve(pattern, serviceDate);
+    var tripTimes = timetable.getTripTimes(tripRef.tripId());
+    if (tripTimes == null) {
+      LOG.debug("Trip times not found for trip {} on {}", tripRef.tripId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Create builder from scheduled times
+    var builder = tripTimes.createRealTimeFromScheduledTimes();
+
+    // Apply stop time updates
+    var stopUpdates = parsedUpdate.stopTimeUpdates();
+    if (stopUpdates.isEmpty()) {
+      LOG.debug("No stop time updates for trip {}", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_UPDATES,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Apply each stop time update
+    boolean anyUpdatesApplied = false;
+    for (int i = 0; i < stopUpdates.size() && i < builder.numberOfStops(); i++) {
+      var stopUpdate = stopUpdates.get(i);
+
+      // Apply time updates
+      if (stopUpdate.arrivalUpdate() != null) {
+        int scheduledArrival = builder.getScheduledArrivalTime(i);
+        int updatedArrival = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
+        builder.withArrivalTime(i, updatedArrival);
+        anyUpdatesApplied = true;
+      }
+
+      if (stopUpdate.departureUpdate() != null) {
+        int scheduledDeparture = builder.getScheduledDepartureTime(i);
+        int updatedDeparture = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
+        builder.withDepartureTime(i, updatedDeparture);
+        anyUpdatesApplied = true;
+      }
+
+      // Apply stop status
+      switch (stopUpdate.status()) {
+        case CANCELLED, SKIPPED -> {
+          builder.withCanceled(i);
+          anyUpdatesApplied = true;
+        }
+        case NO_DATA -> {
+          builder.withNoData(i);
+          anyUpdatesApplied = true;
+        }
+        case SCHEDULED, ADDED -> {
+          // Normal update, already handled by time updates
+        }
+      }
+
+      // Apply additional properties
+      if (stopUpdate.stopHeadsign() != null) {
+        builder.withStopHeadsign(i, stopUpdate.stopHeadsign());
+      }
+      if (stopUpdate.occupancy() != null) {
+        builder.withOccupancyStatus(i, stopUpdate.occupancy());
+      }
+      if (stopUpdate.predictionInaccurate()) {
+        builder.withInaccuratePredictions(i);
+      }
+      if (stopUpdate.recorded()) {
+        builder.withRecorded(i);
+      }
+    }
+
+    if (!anyUpdatesApplied) {
+      LOG.debug("No actual updates applied for trip {}", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_UPDATES,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Mark as modified or updated based on whether trip has real-time state
+    builder.withRealTimeState(org.opentripplanner.transit.model.timetable.RealTimeState.MODIFIED);
+
+    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
+    LOG.debug("Updated trip {} on {}", tripRef.tripId(), serviceDate);
+    return Result.success(realTimeTripUpdate);
   }
 
   private Result<RealTimeTripUpdate, UpdateError> handleCancelTrip(

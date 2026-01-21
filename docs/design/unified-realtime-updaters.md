@@ -789,7 +789,41 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 
 ### Phase 3: Common Applier Implementation
 
-**Status:** Not started
+**Status:** ⏳ IN PROGRESS (Partial)
+
+**Class:** `org.opentripplanner.updater.trip.DefaultTripUpdateApplier`
+
+**Completed Handlers:**
+
+| Handler | Status | Tests | Description |
+|---------|--------|-------|-------------|
+| `UPDATE_EXISTING` | ✅ Complete | ✅ 3 tests | Updates arrival/departure times on existing trips; supports stop cancellations, NO_DATA states, stop headsigns, occupancy, and prediction flags |
+| `CANCEL_TRIP` | ✅ Complete | ✅ 2 tests | Marks entire trip as CANCELED |
+| `DELETE_TRIP` | ✅ Complete | ✅ 1 test | Marks entire trip as DELETED |
+
+**Pending Handlers:**
+
+| Handler | Status | Description |
+|---------|--------|-------------|
+| `ADD_NEW_TRIP` | ⏳ TODO | Creates new trips with Trip/Route/Pattern/TripTimes from scratch |
+| `MODIFY_TRIP` | ⏳ TODO | Replaces existing trip pattern with modified stop sequence |
+| `ADD_EXTRA_CALLS` | ⏳ TODO | Inserts extra stops into existing trip (SIRI-specific) |
+
+**Additional Work Needed:**
+- [ ] Delay interpolation logic (forward and backward propagation)
+- [ ] Stop pattern modification handling
+- [ ] Trip/Route/Pattern creation for new trips
+- [ ] Integration with TripPatternCache
+- [ ] Comprehensive test coverage for all handlers
+
+**Test Status:** 9/9 tests passing in `DefaultTripUpdateApplierTest`
+
+**Key Implementation Details:**
+- Uses `RealTimeTripTimesBuilder` for creating real-time trip times
+- Integrates with `TimetableSnapshotManager` for buffered updates
+- Resolves trips/patterns via `TransitEditorService`
+- Applies time updates using `TimeUpdate.resolveTime()` from common model
+- Marks trips with appropriate `RealTimeState` (MODIFIED, CANCELED, DELETED)
 
 ### Phase 4: Integration
 
