@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.Result;
@@ -36,13 +37,22 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
   private final TransitEditorService transitService;
   private final SiriTripPatternCache tripPatternCache;
+  private final TripMatcher tripMatcher;
 
   public DefaultTripUpdateApplier(TransitEditorService transitService) {
+    this(transitService, null);
+  }
+
+  public DefaultTripUpdateApplier(
+    TransitEditorService transitService,
+    @Nullable TripMatcher tripMatcher
+  ) {
     this.transitService = Objects.requireNonNull(transitService);
     this.tripPatternCache = new SiriTripPatternCache(
       new SiriTripPatternIdGenerator(),
       transitService::findPattern
     );
+    this.tripMatcher = tripMatcher;
   }
 
   @Override
@@ -72,7 +82,11 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     var tripRef = parsedUpdate.tripReference();
     var serviceDate = parsedUpdate.serviceDate();
 
+    // Try fuzzy matching if tripId is null
     if (tripRef.tripId() == null) {
+      if (tripMatcher != null) {
+        return handleFuzzyMatch(parsedUpdate, context);
+      }
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_TRIP_ID));
     }
 
@@ -633,6 +647,14 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     var serviceDate = parsedUpdate.serviceDate();
     var tripReference = parsedUpdate.tripReference();
 
+    // Try fuzzy matching if tripId is null
+    if (tripReference.tripId() == null) {
+      if (tripMatcher != null) {
+        return handleFuzzyMatch(parsedUpdate, context);
+      }
+      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_TRIP_ID));
+    }
+
     // Resolve the trip
     var trip = transitService.getTrip(tripReference.tripId());
     if (trip == null) {
@@ -742,5 +764,62 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     var realTimeTripTimes = rtBuilder.build();
     var realTimeTripUpdate = new RealTimeTripUpdate(newPattern, realTimeTripTimes, serviceDate);
     return Result.success(realTimeTripUpdate);
+  }
+
+  /**
+   * Handles fuzzy matching when trip ID is not available.
+   * Delegates to the TripMatcher to find the trip by alternative identifiers.
+   */
+  private Result<RealTimeTripUpdate, UpdateError> handleFuzzyMatch(
+    ParsedTripUpdate parsedUpdate,
+    TripUpdateApplierContext context
+  ) {
+    var matchResult = tripMatcher.match(parsedUpdate, context);
+
+    if (matchResult.isFailure()) {
+      return Result.failure(matchResult.failureValue());
+    }
+
+    var tripAndPattern = matchResult.successValue();
+    var trip = tripAndPattern.trip();
+
+    // Now process the update with the matched trip
+    // Create a new ParsedTripUpdate with the resolved trip ID
+    var updatedTripRef = org.opentripplanner.updater.trip.model.TripReference.builder()
+      .withTripId(trip.getId())
+      .withRouteId(parsedUpdate.tripReference().routeId())
+      .withStartTime(parsedUpdate.tripReference().startTime())
+      .withStartDate(parsedUpdate.tripReference().startDate())
+      .withDirection(parsedUpdate.tripReference().direction())
+      .withVehicleRef(parsedUpdate.tripReference().vehicleRef())
+      .withLineRef(parsedUpdate.tripReference().lineRef())
+      .withFuzzyMatchingHint(parsedUpdate.tripReference().fuzzyMatchingHint())
+      .build();
+
+    var updatedParsedUpdate = org.opentripplanner.updater.trip.model.ParsedTripUpdate.builder(
+      parsedUpdate.updateType(),
+      updatedTripRef,
+      parsedUpdate.serviceDate()
+    )
+      .withStopTimeUpdates(parsedUpdate.stopTimeUpdates())
+      .withTripCreationInfo(parsedUpdate.tripCreationInfo())
+      .withStopPatternModification(parsedUpdate.stopPatternModification())
+      .withOptions(parsedUpdate.options())
+      .withDataSource(parsedUpdate.dataSource())
+      .build();
+
+    // Recursively call the appropriate handler with the resolved trip ID
+    return switch (parsedUpdate.updateType()) {
+      case UPDATE_EXISTING -> handleUpdateExisting(updatedParsedUpdate, context);
+      case ADD_EXTRA_CALLS -> handleAddExtraCalls(updatedParsedUpdate, context);
+      default -> Result.failure(
+        new UpdateError(
+          null,
+          UpdateError.UpdateErrorType.UNKNOWN,
+          Integer.valueOf(0),
+          context.feedId()
+        )
+      );
+    };
   }
 }

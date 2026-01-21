@@ -839,6 +839,85 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 - **Handlers Using Cache**: `ADD_NEW_TRIP`, `MODIFY_TRIP` (when pattern changes), `ADD_EXTRA_CALLS`
 - **Benefits**: Reduced memory usage, consistent pattern IDs across SIRI/GTFS-RT, unified pattern management
 
+**Fuzzy Trip Matching Integration:** ✅ COMPLETE
+
+**Status:** Full implementation with comprehensive unit tests
+
+**Purpose:** Enables matching trips when exact trip IDs are unavailable, using alternative identifiers like vehicle references or stop patterns.
+
+**Key Components:**
+
+1. **TripMatcher Interface** (`org.opentripplanner.updater.trip.TripMatcher`)
+   - Common interface for pluggable fuzzy matching strategies
+   - Method: `match(ParsedTripUpdate, TripUpdateApplierContext) → Result<TripAndPattern, UpdateError>`
+   - Enables format-specific matching implementations
+
+2. **SiriTripMatcher Implementation** (`org.opentripplanner.updater.trip.SiriTripMatcher`)
+   - Self-contained fuzzy matcher for SIRI-based updates
+   - **No dependency on SiriFuzzyTripMatcher** - all logic copied internally
+   - Uses only `ParsedTripUpdate` data (no SIRI-specific types)
+   - Builds internal caches during construction for fast runtime matching
+
+3. **Matching Strategies** (in order of preference):
+   - **Primary: VehicleRef matching** - Uses NeTEx internal planning code for RAIL trips
+   - **Fallback: Last stop + arrival time** - When vehicleRef unavailable
+   - **Sibling stop support** - Matches different platforms at same parent station
+   - **LineRef filtering** - Filters by route when multiple candidates found
+   - **Validation** - Matches first/last stops and first departure time against scheduled data
+
+4. **Cache Implementation**:
+   - `internalPlanningCodeCache`: Maps vehicleRef → Set<Trip> (RAIL trips only)
+   - `lastStopArrivalCache`: Maps "stopId:arrivalSeconds" → Set<Trip> (all trips)
+   - Built eagerly during construction from TransitService
+   - Uses scheduled timetable data for keys (not real-time)
+
+5. **Integration with DefaultTripUpdateApplier**:
+   - Optional `TripMatcher` field injected via constructor
+   - `UPDATE_EXISTING` handler: When tripId is null, calls `handleFuzzyMatch()`
+   - `ADD_EXTRA_CALLS` handler: When tripId is null, calls `handleFuzzyMatch()`
+   - `handleFuzzyMatch()`: Resolves trip, creates new update with tripId, recursively calls original handler
+   - Error codes: `NO_FUZZY_TRIP_MATCH` (no match), `MULTIPLE_FUZZY_TRIP_MATCHES` (ambiguous)
+
+6. **TripReference Extensions**:
+   - Added `vehicleRef` field (String) - SIRI internal planning code / train number
+   - Added `lineRef` field (String) - SIRI line identifier for route filtering
+   - Constructor changed from 6 to 8 parameters
+   - Format-independent design (not SIRI-specific)
+
+7. **Test Coverage**: `SiriTripMatcherTest` (10 test cases) ✅ ALL PASSING
+   - ✅ Match by vehicleRef (RAIL mode with internal planning code)
+   - ✅ Match by last stop arrival (fallback strategy)
+   - ✅ Match by sibling stop (different platforms at same station)
+   - ✅ Match with lineRef filter (route-based disambiguation)
+   - ✅ No match returns NO_FUZZY_TRIP_MATCH error
+   - ✅ Multiple matches returns MULTIPLE_FUZZY_TRIP_MATCHES error
+   - ✅ Empty stop updates returns NO_VALID_STOPS error
+   - ✅ Invalid stop reference returns error
+   - ✅ First stop mismatch returns error
+   - ✅ Service date filtering works correctly
+
+**Test Debugging Notes:**
+- **Issue 1**: Service date mismatch - `TransitTestEnvironment.of()` defaulted to wrong date
+- **Fix**: Use `TransitTestEnvironment.of(SERVICE_DATE)` to align test environment with update dates
+- **Issue 2**: Manual `.withServiceId()` broke service code mapping in test
+- **Fix**: Use `.withServiceDates()` on TripInput to let builder manage service codes
+
+**Key Design Decisions:**
+- **Self-contained implementation**: SiriTripMatcher has no external fuzzy matcher dependencies
+- **Uses common model**: Only requires ParsedTripUpdate, works with unified architecture
+- **Cache initialization**: Eager loading during construction for fast matching at runtime
+- **Sibling stop matching**: Handles SIRI data reporting different platform at same station
+- **Service date filtering**: Uses `CalendarService` to filter trips by active service dates
+- **Modified pattern support**: Checks snapshot manager for modified patterns before falling back to scheduled
+
+**Current Status:**
+- ✅ Interface and implementation complete
+- ✅ Integration with DefaultTripUpdateApplier complete
+- ✅ All 20 existing applier tests passing (no regressions)
+- ✅ All 10 SiriTripMatcher unit tests passing
+- ✅ Self-contained design eliminates SiriFuzzyTripMatcher dependency
+- ✅ Ready for integration into SIRI-ET and GTFS-RT updaters
+
 **Additional Work for Future Phases:**
 - [ ] Wiring into SIRI-ET and GTFS-RT updaters - Phase 4
 
