@@ -633,7 +633,7 @@ public void applyEstimatedTimetable(
 - `StopReference` supports both GTFS stop IDs and SIRI stop point refs
 - `TripReference` includes fuzzy matching hint for different matching strategies
 - `TripUpdateOptions` reuses existing `ForwardsDelayPropagationType` and `BackwardsDelayPropagationType` enums
-- All records use builders for complex construction with sensible defaults
+- All classes use builders for complex construction with sensible defaults
 
 ### Phase 2: Interfaces ✅ COMPLETE
 
@@ -652,14 +652,81 @@ public void applyEstimatedTimetable(
 - `TripUpdateParser<T>` is generic to support different input types (SIRI's `EstimatedVehicleJourney`, GTFS-RT's `TripUpdate`)
 - Parser produces `ParsedTripUpdate`, Applier produces `RealTimeTripUpdate`
 - Both use `Result<T, UpdateError>` for error handling, consistent with existing codebase
-- Contexts are records with minimal required fields
+- Context classes contain minimal required fields
 
 ### Phase 2b: Parser Implementations
 
-**Status:** Not started
+**Status:** ✅ GTFS-RT Parser COMPLETE & TESTED | ⏳ SIRI Parser Next
 
-- [ ] `SiriTripUpdateParser` - Parse `EstimatedVehicleJourney` → `ParsedTripUpdate`
-- [ ] `GtfsRtTripUpdateParser` - Parse `GtfsRealtime.TripUpdate` → `ParsedTripUpdate`
+| Parser | Status | Tests | Test Results |
+|--------|--------|-------|--------------|
+| `GtfsRtTripUpdateParser` | ✅ Complete | ✅ 16 tests | ✅ **ALL PASSING** |
+| `SiriTripUpdateParser` | ⏳ Ready to implement | ⏳ Tests to create | - |
+
+**GTFS-RT Parser Implementation:**
+
+**Class:** `org.opentripplanner.updater.trip.gtfs.GtfsRtTripUpdateParser`
+
+✅ **FULLY TESTED & WORKING** - All 16 test cases passing
+
+Full implementation of `TripUpdateParser<GtfsRealtime.TripUpdate>` interface:
+
+- ✅ Parses all GTFS-RT `ScheduleRelationship` types:
+  - `SCHEDULED` → `TripUpdateType.UPDATE_EXISTING`
+  - `CANCELED` → `TripUpdateType.CANCEL_TRIP`
+  - `DELETED` → `TripUpdateType.DELETE_TRIP`
+  - `ADDED`/`NEW` → `TripUpdateType.ADD_NEW_TRIP`
+  - `REPLACEMENT` → `TripUpdateType.MODIFY_TRIP`
+  - Returns errors for `UNSCHEDULED` and `DUPLICATED`
+
+- ✅ Stop time update parsing:
+  - Delay-based times for scheduled trips (uses delay in seconds)
+  - Absolute times for new trips (uses time since midnight)
+  - Stop sequences, stop headsigns, assigned stop IDs
+  - Pickup/dropoff types from `StopTimeProperties`
+  - Skipped stop detection
+
+- ✅ Trip creation info parsing:
+  - Route ID, headsign, short name
+  - Wheelchair accessibility from vehicle descriptor
+  - Service date and trip descriptor fields
+
+- ✅ Configuration preservation:
+  - Forwards and backwards delay propagation types
+  - Creates `TripUpdateOptions` with GTFS-RT defaults
+
+- ✅ Error handling:
+  - Missing trip ID validation
+  - Date parsing error handling
+  - Returns `Result<ParsedTripUpdate, UpdateError>`
+
+**Test Coverage:** `GtfsRtTripUpdateParserTest` (16 test cases)
+- Scheduled trip updates with delays
+- Cancelled and deleted trips
+- New trip creation with absolute times
+- Replacement trips
+- Skipped stops
+- Assigned stop IDs
+- Trip and stop properties
+- Direction handling
+- Error cases (missing trip ID, unsupported types)
+- Empty updates
+- Configuration preservation
+
+**Key Design Decisions:**
+1. Different parsing logic for scheduled vs. new trips (delay vs. absolute time)
+2. Uses existing `ForwardsDelayPropagationType` and `BackwardsDelayPropagationType` enums
+3. Maps protobuf wheelchair accessibility values to OTP `Accessibility` enum
+4. Returns empty update lists for cancellations (no stop time processing needed)
+
+**Next Steps for SIRI Parser:**
+The SIRI parser will follow a similar structure but must handle:
+- `EstimatedVehicleJourney` input type
+- `CallWrapper` abstraction for RecordedCall/EstimatedCall
+- Three update types: REPLACEMENT_DEPARTURE, EXTRA_CALL, TRIP_UPDATE
+- Absolute times (SIRI always provides actual times, not delays)
+- SIRI-specific fields: prediction inaccuracy, extra calls, destination displays
+- Integration with `EntityResolver` for ID resolution
 
 ### Phase 3: Common Applier Implementation
 
