@@ -789,7 +789,7 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 
 ### Phase 3: Common Applier Implementation
 
-**Status:** ✅ COMPLETE
+**Status:** ✅ COMPLETE (including delay interpolation)
 
 **Class:** `org.opentripplanner.updater.trip.DefaultTripUpdateApplier`
 
@@ -797,14 +797,14 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 
 | Handler | Status | Tests | Description |
 |---------|--------|-------|-------------|
-| `UPDATE_EXISTING` | ✅ Complete | ✅ 3 tests | Updates arrival/departure times on existing trips; supports stop cancellations, NO_DATA states, stop headsigns, occupancy, and prediction flags |
+| `UPDATE_EXISTING` | ✅ Complete | ✅ 6 tests | Updates arrival/departure times on existing trips; supports stop cancellations, NO_DATA states, stop headsigns, occupancy, prediction flags, **and delay interpolation (forward/backward propagation)** |
 | `CANCEL_TRIP` | ✅ Complete | ✅ 2 tests | Marks entire trip as CANCELED |
 | `DELETE_TRIP` | ✅ Complete | ✅ 1 test | Marks entire trip as DELETED |
 | `ADD_NEW_TRIP` | ✅ Complete | ✅ 3 tests | Creates new trips with Trip/Route/Pattern/TripTimes from scratch; validates route exists and stop time updates present |
 | `MODIFY_TRIP` | ✅ Complete | ✅ 4 tests | Replaces trip stop pattern with modified sequence; creates new pattern if stops change, RealTimeState.MODIFIED for pattern changes, RealTimeState.UPDATED for time-only changes |
 | `ADD_EXTRA_CALLS` | ✅ Complete | ✅ 4 tests | Inserts extra stops into existing trip; validates original stop count matches pattern, creates new pattern with extra calls, marks as RealTimeState.MODIFIED |
 
-**Test Status:** ✅ 17/17 tests passing in `DefaultTripUpdateApplierTest`
+**Test Status:** ✅ 20/20 tests passing in `DefaultTripUpdateApplierTest`
 
 **Key Implementation Details:**
 - Uses `RealTimeTripTimesBuilder` for creating real-time trip times
@@ -818,9 +818,18 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 - Compares stop patterns to determine MODIFIED vs UPDATED state
 - Reuses original pattern if stop sequence unchanged
 - **ADD_EXTRA_CALLS**: Validates non-extra stops match original pattern positions, inserts extra stops at specified sequence, creates new pattern with combined stop list
+- **DELAY INTERPOLATION**: Supports forward/backward delay propagation via `TripUpdateOptions`; uses existing GTFS-RT interpolators; SIRI defaults to no interpolation (NONE/NONE); GTFS-RT configurable per updater
+
+**Delay Interpolation Implementation:**
+- **Forward Interpolation**: Propagates delays forward to stops without explicit times (configurable via `ForwardsDelayPropagationType`)
+- **Backward Interpolation**: Propagates delays backward to ensure non-decreasing times (configurable via `BackwardsDelayPropagationType`)
+- **Integration**: Reuses existing `ForwardsDelayInterpolator` and `BackwardsDelayInterpolator` from GTFS-RT package
+- **Stop Matching**: Iterates through ALL stops in pattern and matches updates by stop ID (similar to GTFS-RT `TripTimesUpdater`)
+- **Builder Strategy**: Uses `createRealTimeWithoutScheduledTimes()` to allow interpolators to fill missing times
+- **Fallback**: When interpolation disabled (SIRI defaults), copies scheduled times for stops without updates
+- **Tests**: 3 new tests verify forward interpolation, backward interpolation, and no-interpolation scenarios
 
 **Additional Work for Future Phases:**
-- [ ] Delay interpolation logic (forward and backward propagation) - optional enhancement
 - [ ] Integration with TripPatternCache - Phase 4
 - [ ] Wiring into SIRI-ET and GTFS-RT updaters - Phase 4
 

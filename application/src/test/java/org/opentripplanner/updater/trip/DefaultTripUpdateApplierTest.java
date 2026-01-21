@@ -15,8 +15,11 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.model.TripUpdateOptions;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
@@ -209,6 +212,106 @@ class DefaultTripUpdateApplierTest {
 
     assertTrue(result.isFailure());
     assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+  }
+
+  @Test
+  void testUpdateExisting_withForwardInterpolation() {
+    var options = TripUpdateOptions.builder()
+      .withForwardsPropagation(ForwardsDelayPropagationType.DEFAULT)
+      .withBackwardsPropagation(BackwardsDelayPropagationType.NONE)
+      .build();
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.UPDATE_EXISTING,
+      TripReference.builder().withTripId(tripId).build(),
+      SERVICE_DATE
+    )
+      .withOptions(options)
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+          org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+            new FeedScopedId(FEED_ID, "stop1")
+          )
+        )
+          .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(120))
+          .withDepartureUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(120))
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isSuccess());
+    var tripTimes = result.successValue().updatedTripTimes();
+    assertEquals(120, tripTimes.getArrivalDelay(0));
+    assertEquals(120, tripTimes.getDepartureDelay(0));
+    assertEquals(120, tripTimes.getArrivalDelay(1));
+    assertEquals(120, tripTimes.getDepartureDelay(1));
+  }
+
+  @Test
+  void testUpdateExisting_withBackwardInterpolation() {
+    var options = TripUpdateOptions.builder()
+      .withForwardsPropagation(ForwardsDelayPropagationType.NONE)
+      .withBackwardsPropagation(BackwardsDelayPropagationType.REQUIRED)
+      .build();
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.UPDATE_EXISTING,
+      TripReference.builder().withTripId(tripId).build(),
+      SERVICE_DATE
+    )
+      .withOptions(options)
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+          org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+            new FeedScopedId(FEED_ID, "stop2")
+          )
+        )
+          .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(180))
+          .withDepartureUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(180))
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isSuccess());
+    var tripTimes = result.successValue().updatedTripTimes();
+    assertEquals(180, tripTimes.getArrivalDelay(1));
+    assertEquals(180, tripTimes.getDepartureDelay(1));
+  }
+
+  @Test
+  void testUpdateExisting_noInterpolation() {
+    var options = TripUpdateOptions.siriDefaults();
+
+    var update = ParsedTripUpdate.builder(
+      TripUpdateType.UPDATE_EXISTING,
+      TripReference.builder().withTripId(tripId).build(),
+      SERVICE_DATE
+    )
+      .withOptions(options)
+      .addStopTimeUpdate(
+        org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate.builder(
+          org.opentripplanner.updater.trip.model.StopReference.ofStopId(
+            new FeedScopedId(FEED_ID, "stop1")
+          )
+        )
+          .withArrivalUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(120))
+          .withDepartureUpdate(org.opentripplanner.updater.trip.model.TimeUpdate.ofDelay(120))
+          .build()
+      )
+      .build();
+
+    var result = applier.apply(update, context);
+
+    assertTrue(result.isSuccess());
+    var tripTimes = result.successValue().updatedTripTimes();
+    assertEquals(120, tripTimes.getArrivalDelay(0));
+    assertEquals(120, tripTimes.getDepartureDelay(0));
+    assertEquals(0, tripTimes.getArrivalDelay(1));
+    assertEquals(0, tripTimes.getDepartureDelay(1));
   }
 
   @Test

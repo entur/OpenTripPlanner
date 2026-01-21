@@ -15,6 +15,8 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
+import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -124,8 +126,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Create builder from scheduled times
-    var builder = tripTimes.createRealTimeFromScheduledTimes();
+    // Create builder without scheduled times so interpolation can fill them in
+    var builder = tripTimes.createRealTimeWithoutScheduledTimes();
 
     // Apply stop time updates
     var stopUpdates = parsedUpdate.stopTimeUpdates();
@@ -141,54 +143,81 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Apply each stop time update
+    // Apply each stop time update - iterate through ALL stops in pattern
+    // and match updates by stop ID (similar to GTFS-RT TripTimesUpdater)
+    int updateIndex = 0;
     boolean anyUpdatesApplied = false;
-    for (int i = 0; i < stopUpdates.size() && i < builder.numberOfStops(); i++) {
-      var stopUpdate = stopUpdates.get(i);
+    int numStops = builder.numberOfStops();
 
-      // Apply time updates
-      if (stopUpdate.arrivalUpdate() != null) {
-        int scheduledArrival = builder.getScheduledArrivalTime(i);
-        int updatedArrival = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
-        builder.withArrivalTime(i, updatedArrival);
-        anyUpdatesApplied = true;
+    for (int i = 0; i < numStops; i++) {
+      var stopUpdate = updateIndex < stopUpdates.size() ? stopUpdates.get(updateIndex) : null;
+
+      // Check if this update matches the current stop
+      boolean match = false;
+      if (stopUpdate != null && stopUpdate.stopReference() != null) {
+        var stopId = pattern.getStop(i).getId();
+        if (stopUpdate.stopReference().stopId() != null) {
+          match = stopUpdate.stopReference().stopId().equals(stopId);
+        }
       }
 
-      if (stopUpdate.departureUpdate() != null) {
-        int scheduledDeparture = builder.getScheduledDepartureTime(i);
-        int updatedDeparture = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
-        builder.withDepartureTime(i, updatedDeparture);
-        anyUpdatesApplied = true;
-      }
-
-      // Apply stop status
-      switch (stopUpdate.status()) {
-        case CANCELLED, SKIPPED -> {
-          builder.withCanceled(i);
+      if (match) {
+        // Apply time updates - use delay-based updates when available for interpolation
+        if (stopUpdate.arrivalUpdate() != null) {
+          if (stopUpdate.arrivalUpdate().hasDelay()) {
+            builder.withArrivalDelay(i, stopUpdate.arrivalUpdate().delaySeconds());
+          } else {
+            int scheduledArrival = builder.getScheduledArrivalTime(i);
+            int updatedArrival = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
+            builder.withArrivalTime(i, updatedArrival);
+          }
           anyUpdatesApplied = true;
         }
-        case NO_DATA -> {
-          builder.withNoData(i);
+
+        if (stopUpdate.departureUpdate() != null) {
+          if (stopUpdate.departureUpdate().hasDelay()) {
+            builder.withDepartureDelay(i, stopUpdate.departureUpdate().delaySeconds());
+          } else {
+            int scheduledDeparture = builder.getScheduledDepartureTime(i);
+            int updatedDeparture = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
+            builder.withDepartureTime(i, updatedDeparture);
+          }
           anyUpdatesApplied = true;
         }
-        case SCHEDULED, ADDED -> {
-          // Normal update, already handled by time updates
-        }
-      }
 
-      // Apply additional properties
-      if (stopUpdate.stopHeadsign() != null) {
-        builder.withStopHeadsign(i, stopUpdate.stopHeadsign());
+        // Apply stop status
+        switch (stopUpdate.status()) {
+          case CANCELLED, SKIPPED -> {
+            builder.withCanceled(i);
+            anyUpdatesApplied = true;
+          }
+          case NO_DATA -> {
+            builder.withNoData(i);
+            anyUpdatesApplied = true;
+          }
+          case SCHEDULED, ADDED -> {
+            // Normal update, already handled by time updates
+          }
+        }
+
+        // Apply additional properties
+        if (stopUpdate.stopHeadsign() != null) {
+          builder.withStopHeadsign(i, stopUpdate.stopHeadsign());
+        }
+        if (stopUpdate.occupancy() != null) {
+          builder.withOccupancyStatus(i, stopUpdate.occupancy());
+        }
+        if (stopUpdate.predictionInaccurate()) {
+          builder.withInaccuratePredictions(i);
+        }
+        if (stopUpdate.recorded()) {
+          builder.withRecorded(i);
+        }
+
+        // Move to next update
+        updateIndex++;
       }
-      if (stopUpdate.occupancy() != null) {
-        builder.withOccupancyStatus(i, stopUpdate.occupancy());
-      }
-      if (stopUpdate.predictionInaccurate()) {
-        builder.withInaccuratePredictions(i);
-      }
-      if (stopUpdate.recorded()) {
-        builder.withRecorded(i);
-      }
+      // If no match, leave this stop with scheduled times (interpolation will fill it in if needed)
     }
 
     if (!anyUpdatesApplied) {
@@ -201,6 +230,23 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           context.feedId()
         )
       );
+    }
+
+    // Apply delay interpolation if configured
+    var options = parsedUpdate.options();
+    if (options.propagatesDelays()) {
+      // Apply forward interpolation to fill in missing times
+      ForwardsDelayInterpolator.getInstance(options.forwardsPropagation()).interpolateDelay(
+        builder
+      );
+
+      // Apply backward interpolation to ensure non-decreasing times
+      BackwardsDelayInterpolator.getInstance(options.backwardsPropagation()).propagateBackwards(
+        builder
+      );
+    } else {
+      // No interpolation - copy scheduled times for stops without explicit updates
+      builder.copyMissingTimesFromScheduledTimetable();
     }
 
     // Mark as modified or updated based on whether trip has real-time state
