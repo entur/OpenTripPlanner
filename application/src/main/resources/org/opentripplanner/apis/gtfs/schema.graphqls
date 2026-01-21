@@ -1776,10 +1776,6 @@ type QueryType {
     """
     before: String,
     """
-    Parameters that affect flexible transport routing per request.
-    """
-    flex: FlexRequest,
-    """
     Datetime of the search. It's possible to either define the earliest departure time
     or the latest arrival time. By default, earliest departure time is set as now.
     """
@@ -1794,6 +1790,8 @@ type QueryType {
     in the first search).
     """
     first: Int,
+    "Parameters that affect flexible transport routing per request."
+    flex: FlexRequest,
     """
     Settings that control the behavior of itinerary filtering. These are advanced settings and
     should not be set by a user through user preferences.
@@ -2707,7 +2705,7 @@ type TripOnServiceDateConnection {
   pageInfo: PageInfo!
   """
   The total number of trips on service dates in this connection at the time of query execution (including the current and previous
-  pages). 
+  pages).
   Note, this number might not stay the same throughout the paging as trips might be added or
   removed.
   """
@@ -4303,9 +4301,7 @@ input DestinationScooterPolicyInput {
   keepingCost: Cost
 }
 
-"""
-Parameters that affect flexible transport routing per request.
-"""
+"Parameters that affect flexible transport routing per request."
 input FlexRequest {
   """
   The date and time for the latest time the user is expected to book the journey.
@@ -4315,7 +4311,7 @@ input FlexRequest {
   services only) are used to enforce this. If this parameter is _not set_, no booking-time
   restrictions are applied - all journeys are listed.
   """
-  bookingTime: OffsetDateTime,
+  bookingTime: OffsetDateTime
 }
 
 input InputBanned {
