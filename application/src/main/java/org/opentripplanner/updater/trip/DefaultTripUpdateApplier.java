@@ -59,16 +59,100 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {
-    // TODO: Implement
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    return cancelOrDeleteTrip(parsedUpdate, context, true);
   }
 
   private Result<RealTimeTripUpdate, UpdateError> handleDeleteTrip(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {
-    // TODO: Implement
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    return cancelOrDeleteTrip(parsedUpdate, context, false);
+  }
+
+  /**
+   * Common logic for canceling or deleting a trip.
+   *
+   * @param parsedUpdate the parsed update
+   * @param context the context
+   * @param isCancel true for cancel, false for delete
+   * @return Result with RealTimeTripUpdate or UpdateError
+   */
+  private Result<RealTimeTripUpdate, UpdateError> cancelOrDeleteTrip(
+    ParsedTripUpdate parsedUpdate,
+    TripUpdateApplierContext context,
+    boolean isCancel
+  ) {
+    var tripRef = parsedUpdate.tripReference();
+    var serviceDate = parsedUpdate.serviceDate();
+
+    // Resolve trip from ID
+    var trip = transitService.getTrip(tripRef.tripId());
+    if (trip == null) {
+      LOG.debug("Trip {} not found for cancellation/deletion", tripRef.tripId());
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Find the trip pattern
+    var pattern = transitService.findPattern(trip, serviceDate);
+    if (pattern == null) {
+      LOG.debug("Pattern not found for trip {} on date {}", tripRef.tripId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Get the snapshot manager and resolve current timetable
+    var snapshotManager = context.snapshotManager();
+    if (snapshotManager == null) {
+      LOG.error("No snapshot manager available for cancellation/deletion");
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.UNKNOWN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    var timetable = snapshotManager.resolve(pattern, serviceDate);
+    var tripTimes = timetable.getTripTimes(tripRef.tripId());
+    if (tripTimes == null) {
+      LOG.debug("Trip times not found for trip {} on {}", tripRef.tripId(), serviceDate);
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Create real-time trip times and mark as canceled/deleted
+    var builder = tripTimes.createRealTimeFromScheduledTimes();
+    if (isCancel) {
+      builder.cancelTrip();
+      LOG.debug("Canceling trip {} on {}", tripRef.tripId(), serviceDate);
+    } else {
+      builder.deleteTrip();
+      LOG.debug("Deleting trip {} on {}", tripRef.tripId(), serviceDate);
+    }
+
+    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
+    return Result.success(realTimeTripUpdate);
   }
 
   private Result<RealTimeTripUpdate, UpdateError> handleAddNewTrip(
