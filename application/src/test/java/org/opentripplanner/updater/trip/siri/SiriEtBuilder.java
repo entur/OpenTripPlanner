@@ -1,8 +1,6 @@
 package org.opentripplanner.updater.trip.siri;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -150,23 +148,34 @@ public class SiriEtBuilder {
 
   public static class FramedVehicleRefBuilder {
 
-    private LocalDate serviceDate;
+    private String dataFrameRef;
     private String vehicleJourneyRef;
 
-    public SiriEtBuilder.FramedVehicleRefBuilder withServiceDate(LocalDate serviceDate) {
-      this.serviceDate = serviceDate;
+    public SiriEtBuilder.FramedVehicleRefBuilder withDataFrameRef(String dataFrameRef) {
+      this.dataFrameRef = dataFrameRef;
+      return this;
+    }
+
+    public SiriEtBuilder.FramedVehicleRefBuilder withDatedVehicleJourneyRef(
+      String vehicleJourneyRef
+    ) {
+      this.vehicleJourneyRef = vehicleJourneyRef;
       return this;
     }
 
     public SiriEtBuilder.FramedVehicleRefBuilder withVehicleJourneyRef(String vehicleJourneyRef) {
-      this.vehicleJourneyRef = vehicleJourneyRef;
+      return withDatedVehicleJourneyRef(vehicleJourneyRef);
+    }
+
+    public SiriEtBuilder.FramedVehicleRefBuilder withServiceDate(java.time.LocalDate serviceDate) {
+      this.dataFrameRef = java.time.format.DateTimeFormatter.ISO_LOCAL_DATE.format(serviceDate);
       return this;
     }
 
     public FramedVehicleJourneyRefStructure build() {
       DataFrameRefStructure dataFrameRefStructure = new DataFrameRefStructure();
-      if (serviceDate != null) {
-        dataFrameRefStructure.setValue(DateTimeFormatter.ISO_LOCAL_DATE.format(serviceDate));
+      if (dataFrameRef != null) {
+        dataFrameRefStructure.setValue(dataFrameRef);
       }
       FramedVehicleJourneyRefStructure framedVehicleJourneyRefStructure =
         new FramedVehicleJourneyRefStructure();
@@ -189,11 +198,15 @@ public class SiriEtBuilder {
     }
 
     public RecordedCallsBuilder call(StopLocation stop) {
+      return call(stop.getId().getId());
+    }
+
+    public RecordedCallsBuilder call(String stopPointRef) {
       var call = new RecordedCall();
       call.setOrder(BigInteger.valueOf(orderOffset + calls.size()));
 
       var ref = new StopPointRefStructure();
-      ref.setValue(stop.getId().getId());
+      ref.setValue(stopPointRef);
       call.setStopPointRef(ref);
 
       calls.add(call);
@@ -230,6 +243,18 @@ public class SiriEtBuilder {
       var dd = new NaturalLanguageStringStructure();
       dd.setValue(destinationDisplay);
       calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public RecordedCallsBuilder withAimedDepartureTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public RecordedCallsBuilder withActualDepartureTime(String actualTime) {
+      var call = calls.getLast();
+      call.setActualDepartureTime(localTimeParser.zonedDateTime(actualTime));
       return this;
     }
 
@@ -331,6 +356,59 @@ public class SiriEtBuilder {
       var dd = new NaturalLanguageStringStructure();
       dd.setValue(destinationDisplay);
       calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withAimedArrivalTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedArrivalTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withExpectedArrivalTime(String expectedTime) {
+      var call = calls.getLast();
+      call.setExpectedArrivalTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withAimedDepartureTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withExpectedDepartureTime(String expectedTime) {
+      var call = calls.getLast();
+      call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withCancellation(boolean cancel) {
+      var call = calls.getLast();
+      call.setCancellation(cancel);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withPredictionInaccurate(boolean inaccurate) {
+      var call = calls.getLast();
+      call.setPredictionInaccurate(inaccurate);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withOccupancy(uk.org.siri.siri21.OccupancyEnumeration occupancy) {
+      var call = calls.getLast();
+      call.setOccupancy(occupancy);
+      return this;
+    }
+
+    public EstimatedCallsBuilder next() {
       return this;
     }
 
