@@ -1,49 +1,30 @@
 <configuration>
-
-  <!-- This is a separate logback configuration for tests. We may want to suppress noisy warnings during tests. -->
-
-  <!-- This suppresses the meta-log entries about Logback configuration (how Java). This is a stopgap measure.
-       The right solution is to make sure there are not logback.xml files from our dependency libraries on the classpath. -->
   <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-
-  <!-- This will push these level changes onto Java.util.logging. Otherwise, JUL defaults to a high threshold
-       for logging and debug log messages will never make it to slf4j. -->
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
 
-  <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+  <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+    <file>/tmp/quay-test-debug.log</file>
+    <immediateFlush>true</immediateFlush>
     <encoder>
-      <!-- print out file and line number in parenthesis, which Eclipse and IDEA will link -->
-      <pattern>%d{HH:mm:ss.SSS} %level [%thread] \(%F:%L\) %msg%n</pattern>
+      <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] (%F:%L) %msg%n</pattern>
     </encoder>
   </appender>
 
-  <!-- Change this to debug if you want to let more messages through. -->
+  <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+    <queueSize>512</queueSize>
+    <discardingThreshold>0</discardingThreshold>
+    <appender-ref ref="FILE" />
+  </appender>
+
   <root level="info">
-    <appender-ref ref="stdout" />
+    <appender-ref ref="ASYNC" />
   </root>
 
-  <!-- Graph builder data import logs a summary at INFO level and issues at DEBUG level -->
-  <logger name="DATA_IMPORT_ISSUES" level="info" />
+  <!-- Enable debug logging for DefaultTripUpdateApplier -->
+  <logger name="org.opentripplanner.updater.trip.DefaultTripUpdateApplier" level="debug" />
+  <logger name="org.opentripplanner.updater.trip.siri" level="debug" />
 
-
-  <logger name="org.opentripplanner" level="info"/>
-  <logger name="org.opentripplanner.graph_builder.module.transfer.DirectTransferGenerator" level="info"/>
-
-
-  <logger name="org.opentripplanner.routing" level="info"/>
-  <logger name="org.opentripplanner.routing.algorithm.transferoptimization" level="info"/>
-
-  <!-- Raptor request debug logging - Turn on/off: debug/info -->
-  <logger name="org.opentripplanner.raptor.RaptorService" level="info"/>
-
-  <!-- THIRD PARTY LOGGERS -->
-  <!-- Log levels for individual loggers (classes). -->
   <logger name="ch.qos.logback" level="error"/>
-
-  <!-- Avoid printing info messages about calendars when building graph -->
   <logger name="org.onebusaway.gtfs.impl.calendar.CalendarServiceDataFactoryImpl" level="warn" />
-
-  <!-- Avoid printing many warnings about stops off the edge of the OSM map in tests. -->
   <logger name="org.opentripplanner.graph_builder.linking.SimpleStreetSplitter" level="error" />
-
 </configuration>

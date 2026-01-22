@@ -23,7 +23,7 @@ public class SiriTripPatternIdGenerator {
    * roughly follows the format of {@link GenerateTripPatternsOperation}. The generator suffixes the
    * ID with 'RT' to indicate that this trip pattern is generated in response to a realtime message.
    */
-  FeedScopedId generateUniqueTripPatternId(Trip trip) {
+  public FeedScopedId generateUniqueTripPatternId(Trip trip) {
     Route route = trip.getRoute();
     FeedScopedId routeId = route.getId();
     Direction direction = trip.getDirection();

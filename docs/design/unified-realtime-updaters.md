@@ -2,7 +2,7 @@
 
 ## Implementation Status
 
-**Overall Progress:** 🟢 Phase 1-3 Complete, Phase 4A Complete, Phase 4B In Progress
+**Overall Progress:** 🟡 Phase 1-3 Complete, Phase 4A Nearly Complete
 
 | Phase | Component | Status | Progress |
 |-------|-----------|--------|----------|
@@ -11,11 +11,97 @@
 | 2b | Parser Implementations | ✅ Complete | 33/33 tests passing |
 | 3 | Common Applier | ✅ Complete | 20/20 tests passing |
 | 3b | Fuzzy Trip Matching | ✅ Complete | 20/20 tests passing |
-| 4A | **SIRI Adapter Integration** | **✅ Complete** | **124/124 tests passing** |
-| 4B | GTFS-RT Adapter Integration | ⏳ Planned | Ready to start |
+| 4A | **SIRI Adapter Integration** | **🟡 NEARLY COMPLETE** | **191/193 tests passing (98.9%)** |
+| 4B | GTFS-RT Adapter Integration | ⏳ Planned | Blocked by 4A |
 | 5 | Documentation & Cleanup | ⏳ In Progress | This document updated |
 
-**Latest Achievement (2026-01-21):** Phase 4A (SIRI Adapter Integration) completed and validated with zero test failures and no regressions. SIRI adapter refactored from 445 lines to ~130 lines using unified architecture.
+### Phase 4A Progress (2026-01-22)
+
+**Target Tests (5 classes, 20 tests):** ✅ ALL PASSING
+- ExtraJourneyTest: 5/5 ✅
+- ExtraCallTest: 5/5 ✅  
+- FuzzyTripMatchingTest: 5/5 ✅
+- NegativeTimesTest: 3/3 ✅
+- InvalidCallsTest: 2/2 ✅
+
+**Broader SIRI Tests:** 191/193 passing (2 failures outside target scope)
+
+**Fixed Issues:**
+- ✅ Stop reference resolution (SIRI stopPointRef to OTP stop ID)
+- ✅ Trip reference resolution (TripOnServiceDate vs Trip lookup)
+- ✅ Service date handling (test environment date vs real date)
+- ✅ RealTimeState (UPDATED vs MODIFIED vs ADDED)
+- ✅ Time handling when only arrival or departure provided
+- ✅ Quay change detection (delegates to MODIFY_TRIP handler)
+- ✅ Trip cancellation with revert to scheduled pattern
+- ✅ Trip registration (`tripCreation=true`, `TripOnServiceDate` creation)
+- ✅ Pattern creation with scheduled timetable and service code
+- ✅ Route creation when route doesn't exist
+- ✅ Error code mapping (DataValidationExceptionMapper integration)
+- ✅ Stop count validation (TOO_FEW_STOPS, TOO_MANY_STOPS)
+- ✅ Unknown stop validation (UNKNOWN_STOP)
+- ✅ Stop mismatch vs sibling validation
+- ✅ Fuzzy matching cache lookup (use scheduled time, not expected)
+- ✅ Recorded flag `[R]` in handleUpdateExisting
+- ✅ MODIFIED state when stops are cancelled
+
+**Remaining Issues (2 test failures):**
+
+1. **QuayChangeTest.testChangeQuay** (line 52)
+   - **Expected:** Pattern `F:Route1::001:RT[MODIFIED]`
+   - **Actual:** Pattern `F:Pattern1[SCHEDULED]`
+   - **Root Cause:** New pattern from `handleModifyTrip()` is not being indexed in Raptor transit data
+   - **Analysis:** The timetable times are updated correctly (line 47 passes), but the new pattern
+     created for the quay change is not being added to `RaptorTransitData.tripPatternsRunningOnDate`.
+     The `TimetableSnapshot.update()` stores the pattern in `realTimeNewTripPatternsForModifiedTrips`
+     and adds to `patternsForStop`, but the `RealTimeRaptorTransitDataUpdater` may not be processing
+     it correctly for modified patterns.
+
+2. **CancellationTest.testChangeQuayAndCancelAddedTrip** (line 146)
+   - **Expected:** `CANCELED | A 0:00:11 0:00:11 | B 0:00:20 0:00:20`
+   - **Actual:** `CANCELED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21`
+   - **Root Cause:** When an added trip is cancelled, it should revert to "adjusted" scheduled times
+     where first stop arrival = departure, last stop departure = arrival
+   - **Analysis:** The cancellation handler is using the original scheduled times without applying
+     the first/last stop time adjustment that is done for added trips
+
+### Technical Findings
+
+#### Key Architectural Insight: Raptor Pattern Indexing
+
+The test `QuayChangeTest.testChangeQuay` reveals an important architectural issue:
+
+1. **TimetableSnapshot.update()** correctly:
+   - Creates new timetable with updated trip times
+   - Stores modified pattern in `realTimeNewTripPatternsForModifiedTrips`
+   - Adds pattern to `patternsForStop` index
+
+2. **RealTimeRaptorTransitDataUpdater.update()** processes:
+   - `updatedTimetables` collection from commit
+   - Creates `TripPatternForDate` objects for Raptor routing
+   - Updates `tripPatternsRunningOnDate` map
+
+3. **Gap identified:** For MODIFIED trips with new patterns:
+   - The new pattern needs to be included in `getTripPatternsForRunningDate()`
+   - Currently, the old SCHEDULED pattern still appears instead
+   - The new pattern may not be getting added to `tripPatternsRunningOnDate`
+
+#### Time Handling for First/Last Stops
+
+The time fallback logic was corrected to only apply when times are NOT explicitly provided:
+
+```java
+// Only adjust if the time was not explicitly provided
+if (isFirstStop && rawArrivalTime < 0 && departureTime >= 0) {
+  arrivalTime = departureTime;  // Use departure for missing arrival
+}
+if (isLastStop && rawDepartureTime < 0 && arrivalTime >= 0) {
+  departureTime = arrivalTime;  // Use arrival for missing departure
+}
+```
+
+This prevents overwriting explicitly provided times while still handling the common SIRI case
+where only departure is provided for first stop and only arrival for last stop.
 
 ---
 
@@ -1056,20 +1142,102 @@ EstimatedTimetableHandler
 - Easier to maintain and extend
 - Better error handling with Result<> pattern
 
-**Production Readiness:** ✅ READY
-- Code compiles cleanly
-- All tests passing
-- No breaking changes
-- Legacy compatibility maintained
-- Documentation updated
+**Production Readiness:** 🔴 NOT READY - Critical bugs identified
 
 **Checkpoint:** See `checkpoints/012-phase1-siri-adapter-complete.md` for detailed completion report.
 
 ---
 
+#### Phase 4A Issue Analysis (2026-01-22)
+
+**Test Results:** 29/29 SIRI module tests FAILING
+
+**Failure Categories:**
+
+| Category | Count | Pattern |
+|----------|-------|---------|
+| Update count = 0 | 16 | Expected 1 successful update, got 0 |
+| Wrong error code | 13 | Expected specific code, got generic (UNKNOWN, NO_UPDATES, NO_TRIP_ID) |
+
+**Root Cause Analysis:**
+
+The integration has a critical flaw: **EntityResolver is not being used to resolve SIRI stop references to OTP stop IDs**.
+
+**Data Flow Problem:**
+
+```
+1. SiriRealTimeTripUpdateAdapter.applyEstimatedTimetable() receives EntityResolver ← NOT USED!
+2. SiriTripUpdateParser creates StopReference.ofStopPointRef("NSR:Quay:1234")
+   └── Sets stopPointRef, leaves stopId = null
+3. DefaultTripUpdateApplier.handleUpdateExisting() tries to match:
+   if (stopUpdate.stopReference().stopId() != null) {  // ← Always false!
+       match = stopUpdate.stopReference().stopId().equals(stopId);
+   }
+4. No stops match → "NO_UPDATES" error
+```
+
+**Specific Issues:**
+
+1. **SiriRealTimeTripUpdateAdapter.java:70-93**
+   - Receives `EntityResolver entityResolver` but never uses it
+   - Creates `TripUpdateParserContext` without EntityResolver
+   - Parser cannot resolve SIRI stopPointRefs to OTP FeedScopedIds
+
+2. **SiriTripUpdateParser.java:245**
+   - Creates `StopReference.ofStopPointRef(call.getStopPointRef())`
+   - Only sets `stopPointRef` field, `stopId` remains null
+
+3. **DefaultTripUpdateApplier.java:180-185**
+   - Checks `stopUpdate.stopReference().stopId()` which is always null for SIRI
+   - Falls through without matching any stops
+
+**Required Fix:**
+
+The **applier** (not parser) must resolve stop references. The parser should only extract data from the message format.
+
+Add a `resolveStop(StopReference)` helper in `DefaultTripUpdateApplier`:
+```java
+@Nullable
+private RegularStop resolveStop(StopReference stopRef, String feedId) {
+  // GTFS-style: direct stop ID
+  if (stopRef.stopId() != null) {
+    return transitService.getRegularStop(stopRef.stopId());
+  }
+  // SIRI-style: stop point reference (quay)
+  if (stopRef.stopPointRef() != null) {
+    var id = new FeedScopedId(feedId, stopRef.stopPointRef());
+    return transitService
+      .findStopByScheduledStopPoint(id)
+      .orElseGet(() -> transitService.getRegularStop(id));
+  }
+  return null;
+}
+```
+
+**Handlers needing this fix:**
+- `handleUpdateExisting()` - stop matching logic (lines 180-185)
+- `handleAddNewTrip()` - stop resolution (line 428)
+- `handleModifyTrip()` - stop resolution (line 564)
+- `handleAddExtraCalls()` - stop resolution (line 699)
+
+**Affected Tests (29 total):**
+
+- `CanceledJourneyTest` (2 failures)
+- `ExtraJourneyTest` (4 failures)
+- `ExtraThenCanceledJourneyTest` (1 failure)
+- `FuzzyTripMatchingTest` (2 failures)
+- `InvalidCallsTest` (4 failures)
+- `NegativeTimesTest` (2 failures)
+- `DestinationDisplayTest` (1 failure)
+- `QuayChangeTest` (1 failure)
+- `UpdatedTimesTest` (3 failures)
+- Additional tests (9 failures)
+
+---
+
 #### Phase 4B: GTFS-RT Adapter Integration
 
-**Status:** ⏳ PLANNED (Ready to Start)
+**Status:** ⏳ BLOCKED (Waiting for Phase 4A fixes)
 
 **Objective:** Apply same refactoring to GTFS-RT adapter - use unified `DefaultTripUpdateApplier` + `GtfsTripMatcher`
 

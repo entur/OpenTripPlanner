@@ -5,6 +5,7 @@ import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
@@ -41,12 +42,23 @@ public class SiriRealTimeTripUpdateAdapter {
   private final TimetableSnapshotManager snapshotManager;
   private final TripUpdateApplier applier;
   private final SiriTripUpdateParser parser;
+  private final Supplier<LocalDate> localDateNow;
 
   public SiriRealTimeTripUpdateAdapter(
     String feedId,
     TimetableRepository timetableRepository,
     TimetableSnapshotManager snapshotManager,
     @Nullable SiriTripMatcher tripMatcher
+  ) {
+    this(feedId, timetableRepository, snapshotManager, tripMatcher, LocalDate::now);
+  }
+
+  public SiriRealTimeTripUpdateAdapter(
+    String feedId,
+    TimetableRepository timetableRepository,
+    TimetableSnapshotManager snapshotManager,
+    @Nullable SiriTripMatcher tripMatcher,
+    Supplier<LocalDate> localDateNow
   ) {
     this.feedId = feedId;
     this.snapshotManager = snapshotManager;
@@ -56,6 +68,7 @@ public class SiriRealTimeTripUpdateAdapter {
     );
     this.applier = new DefaultTripUpdateApplier(transitEditorService, tripMatcher);
     this.parser = new SiriTripUpdateParser();
+    this.localDateNow = localDateNow;
   }
 
   /**
@@ -88,7 +101,7 @@ public class SiriRealTimeTripUpdateAdapter {
     TripUpdateParserContext parserContext = new TripUpdateParserContext(
       feedId,
       transitEditorService.getTimeZone(),
-      LocalDate::now
+      localDateNow
     );
     TripUpdateApplierContext applierContext = new TripUpdateApplierContext(feedId, snapshotManager);
 

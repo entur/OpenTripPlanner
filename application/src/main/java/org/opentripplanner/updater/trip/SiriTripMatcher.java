@@ -61,7 +61,7 @@ public class SiriTripMatcher implements TripMatcher {
       );
     }
 
-    // Get first stop with departure time
+    // Get first stop with departure time (use scheduled time for matching)
     ParsedStopTimeUpdate firstStop = stopUpdates.get(0);
     if (firstStop.departureUpdate() == null || !firstStop.departureUpdate().hasAbsoluteTime()) {
       return Result.failure(
@@ -69,7 +69,11 @@ public class SiriTripMatcher implements TripMatcher {
       );
     }
 
-    int firstDepartureSeconds = firstStop.departureUpdate().absoluteTimeSecondsSinceMidnight();
+    // Use scheduled (aimed) time for matching if available, fallback to absolute time
+    Integer scheduledDeparture = firstStop.departureUpdate().scheduledTimeSecondsSinceMidnight();
+    int firstDepartureSeconds = scheduledDeparture != null
+      ? scheduledDeparture
+      : firstStop.departureUpdate().absoluteTimeSecondsSinceMidnight();
     LocalDate serviceDate = parsedUpdate.serviceDate();
 
     // Step 1: Get candidate trips by vehicle ref (if available) or last stop
@@ -165,14 +169,21 @@ public class SiriTripMatcher implements TripMatcher {
       }
     }
 
-    // Fallback: match by last stop + arrival time
+    // Fallback: match by last stop + arrival time (use scheduled/aimed time for matching)
     ParsedStopTimeUpdate lastStop = stopUpdates.get(stopUpdates.size() - 1);
-    if (lastStop.arrivalUpdate() != null && lastStop.arrivalUpdate().hasAbsoluteTime()) {
-      FeedScopedId lastStopId = lastStop.stopReference().stopId();
-      RegularStop stop = (RegularStop) transitService.getRegularStop(lastStopId);
+    if (lastStop.arrivalUpdate() != null) {
+      RegularStop stop = resolveStop(lastStop.stopReference());
       if (stop != null) {
-        int arrivalSeconds = lastStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight();
-        return getMatchingTripsOnStopOrSiblings(stop, arrivalSeconds);
+        // Use scheduled (aimed) time for cache lookup if available, fallback to absolute time
+        Integer scheduledTime = lastStop.arrivalUpdate().scheduledTimeSecondsSinceMidnight();
+        int arrivalSeconds = scheduledTime != null
+          ? scheduledTime
+          : (lastStop.arrivalUpdate().hasAbsoluteTime()
+              ? lastStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight()
+              : -1);
+        if (arrivalSeconds >= 0) {
+          return getMatchingTripsOnStopOrSiblings(stop, arrivalSeconds);
+        }
       }
     }
 
@@ -216,11 +227,8 @@ public class SiriTripMatcher implements TripMatcher {
     ParsedStopTimeUpdate firstStop = stopUpdates.get(0);
     ParsedStopTimeUpdate lastStop = stopUpdates.get(stopUpdates.size() - 1);
 
-    FeedScopedId firstStopId = firstStop.stopReference().stopId();
-    FeedScopedId lastStopId = lastStop.stopReference().stopId();
-
-    RegularStop journeyFirstStop = (RegularStop) transitService.getRegularStop(firstStopId);
-    RegularStop journeyLastStop = (RegularStop) transitService.getRegularStop(lastStopId);
+    RegularStop journeyFirstStop = resolveStop(firstStop.stopReference());
+    RegularStop journeyLastStop = resolveStop(lastStop.stopReference());
 
     if (journeyFirstStop == null || journeyLastStop == null) {
       return Result.failure(
@@ -302,5 +310,25 @@ public class SiriTripMatcher implements TripMatcher {
       return context.snapshotManager().resolve(pattern, serviceDate);
     }
     return pattern.getScheduledTimetable();
+  }
+
+  /**
+   * Resolve a stop from a StopReference, handling both GTFS-style (stopId) and SIRI-style
+   * (stopPointRef) references.
+   */
+  @javax.annotation.Nullable
+  private RegularStop resolveStop(org.opentripplanner.updater.trip.model.StopReference stopRef) {
+    // GTFS-style: direct stop ID lookup
+    if (stopRef.stopId() != null) {
+      return transitService.getRegularStop(stopRef.stopId());
+    }
+    // SIRI-style: stop point reference (quay) - resolve via scheduled stop point or direct ID
+    if (stopRef.stopPointRef() != null) {
+      var id = new FeedScopedId(feedId, stopRef.stopPointRef());
+      return transitService
+        .findStopByScheduledStopPoint(id)
+        .orElseGet(() -> transitService.getRegularStop(id));
+    }
+    return null;
   }
 }

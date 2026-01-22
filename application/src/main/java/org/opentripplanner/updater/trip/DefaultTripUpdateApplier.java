@@ -5,20 +5,31 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTime;
+import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.organization.Agency;
+import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
+import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
@@ -71,6 +82,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
         case MODIFY_TRIP -> handleModifyTrip(parsedUpdate, context);
         case ADD_EXTRA_CALLS -> handleAddExtraCalls(parsedUpdate, context);
       };
+    } catch (DataValidationException e) {
+      return DataValidationExceptionMapper.toResult(e, parsedUpdate.dataSource());
     } catch (Exception e) {
       LOG.error("Error applying trip update: {}", e.getMessage(), e);
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
@@ -89,13 +102,17 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       if (tripMatcher != null) {
         return handleFuzzyMatch(parsedUpdate, context);
       }
-      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_TRIP_ID));
+      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
     }
 
     // Resolve trip based on reference type
     var trip = resolveTrip(tripRef, serviceDate);
 
     if (trip == null) {
+      // Trip not found - try fuzzy matching as fallback if available
+      if (tripMatcher != null) {
+        return handleFuzzyMatch(parsedUpdate, context);
+      }
       LOG.debug("Trip {} not found for update", tripRef.tripId());
       return Result.failure(
         new UpdateError(
@@ -136,12 +153,12 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     }
 
     var timetable = snapshotManager.resolve(pattern, serviceDate);
-    var tripTimes = timetable.getTripTimes(tripRef.tripId());
+    var tripTimes = timetable.getTripTimes(trip);
     if (tripTimes == null) {
-      LOG.debug("Trip times not found for trip {} on {}", tripRef.tripId(), serviceDate);
+      LOG.debug("Trip times not found for trip {} on {}", trip.getId(), serviceDate);
       return Result.failure(
         new UpdateError(
-          tripRef.tripId(),
+          trip.getId(),
           UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
           null,
           context.feedId()
@@ -166,10 +183,82 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
+    // Validate stop count before processing
+    int numStopsInUpdate = stopUpdates.size();
+    int numStopsInPattern = pattern.numberOfStops();
+    if (numStopsInUpdate < numStopsInPattern) {
+      LOG.debug(
+        "Too few stops in update for trip {} - {} stops in update, {} in pattern",
+        tripRef.tripId(),
+        numStopsInUpdate,
+        numStopsInPattern
+      );
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TOO_FEW_STOPS,
+          null,
+          context.feedId()
+        )
+      );
+    }
+    if (numStopsInUpdate > numStopsInPattern) {
+      LOG.debug(
+        "Too many stops in update for trip {} - {} stops in update, {} in pattern",
+        tripRef.tripId(),
+        numStopsInUpdate,
+        numStopsInPattern
+      );
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.TOO_MANY_STOPS,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Check for unknown stops (must be done before pattern change detection)
+    for (int i = 0; i < numStopsInUpdate; i++) {
+      var stopUpdate = stopUpdates.get(i);
+      if (stopUpdate.stopReference() == null) {
+        continue;
+      }
+      var resolvedStop = resolveStop(stopUpdate.stopReference(), context.feedId());
+      if (resolvedStop == null) {
+        LOG.debug(
+          "Unknown stop {} in update for trip {}",
+          stopUpdate.stopReference(),
+          tripRef.tripId()
+        );
+        return Result.failure(
+          new UpdateError(
+            tripRef.tripId(),
+            UpdateError.UpdateErrorType.UNKNOWN_STOP,
+            i,
+            context.feedId()
+          )
+        );
+      }
+    }
+
+    // Check if the update involves a stop pattern change (quay change)
+    // If so, delegate to handleModifyTrip
+    boolean stopPatternChange = detectStopPatternChange(stopUpdates, pattern, context.feedId());
+    if (stopPatternChange) {
+      LOG.debug(
+        "Detected stop pattern change for trip {}, delegating to modify handler",
+        tripRef.tripId()
+      );
+      return handleModifyTrip(parsedUpdate, context);
+    }
+
     // Apply each stop time update - iterate through ALL stops in pattern
     // and match updates by stop ID (similar to GTFS-RT TripTimesUpdater)
     int updateIndex = 0;
     boolean anyUpdatesApplied = false;
+    boolean anyCancelledStops = false;
     int numStops = builder.numberOfStops();
 
     for (int i = 0; i < numStops; i++) {
@@ -178,33 +267,54 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       // Check if this update matches the current stop
       boolean match = false;
       if (stopUpdate != null && stopUpdate.stopReference() != null) {
-        var stopId = pattern.getStop(i).getId();
-        if (stopUpdate.stopReference().stopId() != null) {
-          match = stopUpdate.stopReference().stopId().equals(stopId);
+        var patternStop = pattern.getStop(i);
+        var resolvedStop = resolveStop(stopUpdate.stopReference(), context.feedId());
+        if (resolvedStop != null) {
+          match = resolvedStop.getId().equals(patternStop.getId());
         }
       }
 
       if (match) {
-        // Apply time updates - use delay-based updates when available for interpolation
+        // Apply time updates - ensure both arrival and departure are set to prevent negative dwell
+        int scheduledArrival = builder.getScheduledArrivalTime(i);
+        int scheduledDeparture = builder.getScheduledDepartureTime(i);
+
+        Integer updatedArrival = null;
+        Integer updatedDeparture = null;
+
+        // Calculate updated arrival
         if (stopUpdate.arrivalUpdate() != null) {
           if (stopUpdate.arrivalUpdate().hasDelay()) {
-            builder.withArrivalDelay(i, stopUpdate.arrivalUpdate().delaySeconds());
+            updatedArrival = scheduledArrival + stopUpdate.arrivalUpdate().delaySeconds();
           } else {
-            int scheduledArrival = builder.getScheduledArrivalTime(i);
-            int updatedArrival = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
-            builder.withArrivalTime(i, updatedArrival);
+            updatedArrival = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
           }
-          anyUpdatesApplied = true;
         }
 
+        // Calculate updated departure
         if (stopUpdate.departureUpdate() != null) {
           if (stopUpdate.departureUpdate().hasDelay()) {
-            builder.withDepartureDelay(i, stopUpdate.departureUpdate().delaySeconds());
+            updatedDeparture = scheduledDeparture + stopUpdate.departureUpdate().delaySeconds();
           } else {
-            int scheduledDeparture = builder.getScheduledDepartureTime(i);
-            int updatedDeparture = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
-            builder.withDepartureTime(i, updatedDeparture);
+            updatedDeparture = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
           }
+        }
+
+        // Apply times, ensuring no negative dwell time
+        if (updatedArrival != null && updatedDeparture != null) {
+          // Both provided - use as-is
+          builder.withArrivalTime(i, updatedArrival);
+          builder.withDepartureTime(i, updatedDeparture);
+          anyUpdatesApplied = true;
+        } else if (updatedArrival != null) {
+          // Only arrival - set departure to max of arrival and scheduled departure
+          builder.withArrivalTime(i, updatedArrival);
+          builder.withDepartureTime(i, Math.max(updatedArrival, scheduledDeparture));
+          anyUpdatesApplied = true;
+        } else if (updatedDeparture != null) {
+          // Only departure - set arrival to departure (assume zero dwell time)
+          builder.withArrivalTime(i, updatedDeparture);
+          builder.withDepartureTime(i, updatedDeparture);
           anyUpdatesApplied = true;
         }
 
@@ -213,6 +323,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           case CANCELLED, SKIPPED -> {
             builder.withCanceled(i);
             anyUpdatesApplied = true;
+            anyCancelledStops = true;
           }
           case NO_DATA -> {
             builder.withNoData(i);
@@ -272,8 +383,18 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       builder.copyMissingTimesFromScheduledTimetable();
     }
 
-    // Mark as modified or updated based on whether trip has real-time state
-    builder.withRealTimeState(org.opentripplanner.transit.model.timetable.RealTimeState.MODIFIED);
+    // Determine the appropriate real-time state
+    var currentState = tripTimes.getRealTimeState();
+    if (currentState == RealTimeState.ADDED) {
+      // Keep the ADDED state for dynamically added trips
+      builder.withRealTimeState(RealTimeState.ADDED);
+    } else if (anyCancelledStops) {
+      // If any stop was cancelled, use MODIFIED state
+      builder.withRealTimeState(RealTimeState.MODIFIED);
+    } else {
+      // Regular trip update - mark as UPDATED
+      builder.withRealTimeState(RealTimeState.UPDATED);
+    }
 
     var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
     LOG.debug("Updated trip {} on {}", tripRef.tripId(), serviceDate);
@@ -296,6 +417,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
   /**
    * Common logic for canceling or deleting a trip.
+   * When canceling, the trip reverts to its scheduled pattern and times (not real-time modified).
    *
    * @param parsedUpdate the parsed update
    * @param context the context
@@ -324,21 +446,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Find the trip pattern
-    var pattern = transitService.findPattern(trip, serviceDate);
-    if (pattern == null) {
-      LOG.debug("Pattern not found for trip {} on date {}", tripRef.tripId(), serviceDate);
-      return Result.failure(
-        new UpdateError(
-          tripRef.tripId(),
-          UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN,
-          null,
-          context.feedId()
-        )
-      );
-    }
-
-    // Get the snapshot manager and resolve current timetable
+    // Get the snapshot manager
     var snapshotManager = context.snapshotManager();
     if (snapshotManager == null) {
       LOG.error("No snapshot manager available for cancellation/deletion");
@@ -352,13 +460,41 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    var timetable = snapshotManager.resolve(pattern, serviceDate);
-    var tripTimes = timetable.getTripTimes(tripRef.tripId());
+    // Try to find SCHEDULED pattern first (for scheduled trips)
+    // For added trips, the scheduled pattern will be null
+    var scheduledPattern = transitService.findPattern(trip);
+    TripPattern pattern;
+    org.opentripplanner.transit.model.timetable.TripTimes tripTimes;
+
+    if (scheduledPattern != null) {
+      // Scheduled trip - revert to scheduled pattern and times
+      pattern = scheduledPattern;
+      snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
+      var timetable = pattern.getScheduledTimetable();
+      tripTimes = timetable.getTripTimes(trip);
+    } else {
+      // Added trip - find real-time pattern (no scheduled pattern exists)
+      pattern = transitService.findPattern(trip, serviceDate);
+      if (pattern == null) {
+        LOG.debug("Pattern not found for added trip {}", tripRef.tripId());
+        return Result.failure(
+          new UpdateError(
+            tripRef.tripId(),
+            UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN,
+            null,
+            context.feedId()
+          )
+        );
+      }
+      var timetable = snapshotManager.resolve(pattern, serviceDate);
+      tripTimes = timetable.getTripTimes(trip);
+    }
+
     if (tripTimes == null) {
-      LOG.debug("Trip times not found for trip {} on {}", tripRef.tripId(), serviceDate);
+      LOG.debug("Trip times not found for trip {} on {}", trip.getId(), serviceDate);
       return Result.failure(
         new UpdateError(
-          tripRef.tripId(),
+          trip.getId(),
           UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
           null,
           context.feedId()
@@ -387,6 +523,32 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     var tripRef = parsedUpdate.tripReference();
     var serviceDate = parsedUpdate.serviceDate();
     var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+    var tripCreationInfo = parsedUpdate.tripCreationInfo();
+
+    // Validate we have trip creation info (required for ADD_NEW_TRIP in SIRI)
+    if (tripCreationInfo == null) {
+      LOG.debug(
+        "No trip creation info for new trip {} - EstimatedVehicleJourneyCode required",
+        tripRef.tripId()
+      );
+      return Result.failure(
+        new UpdateError(
+          tripRef.tripId(),
+          UpdateError.UpdateErrorType.UNKNOWN,
+          null,
+          context.feedId()
+        )
+      );
+    }
+
+    // Check if this is an update to an already-added trip
+    boolean isUpdateToExistingAddedTrip = false;
+    if (context.snapshotManager() != null) {
+      var existingPattern = context
+        .snapshotManager()
+        .getNewTripPatternForModifiedTrip(tripRef.tripId(), serviceDate);
+      isUpdateToExistingAddedTrip = existingPattern != null;
+    }
 
     // Validate we have stop time updates
     if (stopTimeUpdates.isEmpty()) {
@@ -401,37 +563,26 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Get the route
+    // Get or create the route
+    boolean routeCreation = false;
     var route = transitService.getRoute(tripRef.routeId());
     if (route == null) {
-      LOG.debug("Route {} not found for new trip {}", tripRef.routeId(), tripRef.tripId());
-      return Result.failure(
-        new UpdateError(
-          tripRef.tripId(),
-          UpdateError.UpdateErrorType.UNKNOWN,
-          null,
-          context.feedId()
-        )
-      );
-    }
+      // Route doesn't exist - try to create it
 
-    // Get or create service ID for the service date
-    var serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
-
-    // Create the trip
-    var trip = Trip.of(tripRef.tripId()).withRoute(route).withServiceId(serviceId).build();
-
-    // Create stop times from updates
-    List<StopTime> stopTimes = new ArrayList<>();
-    for (int i = 0; i < stopTimeUpdates.size(); i++) {
-      var stopUpdate = stopTimeUpdates.get(i);
-      var stop = transitService.getRegularStop(stopUpdate.stopReference().stopId());
-      if (stop == null) {
-        LOG.debug(
-          "Stop {} not found for new trip {}",
-          stopUpdate.stopReference(),
-          tripRef.tripId()
-        );
+      // Resolve operator/agency
+      Agency agency = null;
+      if (tripCreationInfo != null && tripCreationInfo.operatorId() != null) {
+        agency = transitService.getAgency(tripCreationInfo.operatorId());
+      }
+      if (agency == null) {
+        // Use first available agency as fallback
+        var agencies = transitService.listAgencies();
+        if (!agencies.isEmpty()) {
+          agency = agencies.iterator().next();
+        }
+      }
+      if (agency == null) {
+        LOG.debug("Cannot resolve agency for new route {}", tripRef.routeId());
         return Result.failure(
           new UpdateError(
             tripRef.tripId(),
@@ -442,17 +593,100 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
         );
       }
 
+      // Get mode from trip creation info or default to BUS
+      TransitMode mode = TransitMode.BUS;
+      if (tripCreationInfo != null && tripCreationInfo.mode() != null) {
+        mode = tripCreationInfo.mode();
+      }
+
+      // Use routeCreationInfo if available, otherwise use tripRef.routeId()
+      FeedScopedId routeId = tripRef.routeId();
+      I18NString longName = null;
+      if (tripCreationInfo != null && tripCreationInfo.requiresRouteCreation()) {
+        var routeInfo = tripCreationInfo.routeCreationInfo();
+        if (routeInfo.mode() != null) {
+          mode = routeInfo.mode();
+        }
+        if (routeInfo.routeName() != null) {
+          longName = new NonLocalizedString(routeInfo.routeName());
+        }
+      }
+
+      // Use route ID as fallback long name if not provided
+      if (longName == null) {
+        longName = new NonLocalizedString(routeId.getId());
+      }
+
+      route = Route.of(routeId).withAgency(agency).withMode(mode).withLongName(longName).build();
+      routeCreation = true;
+      LOG.info("Creating new route {} for added trip {}", route.getId(), tripRef.tripId());
+    }
+
+    // Get or create service ID for the service date
+    var serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
+
+    // Create the trip
+    var trip = Trip.of(tripRef.tripId()).withRoute(route).withServiceId(serviceId).build();
+
+    // Create stop times from updates
+    List<StopTime> stopTimes = new ArrayList<>();
+    int numStops = stopTimeUpdates.size();
+    for (int i = 0; i < numStops; i++) {
+      var stopUpdate = stopTimeUpdates.get(i);
+      var stop = resolveStop(stopUpdate.stopReference(), context.feedId());
+      if (stop == null) {
+        LOG.debug(
+          "Stop {} not found for new trip {}",
+          stopUpdate.stopReference(),
+          tripRef.tripId()
+        );
+        return Result.failure(
+          new UpdateError(
+            tripRef.tripId(),
+            UpdateError.UpdateErrorType.UNKNOWN_STOP,
+            null,
+            context.feedId()
+          )
+        );
+      }
+
       var stopTime = new StopTime();
       stopTime.setStop(stop);
       stopTime.setStopSequence(i);
 
-      // Resolve arrival and departure times
-      int arrivalTime = stopUpdate.hasArrivalUpdate()
-        ? stopUpdate.arrivalUpdate().resolveTime(0)
-        : -1;
-      int departureTime = stopUpdate.hasDepartureUpdate()
-        ? stopUpdate.departureUpdate().resolveTime(0)
-        : -1;
+      // Get scheduled (aimed) times for the static schedule
+      // Use scheduled times if available, otherwise fall back to realtime times
+      Integer scheduledArrival = stopUpdate.hasArrivalUpdate()
+        ? stopUpdate.arrivalUpdate().scheduledTimeSecondsSinceMidnight()
+        : null;
+      Integer scheduledDeparture = stopUpdate.hasDepartureUpdate()
+        ? stopUpdate.departureUpdate().scheduledTimeSecondsSinceMidnight()
+        : null;
+
+      // If no scheduled time, fall back to realtime/absolute time
+      int rawArrivalTime = scheduledArrival != null
+        ? scheduledArrival
+        : (stopUpdate.hasArrivalUpdate() ? stopUpdate.arrivalUpdate().resolveTime(0) : -1);
+      int rawDepartureTime = scheduledDeparture != null
+        ? scheduledDeparture
+        : (stopUpdate.hasDepartureUpdate() ? stopUpdate.departureUpdate().resolveTime(0) : -1);
+
+      // Apply time fallback: if one is missing, use the other
+      int arrivalTime = rawArrivalTime >= 0 ? rawArrivalTime : rawDepartureTime;
+      int departureTime = rawDepartureTime >= 0 ? rawDepartureTime : rawArrivalTime;
+
+      // First stop: if only departure was provided, use it for arrival too
+      boolean isFirstStop = (i == 0);
+      // Last stop: if only arrival was provided, use it for departure too
+      boolean isLastStop = (i == numStops - 1);
+
+      // Only adjust if the time was not explicitly provided
+      if (isFirstStop && rawArrivalTime < 0 && departureTime >= 0) {
+        arrivalTime = departureTime;
+      }
+      if (isLastStop && rawDepartureTime < 0 && arrivalTime >= 0) {
+        departureTime = arrivalTime;
+      }
 
       stopTime.setArrivalTime(arrivalTime);
       stopTime.setDepartureTime(departureTime);
@@ -463,18 +697,100 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     // Create stop pattern
     var stopPattern = new StopPattern(stopTimes);
 
-    // Create scheduled trip times
-    var scheduledTripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator());
+    // Create scheduled trip times with service code for routing
+    var serviceCode = transitService.getServiceCode(trip.getServiceId());
+    var scheduledTripTimes = TripTimesFactory.tripTimes(
+      trip,
+      stopTimes,
+      new Deduplicator()
+    ).withServiceCode(serviceCode);
 
-    // Get or create trip pattern using cache
-    var pattern = tripPatternCache.getOrCreateTripPattern(stopPattern, trip);
+    // Validate that scheduled times don't have negative hops or dwell times
+    scheduledTripTimes.validateNonIncreasingTimes();
+
+    // Create pattern with scheduled timetable containing the trip times
+    var patternIdGenerator = new SiriTripPatternIdGenerator();
+    var patternId = patternIdGenerator.generateUniqueTripPatternId(trip);
+    var pattern = TripPattern.of(patternId)
+      .withRoute(trip.getRoute())
+      .withMode(trip.getMode())
+      .withNetexSubmode(trip.getNetexSubMode())
+      .withStopPattern(stopPattern)
+      .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(scheduledTripTimes))
+      .withCreatedByRealtimeUpdater(true)
+      .build();
 
     // Create real-time trip times from scheduled
     var rtBuilder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    rtBuilder.withRealTimeState(RealTimeState.ADDED);
+    // Use UPDATED state if this is re-applying to an already-added trip, otherwise ADDED
+    rtBuilder.withRealTimeState(
+      isUpdateToExistingAddedTrip ? RealTimeState.UPDATED : RealTimeState.ADDED
+    );
+
+    // Apply realtime updates (use absolute/actual times) and recorded flag
+    int numStopsForRt = stopTimeUpdates.size();
+    for (int i = 0; i < numStopsForRt; i++) {
+      var stopUpdate = stopTimeUpdates.get(i);
+      boolean isFirstStop = (i == 0);
+      boolean isLastStop = (i == numStopsForRt - 1);
+
+      int rtArrival = -1;
+      int rtDeparture = -1;
+      boolean hasArrival = stopUpdate.hasArrivalUpdate();
+      boolean hasDeparture = stopUpdate.hasDepartureUpdate();
+
+      if (hasArrival) {
+        rtArrival = stopUpdate.arrivalUpdate().resolveTime(0);
+      }
+      if (hasDeparture) {
+        rtDeparture = stopUpdate.departureUpdate().resolveTime(0);
+      }
+
+      // Apply fallback: if one is missing, use the other
+      if (rtArrival < 0 && rtDeparture >= 0) {
+        rtArrival = rtDeparture;
+      }
+      if (rtDeparture < 0 && rtArrival >= 0) {
+        rtDeparture = rtArrival;
+      }
+
+      // First stop: if only departure was provided, use it for arrival too
+      if (isFirstStop && !hasArrival && rtDeparture >= 0) {
+        rtArrival = rtDeparture;
+      }
+      // Last stop: if only arrival was provided, use it for departure too
+      if (isLastStop && !hasDeparture && rtArrival >= 0) {
+        rtDeparture = rtArrival;
+      }
+
+      if (rtArrival >= 0) {
+        rtBuilder.withArrivalTime(i, rtArrival);
+      }
+      if (rtDeparture >= 0) {
+        rtBuilder.withDepartureTime(i, rtDeparture);
+      }
+
+      if (stopUpdate.recorded()) {
+        rtBuilder.withRecorded(i);
+      }
+    }
+
     var realTimeTripTimes = rtBuilder.build();
 
-    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, realTimeTripTimes, serviceDate);
+    // Create TripOnServiceDate for the added trip
+    var tripOnServiceDate = TripOnServiceDate.of(tripRef.tripId())
+      .withTrip(trip)
+      .withServiceDate(serviceDate)
+      .build();
+
+    var realTimeTripUpdate = new RealTimeTripUpdate(
+      pattern,
+      realTimeTripTimes,
+      serviceDate,
+      tripOnServiceDate,
+      true,
+      routeCreation
+    );
     LOG.debug("Added new trip {} on {}", tripRef.tripId(), serviceDate);
     return Result.success(realTimeTripUpdate);
   }
@@ -557,11 +873,11 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Create stop times from updates
+    // Create stop times from updates - validate stop siblings where applicable
     List<StopTime> newStopTimes = new ArrayList<>();
     for (int i = 0; i < stopTimeUpdates.size(); i++) {
       var stopUpdate = stopTimeUpdates.get(i);
-      var stop = transitService.getRegularStop(stopUpdate.stopReference().stopId());
+      var stop = resolveStop(stopUpdate.stopReference(), context.feedId());
       if (stop == null) {
         LOG.debug(
           "Stop {} not found for modified trip {}",
@@ -578,6 +894,35 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
         );
       }
 
+      // Validate that the stop is either the original stop or a sibling (same station)
+      if (i < originalPattern.numberOfStops()) {
+        var originalStop = originalPattern.getStop(i);
+        if (!stop.getId().equals(originalStop.getId())) {
+          // Check if they're siblings (same parent station)
+          boolean areSiblings =
+            stop.getParentStation() != null &&
+            originalStop.getParentStation() != null &&
+            stop.getParentStation().equals(originalStop.getParentStation());
+          if (!areSiblings) {
+            LOG.debug(
+              "Stop mismatch at position {} for trip {} - {} is not a sibling of {}",
+              i,
+              tripRef.tripId(),
+              stop.getId(),
+              originalStop.getId()
+            );
+            return Result.failure(
+              new UpdateError(
+                tripRef.tripId(),
+                UpdateError.UpdateErrorType.STOP_MISMATCH,
+                i,
+                context.feedId()
+              )
+            );
+          }
+        }
+      }
+
       var stopTime = new StopTime();
       stopTime.setStop(stop);
       stopTime.setStopSequence(i);
@@ -588,13 +933,27 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
         ? tripTimes.getScheduledDepartureTime(i)
         : 0;
 
-      // Resolve arrival and departure times
-      int arrivalTime = stopUpdate.hasArrivalUpdate()
-        ? stopUpdate.arrivalUpdate().resolveTime(scheduledArrival)
-        : -1;
-      int departureTime = stopUpdate.hasDepartureUpdate()
-        ? stopUpdate.departureUpdate().resolveTime(scheduledDeparture)
-        : -1;
+      // Resolve arrival and departure times - ensure both are set to prevent -1 values
+      int arrivalTime;
+      int departureTime;
+
+      if (stopUpdate.hasArrivalUpdate() && stopUpdate.hasDepartureUpdate()) {
+        // Both provided
+        arrivalTime = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
+        departureTime = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
+      } else if (stopUpdate.hasArrivalUpdate()) {
+        // Only arrival - set departure to same as arrival
+        arrivalTime = stopUpdate.arrivalUpdate().resolveTime(scheduledArrival);
+        departureTime = arrivalTime;
+      } else if (stopUpdate.hasDepartureUpdate()) {
+        // Only departure - set arrival to same as departure
+        departureTime = stopUpdate.departureUpdate().resolveTime(scheduledDeparture);
+        arrivalTime = departureTime;
+      } else {
+        // Neither - use scheduled times
+        arrivalTime = scheduledArrival;
+        departureTime = scheduledDeparture;
+      }
 
       stopTime.setArrivalTime(arrivalTime);
       stopTime.setDepartureTime(departureTime);
@@ -623,6 +982,14 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
     // Create real-time trip times from scheduled
     var rtBuilder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+
+    // Apply recorded flag for each stop
+    for (int i = 0; i < stopTimeUpdates.size(); i++) {
+      var stopUpdate = stopTimeUpdates.get(i);
+      if (stopUpdate.recorded()) {
+        rtBuilder.withRecorded(i);
+      }
+    }
 
     // Set real-time state based on whether pattern changed
     if (stopPatternChanged) {
@@ -664,8 +1031,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
     }
 
-    // Get the original pattern
-    var originalPattern = transitService.findPattern(trip, serviceDate);
+    // Get the original SCHEDULED pattern (not the realtime modified one)
+    // Use findPattern without serviceDate to get the scheduled pattern
+    var originalPattern = transitService.findPattern(trip);
     if (originalPattern == null) {
       return Result.failure(
         UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
@@ -678,7 +1046,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
     // Validate that non-extra calls match the original pattern
     if (numOriginalStops != originalPattern.numberOfStops()) {
-      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+      return Result.failure(
+        UpdateError.noTripId(UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
+      );
     }
 
     // Resolve the existing trip times to use as base for modifications
@@ -696,7 +1066,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
     for (var stopTimeUpdate : stopTimeUpdates) {
       var stopRef = stopTimeUpdate.stopReference();
-      var stop = transitService.getRegularStop(stopRef.stopId());
+      var stop = resolveStop(stopRef, context.feedId());
 
       if (stop == null) {
         return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN_STOP));
@@ -706,7 +1076,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       if (!stopTimeUpdate.isExtraCall()) {
         var originalStop = originalPattern.getStop(originalStopIndex);
         if (!stop.getId().equals(originalStop.getId())) {
-          return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+          return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.STOP_MISMATCH));
         }
         originalStopIndex++;
       }
@@ -762,6 +1132,10 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       if (stopTimeUpdate.hasDepartureUpdate()) {
         rtBuilder.withDepartureTime(i, stopTimeUpdate.departureUpdate().resolveTime(0));
       }
+
+      if (stopTimeUpdate.recorded()) {
+        rtBuilder.withRecorded(i);
+      }
     }
 
     var realTimeTripTimes = rtBuilder.build();
@@ -770,16 +1144,95 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   }
 
   /**
+   * Resolves a stop from a StopReference, handling both GTFS-style stop IDs and SIRI-style
+   * stop point references.
+   *
+   * @param stopRef The stop reference to resolve
+   * @param feedId The feed ID to use when creating FeedScopedIds for SIRI stop point refs
+   * @return The resolved RegularStop, or null if not found
+   */
+  /**
+   * Checks if the stop time updates indicate a stop pattern change (e.g., quay change).
+   * Returns true if any of the update stops don't match the corresponding pattern stops.
+   */
+  private boolean detectStopPatternChange(
+    List<org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate> stopUpdates,
+    TripPattern pattern,
+    String feedId
+  ) {
+    int numPatternStops = pattern.numberOfStops();
+    int updateIndex = 0;
+
+    LOG.debug(
+      "detectStopPatternChange: {} pattern stops, {} update stops",
+      numPatternStops,
+      stopUpdates.size()
+    );
+
+    for (int i = 0; i < numPatternStops && updateIndex < stopUpdates.size(); i++) {
+      var stopUpdate = stopUpdates.get(updateIndex);
+      var stopRef = stopUpdate.stopReference();
+      var patternStop = pattern.getStop(i);
+
+      var resolvedStop = resolveStop(stopRef, feedId);
+      LOG.debug(
+        "detectStopPatternChange: i={}, updateIndex={}, stopRef={}, resolvedStop={}, patternStop={}",
+        i,
+        updateIndex,
+        stopRef,
+        resolvedStop != null ? resolvedStop.getId() : null,
+        patternStop.getId()
+      );
+      if (resolvedStop == null) {
+        // Unknown stop - could be a pattern change
+        continue;
+      }
+
+      // Check if the resolved stop matches the pattern stop
+      if (!resolvedStop.getId().equals(patternStop.getId())) {
+        // Stops don't match - this is a pattern change
+        LOG.debug("detectStopPatternChange: DETECTED pattern change at position {}", i);
+        return true;
+      }
+
+      updateIndex++;
+    }
+
+    LOG.debug("detectStopPatternChange: NO pattern change detected");
+    return false;
+  }
+
+  @Nullable
+  private RegularStop resolveStop(StopReference stopRef, String feedId) {
+    // GTFS-style: direct stop ID lookup
+    if (stopRef.stopId() != null) {
+      return transitService.getRegularStop(stopRef.stopId());
+    }
+    // SIRI-style: stop point reference (quay) - resolve via scheduled stop point or direct ID
+    if (stopRef.stopPointRef() != null) {
+      var id = new FeedScopedId(feedId, stopRef.stopPointRef());
+      return transitService
+        .findStopByScheduledStopPoint(id)
+        .orElseGet(() -> transitService.getRegularStop(id));
+    }
+    return null;
+  }
+
+  /**
    * Resolves a trip based on the trip reference type.
-   * For DATED_SERVICE_JOURNEY, uses TripOnServiceDate lookup by ID.
+   * For DATED_SERVICE_JOURNEY, uses TripOnServiceDate lookup by ID, with fallback to direct lookup.
    * For STANDARD, uses direct trip ID lookup.
    */
   @Nullable
   private Trip resolveTrip(TripReference tripRef, LocalDate serviceDate) {
     if (tripRef.tripReferenceType() == TripReference.TripReferenceType.DATED_SERVICE_JOURNEY) {
-      // SIRI dated vehicle journey ref - the trip ID IS the TripOnServiceDate ID
+      // SIRI dated vehicle journey ref - first try TripOnServiceDate lookup
       var tripOnServiceDate = transitService.getTripOnServiceDate(tripRef.tripId());
-      return tripOnServiceDate != null ? tripOnServiceDate.getTrip() : null;
+      if (tripOnServiceDate != null) {
+        return tripOnServiceDate.getTrip();
+      }
+      // Fallback: try direct trip lookup (for dynamically added trips)
+      return transitService.getTrip(tripRef.tripId());
     } else {
       // Standard trip reference - direct lookup
       return transitService.getTrip(tripRef.tripId());

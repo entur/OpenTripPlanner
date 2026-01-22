@@ -75,7 +75,8 @@ public class SiriTestHelper {
       transitTestEnvironment.feedId(),
       transitTestEnvironment.timetableRepository(),
       transitTestEnvironment.timetableSnapshotManager(),
-      tripMatcher
+      tripMatcher,
+      transitTestEnvironment::defaultServiceDate
     );
   }
 
