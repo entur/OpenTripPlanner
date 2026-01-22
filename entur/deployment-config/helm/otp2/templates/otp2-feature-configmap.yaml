@@ -10,10 +10,6 @@ data:
         "FlexRouting": {{ .Values.configuration.flexRouting }},
         "FloatingBike": {{ .Values.configuration.floatingBike }},
         "GtfsGraphQlApi": {{ .Values.configuration.gtfsGraphQlApi }},
-        // TODO Remove "IncludeEmptyRailStopsInTransfers", when
-        // "IncludeStopsUsedRealTimeInTransfers" has been is production for a week
-        "IncludeEmptyRailStopsInTransfers" : true,
-        // Will be used when PR 7042 Missing transfers is merged
         "IncludeStopsUsedRealTimeInTransfers" : true,
         "MultiCriteriaGroupMaxFilter" : true,
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
