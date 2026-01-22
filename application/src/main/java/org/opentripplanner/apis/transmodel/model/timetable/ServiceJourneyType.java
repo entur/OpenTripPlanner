@@ -307,7 +307,7 @@ public class ServiceJourneyType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
-          .name("isReplacementServiceJourney")
+          .name("isReplacement")
           .description(
             "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
           )

@@ -2717,9 +2717,9 @@ type TripOnServiceDate {
   "Is this TripOnServiceDate a replacement? For GTFS-sourced data this might be all we know."
   isReplacement: Boolean
   "Replaced by these TripOnServiceDates."
-  replacedBy: [ReplacedByRelation!]!
+  replacedByRelation: [ReplacedByRelation!]!
   "Replacement for these TripOnServiceDates."
-  replacementFor: [ReplacementForRelation!]!
+  replacementForRelation: [ReplacementForRelation!]!
   """
   The service date when the trip occurs.
     

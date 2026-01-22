@@ -1247,7 +1247,7 @@ type ServiceJourney {
   ): [EstimatedCall!]! @timingData
   id: ID!
   "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
-  isReplacementServiceJourney: Boolean!
+  isReplacement: Boolean!
   "JourneyPattern for the service journey, according to scheduled data. If the ServiceJourney is not included in the scheduled data, null is returned."
   journeyPattern: JourneyPattern
   line: Line!
