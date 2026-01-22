@@ -181,7 +181,10 @@ public class AccessPaths {
   private static List<RaptorAccessEgress> decorateWithTimePenaltyLogic(
     Collection<RaptorAccessEgress> paths
   ) {
-    return paths.stream().map(it -> it.hasTimePenalty() ? new AccessWithPenalty(it) : it).toList();
+    return paths
+      .stream()
+      .map(it -> it.hasTimePenalty() ? new AccessWithPenalty(it) : it)
+      .toList();
   }
 
   private boolean hasTimePenalty() {
@@ -210,7 +213,10 @@ public class AccessPaths {
       return List.of();
     }
     if (iterationTimePenaltyLimit != RaptorConstants.TIME_NOT_SET) {
-      return list.stream().filter(e -> e.timePenalty() > iterationTimePenaltyLimit).toList();
+      return list
+        .stream()
+        .filter(e -> e.timePenalty() > iterationTimePenaltyLimit)
+        .toList();
     }
     return list;
   }

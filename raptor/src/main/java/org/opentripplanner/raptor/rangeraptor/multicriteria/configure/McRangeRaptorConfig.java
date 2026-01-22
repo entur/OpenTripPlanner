@@ -151,15 +151,15 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private RoutingStrategy<T> createTransitWorkerStrategy(McRangeRaptorWorkerState<T> state) {
     return includeC2()
       ? createTransitWorkerStrategy(
-        state,
-        createPatternRideC2Factory(),
-        PatternRideC2.paretoComparatorRelativeCost(dominanceFunctionC2())
-      )
+          state,
+          createPatternRideC2Factory(),
+          PatternRideC2.paretoComparatorRelativeCost(dominanceFunctionC2())
+        )
       : createTransitWorkerStrategy(
-        state,
-        PatternRideC1.factory(),
-        PatternRideC1.paretoComparatorRelativeCost()
-      );
+          state,
+          PatternRideC1.factory(),
+          PatternRideC1.paretoComparatorRelativeCost()
+        );
   }
 
   private <R extends PatternRide<T>> RoutingStrategy<T> createTransitWorkerStrategy(

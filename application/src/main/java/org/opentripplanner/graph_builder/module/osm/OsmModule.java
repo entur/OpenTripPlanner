@@ -355,7 +355,7 @@ public class OsmModule implements GraphBuilderModule {
       double lastLat = -1;
       double lastLon = -1;
       String lastLevel = null;
-      for (TLongIterator iter = way.getNodeRefs().iterator(); iter.hasNext();) {
+      for (TLongIterator iter = way.getNodeRefs().iterator(); iter.hasNext(); ) {
         long nodeId = iter.next();
         OsmNode node = osmdb.getNode(nodeId);
         if (node == null) {
@@ -438,8 +438,9 @@ public class OsmModule implements GraphBuilderModule {
         ) {
           segmentCoordinates.add(osmEndNode.getCoordinate());
 
-          geometry = GeometryUtils.getGeometryFactory()
-            .createLineString(segmentCoordinates.toArray(new Coordinate[0]));
+          geometry = GeometryUtils.getGeometryFactory().createLineString(
+            segmentCoordinates.toArray(new Coordinate[0])
+          );
           segmentCoordinates.clear();
         } else {
           segmentCoordinates.add(osmEndNode.getCoordinate());

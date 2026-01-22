@@ -102,7 +102,7 @@ public final class AccessEgressFunctions {
       // See https://github.com/opentripplanner/OpenTripPlanner/issues/5601
       LOG.warn(
         "Duplicate access/egress paths passed into raptor:\n\t" +
-        duplicates.stream().map(Objects::toString).collect(Collectors.joining("\n\t"))
+          duplicates.stream().map(Objects::toString).collect(Collectors.joining("\n\t"))
       );
     }
     return result;

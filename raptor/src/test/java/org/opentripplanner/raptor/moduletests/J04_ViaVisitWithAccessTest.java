@@ -116,8 +116,8 @@ class J04_ViaVisitWithAccessTest {
   @Test
   @DisplayName(
     "Visit via is in access. This tests the corner case where two access paths both arrive at via " +
-    "stop. One has the numberOfViaLocationsVisited() set, the other not. It is NICE TO HAVE to " +
-    "handle this gracefully."
+      "stop. One has the numberOfViaLocationsVisited() set, the other not. It is NICE TO HAVE to " +
+      "handle this gracefully."
   )
   void accessWithViaVisit() {
     data
