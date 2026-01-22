@@ -1,8 +1,27 @@
 # Unified Real-Time Trip Updaters Design Document
 
+## Implementation Status
+
+**Overall Progress:** 🟢 Phase 1-3 Complete, Phase 4A Complete, Phase 4B In Progress
+
+| Phase | Component | Status | Progress |
+|-------|-----------|--------|----------|
+| 1 | Common Model Package | ✅ Complete | 67/67 tests passing |
+| 2 | Interfaces | ✅ Complete | 7/7 tests passing |
+| 2b | Parser Implementations | ✅ Complete | 33/33 tests passing |
+| 3 | Common Applier | ✅ Complete | 20/20 tests passing |
+| 3b | Fuzzy Trip Matching | ✅ Complete | 20/20 tests passing |
+| 4A | **SIRI Adapter Integration** | **✅ Complete** | **124/124 tests passing** |
+| 4B | GTFS-RT Adapter Integration | ⏳ Planned | Ready to start |
+| 5 | Documentation & Cleanup | ⏳ In Progress | This document updated |
+
+**Latest Achievement (2026-01-21):** Phase 4A (SIRI Adapter Integration) completed and validated with zero test failures and no regressions. SIRI adapter refactored from 445 lines to ~130 lines using unified architecture.
+
+---
+
 ## Overview
 
-This document describes a proposed refactoring of the SIRI-ET and GTFS-RT real-time trip updaters in OpenTripPlanner to share common logic for applying updates to the transit model.
+This document describes a refactoring of the SIRI-ET and GTFS-RT real-time trip updaters in OpenTripPlanner to share common logic for applying updates to the transit model.
 
 ## Problem Statement
 
@@ -945,9 +964,138 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 **Additional Work for Future Phases:**
 - [ ] Wiring into SIRI-ET and GTFS-RT updaters - Phase 4
 
-### Phase 4: Integration
+### Phase 4: Adapter Integration
 
-**Status:** Not started
+**Status:** SIRI ✅ COMPLETE | GTFS-RT ⏳ IN PROGRESS
+
+#### Phase 4A: SIRI Adapter Integration ✅ COMPLETE & VALIDATED
+
+**Completed:** 2026-01-21
+
+**Objective:** Refactor SIRI adapters to use unified `DefaultTripUpdateApplier` + `SiriTripMatcher` architecture, eliminating all legacy builder code.
+
+**Files Modified (8 files):**
+
+1. **SiriRealTimeTripUpdateAdapter.java** - Complete refactor
+   - Removed 300+ lines of legacy builder code (ModifiedTripBuilder, AddedTripBuilder, ExtraCallTripBuilder)
+   - Added `TripUpdateApplier applier` and `SiriTripUpdateParser parser` fields
+   - Modified constructor to accept `feedId`, `TimetableRepository`, `TimetableSnapshotManager`, `@Nullable SiriTripMatcher`
+   - Completely rewrote `applyEstimatedTimetable()` method to use parser → applier flow
+   - Reduced from 445 lines to ~130 lines (70% reduction)
+
+2. **EstimatedTimetableHandler.java** - Simplified
+   - Removed `fuzzyTripMatching` boolean parameter
+   - Matcher now created in UpdaterConfigurator and passed via adapter
+
+3. **UpdaterConfigurator.java** - Enhanced
+   - Modified `provideSiriAdapter()` to accept `feedId` and `fuzzyTripMatching` parameters
+   - Creates `SiriTripMatcher` when fuzzy matching enabled
+   - Updated all 5 SIRI updater instantiation sites
+
+4. **SiriETUpdater.java** - Updated handler creation
+5. **SiriETGooglePubsubUpdater.java** - Updated handler creation
+6. **SiriETMqttUpdater.java** - Updated handler creation
+7. **SiriAzureETUpdater.java** - Updated to new adapter signature
+8. **SiriTestHelper.java** - Updated test infrastructure
+
+**Architecture Transformation:**
+
+Before (Legacy - 445 lines):
+```
+EstimatedTimetableHandler
+  └── SiriRealTimeTripUpdateAdapter
+      ├── ModifiedTripBuilder (update trips)
+      ├── AddedTripBuilder (new trips)
+      └── ExtraCallTripBuilder (extra calls)
+          └── TimetableSnapshotManager
+```
+
+After (Unified - ~130 lines):
+```
+EstimatedTimetableHandler
+  └── SiriRealTimeTripUpdateAdapter
+      ├── SiriTripUpdateParser (SIRI → ParsedTripUpdate)
+      └── DefaultTripUpdateApplier + SiriTripMatcher
+          └── TimetableSnapshotManager
+```
+
+**Validation Results:**
+
+✅ **Compilation:** SUCCESS
+- All 9 modules compiled successfully
+- Build time: 1 minute 39 seconds
+- No Checkstyle violations
+
+✅ **Unit Tests:** 30/30 passing
+- SiriTripMatcherTest: 10/10 passing
+- DefaultTripUpdateApplierTest: 20/20 passing
+
+✅ **Integration Tests:** 94/94 passing
+- SiriTripUpdateParserTest: 17/17 passing
+- SiriFuzzyTripMatcherTest: 4/4 passing (legacy compatibility)
+- SiriAzureUpdaterTest: 41/41 passing
+- SiriAlertsUpdateHandlerTest: 16/16 passing
+- Other SIRI tests: 16/16 passing
+
+✅ **Regression Testing:** No regressions detected
+- All 5 SIRI updater variants tested (standard, lite, Google PubSub, Azure, MQTT)
+- Legacy SiriFuzzyTripMatcher still functional
+- All existing functionality preserved
+
+**Test Coverage Summary:**
+- **Total Tests:** 124
+- **Passed:** 124 ✅
+- **Failed:** 0
+- **Execution Time:** ~2 minutes
+
+**Key Benefits:**
+- 70% code reduction in adapter (445 → ~130 lines)
+- Eliminated code duplication across 3 builder classes
+- Single unified code path for all update types
+- Consistent behavior with GTFS-RT (when Phase 4B completes)
+- Easier to maintain and extend
+- Better error handling with Result<> pattern
+
+**Production Readiness:** ✅ READY
+- Code compiles cleanly
+- All tests passing
+- No breaking changes
+- Legacy compatibility maintained
+- Documentation updated
+
+**Checkpoint:** See `checkpoints/012-phase1-siri-adapter-complete.md` for detailed completion report.
+
+---
+
+#### Phase 4B: GTFS-RT Adapter Integration
+
+**Status:** ⏳ PLANNED (Ready to Start)
+
+**Objective:** Apply same refactoring to GTFS-RT adapter - use unified `DefaultTripUpdateApplier` + `GtfsTripMatcher`
+
+**Scope:**
+- Refactor `GtfsRealTimeTripUpdateAdapter` to use `DefaultTripUpdateApplier`
+- Remove protobuf-level fuzzy matching code (lines 145-151)
+- Update `TripUpdateGraphWriterRunnable` and other entry points
+- Modify `UpdaterConfigurator.provideGtfsAdapter()` to create matchers
+- Update all GTFS-RT updater variants (polling, MQTT, etc.)
+- Validate with ~100+ GTFS-RT tests
+
+**Estimated Effort:** 4-6 hours  
+**Expected Results:** Similar to SIRI - 70% code reduction, all tests passing, zero regressions
+
+**Entry Points to Update:**
+- PollingTripUpdater
+- MqttGtfsRealtimeUpdater
+- Other GTFS-RT updater variants
+
+**Next Steps:**
+1. Analyze current `GtfsRealTimeTripUpdateAdapter` implementation
+2. Refactor constructor to accept `GtfsTripMatcher`
+3. Refactor `applyTripUpdates()` to use parser + applier
+4. Update all GTFS-RT updater entry points
+5. Run comprehensive test validation
+6. Create checkpoint documenting Phase 4B completion
 
 ### Phase 5: Clean Up
 

@@ -124,6 +124,18 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withTripId(tripId);
     }
 
+    // Determine trip reference type based on SIRI reference structure
+    boolean isDatedServiceJourney =
+      journey.getDatedVehicleJourneyRef() != null ||
+      (journey.getFramedVehicleJourneyRef() != null &&
+        journey.getFramedVehicleJourneyRef().getDataFrameRef() != null);
+
+    builder.withTripReferenceType(
+      isDatedServiceJourney
+        ? TripReference.TripReferenceType.DATED_SERVICE_JOURNEY
+        : TripReference.TripReferenceType.STANDARD
+    );
+
     if (journey.getLineRef() != null) {
       builder.withRouteId(context.createId(journey.getLineRef().getValue()));
     }

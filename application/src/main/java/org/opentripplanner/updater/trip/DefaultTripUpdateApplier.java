@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.trip;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +19,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
 import org.slf4j.Logger;
@@ -90,8 +92,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_TRIP_ID));
     }
 
-    // Resolve trip from ID
-    var trip = transitService.getTrip(tripRef.tripId());
+    // Resolve trip based on reference type
+    var trip = resolveTrip(tripRef, serviceDate);
+
     if (trip == null) {
       LOG.debug("Trip {} not found for update", tripRef.tripId());
       return Result.failure(
@@ -307,8 +310,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     var tripRef = parsedUpdate.tripReference();
     var serviceDate = parsedUpdate.serviceDate();
 
-    // Resolve trip from ID
-    var trip = transitService.getTrip(tripRef.tripId());
+    // Resolve trip based on reference type
+    var trip = resolveTrip(tripRef, serviceDate);
     if (trip == null) {
       LOG.debug("Trip {} not found for cancellation/deletion", tripRef.tripId());
       return Result.failure(
@@ -497,8 +500,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Resolve trip from ID
-    var trip = transitService.getTrip(tripRef.tripId());
+    // Resolve trip based on reference type
+    var trip = resolveTrip(tripRef, serviceDate);
     if (trip == null) {
       LOG.debug("Trip {} not found for modification", tripRef.tripId());
       return Result.failure(
@@ -655,8 +658,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.NO_TRIP_ID));
     }
 
-    // Resolve the trip
-    var trip = transitService.getTrip(tripReference.tripId());
+    // Resolve the trip based on reference type
+    var trip = resolveTrip(tripReference, serviceDate);
     if (trip == null) {
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
     }
@@ -764,6 +767,23 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     var realTimeTripTimes = rtBuilder.build();
     var realTimeTripUpdate = new RealTimeTripUpdate(newPattern, realTimeTripTimes, serviceDate);
     return Result.success(realTimeTripUpdate);
+  }
+
+  /**
+   * Resolves a trip based on the trip reference type.
+   * For DATED_SERVICE_JOURNEY, uses TripOnServiceDate lookup by ID.
+   * For STANDARD, uses direct trip ID lookup.
+   */
+  @Nullable
+  private Trip resolveTrip(TripReference tripRef, LocalDate serviceDate) {
+    if (tripRef.tripReferenceType() == TripReference.TripReferenceType.DATED_SERVICE_JOURNEY) {
+      // SIRI dated vehicle journey ref - the trip ID IS the TripOnServiceDate ID
+      var tripOnServiceDate = transitService.getTripOnServiceDate(tripRef.tripId());
+      return tripOnServiceDate != null ? tripOnServiceDate.getTrip() : null;
+    } else {
+      // Standard trip reference - direct lookup
+      return transitService.getTrip(tripRef.tripId());
+    }
   }
 
   /**
