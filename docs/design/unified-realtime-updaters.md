@@ -11,7 +11,7 @@
 | 2b | Parser Implementations | ✅ Complete | 33/33 tests passing |
 | 3 | Common Applier | ✅ Complete | 20/20 tests passing |
 | 3b | Fuzzy Trip Matching | ✅ Complete | 20/20 tests passing |
-| 4A | **SIRI Adapter Integration** | **🟡 NEARLY COMPLETE** | **191/193 tests passing (98.9%)** |
+| 4A | **SIRI Adapter Integration** | **🟡 NEARLY COMPLETE** | **133/134 tests passing (99.3%)** |
 | 4B | GTFS-RT Adapter Integration | ⏳ Planned | Blocked by 4A |
 | 5 | Documentation & Cleanup | ⏳ In Progress | This document updated |
 
@@ -23,8 +23,9 @@
 - FuzzyTripMatchingTest: 5/5 ✅
 - NegativeTimesTest: 3/3 ✅
 - InvalidCallsTest: 2/2 ✅
+- CancellationTest: 4/4 ✅
 
-**Broader SIRI Tests:** 191/193 passing (2 failures outside target scope)
+**Broader SIRI Tests:** 133/134 passing (1 failure outside target scope)
 
 **Fixed Issues:**
 - ✅ Stop reference resolution (SIRI stopPointRef to OTP stop ID)
@@ -44,8 +45,9 @@
 - ✅ Fuzzy matching cache lookup (use scheduled time, not expected)
 - ✅ Recorded flag `[R]` in handleUpdateExisting
 - ✅ MODIFIED state when stops are cancelled
+- ✅ Added trip cancellation with first/last stop time adjustment (2026-01-22)
 
-**Remaining Issues (2 test failures):**
+**Remaining Issues (1 test failure):**
 
 1. **QuayChangeTest.testChangeQuay** (line 52)
    - **Expected:** Pattern `F:Route1::001:RT[MODIFIED]`
@@ -57,15 +59,45 @@
      and adds to `patternsForStop`, but the `RealTimeRaptorTransitDataUpdater` may not be processing
      it correctly for modified patterns.
 
-2. **CancellationTest.testChangeQuayAndCancelAddedTrip** (line 146)
-   - **Expected:** `CANCELED | A 0:00:11 0:00:11 | B 0:00:20 0:00:20`
-   - **Actual:** `CANCELED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21`
-   - **Root Cause:** When an added trip is cancelled, it should revert to "adjusted" scheduled times
-     where first stop arrival = departure, last stop departure = arrival
-   - **Analysis:** The cancellation handler is using the original scheduled times without applying
-     the first/last stop time adjustment that is done for added trips
-
 ### Technical Findings
+
+#### Fix: Added Trip Cancellation with Time Adjustment (2026-01-22)
+
+**Issue:** `CancellationTest.testChangeQuayAndCancelAddedTrip` was failing because cancelled added trips
+weren't applying the first/last stop time adjustment.
+
+**Root Cause:** The `cancelOrDeleteTrip()` method in `DefaultTripUpdateApplier` was:
+1. Not correctly detecting added trips (checked `scheduledPattern == null`, but `findPattern(trip)` 
+   returns the RT-added pattern for added trips, so it was non-null)
+2. Not reverting modified patterns before getting the original pattern
+3. Not applying the first/last stop time adjustment required for added trips
+
+**Fix in `DefaultTripUpdateApplier.cancelOrDeleteTrip()`:**
+1. Changed detection to use `pattern.isCreatedByRealtimeUpdater()` to identify added trips
+2. Call `revertTripToScheduledTripPattern()` before getting pattern for added trips
+3. Use `pattern.getScheduledTimetable()` instead of real-time timetable for original times
+4. Apply first/last stop adjustment: first stop arrival = departure, last stop departure = arrival
+
+```java
+if (pattern != null && !pattern.isCreatedByRealtimeUpdater()) {
+  // Scheduled trip path
+  isAddedTrip = false;
+  ...
+} else {
+  // Added trip path
+  isAddedTrip = true;
+  snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
+  pattern = transitService.findPattern(trip, serviceDate);
+  var timetable = pattern.getScheduledTimetable();
+  ...
+}
+
+// For added trips, apply first/last stop time adjustment
+if (isAddedTrip) {
+  builder.withArrivalTime(0, tripTimes.getScheduledDepartureTime(0));
+  builder.withDepartureTime(lastStopIndex, tripTimes.getScheduledArrivalTime(lastStopIndex));
+}
+```
 
 #### Key Architectural Insight: Raptor Pattern Indexing
 

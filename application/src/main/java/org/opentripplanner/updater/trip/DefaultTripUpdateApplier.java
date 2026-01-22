@@ -460,21 +460,31 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       );
     }
 
-    // Try to find SCHEDULED pattern first (for scheduled trips)
-    // For added trips, the scheduled pattern will be null
-    var scheduledPattern = transitService.findPattern(trip);
-    TripPattern pattern;
+    // Find the pattern for this trip
+    // For scheduled trips, this returns the static pattern
+    // For added trips, this returns the RT-added pattern (which has isCreatedByRealtimeUpdater = true)
+    var pattern = transitService.findPattern(trip);
     org.opentripplanner.transit.model.timetable.TripTimes tripTimes;
+    boolean isAddedTrip;
 
-    if (scheduledPattern != null) {
+    if (pattern != null && !pattern.isCreatedByRealtimeUpdater()) {
       // Scheduled trip - revert to scheduled pattern and times
-      pattern = scheduledPattern;
+      isAddedTrip = false;
       snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
       var timetable = pattern.getScheduledTimetable();
       tripTimes = timetable.getTripTimes(trip);
     } else {
-      // Added trip - find real-time pattern (no scheduled pattern exists)
+      // Added trip - first revert any pattern modifications (like quay changes)
+      // This ensures we get the ORIGINAL added pattern, not a modified one
+      isAddedTrip = true;
+      snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
+
+      // Now find the original real-time pattern (no scheduled pattern exists for added trips)
       pattern = transitService.findPattern(trip, serviceDate);
+      if (pattern == null) {
+        // Fallback: try findPattern(trip) which checks timetableSnapshot
+        pattern = transitService.findPattern(trip);
+      }
       if (pattern == null) {
         LOG.debug("Pattern not found for added trip {}", tripRef.tripId());
         return Result.failure(
@@ -486,7 +496,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           )
         );
       }
-      var timetable = snapshotManager.resolve(pattern, serviceDate);
+      // For added trips, use the scheduled timetable (original times when trip was added)
+      // not the real-time timetable (which may have been modified)
+      var timetable = pattern.getScheduledTimetable();
       tripTimes = timetable.getTripTimes(trip);
     }
 
@@ -504,6 +516,22 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
     // Create real-time trip times and mark as canceled/deleted
     var builder = tripTimes.createRealTimeFromScheduledTimes();
+
+    // For added trips, apply first/last stop time adjustment to avoid negative dwell times
+    // First stop: arrival = departure; Last stop: departure = arrival
+    if (isAddedTrip) {
+      int numStops = pattern.numberOfStops();
+      if (numStops > 0) {
+        // First stop: set arrival = departure
+        int firstStopDeparture = tripTimes.getScheduledDepartureTime(0);
+        builder.withArrivalTime(0, firstStopDeparture);
+        // Last stop: set departure = arrival
+        int lastStopIndex = numStops - 1;
+        int lastStopArrival = tripTimes.getScheduledArrivalTime(lastStopIndex);
+        builder.withDepartureTime(lastStopIndex, lastStopArrival);
+      }
+    }
+
     if (isCancel) {
       builder.cancelTrip();
       LOG.debug("Canceling trip {} on {}", tripRef.tripId(), serviceDate);
