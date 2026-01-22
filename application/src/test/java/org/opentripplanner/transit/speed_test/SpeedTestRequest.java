@@ -22,6 +22,7 @@ public class SpeedTestRequest {
   private final SpeedTestCmdLineOpts opts;
   private final SpeedTestConfig config;
   private final SpeedTestProfile profile;
+  private final RouteRequest defaultRouteRequest;
   private final ZoneId timeZoneId;
 
   SpeedTestRequest(
@@ -29,12 +30,14 @@ public class SpeedTestRequest {
     SpeedTestCmdLineOpts opts,
     SpeedTestConfig config,
     SpeedTestProfile profile,
+    RouteRequest defaultRouteRequest,
     ZoneId timeZoneId
   ) {
     this.testCase = testCase;
     this.opts = opts;
     this.config = config;
     this.profile = profile;
+    this.defaultRouteRequest = defaultRouteRequest;
     this.timeZoneId = timeZoneId;
   }
 
@@ -43,7 +46,7 @@ public class SpeedTestRequest {
   }
 
   RouteRequest toRouteRequest() {
-    var builder = config.request.copyOf();
+    var builder = defaultRouteRequest.copyOf();
 
     var input = testCase.definition();
 
