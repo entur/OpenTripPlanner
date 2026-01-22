@@ -966,6 +966,25 @@ public class GraphQLTypes {
     VEHICLE_RENT,
   }
 
+  public static class GraphQLFlexRequestInput {
+
+    private java.time.OffsetDateTime bookingTime;
+
+    public GraphQLFlexRequestInput(Map<String, Object> args) {
+      if (args != null) {
+        this.bookingTime = (java.time.OffsetDateTime) args.get("bookingTime");
+      }
+    }
+
+    public java.time.OffsetDateTime getGraphQLBookingTime() {
+      return this.bookingTime;
+    }
+
+    public void setGraphQLBookingTime(java.time.OffsetDateTime bookingTime) {
+      this.bookingTime = bookingTime;
+    }
+  }
+
   public enum GraphQLFormFactor {
     BICYCLE,
     CAR,
@@ -3835,9 +3854,11 @@ public class GraphQLTypes {
 
     private String after;
     private String before;
+    private java.time.OffsetDateTime bookingTime;
     private GraphQLPlanDateTimeInput dateTime;
     private GraphQLPlanLabeledLocationInput destination;
     private Integer first;
+    private GraphQLFlexRequestInput flex;
     private GraphQLPlanItineraryFilterInput itineraryFilter;
     private Integer last;
     private java.util.Locale locale;
@@ -3851,11 +3872,13 @@ public class GraphQLTypes {
       if (args != null) {
         this.after = (String) args.get("after");
         this.before = (String) args.get("before");
+        this.bookingTime = (java.time.OffsetDateTime) args.get("bookingTime");
         this.dateTime = new GraphQLPlanDateTimeInput((Map<String, Object>) args.get("dateTime"));
         this.destination = new GraphQLPlanLabeledLocationInput(
           (Map<String, Object>) args.get("destination")
         );
         this.first = (Integer) args.get("first");
+        this.flex = new GraphQLFlexRequestInput((Map<String, Object>) args.get("flex"));
         this.itineraryFilter = new GraphQLPlanItineraryFilterInput(
           (Map<String, Object>) args.get("itineraryFilter")
         );
@@ -3883,6 +3906,10 @@ public class GraphQLTypes {
       return this.before;
     }
 
+    public java.time.OffsetDateTime getGraphQLBookingTime() {
+      return this.bookingTime;
+    }
+
     public GraphQLPlanDateTimeInput getGraphQLDateTime() {
       return this.dateTime;
     }
@@ -3893,6 +3920,10 @@ public class GraphQLTypes {
 
     public Integer getGraphQLFirst() {
       return this.first;
+    }
+
+    public GraphQLFlexRequestInput getGraphQLFlex() {
+      return this.flex;
     }
 
     public GraphQLPlanItineraryFilterInput getGraphQLItineraryFilter() {
@@ -3933,6 +3964,10 @@ public class GraphQLTypes {
 
     public void setGraphQLBefore(String before) {
       this.before = before;
+    }
+
+    public void setGraphQLBookingTime(java.time.OffsetDateTime bookingTime) {
+      this.bookingTime = bookingTime;
     }
 
     public void setGraphQLDateTime(GraphQLPlanDateTimeInput dateTime) {
