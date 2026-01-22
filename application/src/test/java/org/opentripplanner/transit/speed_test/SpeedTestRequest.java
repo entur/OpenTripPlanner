@@ -64,7 +64,7 @@ public class SpeedTestRequest {
 
     // Filter the results inside the SpeedTest, not in the itineraries filter,
     // when ignoring street results. This will use the default which is 50.
-    if (!config.ignoreStreetResults) {
+    if (!config.ignoreStreetResults()) {
       builder.withNumItineraries(opts.numOfItineraries());
     }
     builder.withJourney(journeyBuilder -> {
@@ -120,6 +120,6 @@ public class SpeedTestRequest {
 
   private Instant time(int time) {
     // Note time may be negative and exceed 24 hours
-    return config.testDate.atStartOfDay(timeZoneId).plusSeconds(time).toInstant();
+    return config.testDate().atStartOfDay(timeZoneId).plusSeconds(time).toInstant();
   }
 }

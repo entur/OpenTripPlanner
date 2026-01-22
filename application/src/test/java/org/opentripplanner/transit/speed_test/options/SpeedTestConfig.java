@@ -17,28 +17,23 @@ public class SpeedTestConfig {
   private static final String FILE_NAME = "speed-test-config.json";
   private static final SpeedTestConfig DEFAULT = new SpeedTestConfig();
 
-  /**
-   * The test date is the date used for all test cases. The default value is today.
-   */
-  public final LocalDate testDate;
-
-  /** The speed test run all its test on an existing pre-build graph. */
-  public final URI graph;
-  public final String feedId;
-  public final boolean ignoreStreetResults;
+  private final String feedId;
+  private final LocalDate testDate;
+  private final boolean ignoreStreetResults;
+  private final URI graph;
 
   public SpeedTestConfig() {
-    this.testDate = null;
-    this.graph = URI.create("graph.obj");
     this.feedId = "F";
+    this.testDate = null;
     this.ignoreStreetResults = true;
+    this.graph = URI.create("graph.obj");
   }
 
   public SpeedTestConfig(Builder builder) {
-    this.testDate = Objects.requireNonNull(builder.testDate);
-    this.graph = Objects.requireNonNull(builder.graph);
     this.feedId = Objects.requireNonNull(builder.feedId);
+    this.testDate = Objects.requireNonNull(builder.testDate);
     this.ignoreStreetResults = Objects.requireNonNull(builder.ignoreStreetResults);
+    this.graph = Objects.requireNonNull(builder.graph);
   }
 
   public static SpeedTestConfig.Builder of() {
@@ -63,8 +58,8 @@ public class SpeedTestConfig {
     var builder = of()
       .withFeedId(adapter.of("feedId").asString())
       .withTestDate(adapter.of("testDate").asDateOrRelativePeriod("PT0D", ZoneId.of("UTC")))
-      .withGraph(adapter.of("graph").asUri(null))
-      .withIgnoreStreetResults(adapter.of("ignoreStreetResults").asBoolean(false));
+      .withIgnoreStreetResults(adapter.of("ignoreStreetResults").asBoolean(false))
+      .withGraph(adapter.of("graph").asUri(null));
 
     adapter.logAllWarnings(LOG::warn);
 
@@ -74,37 +69,47 @@ public class SpeedTestConfig {
   @Override
   public String toString() {
     return ToStringBuilder.of(getClass())
-      .addDate("testDate", testDate)
-      .addObj("graph", graph)
       .addStr("feedId", feedId)
+      .addDate("testDate", testDate)
       .addBoolIfTrue("ignoreStreetResults", ignoreStreetResults)
+      .addObj("graph", graph)
       .toString();
+  }
+
+  public String feedId() {
+    return feedId;
+  }
+
+  /**
+   * The test date is the date used for all test cases. The default value is today.
+   */
+  public LocalDate testDate() {
+    return testDate;
+  }
+
+  public boolean ignoreStreetResults() {
+    return ignoreStreetResults;
+  }
+
+  /** The speed test run all its test on an existing pre-build graph. */
+  public URI graph() {
+    return graph;
   }
 
   public static class Builder {
 
-    public LocalDate testDate;
-    public URI graph;
     public String feedId;
+    public LocalDate testDate;
     public boolean ignoreStreetResults;
+    public URI graph;
 
     Builder(SpeedTestConfig original) {
       if (original != null) {
-        this.testDate = original.testDate;
-        this.graph = original.graph;
         this.feedId = original.feedId;
+        this.testDate = original.testDate;
         this.ignoreStreetResults = original.ignoreStreetResults;
+        this.graph = original.graph;
       }
-    }
-
-    public Builder withTestDate(LocalDate testDate) {
-      this.testDate = testDate;
-      return this;
-    }
-
-    public Builder withGraph(URI graph) {
-      this.graph = graph;
-      return this;
     }
 
     public Builder withFeedId(String feedId) {
@@ -112,8 +117,18 @@ public class SpeedTestConfig {
       return this;
     }
 
+    public Builder withTestDate(LocalDate testDate) {
+      this.testDate = testDate;
+      return this;
+    }
+
     public Builder withIgnoreStreetResults(boolean ignoreStreetResults) {
       this.ignoreStreetResults = ignoreStreetResults;
+      return this;
+    }
+
+    public Builder withGraph(URI graph) {
+      this.graph = graph;
       return this;
     }
 

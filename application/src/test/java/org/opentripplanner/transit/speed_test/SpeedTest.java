@@ -93,7 +93,7 @@ public class SpeedTest {
     this.tcIO = new CsvFileSupport(
       opts.rootDir(),
       TRAVEL_SEARCH_FILENAME,
-      config.feedId,
+      config.feedId(),
       opts.replaceExpectedResultsFiles()
     );
 
@@ -185,7 +185,7 @@ public class SpeedTest {
       var config = SpeedTestConfig.config(opts.rootDir());
       var routerConfig = new OtpConfigLoader(opts.rootDir()).loadRouterConfig();
       OtpStartupInfo.logInfo("Run Speed Test");
-      var model = SetupHelper.loadGraph(opts.rootDir(), config.graph);
+      var model = SetupHelper.loadGraph(opts.rootDir(), config.graph());
       var timetableRepository = model.timetableRepository();
       var transferRepository = model.transferRepository();
       var buildConfig = model.buildConfig();
@@ -383,7 +383,7 @@ public class SpeedTest {
   private List<Itinerary> trimItineraries(RoutingResponse routingResponse) {
     var stream = routingResponse.getTripPlan().itineraries.stream();
 
-    if (config.ignoreStreetResults) {
+    if (config.ignoreStreetResults()) {
       stream = stream.filter(Predicate.not(Itinerary::isStreetOnly));
     }
     return stream.limit(opts.numOfItineraries()).toList();

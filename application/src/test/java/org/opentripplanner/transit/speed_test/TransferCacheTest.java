@@ -25,7 +25,7 @@ public class TransferCacheTest {
       var config = SpeedTestConfig.config(opts.rootDir());
       var routerConfig = new OtpConfigLoader(opts.rootDir()).loadRouterConfig();
       SetupHelper.loadOtpFeatures(opts);
-      var model = SetupHelper.loadGraph(opts.rootDir(), config.graph);
+      var model = SetupHelper.loadGraph(opts.rootDir(), config.graph());
       var timetableRepository = model.timetableRepository();
       var transferRepository = model.transferRepository();
       var buildConfig = model.buildConfig();
