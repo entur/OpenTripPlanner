@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>232</otp.serialization.version.id>
+        <otp.serialization.version.id>233</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.1</geotools.version>
@@ -120,7 +120,7 @@
                     <version>${plugin.prettier.version}</version>
                     <configuration>
                         <skip>${plugin.prettier.skip}</skip>
-                        <prettierJavaVersion>2.6.8</prettierJavaVersion>
+                        <prettierJavaVersion>2.7.7</prettierJavaVersion>
                         <inputGlobs>
                             <inputGlob>src/main/java/**/*.java</inputGlob>
                             <inputGlob>src/test/java/**/*.java</inputGlob>

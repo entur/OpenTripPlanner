@@ -143,10 +143,9 @@ public class OsmTagMapper {
         new Equals("cycleway", "opposite_lane"),
         new Not(new Equals("highway", "cycleway"))
       ),
-      new MixinPropertiesBuilder()
-        .directional(TraverseDirection.BACKWARD, builder ->
-          builder.withBicycleSafety(0.87).addPermission(BICYCLE)
-        )
+      new MixinPropertiesBuilder().directional(TraverseDirection.BACKWARD, builder ->
+        builder.withBicycleSafety(0.87).addPermission(BICYCLE)
+      )
     );
 
     /* cycleway=track */
@@ -164,10 +163,9 @@ public class OsmTagMapper {
         new Equals("cycleway", "opposite_track"),
         new Not(new Equals("highway", "cycleway"))
       ),
-      new MixinPropertiesBuilder()
-        .directional(TraverseDirection.BACKWARD, builder ->
-          builder.withBicycleSafety(0.75).addPermission(BICYCLE)
-        )
+      new MixinPropertiesBuilder().directional(TraverseDirection.BACKWARD, builder ->
+        builder.withBicycleSafety(0.75).addPermission(BICYCLE)
+      )
     );
 
     /* cycleway=shared_lane a.k.a. bike boulevards or neighborhood greenways */
@@ -185,10 +183,9 @@ public class OsmTagMapper {
         new Equals("cycleway", "opposite"),
         new Not(new Equals("highway", "cycleway"))
       ),
-      new MixinPropertiesBuilder()
-        .directional(TraverseDirection.BACKWARD, builder ->
-          builder.withBicycleSafety(1.4).addPermission(BICYCLE)
-        )
+      new MixinPropertiesBuilder().directional(TraverseDirection.BACKWARD, builder ->
+        builder.withBicycleSafety(1.4).addPermission(BICYCLE)
+      )
     );
 
     /* sidewalk and crosswalk */
