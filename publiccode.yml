@@ -26,7 +26,7 @@ usedBy:
   - Norway (nationwide), Entur AS
   - Finland, Helsinki, Helsinki Regional Transport Authority
   - Finland (nationwide), Finnish Transport Agency
-  - Finland Intercity, Matkahuolto and Kyyti
+  - Finland Intercity, Matkahuolto
   - Sweden, Skåne, Skånetrafiken
   - Italy, Piemonte Region and the City of Torino, 5T
   - Italy, Trento Province
@@ -38,7 +38,7 @@ usedBy:
   - Germany, Leipzig, Leipzig Move
   - Polen, Poznań, Urban Transport Authority of Poznań
   - Iceland (nationwide) – Strætó
-  - See https://docs.opentripplanner.org/en/latest/Deployments/ witch include none Europeen listings
+  - See https://docs.opentripplanner.org/en/latest/Deployments/ which includes non-European listings
 
 roadmap: "https://github.com/orgs/opentripplanner/projects/3"
 
