@@ -182,8 +182,7 @@ public class TripInput {
     int arrivalTime,
     int departureTime,
     @Nullable String headsign
-  )
-    implements StopCallInput {
+  ) implements StopCallInput {
     public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
       st.setTrip(trip);
@@ -196,13 +195,14 @@ public class TripInput {
       }
       return st;
     }
+
     public StopLocation stopLocation() {
       return stop;
     }
   }
 
-  private record FlexStopCallInput(AreaStop stop, int windowStart, int windowEnd)
-    implements StopCallInput {
+  private record FlexStopCallInput(AreaStop stop, int windowStart, int windowEnd) implements
+    StopCallInput {
     public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
       st.setTrip(trip);
@@ -212,6 +212,7 @@ public class TripInput {
       st.setFlexWindowEnd(windowEnd);
       return st;
     }
+
     public StopLocation stopLocation() {
       return stop;
     }

@@ -7,26 +7,30 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.osm.model.OsmWay;
 
-public record OnlyOneIntersectionNodeInElevatorWay(OsmWay way, Coordinate from, Coordinate to)
-  implements DataImportIssue {
+public record FewerThanTwoIntersectionNodesInElevatorWay(
+  OsmWay way,
+  Coordinate from,
+  Coordinate to,
+  int intersectionNodes
+) implements DataImportIssue {
   private static final String FMT =
-    "Elevator way %s has only one intersection node. " +
+    "Elevator way %s has fewer than two intersection nodes: %s. " +
     "This makes the elevator unusable. " +
-    "Please check whether the way is correctly modeled.";
+    "Please check whether the elevator way is correctly modeled.";
 
   private static final String HTMLFMT =
-    "<a href='%s'>Elevator way %s</a> has only one intersection node. " +
+    "<a href='%s'>Elevator way %s</a> has fewer than two intersection nodes: %s. " +
     "This makes the elevator unusable. " +
-    "Please check whether the way is correctly modeled.";
+    "Please check whether the elevator way is correctly modeled.";
 
   @Override
   public String getMessage() {
-    return String.format(FMT, way.getId());
+    return String.format(FMT, way.getId(), intersectionNodes);
   }
 
   @Override
   public String getHTMLMessage() {
-    return String.format(HTMLFMT, way.url(), way.getId());
+    return String.format(HTMLFMT, way.url(), way.getId(), intersectionNodes);
   }
 
   @Override
