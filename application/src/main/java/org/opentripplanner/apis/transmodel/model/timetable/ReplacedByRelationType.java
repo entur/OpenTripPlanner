@@ -19,7 +19,7 @@ public class ReplacedByRelationType {
       .name(NAME)
       .description(
         "Relation for indicating the DatedServiceJourney which is replacing an older one. Exists as a\n" +
-        "place to put additional information on the replacement when we get SIRI 2.1 support."
+          "place to put additional information on the replacement when we get SIRI 2.1 support."
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
