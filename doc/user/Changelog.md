@@ -73,6 +73,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add modes filter and totalCount to the canceled trips query in the GTFS API [#7200](https://github.com/opentripplanner/OpenTripPlanner/pull/7200)
 - Make sure flex transfers are indexed exactly once [#7218](https://github.com/opentripplanner/OpenTripPlanner/pull/7218)
 - Fix SIRI ET ExtraJourney trips not appearing in departure/arrival boards [#7052](https://github.com/opentripplanner/OpenTripPlanner/pull/7052)
+- Add `CarRequest` to cache key in `RaptorRequestTransferCache` [#7194](https://github.com/opentripplanner/OpenTripPlanner/pull/7194)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
