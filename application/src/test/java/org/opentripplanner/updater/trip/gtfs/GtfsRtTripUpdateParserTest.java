@@ -118,10 +118,9 @@ class GtfsRtTripUpdateParserTest {
           .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.ADDED)
       )
       .setVehicle(
-        GtfsRealtime.VehicleDescriptor.newBuilder()
-          .setWheelchairAccessible(
-            GtfsRealtime.VehicleDescriptor.WheelchairAccessible.WHEELCHAIR_ACCESSIBLE
-          )
+        GtfsRealtime.VehicleDescriptor.newBuilder().setWheelchairAccessible(
+          GtfsRealtime.VehicleDescriptor.WheelchairAccessible.WHEELCHAIR_ACCESSIBLE
+        )
       )
       .addStopTimeUpdate(
         GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
@@ -218,8 +217,9 @@ class GtfsRtTripUpdateParserTest {
           .setStopId("stop1")
           .setStopSequence(0)
           .setStopTimeProperties(
-            GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties.newBuilder()
-              .setAssignedStopId("stop1_platform_2")
+            GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties.newBuilder().setAssignedStopId(
+              "stop1_platform_2"
+            )
           )
           .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
       )
@@ -281,8 +281,9 @@ class GtfsRtTripUpdateParserTest {
           .setStopId("stop1")
           .setStopSequence(0)
           .setStopTimeProperties(
-            GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties.newBuilder()
-              .setStopHeadsign("Downtown Express")
+            GtfsRealtime.TripUpdate.StopTimeUpdate.StopTimeProperties.newBuilder().setStopHeadsign(
+              "Downtown Express"
+            )
           )
           .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
       )
@@ -331,8 +332,9 @@ class GtfsRtTripUpdateParserTest {
   void parseMissingTripId() {
     var tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
       .setTrip(
-        GtfsRealtime.TripDescriptor.newBuilder()
-          .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED)
+        GtfsRealtime.TripDescriptor.newBuilder().setScheduleRelationship(
+          GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED
+        )
       )
       .build();
 
