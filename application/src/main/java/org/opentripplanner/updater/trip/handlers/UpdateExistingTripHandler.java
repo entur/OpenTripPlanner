@@ -23,8 +23,18 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    // TODO: Implement
-    LOG.debug("UpdateExistingTripHandler not yet implemented");
+    // Resolve the trip using the TripIdResolver
+    var tripResult = context.tripIdResolver().resolveTrip(parsedUpdate.tripReference());
+    if (tripResult.isFailure()) {
+      LOG.debug("Could not resolve trip for update: {}", parsedUpdate.tripReference());
+      return Result.failure(tripResult.failureValue());
+    }
+
+    var trip = tripResult.successValue();
+    LOG.debug("Resolved trip {} for update", trip.getId());
+
+    // TODO: Apply the actual time updates to the trip
+    LOG.debug("UpdateExistingTripHandler apply logic not yet implemented");
     return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
   }
 }
