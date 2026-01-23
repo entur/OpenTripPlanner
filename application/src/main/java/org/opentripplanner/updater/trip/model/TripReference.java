@@ -16,6 +16,9 @@ public final class TripReference {
   private final FeedScopedId tripId;
 
   @Nullable
+  private final FeedScopedId tripOnServiceDateId;
+
+  @Nullable
   private final FeedScopedId routeId;
 
   @Nullable
@@ -31,6 +34,7 @@ public final class TripReference {
 
   /**
    * @param tripId The trip ID (may be null if fuzzy matching by route/time is used)
+   * @param tripOnServiceDateId The TripOnServiceDate ID (dated service journey ID)
    * @param routeId The route ID (used for fuzzy matching when trip ID is ambiguous)
    * @param startTime The scheduled start time of the trip (e.g., "08:30:00")
    * @param startDate The service date for the trip
@@ -39,6 +43,7 @@ public final class TripReference {
    */
   public TripReference(
     @Nullable FeedScopedId tripId,
+    @Nullable FeedScopedId tripOnServiceDateId,
     @Nullable FeedScopedId routeId,
     @Nullable String startTime,
     @Nullable LocalDate startDate,
@@ -46,6 +51,7 @@ public final class TripReference {
     FuzzyMatchingHint fuzzyMatchingHint
   ) {
     this.tripId = tripId;
+    this.tripOnServiceDateId = tripOnServiceDateId;
     this.routeId = routeId;
     this.startTime = startTime;
     this.startDate = startDate;
@@ -82,6 +88,7 @@ public final class TripReference {
       null,
       null,
       null,
+      null,
       FuzzyMatchingHint.EXACT_MATCH_REQUIRED
     );
   }
@@ -90,7 +97,7 @@ public final class TripReference {
    * Create a trip reference with a trip ID and specified fuzzy matching hint.
    */
   public static TripReference ofTripId(FeedScopedId tripId, FuzzyMatchingHint fuzzyMatchingHint) {
-    return new TripReference(tripId, null, null, null, null, fuzzyMatchingHint);
+    return new TripReference(tripId, null, null, null, null, null, fuzzyMatchingHint);
   }
 
   /**
@@ -103,6 +110,11 @@ public final class TripReference {
   @Nullable
   public FeedScopedId tripId() {
     return tripId;
+  }
+
+  @Nullable
+  public FeedScopedId tripOnServiceDateId() {
+    return tripOnServiceDateId;
   }
 
   @Nullable
@@ -137,6 +149,13 @@ public final class TripReference {
   }
 
   /**
+   * Returns true if this reference has a TripOnServiceDate ID.
+   */
+  public boolean hasTripOnServiceDateId() {
+    return tripOnServiceDateId != null;
+  }
+
+  /**
    * Returns true if this reference has a route ID.
    */
   public boolean hasRouteId() {
@@ -168,6 +187,7 @@ public final class TripReference {
     TripReference that = (TripReference) o;
     return (
       Objects.equals(tripId, that.tripId) &&
+      Objects.equals(tripOnServiceDateId, that.tripOnServiceDateId) &&
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(startTime, that.startTime) &&
       Objects.equals(startDate, that.startDate) &&
@@ -178,7 +198,15 @@ public final class TripReference {
 
   @Override
   public int hashCode() {
-    return Objects.hash(tripId, routeId, startTime, startDate, direction, fuzzyMatchingHint);
+    return Objects.hash(
+      tripId,
+      tripOnServiceDateId,
+      routeId,
+      startTime,
+      startDate,
+      direction,
+      fuzzyMatchingHint
+    );
   }
 
   @Override
@@ -187,6 +215,8 @@ public final class TripReference {
       "TripReference{" +
       "tripId=" +
       tripId +
+      ", tripOnServiceDateId=" +
+      tripOnServiceDateId +
       ", routeId=" +
       routeId +
       ", startTime='" +
@@ -208,6 +238,7 @@ public final class TripReference {
   public static class Builder {
 
     private FeedScopedId tripId;
+    private FeedScopedId tripOnServiceDateId;
     private FeedScopedId routeId;
     private String startTime;
     private LocalDate startDate;
@@ -216,6 +247,11 @@ public final class TripReference {
 
     public Builder withTripId(FeedScopedId tripId) {
       this.tripId = tripId;
+      return this;
+    }
+
+    public Builder withTripOnServiceDateId(FeedScopedId tripOnServiceDateId) {
+      this.tripOnServiceDateId = tripOnServiceDateId;
       return this;
     }
 
@@ -245,7 +281,15 @@ public final class TripReference {
     }
 
     public TripReference build() {
-      return new TripReference(tripId, routeId, startTime, startDate, direction, fuzzyMatchingHint);
+      return new TripReference(
+        tripId,
+        tripOnServiceDateId,
+        routeId,
+        startTime,
+        startDate,
+        direction,
+        fuzzyMatchingHint
+      );
     }
   }
 }

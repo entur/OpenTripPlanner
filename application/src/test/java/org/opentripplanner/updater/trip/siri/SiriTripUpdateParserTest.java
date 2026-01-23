@@ -38,9 +38,10 @@ class SiriTripUpdateParserTest {
   }
 
   @Test
-  void parseUpdateExistingTrip() {
+  void parseUpdateExistingTripWithDatedVehicleJourneyRef() {
+    // getDatedVehicleJourneyRef contains a TripOnServiceDate ID, not a Trip ID
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withDatedVehicleJourneyRef("dated-trip1")
       .withLineRef("route1")
       .withEstimatedCalls(calls ->
         calls.call("stop1").withAimedDepartureTime("08:00").withExpectedDepartureTime("08:05")
@@ -53,7 +54,12 @@ class SiriTripUpdateParserTest {
     var parsed = result.successValue();
 
     assertEquals(TripUpdateType.UPDATE_EXISTING, parsed.updateType());
-    assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
+    // DatedVehicleJourneyRef should set tripOnServiceDateId, NOT tripId
+    assertNull(parsed.tripReference().tripId());
+    assertEquals(
+      new FeedScopedId(FEED_ID, "dated-trip1"),
+      parsed.tripReference().tripOnServiceDateId()
+    );
     assertEquals(TEST_DATE, parsed.serviceDate());
     assertEquals(1, parsed.stopTimeUpdates().size());
 
@@ -377,6 +383,7 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseWithFramedVehicleJourneyRef() {
+    // FramedVehicleJourneyRef.getDatedVehicleJourneyRef contains the actual Trip ID
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef("2024-01-15")
@@ -391,7 +398,9 @@ class SiriTripUpdateParserTest {
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
 
+    // FramedVehicleJourneyRef should set tripId, NOT tripOnServiceDateId
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
+    assertNull(parsed.tripReference().tripOnServiceDateId());
     assertEquals(TEST_DATE, parsed.serviceDate());
   }
 
