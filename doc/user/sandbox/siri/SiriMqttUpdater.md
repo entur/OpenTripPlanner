@@ -27,19 +27,20 @@ of the `router-config.json`.
 <!-- siri-et-mqtt BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter                                         |    Type    | Summary                                                |  Req./Opt. | Default Value | Since |
-|----------------------------------------------------------|:----------:|--------------------------------------------------------|:----------:|---------------|:-----:|
-| type = "siri-et-mqtt"                                    |   `enum`   | The type of the updater.                               | *Required* |               |  1.5  |
-| feedId                                                   |  `string`  | The feed ID this updater should be applied to          | *Required* |               |  2.9  |
-| fuzzyTripMatching                                        |  `boolean` | Whether or not the fuzzy trip matcher should be used   | *Required* |               |  2.9  |
-| host                                                     |  `string`  | The host of the MQTT broker                            | *Required* |               |  2.9  |
-| [maxPrimingIdleTime](#u__17__maxPrimingIdleTime)         | `duration` | Max idle time until priming is considered complete.    | *Optional* | `"PT1S"`      |  2.9  |
-| [numberOfPrimingWorkers](#u__17__numberOfPrimingWorkers) |  `integer` | Number of priming workers to process retained messages | *Optional* | `1`           |  2.9  |
-| [password](#u__17__password)                             |  `string`  | The password for authorization at the MQTT broker      | *Optional* |               |  2.9  |
-| port                                                     |  `integer` | The port of the MQTT broker                            | *Required* |               |  2.9  |
-| qos                                                      |  `integer` | The qos used for the MQTT subscription                 | *Required* |               |  2.9  |
-| topic                                                    |  `string`  | The topic the updater should subscribe to              | *Required* |               |  2.9  |
-| [user](#u__17__user)                                     |  `string`  | The user for authorization at the MQTT broker          | *Optional* |               |  2.9  |
+| Config Parameter                                                   |    Type    | Summary                                                |  Req./Opt. | Default Value | Since |
+|--------------------------------------------------------------------|:----------:|--------------------------------------------------------|:----------:|---------------|:-----:|
+| type = "siri-et-mqtt"                                              |   `enum`   | The type of the updater.                               | *Required* |               |  1.5  |
+| feedId                                                             |  `string`  | The feed ID this updater should be applied to          | *Required* |               |  2.9  |
+| fuzzyTripMatching                                                  |  `boolean` | Whether or not the fuzzy trip matcher should be used   | *Required* |               |  2.9  |
+| host                                                               |  `string`  | The host of the MQTT broker                            | *Required* |               |  2.9  |
+| [maxPrimingIdleTime](#u__17__maxPrimingIdleTime)                   | `duration` | Max idle time until priming is considered complete.    | *Optional* | `"PT1S"`      |  2.9  |
+| [numberOfPrimingWorkers](#u__17__numberOfPrimingWorkers)           |  `integer` | Number of priming workers to process retained messages | *Optional* | `1`           |  2.9  |
+| [password](#u__17__password)                                       |  `string`  | The password for authorization at the MQTT broker      | *Optional* |               |  2.9  |
+| port                                                               |  `integer` | The port of the MQTT broker                            | *Required* |               |  2.9  |
+| qos                                                                |  `integer` | The qos used for the MQTT subscription                 | *Required* |               |  2.9  |
+| topic                                                              |  `string`  | The topic the updater should subscribe to              | *Required* |               |  2.9  |
+| [useNewUpdaterImplementation](#u__17__useNewUpdaterImplementation) |  `boolean` | Use the new trip updater implementation.               | *Optional* | `false`       |  2.9  |
+| [user](#u__17__user)                                               |  `string`  | The user for authorization at the MQTT broker          | *Optional* |               |  2.9  |
 
 
 ##### Parameter details
@@ -80,6 +81,18 @@ of the graph always occurs in a single thread.
 The password for authorization at the MQTT broker
 
 If no authorization is required, the password does not need to be supplied.
+
+<h4 id="u__17__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
+
+**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[17] 
+
+Use the new trip updater implementation.
+
+When enabled, uses the new modular trip updater implementation based on
+`DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+The default value is `false`, which uses the legacy implementation.
+
 
 <h4 id="u__17__user">user</h4>
 
