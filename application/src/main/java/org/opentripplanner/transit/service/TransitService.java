@@ -447,5 +447,9 @@ public interface TransitService {
    */
   boolean hasScheduledServicesAfter(LocalDate date, StopLocation stop);
 
+  /**
+   * Returns a helper for Route/Trip/TripOnServiceDate replacement logic, with the same lifecycle
+   * as TransitService.
+   */
   ReplacementHelper getReplacementHelper();
 }

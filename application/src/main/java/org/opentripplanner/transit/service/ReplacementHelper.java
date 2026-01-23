@@ -1,5 +1,6 @@
 package org.opentripplanner.transit.service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -46,14 +47,14 @@ public class ReplacementHelper {
     this.timetableSnapshot = timetableSnapshot;
   }
 
-  public Iterable<ReplacedByRelation> getReplacedBy(TripOnServiceDate tripOnServiceDate) {
+  public Collection<ReplacedByRelation> getReplacedBy(TripOnServiceDate tripOnServiceDate) {
     var id = tripOnServiceDate.getId();
     var replacedBy = timetableRepository.getReplacedByTripOnServiceDate(id);
     Stream<TripOnServiceDate> tripsOnServiceDate;
     if (timetableSnapshot != null) {
       tripsOnServiceDate = Stream.concat(
         replacedBy.stream(),
-        timetableSnapshot.getReplacedByTripOnServiceDate(id).stream()
+        timetableSnapshot.getRealTimeReplacedByTripOnServiceDate(id).stream()
       );
     } else {
       tripsOnServiceDate = replacedBy.stream();
@@ -61,7 +62,7 @@ public class ReplacementHelper {
     return tripsOnServiceDate.map(ReplacedByRelation::new).toList();
   }
 
-  public Iterable<ReplacementForRelation> getReplacementFor(TripOnServiceDate tripOnServiceDate) {
+  public Collection<ReplacementForRelation> getReplacementFor(TripOnServiceDate tripOnServiceDate) {
     return tripOnServiceDate.getReplacementFor().stream().map(ReplacementForRelation::new).toList();
   }
 
@@ -89,11 +90,12 @@ public class ReplacementHelper {
     );
   }
 
-  private boolean haveReplacedByTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {
+  private boolean hasReplacedByTripOnServiceDates(TripOnServiceDate tripOnServiceDate) {
     var id = tripOnServiceDate.getId();
     return (
       !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
-      (timetableSnapshot != null && timetableSnapshot.getReplacedByTripOnServiceDate(id).isEmpty())
+      (timetableSnapshot != null &&
+        timetableSnapshot.getRealTimeReplacedByTripOnServiceDate(id).isEmpty())
     );
   }
 
@@ -104,7 +106,7 @@ public class ReplacementHelper {
       .anyMatch(
         tripOnServiceDate ->
           tripOnServiceDate.getTrip().getRoute().getId().equals(route.getId()) &&
-          haveReplacedByTripOnServiceDate(tripOnServiceDate)
+          hasReplacedByTripOnServiceDates(tripOnServiceDate)
       );
   }
 
@@ -115,7 +117,7 @@ public class ReplacementHelper {
       .anyMatch(
         tripOnServiceDate ->
           tripOnServiceDate.getTrip().getId().equals(trip.getId()) &&
-          haveReplacedByTripOnServiceDate(tripOnServiceDate)
+          hasReplacedByTripOnServiceDates(tripOnServiceDate)
       );
   }
 }

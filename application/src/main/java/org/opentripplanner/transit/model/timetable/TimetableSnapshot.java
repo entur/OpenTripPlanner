@@ -540,7 +540,7 @@ public class TimetableSnapshot {
     return modified;
   }
 
-  public Collection<TripOnServiceDate> getReplacedByTripOnServiceDate(FeedScopedId id) {
+  public Collection<TripOnServiceDate> getRealTimeReplacedByTripOnServiceDate(FeedScopedId id) {
     return realTimeAddedReplacedByTripOnServiceDateById.get(id);
   }
 

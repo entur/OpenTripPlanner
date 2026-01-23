@@ -434,11 +434,11 @@ type Line {
   groupOfLines: [GroupOfLines]!
   id: ID!
   """
-  Is this a replacement Line. In NeTEx/SIRI-sourced data this can be set by either
+  Is this a replacement Line? In NeTEx/SIRI-sourced data this can be set by either
   a replacement submode, or a replacement link in a DatedServiceJourney. Only true
   for GTFS-sourced data if set by the extended GTFS type.
   """
-  isReplacementLine: Boolean!
+  isReplacement: Boolean!
   journeyPatterns: [JourneyPattern]
   name: String
   notices: [Notice!]!
@@ -447,7 +447,7 @@ type Line {
   "Publicly announced code for line, differentiating it from other lines for the same operator."
   publicCode: String
   quays: [Quay]!
-  "Are there replacement DatedServiceJourneys for this Line."
+  "Are there replacement DatedServiceJourneys for this Line?"
   replacementsExist: Boolean!
   serviceJourneys: [ServiceJourney]!
   "Get all situations active for the line."
@@ -1255,7 +1255,7 @@ type ServiceJourney {
   ): [EstimatedCall!]! @timingData
   id: ID!
   """
-  Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by
+  Is this a replacement ServiceJourney? In NeTEx/SIRI-sourced data this can be set by
   either a replacement submode, or a replacement link in a DatedServiceJourney. Only
   true for GTFS-sourced data if set by the extended GTFS type.
   """
@@ -1286,7 +1286,7 @@ type ServiceJourney {
     "Only fetch the last n quays on the service journey"
     last: Int
   ): [Quay!]!
-  "Are there replacement DatedServiceJourneys for this ServiceJourney"
+  "Are there replacement DatedServiceJourneys for this ServiceJourney?"
   replacementsExist: Boolean!
   serviceAlteration: ServiceAlteration @deprecated(reason : "The service journey alteration will be moved out of SJ and grouped together with the SJ and date. In Netex this new type is called DatedServiceJourney. We will create artificial DSJs for the old SJs.")
   "Get all situations active for the service journey."
