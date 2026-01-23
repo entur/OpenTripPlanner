@@ -172,12 +172,14 @@ public class TripResponseMapper {
           .withStopPointRef(stopPointRefMapper.stopPointRef(sa.place.stop))
           .withStopPointName(internationalText(sa.place.stop.getName()))
           .withServiceArrival(
-            new ServiceArrivalStructure()
-              .withTimetabledTime(new XmlDateTime(sa.arrival.scheduledTime()))
+            new ServiceArrivalStructure().withTimetabledTime(
+              new XmlDateTime(sa.arrival.scheduledTime())
+            )
           )
           .withServiceDeparture(
-            new ServiceDepartureStructure()
-              .withTimetabledTime(new XmlDateTime(sa.departure.scheduledTime()))
+            new ServiceDepartureStructure().withTimetabledTime(
+              new XmlDateTime(sa.departure.scheduledTime())
+            )
           )
       )
       .toList();

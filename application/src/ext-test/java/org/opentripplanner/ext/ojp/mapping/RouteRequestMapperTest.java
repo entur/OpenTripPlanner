@@ -165,12 +165,11 @@ class RouteRequestMapperTest {
       .withOrigin(geoPosition(47.3769, 8.5417))
       .withDestination(geoPosition(46.9480, 7.4474))
       .withParams(
-        new TripParamStructure()
-          .withModeAndModeOfOperationFilter(
-            new ModeAndModeOfOperationFilterStructure()
-              .withExclude(true)
-              .withPtMode(VehicleModesOfTransportEnumeration.RAIL)
-          )
+        new TripParamStructure().withModeAndModeOfOperationFilter(
+          new ModeAndModeOfOperationFilterStructure()
+            .withExclude(true)
+            .withPtMode(VehicleModesOfTransportEnumeration.RAIL)
+        )
       );
 
     var routeRequest = mapper.map(tripRequest);
@@ -182,59 +181,56 @@ class RouteRequestMapperTest {
     return List.of(
       Arguments.of(
         "[(select: [(transportModes: EMPTY, agencies: [F:agency1])])]",
-        new TripParamStructure()
-          .withOperatorFilter(
-            new OperatorFilterStructure()
-              .withExclude(false)
-              .withOperatorRef(List.of(new OperatorRefStructure().withValue("F:agency1")))
-          )
+        new TripParamStructure().withOperatorFilter(
+          new OperatorFilterStructure()
+            .withExclude(false)
+            .withOperatorRef(List.of(new OperatorRefStructure().withValue("F:agency1")))
+        )
       ),
       Arguments.of(
         "[(not: [(transportModes: EMPTY, agencies: [F:agency1])])]",
-        new TripParamStructure()
-          .withOperatorFilter(
-            new OperatorFilterStructure()
-              .withExclude(true)
-              .withOperatorRef(List.of(new OperatorRefStructure().withValue("F:agency1")))
-          )
+        new TripParamStructure().withOperatorFilter(
+          new OperatorFilterStructure()
+            .withExclude(true)
+            .withOperatorRef(List.of(new OperatorRefStructure().withValue("F:agency1")))
+        )
       ),
       Arguments.of(
         "[(select: [(transportModes: EMPTY, routes: [F:route1])])]",
-        new TripParamStructure()
-          .withLineFilter(
-            new LineDirectionFilterStructure()
-              .withExclude(false)
-              .withLine(
-                (new LineDirectionStructure()
-                    .withLineRef(new LineRefStructure().withValue("F:route1")))
-              )
-          )
+        new TripParamStructure().withLineFilter(
+          new LineDirectionFilterStructure()
+            .withExclude(false)
+            .withLine(
+              (new LineDirectionStructure().withLineRef(
+                  new LineRefStructure().withValue("F:route1")
+                ))
+            )
+        )
       ),
       Arguments.of(
         "[(not: [(transportModes: EMPTY, routes: [F:agency1])])]",
-        new TripParamStructure()
-          .withLineFilter(
-            new LineDirectionFilterStructure()
-              .withExclude(true)
-              .withLine(
-                (new LineDirectionStructure()
-                    .withLineRef(new LineRefStructure().withValue("F:agency1")))
-              )
-          )
+        new TripParamStructure().withLineFilter(
+          new LineDirectionFilterStructure()
+            .withExclude(true)
+            .withLine(
+              (new LineDirectionStructure().withLineRef(
+                  new LineRefStructure().withValue("F:agency1")
+                ))
+            )
+        )
       ),
       Arguments.of(
         "[(not: [(transportModes: EMPTY, routes: [B:route2, A:route1])])]",
-        new TripParamStructure()
-          .withLineFilter(
-            new LineDirectionFilterStructure()
-              .withExclude(true)
-              .withLine(
-                new LineDirectionStructure()
-                  .withLineRef(new LineRefStructure().withValue("A:route1")),
-                new LineDirectionStructure()
-                  .withLineRef(new LineRefStructure().withValue("B:route2"))
-              )
-          )
+        new TripParamStructure().withLineFilter(
+          new LineDirectionFilterStructure()
+            .withExclude(true)
+            .withLine(
+              new LineDirectionStructure().withLineRef(
+                new LineRefStructure().withValue("A:route1")
+              ),
+              new LineDirectionStructure().withLineRef(new LineRefStructure().withValue("B:route2"))
+            )
+        )
       )
     );
   }
@@ -249,8 +245,9 @@ class RouteRequestMapperTest {
 
   @Test
   void mapAdditionalTransferTime() {
-    var tripRequest = baseRequest()
-      .withParams(new TripParamStructure().withAdditionalTransferTime(Duration.ofMinutes(10)));
+    var tripRequest = baseRequest().withParams(
+      new TripParamStructure().withAdditionalTransferTime(Duration.ofMinutes(10))
+    );
 
     var routeRequest = mapper.map(tripRequest);
 
@@ -267,15 +264,13 @@ class RouteRequestMapperTest {
   @ParameterizedTest
   @MethodSource("personalModeCase")
   void personalMode(PersonalModesEnumeration personalMode, StreetMode expectedMode) {
-    var tripRequest = baseRequest()
-      .withParams(
-        new TripParamStructure()
-          .withModeAndModeOfOperationFilter(
-            new ModeAndModeOfOperationFilterStructure()
-              .withExclude(false)
-              .withPersonalMode(personalMode)
-          )
-      );
+    var tripRequest = baseRequest().withParams(
+      new TripParamStructure().withModeAndModeOfOperationFilter(
+        new ModeAndModeOfOperationFilterStructure()
+          .withExclude(false)
+          .withPersonalMode(personalMode)
+      )
+    );
 
     var routeRequest = mapper.map(tripRequest);
 
@@ -284,27 +279,24 @@ class RouteRequestMapperTest {
 
   private static Stream<TripParamStructure> invalidPersonalModeCases() {
     return Stream.of(
-      new TripParamStructure()
-        .withModeAndModeOfOperationFilter(
-          new ModeAndModeOfOperationFilterStructure()
-            .withExclude(true)
-            .withPersonalMode(PersonalModesEnumeration.BICYCLE)
-        ),
-      new TripParamStructure()
-        .withModeAndModeOfOperationFilter(
-          new ModeAndModeOfOperationFilterStructure()
-            .withExclude(false)
-            .withPersonalMode(PersonalModesEnumeration.BICYCLE, PersonalModesEnumeration.CAR)
-        ),
-      new TripParamStructure()
-        .withModeAndModeOfOperationFilter(
-          new ModeAndModeOfOperationFilterStructure()
-            .withExclude(false)
-            .withPersonalMode(PersonalModesEnumeration.BICYCLE),
-          new ModeAndModeOfOperationFilterStructure()
-            .withExclude(false)
-            .withPersonalMode(PersonalModesEnumeration.FOOT)
-        )
+      new TripParamStructure().withModeAndModeOfOperationFilter(
+        new ModeAndModeOfOperationFilterStructure()
+          .withExclude(true)
+          .withPersonalMode(PersonalModesEnumeration.BICYCLE)
+      ),
+      new TripParamStructure().withModeAndModeOfOperationFilter(
+        new ModeAndModeOfOperationFilterStructure()
+          .withExclude(false)
+          .withPersonalMode(PersonalModesEnumeration.BICYCLE, PersonalModesEnumeration.CAR)
+      ),
+      new TripParamStructure().withModeAndModeOfOperationFilter(
+        new ModeAndModeOfOperationFilterStructure()
+          .withExclude(false)
+          .withPersonalMode(PersonalModesEnumeration.BICYCLE),
+        new ModeAndModeOfOperationFilterStructure()
+          .withExclude(false)
+          .withPersonalMode(PersonalModesEnumeration.FOOT)
+      )
     );
   }
 
@@ -327,24 +319,22 @@ class RouteRequestMapperTest {
   }
 
   private static PlaceContextStructure geoPosition(double lat, double lng) {
-    return new PlaceContextStructure()
-      .withPlaceRef(
-        new PlaceRefStructure()
-          .withGeoPosition(new LocationStructure().withLatitude(lat).withLongitude(lng))
-      );
+    return new PlaceContextStructure().withPlaceRef(
+      new PlaceRefStructure().withGeoPosition(
+        new LocationStructure().withLatitude(lat).withLongitude(lng)
+      )
+    );
   }
 
   private static PlaceContextStructure stopPlaceRef(String value) {
-    return new PlaceContextStructure()
-      .withPlaceRef(
-        new PlaceRefStructure().withStopPlaceRef(new StopPlaceRefStructure().withValue(value))
-      );
+    return new PlaceContextStructure().withPlaceRef(
+      new PlaceRefStructure().withStopPlaceRef(new StopPlaceRefStructure().withValue(value))
+    );
   }
 
   private static PlaceContextStructure stopPointRef(String value) {
-    return new PlaceContextStructure()
-      .withPlaceRef(
-        new PlaceRefStructure().withStopPointRef(new StopPointRefStructure().withValue(value))
-      );
+    return new PlaceContextStructure().withPlaceRef(
+      new PlaceRefStructure().withStopPointRef(new StopPointRefStructure().withValue(value))
+    );
   }
 }

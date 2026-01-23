@@ -140,9 +140,11 @@ public class CallAtStopService {
     public boolean includesAgencies() {
       return !includedAgencies.isEmpty();
     }
+
     public boolean includesRoutes() {
       return !includedRoutes().isEmpty();
     }
+
     public boolean includesModes() {
       return !includedModes.isEmpty();
     }

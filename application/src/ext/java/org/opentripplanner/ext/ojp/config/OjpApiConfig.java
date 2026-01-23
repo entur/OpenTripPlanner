@@ -16,7 +16,7 @@ public class OjpApiConfig {
       .summary("Hide the feed id in all API output, and add it to input ids.")
       .description(
         "Only turn this feature on if you have unique ids across all feeds, without the " +
-        "feedId prefix."
+          "feedId prefix."
       )
       .asBoolean(false);
     var hardcodedInputFeedId = c
@@ -25,7 +25,7 @@ public class OjpApiConfig {
       .summary("The hardcoded feedId to add to all input ids.")
       .description(
         "Only turn this feature on if you have unique ids across all feeds, without the " +
-        "feedId prefix _and_ `hideFeedId` is set to `true`.`"
+          "feedId prefix _and_ `hideFeedId` is set to `true`.`"
       )
       .asString(null);
 

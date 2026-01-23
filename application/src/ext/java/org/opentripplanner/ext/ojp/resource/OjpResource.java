@@ -26,8 +26,7 @@ public class OjpResource {
 
   private static final Logger LOG = LoggerFactory.getLogger(OjpResource.class);
 
-  private static final String EXPLORER_HTML =
-    """
+  private static final String EXPLORER_HTML = """
       <!doctype html>
       <html lang="en">
         <head>

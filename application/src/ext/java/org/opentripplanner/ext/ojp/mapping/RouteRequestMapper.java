@@ -116,12 +116,16 @@ public class RouteRequestMapper {
       var g = place.getPlaceRef().getGeoPosition();
       return GenericLocation.fromCoordinate(g.getLatitude(), g.getLongitude());
     } else if (
-      Optional.ofNullable(place.getPlaceRef().getStopPlaceRef()).map(r -> r.getValue()).isPresent()
+      Optional.ofNullable(place.getPlaceRef().getStopPlaceRef())
+        .map(r -> r.getValue())
+        .isPresent()
     ) {
       var id = idMapper.parse(place.getPlaceRef().getStopPlaceRef().getValue());
       return GenericLocation.fromStopId(id);
     } else if (
-      Optional.ofNullable(place.getPlaceRef().getStopPointRef()).map(r -> r.getValue()).isPresent()
+      Optional.ofNullable(place.getPlaceRef().getStopPointRef())
+        .map(r -> r.getValue())
+        .isPresent()
     ) {
       var id = idMapper.parse(place.getPlaceRef().getStopPointRef().getValue());
       return GenericLocation.fromStopId(id);

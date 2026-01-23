@@ -62,7 +62,7 @@ class StopEventParamsMapperTest {
               .withItModeAndModeOfOperation(
                 new ItModesStructure().withPersonalMode(PersonalModesEnumeration.FOOT)
               )
-                .withMaxDistance(10)
+              .withMaxDistance(10)
           )
       )
     );
