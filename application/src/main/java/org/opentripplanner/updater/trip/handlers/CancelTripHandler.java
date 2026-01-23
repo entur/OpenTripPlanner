@@ -1,7 +1,10 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
+import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
@@ -23,8 +26,51 @@ public class CancelTripHandler implements TripUpdateHandler {
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    // TODO: Implement
-    LOG.debug("CancelTripHandler not yet implemented");
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    var tripReference = parsedUpdate.tripReference();
+    var serviceDate = parsedUpdate.serviceDate();
+    var tripIdResolver = context.tripIdResolver();
+
+    // Resolve the trip from the trip reference
+    var tripResult = tripIdResolver.resolveTrip(tripReference);
+    if (tripResult.isFailure()) {
+      return Result.failure(tripResult.failureValue());
+    }
+
+    Trip trip = tripResult.successValue();
+
+    // Find the pattern for this trip on this service date
+    TripPattern pattern = transitService.findPattern(trip, serviceDate);
+    if (pattern == null) {
+      LOG.warn("No pattern found for trip {} on {}", trip.getId(), serviceDate);
+      return Result.failure(
+        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND)
+      );
+    }
+
+    // Get the trip times from the scheduled timetable
+    TripTimes tripTimes = pattern.getScheduledTimetable().getTripTimes(trip);
+    if (tripTimes == null) {
+      LOG.warn("No trip times found for trip {} in pattern {}", trip.getId(), pattern.getId());
+      return Result.failure(
+        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND)
+      );
+    }
+
+    // Revert any previous real-time modifications to this trip on this service date
+    var snapshotManager = context.snapshotManager();
+    if (snapshotManager != null) {
+      snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
+    }
+
+    // Create the cancelled trip times
+    var builder = tripTimes.createRealTimeFromScheduledTimes();
+    builder.cancelTrip();
+
+    // Create the RealTimeTripUpdate
+    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
+
+    LOG.debug("Cancelled trip {} on {}", trip.getId(), serviceDate);
+
+    return Result.success(realTimeTripUpdate);
   }
 }
