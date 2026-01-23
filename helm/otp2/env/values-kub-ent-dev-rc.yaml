@@ -1,0 +1,19 @@
+otpFeatures:
+  emission: true
+  empiricalDelay: true
+  gbfsGeofencingBuildTime: true
+journeyPlanner:
+  enabled: false
+cronjobRedeployGraphBuilder:
+    releaseCandidateGraphBuilderEnabled: true
+    mardukBucket: marduk-dev
+    mardukInternalBucket: ror-marduk-internal-dev
+    ignoreFareFrame: false
+gbfsGeofencing:
+  feeds:
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voioslo/gbfs"
+      network: "voioslo"
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltoslo/gbfs"
+      network: "boltoslo"
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeoslo/gbfs"
+      network: "rydeoslo"
