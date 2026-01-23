@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
+import org.opentripplanner.ext.siri.updater.azure.SiriAzureETUpdaterParameters;
 import org.opentripplanner.ext.siri.updater.azure.SiriAzureUpdater;
+import org.opentripplanner.ext.siri.updater.mqtt.MqttSiriETUpdaterParameters;
 import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.api.VehicleRentalServiceDirectoryFetcherParameters;
@@ -29,8 +31,11 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
+import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdater;
+import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdaterParameters;
 import org.opentripplanner.updater.vehicle_parking.AvailabilityDataSourceFactory;
 import org.opentripplanner.updater.vehicle_parking.VehicleParkingAvailabilityUpdater;
 import org.opentripplanner.updater.vehicle_parking.VehicleParkingDataSourceFactory;
@@ -204,7 +209,9 @@ public class UpdaterConfigurator {
       );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
-      updaters.add(new SiriETGooglePubsubUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETGooglePubsubUpdater(configItem, createGooglePubsubAdapter(configItem))
+      );
     }
     for (var configItem : updatersParameters.getSiriSXUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
@@ -233,13 +240,13 @@ public class UpdaterConfigurator {
       }
     }
     for (var configItem : updatersParameters.getSiriAzureETUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(SiriAzureUpdater.createETUpdater(configItem, createAzureAdapter(configItem)));
     }
     for (var configItem : updatersParameters.getSiriAzureSXUpdaterParameters()) {
       updaters.add(SiriAzureUpdater.createSXUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getMqttSiriETUpdaterParameters()) {
-      updaters.add(new SiriETMqttUpdater(configItem, provideSiriAdapter()));
+      updaters.add(new SiriETMqttUpdater(configItem, createMqttAdapter(configItem)));
     }
 
     return updaters;
@@ -247,6 +254,32 @@ public class UpdaterConfigurator {
 
   private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
     return new SiriRealTimeTripUpdateAdapter(timetableRepository, snapshotManager);
+  }
+
+  private SiriTripUpdateAdapter createGooglePubsubAdapter(
+    SiriETGooglePubsubUpdaterParameters config
+  ) {
+    if (config.useNewUpdaterImplementation()) {
+      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager);
+    } else {
+      return provideSiriAdapter();
+    }
+  }
+
+  private SiriTripUpdateAdapter createAzureAdapter(SiriAzureETUpdaterParameters config) {
+    if (config.isUseNewUpdaterImplementation()) {
+      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager);
+    } else {
+      return provideSiriAdapter();
+    }
+  }
+
+  private SiriTripUpdateAdapter createMqttAdapter(MqttSiriETUpdaterParameters config) {
+    if (config.useNewUpdaterImplementation()) {
+      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager);
+    } else {
+      return provideSiriAdapter();
+    }
   }
 
   private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
