@@ -76,6 +76,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add `CarRequest` to cache key in `RaptorRequestTransferCache` [#7194](https://github.com/opentripplanner/OpenTripPlanner/pull/7194)
 - Add booking time parameter to the GTFS API [#7221](https://github.com/opentripplanner/OpenTripPlanner/pull/7221)
 - Add HTTP response time metric [#7133](https://github.com/opentripplanner/OpenTripPlanner/pull/7133)
+- Add second criteria to the Raptor heuristics [#7165](https://github.com/opentripplanner/OpenTripPlanner/pull/7165)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
