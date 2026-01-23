@@ -18,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.DatedVehicleJourneyRef;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.FramedVehicleJourneyRefStructure;
-import uk.org.siri.siri21.MonitoredVehicleJourneyStructure;
 
 /**
  * This class is responsible for resolving references to various entities in the transit model for
@@ -75,24 +74,6 @@ public class EntityResolver {
     }
 
     return null;
-  }
-
-  /**
-   * Resolve a {@link Trip} by resolving a service journey id from MonitoredVehicleJourney ->
-   * FramedVehicleJourneyRef -> DatedVehicleJourneyRef.
-   */
-  public Trip resolveTrip(MonitoredVehicleJourneyStructure journey) {
-    return resolveTrip(journey.getFramedVehicleJourneyRef());
-  }
-
-  public TripOnServiceDate resolveTripOnServiceDate(
-    EstimatedVehicleJourney estimatedVehicleJourney
-  ) {
-    FeedScopedId datedServiceJourneyId = resolveDatedServiceJourneyId(estimatedVehicleJourney);
-    if (datedServiceJourneyId != null) {
-      return resolveTripOnServiceDate(datedServiceJourneyId);
-    }
-    return resolveTripOnServiceDate(estimatedVehicleJourney.getFramedVehicleJourneyRef());
   }
 
   public TripOnServiceDate resolveTripOnServiceDate(String datedServiceJourneyId) {
