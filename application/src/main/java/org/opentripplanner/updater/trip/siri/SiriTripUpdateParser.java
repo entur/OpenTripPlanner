@@ -124,6 +124,11 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withTripId(tripId);
     }
 
+    var tripOnServiceDateId = resolveTripOnServiceDateId(journey, context);
+    if (tripOnServiceDateId != null) {
+      builder.withTripOnServiceDateId(tripOnServiceDateId);
+    }
+
     if (journey.getLineRef() != null) {
       builder.withRouteId(context.createId(journey.getLineRef().getValue()));
     }
@@ -153,7 +158,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     builder.withFuzzyMatchingHint(
-      updateType == TripUpdateType.ADD_NEW_TRIP || tripId == null
+      updateType == TripUpdateType.ADD_NEW_TRIP || (tripId == null && tripOnServiceDateId == null)
         ? TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED
         : TripReference.FuzzyMatchingHint.EXACT_MATCH_REQUIRED
     );
@@ -161,11 +166,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     return builder.build();
   }
 
+  /**
+   * Resolve the Trip ID (service journey id) from the EstimatedVehicleJourney.
+   * This only returns an ID when it's actually a Trip ID, not a TripOnServiceDate ID.
+   */
   @Nullable
   private FeedScopedId resolveTripId(
     EstimatedVehicleJourney journey,
     TripUpdateParserContext context
   ) {
+    // FramedVehicleJourneyRef.getDatedVehicleJourneyRef contains the actual Trip ID
     if (journey.getFramedVehicleJourneyRef() != null) {
       var ref = journey.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef();
       if (ref != null) {
@@ -173,10 +183,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
 
-    if (journey.getDatedVehicleJourneyRef() != null) {
-      return context.createId(journey.getDatedVehicleJourneyRef().getValue());
-    }
-
+    // EstimatedVehicleJourneyCode contains an encoded Trip ID
     if (journey.getEstimatedVehicleJourneyCode() != null) {
       var adapter = new EstimatedVehicleJourneyCodeAdapter(
         journey.getEstimatedVehicleJourneyCode()
@@ -184,6 +191,23 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       return context.createId(adapter.getServiceJourneyId());
     }
 
+    return null;
+  }
+
+  /**
+   * Resolve the TripOnServiceDate ID (dated service journey id) from the EstimatedVehicleJourney.
+   * This is used when the SIRI message references a trip by its dated service journey id
+   * rather than the underlying service journey id.
+   */
+  @Nullable
+  private FeedScopedId resolveTripOnServiceDateId(
+    EstimatedVehicleJourney journey,
+    TripUpdateParserContext context
+  ) {
+    // journey.getDatedVehicleJourneyRef contains a TripOnServiceDate ID, not a Trip ID
+    if (journey.getDatedVehicleJourneyRef() != null) {
+      return context.createId(journey.getDatedVehicleJourneyRef().getValue());
+    }
     return null;
   }
 
