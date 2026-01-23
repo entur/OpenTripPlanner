@@ -77,15 +77,14 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     TripUpdateApplierContext context
   ) {
     try {
-      TripUpdateHandler handler =
-        switch (parsedUpdate.updateType()) {
-          case UPDATE_EXISTING -> updateExistingHandler;
-          case CANCEL_TRIP -> cancelTripHandler;
-          case DELETE_TRIP -> deleteTripHandler;
-          case ADD_NEW_TRIP -> addNewTripHandler;
-          case MODIFY_TRIP -> modifyTripHandler;
-          case ADD_EXTRA_CALLS -> addExtraCallsHandler;
-        };
+      TripUpdateHandler handler = switch (parsedUpdate.updateType()) {
+        case UPDATE_EXISTING -> updateExistingHandler;
+        case CANCEL_TRIP -> cancelTripHandler;
+        case DELETE_TRIP -> deleteTripHandler;
+        case ADD_NEW_TRIP -> addNewTripHandler;
+        case MODIFY_TRIP -> modifyTripHandler;
+        case ADD_EXTRA_CALLS -> addExtraCallsHandler;
+      };
       return handler.handle(parsedUpdate, context, transitService);
     } catch (Exception e) {
       LOG.error("Error applying trip update: {}", e.getMessage(), e);
