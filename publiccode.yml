@@ -1,44 +1,45 @@
-publiccodeYmlVersion: "0.2"
-
+publiccodeYmlVersion: 0.5.0
 name: OpenTripPlanner
-url: "https://github.com/opentripplanner/OpenTripPlanner"
-landingURL: "https://opentripplanner.org"
-
-softwareVersion: "2.8.1"
-releaseDate: "2025-09-22"
-logo: "doc/user/images/otp-logo.svg"
-
-developmentStatus: stable
-
-softwareType: standalone/backend
-
+applicationSuite: OpenTripPlanner
+url: https://github.com/opentripplanner/OpenTripPlanner
+landingURL: https://opentripplanner.org
+softwareVersion: 2.8.1
+releaseDate: 2025-09-22
+logo: https://github.com/opentripplanner/OpenTripPlanner/blob/dev-2.x/doc/user/images/otp-logo.svg
 platforms:
-  - linux
-  - mac
-  - windows
-
+  - web
+  - ios
+  - android
 categories:
-  - data-analytics
-  - data-visualization
   - geographic-information-systems
-
+  - other
+organisation:
+  uri: https://sfconservancy.org
+fundedBy:
+  - name: Entur AS
+    uri: https://entur.no
+  - name: Helsinki Regional Transport Authority
+    uri: https://www.hsl.fi
+  - name: Skånetrafiken
+    uri: https://www.skanetrafiken.se
 usedBy:
   - Norway (nationwide), Entur AS
-  - Finland, Helsinki, Helsinki Regional Transport Authority
-  - Finland (nationwide), Finnish Transport Agency
-  - Finland Intercity, Matkahuolto
+  - Finland, Helsinki, Helsinki Region Transport Authority
+  - Finland (nationwide), Fintraffic
+  - Finland (various cities), Waltti Solutions
   - Sweden, Skåne, Skånetrafiken
   - Italy, Piemonte Region and the City of Torino, 5T
   - Italy, Trento Province
   - Spain, Valencia, Municipal Transport Company of Valencia S.A.U.
-  - France, Grenoble, SMTC, Grenoble Alpes métropole, l'État Français, the Rhône-alpes region, the Isère council and the City of Grenoble
+  - France, Grenoble, SMTC, Grenoble Alpes métropole, l'État Français, the
+    Rhône-alpes region, the Isère council and the City of Grenoble
   - France, Rennes, STAR
   - France, Alençon, Réunir Alençon
   - Germany, Lower Saxony, VBN transportation authority
   - Germany, Leipzig, Leipzig Move
   - Polen, Poznań, Urban Transport Authority of Poznań
   - Iceland (nationwide) – Strætó
-  - See https://docs.opentripplanner.org/en/latest/Deployments/ which includes non-European listings
+  - See https://docs.opentripplanner.org/en/latest/Deployments/ witch include none-Europeen listings
 
 roadmap: "https://github.com/orgs/opentripplanner/projects/3"
 
@@ -49,108 +50,47 @@ organisation:
 description:
   en:
     localisedName: OpenTripPlanner
-    shortDescription: >
-      Open source multi-modal trip planner focusing on travel by scheduled and flexible public
-      transportation in combination with walking, bicycling, car and mobility services.
-    longDescription: >
-      OpenTripPlanner (OTP) is an open source multi-modal trip planner, focusing on travel by scheduled
-      public transportation in combination with bicycling, walking, and mobility services including bike
-      share and ride hailing. Its server component runs on any platform with a Java virtual machine (
-      including Linux, Mac, and Windows). It exposes GraphQL APIs that can be accessed by various
-      clients including open source Javascript components and native mobile applications. It builds its
-      representation of the transportation network from open data in open standard file formats (primarily
-      NeTEx, GTFS, GBFS and OpenStreetMap). It applies real-time updates and alerts with immediate 
-      visibility to clients, finding itineraries that account for disruptions and service changes.
-
-
-      The project was launched by Portland, Oregon's transport agency TriMet in July 2009 and has been
-      in active development for over 15 years. This is OpenTripPlanner 2 (OTP2), the second major version
-      which has been under development since 2018 and is now the dominant version being actively supported.
-
-
-      Key features include:
-
-      - Multi-modal routing (public transit, walking, biking, car)
-
-      - Real-time updates for transit disruptions and service changes supporting Siri, GTFS-RT and 
-        GBFS data formats.
-
-      - Support for GTFS and NeTEx transit data formats
-
-      - OpenStreetMap integration for street network data
-
-      - GraphQL API for flexible data queries
-
-      - Support for bike share, ride hailing, and mobility services
-
-      - High-performance routing algorithms (RAPTOR-based)
-
-      - Flexible itinerary filtering and optimization
-
-      - Multi-criteria journey planning with pareto-optimal results
-    documentation: "https://docs.opentripplanner.org/"
-    apiDocumentation: "https://docs.opentripplanner.org/api/dev-2.x/graphql-gtfs/"
+    shortDescription: Open source multi-modal trip planner focused on travel by
+      scheduled and flexible public transportation combined with street routing.
+    longDescription: OpenTripPlanner (OTP) is an open source multi-modal trip
+      planner, focused on travel by scheduled public transportation in combination
+      with walking, cycling, driving, and mobility services including bike
+      share and ride hailing. Its server component runs on any platform with a
+      Java virtual machine (including Linux, Mac, and Windows). It exposes
+      GraphQL APIs that can be accessed by various clients including open source
+      Javascript components and native mobile applications. It builds its
+      representation of the transportation network from open data in open standard
+      file formats (primarily NeTEx, Siri, GTFS, GBFS and OpenStreetMap). It
+      applies real-time updates and alerts with immediate visibility to clients,
+      finding itineraries that account for disruptions and service changes.
+    documentation: https://opentripplanner.org
+    apiDocumentation: https://docs.opentripplanner.org/api/dev-2.x/graphql-gtfs/introduction
     features:
-      - Multi-modal journey planning
-      - Real-time transit updates
-      - GTFS and NeTEx support
-      - OpenStreetMap integration
-      - GraphQL APIs, Transmodel & GTFS
-      - High-performance routing
-      - Bike share and ride hailing integration
-      - Pareto-optimal multi-criteria search
-      - Flexible transit routing
-
+      - Multimodal street and transit planning
+      - Multi-criteria journey planning with pareto-optimal results
+      - GraphQL API for flexible data queries
+      - Support for bike share, ride hailing, and mobility services
+      - High-performance routing algorithms (RAPTOR-based)
+      - Flexible itinerary filtering and optimization
+      - Real-time updates for transit disruptions and service changes
+      - OpenStreetMap integration for street network data
+      - Demand-Responsive Transit (GTFS Flex)
+      - Micro-mobility (GBFS)
+      - Transmodel, NeTEx and Siri Realtime support
+      - GTFS and GTFS-RT support
 legal:
   license: LGPL-3.0-only
-  mainCopyrightOwner: OpenTripPlanner Contributors
-  repoOwner: OpenTripPlanner Project
-
 maintenance:
   type: community
   contacts:
     - name: Andrew Byrd
       email: andrew@fastmail.net
-      affiliation: Conveyal
     - name: Thomas Gran
       email: t2gran@gmail.com
-      affiliation: Entur
+      affiliation: Entur AS
     - name: Leonard Ehrenfried
       email: mail@leonard.io
-
 localisation:
-  localisationReady: yes
+  localisationReady: false
   availableLanguages:
     - en
-    - de
-    - fr
-    - es
-    - it
-    - nl
-    - pl
-    - pt
-    - fi
-    - sv
-    - no
-
-dependsOn:
-  open:
-    - name: Java
-      versionMin: "21"
-
-intendedAudience:
-  scope:
-    - transportation
-    - government
-    - research
-  countries:
-    - us
-    - no
-    - de
-    - fi
-    - fr
-    - nl
-    - it
-    - es
-    - gb
-    - se
