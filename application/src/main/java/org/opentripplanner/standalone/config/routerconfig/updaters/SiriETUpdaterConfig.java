@@ -3,6 +3,7 @@ package org.opentripplanner.standalone.config.routerconfig.updaters;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_3;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import java.time.Duration;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -49,6 +50,15 @@ public class SiriETUpdaterConfig {
         .of("producerMetrics")
         .since(V2_7)
         .summary("If failure, success, and warning metrics should be collected per producer.")
+        .asBoolean(false),
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary(
+          "Use the new unified trip update implementation. " +
+          "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
+          "When false (default), uses the legacy SiriRealTimeTripUpdateAdapter."
+        )
         .asBoolean(false)
     );
   }

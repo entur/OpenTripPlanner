@@ -197,13 +197,17 @@ public class UpdaterConfigurator {
       updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(configItem, timetableRepository, snapshotManager)
+      );
     }
     for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
       updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(configItem, timetableRepository, snapshotManager)
+      );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
       updaters.add(new SiriETGooglePubsubUpdater(configItem, provideSiriAdapter()));
