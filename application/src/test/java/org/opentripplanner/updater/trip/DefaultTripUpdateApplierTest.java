@@ -47,7 +47,8 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testCancelTrip_notImplemented() {
+  void testCancelTrip_tripNotFound() {
+    // Empty trip reference should result in TRIP_NOT_FOUND
     var update = ParsedTripUpdate.builder(
       TripUpdateType.CANCEL_TRIP,
       TripReference.builder().build(),
@@ -57,7 +58,7 @@ class DefaultTripUpdateApplierTest {
     var result = applier.apply(update, context);
 
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
+    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
   }
 
   @Test
