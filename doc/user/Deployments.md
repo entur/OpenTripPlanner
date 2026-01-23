@@ -9,15 +9,15 @@ The following are known deployments of OTP in a government- or agency-sponsored 
   standard NeTEx format with SIRI real-time updates. Entur has contributed greatly to the OTP2 effort
   and primarily uses OTP2 in production, handling peak loads in excess of 20 requests per second. 
   Most regional agencies in Norway, like **Ruter, Oslo area** uses OTP as a service provided by Entur.
-* **Finland (nationwide)** The [Helsinki Regional Transport Authority](https://www.reittiopas.fi/),
-  the [Finnish Transport Agency](https://opas.matka.fi/), and
-  other [Finnish cities](https://waltti.fi/?lang=en) have collaborated to
-  create [Digitransit](https://digitransit.fi/en/), providing OTP-based trip planners, APIs, open
-  data, Docker containers and open source code. Each member organisation runs its own instance of a
-  shared codebase and deployment environment. Their source code is
-  available [on Github](https://github.com/HSLdevcom/), including
-  a [new custom UI](https://github.com/HSLdevcom/digitransit-ui). This system also has a strong
-  real-time component.
+* **Finland (nationwide)** [Digitransit](https://digitransit.fi/en/) is a collaboration effort between
+  the [Helsinki Region Transport Authority (HSL)](https://www.hsl.fi/en),
+  [Fintraffic](https://www.fintraffic.fi/en), and
+  other Finnish cities through [Waltti Solutions](https://waltti.fi/en/). 
+  Digitransit utilizes OpenTripPlanner through its routing APIs and user interfaces
+  for a variety of different cities and regions. Many of the projects related to Digitransit are
+  open source. The source code is available [on Github](https://github.com/HSLdevcom/).
+  The [Digitransit Journey Planner](https://github.com/HSLdevcom/digitransit-ui) is the web-based
+  user interface that uses OpenTripPlanner.
 * **Finland Intercity** The Finnish intercity coach
   service [Matkahuolto](https://en.wikipedia.org/wiki/Matkahuolto)
   has [developed a trip planner in partnership with Kyyti](https://www.kyyti.com/matkahuoltos-new-app-brings-real-travel-chains-within-the-reach-of-citizens-in-addition-to-coach-travel-hsl-tickets-are-also-available/).
