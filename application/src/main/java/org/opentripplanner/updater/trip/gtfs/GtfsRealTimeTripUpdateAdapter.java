@@ -62,6 +62,8 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -74,7 +76,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   private static final Logger LOG = LoggerFactory.getLogger(GtfsRealTimeTripUpdateAdapter.class);
 
   /** A synchronized cache of trip patterns added to the graph due to GTFS-realtime messages. */
-  private final TripPatternCache tripPatternCache = new TripPatternCache();
+  private final SiriTripPatternCache tripPatternCache;
 
   private final ZoneId timeZone;
 
@@ -106,6 +108,10 @@ public class GtfsRealTimeTripUpdateAdapter {
       snapshotManager.getTimetableSnapshotBuffer()
     );
     this.deduplicator = timetableRepository.getDeduplicator();
+    this.tripPatternCache = new SiriTripPatternCache(
+      new SiriTripPatternIdGenerator(),
+      transitEditorService::findPattern
+    );
   }
 
   /**
@@ -404,11 +410,7 @@ public class GtfsRealTimeTripUpdateAdapter {
 
       final Trip trip = transitEditorService.getTrip(tripId);
       // Get cached trip pattern or create one if it doesn't exist yet
-      final TripPattern newPattern = tripPatternCache.getOrCreateTripPattern(
-        newStopPattern,
-        trip,
-        pattern
-      );
+      final TripPattern newPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
 
       cancelScheduledTrip(tripId, serviceDate, CancelationType.DELETE);
       return snapshotManager.updateBuffer(
@@ -649,13 +651,8 @@ public class GtfsRealTimeTripUpdateAdapter {
     // Create StopPattern
     final StopPattern stopPattern = tripTimesWithStopPattern.stopPattern();
 
-    final TripPattern originalTripPattern = transitEditorService.findPattern(trip);
     // Get cached trip pattern or create one if it doesn't exist yet
-    final TripPattern pattern = tripPatternCache.getOrCreateTripPattern(
-      stopPattern,
-      trip,
-      originalTripPattern
-    );
+    final TripPattern pattern = tripPatternCache.getOrCreateTripPattern(stopPattern, trip);
 
     trace(
       trip.getId(),
