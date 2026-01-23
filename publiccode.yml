@@ -91,6 +91,16 @@ maintenance:
     - name: Leonard Ehrenfried
       email: mail@leonard.io
 localisation:
-  localisationReady: false
+  localisationReady: true
   availableLanguages:
     - en
+    - de
+    - fr
+    - es
+    - it
+    - nl
+    - pl
+    - pt
+    - fi
+    - sv
+    - no
