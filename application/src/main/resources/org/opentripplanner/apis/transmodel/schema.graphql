@@ -433,7 +433,11 @@ type Line {
   "Groups of lines that line is a part of."
   groupOfLines: [GroupOfLines]!
   id: ID!
-  "Is this a replacement Line. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
+  """
+  Is this a replacement Line. In NeTEx/SIRI-sourced data this can be set by either
+  a replacement submode, or a replacement link in a DatedServiceJourney. Only true
+  for GTFS-sourced data if set by the extended GTFS type.
+  """
   isReplacementLine: Boolean!
   journeyPatterns: [JourneyPattern]
   name: String
@@ -1240,15 +1244,26 @@ type ServiceJourney {
   "Booking arrangements for flexible services."
   bookingArrangements: BookingArrangement @deprecated(reason : "BookingArrangements are defined per stop, and can be found under `passingTimes` or `estimatedCalls`")
   directionType: DirectionType
-  "Returns scheduled passingTimes for this ServiceJourney for a given date, updated with real-time-updates (if available). NB! This takes a date as argument (default=today) and returns estimatedCalls for that date and should only be used if the date is known when creating the request. For fetching estimatedCalls for a given trip.leg, use leg.serviceJourneyEstimatedCalls instead."
+  """
+  Returns scheduled passingTimes for this ServiceJourney for a given date, updated with real-time-updates (if available).
+  NB! This takes a date as argument (default=today) and returns estimatedCalls for that date and should only be used if the date is
+  known when creating the request. For fetching estimatedCalls for a given trip.leg, use leg.serviceJourneyEstimatedCalls instead.
+  """
   estimatedCalls(
     "Date to get estimated calls for. Defaults to today."
     date: Date
   ): [EstimatedCall!]! @timingData
   id: ID!
-  "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
+  """
+  Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by
+  either a replacement submode, or a replacement link in a DatedServiceJourney. Only
+  true for GTFS-sourced data if set by the extended GTFS type.
+  """
   isReplacement: Boolean!
-  "JourneyPattern for the service journey, according to scheduled data. If the ServiceJourney is not included in the scheduled data, null is returned."
+  """
+  JourneyPattern for the service journey, according to scheduled data. If the
+  ServiceJourney is not included in the scheduled data, null is returned.
+  """
   journeyPattern: JourneyPattern
   line: Line!
   notices: [Notice!]!
@@ -1261,7 +1276,10 @@ type ServiceJourney {
   privateCode: String
   "Publicly announced code for service journey, differentiating it from other service journeys for the same line."
   publicCode: String
-  "Quays visited by service journey, according to scheduled data. If the ServiceJourney is not included in the scheduled data, an empty list is returned."
+  """
+  Quays visited by service journey, according to scheduled data. If the
+  ServiceJourney is not included in the scheduled data, an empty list is returned.
+  """
   quays(
     "Only fetch the first n quays on the service journey"
     first: Int,

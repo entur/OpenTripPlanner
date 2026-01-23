@@ -155,7 +155,7 @@ public class ServiceJourneyType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("journeyPattern")
           .description(
-            "JourneyPattern for the service journey, according to scheduled data. If the " +
+            "JourneyPattern for the service journey, according to scheduled data. If the\n" +
               "ServiceJourney is not included in the scheduled data, null is returned."
           )
           .type(journeyPatternType)
@@ -166,7 +166,7 @@ public class ServiceJourneyType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("quays")
           .description(
-            "Quays visited by service journey, according to scheduled data. If the " +
+            "Quays visited by service journey, according to scheduled data. If the\n" +
               "ServiceJourney is not included in the scheduled data, an empty list is returned."
           )
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(quayType))))
@@ -231,8 +231,8 @@ public class ServiceJourneyType {
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(estimatedCallType))))
           .withDirective(TransmodelDirectives.TIMING_DATA)
           .description(
-            "Returns scheduled passingTimes for this ServiceJourney for a given date, updated with real-time-updates (if available). " +
-              "NB! This takes a date as argument (default=today) and returns estimatedCalls for that date and should only be used if the date is " +
+            "Returns scheduled passingTimes for this ServiceJourney for a given date, updated with real-time-updates (if available).\n" +
+              "NB! This takes a date as argument (default=today) and returns estimatedCalls for that date and should only be used if the date is\n" +
               "known when creating the request. For fetching estimatedCalls for a given trip.leg, use leg.serviceJourneyEstimatedCalls instead."
           )
           .argument(
@@ -309,7 +309,9 @@ public class ServiceJourneyType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("isReplacement")
           .description(
-            "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by either a replacement submode, or a replacement link in a DatedServiceJourney. Only true for GTFS-sourced data if set by the extended GTFS type."
+            "Is this a replacement ServiceJourney. In NeTEx/SIRI-sourced data this can be set by\n" +
+              "either a replacement submode, or a replacement link in a DatedServiceJourney. Only\n" +
+              "true for GTFS-sourced data if set by the extended GTFS type."
           )
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .dataFetcher(environment ->
