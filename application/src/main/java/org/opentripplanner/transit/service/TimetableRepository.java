@@ -30,11 +30,12 @@ import org.opentripplanner.model.FeedInfo;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.calendar.impl.CalendarServiceImpl;
-import org.opentripplanner.model.transfer.DefaultTransferService;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.impl.DelegatingTransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.routing.util.ConcurrentPublished;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
+import org.opentripplanner.transfer.constrained.internal.DefaultConstrainedTransferService;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.transit.model.framework.Deduplicator;
@@ -85,7 +86,8 @@ public class TimetableRepository implements Serializable {
   private final Map<String, FeedInfo> feedInfoForId = new HashMap<>();
 
   private final Multimap<AbstractTransitEntity, Notice> noticesByElement = HashMultimap.create();
-  private final DefaultTransferService transferService = new DefaultTransferService();
+  private final ConstrainedTransferService constrainedTransferService =
+    new DefaultConstrainedTransferService();
 
   private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
 
@@ -182,8 +184,8 @@ public class TimetableRepository implements Serializable {
     return realtimeRaptorTransitData != null;
   }
 
-  public DefaultTransferService getTransferService() {
-    return transferService;
+  public ConstrainedTransferService getConstrainedTransferService() {
+    return constrainedTransferService;
   }
 
   /**
