@@ -215,7 +215,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
 
-    return context.localDateNow().get();
+    return null;
   }
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(

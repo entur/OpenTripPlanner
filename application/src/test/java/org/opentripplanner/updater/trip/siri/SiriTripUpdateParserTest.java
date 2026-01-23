@@ -66,7 +66,9 @@ class SiriTripUpdateParserTest {
   @Test
   void parseCancelledTrip() {
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withCancellation(true)
       .buildEstimatedVehicleJourney();
 
@@ -275,7 +277,9 @@ class SiriTripUpdateParserTest {
   void parseNotMonitoredButCancelled() {
     // Cancelled journeys can be not monitored
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withMonitored(false)
       .withCancellation(true)
       .buildEstimatedVehicleJourney();
