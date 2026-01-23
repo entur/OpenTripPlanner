@@ -56,8 +56,8 @@ public class SiriETUpdaterConfig {
         .since(V2_9)
         .summary(
           "Use the new unified trip update implementation. " +
-          "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
-          "When false (default), uses the legacy SiriRealTimeTripUpdateAdapter."
+            "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
+            "When false (default), uses the legacy SiriRealTimeTripUpdateAdapter."
         )
         .asBoolean(false)
     );
