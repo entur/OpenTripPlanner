@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
@@ -23,10 +24,10 @@ class DefaultTripUpdateApplierTest {
 
   @BeforeEach
   void setUp() {
-    // TODO: Create mock services
-    transitService = null;
+    var env = TransitTestEnvironment.of().build();
+    transitService = (TransitEditorService) env.transitService();
     applier = new DefaultTripUpdateApplier(transitService);
-    context = new TripUpdateApplierContext("test-feed", null);
+    context = new TripUpdateApplierContext(env.feedId(), null);
   }
 
   @Test
