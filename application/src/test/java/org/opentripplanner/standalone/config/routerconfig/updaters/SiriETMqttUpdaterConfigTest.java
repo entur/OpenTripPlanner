@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class SiriETMqttUpdaterConfigTest {
 
-  private static final String BASE_CONFIG =
-    """
+  private static final String BASE_CONFIG = """
     {
       "feedId": "test-feed",
       "host": "mqtt.example.com",
