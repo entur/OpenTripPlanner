@@ -291,7 +291,9 @@ public class SerializedGraphObject implements Serializable {
   ) {
     var f = new OtpNumberFormat();
     var nStops = f.formatNumber(timetableRepository.getSiteRepository().stopIndexSize());
-    var nTransfers = f.formatNumber(timetableRepository.getTransferService().listAll().size());
+    var nTransfers = f.formatNumber(
+      timetableRepository.getConstrainedTransferService().listAll().size()
+    );
     var nPatterns = f.formatNumber(timetableRepository.getAllTripPatterns().size());
     var nVertices = f.formatNumber(graph.countVertices());
     var nEdges = f.formatNumber(graph.countEdges());

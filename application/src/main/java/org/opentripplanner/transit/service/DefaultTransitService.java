@@ -728,7 +728,7 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public ConstrainedTransferService getConstrainedTransferService() {
-    return timetableRepository.getTransferService();
+    return timetableRepository.getConstrainedTransferService();
   }
 
   @Override

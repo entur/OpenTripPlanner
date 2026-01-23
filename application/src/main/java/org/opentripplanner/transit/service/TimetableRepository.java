@@ -86,7 +86,7 @@ public class TimetableRepository implements Serializable {
   private final Map<String, FeedInfo> feedInfoForId = new HashMap<>();
 
   private final Multimap<AbstractTransitEntity, Notice> noticesByElement = HashMultimap.create();
-  private final ConstrainedTransferService transferService =
+  private final ConstrainedTransferService constrainedTransferService =
     new DefaultConstrainedTransferService();
 
   private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
@@ -184,8 +184,8 @@ public class TimetableRepository implements Serializable {
     return realtimeRaptorTransitData != null;
   }
 
-  public ConstrainedTransferService getTransferService() {
-    return transferService;
+  public ConstrainedTransferService getConstrainedTransferService() {
+    return constrainedTransferService;
   }
 
   /**
