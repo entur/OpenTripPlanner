@@ -14,16 +14,21 @@ public final class TripUpdateApplierContext {
   @Nullable
   private final TimetableSnapshotManager snapshotManager;
 
+  private final TripIdResolver tripIdResolver;
+
   /**
    * @param feedId The feed ID for this update source
    * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
+   * @param tripIdResolver The resolver for looking up trips from trip references
    */
   public TripUpdateApplierContext(
     String feedId,
-    @Nullable TimetableSnapshotManager snapshotManager
+    @Nullable TimetableSnapshotManager snapshotManager,
+    TripIdResolver tripIdResolver
   ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.snapshotManager = snapshotManager;
+    this.tripIdResolver = Objects.requireNonNull(tripIdResolver, "tripIdResolver must not be null");
   }
 
   public String feedId() {
@@ -33,6 +38,10 @@ public final class TripUpdateApplierContext {
   @Nullable
   public TimetableSnapshotManager snapshotManager() {
     return snapshotManager;
+  }
+
+  public TripIdResolver tripIdResolver() {
+    return tripIdResolver;
   }
 
   @Override
@@ -45,13 +54,15 @@ public final class TripUpdateApplierContext {
     }
     TripUpdateApplierContext that = (TripUpdateApplierContext) o;
     return (
-      Objects.equals(feedId, that.feedId) && Objects.equals(snapshotManager, that.snapshotManager)
+      Objects.equals(feedId, that.feedId) &&
+      Objects.equals(snapshotManager, that.snapshotManager) &&
+      Objects.equals(tripIdResolver, that.tripIdResolver)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(feedId, snapshotManager);
+    return Objects.hash(feedId, snapshotManager, tripIdResolver);
   }
 
   @Override
@@ -63,6 +74,8 @@ public final class TripUpdateApplierContext {
       '\'' +
       ", snapshotManager=" +
       snapshotManager +
+      ", tripIdResolver=" +
+      tripIdResolver +
       '}'
     );
   }
