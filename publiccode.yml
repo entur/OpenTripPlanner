@@ -100,8 +100,6 @@ description:
       - Bike share and ride hailing integration
       - Pareto-optimal multi-criteria search
       - Flexible transit routing
-    screenshots:
-      - https://docs.opentripplanner.org/en/dev-2.x/images/client.png
 
 legal:
   license: LGPL-3.0-only
