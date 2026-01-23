@@ -75,6 +75,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Fix SIRI ET ExtraJourney trips not appearing in departure/arrival boards [#7052](https://github.com/opentripplanner/OpenTripPlanner/pull/7052)
 - Add `CarRequest` to cache key in `RaptorRequestTransferCache` [#7194](https://github.com/opentripplanner/OpenTripPlanner/pull/7194)
 - Add booking time parameter to the GTFS API [#7221](https://github.com/opentripplanner/OpenTripPlanner/pull/7221)
+- Add HTTP response time metric [#7133](https://github.com/opentripplanner/OpenTripPlanner/pull/7133)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
