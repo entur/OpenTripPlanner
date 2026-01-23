@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.api.model.SearchDirection;
@@ -33,7 +34,7 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
 
   /* Variables used during the search (mutable) */
 
-  private int currentRouteBoardSlack = 0;
+  private int currentRouteBoardSlack = RaptorConstants.NOT_SET;
 
   public DirectTransitSearch(
     int earliestDepartureTime,
@@ -107,6 +108,7 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
         }
       }
     }
+    this.currentRouteBoardSlack = RaptorConstants.NOT_SET;
     // Expand the best-path into all paths within the search-window
     return bestPath == null ? List.of() : findAllPathsInSearchWindow(route, bestPath);
   }
@@ -148,7 +150,7 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
     RaptorPath<T> firstPath
   ) {
     var transitLeg = firstPath.accessLeg().nextLeg().asTransitLeg();
-    int firstScheduleIndex = transitLeg.trip().tripSortIndex();
+    int tripScheduleStartIndex = transitLeg.trip().tripSortIndex() + 1;
     var access = firstPath.accessLeg().access();
     var egress = firstPath.egressLeg().egress();
     int boardPos = transitLeg.getFromStopPosition();
@@ -158,11 +160,8 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
     var results = new ArrayList<RaptorPath<T>>();
     results.add(firstPath);
 
-    for (int i = 0; i < timetable.numberOfTripSchedules(); i++) {
+    for (int i = tripScheduleStartIndex; i < timetable.numberOfTripSchedules(); i++) {
       var schedule = timetable.getTripSchedule(i);
-      if (schedule.tripSortIndex() <= firstScheduleIndex) {
-        continue;
-      }
       var path = mapToPath(schedule, access, egress, boardPos, alightPos);
 
       // We only need to check the end of the search-window, since we know the {@code firstPath} is
