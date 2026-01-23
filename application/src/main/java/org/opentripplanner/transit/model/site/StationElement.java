@@ -13,11 +13,10 @@ import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
  * used as from and to.
  */
 public abstract class StationElement<
-  E extends StationElement<E, B>, B extends StationElementBuilder<E, B>
+  E extends StationElement<E, B>,
+  B extends StationElementBuilder<E, B>
 >
   extends AbstractTransitEntity<E, B> {
-
-  public static final StopLevel DEFAULT_LEVEL = new StopLevel("default stop level", 0);
 
   private final I18NString name;
 

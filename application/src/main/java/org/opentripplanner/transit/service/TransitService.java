@@ -15,13 +15,12 @@ import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.model.FeedInfo;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.CalendarService;
-import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.services.TransitAlertService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transit.api.request.FindRegularStopsByBoundingBoxRequest;
 import org.opentripplanner.transit.api.request.FindRoutesRequest;
 import org.opentripplanner.transit.api.request.FindStopLocationsRequest;
@@ -203,6 +202,11 @@ public interface TransitService {
   List<TripOnServiceDate> listCanceledTrips();
 
   /**
+   * Lists all canceled trips which match the filtering criteria in the request.
+   */
+  List<TripOnServiceDate> findCanceledTrips(TripOnServiceDateRequest request);
+
+  /**
    * Return all routes, including those created by real-time updates.
    */
   Collection<Route> listRoutes();
@@ -339,8 +343,6 @@ public interface TransitService {
 
   Collection<TripOnServiceDate> listTripsOnServiceDate();
 
-  Collection<PathTransfer> findPathTransfers(StopLocation stop);
-
   RaptorTransitData getRaptorTransitData();
 
   RaptorTransitData getRealtimeRaptorTransitData();
@@ -357,7 +359,7 @@ public interface TransitService {
 
   Instant getTransitServiceStarts();
 
-  TransferService getTransferService();
+  ConstrainedTransferService getConstrainedTransferService();
 
   boolean transitFeedCovers(Instant dateTime);
 

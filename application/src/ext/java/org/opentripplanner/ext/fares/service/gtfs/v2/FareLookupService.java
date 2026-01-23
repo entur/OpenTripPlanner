@@ -5,6 +5,7 @@ import static org.opentripplanner.utils.collection.ListUtils.partitionIntoOverla
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -30,11 +31,13 @@ class FareLookupService implements Serializable {
   private final List<FareTransferRule> transferRules;
   private final AreaMatcher areaMatcher;
   private final NetworkMatcher networkMatcher;
+  private final TimeframeMatcher timeframeMatcher;
 
   FareLookupService(
     List<FareLegRule> legRules,
     List<FareTransferRule> fareTransferRules,
-    Multimap<FeedScopedId, FeedScopedId> stopAreas
+    Multimap<FeedScopedId, FeedScopedId> stopAreas,
+    Multimap<FeedScopedId, LocalDate> serviceDates
   ) {
     this.legRules = List.copyOf(legRules);
     this.transferRules = stripWildcards(fareTransferRules);
@@ -42,6 +45,7 @@ class FareLookupService implements Serializable {
     var rulePriorityMatcher = new RulePriorityMatcher(legRules);
     this.areaMatcher = new AreaMatcher(rulePriorityMatcher, legRules, stopAreas);
     this.networkMatcher = new NetworkMatcher(rulePriorityMatcher, legRules);
+    this.timeframeMatcher = new TimeframeMatcher(serviceDates);
   }
 
   /**
@@ -63,10 +67,9 @@ class FareLookupService implements Serializable {
    * exist.
    */
   Set<FareLegRule> legRules(TransitLeg leg) {
-    var rules =
-      this.legRules.stream()
-        .filter(r -> legMatchesRule(leg, r))
-        .collect(Collectors.toUnmodifiableSet());
+    var rules = this.legRules.stream()
+      .filter(r -> legMatchesRule(leg, r))
+      .collect(Collectors.toUnmodifiableSet());
     var containsPriorities = rules.stream().anyMatch(r -> r.priority().isPresent());
     if (containsPriorities) {
       return findHighestPriority(rules);
@@ -106,19 +109,18 @@ class FareLookupService implements Serializable {
    * Find fare offers for a specific pair of legs.
    */
   Set<LegOffer> findTransferOffersForSubLegs(TransitLeg head, List<TransitLeg> tail) {
-    Set<TransferMatch> transfers =
-      this.transferRules.stream()
-        .flatMap(r -> {
-          var fromRules = findFareLegRule(r.fromLegGroup());
-          var toRules = findFareLegRule(r.toLegGroup());
-          if (fromRules.isEmpty() || toRules.isEmpty()) {
-            return Stream.of();
-          } else {
-            var possibleTransfers = findPossibleTransfers(head, tail, r, fromRules, toRules);
-            return SetUtils.intersection(possibleTransfers).stream();
-          }
-        })
-        .collect(Collectors.toSet());
+    Set<TransferMatch> transfers = this.transferRules.stream()
+      .flatMap(r -> {
+        var fromRules = findFareLegRule(r.fromLegGroup());
+        var toRules = findFareLegRule(r.toLegGroup());
+        if (fromRules.isEmpty() || toRules.isEmpty()) {
+          return Stream.of();
+        } else {
+          var possibleTransfers = findPossibleTransfers(head, tail, r, fromRules, toRules);
+          return SetUtils.intersection(possibleTransfers).stream();
+        }
+      })
+      .collect(Collectors.toSet());
 
     Multimap<FareProduct, FareProduct> dependencies = HashMultimap.create();
 
@@ -206,8 +208,14 @@ class FareLookupService implements Serializable {
         .flatMap(pair -> {
           var from = pair.first();
           var to = pair.second();
-          var matchingFrom = fromRules.stream().filter(rule -> legMatchesRule(from, rule)).toList();
-          var matchingTo = toRules.stream().filter(rule -> legMatchesRule(to, rule)).toList();
+          var matchingFrom = fromRules
+            .stream()
+            .filter(rule -> legMatchesRule(from, rule))
+            .toList();
+          var matchingTo = toRules
+            .stream()
+            .filter(rule -> legMatchesRule(to, rule))
+            .toList();
 
           return matchingFrom
             .stream()
@@ -229,12 +237,16 @@ class FareLookupService implements Serializable {
       // covers this area
       areaMatcher.matchesFromArea(leg.from().stop, rule.fromAreaId()) &&
       areaMatcher.matchesToArea(leg.to().stop, rule.toAreaId()) &&
-      DistanceMatcher.matchesDistance(leg, rule)
+      DistanceMatcher.matchesDistance(leg, rule) &&
+      timeframeMatcher.matchesTimeframes(leg, rule)
     );
   }
 
   private List<FareLegRule> findFareLegRule(FeedScopedId id) {
-    return legRules.stream().filter(r -> r.legGroupId().equals(id)).toList();
+    return legRules
+      .stream()
+      .filter(r -> r.legGroupId().equals(id))
+      .toList();
   }
 
   private static List<FareTransferRule> stripWildcards(Collection<FareTransferRule> rules) {
@@ -258,8 +270,12 @@ class FareLookupService implements Serializable {
    *
    * @link <a href="https://gtfs.org/documentation/schedule/reference/#fare_leg_rulestxt">spec</a>
    */
-  private static Set<FareLegRule> findHighestPriority(Set<FareLegRule> rules) {
-    var maxPriority = rules.stream().mapToInt(r -> r.priority().orElse(0)).max().orElse(0);
+  private static Set<FareLegRule> findHighestPriority(Collection<FareLegRule> rules) {
+    var maxPriority = rules
+      .stream()
+      .mapToInt(r -> r.priority().orElse(0))
+      .max()
+      .orElse(0);
     return rules
       .stream()
       .filter(r -> r.priority().orElse(0) == maxPriority)

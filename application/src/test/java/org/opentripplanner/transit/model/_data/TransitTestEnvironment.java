@@ -8,6 +8,7 @@ import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
+import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -24,6 +25,7 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 public final class TransitTestEnvironment {
 
   private final TimetableRepository timetableRepository;
+  private final TransferRepository transferRepository;
   private final TimetableSnapshotManager snapshotManager;
   private final LocalDate defaultServiceDate;
 
@@ -39,22 +41,31 @@ public final class TransitTestEnvironment {
     return new TransitTestEnvironmentBuilder(timeZone, serviceDate);
   }
 
-  TransitTestEnvironment(TimetableRepository timetableRepository, LocalDate defaultServiceDate) {
+  TransitTestEnvironment(
+    TimetableRepository timetableRepository,
+    TransferRepository transferRepository,
+    LocalDate defaultServiceDate
+  ) {
     this.timetableRepository = timetableRepository;
 
     this.timetableRepository.index();
     this.timetableRepository.setRaptorTransitData(
-        RaptorTransitDataMapper.map(new TestTransitTuningParameters(), timetableRepository)
-      );
+      RaptorTransitDataMapper.map(
+        new TestTransitTuningParameters(),
+        timetableRepository,
+        transferRepository
+      )
+    );
     this.timetableRepository.setRealtimeRaptorTransitData(
-        new RaptorTransitData(timetableRepository.getRaptorTransitData())
-      );
+      new RaptorTransitData(timetableRepository.getRaptorTransitData())
+    );
     this.snapshotManager = new TimetableSnapshotManager(
       new RealTimeRaptorTransitDataUpdater(timetableRepository),
       TimetableSnapshotParameters.PUBLISH_IMMEDIATELY,
       () -> defaultServiceDate
     );
     this.defaultServiceDate = defaultServiceDate;
+    this.transferRepository = transferRepository;
   }
 
   /**
@@ -115,5 +126,19 @@ public final class TransitTestEnvironment {
    */
   public TripOnDateDataFetcher tripData(String tripId, LocalDate serviceDate) {
     return new TripOnDateDataFetcher(transitService(), id(tripId), serviceDate);
+  }
+
+  /**
+   * Returns a fetcher for the given service date. By default it also includes cancelled trips.
+   */
+  public RaptorTransitDataFetcher raptorData(LocalDate serviceDate) {
+    return new RaptorTransitDataFetcher(transitService(), serviceDate);
+  }
+
+  /**
+   * Returns a fetcher for the default service date. By default it also includes cancelled trips.
+   */
+  public RaptorTransitDataFetcher raptorData() {
+    return raptorData(defaultServiceDate);
   }
 }

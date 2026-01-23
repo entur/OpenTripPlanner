@@ -196,24 +196,34 @@ public class DurationUtils {
   }
 
   /**
-   * Checks that duration is positive and less than the given {@code maxLimit} (exclusive).
+   * Checks that duration is positive.
    *
    * @param subject used to identify name of the problematic value when throwing an exception.
    */
-  public static Duration requireNonNegative(Duration value, Duration maxLimit, String subject) {
+  public static Duration requireNonNegative(Duration value, String subject) {
     Objects.requireNonNull(value);
     if (value.isNegative()) {
       throw new IllegalArgumentException(
         "Duration %s can't be negative: %s".formatted(subject, value)
       );
     }
+    return value;
+  }
+
+  /**
+   * Checks that duration is positive and less than the given {@code maxLimit} (exclusive).
+   *
+   * @param subject used to identify name of the problematic value when throwing an exception.
+   */
+  public static Duration requireNonNegative(Duration value, Duration maxLimit, String subject) {
+    requireNonNegative(value, subject);
     if (value.compareTo(maxLimit) >= 0) {
       throw new IllegalArgumentException(
         "Duration %s can't be longer or equals too %s: %s".formatted(
-            subject,
-            durationToStr(maxLimit),
-            value
-          )
+          subject,
+          durationToStr(maxLimit),
+          value
+        )
       );
     }
     return value;

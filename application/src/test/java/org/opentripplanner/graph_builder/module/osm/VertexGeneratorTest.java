@@ -109,7 +109,7 @@ class VertexGeneratorTest {
     assertEquals(vertexForW1NotOnBarrier, vertexForW2NotOnBarrier);
 
     assertInstanceOf(BarrierPassThroughVertex.class, vertexForW2OnBarrier);
-    assertEquals(n3.getId(), ((BarrierPassThroughVertex) vertexForW2OnBarrier).nodeId);
+    assertEquals(n3.getId(), ((BarrierPassThroughVertex) vertexForW2OnBarrier).nodeId());
     assertEquals(w2.getId(), ((BarrierPassThroughVertex) vertexForW2OnBarrier).getEntityId());
     assertFalse(vertexForW2NotOnBarrier instanceof BarrierPassThroughVertex);
 
@@ -123,14 +123,22 @@ class VertexGeneratorTest {
 
     assertEquals(
       0,
-      issueStore.listIssues().stream().filter(x -> x instanceof BarrierIntersectingHighway).count()
+      issueStore
+        .listIssues()
+        .stream()
+        .filter(x -> x instanceof BarrierIntersectingHighway)
+        .count()
     );
     var barrierVertexOnBarrier = subject.getVertexForOsmNode(n3, w1, NORMAL);
     assertInstanceOf(OsmVertex.class, barrierVertexOnBarrier);
     assertFalse(barrierVertexOnBarrier instanceof BarrierVertex);
     assertEquals(
       1,
-      issueStore.listIssues().stream().filter(x -> x instanceof BarrierIntersectingHighway).count()
+      issueStore
+        .listIssues()
+        .stream()
+        .filter(x -> x instanceof BarrierIntersectingHighway)
+        .count()
     );
     var barrierVertexNotOnBarrier = subject.getVertexForOsmNode(n10, w1, NORMAL);
     assertFalse(barrierVertexNotOnBarrier instanceof BarrierVertex);

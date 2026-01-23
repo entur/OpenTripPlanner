@@ -11,6 +11,7 @@ import org.opentripplanner.netex.NetexModule;
 import org.opentripplanner.netex.config.NetexFeedParameters;
 import org.opentripplanner.netex.loader.NetexDataSourceHierarchy;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
@@ -38,7 +39,8 @@ public class NetexConfigure {
   public NetexModule createNetexModule(
     Iterable<ConfiguredCompositeDataSource<NetexFeedParameters>> netexSources,
     TimetableRepository timetableRepository,
-    VehicleParkingRepository parkingRepsitory,
+    VehicleParkingRepository parkingRepository,
+    StreetDetailsRepository streetDetailsRepository,
     Graph graph,
     DeduplicatorService deduplicator,
     DataImportIssueStore issueStore
@@ -57,7 +59,8 @@ public class NetexConfigure {
       graph,
       deduplicator,
       timetableRepository,
-      parkingRepsitory,
+      parkingRepository,
+      streetDetailsRepository,
       issueStore,
       buildParams.getSubwayAccessTimeSeconds(),
       buildParams.getTransitServicePeriod(),
