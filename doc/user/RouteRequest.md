@@ -106,6 +106,7 @@ and in the [transferRequests in build-config.json](BuildConfiguration.md#transfe
 |       useAvailabilityInformation                                                                             |        `boolean`       | Whether or not vehicle rental availability information will be used to plan vehicle rental trips.                                                        | *Optional* | `false`          |  2.0  |
 |       [allowedNetworks](#rd_car_rental_allowedNetworks)                                                      |       `string[]`       | The vehicle rental networks which may be used. If empty all networks may be used.                                                                        | *Optional* |                  |  2.1  |
 |       [bannedNetworks](#rd_car_rental_bannedNetworks)                                                        |       `string[]`       | The vehicle rental networks which may not be used. If empty, no networks are banned.                                                                     | *Optional* |                  |  2.1  |
+| [directTransitSearch](#rd_directTransitSearch)                                                               |        `object`        | Extend the search result with extra results using a direct transit search                                                                                | *Optional* |                  |  2.9  |
 | elevator                                                                                                     |        `object`        | Elevator preferences.                                                                                                                                    | *Optional* |                  |  2.9  |
 |    boardCost                                                                                                 |        `integer`       | What is the cost of boarding a elevator?                                                                                                                 | *Optional* | `15`             |  2.9  |
 |    boardSlack                                                                                                |       `duration`       | How long it takes to get on an elevator, on average.                                                                                                     | *Optional* | `"PT1M30S"`      |  2.9  |
@@ -697,11 +698,11 @@ The vehicle rental networks which may not be used. If empty, no networks are ban
 **Since version:** `2.9` ∙ **Type:** `object` ∙ **Cardinality:** `Optional`   
 **Path:** /routingDefaults 
 
-Extend the search result with extra paths using a direct transit search
+Extend the search result with extra results using a direct transit search
 
-The direct transit search finds paths using a single transit leg, limited to a specified
-cost window. It will find paths even if they are not optimal in regard to the criteria in
-the main raptor search.
+The direct transit search finds results using a single transit leg, limited to a specified
+cost relaxation. It will include results even if they are not optimal in regard to the criteria
+in the main raptor search.
 
 This featue is off by default!
 

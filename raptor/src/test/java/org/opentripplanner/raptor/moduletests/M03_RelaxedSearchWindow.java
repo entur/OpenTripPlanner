@@ -50,7 +50,7 @@ public class M03_RelaxedSearchWindow implements RaptorTestConstants {
 
     assertEquals(
       "Walk 1m ~ A ~ BUS R1 0:03 0:04 ~ B ~ Walk 1m [0:02 0:05 3m Tₙ0 C₁900]\n" +
-      "Walk 1m ~ A ~ BUS R1 0:04 0:05 ~ B ~ Walk 1m [0:03 0:06 3m Tₙ0 C₁900]",
+        "Walk 1m ~ A ~ BUS R1 0:04 0:05 ~ B ~ Walk 1m [0:03 0:06 3m Tₙ0 C₁900]",
       pathsToString(result)
     );
   }

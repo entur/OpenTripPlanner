@@ -373,19 +373,28 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     Collection<? extends RaptorAccessEgress> list,
     Duration maxDuration
   ) {
-    return list.stream().filter(ae -> ae.durationInSeconds() <= maxDuration.toSeconds()).toList();
+    return list
+      .stream()
+      .filter(ae -> ae.durationInSeconds() <= maxDuration.toSeconds())
+      .toList();
   }
 
   private List<? extends RaptorAccessEgress> filterAccessEgressNoOpeningHours(
     Collection<? extends RaptorAccessEgress> list
   ) {
-    return list.stream().filter(it -> !it.hasOpeningHours()).toList();
+    return list
+      .stream()
+      .filter(it -> !it.hasOpeningHours())
+      .toList();
   }
 
   private List<? extends RaptorAccessEgress> decorateAccessEgressWithExtraCost(
     Collection<? extends RaptorAccessEgress> list,
     double costFactor
   ) {
-    return list.stream().map(it -> new AccessEgressWithExtraCost(it, costFactor)).toList();
+    return list
+      .stream()
+      .map(it -> new AccessEgressWithExtraCost(it, costFactor))
+      .toList();
   }
 }

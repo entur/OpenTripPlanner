@@ -53,7 +53,7 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
 
   /// Run the search
   public Collection<RaptorPath<T>> route() {
-    var results = new ParetoSet<RaptorPath<T>>(new DestinationArrivalComparator<>(relaxC1));
+    var results = ParetoSet.<RaptorPath<T>>of(new DestinationArrivalComparator<>(relaxC1));
 
     var routes = data.routeIndexIterator(findAllAccessStopIndexes());
 
@@ -133,7 +133,7 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
     if (path.startTime() < earliestDepartureTime) {
       throw new IllegalStateException(
         "This should not happen. There is a mismatch between the calculated board time/" +
-        "trip search and the assembly of the path."
+          "trip search and the assembly of the path."
       );
     }
 

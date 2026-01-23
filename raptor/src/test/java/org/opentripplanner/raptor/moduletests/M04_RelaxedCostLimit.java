@@ -41,8 +41,8 @@ public class M04_RelaxedCostLimit implements RaptorTestConstants {
     var result = raptorService.findAllDirectTransit(createRequest(), data);
     assertEquals(
       "A ~ BUS SLOW 0:05 1:05 ~ B [0:05 1:05 1h Tₙ0 C₁4_200]\n" +
-      "A ~ BUS FAST 1:00 1:10 ~ B [1:00 1:10 10m Tₙ0 C₁1_200]\n" +
-      "A ~ BUS SLOW 1:05 2:05 ~ B [1:05 2:05 1h Tₙ0 C₁4_200]",
+        "A ~ BUS FAST 1:00 1:10 ~ B [1:00 1:10 10m Tₙ0 C₁1_200]\n" +
+        "A ~ BUS SLOW 1:05 2:05 ~ B [1:05 2:05 1h Tₙ0 C₁4_200]",
       pathsToString(result)
     );
   }
@@ -59,7 +59,7 @@ public class M04_RelaxedCostLimit implements RaptorTestConstants {
     var result = raptorService.findAllDirectTransit(createRequest(), data);
     assertEquals(
       "A ~ BUS FAST 1:00 1:10 ~ B [1:00 1:10 10m Tₙ0 C₁1_200]\n" +
-      "A ~ BUS SLOWER 1:00 1:29 ~ B [1:00 1:29 29m Tₙ0 C₁2_340]",
+        "A ~ BUS SLOWER 1:00 1:29 ~ B [1:00 1:29 29m Tₙ0 C₁2_340]",
       pathsToString(result)
     );
   }
