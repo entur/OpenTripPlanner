@@ -14,5 +14,6 @@ public record DefaultSiriETUpdaterParameters(
   Duration previewInterval,
   boolean fuzzyTripMatching,
   HttpHeaders httpRequestHeaders,
-  boolean producerMetrics
+  boolean producerMetrics,
+  boolean useNewUpdaterImplementation
 ) implements SiriETUpdaterParameters, SiriETHttpTripUpdateSource.Parameters {}
