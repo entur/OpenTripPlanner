@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 
 class SiriAzureETUpdaterConfigTest {
 
-  private static final String BASE_CONFIG =
-    """
+  private static final String BASE_CONFIG = """
     {
       "servicebus-url": "Endpoint=sb://example.servicebus.windows.net/",
       "topic": "my-topic",
