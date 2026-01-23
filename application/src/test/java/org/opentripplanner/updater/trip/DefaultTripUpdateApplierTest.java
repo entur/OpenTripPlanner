@@ -27,11 +27,13 @@ class DefaultTripUpdateApplierTest {
     var env = TransitTestEnvironment.of().build();
     transitService = (TransitEditorService) env.transitService();
     applier = new DefaultTripUpdateApplier(transitService);
-    context = new TripUpdateApplierContext(env.feedId(), null);
+    var tripIdResolver = new TripIdResolver(env.transitService());
+    context = new TripUpdateApplierContext(env.feedId(), null, tripIdResolver);
   }
 
   @Test
-  void testUpdateExisting_notImplemented() {
+  void testUpdateExisting_tripNotFound() {
+    // When no trip ID is provided, the resolver returns TRIP_NOT_FOUND
     var update = ParsedTripUpdate.builder(
       TripUpdateType.UPDATE_EXISTING,
       TripReference.builder().build(),
@@ -41,7 +43,7 @@ class DefaultTripUpdateApplierTest {
     var result = applier.apply(update, context);
 
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
+    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
   }
 
   @Test
