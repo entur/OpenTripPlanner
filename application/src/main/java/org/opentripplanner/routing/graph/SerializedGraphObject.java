@@ -19,7 +19,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
-import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.framework.geometry.CompactElevationProfile;
@@ -92,7 +91,6 @@ public class SerializedGraphObject implements Serializable {
   private final int routingTripPatternCounter;
   public final EmissionRepository emissionRepository;
   public final @Nullable EmpiricalDelayRepository empiricalDelayRepository;
-  public final @Nullable GbfsGeofencingRepository gbfsGeofencingRepository;
   public final FareServiceFactory fareServiceFactory;
   public final StreetRepository streetRepository;
   public final VehicleParkingRepository parkingRepository;
@@ -111,7 +109,6 @@ public class SerializedGraphObject implements Serializable {
     DataImportIssueSummary issueSummary,
     EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
-    @Nullable GbfsGeofencingRepository gbfsGeofencingRepository,
     StopConsolidationRepository stopConsolidationRepository,
     FareServiceFactory fareServiceFactory
   ) {
@@ -129,7 +126,6 @@ public class SerializedGraphObject implements Serializable {
     this.issueSummary = issueSummary;
     this.emissionRepository = emissionRepository;
     this.empiricalDelayRepository = empiricalDelayRepository;
-    this.gbfsGeofencingRepository = gbfsGeofencingRepository;
     this.allTransitSubModes = SubMode.listAllCachedSubModes();
     this.routingTripPatternCounter = RoutingTripPattern.indexCounter();
     this.stopConsolidationRepository = stopConsolidationRepository;

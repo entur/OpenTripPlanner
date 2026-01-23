@@ -13,7 +13,6 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
-import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OtpAppException;
@@ -87,7 +86,6 @@ public class GraphBuilder implements Runnable {
     VehicleParkingRepository vehicleParkingService,
     @Nullable EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
-    @Nullable GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     boolean loadStreetGraph,
     boolean saveStreetGraph
@@ -113,7 +111,6 @@ public class GraphBuilder implements Runnable {
       .stopConsolidationRepository(stopConsolidationRepository)
       .emissionRepository(emissionRepository)
       .empiricalDelayRepository(empiricalDelayRepository)
-      .gbfsGeofencingRepositoryBuilder(gbfsGeofencingRepositoryBuilder)
       .fareServiceFactory(fareServiceFactory)
       .dataSources(dataSources)
       .timeZoneId(timetableRepository.getTimeZone());

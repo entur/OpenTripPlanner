@@ -4,8 +4,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
-import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingFeedParameters;
 import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingParameters;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
@@ -29,17 +27,10 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
   private static final Logger LOG = LoggerFactory.getLogger(GbfsGeofencingGraphBuilder.class);
 
   private final GbfsGeofencingParameters parameters;
-  private final GbfsGeofencingRepositoryBuilder repositoryBuilder;
   private final Graph graph;
-  private GbfsGeofencingRepository repository;
 
-  public GbfsGeofencingGraphBuilder(
-    GbfsGeofencingParameters parameters,
-    GbfsGeofencingRepositoryBuilder repositoryBuilder,
-    Graph graph
-  ) {
+  public GbfsGeofencingGraphBuilder(GbfsGeofencingParameters parameters, Graph graph) {
     this.parameters = parameters;
-    this.repositoryBuilder = repositoryBuilder;
     this.graph = graph;
   }
 
@@ -74,7 +65,6 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
 
     if (allZones.isEmpty()) {
       LOG.info("No geofencing zones loaded from any GBFS feeds");
-      this.repository = repositoryBuilder.build();
       return;
     }
 
@@ -82,26 +72,11 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
     var applier = new GeofencingZoneApplier(graph::findEdges);
     var modifiedEdges = applier.applyGeofencingZones(allZones);
 
-    repositoryBuilder.addGeofencingZones(allZones);
-    repositoryBuilder.setModifiedEdgeCount(modifiedEdges.size());
-    this.repository = repositoryBuilder.build();
-
     LOG.info(
       "Applied {} geofencing zones to {} street edges at build time",
       allZones.size(),
       modifiedEdges.size()
     );
-  }
-
-  /**
-   * Get the built repository after graph building completes.
-   * <p>
-   * This method should only be called after {@link #buildGraph()} has completed.
-   *
-   * @return the built repository, or null if buildGraph() hasn't been called yet
-   */
-  public GbfsGeofencingRepository getRepository() {
-    return repository;
   }
 
   private List<GeofencingZone> loadGeofencingZonesFromFeed(

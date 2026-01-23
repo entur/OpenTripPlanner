@@ -6,8 +6,6 @@ import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
-import org.opentripplanner.ext.gbfsgeofencing.GbfsGeofencingRepository;
-import org.opentripplanner.ext.gbfsgeofencing.internal.GbfsGeofencingRepositoryBuilder;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -77,13 +75,6 @@ public class ConstructApplication {
    */
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
 
-  /**
-   * The GBFS geofencing repository builder is used during graph build to create the repository.
-   * Null when loading from a serialized graph (repository comes from deserialized object).
-   */
-  @Nullable
-  private final GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder;
-
   private final ConstructApplicationFactory factory;
 
   /**
@@ -102,8 +93,6 @@ public class ConstructApplication {
     DataImportIssueSummary issueSummary,
     EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
-    @Nullable GbfsGeofencingRepository gbfsGeofencingRepository,
-    @Nullable GbfsGeofencingRepositoryBuilder gbfsGeofencingRepositoryBuilder,
     VehicleParkingRepository vehicleParkingRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetRepository streetRepository,
@@ -112,7 +101,6 @@ public class ConstructApplication {
     this.cli = cli;
     this.graphBuilderDataSources = graphBuilderDataSources;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
-    this.gbfsGeofencingRepositoryBuilder = gbfsGeofencingRepositoryBuilder;
 
     // We create the optional GraphVisualizer here, because it would be significant more complex to
     // use Dagger DI to do it - passing in a parameter to enable it or not.
@@ -130,7 +118,6 @@ public class ConstructApplication {
       .vehicleParkingRepository(vehicleParkingRepository)
       .emissionRepository(emissionRepository)
       .empiricalDelayRepository(empiricalDelayRepository)
-      .gbfsGeofencingRepository(gbfsGeofencingRepository)
       .dataImportIssueSummary(issueSummary)
       .stopConsolidationRepository(stopConsolidationRepository)
       .streetStreetRepository(streetRepository)
@@ -174,7 +161,6 @@ public class ConstructApplication {
       factory.vehicleParkingRepository(),
       factory.emissionRepository(),
       factory.empiricalDelayRepository(),
-      gbfsGeofencingRepositoryBuilder,
       factory.stopConsolidationRepository(),
       cli.doLoadStreetGraph(),
       cli.doSaveStreetGraph()
@@ -402,29 +388,6 @@ public class ConstructApplication {
   @Nullable
   public EmpiricalDelayRepository empiricalDelayRepository() {
     return factory.empiricalDelayRepository();
-  }
-
-  /**
-   * Get the GBFS geofencing repository.
-   * <p>
-   * During a fresh graph build, the repository is created by the {@link GbfsGeofencingRepositoryBuilder}
-   * and we retrieve it from there. When loading from a serialized graph, the repository comes
-   * directly from the Dagger factory (injected during construction).
-   *
-   * @return the repository, or null if GBFS geofencing is not enabled
-   */
-  @Nullable
-  public GbfsGeofencingRepository gbfsGeofencingRepository() {
-    // First check if we have a repository from Dagger (loaded from serialized graph)
-    var repository = factory.gbfsGeofencingRepository();
-    if (repository != null) {
-      return repository;
-    }
-    // During fresh build, get the repository from the builder after graph build completes
-    if (gbfsGeofencingRepositoryBuilder != null) {
-      return gbfsGeofencingRepositoryBuilder.getBuiltRepository();
-    }
-    return null;
   }
 
   public FareServiceFactory fareServiceFactory() {
