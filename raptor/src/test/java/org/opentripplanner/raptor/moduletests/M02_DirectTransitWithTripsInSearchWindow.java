@@ -16,7 +16,7 @@ import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
 /**
  * FEATURE UNDER TEST
  * <p>
- * The direct transit search should return two trips on the same route.
+ * The direct transit search should return all trips on the same route within the search window.
  */
 public class M02_DirectTransitWithTripsInSearchWindow implements RaptorTestConstants {
 

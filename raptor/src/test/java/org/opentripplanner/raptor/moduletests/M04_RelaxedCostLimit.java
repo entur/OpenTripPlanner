@@ -23,7 +23,6 @@ import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
  */
 public class M04_RelaxedCostLimit implements RaptorTestConstants {
 
-  private final TestTransitData data = new TestTransitData();
   private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
   ///  Expensive trips should be included if they are optimal on arrival or departure

@@ -1,7 +1,5 @@
 package org.opentripplanner.raptor.spi;
 
-import org.opentripplanner.raptor.api.model.RaptorTripPattern;
-
 /**
  * Responsible for providing {@code boardSlack}, {@code alightSlack} and {@code transferSlack}.
  */
@@ -23,7 +21,7 @@ public interface RaptorSlackProvider {
    * <p>
    * Unit: seconds.
    *
-   * @param slackIndex The {@link RaptorTripPattern#slackIndex()} should be passed in here.
+   * @param slackIndex The slackIndex is provided by the RaptorTripPattern
    */
   int boardSlack(int slackIndex);
 

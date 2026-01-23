@@ -150,7 +150,7 @@ public class TransitRouter {
     );
     var raptorRequest = mapper.mapRaptorRequest();
 
-    // Route McRangeRaptor transit
+    // Transit routing using Raptor
     var raptorService = new RaptorService<>(
       serverContext.raptorConfig(),
       createExtraMcRouterSearch(accessEgresses, raptorTransitData)

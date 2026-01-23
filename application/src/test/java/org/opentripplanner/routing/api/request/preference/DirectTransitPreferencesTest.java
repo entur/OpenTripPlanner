@@ -53,9 +53,6 @@ class DirectTransitPreferencesTest {
   }
 
   @Test
-  void copyOf() {}
-
-  @Test
   void testEqualsAndHashCode() {
     var sameAs = DirectTransitPreferences.of()
       .withEnabled(true)

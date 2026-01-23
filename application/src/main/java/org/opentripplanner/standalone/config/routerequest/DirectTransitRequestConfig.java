@@ -11,12 +11,12 @@ public class DirectTransitRequestConfig {
     NodeAdapter c = root
       .of("directTransitSearch")
       .since(V2_9)
-      .summary("Extend the search result with extra paths using a direct transit search")
+      .summary("Extend the search result with extra results using a direct transit search")
       .description(
         """
-        The direct transit search finds paths using a single transit leg, limited to a specified
-        cost window. It will find paths even if they are not optimal in regard to the criteria in
-        the main raptor search.
+        The direct transit search finds results using a single transit leg, limited to a specified
+        cost relaxation. It will include results even if they are not optimal in regard to the criteria
+        in the main raptor search.
 
         This featue is off by default!
         """
@@ -58,7 +58,7 @@ public class DirectTransitRequestConfig {
           .description(
             """
             The cost for access/egress will be multiplied by this factor. This can be used to limit
-            the amount of walking in the paths.
+            the amount of walking.
             """
           )
           .asDouble(dft.extraAccessEgressCostFactor())
@@ -74,7 +74,7 @@ public class DirectTransitRequestConfig {
             as for the regular search. Setting this to a higher value than what is used for the regular
             search will have have no effect.
 
-            If set to zero, the search won't include paths where access or egress is necessary. In
+            If set to zero, the search won't include results where access or egress is necessary. In
             this case the direct transit search will only be used when searching to and from a stop
             or station.
             """
