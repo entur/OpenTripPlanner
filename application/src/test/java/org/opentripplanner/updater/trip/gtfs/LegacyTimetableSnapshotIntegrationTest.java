@@ -272,7 +272,7 @@ public class LegacyTimetableSnapshotIntegrationTest {
     final Timetable scheduledTimetable = pattern.getScheduledTimetable();
     var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
       scheduledTimetable,
-      new TripUpdate(tripUpdate, feedId, () -> serviceDate),
+      new TripUpdate(feedId, tripUpdate, () -> serviceDate),
       timeZone,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA

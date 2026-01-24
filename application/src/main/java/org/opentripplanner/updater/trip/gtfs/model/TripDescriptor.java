@@ -7,7 +7,6 @@ import java.time.LocalDate;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -20,23 +19,14 @@ public class TripDescriptor {
 
   private final GtfsRealtime.TripDescriptor tripDescriptor;
   private final Supplier<LocalDate> localDateNow;
-  private final FeedScopedId tripId;
   private LocalDate serviceDate;
 
   public TripDescriptor(
     GtfsRealtime.TripDescriptor tripDescriptor,
-    String feedId,
     Supplier<LocalDate> localDateNow
   ) {
     this.tripDescriptor = tripDescriptor;
     this.localDateNow = localDateNow;
-    this.tripId = tripIdOpt()
-      .map(id -> new FeedScopedId(feedId, id))
-      .orElse(null);
-  }
-
-  public FeedScopedId tripId() {
-    return tripId;
   }
 
   public Optional<String> routeId() {
@@ -70,7 +60,7 @@ public class TripDescriptor {
       return Optional.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
     }
 
-    if (tripId == null) {
+    if (tripId().isEmpty()) {
       return Optional.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
     }
     return Optional.empty();
@@ -92,7 +82,7 @@ public class TripDescriptor {
     }
   }
 
-  private Optional<String> tripIdOpt() {
+  Optional<String> tripId() {
     return tripDescriptor.hasTripId()
       ? Optional.of(tripDescriptor.getTripId()).filter(StringUtils::hasValue)
       : Optional.empty();

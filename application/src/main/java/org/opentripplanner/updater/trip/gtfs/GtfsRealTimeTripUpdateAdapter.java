@@ -154,24 +154,23 @@ public class GtfsRealTimeTripUpdateAdapter {
         rawTripUpdate = rawTripUpdate.toBuilder().setTrip(trip).build();
       }
 
-      var tripUpdate = new TripUpdate(rawTripUpdate, feedId, localDateNow);
-      var tripDescriptor = tripUpdate.tripDescriptor();
+      var tripUpdate = new TripUpdate(feedId, rawTripUpdate, localDateNow);
 
-      var error = tripDescriptor.validate();
+      var error = tripUpdate.validate();
       if (error.isPresent()) {
-        results.add(UpdateError.result(tripDescriptor.tripId(), error.get()));
+        results.add(UpdateError.result(tripUpdate.tripId(), error.get()));
         continue;
       }
 
       // Determine what kind of trip update this is
-      var scheduleRelationship = tripDescriptor.scheduleRelationship();
+      var scheduleRelationship = tripUpdate.scheduleRelationship();
       if (updateIncrementality == DIFFERENTIAL) {
         purgePatternModifications(tripUpdate);
       }
 
       if (LOG.isTraceEnabled()) {
         trace(
-          tripDescriptor.tripId(),
+          tripUpdate.tripId(),
           tripUpdate.serviceDate(),
           "trip update #{} ({} updates): {}",
           i,
@@ -180,7 +179,7 @@ public class GtfsRealTimeTripUpdateAdapter {
         );
       } else {
         debug(
-          tripDescriptor.tripId(),
+          tripUpdate.tripId(),
           tripUpdate.serviceDate(),
           "trip update #{} ({} updates)",
           i,
@@ -197,7 +196,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       results.add(result);
 
       if (result.isFailure()) {
-        debug(tripDescriptor.tripId(), tripUpdate.serviceDate(), "Failed to apply TripUpdate.");
+        debug(tripUpdate.tripId(), tripUpdate.serviceDate(), "Failed to apply TripUpdate.");
         if (failuresByRelationship.containsKey(scheduleRelationship)) {
           var c = failuresByRelationship.get(scheduleRelationship);
           failuresByRelationship.put(scheduleRelationship, ++c);
@@ -437,10 +436,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       return UpdateError.result(tripUpdate.tripId(), OUTSIDE_SERVICE_PERIOD);
     }
 
-    var result = new RouteBuilder(transitEditorService).build(
-      tripUpdate.tripId(),
-      tripUpdate.tripDescriptor()
-    );
+    var result = new RouteBuilder(transitEditorService).build(tripUpdate);
 
     // TODO: which Agency ID to use? Currently use feed id.
     var tripBuilder = Trip.of(tripUpdate.tripId())

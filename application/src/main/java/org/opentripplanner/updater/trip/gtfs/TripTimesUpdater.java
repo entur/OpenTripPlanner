@@ -70,7 +70,7 @@ class TripTimesUpdater {
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType
   ) {
-    var tripId = tripUpdate.tripDescriptor().tripId();
+    var tripId = tripUpdate.tripId();
 
     var tripTimes = timetable.getTripTimes(tripId);
     if (tripTimes == null) {

@@ -11,7 +11,7 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
-import org.opentripplanner.updater.trip.gtfs.model.TripDescriptor;
+import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 
 class RouteBuilder {
 
@@ -23,20 +23,21 @@ class RouteBuilder {
     this.transitService = transitService;
   }
 
-  Result build(FeedScopedId tripId, TripDescriptor tripDescriptor) {
-    var optionalRoute = getRoute(tripId.getFeedId(), tripDescriptor);
-    var route = optionalRoute.orElseGet(() -> createRoute(tripDescriptor, tripId));
+  Result build(TripUpdate update) {
+    var optionalRoute = getRoute(update);
+    var route = optionalRoute.orElseGet(() -> createRoute(update));
     return new Result(optionalRoute.isEmpty(), route);
   }
 
-  private Route createRoute(TripDescriptor tripDescriptor, FeedScopedId tripId) {
+  private Route createRoute(TripUpdate update) {
+    var tripId = update.tripId();
     // the route in this update doesn't already exist, but the update contains the information so it will be created
-    var routeId = tripDescriptor.routeId().map(id -> new FeedScopedId(tripId.getFeedId(), id));
+    var routeId = update.routeId();
     return routeId
       .map(id -> {
         var builder = Route.of(id);
 
-        var addedRouteExtension = AddedRoute.ofTripDescriptor(tripDescriptor);
+        var addedRouteExtension = AddedRoute.ofTripDescriptor(update);
 
         var agency = transitService
           .findAgency(new FeedScopedId(tripId.getFeedId(), addedRouteExtension.agencyId()))
@@ -82,9 +83,7 @@ class RouteBuilder {
       .build();
   }
 
-  private Optional<Route> getRoute(String feedId, TripDescriptor tripDescriptor) {
-    return tripDescriptor
-      .routeId()
-      .flatMap(id -> Optional.ofNullable(transitService.getRoute(new FeedScopedId(feedId, id))));
+  private Optional<Route> getRoute(TripUpdate tripUpdate) {
+    return tripUpdate.routeId().flatMap(id -> Optional.ofNullable(transitService.getRoute(id)));
   }
 }

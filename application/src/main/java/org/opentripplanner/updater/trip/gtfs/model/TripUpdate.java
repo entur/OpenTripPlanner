@@ -12,25 +12,28 @@ import java.util.stream.Collectors;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
+import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
 
 /**
  * A real-time update for trip, which may contain updated stop times and trip properties.
  */
 public final class TripUpdate {
 
+  private final String feedId;
   private final com.google.transit.realtime.GtfsRealtime.TripUpdate tripUpdate;
   private final TripDescriptor tripDescriptor;
 
   public TripUpdate(
-    GtfsRealtime.TripUpdate tripUpdate,
     String feedId,
+    GtfsRealtime.TripUpdate tripUpdate,
     Supplier<LocalDate> localDateNow
   ) {
+    this.feedId = feedId;
     this.tripUpdate = tripUpdate;
-    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), feedId, localDateNow);
+    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), localDateNow);
   }
 
-  public TripDescriptor tripDescriptor() {
+  public TripDescriptor descriptor() {
     return tripDescriptor;
   }
 
@@ -71,7 +74,18 @@ public final class TripUpdate {
   }
 
   public FeedScopedId tripId() {
-    return tripDescriptor.tripId();
+    return tripDescriptor
+      .tripId()
+      .map(id -> new FeedScopedId(feedId, id))
+      .orElse(null);
+  }
+
+  public Optional<UpdateErrorType> validate() {
+    return tripDescriptor.validate();
+  }
+
+  public Optional<FeedScopedId> routeId() {
+    return tripDescriptor.routeId().map(id -> new FeedScopedId(feedId, id));
   }
 
   private Optional<GtfsRealtime.TripUpdate.TripProperties> tripProperties() {
