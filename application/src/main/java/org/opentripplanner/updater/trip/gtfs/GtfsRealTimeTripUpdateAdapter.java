@@ -12,7 +12,6 @@ import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_A
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_NOT_FOUND;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
-import static org.opentripplanner.updater.trip.gtfs.TripTimesUpdater.getWheelchairAccessibility;
 
 import com.google.common.collect.Multimaps;
 import com.google.transit.realtime.GtfsRealtime;
@@ -29,18 +28,12 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.gtfs.mapping.TransitModeMapper;
-import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
@@ -60,7 +53,6 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
@@ -447,22 +439,16 @@ public class GtfsRealTimeTripUpdateAdapter {
       debug(tripId, serviceDate, "Graph already contains trip id of NEW trip, skipping.");
       return UpdateError.result(tripId, TRIP_ALREADY_EXISTS);
     }
-
-    // Create new Trip
-    var tripDescriptor = tripUpdate.tripDescriptor();
-
-    var optionalRoute = getRoute(tripId.getFeedId(), tripDescriptor);
-    var route = optionalRoute.orElseGet(() -> createRoute(tripDescriptor, tripId));
-
-    // TODO: which Agency ID to use? Currently use feed id.
-    var tripBuilder = Trip.of(tripId).withRoute(route);
-
     // get service ID running only on this service date
     var serviceId = transitEditorService.getOrCreateServiceIdForDate(serviceDate);
     if (serviceId == null) {
       return UpdateError.result(tripId, OUTSIDE_SERVICE_PERIOD);
     }
-    tripBuilder.withServiceId(serviceId);
+
+    var result = new RouteBuilder(transitEditorService).build(tripId, tripUpdate.tripDescriptor());
+
+    // TODO: which Agency ID to use? Currently use feed id.
+    var tripBuilder = Trip.of(tripId).withRoute(result.route()).withServiceId(serviceId);
 
     tripUpdate.tripHeadsign().ifPresent(tripBuilder::withHeadsign);
     tripUpdate.tripShortName().ifPresent(tripBuilder::withShortName);
@@ -474,7 +460,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       tripUpdate,
       serviceDate,
       RealTimeState.ADDED,
-      optionalRoute.isEmpty()
+      result.newRouteCreated()
     );
   }
 
@@ -503,9 +489,7 @@ public class GtfsRealTimeTripUpdateAdapter {
                 stopId
               );
             }
-            return stop == null
-              ? Optional.empty()
-              : Optional.of(new StopAndStopTimeUpdate(stop, st));
+            return Optional.ofNullable(stop).map(s -> new StopAndStopTimeUpdate(s, st));
           })
           .stream()
       )
@@ -546,12 +530,11 @@ public class GtfsRealTimeTripUpdateAdapter {
 
     var result = TripTimesUpdater.createNewTripTimesFromGtfsRt(
       trip,
-      getWheelchairAccessibility(tripUpdate).orElse(null),
+      tripUpdate,
       stopAndStopTimeUpdates,
       timeZone,
       serviceDate,
       realTimeState,
-      tripUpdate.tripHeadsign().orElse(null),
       deduplicator,
       transitEditorService.getServiceCode(trip.getServiceId())
     );
@@ -566,73 +549,6 @@ public class GtfsRealTimeTripUpdateAdapter {
         )
       )
       .mapSuccess(s -> s.addWarnings(warnings));
-  }
-
-  private Route createRoute(
-    org.opentripplanner.updater.trip.gtfs.model.TripDescriptor tripDescriptor,
-    FeedScopedId tripId
-  ) {
-    // the route in this update doesn't already exist, but the update contains the information so it will be created
-    var routeId = tripDescriptor.routeId().map(id -> new FeedScopedId(tripId.getFeedId(), id));
-    return routeId
-      .map(id -> {
-        var builder = Route.of(id);
-
-        var addedRouteExtension = AddedRoute.ofTripDescriptor(tripDescriptor);
-
-        var agency = transitEditorService
-          .findAgency(new FeedScopedId(tripId.getFeedId(), addedRouteExtension.agencyId()))
-          .orElseGet(() -> fallbackAgency(tripId.getFeedId()));
-
-        builder.withAgency(agency);
-
-        builder.withGtfsType(addedRouteExtension.routeType());
-        var mode = TransitModeMapper.mapMode(addedRouteExtension.routeType());
-        builder.withMode(mode);
-
-        // Create route name
-        var name = Objects.requireNonNullElse(
-          addedRouteExtension.routeLongName(),
-          tripId.toString()
-        );
-        builder.withLongName(new NonLocalizedString(name));
-        builder.withUrl(addedRouteExtension.routeUrl());
-        return builder.build();
-      })
-      .orElseGet(() -> {
-        var builder = Route.of(tripId);
-
-        builder.withAgency(fallbackAgency(tripId.getFeedId()));
-        // Guess the route type as it doesn't exist yet in the specifications
-        // Bus. Used for short- and long-distance bus routes.
-        builder.withGtfsType(3);
-        builder.withMode(TransitMode.BUS);
-        // Create route name
-        I18NString longName = NonLocalizedString.ofNullable(tripId.getId());
-        builder.withLongName(longName);
-        return builder.build();
-      });
-  }
-
-  /**
-   * Create dummy agency for added trips.
-   */
-  private Agency fallbackAgency(String feedId) {
-    return Agency.of(new FeedScopedId(feedId, "autogenerated-gtfs-rt-added-route"))
-      .withName("Agency automatically added by GTFS-RT update")
-      .withTimezone(transitEditorService.getTimeZone().toString())
-      .build();
-  }
-
-  private Optional<Route> getRoute(
-    String feedId,
-    org.opentripplanner.updater.trip.gtfs.model.TripDescriptor tripDescriptor
-  ) {
-    return tripDescriptor
-      .routeId()
-      .flatMap(id ->
-        Optional.ofNullable(transitEditorService.getRoute(new FeedScopedId(feedId, id)))
-      );
   }
 
   /**
@@ -815,7 +731,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   ) {
     var canceledPreviouslyAddedTrip =
       incrementality != FULL_DATASET &&
-      cancelPreviouslyAddedTrip(tripId, serviceDate, cancelationType);
+        cancelPreviouslyAddedTrip(tripId, serviceDate, cancelationType);
 
     // if previously an added trip was removed, there can't be a scheduled trip to remove
     if (canceledPreviouslyAddedTrip) {

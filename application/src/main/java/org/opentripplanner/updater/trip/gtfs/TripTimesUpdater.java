@@ -16,14 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.OptionalInt;
-import javax.annotation.Nullable;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
@@ -216,7 +212,7 @@ class TripTimesUpdater {
       LOG.debug("Propagated delay from stop index {} backwards on trip {}.", index, tripId)
     );
 
-    getWheelchairAccessibility(tripUpdate).ifPresent(builder::withWheelchairAccessibility);
+    tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
 
     // Make sure that updated trip times have the correct real time state
     builder.withRealTimeState(RealTimeState.UPDATED);
@@ -240,19 +236,18 @@ class TripTimesUpdater {
    * Add a new or replacement trip to the snapshot
    *
    * @param trip              trip
-   * @param wheelchairAccessibility accessibility information of the vehicle
+   * @param tripUpdate        information about the trip
    * @param serviceDate       service date of trip
    * @param realTimeState     real-time state of new trip
    * @return empty Result if successful or one containing an error
    */
   public static Result<TripTimesWithStopPattern, UpdateError> createNewTripTimesFromGtfsRt(
     Trip trip,
-    @Nullable Accessibility wheelchairAccessibility,
+    TripUpdate tripUpdate,
     List<StopAndStopTimeUpdate> stopAndStopTimeUpdates,
     ZoneId timeZone,
     LocalDate serviceDate,
     RealTimeState realTimeState,
-    @Nullable I18NString tripHeadsign,
     DeduplicatorService deduplicator,
     int serviceCode
   ) {
@@ -267,7 +262,6 @@ class TripTimesUpdater {
     var lastStopSequence = -1;
     for (final StopAndStopTimeUpdate item : stopAndStopTimeUpdates) {
       final var update = item.stopTimeUpdate();
-      final var stop = item.stop();
 
       // validate stop sequence
       OptionalInt stopSequence = update.stopSequence();
@@ -297,7 +291,7 @@ class TripTimesUpdater {
       // Create stop time
       final StopTime stopTime = new StopTime();
       stopTime.setTrip(trip);
-      stopTime.setStop(stop);
+      stopTime.setStop(item.stop());
       // Set arrival time
       final var arrival = update.scheduledArrivalTimeWithRealTimeFallback();
       if (arrival.isPresent()) {
@@ -344,9 +338,6 @@ class TripTimesUpdater {
       stopTimes,
       deduplicator
     ).createRealTimeFromScheduledTimes();
-    if (tripHeadsign != null) {
-      builder.withTripHeadsign(tripHeadsign);
-    }
 
     // Update all times to mark trip times as realtime
     for (int stopIndex = 0; stopIndex < builder.numberOfStops(); stopIndex++) {
@@ -366,14 +357,10 @@ class TripTimesUpdater {
     }
 
     // Set service code of new trip times
-    builder.withServiceCode(serviceCode);
+    builder.withServiceCode(serviceCode).withRealTimeState(realTimeState);
 
-    // Make sure that updated trip times have the correct real time state
-    builder.withRealTimeState(realTimeState);
-
-    if (wheelchairAccessibility != null) {
-      builder.withWheelchairAccessibility(wheelchairAccessibility);
-    }
+    tripUpdate.tripHeadsign().ifPresent(builder::withTripHeadsign);
+    tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
 
     RealTimeTripTimes tripTimes = builder.build();
 
@@ -402,15 +389,5 @@ class TripTimesUpdater {
       () ->
         departureDelay.ifPresent(delay -> builder.withDepartureDelay(stopPositionInPattern, delay))
     );
-  }
-
-  static Optional<Accessibility> getWheelchairAccessibility(TripUpdate tripUpdate) {
-    return tripUpdate
-      .vehicle()
-      .flatMap(vehicleDescriptor ->
-        vehicleDescriptor.hasWheelchairAccessible()
-          ? GtfsRealtimeMapper.mapWheelchairAccessible(vehicleDescriptor.getWheelchairAccessible())
-          : Optional.empty()
-      );
   }
 }

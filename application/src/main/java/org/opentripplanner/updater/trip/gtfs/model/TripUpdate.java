@@ -1,10 +1,13 @@
 package org.opentripplanner.updater.trip.gtfs.model;
 
+import static org.opentripplanner.updater.trip.gtfs.model.GtfsRealtimeMapper.mapWheelchairAccessible;
+
 import com.google.transit.realtime.GtfsRealtime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.transit.model.basic.Accessibility;
 
 /**
  * A real-time update for trip, which may contain updated stop times and trip properties.
@@ -31,15 +34,23 @@ public final class TripUpdate {
   }
 
   public Optional<I18NString> tripHeadsign() {
-    return tripProperties().flatMap(p ->
-      p.hasTripHeadsign() ? Optional.of(I18NString.of(p.getTripHeadsign())) : Optional.empty()
-    );
+    return tripProperties()
+      .filter(p -> p.hasTripHeadsign())
+      .map(p -> I18NString.of(p.getTripHeadsign()));
   }
 
   public Optional<String> tripShortName() {
-    return tripProperties().flatMap(p ->
-      p.hasTripShortName() ? Optional.of(p.getTripShortName()) : Optional.empty()
-    );
+    return tripProperties()
+      .filter(p -> p.hasTripShortName())
+      .map(p -> p.getTripShortName());
+  }
+
+  public Optional<Accessibility> wheelchairAccessibility() {
+    return vehicle()
+      .filter(d -> d.hasWheelchairAccessible())
+      .flatMap(vehicleDescriptor ->
+        mapWheelchairAccessible(vehicleDescriptor.getWheelchairAccessible())
+      );
   }
 
   private Optional<GtfsRealtime.TripUpdate.TripProperties> tripProperties() {
