@@ -401,6 +401,11 @@ public class TripUpdateBuilder {
     return this;
   }
 
+  public TripUpdateBuilder withServiceDate(String s) {
+    tripDescriptorBuilder.setStartDate(s);
+    return this;
+  }
+
   private TripUpdateBuilder addStopTime(
     @Nullable String stopId,
     @Nullable String arrivalTime,

@@ -6,6 +6,8 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
+import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.opentripplanner.utils.time.TimeUtils;
@@ -16,9 +18,15 @@ import org.opentripplanner.utils.time.TimeUtils;
 public class TripDescriptor {
 
   private final GtfsRealtime.TripDescriptor tripDescriptor;
+  private final Supplier<LocalDate> localDateNow;
+  private LocalDate serviceDate;
 
-  public TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor) {
+  public TripDescriptor(
+    GtfsRealtime.TripDescriptor tripDescriptor,
+    Supplier<LocalDate> localDateNow
+  ) {
     this.tripDescriptor = tripDescriptor;
+    this.localDateNow = localDateNow;
   }
 
   public Optional<String> tripId() {
@@ -49,6 +57,31 @@ public class TripDescriptor {
     return tripDescriptor.hasScheduleRelationship()
       ? tripDescriptor.getScheduleRelationship()
       : ScheduleRelationship.SCHEDULED;
+  }
+
+  public Optional<UpdateErrorType> validate() {
+    try {
+      startDate();
+    } catch (ParseException e) {
+      return Optional.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
+    }
+    return Optional.empty();
+  }
+
+  LocalDate serviceDate() {
+    if (serviceDate != null) {
+      return serviceDate;
+    }
+    try {
+      // TODO: figure out the correct service date. For the special case that a trip
+      // starts for example at 40:00, yesterday would probably be a better guess.
+      serviceDate = startDate().orElse(localDateNow.get());
+      return serviceDate;
+    } catch (ParseException e) {
+      throw new RuntimeException(
+        "TripDescription does not have a valid startDate: call validate() first."
+      );
+    }
   }
 
   GtfsRealtime.TripDescriptor original() {

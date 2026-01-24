@@ -16,7 +16,6 @@ import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET
 import com.google.common.collect.Multimaps;
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -156,7 +155,7 @@ public class GtfsRealTimeTripUpdateAdapter {
         rawTripUpdate = rawTripUpdate.toBuilder().setTrip(trip).build();
       }
 
-      var tripUpdate = new TripUpdate(rawTripUpdate);
+      var tripUpdate = new TripUpdate(rawTripUpdate, localDateNow);
       var tripDescriptor = tripUpdate.tripDescriptor();
 
       tripDescriptor
@@ -164,77 +163,48 @@ public class GtfsRealTimeTripUpdateAdapter {
         .map(id -> new FeedScopedId(feedId, id))
         .ifPresentOrElse(
           tripId -> {
-            LocalDate serviceDate;
-            try {
-              // TODO: figure out the correct service date. For the special case that a trip
-              // starts for example at 40:00, yesterday would probably be a better guess.
-              serviceDate = tripDescriptor.startDate().orElse(localDateNow.get());
-            } catch (ParseException e) {
-              debug(
-                tripId,
-                null,
-                "Failed to parse start date in gtfs-rt trip update: {}",
-                e.getMessage()
-              );
+            var error = tripDescriptor.validate();
+            if (error.isPresent()) {
+              results.add(UpdateError.result(tripId, error.get()));
               return;
             }
+
             // Determine what kind of trip update this is
             var scheduleRelationship = tripDescriptor.scheduleRelationship();
             if (updateIncrementality == DIFFERENTIAL) {
-              purgePatternModifications(scheduleRelationship, tripId, serviceDate);
+              purgePatternModifications(scheduleRelationship, tripId, tripUpdate.serviceDate());
             }
 
             if (LOG.isTraceEnabled()) {
               trace(
                 tripId,
-                serviceDate,
+                tripUpdate.serviceDate(),
                 "trip update #{} ({} updates): {}",
                 uIndex,
                 updates.size(),
                 tripUpdate
               );
             } else {
-              debug(tripId, serviceDate, "trip update #{} ({} updates)", uIndex, updates.size());
+              debug(
+                tripId,
+                tripUpdate.serviceDate(),
+                "trip update #{} ({} updates)",
+                uIndex,
+                updates.size()
+              );
             }
 
-            Result<UpdateSuccess, UpdateError> result;
-            try {
-              result = switch (scheduleRelationship) {
-                case SCHEDULED -> handleScheduledTrip(
-                  tripUpdate,
-                  tripId,
-                  serviceDate,
-                  forwardsDelayPropagationType,
-                  backwardsDelayPropagationType
-                );
-                case NEW, ADDED -> validateAndHandleNewTrip(tripUpdate, tripId, serviceDate);
-                case CANCELED -> handleCanceledTrip(
-                  tripId,
-                  serviceDate,
-                  CancelationType.CANCEL,
-                  updateIncrementality
-                );
-                case DELETED -> handleCanceledTrip(
-                  tripId,
-                  serviceDate,
-                  CancelationType.DELETE,
-                  updateIncrementality
-                );
-                case REPLACEMENT -> validateAndHandleReplacementTrip(
-                  tripUpdate,
-                  tripId,
-                  serviceDate
-                );
-                case UNSCHEDULED -> UpdateError.result(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
-                case DUPLICATED -> UpdateError.result(tripId, NOT_IMPLEMENTED_DUPLICATED);
-              };
-            } catch (DataValidationException e) {
-              result = DataValidationExceptionMapper.toResult(e);
-            }
-
+            var result = applyUpdate(
+              forwardsDelayPropagationType,
+              backwardsDelayPropagationType,
+              updateIncrementality,
+              tripId,
+              tripUpdate
+            );
             results.add(result);
+
             if (result.isFailure()) {
-              debug(tripId, serviceDate, "Failed to apply TripUpdate.");
+              debug(tripId, tripUpdate.serviceDate(), "Failed to apply TripUpdate.");
               if (failuresByRelationship.containsKey(scheduleRelationship)) {
                 var c = failuresByRelationship.get(scheduleRelationship);
                 failuresByRelationship.put(scheduleRelationship, ++c);
@@ -256,6 +226,45 @@ public class GtfsRealTimeTripUpdateAdapter {
       logUpdateResult(feedId, failuresByRelationship, updateResult);
     }
     return updateResult;
+  }
+
+  private Result<UpdateSuccess, UpdateError> applyUpdate(
+    ForwardsDelayPropagationType forwardsDelayPropagationType,
+    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    UpdateIncrementality updateIncrementality,
+    FeedScopedId tripId,
+    TripUpdate tripUpdate
+  ) {
+    Result<UpdateSuccess, UpdateError> result;
+    try {
+      result = switch (tripUpdate.scheduleRelationship()) {
+        case SCHEDULED -> handleScheduledTrip(
+          tripUpdate,
+          tripId,
+          forwardsDelayPropagationType,
+          backwardsDelayPropagationType
+        );
+        case NEW, ADDED -> validateAndHandleNewTrip(tripUpdate, tripId);
+        case CANCELED -> handleCanceledTrip(
+          tripId,
+          tripUpdate.serviceDate(),
+          CancelationType.CANCEL,
+          updateIncrementality
+        );
+        case DELETED -> handleCanceledTrip(
+          tripId,
+          tripUpdate.serviceDate(),
+          CancelationType.DELETE,
+          updateIncrementality
+        );
+        case REPLACEMENT -> validateAndHandleReplacementTrip(tripUpdate, tripId);
+        case UNSCHEDULED -> UpdateError.result(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
+        case DUPLICATED -> UpdateError.result(tripId, NOT_IMPLEMENTED_DUPLICATED);
+      };
+    } catch (DataValidationException e) {
+      result = DataValidationExceptionMapper.toResult(e);
+    }
+    return result;
   }
 
   /**
@@ -327,12 +336,12 @@ public class GtfsRealTimeTripUpdateAdapter {
   private Result<UpdateSuccess, UpdateError> handleScheduledTrip(
     TripUpdate tripUpdate,
     FeedScopedId tripId,
-    LocalDate serviceDate,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType
   ) {
     final TripPattern pattern = getPatternForTripId(tripId);
 
+    var serviceDate = tripUpdate.serviceDate();
     if (pattern == null) {
       debug(tripId, serviceDate, "No pattern found for tripId, skipping TripUpdate.");
       return UpdateError.result(tripId, TRIP_NOT_FOUND);
@@ -431,16 +440,19 @@ public class GtfsRealTimeTripUpdateAdapter {
    */
   private Result<UpdateSuccess, UpdateError> validateAndHandleNewTrip(
     final TripUpdate tripUpdate,
-    final FeedScopedId tripId,
-    final LocalDate serviceDate
+    final FeedScopedId tripId
   ) {
     // Check whether trip id already exists in graph
     if (transitEditorService.getScheduledTrip(tripId) != null) {
-      debug(tripId, serviceDate, "Graph already contains trip id of NEW trip, skipping.");
+      debug(
+        tripId,
+        tripUpdate.serviceDate(),
+        "Graph already contains trip id of NEW trip, skipping."
+      );
       return UpdateError.result(tripId, TRIP_ALREADY_EXISTS);
     }
     // get service ID running only on this service date
-    var serviceId = transitEditorService.getOrCreateServiceIdForDate(serviceDate);
+    var serviceId = transitEditorService.getOrCreateServiceIdForDate(tripUpdate.serviceDate());
     if (serviceId == null) {
       return UpdateError.result(tripId, OUTSIDE_SERVICE_PERIOD);
     }
@@ -458,7 +470,6 @@ public class GtfsRealTimeTripUpdateAdapter {
     return handleNewOrReplacementTrip(
       trip,
       tripUpdate,
-      serviceDate,
       RealTimeState.ADDED,
       result.newRouteCreated()
     );
@@ -499,18 +510,20 @@ public class GtfsRealTimeTripUpdateAdapter {
   /**
    * Handle GTFS-RT TripUpdate message containing an NEW or REPLACEMENT trip.
    *
-   * @param serviceDate     service date for added trip
    * @return empty Result if successful or one containing an error
    */
   private Result<UpdateSuccess, UpdateError> handleNewOrReplacementTrip(
     Trip trip,
     TripUpdate tripUpdate,
-    LocalDate serviceDate,
     RealTimeState realTimeState,
     boolean hasANewRouteBeenCreated
   ) {
     FeedScopedId tripId = trip.getId();
-    var stopAndStopTimeUpdates = matchStopsToStopTimeUpdates(tripUpdate, tripId, serviceDate);
+    var stopAndStopTimeUpdates = matchStopsToStopTimeUpdates(
+      tripUpdate,
+      tripId,
+      tripUpdate.serviceDate()
+    );
 
     var warnings = new ArrayList<UpdateSuccess.WarningType>(0);
 
@@ -522,7 +535,7 @@ public class GtfsRealTimeTripUpdateAdapter {
     if (stopAndStopTimeUpdates.size() < 2) {
       debug(
         tripId,
-        serviceDate,
+        tripUpdate.serviceDate(),
         "NEW or REPLACEMENT trip has fewer than two known stops, skipping."
       );
       return UpdateError.result(tripId, TOO_FEW_STOPS);
@@ -533,7 +546,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       tripUpdate,
       stopAndStopTimeUpdates,
       timeZone,
-      serviceDate,
+      tripUpdate.serviceDate(),
       realTimeState,
       deduplicator,
       transitEditorService.getServiceCode(trip.getServiceId())
@@ -543,7 +556,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       .flatMap(value ->
         addNewOrReplacementTripToSnapshot(
           value,
-          serviceDate,
+          tripUpdate.serviceDate(),
           realTimeState,
           hasANewRouteBeenCreated
         )
@@ -692,35 +705,37 @@ public class GtfsRealTimeTripUpdateAdapter {
    */
   private Result<UpdateSuccess, UpdateError> validateAndHandleReplacementTrip(
     final TripUpdate tripUpdate,
-    final FeedScopedId tripId,
-    final LocalDate serviceDate
+    final FeedScopedId tripId
   ) {
     Objects.requireNonNull(tripUpdate);
-    Objects.requireNonNull(serviceDate);
 
     // Check whether trip id already exists in graph
     Trip trip = transitEditorService.getTrip(tripId);
 
     if (trip == null) {
-      debug(tripId, serviceDate, "Feed does not contain trip id of REPLACEMENT trip, skipping.");
+      debug(
+        tripId,
+        tripUpdate.serviceDate(),
+        "Feed does not contain trip id of REPLACEMENT trip, skipping."
+      );
       return UpdateError.result(tripId, TRIP_NOT_FOUND);
     }
 
     // Check whether service date is served by trip
     final Set<FeedScopedId> serviceIds = transitEditorService
       .getCalendarService()
-      .getServiceIdsOnDate(serviceDate);
+      .getServiceIdsOnDate(tripUpdate.serviceDate());
     if (!serviceIds.contains(trip.getServiceId())) {
       // TODO: should we support this and change service id of trip?
       debug(
         tripId,
-        serviceDate,
+        tripUpdate.serviceDate(),
         "REPLACEMENT trip has a service date that is not served by trip, skipping."
       );
       return UpdateError.result(tripId, NO_SERVICE_ON_DATE);
     }
 
-    return handleNewOrReplacementTrip(trip, tripUpdate, serviceDate, RealTimeState.MODIFIED, false);
+    return handleNewOrReplacementTrip(trip, tripUpdate, RealTimeState.MODIFIED, false);
   }
 
   private Result<UpdateSuccess, UpdateError> handleCanceledTrip(
@@ -731,7 +746,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   ) {
     var canceledPreviouslyAddedTrip =
       incrementality != FULL_DATASET &&
-        cancelPreviouslyAddedTrip(tripId, serviceDate, cancelationType);
+      cancelPreviouslyAddedTrip(tripId, serviceDate, cancelationType);
 
     // if previously an added trip was removed, there can't be a scheduled trip to remove
     if (canceledPreviouslyAddedTrip) {

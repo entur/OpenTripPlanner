@@ -3,8 +3,11 @@ package org.opentripplanner.updater.trip.gtfs.model;
 import static org.opentripplanner.updater.trip.gtfs.model.GtfsRealtimeMapper.mapWheelchairAccessible;
 
 import com.google.transit.realtime.GtfsRealtime;
+import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -15,14 +18,15 @@ import org.opentripplanner.transit.model.basic.Accessibility;
 public final class TripUpdate {
 
   private final com.google.transit.realtime.GtfsRealtime.TripUpdate tripUpdate;
+  private final TripDescriptor tripDescriptor;
 
-  public TripUpdate(com.google.transit.realtime.GtfsRealtime.TripUpdate tripUpdate) {
+  public TripUpdate(GtfsRealtime.TripUpdate tripUpdate, Supplier<LocalDate> localDateNow) {
     this.tripUpdate = tripUpdate;
+    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), localDateNow);
   }
 
   public TripDescriptor tripDescriptor() {
-    // this field is required, so no check is done
-    return new TripDescriptor(tripUpdate.getTrip());
+    return tripDescriptor;
   }
 
   public List<StopTimeUpdate> stopTimeUpdates() {
@@ -51,6 +55,14 @@ public final class TripUpdate {
       .flatMap(vehicleDescriptor ->
         mapWheelchairAccessible(vehicleDescriptor.getWheelchairAccessible())
       );
+  }
+
+  public LocalDate serviceDate() {
+    return tripDescriptor.serviceDate();
+  }
+
+  public ScheduleRelationship scheduleRelationship() {
+    return tripDescriptor.scheduleRelationship();
   }
 
   private Optional<GtfsRealtime.TripUpdate.TripProperties> tripProperties() {
