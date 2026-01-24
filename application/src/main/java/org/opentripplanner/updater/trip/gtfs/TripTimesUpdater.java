@@ -4,11 +4,9 @@ import static org.opentripplanner.transit.model.framework.Result.success;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_ARRIVAL_TIME;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_DEPARTURE_TIME;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_NOT_FOUND;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN;
 
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate.ScheduleRelationship;
-import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.OptionalInt;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.DataValidationException;
@@ -59,7 +56,6 @@ class TripTimesUpdater {
    *
    * @param tripUpdate                    GTFS-RT trip update
    * @param timeZone                      time zone of trip update
-   * @param updateServiceDate             service date of trip update
    * @param backwardsDelayPropagationType Defines when delays are propagated to previous stops and
    *                                      if these stops are given the NO_DATA flag
    * @return {@link Result < TripTimesPatch ,    UpdateError   >} contains either a new copy of updated
@@ -71,24 +67,15 @@ class TripTimesUpdater {
     Timetable timetable,
     TripUpdate tripUpdate,
     ZoneId timeZone,
-    LocalDate updateServiceDate,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType
   ) {
-    var optionalTripId = tripUpdate.tripDescriptor().tripId();
-    if (optionalTripId.isEmpty()) {
-      // I don't think it should happen here as an empty trip id was already rejected in the adapter
-      LOG.debug("TripDescriptor object has no TripId field");
-      return Result.failure(UpdateError.noTripId(TRIP_NOT_FOUND));
-    }
-    var tripId = optionalTripId.get();
+    var tripId = tripUpdate.tripDescriptor().tripId();
 
-    var feedScopedTripId = new FeedScopedId(timetable.getPattern().getFeedId(), tripId);
-
-    var tripTimes = timetable.getTripTimes(feedScopedTripId);
+    var tripTimes = timetable.getTripTimes(tripId);
     if (tripTimes == null) {
       LOG.debug("tripId {} not found in pattern.", tripId);
-      return Result.failure(new UpdateError(feedScopedTripId, TRIP_NOT_FOUND_IN_PATTERN));
+      return Result.failure(new UpdateError(tripId, TRIP_NOT_FOUND_IN_PATTERN));
     } else {
       LOG.trace("tripId {} found in timetable.", tripId);
     }
@@ -113,7 +100,7 @@ class TripTimesUpdater {
     int numStops = tripTimes.getNumStops();
 
     final long today = ServiceDateUtils.asStartOfService(
-      updateServiceDate,
+      tripUpdate.serviceDate(),
       timeZone
     ).toEpochSecond();
 
@@ -169,7 +156,7 @@ class TripTimesUpdater {
               i,
               tripId
             );
-            return Result.failure(new UpdateError(feedScopedTripId, INVALID_ARRIVAL_TIME, i));
+            return Result.failure(new UpdateError(tripId, INVALID_ARRIVAL_TIME, i));
           }
           if (!update.isDepartureValid()) {
             LOG.debug(
@@ -177,7 +164,7 @@ class TripTimesUpdater {
               i,
               tripId
             );
-            return Result.failure(new UpdateError(feedScopedTripId, INVALID_DEPARTURE_TIME, i));
+            return Result.failure(new UpdateError(tripId, INVALID_DEPARTURE_TIME, i));
           }
           setArrivalAndDeparture(builder, i, update, today);
         }
@@ -194,7 +181,7 @@ class TripTimesUpdater {
         "Part of a TripUpdate object could not be applied successfully to trip {}.",
         tripId
       );
-      return Result.failure(new UpdateError(feedScopedTripId, INVALID_STOP_SEQUENCE));
+      return Result.failure(new UpdateError(tripId, INVALID_STOP_SEQUENCE));
     }
 
     // Interpolate missing times for stops which don't have times associated. Note: Currently for
@@ -237,7 +224,6 @@ class TripTimesUpdater {
    *
    * @param trip              trip
    * @param tripUpdate        information about the trip
-   * @param serviceDate       service date of trip
    * @param realTimeState     real-time state of new trip
    * @return empty Result if successful or one containing an error
    */
@@ -246,14 +232,13 @@ class TripTimesUpdater {
     TripUpdate tripUpdate,
     List<StopAndStopTimeUpdate> stopAndStopTimeUpdates,
     ZoneId timeZone,
-    LocalDate serviceDate,
     RealTimeState realTimeState,
     DeduplicatorService deduplicator,
     int serviceCode
   ) {
     // Calculate seconds since epoch on GTFS midnight (noon minus 12h) of service date
     final long midnightSecondsSinceEpoch = ServiceDateUtils.asStartOfService(
-      serviceDate,
+      tripUpdate.serviceDate(),
       timeZone
     ).toEpochSecond();
 
@@ -272,7 +257,7 @@ class TripTimesUpdater {
             "{} trip {} on {} contains negative stop sequence, skipping.",
             realTimeState,
             trip.getId(),
-            serviceDate
+            tripUpdate.serviceDate()
           );
           return UpdateError.result(trip.getId(), INVALID_STOP_SEQUENCE);
         }
@@ -281,7 +266,7 @@ class TripTimesUpdater {
             "{} trip {} on {} contains decreasing stop sequence, skipping.",
             realTimeState,
             trip.getId(),
-            serviceDate
+            tripUpdate.serviceDate()
           );
           return UpdateError.result(trip.getId(), INVALID_STOP_SEQUENCE);
         }
@@ -301,7 +286,7 @@ class TripTimesUpdater {
             "NEW trip {} on {} has invalid arrival time (compared to start date in " +
               "TripDescriptor), skipping.",
             trip.getId(),
-            serviceDate
+            tripUpdate.serviceDate()
           );
           return UpdateError.result(trip.getId(), INVALID_ARRIVAL_TIME);
         }
@@ -316,7 +301,7 @@ class TripTimesUpdater {
             "NEW trip {} on {} has invalid departure time (compared to start date in " +
               "TripDescriptor), skipping.",
             trip.getId(),
-            serviceDate
+            tripUpdate.serviceDate()
           );
           return UpdateError.result(trip.getId(), INVALID_DEPARTURE_TIME);
         }

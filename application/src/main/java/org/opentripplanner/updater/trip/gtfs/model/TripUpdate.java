@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
 
 /**
@@ -20,9 +21,13 @@ public final class TripUpdate {
   private final com.google.transit.realtime.GtfsRealtime.TripUpdate tripUpdate;
   private final TripDescriptor tripDescriptor;
 
-  public TripUpdate(GtfsRealtime.TripUpdate tripUpdate, Supplier<LocalDate> localDateNow) {
+  public TripUpdate(
+    GtfsRealtime.TripUpdate tripUpdate,
+    String feedId,
+    Supplier<LocalDate> localDateNow
+  ) {
     this.tripUpdate = tripUpdate;
-    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), localDateNow);
+    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), feedId, localDateNow);
   }
 
   public TripDescriptor tripDescriptor() {
@@ -63,6 +68,10 @@ public final class TripUpdate {
 
   public ScheduleRelationship scheduleRelationship() {
     return tripDescriptor.scheduleRelationship();
+  }
+
+  public FeedScopedId tripId() {
+    return tripDescriptor.tripId();
   }
 
   private Optional<GtfsRealtime.TripUpdate.TripProperties> tripProperties() {

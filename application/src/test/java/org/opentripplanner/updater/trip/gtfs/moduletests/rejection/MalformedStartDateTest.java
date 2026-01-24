@@ -21,7 +21,7 @@ class MalformedStartDateTest implements RealtimeTestConstants {
   private final RegularStop stopB = envBuilder.stop(STOP_B_ID);
 
   @Test
-  void invalidTripDate() {
+  void malformedStartDate() {
     var tripInput = TripInput.of(TRIP_1_ID)
       .addStop(stopA, "0:00:10", "0:00:11")
       .addStop(stopB, "0:00:20", "0:00:21");
