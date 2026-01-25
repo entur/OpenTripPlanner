@@ -31,6 +31,7 @@ import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
+import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Timetable;
@@ -44,6 +45,10 @@ import org.opentripplanner.utils.time.TimeUtils;
 public class TripTimesUpdaterTest {
 
   private static final ZoneId TIME_ZONE = ZoneIds.NEW_YORK;
+  public static final TripTimesUpdater TRIP_TIMES_UPDATER = new TripTimesUpdater(
+    TIME_ZONE,
+    new Deduplicator()
+  );
   private static final LocalDate SERVICE_DATE = LocalDate.of(2009, 8, 7);
   private static final Supplier<LocalDate> NOW = () -> SERVICE_DATE;
 
@@ -79,10 +84,9 @@ public class TripTimesUpdaterTest {
       .addNoDataStop(0)
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -101,10 +105,9 @@ public class TripTimesUpdaterTest {
       .addSkippedStop(0)
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -120,10 +123,9 @@ public class TripTimesUpdaterTest {
       .addStopTimeWithArrivalAndDeparture(2, "00:10:01", "00:10:00")
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -150,10 +152,9 @@ public class TripTimesUpdaterTest {
       .addStopTime(1, "00:02:00")
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -184,10 +185,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -218,10 +218,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -252,10 +251,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -286,10 +284,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -329,10 +326,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -351,10 +347,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.NONE,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -372,10 +367,9 @@ public class TripTimesUpdaterTest {
       .addDelayedStopTime(3, 35, 40)
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.NONE,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -401,10 +395,9 @@ public class TripTimesUpdaterTest {
       .addNoDataStop(3)
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -457,10 +450,9 @@ public class TripTimesUpdaterTest {
       .addDelayedStopTime(3, 0)
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -518,10 +510,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -560,10 +551,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.ALWAYS
     );
@@ -598,10 +588,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.ALWAYS
     );
@@ -631,10 +620,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.NONE
     );
@@ -660,10 +648,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.NONE
     );
@@ -686,10 +673,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -726,10 +712,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -772,10 +757,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -804,10 +788,9 @@ public class TripTimesUpdaterTest {
       )
       .build();
 
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED
     );
@@ -854,10 +837,9 @@ public class TripTimesUpdaterTest {
 
     GtfsRealtime.TripUpdate tripUpdate = tripUpdateBuilder.build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -900,10 +882,9 @@ public class TripTimesUpdaterTest {
 
     GtfsRealtime.TripUpdate tripUpdate = tripUpdateBuilder.build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -945,10 +926,9 @@ public class TripTimesUpdaterTest {
 
     GtfsRealtime.TripUpdate tripUpdate = tripUpdateBuilder.build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -980,10 +960,9 @@ public class TripTimesUpdaterTest {
 
     GtfsRealtime.TripUpdate tripUpdate = tripUpdateBuilder.build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -1025,10 +1004,9 @@ public class TripTimesUpdaterTest {
 
     GtfsRealtime.TripUpdate tripUpdate = tripUpdateBuilder.build();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       timetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -1078,10 +1056,9 @@ public class TripTimesUpdaterTest {
     var scheduledTimetable = patternIndex
       .get(new FeedScopedId(feedId, TRIP_ID_WITH_MORE_STOPS))
       .getScheduledTimetable();
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       scheduledTimetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -1142,10 +1119,9 @@ public class TripTimesUpdaterTest {
       .get(new FeedScopedId(feedId, TRIP_ID_WITH_MORE_STOPS))
       .getScheduledTimetable();
 
-    var patch = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var patch = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
       scheduledTimetable,
       new TripUpdate(feedId, tripUpdate, NOW),
-      TIME_ZONE,
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
@@ -1203,10 +1179,9 @@ public class TripTimesUpdaterTest {
       builder.addRawStopTime(emptyStopTime(2, setEmptyEvent));
       GtfsRealtime.TripUpdate tripUpdate = builder.build();
 
-      var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+      var result = TRIP_TIMES_UPDATER.createUpdatedTripTimesFromGtfsRt(
         timetable,
         new TripUpdate(feedId, tripUpdate, NOW),
-        TIME_ZONE,
         ForwardsDelayPropagationType.DEFAULT,
         BackwardsDelayPropagationType.REQUIRED_NO_DATA
       );

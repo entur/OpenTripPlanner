@@ -18,7 +18,6 @@ import com.google.common.collect.Multimaps;
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,8 +75,6 @@ public class GtfsRealTimeTripUpdateAdapter {
    **/
   private final SiriTripPatternCache tripPatternCache;
 
-  private final ZoneId timeZone;
-
   /**
    * Long-lived transit editor service that has access to the timetable snapshot buffer.
    * This differs from the usual use case where the transit service refers to the latest published
@@ -89,6 +86,7 @@ public class GtfsRealTimeTripUpdateAdapter {
 
   private final TimetableSnapshotManager snapshotManager;
   private final Supplier<LocalDate> localDateNow;
+  private final TripTimesUpdater tripTimesUpdater;
 
   /**
    * Constructor to allow tests to provide their own clock, not using system time.
@@ -100,13 +98,16 @@ public class GtfsRealTimeTripUpdateAdapter {
     Supplier<LocalDate> localDateNow
   ) {
     this.snapshotManager = snapshotManager;
-    this.timeZone = timetableRepository.getTimeZone();
     this.localDateNow = localDateNow;
     this.transitEditorService = new DefaultTransitService(
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
     );
     this.deduplicator = deduplicator;
+    this.tripTimesUpdater = new TripTimesUpdater(
+      timetableRepository.getTimeZone(),
+      deduplicator
+    );
     this.tripPatternCache = new SiriTripPatternCache(
       new SiriTripPatternIdGenerator(),
       transitEditorService::findPattern
@@ -318,10 +319,9 @@ public class GtfsRealTimeTripUpdateAdapter {
     }
 
     // Get new TripTimes based on scheduled timetable
-    var result = TripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
+    var result = tripTimesUpdater.createUpdatedTripTimesFromGtfsRt(
       pattern.getScheduledTimetable(),
       tripUpdate,
-      timeZone,
       forwardsDelayPropagationType,
       backwardsDelayPropagationType
     );
@@ -471,13 +471,11 @@ public class GtfsRealTimeTripUpdateAdapter {
       return UpdateError.result(tripId, TOO_FEW_STOPS);
     }
 
-    var result = TripTimesUpdater.createNewTripTimesFromGtfsRt(
+    var result = tripTimesUpdater.createNewTripTimesFromGtfsRt(
       trip,
       tripUpdate,
       stopAndStopTimeUpdates,
-      timeZone,
       realTimeState,
-      deduplicator,
       transitEditorService.getServiceCode(trip.getServiceId())
     );
 

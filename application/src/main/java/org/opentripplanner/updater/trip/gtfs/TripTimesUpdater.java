@@ -41,10 +41,18 @@ class TripTimesUpdater {
 
   private static final Logger LOG = LoggerFactory.getLogger(TripTimesUpdater.class);
 
+  private final ZoneId timeZone;
+  private final Deduplicator deduplicator;
+
   /**
    * Maximum time in seconds since midnight for arrivals and departures
    */
   private static final long MAX_ARRIVAL_DEPARTURE_TIME = 48 * 60 * 60;
+
+  TripTimesUpdater(ZoneId timeZone, Deduplicator deduplicator) {
+    this.timeZone = timeZone;
+    this.deduplicator = deduplicator;
+  }
 
   /**
    * Apply the TripUpdate to the appropriate TripTimes from a Timetable. The existing TripTimes
@@ -55,7 +63,6 @@ class TripTimesUpdater {
    * all trips in a timetable are from the same feed, which should always be the case.
    *
    * @param tripUpdate                    GTFS-RT trip update
-   * @param timeZone                      time zone of trip update
    * @param backwardsDelayPropagationType Defines when delays are propagated to previous stops and
    *                                      if these stops are given the NO_DATA flag
    * @return {@link Result < TripTimesPatch ,    UpdateError   >} contains either a new copy of updated
@@ -63,10 +70,9 @@ class TripTimesUpdater {
    * trip descriptor of the TripUpdate and a list of stop indices that have been skipped with the
    * realtime update; or an error if something went wrong
    */
-  public static Result<TripTimesPatch, UpdateError> createUpdatedTripTimesFromGtfsRt(
+  public Result<TripTimesPatch, UpdateError> createUpdatedTripTimesFromGtfsRt(
     Timetable timetable,
     TripUpdate tripUpdate,
-    ZoneId timeZone,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType
   ) {
@@ -227,11 +233,10 @@ class TripTimesUpdater {
    * @param realTimeState     real-time state of new trip
    * @return empty Result if successful or one containing an error
    */
-  public static Result<TripTimesWithStopPattern, UpdateError> createNewTripTimesFromGtfsRt(
+  public Result<TripTimesWithStopPattern, UpdateError> createNewTripTimesFromGtfsRt(
     Trip trip,
     TripUpdate tripUpdate,
     List<StopAndStopTimeUpdate> stopAndStopTimeUpdates,
-    ZoneId timeZone,
     RealTimeState realTimeState,
     DeduplicatorService deduplicator,
     int serviceCode
