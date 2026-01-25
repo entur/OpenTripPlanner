@@ -153,13 +153,8 @@ public class GtfsRealTimeTripUpdateAdapter {
           rawTripUpdate = rawTripUpdate.toBuilder().setTrip(trip).build();
         }
 
+        // throws exception when invalid
         var tripUpdate = new TripUpdate(feedId, rawTripUpdate, localDateNow);
-
-        var error = tripUpdate.validate();
-        if (error.isPresent()) {
-          results.add(UpdateError.result(tripUpdate.tripId(), error.get()));
-          continue;
-        }
 
         // Determine what kind of trip update this is
         var scheduleRelationship = tripUpdate.scheduleRelationship();
@@ -309,8 +304,8 @@ public class GtfsRealTimeTripUpdateAdapter {
       return UpdateError.result(tripUpdate.tripId(), NO_UPDATES);
     }
 
-    final FeedScopedId serviceId = transitEditorService.getTrip(tripUpdate.tripId()).getServiceId();
-    final Set<LocalDate> serviceDates = transitEditorService
+    var serviceId = transitEditorService.getTrip(tripUpdate.tripId()).getServiceId();
+    var serviceDates = transitEditorService
       .getCalendarService()
       .getServiceDatesForServiceId(serviceId);
     if (!serviceDates.contains(tripUpdate.serviceDate())) {
@@ -354,10 +349,9 @@ public class GtfsRealTimeTripUpdateAdapter {
       } else {
         debug(
           tripUpdate,
-          "Graph doesn't contain assigned stop id '{}' at position '{}' for trip '{}' , skipping stop assignment.",
+          "Graph doesn't contain assigned stop id '{}' at position '{}', skipping stop assignment.",
           entry.getValue(),
-          entry.getKey(),
-          tripUpdate.tripId()
+          entry.getKey()
         );
       }
     }
@@ -427,11 +421,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   /**
    * Remove any stop that is not know in the static transit data.
    */
-  private List<StopAndStopTimeUpdate> matchStopsToStopTimeUpdates(
-    TripUpdate tripUpdate,
-    FeedScopedId tripId,
-    LocalDate serviceDate
-  ) {
+  private List<StopAndStopTimeUpdate> matchStopsToStopTimeUpdates(TripUpdate tripUpdate) {
     return tripUpdate
       .stopTimeUpdates()
       .stream()
@@ -439,15 +429,10 @@ public class GtfsRealTimeTripUpdateAdapter {
         st
           .stopId()
           .flatMap(id -> {
-            var stopId = new FeedScopedId(tripId.getFeedId(), id);
+            var stopId = new FeedScopedId(tripUpdate.tripId().getFeedId(), id);
             var stop = transitEditorService.getRegularStop(stopId);
             if (stop == null) {
-              debug(
-                tripId,
-                serviceDate,
-                "Stop '{}' not found in graph. Removing from NEW trip.",
-                stopId
-              );
+              debug(tripUpdate, "Stop '{}' not found in graph. Removing from NEW trip.", stopId);
             }
             return Optional.ofNullable(stop).map(s -> new StopAndStopTimeUpdate(s, st));
           })
@@ -468,11 +453,7 @@ public class GtfsRealTimeTripUpdateAdapter {
     boolean hasANewRouteBeenCreated
   ) {
     FeedScopedId tripId = trip.getId();
-    var stopAndStopTimeUpdates = matchStopsToStopTimeUpdates(
-      tripUpdate,
-      tripId,
-      tripUpdate.serviceDate()
-    );
+    var stopAndStopTimeUpdates = matchStopsToStopTimeUpdates(tripUpdate);
 
     var warnings = new ArrayList<UpdateSuccess.WarningType>(0);
 

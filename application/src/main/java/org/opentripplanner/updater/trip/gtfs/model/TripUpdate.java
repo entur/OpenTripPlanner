@@ -1,9 +1,11 @@
 package org.opentripplanner.updater.trip.gtfs.model;
 
+import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_INPUT_STRUCTURE;
 import static org.opentripplanner.updater.trip.gtfs.model.GtfsRealtimeMapper.mapWheelchairAccessible;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
+import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -12,10 +14,11 @@ import java.util.stream.Collectors;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
-import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
+import org.opentripplanner.transit.model.framework.DataValidationException;
 
 /**
  * A real-time update for trip, which may contain updated stop times and trip properties.
+ * Instances of this class are validated and ready for further processing.
  */
 public final class TripUpdate {
 
@@ -31,6 +34,7 @@ public final class TripUpdate {
     this.feedId = feedId;
     this.tripUpdate = tripUpdate;
     this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), localDateNow);
+    this.validate();
   }
 
   public TripDescriptor descriptor() {
@@ -80,8 +84,16 @@ public final class TripUpdate {
       .orElse(null);
   }
 
-  public Optional<UpdateErrorType> validate() {
-    return tripDescriptor.validate();
+  private void validate() throws DataValidationException {
+    if (tripDescriptor.tripId().isEmpty()) {
+      throw new DataValidationException(new InvalidTripError(null, INVALID_INPUT_STRUCTURE));
+    }
+
+    try {
+      tripDescriptor.startDate();
+    } catch (ParseException e) {
+      throw new DataValidationException(new InvalidTripError(tripId(), INVALID_INPUT_STRUCTURE));
+    }
   }
 
   public Optional<FeedScopedId> routeId() {

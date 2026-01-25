@@ -5,12 +5,9 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.function.Supplier;
-import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
-import org.opentripplanner.utils.time.TimeUtils;
 
 /**
  * Specify which trip a real-time update applies and how it should be applied.
@@ -21,49 +18,27 @@ public class TripDescriptor {
   private final Supplier<LocalDate> localDateNow;
   private LocalDate serviceDate;
 
-  public TripDescriptor(
-    GtfsRealtime.TripDescriptor tripDescriptor,
-    Supplier<LocalDate> localDateNow
-  ) {
+  TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor, Supplier<LocalDate> localDateNow) {
     this.tripDescriptor = tripDescriptor;
     this.localDateNow = localDateNow;
   }
 
-  public Optional<String> routeId() {
+  Optional<String> routeId() {
     return tripDescriptor.hasRouteId()
       ? Optional.of(tripDescriptor.getRouteId())
       : Optional.empty();
   }
 
-  public OptionalInt startTime() {
-    return tripDescriptor.hasStartTime()
-      ? OptionalInt.of(TimeUtils.time(tripDescriptor.getStartTime()))
-      : OptionalInt.empty();
-  }
-
-  public Optional<LocalDate> startDate() throws ParseException {
+  Optional<LocalDate> startDate() throws ParseException {
     return tripDescriptor.hasStartDate()
       ? Optional.of(ServiceDateUtils.parseString(tripDescriptor.getStartDate()))
       : Optional.empty();
   }
 
-  public ScheduleRelationship scheduleRelationship() {
+  ScheduleRelationship scheduleRelationship() {
     return tripDescriptor.hasScheduleRelationship()
       ? tripDescriptor.getScheduleRelationship()
       : ScheduleRelationship.SCHEDULED;
-  }
-
-  public Optional<UpdateErrorType> validate() {
-    try {
-      startDate();
-    } catch (ParseException e) {
-      return Optional.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
-    }
-
-    if (tripId().isEmpty()) {
-      return Optional.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
-    }
-    return Optional.empty();
   }
 
   LocalDate serviceDate() {
