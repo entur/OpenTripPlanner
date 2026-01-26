@@ -28,7 +28,8 @@ class DefaultTripUpdateApplierTest {
     transitService = (TransitEditorService) env.transitService();
     applier = new DefaultTripUpdateApplier(transitService);
     var tripIdResolver = new TripIdResolver(env.transitService());
-    context = new TripUpdateApplierContext(env.feedId(), null, tripIdResolver);
+    var stopResolver = new StopResolver(env.transitService(), env.feedId());
+    context = new TripUpdateApplierContext(env.feedId(), null, tripIdResolver, stopResolver);
   }
 
   @Test
