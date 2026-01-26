@@ -152,10 +152,74 @@ Maps update semantics from both formats:
 |------|-------------|---------|---------|
 | `UPDATE_EXISTING` | Update times on existing trip | TRIP_UPDATE | SCHEDULED |
 | `CANCEL_TRIP` | Cancel entire trip | Cancellation=true | CANCELED |
-| `DELETE_TRIP` | Delete trip | Cancellation=true | DELETED |
-| `ADD_NEW_TRIP` | Add trip not in schedule | REPLACEMENT_DEPARTURE | NEW, ADDED |
-| `MODIFY_TRIP` | Replace trip with modified pattern | Modified pattern | REPLACEMENT |
-| `ADD_EXTRA_CALLS` | Add stops to existing trip | EXTRA_CALL | N/A |
+| `DELETE_TRIP` | Delete trip (remove from schedule) | — | DELETED |
+| `ADD_NEW_TRIP` | Add trip not in schedule | ExtraJourney=true | NEW, ADDED |
+| `MODIFY_TRIP` | Modify stop pattern | EXTRA_CALL | REPLACEMENT |
+
+### Feature Comparison: UPDATE_EXISTING / TRIP_UPDATE
+
+The `UPDATE_EXISTING` type (SIRI `TRIP_UPDATE` / GTFS-RT `SCHEDULED`) has different capabilities in each format:
+
+| Feature | SIRI-ET | GTFS-RT |
+|---------|---------|---------|
+| Update arrival/departure times | ✅ | ✅ |
+| Change pickup/dropoff types | ✅ | ✅ |
+| Cancel individual stops | ✅ (`isCancellation`) | ✅ (`SKIPPED`) |
+| Replace stop (same station) | ✅ | ✅ |
+| Replace stop (any stop) | ❌ | ✅ (`assignedStopId`) |
+| Add/remove stops | ❌ | ❌ |
+| Cancel entire trip | ✅ | ✅ (via `CANCELED`) |
+
+**Key Differences:**
+
+1. **Stop Replacement Constraints:**
+   - SIRI-ET: Stops can only be replaced by other stops belonging to the same station (`isPartOfSameStationAs`)
+   - GTFS-RT: Any stop in the graph can replace another via `assignedStopId`
+
+2. **Number of Stops:**
+   - SIRI-ET: Must have exactly the same number of stops as the scheduled pattern (returns `TOO_FEW_STOPS` or `TOO_MANY_STOPS` errors)
+   - GTFS-RT: Must have exactly the same number of stops as the scheduled pattern
+
+3. **Adding Stops:**
+   - SIRI-ET: Use `MODIFY_TRIP` update type with stops marked as `isExtraCall=true`
+   - GTFS-RT: Use `MODIFY_TRIP` update type (maps to `REPLACEMENT`) to completely replace the stop pattern
+
+### Feature Comparison: MODIFY_TRIP
+
+The `MODIFY_TRIP` type allows modifying the stop pattern of an existing scheduled trip. This is used differently in each format:
+
+| Feature | SIRI-ET (EXTRA_CALL) | GTFS-RT (REPLACEMENT) |
+|---------|----------------------|----------------------|
+| Requires existing scheduled trip | ✅ | ✅ |
+| Insert new stops | ✅ (marked as extra call) | ✅ |
+| Remove stops | ❌ | ✅ |
+| Replace stop (same station) | ✅ | ✅ |
+| Replace stop (any stop) | ❌ | ✅ |
+| Change stop order | ❌ | ✅ |
+| Completely new pattern | ❌ | ✅ |
+| Update times | ✅ | ✅ |
+| Change pickup/dropoff | ✅ | ✅ |
+
+**Key Differences:**
+
+1. **Pattern Modification Freedom:**
+   - SIRI-ET EXTRA_CALL: Can only **insert** new stops (marked with `ExtraCall=true`). All other stops must match the original pattern (same stop or same-station replacement). Cannot remove stops or change stop order.
+   - GTFS-RT REPLACEMENT: Complete freedom to define a new stop pattern. Can add, remove, replace, or reorder stops.
+
+2. **Stop Matching:**
+   - SIRI-ET: Non-extra-call stops must match the scheduled pattern by stop ID or belong to the same station
+   - GTFS-RT: No matching required - the new pattern completely replaces the old one
+
+3. **Use Cases:**
+   - SIRI-ET EXTRA_CALL: A bus makes an unscheduled stop (e.g., temporary detour with additional stops)
+   - GTFS-RT REPLACEMENT: A trip is rerouted with a completely different stop sequence
+
+**Unified Model:**
+
+Both SIRI-ET extra calls and GTFS-RT replacements use the single `MODIFY_TRIP` type:
+- The `ParsedStopTimeUpdate.isExtraCall` flag identifies which stops are insertions (SIRI-specific)
+- The applier enforces SIRI-specific constraints when `isExtraCall` stops are present (insertions only, other stops must match)
+- GTFS-RT has no such constraints (full pattern replacement)
 
 ### TripReference (Trip Identification)
 
@@ -491,9 +555,9 @@ public void applyEstimatedTimetable(
 **Challenge:** SIRI supports adding extra stops to existing trips, which GTFS-RT does not directly support.
 
 **Mitigation:**
-- `ADD_EXTRA_CALLS` update type handles this SIRI-specific case
-- `isExtraCall` flag on `ParsedStopTimeUpdate`
-- Applier has specific logic for inserting stops
+- Both use unified `MODIFY_TRIP` type
+- `isExtraCall` flag on `ParsedStopTimeUpdate` identifies SIRI insertions
+- Applier enforces SIRI constraints when `isExtraCall` stops are present
 
 ### 2. GTFS-RT Delay Interpolation
 
@@ -728,7 +792,7 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 - ✅ Handles all SIRI update types:
   - `TRIP_UPDATE` → `TripUpdateType.UPDATE_EXISTING`
   - `REPLACEMENT_DEPARTURE` (extra journey) → `TripUpdateType.ADD_NEW_TRIP`
-  - `EXTRA_CALL` → `TripUpdateType.ADD_EXTRA_CALLS`
+  - `EXTRA_CALL` → `TripUpdateType.MODIFY_TRIP` (with `isExtraCall` flag on stops)
   - Cancellation → `TripUpdateType.CANCEL_TRIP`
 
 - ✅ Stop time update parsing:

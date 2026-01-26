@@ -5,7 +5,6 @@ import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.handlers.AddExtraCallsHandler;
 import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
 import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
 import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
@@ -36,7 +35,6 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   private final TripUpdateHandler deleteTripHandler;
   private final TripUpdateHandler addNewTripHandler;
   private final TripUpdateHandler modifyTripHandler;
-  private final TripUpdateHandler addExtraCallsHandler;
 
   public DefaultTripUpdateApplier(TransitEditorService transitService) {
     this(
@@ -45,8 +43,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       new CancelTripHandler(),
       new DeleteTripHandler(),
       new AddNewTripHandler(),
-      new ModifyTripHandler(),
-      new AddExtraCallsHandler()
+      new ModifyTripHandler()
     );
   }
 
@@ -59,8 +56,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     TripUpdateHandler cancelTripHandler,
     TripUpdateHandler deleteTripHandler,
     TripUpdateHandler addNewTripHandler,
-    TripUpdateHandler modifyTripHandler,
-    TripUpdateHandler addExtraCallsHandler
+    TripUpdateHandler modifyTripHandler
   ) {
     this.transitService = Objects.requireNonNull(transitService);
     this.updateExistingHandler = Objects.requireNonNull(updateExistingHandler);
@@ -68,7 +64,6 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     this.deleteTripHandler = Objects.requireNonNull(deleteTripHandler);
     this.addNewTripHandler = Objects.requireNonNull(addNewTripHandler);
     this.modifyTripHandler = Objects.requireNonNull(modifyTripHandler);
-    this.addExtraCallsHandler = Objects.requireNonNull(addExtraCallsHandler);
   }
 
   @Override
@@ -83,7 +78,6 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
         case DELETE_TRIP -> deleteTripHandler;
         case ADD_NEW_TRIP -> addNewTripHandler;
         case MODIFY_TRIP -> modifyTripHandler;
-        case ADD_EXTRA_CALLS -> addExtraCallsHandler;
       };
       return handler.handle(parsedUpdate, context, transitService);
     } catch (Exception e) {
