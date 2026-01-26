@@ -100,7 +100,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     List<CallWrapper> calls
   ) {
     if (calls.stream().anyMatch(CallWrapper::isExtraCall)) {
-      return TripUpdateType.ADD_EXTRA_CALLS;
+      return TripUpdateType.MODIFY_TRIP;
     }
     if (TRUE.equals(journey.isCancellation())) {
       return TripUpdateType.CANCEL_TRIP;
