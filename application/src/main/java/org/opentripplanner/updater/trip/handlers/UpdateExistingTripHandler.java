@@ -5,13 +5,13 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
@@ -76,14 +76,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     var builder = tripTimes.createRealTimeFromScheduledTimes();
 
     // Apply stop time updates and track if any were applied
-    var applyResult = applyStopTimeUpdates(
-      parsedUpdate,
-      builder,
-      pattern,
-      transitService,
-      trip,
-      context
-    );
+    var applyResult = applyStopTimeUpdates(parsedUpdate, builder, pattern, trip, context);
     if (applyResult.isFailure()) {
       return Result.failure(applyResult.failureValue());
     }
@@ -110,12 +103,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     ParsedTripUpdate parsedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
-    TransitEditorService transitService,
     Trip trip,
     TripUpdateApplierContext context
   ) {
     boolean hasUpdates = false;
     var constraint = parsedUpdate.options().stopReplacementConstraint();
+    var stopResolver = context.stopResolver();
 
     for (ParsedStopTimeUpdate stopUpdate : parsedUpdate.stopTimeUpdates()) {
       Integer stopSequence = stopUpdate.stopSequence();
@@ -134,12 +127,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         }
       } else {
         // Try to match by stop reference (SIRI-style matching)
-        var matchResult = matchStopByReference(
-          stopUpdate.stopReference(),
-          pattern,
-          transitService,
-          context.feedId()
-        );
+        var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
         if (matchResult == null) {
           LOG.debug("Could not match stop update by reference: {}", stopUpdate.stopReference());
           continue;
@@ -157,8 +145,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         scheduledStop,
         resolvedStop,
         constraint,
-        transitService,
-        context.feedId(),
+        stopResolver,
         trip.getId(),
         stopIndex
       );
@@ -213,8 +200,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
    * @param scheduledStop The scheduled stop from the pattern
    * @param resolvedStop The stop resolved from stopPointRef matching (null if matched by sequence)
    * @param constraint The constraint to enforce
-   * @param transitService Service to look up stop locations
-   * @param feedId The feed ID for creating stop IDs
+   * @param stopResolver Resolver to look up stop locations
    * @param tripId The trip ID for error reporting
    * @param stopIndex The stop index for error reporting
    * @return Empty if valid, or an UpdateError if the constraint is violated
@@ -224,8 +210,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     StopLocation scheduledStop,
     @Nullable StopLocation resolvedStop,
     StopReplacementConstraint constraint,
-    TransitEditorService transitService,
-    String feedId,
+    StopResolver stopResolver,
     FeedScopedId tripId,
     int stopIndex
   ) {
@@ -236,8 +221,8 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       // Matched by stopPointRef - the resolved stop is the actual stop
       actualStop = resolvedStop;
     } else if (stopReference.hasAssignedStopId()) {
-      // Matched by sequence with an assigned stop
-      actualStop = transitService.getStopLocation(stopReference.assignedStopId());
+      // Matched by sequence with an assigned stop - use resolver for consistency
+      actualStop = stopResolver.resolve(StopReference.ofStopId(stopReference.assignedStopId()));
     } else {
       // No replacement - using scheduled stop
       return Optional.empty();
@@ -343,19 +328,17 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
    *
    * @param stopReference The stop reference from the update
    * @param pattern The trip pattern to match against
-   * @param transitService Service to resolve stop references
-   * @param feedId The feed ID for creating stop IDs
+   * @param stopResolver Resolver to convert stop references to stops
    * @return The match result with stop index and resolved stop, or null if no match found
    */
   @Nullable
   private StopMatchResult matchStopByReference(
     StopReference stopReference,
     TripPattern pattern,
-    TransitEditorService transitService,
-    String feedId
+    StopResolver stopResolver
   ) {
     // Resolve the stop from the reference
-    StopLocation resolvedStop = resolveStopFromReference(stopReference, transitService, feedId);
+    StopLocation resolvedStop = stopResolver.resolve(stopReference);
     if (resolvedStop == null) {
       return null;
     }
@@ -378,44 +361,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         // Same station - this is likely the matching stop (quay change)
         return new StopMatchResult(i, resolvedStop);
       }
-    }
-
-    return null;
-  }
-
-  /**
-   * Resolves a StopReference to a StopLocation.
-   *
-   * @param stopReference The stop reference to resolve
-   * @param transitService Service to look up stops
-   * @param feedId The feed ID for creating stop IDs
-   * @return The resolved stop, or null if not found
-   */
-  @Nullable
-  private StopLocation resolveStopFromReference(
-    StopReference stopReference,
-    TransitEditorService transitService,
-    String feedId
-  ) {
-    // If there's an assigned stop ID, use it directly
-    if (stopReference.hasAssignedStopId()) {
-      return transitService.getStopLocation(stopReference.assignedStopId());
-    }
-
-    // If there's a direct stop ID, use it
-    if (stopReference.hasStopId()) {
-      return transitService.getStopLocation(stopReference.stopId());
-    }
-
-    // If there's a stop point ref (SIRI-style), resolve it
-    if (stopReference.hasStopPointRef()) {
-      FeedScopedId stopId = new FeedScopedId(feedId, stopReference.stopPointRef());
-      // Try scheduled stop point mapping first, then regular stop
-      RegularStop stop = transitService.findStopByScheduledStopPoint(stopId).orElse(null);
-      if (stop != null) {
-        return stop;
-      }
-      return transitService.getRegularStop(stopId);
     }
 
     return null;

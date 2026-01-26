@@ -17,6 +17,7 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripIdResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
@@ -70,7 +71,13 @@ class UpdateExistingTripHandlerTest {
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
     var tripIdResolver = new TripIdResolver(env.transitService());
-    context = new TripUpdateApplierContext(env.feedId(), snapshotManager, tripIdResolver);
+    var stopResolver = new StopResolver(env.transitService(), env.feedId());
+    context = new TripUpdateApplierContext(
+      env.feedId(),
+      snapshotManager,
+      tripIdResolver,
+      stopResolver
+    );
     handler = new UpdateExistingTripHandler();
   }
 
@@ -368,10 +375,12 @@ class UpdateExistingTripHandlerTest {
 
       stationTransitService = (TransitEditorService) stationEnv.transitService();
       var tripIdResolver = new TripIdResolver(stationEnv.transitService());
+      var stopResolver = new StopResolver(stationEnv.transitService(), stationEnv.feedId());
       stationContext = new TripUpdateApplierContext(
         stationEnv.feedId(),
         stationEnv.timetableSnapshotManager(),
-        tripIdResolver
+        tripIdResolver,
+        stopResolver
       );
     }
 
