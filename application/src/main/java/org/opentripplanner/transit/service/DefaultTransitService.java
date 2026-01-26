@@ -94,6 +94,8 @@ public class DefaultTransitService implements TransitEditorService {
    */
   private final StopTimesHelper stopTimesHelper;
 
+  private final ReplacementHelper replacementHelper;
+
   /**
    * Create a service without a real-time snapshot (and therefore without any real-time data).
    */
@@ -110,6 +112,7 @@ public class DefaultTransitService implements TransitEditorService {
     this.timetableRepositoryIndex = timetableRepository.getTimetableRepositoryIndex();
     this.timetableSnapshot = timetableSnapshot;
     this.stopTimesHelper = new StopTimesHelper(this);
+    this.replacementHelper = new ReplacementHelper(this, timetableRepository, timetableSnapshot);
   }
 
   @Override
@@ -748,6 +751,11 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public boolean hasScheduledServicesAfter(LocalDate date, StopLocation stop) {
     return timetableRepositoryIndex.hasScheduledServicesAfter(date, stop);
+  }
+
+  @Override
+  public ReplacementHelper getReplacementHelper() {
+    return replacementHelper;
   }
 
   /**
