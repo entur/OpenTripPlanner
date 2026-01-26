@@ -143,11 +143,9 @@ public class GtfsRealTimeTripUpdateAdapter {
       snapshotManager.clearBuffer(feedId);
     }
 
-    for (var i = 0; i < updates.size(); ++i) {
+    for (var rawTripUpdate : updates) {
       Result<UpdateSuccess, UpdateError> result;
       try {
-        var rawTripUpdate = updates.get(i);
-
         if (fuzzyTripMatcher != null) {
           var trip = fuzzyTripMatcher.match(feedId, rawTripUpdate.getTrip());
           rawTripUpdate = rawTripUpdate.toBuilder().setTrip(trip).build();
@@ -163,10 +161,10 @@ public class GtfsRealTimeTripUpdateAdapter {
         }
 
         result = applyUpdate(
-          forwardsDelayPropagationType,
-          backwardsDelayPropagationType,
+          tripUpdate,
           updateIncrementality,
-          tripUpdate
+          backwardsDelayPropagationType,
+          forwardsDelayPropagationType
         );
 
         if (result.isFailure()) {
@@ -192,10 +190,10 @@ public class GtfsRealTimeTripUpdateAdapter {
   }
 
   private Result<UpdateSuccess, UpdateError> applyUpdate(
-    ForwardsDelayPropagationType forwardsDelayPropagationType,
-    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    TripUpdate tripUpdate,
     UpdateIncrementality updateIncrementality,
-    TripUpdate tripUpdate
+    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    ForwardsDelayPropagationType forwardsDelayPropagationType
   ) {
     return switch (tripUpdate.scheduleRelationship()) {
       case SCHEDULED -> handleScheduledTrip(
