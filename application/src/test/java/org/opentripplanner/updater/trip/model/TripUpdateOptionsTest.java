@@ -7,6 +7,8 @@ import static org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationTyp
 import static org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType.NONE;
 import static org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType.REQUIRED_NO_DATA;
 import static org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType.DEFAULT;
+import static org.opentripplanner.updater.trip.model.StopReplacementConstraint.ANY_STOP;
+import static org.opentripplanner.updater.trip.model.StopReplacementConstraint.SAME_PARENT_STATION;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
@@ -22,6 +24,7 @@ class TripUpdateOptionsTest {
     assertEquals(BackwardsDelayPropagationType.NONE, options.backwardsPropagation());
     assertTrue(options.allowStopPatternModification());
     assertFalse(options.propagatesDelays());
+    assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
   }
 
   @Test
@@ -32,6 +35,7 @@ class TripUpdateOptionsTest {
     assertEquals(REQUIRED_NO_DATA, options.backwardsPropagation());
     assertTrue(options.allowStopPatternModification());
     assertTrue(options.propagatesDelays());
+    assertEquals(ANY_STOP, options.stopReplacementConstraint());
   }
 
   @Test
@@ -52,12 +56,14 @@ class TripUpdateOptionsTest {
       .withForwardsPropagation(DEFAULT)
       .withBackwardsPropagation(ALWAYS)
       .withAllowStopPatternModification(false)
+      .withStopReplacementConstraint(SAME_PARENT_STATION)
       .build();
 
     assertEquals(DEFAULT, options.forwardsPropagation());
     assertEquals(ALWAYS, options.backwardsPropagation());
     assertFalse(options.allowStopPatternModification());
     assertTrue(options.propagatesDelays());
+    assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
   }
 
   @Test
@@ -78,5 +84,12 @@ class TripUpdateOptionsTest {
       .build();
 
     assertTrue(options.propagatesDelays());
+  }
+
+  @Test
+  void builderDefaultsToAnyStopConstraint() {
+    var options = TripUpdateOptions.builder().build();
+
+    assertEquals(ANY_STOP, options.stopReplacementConstraint());
   }
 }
