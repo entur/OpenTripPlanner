@@ -18,9 +18,8 @@ The following are known deployments of OTP in a government- or agency-sponsored 
   open source. The source code is available [on Github](https://github.com/HSLdevcom/).
   The [Digitransit Journey Planner](https://github.com/HSLdevcom/digitransit-ui) is the web-based
   user interface that uses OpenTripPlanner.
-* **Finland Intercity** The Finnish intercity coach
-  service [Matkahuolto](https://en.wikipedia.org/wiki/Matkahuolto)
-  has [developed a trip planner in partnership with Kyyti](https://www.kyyti.com/matkahuoltos-new-app-brings-real-travel-chains-within-the-reach-of-citizens-in-addition-to-coach-travel-hsl-tickets-are-also-available/).
+* **Finland (intercity)** Finnish intercity coach service [Matkahuolto](https://www.matkahuolto.fi/en).
+* **Finland (railway)** Finnish government-owned railway company [VR](https://www.vr.fi/en).
 * **Skåne, Sweden**, the JourneyPlanner and mobile app for the regional transit agency [Skånetrafiken](https://www.skanetrafiken.se/)
   uses OTP2 with the nordic profile of NeTEx and SIRI for real-time updates.
 * [**Northern Colorado**](https://discover.rideno.co/)
