@@ -71,7 +71,7 @@ class UpdateExistingTripHandlerTest {
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
     var tripIdResolver = new TripIdResolver(env.transitService());
-    var stopResolver = new StopResolver(env.transitService(), env.feedId());
+    var stopResolver = new StopResolver(env.transitService());
     context = new TripUpdateApplierContext(
       env.feedId(),
       snapshotManager,
@@ -375,7 +375,7 @@ class UpdateExistingTripHandlerTest {
 
       stationTransitService = (TransitEditorService) stationEnv.transitService();
       var tripIdResolver = new TripIdResolver(stationEnv.transitService());
-      var stopResolver = new StopResolver(stationEnv.transitService(), stationEnv.feedId());
+      var stopResolver = new StopResolver(stationEnv.transitService());
       stationContext = new TripUpdateApplierContext(
         stationEnv.feedId(),
         stationEnv.timetableSnapshotManager(),
@@ -562,7 +562,7 @@ class UpdateExistingTripHandlerTest {
       // No stopSequence - must match by stop reference
       var stopUpdate = ParsedStopTimeUpdate.builder(
         // A2 is in the same station as A1
-        StopReference.ofStopPointRef("A2")
+        StopReference.ofScheduledStopPointOrStopId(new FeedScopedId(FEED_ID, "A2"))
       )
         // No stopSequence - forces matching by stop reference
         .withArrivalUpdate(TimeUpdate.ofDelay(60))
@@ -596,7 +596,7 @@ class UpdateExistingTripHandlerTest {
       // This should fail because B1 is in station2, but the trip stops at A1 (station1)
       var stopUpdate = ParsedStopTimeUpdate.builder(
         // B1 is in a different station
-        StopReference.ofStopPointRef("B1")
+        StopReference.ofScheduledStopPointOrStopId(new FeedScopedId(FEED_ID, "B1"))
       )
         // No stopSequence - forces matching by stop reference
         .withArrivalUpdate(TimeUpdate.ofDelay(60))

@@ -34,7 +34,7 @@ class TripUpdateApplierTest {
     feedId = env.feedId();
     transitService = env.transitService();
     tripIdResolver = new TripIdResolver(transitService);
-    stopResolver = new StopResolver(transitService, feedId);
+    stopResolver = new StopResolver(transitService);
   }
 
   @Test
