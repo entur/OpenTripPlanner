@@ -7,8 +7,8 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 /**
  * A unified representation of a stop reference that supports both:
  * <ul>
- *   <li>GTFS stop IDs (FeedScopedId)</li>
- *   <li>SIRI stop point references (quay references like "NSR:Quay:1234")</li>
+ *   <li>GTFS stop IDs (FeedScopedId) with direct resolution</li>
+ *   <li>SIRI stop point references that may need scheduled stop point mapping</li>
  * </ul>
  * <p>
  * Additionally supports an assigned stop ID which may override the original reference
@@ -20,55 +20,45 @@ public final class StopReference {
   private final FeedScopedId stopId;
 
   @Nullable
-  private final String stopPointRef;
-
-  @Nullable
   private final FeedScopedId assignedStopId;
 
+  private final StopResolutionStrategy resolutionStrategy;
+
   /**
-   * @param stopId The GTFS-style feed-scoped stop ID
-   * @param stopPointRef The SIRI-style stop point reference (quay reference)
+   * @param stopId The stop ID
    * @param assignedStopId The stop ID assigned after resolution (e.g., from stop assignment)
+   * @param resolutionStrategy The strategy for resolving this stop reference
    */
   public StopReference(
     @Nullable FeedScopedId stopId,
-    @Nullable String stopPointRef,
-    @Nullable FeedScopedId assignedStopId
+    @Nullable FeedScopedId assignedStopId,
+    StopResolutionStrategy resolutionStrategy
   ) {
     this.stopId = stopId;
-    this.stopPointRef = stopPointRef;
     this.assignedStopId = assignedStopId;
+    this.resolutionStrategy = Objects.requireNonNull(resolutionStrategy);
   }
 
   /**
-   * Create a stop reference from a GTFS-style stop ID.
+   * Create a stop reference from a GTFS-style stop ID with direct resolution.
    */
   public static StopReference ofStopId(FeedScopedId stopId) {
-    return new StopReference(stopId, null, null);
+    return new StopReference(stopId, null, StopResolutionStrategy.DIRECT);
   }
 
   /**
    * Create a stop reference from a GTFS-style stop ID with an assigned stop.
    */
   public static StopReference ofStopId(FeedScopedId stopId, @Nullable FeedScopedId assignedStopId) {
-    return new StopReference(stopId, null, assignedStopId);
+    return new StopReference(stopId, assignedStopId, StopResolutionStrategy.DIRECT);
   }
 
   /**
-   * Create a stop reference from a SIRI-style stop point reference.
+   * Create a stop reference that will first try scheduled stop point mapping,
+   * then fall back to direct lookup. This is used for SIRI-style stop point references.
    */
-  public static StopReference ofStopPointRef(String stopPointRef) {
-    return new StopReference(null, stopPointRef, null);
-  }
-
-  /**
-   * Create a stop reference from a SIRI-style stop point reference with an assigned stop.
-   */
-  public static StopReference ofStopPointRef(
-    String stopPointRef,
-    @Nullable FeedScopedId assignedStopId
-  ) {
-    return new StopReference(null, stopPointRef, assignedStopId);
+  public static StopReference ofScheduledStopPointOrStopId(FeedScopedId stopId) {
+    return new StopReference(stopId, null, StopResolutionStrategy.SCHEDULED_STOP_POINT_FIRST);
   }
 
   @Nullable
@@ -77,27 +67,22 @@ public final class StopReference {
   }
 
   @Nullable
-  public String stopPointRef() {
-    return stopPointRef;
-  }
-
-  @Nullable
   public FeedScopedId assignedStopId() {
     return assignedStopId;
   }
 
   /**
-   * Returns true if this reference contains a GTFS-style stop ID.
+   * Returns the strategy for resolving this stop reference.
    */
-  public boolean hasStopId() {
-    return stopId != null;
+  public StopResolutionStrategy resolutionStrategy() {
+    return resolutionStrategy;
   }
 
   /**
-   * Returns true if this reference contains a SIRI-style stop point reference.
+   * Returns true if this reference contains a stop ID.
    */
-  public boolean hasStopPointRef() {
-    return stopPointRef != null;
+  public boolean hasStopId() {
+    return stopId != null;
   }
 
   /**
@@ -111,7 +96,6 @@ public final class StopReference {
    * Returns the primary stop ID to use for routing.
    * If an assigned stop ID is present, it takes precedence.
    * Otherwise, returns the original stop ID.
-   * Returns null if only a stop point reference is available and needs resolution.
    */
   @Nullable
   public FeedScopedId primaryId() {
@@ -132,14 +116,14 @@ public final class StopReference {
     StopReference that = (StopReference) o;
     return (
       Objects.equals(stopId, that.stopId) &&
-      Objects.equals(stopPointRef, that.stopPointRef) &&
-      Objects.equals(assignedStopId, that.assignedStopId)
+      Objects.equals(assignedStopId, that.assignedStopId) &&
+      resolutionStrategy == that.resolutionStrategy
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(stopId, stopPointRef, assignedStopId);
+    return Objects.hash(stopId, assignedStopId, resolutionStrategy);
   }
 
   @Override
@@ -148,11 +132,10 @@ public final class StopReference {
       "StopReference{" +
       "stopId=" +
       stopId +
-      ", stopPointRef='" +
-      stopPointRef +
-      '\'' +
       ", assignedStopId=" +
       assignedStopId +
+      ", resolutionStrategy=" +
+      resolutionStrategy +
       '}'
     );
   }

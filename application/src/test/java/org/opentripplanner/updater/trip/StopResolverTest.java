@@ -11,6 +11,7 @@ import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.model.StopReference;
+import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 
 /**
  * Tests for {@link StopResolver}.
@@ -28,7 +29,7 @@ class StopResolverTest {
   void setUp() {
     var env = TransitTestEnvironment.of().addStops(STOP_A, STOP_B).build();
     transitService = env.transitService();
-    resolver = new StopResolver(transitService, FEED_ID);
+    resolver = new StopResolver(transitService);
   }
 
   @Test
@@ -56,13 +57,15 @@ class StopResolverTest {
   }
 
   @Test
-  void resolveByStopPointRef() {
-    var reference = StopReference.ofStopPointRef(STOP_A);
+  void resolveByScheduledStopPointOrStopId() {
+    var stopId = new FeedScopedId(FEED_ID, STOP_A);
+    var reference = StopReference.ofScheduledStopPointOrStopId(stopId);
 
     var stop = resolver.resolve(reference);
 
+    // Falls back to direct lookup since no scheduled stop point mapping exists
     assertNotNull(stop);
-    assertEquals(new FeedScopedId(FEED_ID, STOP_A), stop.getId());
+    assertEquals(stopId, stop.getId());
   }
 
   @Test
@@ -76,8 +79,9 @@ class StopResolverTest {
   }
 
   @Test
-  void resolveUnknownStopPointRef_returnsNull() {
-    var reference = StopReference.ofStopPointRef("unknown-stop");
+  void resolveUnknownScheduledStopPointOrStopId_returnsNull() {
+    var unknownId = new FeedScopedId(FEED_ID, "unknown-stop");
+    var reference = StopReference.ofScheduledStopPointOrStopId(unknownId);
 
     var stop = resolver.resolve(reference);
 
@@ -86,7 +90,7 @@ class StopResolverTest {
 
   @Test
   void resolveEmptyReference_returnsNull() {
-    var reference = new StopReference(null, null, null);
+    var reference = new StopReference(null, null, StopResolutionStrategy.DIRECT);
 
     var stop = resolver.resolve(reference);
 
