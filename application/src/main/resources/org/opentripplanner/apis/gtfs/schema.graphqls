@@ -1305,8 +1305,14 @@ type QueryType {
     and should be used together with the `last` parameter.
     """
     before: String,
-    "Can be used to filter the results. When paging, the filter should not be changed between pages."
-    filters: CanceledTripsFilterInput,
+    """
+    Can be used to filter the results. When paging, the filter should not be changed between pages.
+    
+    An empty list of filters or no value means that all trips should be included. Only one filter
+    is allowed for now. Once new filtering criteria is introduced, this limitation will be removed.
+    ```
+    """
+    filters: [CanceledTripsFilterInput!],
     """
     Limits how many trips are returned. This parameter is part of the
     [GraphQL Cursor Connections Specification](https://relay.dev/graphql/connections.htm) and can be used together with
