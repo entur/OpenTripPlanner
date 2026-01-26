@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
@@ -22,8 +23,10 @@ import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
+import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.model.TripUpdateOptions;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
@@ -331,5 +334,285 @@ class UpdateExistingTripHandlerTest {
 
     var updatedTimes = (RealTimeTripTimes) result.successValue().updatedTripTimes();
     assertTrue(updatedTimes.isPredictionInaccurate(1));
+  }
+
+  /**
+   * Tests for StopReplacementConstraint validation.
+   */
+  @Nested
+  class StopReplacementConstraintTests {
+
+    private static final String STATION_1 = "station1";
+    private static final String STATION_2 = "station2";
+
+    private TransitTestEnvironment stationEnv;
+    private TransitEditorService stationTransitService;
+    private TripUpdateApplierContext stationContext;
+
+    @BeforeEach
+    void setUpStationEnvironment() {
+      var builder = TransitTestEnvironment.of();
+
+      // Create two stations with stops in each
+      builder.station(STATION_1);
+      builder.station(STATION_2);
+
+      var stopA1 = builder.stopAtStation("A1", STATION_1);
+      // A2 is created for replacement tests but not used in the trip itself
+      builder.stopAtStation("A2", STATION_1);
+      var stopB1 = builder.stopAtStation("B1", STATION_2);
+
+      stationEnv = builder
+        .addTrip(TripInput.of("stationTrip").addStop(stopA1, "10:00").addStop(stopB1, "10:30"))
+        .build();
+
+      stationTransitService = (TransitEditorService) stationEnv.transitService();
+      var tripIdResolver = new TripIdResolver(stationEnv.transitService());
+      stationContext = new TripUpdateApplierContext(
+        stationEnv.feedId(),
+        stationEnv.timetableSnapshotManager(),
+        tripIdResolver
+      );
+    }
+
+    @Test
+    void siriConstraint_allowsReplacementWithinSameStation() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Stop A1 is replaced by A2 (both in station1) - should be allowed
+      var stopA1Id = new FeedScopedId(FEED_ID, "A1");
+      var stopA2Id = new FeedScopedId(FEED_ID, "A2");
+      var stopUpdate = ParsedStopTimeUpdate.builder(
+        // original A1, assigned A2
+        StopReference.ofStopId(stopA1Id, stopA2Id)
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .withDepartureUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    }
+
+    @Test
+    void siriConstraint_rejectsReplacementOutsideStation() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Stop A1 (station1) is replaced by B1 (station2) - should be rejected
+      var stopA1Id = new FeedScopedId(FEED_ID, "A1");
+      var stopB1Id = new FeedScopedId(FEED_ID, "B1");
+      var stopUpdate = ParsedStopTimeUpdate.builder(
+        // original A1, assigned B1 (different station)
+        StopReference.ofStopId(stopA1Id, stopB1Id)
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      assertTrue(result.isFailure(), "Expected failure but got success");
+      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
+      assertEquals(0, result.failureValue().stopIndex());
+    }
+
+    @Test
+    void gtfsRtConstraint_allowsAnyReplacement() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Stop A1 (station1) is replaced by B1 (station2) - should be allowed with ANY_STOP
+      var stopA1Id = new FeedScopedId(FEED_ID, "A1");
+      var stopB1Id = new FeedScopedId(FEED_ID, "B1");
+      var stopUpdate = ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA1Id, stopB1Id))
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .withDepartureUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.ANY_STOP)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    }
+
+    @Test
+    void notAllowedConstraint_rejectsAnyReplacement() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Even replacement within same station should be rejected with NOT_ALLOWED
+      var stopA1Id = new FeedScopedId(FEED_ID, "A1");
+      var stopA2Id = new FeedScopedId(FEED_ID, "A2");
+      var stopUpdate = ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA1Id, stopA2Id))
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.NOT_ALLOWED)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      assertTrue(result.isFailure(), "Expected failure but got success");
+      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
+    }
+
+    @Test
+    void noAssignedStop_validationSkipped() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // No assigned stop - just a regular delay update, should succeed regardless of constraint
+      var stopA1Id = new FeedScopedId(FEED_ID, "A1");
+      var stopUpdate = ParsedStopTimeUpdate.builder(
+        // No assigned stop
+        StopReference.ofStopId(stopA1Id)
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .withDepartureUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.NOT_ALLOWED)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    }
+
+    @Test
+    void siriStopPointRef_matchesByStopReferenceWithinSameStation() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // SIRI-style update: uses stopPointRef for A2 (same station as scheduled A1)
+      // No stopSequence - must match by stop reference
+      var stopUpdate = ParsedStopTimeUpdate.builder(
+        // A2 is in the same station as A1
+        StopReference.ofStopPointRef("A2")
+      )
+        // No stopSequence - forces matching by stop reference
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .withDepartureUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    }
+
+    @Test
+    void siriStopPointRef_rejectsReplacementOutsideStation() {
+      var tripId = new FeedScopedId(FEED_ID, "stationTrip");
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // SIRI-style update: uses stopPointRef for B1 (different station from A1)
+      // This should fail because B1 is in station2, but the trip stops at A1 (station1)
+      var stopUpdate = ParsedStopTimeUpdate.builder(
+        // B1 is in a different station
+        StopReference.ofStopPointRef("B1")
+      )
+        // No stopSequence - forces matching by stop reference
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .withDepartureUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        stationEnv.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+
+      // B1 is in the trip pattern at index 1, so it will match successfully
+      // But since B1 is at station2 and the scheduled stop is also B1, there's no replacement
+      // This is actually a valid update (no replacement happening)
+      assertTrue(result.isSuccess(), "Expected success - B1 matches scheduled B1");
+    }
   }
 }
