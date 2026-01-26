@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.handlers;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -10,6 +11,7 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
+import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
@@ -88,11 +90,18 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
 
     // Create the RealTimeTripUpdate
-    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
-
-    LOG.debug("Updated trip {} on {}", trip.getId(), serviceDate);
-
-    return Result.success(realTimeTripUpdate);
+    try {
+      var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
+      LOG.debug("Updated trip {} on {}", trip.getId(), serviceDate);
+      return Result.success(realTimeTripUpdate);
+    } catch (DataValidationException e) {
+      LOG.info(
+        "Invalid real-time data for trip {} - TripTimes failed to validate after applying updates. {}",
+        trip.getId(),
+        e.getMessage()
+      );
+      return DataValidationExceptionMapper.toResult(e);
+    }
   }
 
   /**
