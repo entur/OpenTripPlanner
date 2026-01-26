@@ -1,6 +1,7 @@
 package org.opentripplanner.utils.collection;
 
 import java.util.Objects;
+import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
 
 /**
  * A small container for an element and its index in a list.
@@ -38,5 +39,16 @@ public final class IndexedListElement<T> {
   @Override
   public int hashCode() {
     return Objects.hash(index, element);
+  }
+
+  @Override
+  public String toString() {
+    return ValueObjectToStringBuilder.of()
+      .addText("[")
+      .addNum(index)
+      .addText("=")
+      .addObj(element)
+      .addText("]")
+      .toString();
   }
 }
