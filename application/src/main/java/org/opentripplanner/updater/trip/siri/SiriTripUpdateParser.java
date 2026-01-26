@@ -254,7 +254,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         continue;
       }
 
-      var stopReference = StopReference.ofStopPointRef(call.getStopPointRef());
+      var stopId = context.createId(call.getStopPointRef());
+      var stopReference = StopReference.ofScheduledStopPointOrStopId(stopId);
       var builder = ParsedStopTimeUpdate.builder(stopReference);
 
       builder.withStatus(determineStopStatus(call));
