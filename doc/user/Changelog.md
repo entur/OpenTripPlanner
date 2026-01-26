@@ -78,6 +78,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add HTTP response time metric [#7133](https://github.com/opentripplanner/OpenTripPlanner/pull/7133)
 - Add second criteria to the Raptor heuristics [#7165](https://github.com/opentripplanner/OpenTripPlanner/pull/7165)
 - Add Route/Trip/TripOnServiceDate replacement to query apis [#7126](https://github.com/opentripplanner/OpenTripPlanner/pull/7126)
+- Make filters for the canceled trips query in the GTFS API a list [#7235](https://github.com/opentripplanner/OpenTripPlanner/pull/7235)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
