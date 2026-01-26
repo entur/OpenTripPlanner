@@ -1,7 +1,12 @@
 package org.opentripplanner.updater.trip.handlers;
 
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -10,6 +15,8 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.StopReference;
+import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +76,18 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     var builder = tripTimes.createRealTimeFromScheduledTimes();
 
     // Apply stop time updates and track if any were applied
-    boolean hasUpdates = applyStopTimeUpdates(parsedUpdate, builder, pattern);
+    var applyResult = applyStopTimeUpdates(
+      parsedUpdate,
+      builder,
+      pattern,
+      transitService,
+      trip,
+      context
+    );
+    if (applyResult.isFailure()) {
+      return Result.failure(applyResult.failureValue());
+    }
+    boolean hasUpdates = applyResult.successValue();
 
     // Set real-time state to UPDATED if any updates were applied
     if (hasUpdates) {
@@ -86,33 +104,66 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
 
   /**
    * Apply stop time updates from the parsed update to the builder.
-   * @return true if any updates were applied
+   * @return Result containing true if any updates were applied, or an error if validation fails
    */
-  private boolean applyStopTimeUpdates(
+  private Result<Boolean, UpdateError> applyStopTimeUpdates(
     ParsedTripUpdate parsedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
-    TripPattern pattern
+    TripPattern pattern,
+    TransitEditorService transitService,
+    Trip trip,
+    TripUpdateApplierContext context
   ) {
     boolean hasUpdates = false;
+    var constraint = parsedUpdate.options().stopReplacementConstraint();
 
     for (ParsedStopTimeUpdate stopUpdate : parsedUpdate.stopTimeUpdates()) {
       Integer stopSequence = stopUpdate.stopSequence();
-      if (stopSequence == null) {
-        LOG.debug(
-          "Stop update without stop sequence, trying to match by stop reference: {}",
-          stopUpdate.stopReference()
+      int stopIndex;
+      StopLocation resolvedStop = null;
+
+      if (stopSequence != null) {
+        stopIndex = stopSequence;
+        if (stopIndex < 0 || stopIndex >= pattern.numberOfStops()) {
+          LOG.warn(
+            "Stop index {} out of bounds for pattern with {} stops",
+            stopIndex,
+            pattern.numberOfStops()
+          );
+          continue;
+        }
+      } else {
+        // Try to match by stop reference (SIRI-style matching)
+        var matchResult = matchStopByReference(
+          stopUpdate.stopReference(),
+          pattern,
+          transitService,
+          context.feedId()
         );
-        continue;
+        if (matchResult == null) {
+          LOG.debug("Could not match stop update by reference: {}", stopUpdate.stopReference());
+          continue;
+        }
+        stopIndex = matchResult.stopIndex;
+        resolvedStop = matchResult.resolvedStop;
       }
 
-      int stopIndex = stopSequence;
-      if (stopIndex < 0 || stopIndex >= pattern.numberOfStops()) {
-        LOG.warn(
-          "Stop index {} out of bounds for pattern with {} stops",
-          stopIndex,
-          pattern.numberOfStops()
-        );
-        continue;
+      // Get the scheduled stop from the pattern
+      StopLocation scheduledStop = pattern.getStop(stopIndex);
+
+      // Validate stop replacement constraint
+      var validationError = validateStopReplacement(
+        stopUpdate.stopReference(),
+        scheduledStop,
+        resolvedStop,
+        constraint,
+        transitService,
+        context.feedId(),
+        trip.getId(),
+        stopIndex
+      );
+      if (validationError.isPresent()) {
+        return Result.failure(validationError.get());
       }
 
       // Handle skipped/cancelled stops
@@ -152,6 +203,221 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       }
     }
 
-    return hasUpdates;
+    return Result.success(hasUpdates);
+  }
+
+  /**
+   * Validates that a stop replacement conforms to the configured constraint.
+   *
+   * @param stopReference The stop reference from the update (may contain an assignedStopId)
+   * @param scheduledStop The scheduled stop from the pattern
+   * @param resolvedStop The stop resolved from stopPointRef matching (null if matched by sequence)
+   * @param constraint The constraint to enforce
+   * @param transitService Service to look up stop locations
+   * @param feedId The feed ID for creating stop IDs
+   * @param tripId The trip ID for error reporting
+   * @param stopIndex The stop index for error reporting
+   * @return Empty if valid, or an UpdateError if the constraint is violated
+   */
+  private Optional<UpdateError> validateStopReplacement(
+    StopReference stopReference,
+    StopLocation scheduledStop,
+    @Nullable StopLocation resolvedStop,
+    StopReplacementConstraint constraint,
+    TransitEditorService transitService,
+    String feedId,
+    FeedScopedId tripId,
+    int stopIndex
+  ) {
+    // Determine the actual stop being used in the update
+    StopLocation actualStop = null;
+
+    if (resolvedStop != null) {
+      // Matched by stopPointRef - the resolved stop is the actual stop
+      actualStop = resolvedStop;
+    } else if (stopReference.hasAssignedStopId()) {
+      // Matched by sequence with an assigned stop
+      actualStop = transitService.getStopLocation(stopReference.assignedStopId());
+    } else {
+      // No replacement - using scheduled stop
+      return Optional.empty();
+    }
+
+    if (actualStop == null) {
+      LOG.warn("Could not resolve stop from reference for trip {}", tripId);
+      return Optional.of(
+        new UpdateError(tripId, UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
+      );
+    }
+
+    // If the actual stop is the same as the scheduled stop, no replacement
+    if (actualStop.getId().equals(scheduledStop.getId())) {
+      return Optional.empty();
+    }
+
+    // Now we have a replacement - check constraint
+    return validateStopReplacementConstraint(
+      scheduledStop,
+      actualStop,
+      constraint,
+      tripId,
+      stopIndex
+    );
+  }
+
+  /**
+   * Validates a stop replacement against the configured constraint.
+   */
+  private Optional<UpdateError> validateStopReplacementConstraint(
+    StopLocation scheduledStop,
+    StopLocation actualStop,
+    StopReplacementConstraint constraint,
+    FeedScopedId tripId,
+    int stopIndex
+  ) {
+    switch (constraint) {
+      case ANY_STOP -> {
+        // Any replacement is allowed
+        return Optional.empty();
+      }
+      case NOT_ALLOWED -> {
+        LOG.warn(
+          "Stop replacement not allowed: trip {} stop index {} actual {} but scheduled is {}",
+          tripId,
+          stopIndex,
+          actualStop.getId(),
+          scheduledStop.getId()
+        );
+        return Optional.of(
+          new UpdateError(tripId, UpdateError.UpdateErrorType.STOP_MISMATCH, stopIndex)
+        );
+      }
+      case SAME_PARENT_STATION -> {
+        var scheduledParent = scheduledStop.getParentStation();
+        var actualParent = actualStop.getParentStation();
+
+        if (scheduledParent == null || actualParent == null) {
+          LOG.warn(
+            "Stop replacement rejected: trip {} stop index {} - stops {} and {} are not part of a station",
+            tripId,
+            stopIndex,
+            scheduledStop.getId(),
+            actualStop.getId()
+          );
+          return Optional.of(
+            new UpdateError(tripId, UpdateError.UpdateErrorType.STOP_MISMATCH, stopIndex)
+          );
+        }
+
+        if (!scheduledParent.getId().equals(actualParent.getId())) {
+          LOG.warn(
+            "Stop replacement rejected: trip {} stop index {} - stop {} (station {}) cannot be replaced by {} (station {})",
+            tripId,
+            stopIndex,
+            scheduledStop.getId(),
+            scheduledParent.getId(),
+            actualStop.getId(),
+            actualParent.getId()
+          );
+          return Optional.of(
+            new UpdateError(tripId, UpdateError.UpdateErrorType.STOP_MISMATCH, stopIndex)
+          );
+        }
+
+        // Same parent station - replacement is valid
+        return Optional.empty();
+      }
+      default -> {
+        return Optional.empty();
+      }
+    }
+  }
+
+  /**
+   * Result of matching a stop update by its stop reference.
+   */
+  private record StopMatchResult(int stopIndex, StopLocation resolvedStop) {}
+
+  /**
+   * Attempts to match a stop update to a position in the pattern by resolving the stop reference.
+   *
+   * @param stopReference The stop reference from the update
+   * @param pattern The trip pattern to match against
+   * @param transitService Service to resolve stop references
+   * @param feedId The feed ID for creating stop IDs
+   * @return The match result with stop index and resolved stop, or null if no match found
+   */
+  @Nullable
+  private StopMatchResult matchStopByReference(
+    StopReference stopReference,
+    TripPattern pattern,
+    TransitEditorService transitService,
+    String feedId
+  ) {
+    // Resolve the stop from the reference
+    StopLocation resolvedStop = resolveStopFromReference(stopReference, transitService, feedId);
+    if (resolvedStop == null) {
+      return null;
+    }
+
+    // Find this stop in the pattern
+    for (int i = 0; i < pattern.numberOfStops(); i++) {
+      StopLocation patternStop = pattern.getStop(i);
+      if (patternStop.getId().equals(resolvedStop.getId())) {
+        // Exact match - stop is the same
+        return new StopMatchResult(i, resolvedStop);
+      }
+      // Check if they share the same parent station (quay change within station)
+      var patternParent = patternStop.getParentStation();
+      var resolvedParent = resolvedStop.getParentStation();
+      if (
+        patternParent != null &&
+        resolvedParent != null &&
+        patternParent.getId().equals(resolvedParent.getId())
+      ) {
+        // Same station - this is likely the matching stop (quay change)
+        return new StopMatchResult(i, resolvedStop);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolves a StopReference to a StopLocation.
+   *
+   * @param stopReference The stop reference to resolve
+   * @param transitService Service to look up stops
+   * @param feedId The feed ID for creating stop IDs
+   * @return The resolved stop, or null if not found
+   */
+  @Nullable
+  private StopLocation resolveStopFromReference(
+    StopReference stopReference,
+    TransitEditorService transitService,
+    String feedId
+  ) {
+    // If there's an assigned stop ID, use it directly
+    if (stopReference.hasAssignedStopId()) {
+      return transitService.getStopLocation(stopReference.assignedStopId());
+    }
+
+    // If there's a direct stop ID, use it
+    if (stopReference.hasStopId()) {
+      return transitService.getStopLocation(stopReference.stopId());
+    }
+
+    // If there's a stop point ref (SIRI-style), resolve it
+    if (stopReference.hasStopPointRef()) {
+      FeedScopedId stopId = new FeedScopedId(feedId, stopReference.stopPointRef());
+      // Try scheduled stop point mapping first, then regular stop
+      RegularStop stop = transitService.findStopByScheduledStopPoint(stopId).orElse(null);
+      if (stop != null) {
+        return stop;
+      }
+      return transitService.getRegularStop(stopId);
+    }
+
+    return null;
   }
 }
