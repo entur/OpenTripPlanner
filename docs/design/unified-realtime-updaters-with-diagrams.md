@@ -260,10 +260,9 @@ Maps update semantics from both formats:
 |------|-------------|---------|---------|
 | `UPDATE_EXISTING` | Update times on existing trip | TRIP_UPDATE | SCHEDULED |
 | `CANCEL_TRIP` | Cancel entire trip | Cancellation=true | CANCELED |
-| `DELETE_TRIP` | Delete trip | Cancellation=true | DELETED |
-| `ADD_NEW_TRIP` | Add trip not in schedule | REPLACEMENT_DEPARTURE | NEW, ADDED |
-| `MODIFY_TRIP` | Replace trip with modified pattern | Modified pattern | REPLACEMENT |
-| `ADD_EXTRA_CALLS` | Add stops to existing trip | EXTRA_CALL | N/A |
+| `DELETE_TRIP` | Delete trip (remove from schedule) | — | DELETED |
+| `ADD_NEW_TRIP` | Add trip not in schedule | ExtraJourney=true | NEW, ADDED |
+| `MODIFY_TRIP` | Modify stop pattern | EXTRA_CALL | REPLACEMENT |
 
 ### TripReference (Trip Identification)
 
@@ -407,7 +406,6 @@ classDiagram
         DELETE_TRIP
         ADD_NEW_TRIP
         MODIFY_TRIP
-        ADD_EXTRA_CALLS
     }
     
     class ParsedStopTimeUpdate {
@@ -692,14 +690,14 @@ graph TB
     subgraph "TripUpdateApplier"
         Input[ParsedTripUpdate]
         Router{Update Type?}
-        
+
         subgraph "Handlers"
-            ModHandler[ModifyExistingTripHandler]
+            UpdateHandler[UpdateExistingTripHandler]
             AddHandler[AddNewTripHandler]
             CancelHandler[CancelTripHandler]
-            ExtraHandler[AddExtraCallsHandler]
+            ModifyHandler[ModifyTripHandler]
         end
-        
+
         subgraph "Shared Services"
             Resolver[EntityResolver<br/>stops, trips, routes]
             Matcher[TripMatcher<br/>fuzzy matching]
@@ -707,35 +705,35 @@ graph TB
             Interpolator[DelayInterpolator]
             Validator[UpdateValidator]
         end
-        
+
         Output[RealTimeTripUpdate]
     end
-    
+
     Input --> Router
-    Router -->|UPDATE_EXISTING| ModHandler
+    Router -->|UPDATE_EXISTING| UpdateHandler
     Router -->|ADD_NEW_TRIP| AddHandler
     Router -->|CANCEL_TRIP| CancelHandler
-    Router -->|ADD_EXTRA_CALLS| ExtraHandler
-    
-    ModHandler --> Resolver
-    ModHandler --> Matcher
-    ModHandler --> Builder
-    ModHandler --> Interpolator
-    
+    Router -->|MODIFY_TRIP| ModifyHandler
+
+    UpdateHandler --> Resolver
+    UpdateHandler --> Matcher
+    UpdateHandler --> Builder
+    UpdateHandler --> Interpolator
+
     AddHandler --> Resolver
     AddHandler --> Builder
-    
+
     CancelHandler --> Matcher
-    
-    ExtraHandler --> Resolver
-    ExtraHandler --> Matcher
-    ExtraHandler --> Builder
-    
-    ModHandler --> Output
+
+    ModifyHandler --> Resolver
+    ModifyHandler --> Matcher
+    ModifyHandler --> Builder
+
+    UpdateHandler --> Output
     AddHandler --> Output
     CancelHandler --> Output
-    ExtraHandler --> Output
-    
+    ModifyHandler --> Output
+
     style Input fill:#90EE90
     style Output fill:#FFD700
 ```
@@ -747,9 +745,9 @@ graph TB
 **Challenge:** SIRI supports adding extra stops to existing trips, which GTFS-RT does not directly support.
 
 **Mitigation:**
-- `ADD_EXTRA_CALLS` update type handles this SIRI-specific case
-- `isExtraCall` flag on `ParsedStopTimeUpdate`
-- Applier has specific logic for inserting stops
+- Both use unified `MODIFY_TRIP` type
+- `isExtraCall` flag on `ParsedStopTimeUpdate` identifies SIRI insertions
+- Applier enforces SIRI constraints when `isExtraCall` stops are present
 
 ### 2. GTFS-RT Delay Interpolation
 
@@ -798,7 +796,7 @@ stateDiagram-v2
     DetermineType --> UpdateExisting: UPDATE_EXISTING
     DetermineType --> AddNewTrip: ADD_NEW_TRIP
     DetermineType --> CancelTrip: CANCEL_TRIP
-    DetermineType --> AddExtraCalls: ADD_EXTRA_CALLS
+    DetermineType --> ModifyTrip: MODIFY_TRIP
     
     UpdateExisting --> ResolveTrip: Find scheduled trip
     ResolveTrip --> UpdateTimes: Apply time updates
@@ -812,12 +810,11 @@ stateDiagram-v2
     CancelTrip --> ResolveTrip2: Find scheduled trip
     ResolveTrip2 --> MarkCanceled: Set cancellation flag
     MarkCanceled --> BuildResult
-    
-    AddExtraCalls --> ResolveTrip3: Find scheduled trip
-    ResolveTrip3 --> InsertStops: Add extra stops
-    InsertStops --> UpdatePattern: Modify TripPattern
-    UpdatePattern --> BuildResult
-    
+
+    ModifyTrip --> ResolveTrip3: Find scheduled trip
+    ResolveTrip3 --> ModifyPattern: Modify stop pattern
+    ModifyPattern --> BuildResult
+
     BuildResult --> [*]: RealTimeTripUpdate
 ```
 
@@ -829,18 +826,18 @@ sequenceDiagram
     participant Parser as SiriParser
     participant Model as ParsedTripUpdate
     participant Applier as TripUpdateApplier
-    participant Handler as AddExtraCallsHandler
+    participant Handler as ModifyTripHandler
     participant Transit as Transit Model
-    
+
     Feed->>Parser: EstimatedVehicleJourney<br/>with ExtraCall=true
     Parser->>Parser: Extract calls
     Parser->>Parser: Detect isExtraCall flag
-    Parser->>Model: Create ParsedTripUpdate<br/>type=ADD_EXTRA_CALLS
+    Parser->>Model: Create ParsedTripUpdate<br/>type=MODIFY_TRIP
     Model->>Model: Mark stop with isExtraCall=true
     Model->>Applier: Submit update
-    Applier->>Handler: Route to ExtraCallsHandler
+    Applier->>Handler: Route to ModifyTripHandler
     Handler->>Transit: Find scheduled trip
-    Handler->>Handler: Validate extra call count
+    Handler->>Handler: Validate extra call constraints
     Handler->>Handler: Insert extra stop in pattern
     Handler->>Transit: Create new TripPattern
     Handler->>Applier: Return RealTimeTripUpdate

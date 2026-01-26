@@ -151,7 +151,7 @@ class SiriTripUpdateParserTest {
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
 
-    assertEquals(TripUpdateType.ADD_EXTRA_CALLS, parsed.updateType());
+    assertEquals(TripUpdateType.MODIFY_TRIP, parsed.updateType());
     assertEquals(3, parsed.stopTimeUpdates().size());
 
     var extraCallUpdate = parsed.stopTimeUpdates().get(1);

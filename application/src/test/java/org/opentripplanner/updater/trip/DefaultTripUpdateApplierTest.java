@@ -102,18 +102,4 @@ class DefaultTripUpdateApplierTest {
     assertTrue(result.isFailure());
     assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
   }
-
-  @Test
-  void testAddExtraCalls_notImplemented() {
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.ADD_EXTRA_CALLS,
-      TripReference.builder().build(),
-      LocalDate.now()
-    ).build();
-
-    var result = applier.apply(update, context);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
-  }
 }
