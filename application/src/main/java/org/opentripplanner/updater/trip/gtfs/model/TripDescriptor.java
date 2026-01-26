@@ -5,7 +5,6 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.Optional;
-import java.util.function.Supplier;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -15,12 +14,9 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
 public class TripDescriptor {
 
   private final GtfsRealtime.TripDescriptor tripDescriptor;
-  private final Supplier<LocalDate> localDateNow;
-  private LocalDate serviceDate;
 
-  TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor, Supplier<LocalDate> localDateNow) {
+  TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor) {
     this.tripDescriptor = tripDescriptor;
-    this.localDateNow = localDateNow;
   }
 
   Optional<String> routeId() {
@@ -39,22 +35,6 @@ public class TripDescriptor {
     return tripDescriptor.hasScheduleRelationship()
       ? tripDescriptor.getScheduleRelationship()
       : ScheduleRelationship.SCHEDULED;
-  }
-
-  LocalDate serviceDate() {
-    if (serviceDate != null) {
-      return serviceDate;
-    }
-    try {
-      // TODO: figure out the correct service date. For the special case that a trip
-      // starts for example at 40:00, yesterday would probably be a better guess.
-      serviceDate = startDate().orElse(localDateNow.get());
-      return serviceDate;
-    } catch (ParseException e) {
-      throw new RuntimeException(
-        "TripDescription does not have a valid startDate: call validate() first."
-      );
-    }
   }
 
   Optional<String> tripId() {

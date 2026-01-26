@@ -23,8 +23,8 @@ class MalformedStartDateTest implements RealtimeTestConstants {
   @Test
   void malformedStartDate() {
     var tripInput = TripInput.of(TRIP_1_ID)
-      .addStop(stopA, "0:00:10", "0:00:11")
-      .addStop(stopB, "0:00:20", "0:00:21");
+      .addStop(stopA, "10:00", "10:00")
+      .addStop(stopB, "10:01", "10:01");
 
     var env = envBuilder.addTrip(tripInput).build();
     var rt = GtfsRtTestHelper.of(env);

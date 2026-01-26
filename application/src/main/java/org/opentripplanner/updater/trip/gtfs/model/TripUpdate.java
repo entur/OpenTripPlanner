@@ -25,6 +25,8 @@ public final class TripUpdate {
   private final String feedId;
   private final com.google.transit.realtime.GtfsRealtime.TripUpdate tripUpdate;
   private final TripDescriptor tripDescriptor;
+  private final Supplier<LocalDate> localDateNow;
+  private LocalDate serviceDate;
 
   public TripUpdate(
     String feedId,
@@ -33,7 +35,8 @@ public final class TripUpdate {
   ) {
     this.feedId = feedId;
     this.tripUpdate = tripUpdate;
-    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip(), localDateNow);
+    this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip());
+    this.localDateNow = localDateNow;
     this.validate();
   }
 
@@ -70,7 +73,19 @@ public final class TripUpdate {
   }
 
   public LocalDate serviceDate() {
-    return tripDescriptor.serviceDate();
+    if (serviceDate != null) {
+      return serviceDate;
+    }
+    try {
+      // TODO: figure out the correct service date. For the special case that a trip
+      // starts for example at 40:00, yesterday would probably be a better guess.
+      serviceDate = tripDescriptor.startDate().orElse(localDateNow.get());
+      return serviceDate;
+    } catch (ParseException e) {
+      throw new RuntimeException(
+        "TripDescription does not have a valid startDate: call validate() first."
+      );
+    }
   }
 
   public ScheduleRelationship scheduleRelationship() {
