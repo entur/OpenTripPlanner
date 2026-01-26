@@ -14,6 +14,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
+import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripIdResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
@@ -91,9 +92,15 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       LocalDate::now
     );
 
-    // Create applier context with the trip ID resolver
+    // Create applier context with the trip ID resolver and stop resolver
     var tripIdResolver = new TripIdResolver(transitEditorService);
-    var applierContext = new TripUpdateApplierContext(feedId, snapshotManager, tripIdResolver);
+    var stopResolver = new StopResolver(transitEditorService, feedId);
+    var applierContext = new TripUpdateApplierContext(
+      feedId,
+      snapshotManager,
+      tripIdResolver,
+      stopResolver
+    );
 
     for (var etDelivery : updates) {
       for (var estimatedJourneyVersion : etDelivery.getEstimatedJourneyVersionFrames()) {
