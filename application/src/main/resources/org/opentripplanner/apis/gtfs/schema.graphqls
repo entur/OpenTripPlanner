@@ -1310,7 +1310,6 @@ type QueryType {
     
     An empty list of filters or no value means that all trips should be included. Only one filter
     is allowed for now. Once new filtering criteria is introduced, this limitation will be removed.
-    ```
     """
     filters: [CanceledTripsFilterInput!],
     """
