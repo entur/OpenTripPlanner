@@ -16,19 +16,24 @@ public final class TripUpdateApplierContext {
 
   private final TripIdResolver tripIdResolver;
 
+  private final StopResolver stopResolver;
+
   /**
    * @param feedId The feed ID for this update source
    * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
    * @param tripIdResolver The resolver for looking up trips from trip references
+   * @param stopResolver The resolver for looking up stops from stop references
    */
   public TripUpdateApplierContext(
     String feedId,
     @Nullable TimetableSnapshotManager snapshotManager,
-    TripIdResolver tripIdResolver
+    TripIdResolver tripIdResolver,
+    StopResolver stopResolver
   ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.snapshotManager = snapshotManager;
     this.tripIdResolver = Objects.requireNonNull(tripIdResolver, "tripIdResolver must not be null");
+    this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
   }
 
   public String feedId() {
@@ -44,6 +49,10 @@ public final class TripUpdateApplierContext {
     return tripIdResolver;
   }
 
+  public StopResolver stopResolver() {
+    return stopResolver;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -56,13 +65,14 @@ public final class TripUpdateApplierContext {
     return (
       Objects.equals(feedId, that.feedId) &&
       Objects.equals(snapshotManager, that.snapshotManager) &&
-      Objects.equals(tripIdResolver, that.tripIdResolver)
+      Objects.equals(tripIdResolver, that.tripIdResolver) &&
+      Objects.equals(stopResolver, that.stopResolver)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(feedId, snapshotManager, tripIdResolver);
+    return Objects.hash(feedId, snapshotManager, tripIdResolver, stopResolver);
   }
 
   @Override
@@ -76,6 +86,8 @@ public final class TripUpdateApplierContext {
       snapshotManager +
       ", tripIdResolver=" +
       tripIdResolver +
+      ", stopResolver=" +
+      stopResolver +
       '}'
     );
   }

@@ -14,6 +14,7 @@ import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripIdResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
@@ -57,7 +58,13 @@ class CancelTripHandlerTest {
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
     var tripIdResolver = new TripIdResolver(env.transitService());
-    context = new TripUpdateApplierContext(env.feedId(), snapshotManager, tripIdResolver);
+    var stopResolver = new StopResolver(env.transitService(), env.feedId());
+    context = new TripUpdateApplierContext(
+      env.feedId(),
+      snapshotManager,
+      tripIdResolver,
+      stopResolver
+    );
     handler = new CancelTripHandler();
   }
 
