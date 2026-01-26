@@ -15,6 +15,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
@@ -64,7 +65,11 @@ class SiriTripUpdateParserTest {
     assertEquals(1, parsed.stopTimeUpdates().size());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
-    assertEquals("stop1", stopUpdate.stopReference().stopPointRef());
+    assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
+    assertEquals(
+      StopResolutionStrategy.SCHEDULED_STOP_POINT_FIRST,
+      stopUpdate.stopReference().resolutionStrategy()
+    );
     assertNotNull(stopUpdate.departureUpdate());
     assertNotNull(stopUpdate.departureUpdate().absoluteTimeSecondsSinceMidnight());
   }
@@ -155,7 +160,7 @@ class SiriTripUpdateParserTest {
     assertEquals(3, parsed.stopTimeUpdates().size());
 
     var extraCallUpdate = parsed.stopTimeUpdates().get(1);
-    assertEquals("stop_extra", extraCallUpdate.stopReference().stopPointRef());
+    assertEquals(new FeedScopedId(FEED_ID, "stop_extra"), extraCallUpdate.stopReference().stopId());
     assertTrue(extraCallUpdate.isExtraCall());
     assertEquals(ParsedStopTimeUpdate.StopUpdateStatus.ADDED, extraCallUpdate.status());
   }
@@ -432,9 +437,18 @@ class SiriTripUpdateParserTest {
     var parsed = result.successValue();
 
     assertEquals(3, parsed.stopTimeUpdates().size());
-    assertEquals("stop1", parsed.stopTimeUpdates().get(0).stopReference().stopPointRef());
-    assertEquals("stop2", parsed.stopTimeUpdates().get(1).stopReference().stopPointRef());
-    assertEquals("stop3", parsed.stopTimeUpdates().get(2).stopReference().stopPointRef());
+    assertEquals(
+      new FeedScopedId(FEED_ID, "stop1"),
+      parsed.stopTimeUpdates().get(0).stopReference().stopId()
+    );
+    assertEquals(
+      new FeedScopedId(FEED_ID, "stop2"),
+      parsed.stopTimeUpdates().get(1).stopReference().stopId()
+    );
+    assertEquals(
+      new FeedScopedId(FEED_ID, "stop3"),
+      parsed.stopTimeUpdates().get(2).stopReference().stopId()
+    );
   }
 
   @Test
