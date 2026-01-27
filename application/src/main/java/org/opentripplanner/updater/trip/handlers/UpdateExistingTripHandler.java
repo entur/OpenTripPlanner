@@ -1,8 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
-import java.util.Optional;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -18,7 +16,6 @@ import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
-import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,6 +115,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     boolean hasUpdates = false;
     var constraint = parsedUpdate.options().stopReplacementConstraint();
     var stopResolver = context.stopResolver();
+    var stopReplacementValidator = new StopReplacementValidator();
 
     for (ParsedStopTimeUpdate stopUpdate : parsedUpdate.stopTimeUpdates()) {
       Integer stopSequence = stopUpdate.stopSequence();
@@ -134,6 +132,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
           );
           continue;
         }
+        // When matching by sequence, only resolve assignedStopId for stop replacement validation
+        if (stopUpdate.stopReference().hasAssignedStopId()) {
+          resolvedStop = stopResolver.resolve(
+            StopReference.ofStopId(stopUpdate.stopReference().assignedStopId())
+          );
+        }
       } else {
         // Try to match by stop reference (SIRI-style matching)
         var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
@@ -148,18 +152,27 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       // Get the scheduled stop from the pattern
       StopLocation scheduledStop = pattern.getStop(stopIndex);
 
-      // Validate stop replacement constraint
-      var validationError = validateStopReplacement(
-        stopUpdate.stopReference(),
-        scheduledStop,
-        resolvedStop,
-        constraint,
-        stopResolver,
-        trip.getId(),
-        stopIndex
-      );
-      if (validationError.isPresent()) {
-        return Result.failure(validationError.get());
+      // Check if we have a stop replacement that we couldn't resolve
+      if (resolvedStop == null && stopUpdate.stopReference().hasAssignedStopId()) {
+        return Result.failure(
+          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
+        );
+      }
+
+      // Validate stop replacement constraint (if there's a replacement)
+      if (resolvedStop != null) {
+        var validationResult = stopReplacementValidator.validate(
+          scheduledStop,
+          resolvedStop,
+          constraint
+        );
+        if (validationResult != StopReplacementValidator.Result.VALID) {
+          var errorType = switch (validationResult) {
+            case STOP_MISMATCH -> UpdateError.UpdateErrorType.STOP_MISMATCH;
+            default -> UpdateError.UpdateErrorType.UNKNOWN;
+          };
+          return Result.failure(new UpdateError(trip.getId(), errorType, stopIndex));
+        }
       }
 
       // Handle skipped/cancelled stops
@@ -203,131 +216,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
   }
 
   /**
-   * Validates that a stop replacement conforms to the configured constraint.
-   *
-   * @param stopReference The stop reference from the update (may contain an assignedStopId)
-   * @param scheduledStop The scheduled stop from the pattern
-   * @param resolvedStop The stop resolved from stopPointRef matching (null if matched by sequence)
-   * @param constraint The constraint to enforce
-   * @param stopResolver Resolver to look up stop locations
-   * @param tripId The trip ID for error reporting
-   * @param stopIndex The stop index for error reporting
-   * @return Empty if valid, or an UpdateError if the constraint is violated
-   */
-  private Optional<UpdateError> validateStopReplacement(
-    StopReference stopReference,
-    StopLocation scheduledStop,
-    @Nullable StopLocation resolvedStop,
-    StopReplacementConstraint constraint,
-    StopResolver stopResolver,
-    FeedScopedId tripId,
-    int stopIndex
-  ) {
-    // Determine the actual stop being used in the update
-    StopLocation actualStop = null;
-
-    if (resolvedStop != null) {
-      // Matched by stopPointRef - the resolved stop is the actual stop
-      actualStop = resolvedStop;
-    } else if (stopReference.hasAssignedStopId()) {
-      // Matched by sequence with an assigned stop - use resolver for consistency
-      actualStop = stopResolver.resolve(StopReference.ofStopId(stopReference.assignedStopId()));
-    } else {
-      // No replacement - using scheduled stop
-      return Optional.empty();
-    }
-
-    if (actualStop == null) {
-      LOG.warn("Could not resolve stop from reference for trip {}", tripId);
-      return Optional.of(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
-      );
-    }
-
-    // If the actual stop is the same as the scheduled stop, no replacement
-    if (actualStop.getId().equals(scheduledStop.getId())) {
-      return Optional.empty();
-    }
-
-    // Now we have a replacement - check constraint
-    return validateStopReplacementConstraint(
-      scheduledStop,
-      actualStop,
-      constraint,
-      tripId,
-      stopIndex
-    );
-  }
-
-  /**
-   * Validates a stop replacement against the configured constraint.
-   */
-  private Optional<UpdateError> validateStopReplacementConstraint(
-    StopLocation scheduledStop,
-    StopLocation actualStop,
-    StopReplacementConstraint constraint,
-    FeedScopedId tripId,
-    int stopIndex
-  ) {
-    switch (constraint) {
-      case ANY_STOP -> {
-        // Any replacement is allowed
-        return Optional.empty();
-      }
-      case NOT_ALLOWED -> {
-        LOG.warn(
-          "Stop replacement not allowed: trip {} stop index {} actual {} but scheduled is {}",
-          tripId,
-          stopIndex,
-          actualStop.getId(),
-          scheduledStop.getId()
-        );
-        return Optional.of(
-          new UpdateError(tripId, UpdateError.UpdateErrorType.STOP_MISMATCH, stopIndex)
-        );
-      }
-      case SAME_PARENT_STATION -> {
-        var scheduledParent = scheduledStop.getParentStation();
-        var actualParent = actualStop.getParentStation();
-
-        if (scheduledParent == null || actualParent == null) {
-          LOG.warn(
-            "Stop replacement rejected: trip {} stop index {} - stops {} and {} are not part of a station",
-            tripId,
-            stopIndex,
-            scheduledStop.getId(),
-            actualStop.getId()
-          );
-          return Optional.of(
-            new UpdateError(tripId, UpdateError.UpdateErrorType.STOP_MISMATCH, stopIndex)
-          );
-        }
-
-        if (!scheduledParent.getId().equals(actualParent.getId())) {
-          LOG.warn(
-            "Stop replacement rejected: trip {} stop index {} - stop {} (station {}) cannot be replaced by {} (station {})",
-            tripId,
-            stopIndex,
-            scheduledStop.getId(),
-            scheduledParent.getId(),
-            actualStop.getId(),
-            actualParent.getId()
-          );
-          return Optional.of(
-            new UpdateError(tripId, UpdateError.UpdateErrorType.STOP_MISMATCH, stopIndex)
-          );
-        }
-
-        // Same parent station - replacement is valid
-        return Optional.empty();
-      }
-      default -> {
-        return Optional.empty();
-      }
-    }
-  }
-
-  /**
    * Result of matching a stop update by its stop reference.
    */
   private record StopMatchResult(int stopIndex, StopLocation resolvedStop) {}
@@ -346,7 +234,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     TripPattern pattern,
     StopResolver stopResolver
   ) {
-    // Resolve the stop from the reference
+    // Resolve the stop from the reference (stopId or stopPointRef)
     StopLocation resolvedStop = stopResolver.resolve(stopReference);
     if (resolvedStop == null) {
       return null;
