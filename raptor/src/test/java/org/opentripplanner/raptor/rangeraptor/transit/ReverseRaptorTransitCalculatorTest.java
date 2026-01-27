@@ -59,6 +59,16 @@ public class ReverseRaptorTransitCalculatorTest {
   }
 
   @Test
+  public void isInIteration() {
+    var subject = create();
+
+    assertFalse(subject.isInIteration(60, 120));
+    assertTrue(subject.isInIteration(61, 120));
+    assertTrue(subject.isInIteration(120, 120));
+    assertFalse(subject.isInIteration(121, 120));
+  }
+
+  @Test
   public void rangeRaptorMinutes() {
     latestArrivalTime = 500;
     searchWindowSizeInSeconds = 200;
