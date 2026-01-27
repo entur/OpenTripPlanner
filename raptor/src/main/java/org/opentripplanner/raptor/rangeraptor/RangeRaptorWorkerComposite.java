@@ -83,9 +83,9 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findOnBoardAccessForRound() {
+  public void findOnBoardAccessForRound(int iterationDepartureTime) {
     for (RangeRaptorWorker<T> child : children) {
-      child.findOnBoardAccessForRound();
+      child.findOnBoardAccessForRound(iterationDepartureTime);
     }
   }
 
