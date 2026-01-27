@@ -75,7 +75,14 @@ public class GtfsRealTimeTripUpdateAdapter {
 
   private static final Logger LOG = LoggerFactory.getLogger(GtfsRealTimeTripUpdateAdapter.class);
 
-  /** A synchronized cache of trip patterns added to the graph due to GTFS-realtime messages. */
+  /**
+   * A synchronized cache of trip patterns added to the timetable repository
+   * due to GTFS-realtime messages.
+   * <p>
+   * This has "Siri" in the name because we are combining the two versions very carefully, step by
+   * step. Once this process is complete, we will clean up the name and move it to an appropriate
+   * package.
+   **/
   private final SiriTripPatternCache tripPatternCache;
 
   private final ZoneId timeZone;
