@@ -151,8 +151,12 @@ public class GtfsRealTimeTripUpdateAdapter {
           rawTripUpdate = rawTripUpdate.toBuilder().setTrip(trip).build();
         }
 
-        // throws exception when invalid
         var tripUpdate = new TripUpdate(feedId, rawTripUpdate, localDateNow);
+        var validationResult = tripUpdate.validate();
+        if (validationResult.isFailure()) {
+          results.add(validationResult.toFailureResult());
+          continue;
+        }
 
         // Determine what kind of trip update this is
         var scheduleRelationship = tripUpdate.scheduleRelationship();

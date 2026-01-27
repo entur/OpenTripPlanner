@@ -15,6 +15,9 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
+import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateSuccess;
 
 /**
  * A real-time update for trip, which may contain updated stop times and trip properties.
@@ -37,7 +40,6 @@ public final class TripUpdate {
     this.tripUpdate = tripUpdate;
     this.tripDescriptor = new TripDescriptor(tripUpdate.getTrip());
     this.localDateNow = localDateNow;
-    this.validate();
   }
 
   public TripDescriptor descriptor() {
@@ -105,16 +107,17 @@ public final class TripUpdate {
       );
   }
 
-  private void validate() throws DataValidationException {
+  public Result<UpdateSuccess, UpdateError> validate() throws DataValidationException {
     if (tripDescriptor.tripId().isEmpty()) {
-      throw new DataValidationException(new InvalidTripError(null, INVALID_INPUT_STRUCTURE));
+      return Result.failure(UpdateError.noTripId(INVALID_INPUT_STRUCTURE));
     }
 
     try {
       tripDescriptor.startDate();
     } catch (ParseException e) {
-      throw new DataValidationException(new InvalidTripError(tripId(), INVALID_INPUT_STRUCTURE));
+      return Result.failure(new UpdateError(tripId(), INVALID_INPUT_STRUCTURE));
     }
+    return Result.success(UpdateSuccess.noWarnings());
   }
 
   public Optional<FeedScopedId> routeId() {

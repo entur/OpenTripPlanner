@@ -4,7 +4,6 @@ import com.beust.jcommander.internal.Nullable;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.TimetableValidationError;
-import org.opentripplanner.updater.trip.gtfs.model.InvalidTripError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,9 +27,6 @@ public class DataValidationExceptionMapper {
       return Result.failure(
         new UpdateError(tt.trip().getId(), mapTimeTableError(tt.code()), tt.stopIndex(), producer)
       );
-    }
-    if (error.error() instanceof InvalidTripError e) {
-      return Result.failure(new UpdateError(e.tripId(), e.code(), null, producer));
     }
     // The mapper should handle all possible errors
     LOG.error("Unhandled error: {}", error.getMessage(), error);
