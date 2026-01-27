@@ -58,6 +58,16 @@ public class ForwardRaptorTransitCalculatorTest {
   }
 
   @Test
+  public void isInIteration() {
+    var subject = create();
+
+    assertFalse(subject.isInIteration(59, 60));
+    assertTrue(subject.isInIteration(60, 60));
+    assertTrue(subject.isInIteration(119, 60));
+    assertFalse(subject.isInIteration(120, 60));
+  }
+
+  @Test
   public void rangeRaptorMinutes() {
     earliestDepartureTime = 500;
     searchWindowSizeInSeconds = 200;
