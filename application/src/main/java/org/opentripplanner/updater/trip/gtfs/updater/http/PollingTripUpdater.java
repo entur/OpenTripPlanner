@@ -8,7 +8,7 @@ import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.TripUpdateGraphWriterRunnable;
 import org.opentripplanner.updater.trip.metrics.BatchTripUpdateMetrics;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -23,7 +23,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
   private static final Logger LOG = LoggerFactory.getLogger(PollingTripUpdater.class);
 
   private final HttpTripUpdateSource updateSource;
-  private final GtfsRealTimeTripUpdateAdapter adapter;
+  private final GtfsTripUpdateAdapter adapter;
 
   /**
    * Feed id that is used for the trip ids in the TripUpdates
@@ -48,7 +48,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
 
   public PollingTripUpdater(
     PollingTripUpdaterParameters parameters,
-    GtfsRealTimeTripUpdateAdapter adapter
+    GtfsTripUpdateAdapter adapter
   ) {
     super(parameters);
     // Create update streamer from preferences

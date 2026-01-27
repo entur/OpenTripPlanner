@@ -29,9 +29,13 @@ import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.TimetableSnapshotFlush;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.gtfs.GtfsNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
+import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdaterParameters;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
+import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdaterParameters;
 import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
@@ -196,7 +200,7 @@ public class UpdaterConfigurator {
       updaters.add(new GtfsRealtimeAlertsUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getPollingStoptimeUpdaterParameters()) {
-      updaters.add(new PollingTripUpdater(configItem, provideGtfsAdapter()));
+      updaters.add(new PollingTripUpdater(configItem, createGtfsAdapter(configItem)));
     }
     for (var configItem : updatersParameters.getVehiclePositionsUpdaterParameters()) {
       updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
@@ -226,7 +230,7 @@ public class UpdaterConfigurator {
       updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getMqttGtfsRealtimeUpdaterParameters()) {
-      updaters.add(new MqttGtfsRealtimeUpdater(configItem, provideGtfsAdapter()));
+      updaters.add(new MqttGtfsRealtimeUpdater(configItem, createMqttGtfsAdapter(configItem)));
     }
     for (var configItem : updatersParameters.getVehicleParkingUpdaterParameters()) {
       switch (configItem.updateType()) {
@@ -288,13 +292,37 @@ public class UpdaterConfigurator {
     }
   }
 
-  private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
-    return new GtfsRealTimeTripUpdateAdapter(
-      timetableRepository,
-      deduplicator,
-      snapshotManager,
-      () -> LocalDate.now(timetableRepository.getTimeZone())
-    );
+  private GtfsTripUpdateAdapter createGtfsAdapter(PollingTripUpdaterParameters config) {
+    if (config.useNewUpdaterImplementation()) {
+      return new GtfsNewTripUpdateAdapter(
+        timetableRepository,
+        snapshotManager,
+        config.forwardsDelayPropagationType(),
+        config.backwardsDelayPropagationType()
+      );
+    } else {
+      return new GtfsRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        () -> LocalDate.now(timetableRepository.getTimeZone())
+      );
+    }
+  }
+
+  private GtfsTripUpdateAdapter createMqttGtfsAdapter(MqttGtfsRealtimeUpdaterParameters config) {
+    if (config.useNewUpdaterImplementation()) {
+      return new GtfsNewTripUpdateAdapter(
+        timetableRepository,
+        snapshotManager,
+        config.forwardsDelayPropagationType(),
+        config.backwardsDelayPropagationType()
+      );
+    } else {
+      return new GtfsRealTimeTripUpdateAdapter(timetableRepository, snapshotManager, () ->
+        LocalDate.now(timetableRepository.getTimeZone())
+      );
+    }
   }
 
   /**
