@@ -246,6 +246,11 @@ public final class TransitPreferences implements Serializable {
         includeRealtimeCancellations != DEFAULT.includeRealtimeCancellations
       )
       .addObj("raptor", raptor, DEFAULT.raptor)
+      .addObj(
+        "directTransitPreferences",
+        directTransitPreferences,
+        DEFAULT.directTransitPreferences
+      )
       .toString();
   }
 

@@ -6,10 +6,12 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.model.Cost;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
 
+///  All preferences related to the Direct Transit Search
 public class DirectTransitPreferences {
 
-  /* The next constants are package-local to be readable in the unit-test. */
+  // The next constants are package-local to be readable in the unit-test.
   static final double DEFAULT_RELUCTANCE = 1.0;
   static final CostLinearFunction DEFAULT_COST_RELAX_FUNCTION = CostLinearFunction.of(
     Cost.costOfMinutes(15),
@@ -46,6 +48,10 @@ public class DirectTransitPreferences {
     return new Builder(DEFAULT);
   }
 
+  public Builder copyOf() {
+    return new Builder(this);
+  }
+
   /// Whether to enable direct transit search
   public boolean enabled() {
     return enabled;
@@ -63,7 +69,8 @@ public class DirectTransitPreferences {
     return extraAccessEgressReluctance;
   }
 
-  public boolean addExtraGeneralizedCostToAccessAndEgress() {
+  ///  Whether there is any extra access/egress reluctance
+  public boolean isExtraReluctanceAddedToAccessAndEgress() {
     return extraAccessEgressReluctance != DEFAULT_RELUCTANCE;
   }
 
@@ -71,10 +78,6 @@ public class DirectTransitPreferences {
   /// results that require no access or egress. I.e. a stop-to-stop search.
   public Optional<Duration> maxAccessEgressDuration() {
     return Optional.ofNullable(maxAccessEgressDuration);
-  }
-
-  public Builder copyOf() {
-    return new Builder(this);
   }
 
   @Override
@@ -86,7 +89,7 @@ public class DirectTransitPreferences {
     return (
       enabled == that.enabled &&
       Double.compare(extraAccessEgressReluctance, that.extraAccessEgressReluctance) == 0 &&
-      maxAccessEgressDuration == that.maxAccessEgressDuration &&
+      Objects.equals(maxAccessEgressDuration, that.maxAccessEgressDuration) &&
       Objects.equals(costRelaxFunction, that.costRelaxFunction)
     );
   }
@@ -99,6 +102,24 @@ public class DirectTransitPreferences {
       extraAccessEgressReluctance,
       maxAccessEgressDuration
     );
+  }
+
+  @Override
+  public String toString() {
+    return ToStringBuilder.of(DirectTransitPreferences.class)
+      .addBool("enabled", enabled)
+      .addObj("costRelaxFunction", costRelaxFunction, DEFAULT.costRelaxFunction)
+      .addNum(
+        "extraAccessEgressReluctance",
+        extraAccessEgressReluctance,
+        DEFAULT.extraAccessEgressReluctance
+      )
+      .addDuration(
+        "maxAccessEgressDuration",
+        maxAccessEgressDuration,
+        DEFAULT.maxAccessEgressDuration
+      )
+      .toString();
   }
 
   public static class Builder {
