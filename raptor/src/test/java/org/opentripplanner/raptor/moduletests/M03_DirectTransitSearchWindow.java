@@ -18,7 +18,7 @@ import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
  * <p>
  * The direct transit search should only return trips in the search window
  */
-public class M03_RelaxedSearchWindow implements RaptorTestConstants {
+public class M03_DirectTransitSearchWindow implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();

@@ -18,7 +18,7 @@ public class DirectTransitRequestConfig {
         cost relaxation. It will include results even if they are not optimal in regard to the criteria
         in the main raptor search.
 
-        This featue is off by default!
+        This feature is off by default!
         """
       )
       .asObject();

@@ -66,4 +66,21 @@ class DirectTransitPreferencesTest {
 
     AssertEqualsAndHashCode.verify(subject).differentFrom(DEFAULT).sameAs(sameAs);
   }
+
+  @Test
+  void testToString() {
+    assertEquals(
+      "DirectTransitPreferences{enabled: false}",
+      DirectTransitPreferences.DEFAULT.toString()
+    );
+    assertEquals(
+      "DirectTransitPreferences{" +
+        "enabled: true, " +
+        "costRelaxFunction: 1h + 3.0 t, " +
+        "extraAccessEgressReluctance: 5.0, " +
+        "maxAccessEgressDuration: 0s" +
+        "}",
+      subject.toString()
+    );
+  }
 }

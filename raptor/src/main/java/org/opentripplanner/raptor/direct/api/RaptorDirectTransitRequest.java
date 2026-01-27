@@ -26,14 +26,6 @@ public final class RaptorDirectTransitRequest {
     this.egressPaths = List.of();
   }
 
-  public static RaptorDirectTransitRequest defaults() {
-    return new RaptorDirectTransitRequest();
-  }
-
-  public static RaptorDirectTransitRequestBuilder of() {
-    return new RaptorDirectTransitRequestBuilder(defaults());
-  }
-
   public RaptorDirectTransitRequest(
     int earliestDepartureTime,
     int searchWindowInSeconds,
@@ -47,6 +39,14 @@ public final class RaptorDirectTransitRequest {
     this.accessPaths = Objects.requireNonNull(accessPaths);
     this.egressPaths = Objects.requireNonNull(egressPaths);
     verify();
+  }
+
+  public static RaptorDirectTransitRequest defaults() {
+    return new RaptorDirectTransitRequest();
+  }
+
+  public static RaptorDirectTransitRequestBuilder of() {
+    return new RaptorDirectTransitRequestBuilder(defaults());
   }
 
   /// The earliest a journey can depart from the origin. The unit is seconds since midnight.
@@ -144,13 +144,13 @@ public final class RaptorDirectTransitRequest {
   }
 
   /* private methods */
-  void verify() {
+  private void verify() {
     assertProperty(isEarliestDepartureTimeSet(), "'earliestDepartureTime' is required.");
     assertProperty(!accessPaths.isEmpty(), "At least one 'accessPath' is required.");
     assertProperty(!egressPaths.isEmpty(), "At least one 'egressPath' is required.");
   }
 
-  static void assertProperty(boolean predicate, String message) {
+  private static void assertProperty(boolean predicate, String message) {
     if (!predicate) {
       throw new IllegalArgumentException(message);
     }
