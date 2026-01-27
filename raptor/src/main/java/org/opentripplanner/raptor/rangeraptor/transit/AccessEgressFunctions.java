@@ -50,7 +50,7 @@ public final class AccessEgressFunctions {
    *         No opening hours is better than being restricted
    *     </li>
    *     <li>
-   *         If Both have opening hours, both need to be accepted
+   *         If both have opening hours, both need to be accepted
    *     </li>
    * </ol>
    */

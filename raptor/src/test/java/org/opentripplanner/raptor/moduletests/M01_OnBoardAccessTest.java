@@ -42,7 +42,7 @@ class M01_OnBoardAccessTest {
       .searchParams()
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
-      .searchWindow(Duration.ofMinutes(2))
+      .searchWindow(Duration.ofMinutes(60))
       .timetable(true);
 
     return builder;
@@ -316,6 +316,38 @@ class M01_OnBoardAccessTest {
       """
       Walk 5m ~ E ~ BUS R2 0:10 0:12 ~ D ~ Walk 30s [0:05 0:12:30 7m30s Tₙ0 C₁1_380]
       B ~ BUS R1 0:05 0:15 ~ D ~ Walk 30s [0:05 0:15:30 10m30s Tₙ0 C₁1_260]""",
+      pathsToString(raptorResponse)
+    );
+  }
+
+  @Test
+  @DisplayName("Range query results in multiple consecutive paths")
+  void rangeQuery() {
+    data
+      .access(
+        new TestRaptorOnBoardAccess(0, 0, 1, STOP_B, 0),
+        new TestRaptorOnBoardAccess(0, 1, 1, STOP_B, 0)
+      )
+      .withRoutes()
+      .withTimetables(
+        """
+        -- R1
+        A     B        C     D
+        0:00  0:05:05  0:10  0:15
+        0:05  0:10     0:15  0:20
+        """
+      )
+      .egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    var raptorResponse = raptorService.route(requestBuilder.build(), data);
+
+    // The result of the range query should include a path for each access
+    assertEquals(
+      """
+      B ~ BUS R1 0:05:05 0:15 ~ D ~ Walk 30s [0:05:05 0:15:30 10m25s Tₙ0 C₁1_255]
+      B ~ BUS R1 0:10 0:20 ~ D ~ Walk 30s [0:10 0:20:30 10m30s Tₙ0 C₁1_260]""",
       pathsToString(raptorResponse)
     );
   }

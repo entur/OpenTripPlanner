@@ -168,7 +168,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findOnBoardAccessForRound() {
+  public void findOnBoardAccessForRound(int iterationDepartureTime) {
     for (var accessPath : accessPaths.onBoardAccessPaths()) {
       RaptorRoute<T> route;
       try {
@@ -186,8 +186,10 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
         return;
       }
 
-      var boardTime = trip.arrival(accessPath.stopPositionInPattern());
-      transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime, trip);
+      var boardTime = trip.departure(accessPath.stopPositionInPattern());
+      if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
+        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime, trip);
+      }
     }
   }
 
