@@ -52,7 +52,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     if (pattern == null) {
       LOG.warn("No pattern found for trip {} on {}", trip.getId(), serviceDate);
       return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND)
+        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND)
       );
     }
 
@@ -61,7 +61,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     if (tripTimes == null) {
       LOG.warn("No trip times found for trip {} in pattern {}", trip.getId(), pattern.getId());
       return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND)
+        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
       );
     }
 
