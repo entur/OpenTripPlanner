@@ -85,6 +85,27 @@ public final class ReverseRaptorTransitCalculator<T extends RaptorTripSchedule>
     return searchWindowInSeconds <= iterationStep;
   }
 
+  /**
+   * Note: This implementation is an identical copy of the one in
+   * {@link ForwardRaptorTransitCalculator}, because introducing a common ancestor with
+   * iterationStep for these two calculators would be too large a performance hit.
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean isInIteration(int subjectTime, int iterationDepartureTime) {
+    boolean iterationDepartureBeforeOrEqSubject = !isAfter(iterationDepartureTime, subjectTime);
+    if (oneIterationOnly()) {
+      return iterationDepartureBeforeOrEqSubject;
+    }
+
+    boolean subjectBeforeIterationWindowEnd = isBefore(
+      subjectTime,
+      plusDuration(iterationDepartureTime, iterationStep)
+    );
+
+    return iterationDepartureBeforeOrEqSubject && subjectBeforeIterationWindowEnd;
+  }
+
   @Override
   public IntIterator patternStopIterator(int nStopsInPattern) {
     return IntIterators.intDecIterator(nStopsInPattern, 0);
