@@ -74,6 +74,7 @@ public class ConstructApplication {
    * the application context.
    */
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
+
   private final ConstructApplicationFactory factory;
 
   /**
