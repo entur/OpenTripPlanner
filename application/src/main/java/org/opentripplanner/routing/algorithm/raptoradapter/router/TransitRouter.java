@@ -32,6 +32,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransit
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.AccessEgressMapper;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.DirectTransitRequestMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.DefaultTransitDataProviderFilter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
@@ -164,7 +165,10 @@ public class TransitRouter {
     debugTimingAggregator.finishedRaptorSearch();
 
     // Route Direct transit
-    var directRequest = mapper.mapToDirectRequest(transitResponse.requestUsed().searchParams());
+    var directRequest = DirectTransitRequestMapper.map(
+      request,
+      transitResponse.requestUsed().searchParams()
+    );
     if (directRequest.isPresent()) {
       debugTimingAggregator.startedDirectTransitSearch();
       var directPaths = raptorService.findAllDirectTransit(

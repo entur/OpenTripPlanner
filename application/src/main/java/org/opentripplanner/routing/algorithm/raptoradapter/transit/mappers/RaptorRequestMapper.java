@@ -3,7 +3,6 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers;
 import static org.opentripplanner.raptor.api.request.Optimization.PARALLEL;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -11,7 +10,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -28,11 +26,8 @@ import org.opentripplanner.raptor.api.request.Optimization;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
-import org.opentripplanner.raptor.api.request.SearchParams;
-import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
 import org.opentripplanner.raptor.rangeraptor.SystemErrDebugLogger;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.performance.PerformanceTimersForRaptor;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.AccessEgressWithExtraCost;
 import org.opentripplanner.routing.api.request.DebugEventType;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
@@ -215,43 +210,6 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     return builder.build();
   }
 
-  ///  Map the request into a request object for the direct transit search. Will return empty if
-  /// the direct transit search shouldn't be run.
-  public Optional<RaptorDirectTransitRequest> mapToDirectRequest(SearchParams searchParamsUsed) {
-    var directTransitRequestOpt = request.preferences().transit().directTransit();
-    if (directTransitRequestOpt.isEmpty()) {
-      return Optional.empty();
-    }
-    var rel = directTransitRequestOpt.orElseThrow();
-    Collection<? extends RaptorAccessEgress> access = searchParamsUsed.accessPaths();
-    Collection<? extends RaptorAccessEgress> egress = searchParamsUsed.egressPaths();
-
-    access = filterAccessEgressNoOpeningHours(access);
-    egress = filterAccessEgressNoOpeningHours(egress);
-
-    if (rel.maxAccessEgressDuration().isPresent()) {
-      var maxDuration = rel.maxAccessEgressDuration().get();
-      access = filterAccessEgressByDuration(access, maxDuration);
-      egress = filterAccessEgressByDuration(egress, maxDuration);
-    }
-    if (rel.addExtraGeneralizedCostToAccessAndEgress()) {
-      double f = rel.extraAccessEgressCostFactor();
-      access = decorateAccessEgressWithExtraCost(access, f);
-      egress = decorateAccessEgressWithExtraCost(egress, f);
-    }
-    if (access.isEmpty() || egress.isEmpty()) {
-      return Optional.empty();
-    }
-    var directRequest = RaptorDirectTransitRequest.of()
-      .addAccessPaths(access)
-      .addEgressPaths(egress)
-      .searchWindowInSeconds(searchParamsUsed.searchWindowInSeconds())
-      .earliestDepartureTime(searchParamsUsed.earliestDepartureTime())
-      .withRelaxC1(mapRelaxCost(rel.costRelaxFunction()))
-      .build();
-    return Optional.of(directRequest);
-  }
-
   private boolean hasPassThroughOnly() {
     return (
       request.isViaSearch() &&
@@ -365,36 +323,5 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       }
     }
     return result;
-  }
-
-  /* Direct transit private methods */
-
-  private List<? extends RaptorAccessEgress> filterAccessEgressByDuration(
-    Collection<? extends RaptorAccessEgress> list,
-    Duration maxDuration
-  ) {
-    return list
-      .stream()
-      .filter(ae -> ae.durationInSeconds() <= maxDuration.toSeconds())
-      .toList();
-  }
-
-  private List<? extends RaptorAccessEgress> filterAccessEgressNoOpeningHours(
-    Collection<? extends RaptorAccessEgress> list
-  ) {
-    return list
-      .stream()
-      .filter(it -> !it.hasOpeningHours())
-      .toList();
-  }
-
-  private List<? extends RaptorAccessEgress> decorateAccessEgressWithExtraCost(
-    Collection<? extends RaptorAccessEgress> list,
-    double costFactor
-  ) {
-    return list
-      .stream()
-      .map(it -> new AccessEgressWithExtraCost(it, costFactor))
-      .toList();
   }
 }
