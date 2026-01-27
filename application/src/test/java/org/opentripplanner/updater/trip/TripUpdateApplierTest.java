@@ -25,7 +25,7 @@ class TripUpdateApplierTest {
 
   private String feedId;
   private TransitService transitService;
-  private TripIdResolver tripIdResolver;
+  private TripResolver tripResolver;
   private StopResolver stopResolver;
 
   @BeforeEach
@@ -33,17 +33,17 @@ class TripUpdateApplierTest {
     var env = TransitTestEnvironment.of().build();
     feedId = env.feedId();
     transitService = env.transitService();
-    tripIdResolver = new TripIdResolver(transitService);
+    tripResolver = new TripResolver(transitService);
     stopResolver = new StopResolver(transitService);
   }
 
   @Test
   void applierContextHasRequiredFields() {
-    var context = new TripUpdateApplierContext(feedId, null, tripIdResolver, stopResolver);
+    var context = new TripUpdateApplierContext(feedId, null, tripResolver, stopResolver);
 
     assertEquals(feedId, context.feedId());
     assertNull(context.snapshotManager());
-    assertNotNull(context.tripIdResolver());
+    assertNotNull(context.tripResolver());
     assertNotNull(context.stopResolver());
   }
 
@@ -58,7 +58,7 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(true);
-    var context = new TripUpdateApplierContext(feedId, null, tripIdResolver, stopResolver);
+    var context = new TripUpdateApplierContext(feedId, null, tripResolver, stopResolver);
 
     var result = applier.apply(parsedUpdate, context);
 
@@ -76,7 +76,7 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(false);
-    var context = new TripUpdateApplierContext(feedId, null, tripIdResolver, stopResolver);
+    var context = new TripUpdateApplierContext(feedId, null, tripResolver, stopResolver);
 
     var result = applier.apply(parsedUpdate, context);
 

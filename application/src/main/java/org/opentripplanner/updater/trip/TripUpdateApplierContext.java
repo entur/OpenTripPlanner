@@ -14,25 +14,25 @@ public final class TripUpdateApplierContext {
   @Nullable
   private final TimetableSnapshotManager snapshotManager;
 
-  private final TripIdResolver tripIdResolver;
+  private final TripResolver tripResolver;
 
   private final StopResolver stopResolver;
 
   /**
    * @param feedId The feed ID for this update source
    * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
-   * @param tripIdResolver The resolver for looking up trips from trip references
+   * @param tripResolver The resolver for looking up trips from trip references
    * @param stopResolver The resolver for looking up stops from stop references
    */
   public TripUpdateApplierContext(
     String feedId,
     @Nullable TimetableSnapshotManager snapshotManager,
-    TripIdResolver tripIdResolver,
+    TripResolver tripResolver,
     StopResolver stopResolver
   ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.snapshotManager = snapshotManager;
-    this.tripIdResolver = Objects.requireNonNull(tripIdResolver, "tripIdResolver must not be null");
+    this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
     this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
   }
 
@@ -45,8 +45,8 @@ public final class TripUpdateApplierContext {
     return snapshotManager;
   }
 
-  public TripIdResolver tripIdResolver() {
-    return tripIdResolver;
+  public TripResolver tripResolver() {
+    return tripResolver;
   }
 
   public StopResolver stopResolver() {
@@ -65,14 +65,14 @@ public final class TripUpdateApplierContext {
     return (
       Objects.equals(feedId, that.feedId) &&
       Objects.equals(snapshotManager, that.snapshotManager) &&
-      Objects.equals(tripIdResolver, that.tripIdResolver) &&
+      Objects.equals(tripResolver, that.tripResolver) &&
       Objects.equals(stopResolver, that.stopResolver)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(feedId, snapshotManager, tripIdResolver, stopResolver);
+    return Objects.hash(feedId, snapshotManager, tripResolver, stopResolver);
   }
 
   @Override
@@ -84,8 +84,8 @@ public final class TripUpdateApplierContext {
       '\'' +
       ", snapshotManager=" +
       snapshotManager +
-      ", tripIdResolver=" +
-      tripIdResolver +
+      ", tripResolver=" +
+      tripResolver +
       ", stopResolver=" +
       stopResolver +
       '}'
