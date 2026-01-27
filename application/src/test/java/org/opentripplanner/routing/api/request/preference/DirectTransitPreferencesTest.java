@@ -18,13 +18,13 @@ class DirectTransitPreferencesTest {
     Cost.ONE_HOUR_WITH_TRANSIT,
     3.0
   );
-  private static final double EXTRA_ACCESS_EGRESS_COST_FACTOR = 5.0;
+  private static final double EXTRA_ACCESS_EGRESS_RELUCTANCE = 5.0;
   private static final Duration MAX_ACCESS_EGRESS_DURATION = Duration.ZERO;
 
   private DirectTransitPreferences subject = DirectTransitPreferences.of()
     .withEnabled(true)
     .withCostRelaxFunction(COST_RELAX_FUNCTION)
-    .withExtraAccessEgressCostFactor(EXTRA_ACCESS_EGRESS_COST_FACTOR)
+    .withExtraAccessEgressReluctance(EXTRA_ACCESS_EGRESS_RELUCTANCE)
     .withMaxAccessEgressDuration(MAX_ACCESS_EGRESS_DURATION)
     .build();
 
@@ -41,9 +41,12 @@ class DirectTransitPreferencesTest {
   }
 
   @Test
-  void extraAccessEgressCostFactor() {
-    assertEquals(DirectTransitPreferences.DEFAULT_FACTOR, DEFAULT.extraAccessEgressCostFactor());
-    assertEquals(EXTRA_ACCESS_EGRESS_COST_FACTOR, subject.extraAccessEgressCostFactor());
+  void extraAccessEgressReluctance() {
+    assertEquals(
+      DirectTransitPreferences.DEFAULT_RELUCTANCE,
+      DEFAULT.extraAccessEgressReluctance()
+    );
+    assertEquals(EXTRA_ACCESS_EGRESS_RELUCTANCE, subject.extraAccessEgressReluctance());
   }
 
   @Test
@@ -57,7 +60,7 @@ class DirectTransitPreferencesTest {
     var sameAs = DirectTransitPreferences.of()
       .withEnabled(true)
       .withCostRelaxFunction(COST_RELAX_FUNCTION)
-      .withExtraAccessEgressCostFactor(EXTRA_ACCESS_EGRESS_COST_FACTOR)
+      .withExtraAccessEgressReluctance(EXTRA_ACCESS_EGRESS_RELUCTANCE)
       .withMaxAccessEgressDuration(Duration.ZERO)
       .build();
 

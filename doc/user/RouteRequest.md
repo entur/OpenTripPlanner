@@ -109,7 +109,7 @@ and in the [transferRequests in build-config.json](BuildConfiguration.md#transfe
 | [directTransitSearch](#rd_directTransitSearch)                                                               |        `object`        | Extend the search result with extra results using a direct transit search                                                                                | *Optional* |                  |  2.9  |
 |    [costRelaxFunction](#rd_directTransitSearch_costRelaxFunction)                                            | `cost-linear-function` | The generalized-cost window for which paths to include.                                                                                                  | *Optional* | `"15m + 1.50 t"` |  2.9  |
 |    enabled                                                                                                   |        `boolean`       | Enable the direct transit search                                                                                                                         | *Optional* | `false`          |  2.9  |
-|    [extraAccessEgressCostFactor](#rd_directTransitSearch_extraAccessEgressCostFactor)                        |        `double`        | Add an extra cost to access/egress legs for these results                                                                                                | *Optional* | `1.0`            |  2.9  |
+|    [extraAccessEgressReluctance](#rd_directTransitSearch_extraAccessEgressReluctance)                        |        `double`        | Add an extra cost factor to access/egress legs for these results                                                                                         | *Optional* | `1.0`            |  2.9  |
 |    [maxAccessEgressDuration](#rd_directTransitSearch_maxAccessEgressDuration)                                |       `duration`       | A limit on the duration of access/egress for the direct transit search                                                                                   | *Optional* |                  |  2.9  |
 | elevator                                                                                                     |        `object`        | Elevator preferences.                                                                                                                                    | *Optional* |                  |  2.9  |
 |    boardCost                                                                                                 |        `integer`       | What is the cost of boarding a elevator?                                                                                                                 | *Optional* | `15`             |  2.9  |
@@ -723,14 +723,14 @@ to 2 times plus 10 minutes compared to the cheapest path. I.e. if the cheapest p
 a cost of 100m the results will include paths with a cost 210m.
 
 
-<h3 id="rd_directTransitSearch_extraAccessEgressCostFactor">extraAccessEgressCostFactor</h3>
+<h3 id="rd_directTransitSearch_extraAccessEgressReluctance">extraAccessEgressReluctance</h3>
 
 **Since version:** `2.9` ∙ **Type:** `double` ∙ **Cardinality:** `Optional` ∙ **Default value:** `1.0`   
 **Path:** /routingDefaults/directTransitSearch 
 
-Add an extra cost to access/egress legs for these results
+Add an extra cost factor to access/egress legs for these results
 
-The cost for access/egress will be multiplied by this factor. This can be used to limit
+The cost for access/egress will be multiplied by this reluctance. This can be used to limit
 the amount of walking.
 
 
@@ -1424,7 +1424,7 @@ include stairs as a last result.
       "enabled" : false,
       "costRelaxFunction" : "15m + 1.5t",
       "maxAccessEgressDuration" : "5m",
-      "extraAccessEgressCostFactor" : 2
+      "extraAccessEgressReluctance" : 2
     }
   }
 }

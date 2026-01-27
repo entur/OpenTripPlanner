@@ -10,7 +10,7 @@ import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 public class DirectTransitPreferences {
 
   /* The next constants are package-local to be readable in the unit-test. */
-  static final double DEFAULT_FACTOR = 1.0;
+  static final double DEFAULT_RELUCTANCE = 1.0;
   static final CostLinearFunction DEFAULT_COST_RELAX_FUNCTION = CostLinearFunction.of(
     Cost.costOfMinutes(15),
     1.5
@@ -19,13 +19,13 @@ public class DirectTransitPreferences {
   public static final DirectTransitPreferences DEFAULT = new DirectTransitPreferences(
     false,
     DEFAULT_COST_RELAX_FUNCTION,
-    DEFAULT_FACTOR,
+    DEFAULT_RELUCTANCE,
     null
   );
 
   private final boolean enabled;
   private final CostLinearFunction costRelaxFunction;
-  private final double extraAccessEgressCostFactor;
+  private final double extraAccessEgressReluctance;
 
   @Nullable
   private final Duration maxAccessEgressDuration;
@@ -33,12 +33,12 @@ public class DirectTransitPreferences {
   private DirectTransitPreferences(
     boolean enabled,
     CostLinearFunction costRelaxFunction,
-    double extraAccessEgressCostFactor,
+    double extraAccessEgressReluctance,
     Duration maxAccessEgressDuration
   ) {
     this.enabled = enabled;
     this.costRelaxFunction = costRelaxFunction;
-    this.extraAccessEgressCostFactor = extraAccessEgressCostFactor;
+    this.extraAccessEgressReluctance = extraAccessEgressReluctance;
     this.maxAccessEgressDuration = maxAccessEgressDuration;
   }
 
@@ -59,12 +59,12 @@ public class DirectTransitPreferences {
   }
 
   /// An extra cost that is used to increase the cost of the access/egress legs for this search.
-  public double extraAccessEgressCostFactor() {
-    return extraAccessEgressCostFactor;
+  public double extraAccessEgressReluctance() {
+    return extraAccessEgressReluctance;
   }
 
   public boolean addExtraGeneralizedCostToAccessAndEgress() {
-    return extraAccessEgressCostFactor != DEFAULT_FACTOR;
+    return extraAccessEgressReluctance != DEFAULT_RELUCTANCE;
   }
 
   /// A limit on the duration for access/egress for this search. Setting this to 0 will only include
@@ -85,7 +85,7 @@ public class DirectTransitPreferences {
     DirectTransitPreferences that = (DirectTransitPreferences) o;
     return (
       enabled == that.enabled &&
-      Double.compare(extraAccessEgressCostFactor, that.extraAccessEgressCostFactor) == 0 &&
+      Double.compare(extraAccessEgressReluctance, that.extraAccessEgressReluctance) == 0 &&
       maxAccessEgressDuration == that.maxAccessEgressDuration &&
       Objects.equals(costRelaxFunction, that.costRelaxFunction)
     );
@@ -96,7 +96,7 @@ public class DirectTransitPreferences {
     return Objects.hash(
       enabled,
       costRelaxFunction,
-      extraAccessEgressCostFactor,
+      extraAccessEgressReluctance,
       maxAccessEgressDuration
     );
   }
@@ -105,7 +105,7 @@ public class DirectTransitPreferences {
 
     private boolean enabled;
     private CostLinearFunction costRelaxFunction;
-    private double extraAccessEgressCostFactor;
+    private double extraAccessEgressReluctance;
     private Duration maxAccessEgressDuration;
     public DirectTransitPreferences original;
 
@@ -113,7 +113,7 @@ public class DirectTransitPreferences {
       this.original = original;
       this.enabled = original.enabled;
       this.costRelaxFunction = original.costRelaxFunction;
-      this.extraAccessEgressCostFactor = original.extraAccessEgressCostFactor;
+      this.extraAccessEgressReluctance = original.extraAccessEgressReluctance;
       this.maxAccessEgressDuration = original.maxAccessEgressDuration;
     }
 
@@ -127,8 +127,8 @@ public class DirectTransitPreferences {
       return this;
     }
 
-    public Builder withExtraAccessEgressCostFactor(double extraAccessEgressCostFactor) {
-      this.extraAccessEgressCostFactor = extraAccessEgressCostFactor;
+    public Builder withExtraAccessEgressReluctance(double extraAccessEgressReluctance) {
+      this.extraAccessEgressReluctance = extraAccessEgressReluctance;
       return this;
     }
 
@@ -141,7 +141,7 @@ public class DirectTransitPreferences {
       var value = new DirectTransitPreferences(
         enabled,
         costRelaxFunction,
-        extraAccessEgressCostFactor,
+        extraAccessEgressReluctance,
         maxAccessEgressDuration
       );
       return original.equals(value) ? original : value;

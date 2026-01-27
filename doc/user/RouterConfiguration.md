@@ -661,7 +661,7 @@ Used to group requests when monitoring OTP.
       "enabled" : false,
       "costRelaxFunction" : "15m + 1.5t",
       "maxAccessEgressDuration" : "5m",
-      "extraAccessEgressCostFactor" : 2
+      "extraAccessEgressReluctance" : 2
     }
   },
   "flex" : {

@@ -50,18 +50,18 @@ public class DirectTransitRequestConfig {
           )
           .asCostLinearFunction(dft.costRelaxFunction())
       )
-      .withExtraAccessEgressCostFactor(
+      .withExtraAccessEgressReluctance(
         c
-          .of("extraAccessEgressCostFactor")
+          .of("extraAccessEgressReluctance")
           .since(V2_9)
-          .summary("Add an extra cost to access/egress legs for these results")
+          .summary("Add an extra cost factor to access/egress legs for these results")
           .description(
             """
-            The cost for access/egress will be multiplied by this factor. This can be used to limit
+            The cost for access/egress will be multiplied by this reluctance. This can be used to limit
             the amount of walking.
             """
           )
-          .asDouble(dft.extraAccessEgressCostFactor())
+          .asDouble(dft.extraAccessEgressReluctance())
       )
       .withMaxAccessEgressDuration(
         c

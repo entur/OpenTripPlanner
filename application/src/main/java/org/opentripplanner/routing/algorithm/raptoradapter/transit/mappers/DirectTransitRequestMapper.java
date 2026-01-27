@@ -35,7 +35,7 @@ public class DirectTransitRequestMapper {
       egress = filterAccessEgressByDuration(egress, maxDuration);
     }
     if (rel.addExtraGeneralizedCostToAccessAndEgress()) {
-      double f = rel.extraAccessEgressCostFactor();
+      double f = rel.extraAccessEgressReluctance();
       access = decorateAccessEgressWithExtraCost(access, f);
       egress = decorateAccessEgressWithExtraCost(egress, f);
     }
