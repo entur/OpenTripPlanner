@@ -4,6 +4,7 @@ import static org.opentripplanner.standalone.config.framework.json.EnumMapper.do
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_8;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
@@ -35,7 +36,16 @@ public class MqttGtfsRealtimeUpdaterConfig {
         .since(V2_2)
         .summary(BackwardsDelayPropagationType.REQUIRED_NO_DATA.typeDescription())
         .description(docEnumValueList(BackwardsDelayPropagationType.values()))
-        .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA)
+        .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA),
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary(
+          "Use the new unified trip update implementation. " +
+            "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
+            "When false (default), uses the legacy GtfsRealTimeTripUpdateAdapter."
+        )
+        .asBoolean(false)
     );
   }
 }
