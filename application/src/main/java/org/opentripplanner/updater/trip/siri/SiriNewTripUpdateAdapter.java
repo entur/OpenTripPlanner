@@ -16,7 +16,7 @@ import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripIdResolver;
+import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
@@ -93,12 +93,12 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     );
 
     // Create applier context with the trip ID resolver and stop resolver
-    var tripIdResolver = new TripIdResolver(transitEditorService);
+    var tripResolver = new TripResolver(transitEditorService);
     var stopResolver = new StopResolver(transitEditorService);
     var applierContext = new TripUpdateApplierContext(
       feedId,
       snapshotManager,
-      tripIdResolver,
+      tripResolver,
       stopResolver
     );
 

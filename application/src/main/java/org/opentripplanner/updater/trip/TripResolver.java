@@ -21,11 +21,11 @@ import org.opentripplanner.updater.trip.model.TripReference;
  * This follows the pattern established in {@code EntityResolver.resolveTrip()} but operates
  * on the parsed {@link TripReference} rather than raw SIRI message objects.
  */
-public class TripIdResolver {
+public class TripResolver {
 
   private final TransitService transitService;
 
-  public TripIdResolver(TransitService transitService) {
+  public TripResolver(TransitService transitService) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
   }
 

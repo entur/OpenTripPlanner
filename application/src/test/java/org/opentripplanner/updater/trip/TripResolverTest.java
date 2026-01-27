@@ -16,16 +16,16 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.TripReference;
 
 /**
- * Tests for {@link TripIdResolver}.
+ * Tests for {@link TripResolver}.
  */
-class TripIdResolverTest {
+class TripResolverTest {
 
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String TRIP_ID = "trip1";
   private static final String TRIP_ON_SERVICE_DATE_ID = "dated-trip1";
 
   private TransitService transitService;
-  private TripIdResolver resolver;
+  private TripResolver resolver;
 
   @BeforeEach
   void setUp() {
@@ -46,7 +46,7 @@ class TripIdResolverTest {
       .build();
 
     transitService = env.transitService();
-    resolver = new TripIdResolver(transitService);
+    resolver = new TripResolver(transitService);
   }
 
   @Test
