@@ -14,7 +14,10 @@ public class DirectTransitRequestMapper {
 
   ///  Map the request into a request object for the direct transit search. Will return empty if
   /// the direct transit search shouldn't be run.
-  public static Optional<RaptorDirectTransitRequest> map(RouteRequest request, SearchParams searchParamsUsed) {
+  public static Optional<RaptorDirectTransitRequest> map(
+    RouteRequest request,
+    SearchParams searchParamsUsed
+  ) {
     var directTransitRequestOpt = request.preferences().transit().directTransit();
     if (directTransitRequestOpt.isEmpty()) {
       return Optional.empty();
