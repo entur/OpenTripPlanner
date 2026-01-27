@@ -28,10 +28,10 @@ public class CancelTripHandler implements TripUpdateHandler {
   ) {
     var tripReference = parsedUpdate.tripReference();
     var serviceDate = parsedUpdate.serviceDate();
-    var tripIdResolver = context.tripIdResolver();
+    var tripResolver = context.tripResolver();
 
     // Resolve the trip from the trip reference
-    var tripResult = tripIdResolver.resolveTrip(tripReference);
+    var tripResult = tripResolver.resolveTrip(tripReference);
     if (tripResult.isFailure()) {
       return Result.failure(tripResult.failureValue());
     }

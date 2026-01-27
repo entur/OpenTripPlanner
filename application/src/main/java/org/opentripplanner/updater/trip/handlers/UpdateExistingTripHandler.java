@@ -35,10 +35,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
   ) {
     var tripReference = parsedUpdate.tripReference();
     var serviceDate = parsedUpdate.serviceDate();
-    var tripIdResolver = context.tripIdResolver();
+    var tripResolver = context.tripResolver();
 
     // Resolve the trip from the trip reference
-    var tripResult = tripIdResolver.resolveTrip(tripReference);
+    var tripResult = tripResolver.resolveTrip(tripReference);
     if (tripResult.isFailure()) {
       LOG.debug("Could not resolve trip for update: {}", tripReference);
       return Result.failure(tripResult.failureValue());
