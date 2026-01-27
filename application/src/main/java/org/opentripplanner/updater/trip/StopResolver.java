@@ -18,7 +18,7 @@ import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
  *   <li>If {@code stopId} is present with {@code DIRECT} strategy, use it directly</li>
  * </ol>
  * <p>
- * This follows the pattern established in {@link TripIdResolver} but operates
+ * This follows the pattern established in {@link TripResolver} but operates
  * on the parsed {@link StopReference} rather than raw message objects.
  */
 public class StopResolver {
