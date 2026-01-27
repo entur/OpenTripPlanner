@@ -56,7 +56,7 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 /**
  * Adapts from GTFS-RT TripUpdates to OTP's internal real-time data model.
  */
-public class GtfsRealTimeTripUpdateAdapter {
+public class GtfsRealTimeTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
   /**
    * A synchronized cache of trip patterns added to the timetable repository
@@ -110,6 +110,7 @@ public class GtfsRealTimeTripUpdateAdapter {
    *                                      of all previous updates for the given feed id.
    * @param updates                       GTFS-RT TripUpdate's that should be applied atomically
    */
+  @Override
   public UpdateResult applyTripUpdates(
     @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
