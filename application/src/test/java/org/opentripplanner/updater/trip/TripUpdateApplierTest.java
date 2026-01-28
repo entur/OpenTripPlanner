@@ -27,6 +27,7 @@ class TripUpdateApplierTest {
   private TransitService transitService;
   private TripResolver tripResolver;
   private StopResolver stopResolver;
+  private org.opentripplanner.updater.trip.siri.SiriTripPatternCache tripPatternCache;
 
   @BeforeEach
   void setUp() {
@@ -35,16 +36,27 @@ class TripUpdateApplierTest {
     transitService = env.transitService();
     tripResolver = new TripResolver(transitService);
     stopResolver = new StopResolver(transitService);
+    tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
+      new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
+      transitService::findPattern
+    );
   }
 
   @Test
   void applierContextHasRequiredFields() {
-    var context = new TripUpdateApplierContext(feedId, null, tripResolver, stopResolver);
+    var context = new TripUpdateApplierContext(
+      feedId,
+      null,
+      tripResolver,
+      stopResolver,
+      tripPatternCache
+    );
 
     assertEquals(feedId, context.feedId());
     assertNull(context.snapshotManager());
     assertNotNull(context.tripResolver());
     assertNotNull(context.stopResolver());
+    assertNotNull(context.tripPatternCache());
   }
 
   @Test
@@ -58,7 +70,13 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(true);
-    var context = new TripUpdateApplierContext(feedId, null, tripResolver, stopResolver);
+    var context = new TripUpdateApplierContext(
+      feedId,
+      null,
+      tripResolver,
+      stopResolver,
+      tripPatternCache
+    );
 
     var result = applier.apply(parsedUpdate, context);
 
@@ -76,7 +94,13 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(false);
-    var context = new TripUpdateApplierContext(feedId, null, tripResolver, stopResolver);
+    var context = new TripUpdateApplierContext(
+      feedId,
+      null,
+      tripResolver,
+      stopResolver,
+      tripPatternCache
+    );
 
     var result = applier.apply(parsedUpdate, context);
 
