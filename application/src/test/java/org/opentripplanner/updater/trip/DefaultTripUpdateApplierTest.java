@@ -29,7 +29,17 @@ class DefaultTripUpdateApplierTest {
     applier = new DefaultTripUpdateApplier(transitService);
     var tripResolver = new TripResolver(env.transitService());
     var stopResolver = new StopResolver(env.transitService());
-    context = new TripUpdateApplierContext(env.feedId(), null, tripResolver, stopResolver);
+    var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
+      new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
+      env.transitService()::findPattern
+    );
+    context = new TripUpdateApplierContext(
+      env.feedId(),
+      null,
+      tripResolver,
+      stopResolver,
+      tripPatternCache
+    );
   }
 
   @Test
