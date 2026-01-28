@@ -178,6 +178,24 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     Trip trip,
     TripUpdateApplierContext context
   ) {
+    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+
+    // Validate stop count matches pattern (SIRI-style validation)
+    // Only validate for SIRI-style updates where stops are matched by reference (no explicit stop sequence)
+    if (!parsedUpdate.hasStopSequences()) {
+      // SIRI-style: validate exact match of stop count
+      if (stopTimeUpdates.size() < pattern.numberOfStops()) {
+        return Result.failure(
+          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TOO_FEW_STOPS)
+        );
+      }
+      if (stopTimeUpdates.size() > pattern.numberOfStops()) {
+        return Result.failure(
+          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TOO_MANY_STOPS)
+        );
+      }
+    }
+
     var result = new PatternModificationResult();
     var constraint = parsedUpdate.options().stopReplacementConstraint();
     var stopResolver = context.stopResolver();
@@ -210,8 +228,19 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         // Match by stop reference (SIRI-style)
         var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
         if (matchResult == null) {
-          LOG.debug("Could not match stop update by reference: {}", stopUpdate.stopReference());
-          continue;
+          // Failed to match - determine if it's an unknown stop or a mismatch
+          var resolvedStopForError = stopResolver.resolve(stopUpdate.stopReference());
+          if (resolvedStopForError == null) {
+            // Stop reference couldn't be resolved at all
+            return Result.failure(
+              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
+            );
+          } else {
+            // Stop was resolved but doesn't match any stop in the pattern
+            return Result.failure(
+              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
+            );
+          }
         }
         stopIndex = matchResult.stopIndex;
         resolvedStop = matchResult.resolvedStop;

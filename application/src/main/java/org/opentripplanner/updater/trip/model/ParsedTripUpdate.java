@@ -125,6 +125,15 @@ public final class ParsedTripUpdate {
     return stopPatternModification != null && stopPatternModification.hasModifications();
   }
 
+  /**
+   * Returns true if any stop time update has an explicit stop sequence number.
+   * GTFS-RT updates typically have stop sequences, while SIRI updates do not.
+   * This is used to determine whether to enforce strict stop count validation.
+   */
+  public boolean hasStopSequences() {
+    return stopTimeUpdates.stream().anyMatch(u -> u.stopSequence() != null);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
