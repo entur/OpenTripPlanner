@@ -23,6 +23,7 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
+import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -149,16 +150,22 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     for (var update : updates) {
       var stopId = update.stopId().map(context::createId);
       var assignedStopId = update.assignedStopId().map(context::createId).orElse(null);
+      var stopSequence = update.stopSequence();
 
-      if (stopId.isEmpty()) {
+      // Skip only if BOTH stop_id and stop_sequence are missing
+      // GTFS-RT allows using either for matching
+      if (stopId.isEmpty() && stopSequence.isEmpty()) {
         continue;
       }
 
-      var stopReference = StopReference.ofStopId(stopId.get(), assignedStopId);
+      // Create StopReference - may have null stopId if only stopSequence is provided
+      var stopReference = stopId.isPresent()
+        ? StopReference.ofStopId(stopId.get(), assignedStopId)
+        : new StopReference(null, assignedStopId, StopResolutionStrategy.DIRECT);
 
       var builder = ParsedStopTimeUpdate.builder(stopReference);
 
-      update.stopSequence().ifPresent(builder::withStopSequence);
+      stopSequence.ifPresent(builder::withStopSequence);
 
       var status = mapStopTimeStatus(update);
       builder.withStatus(status);
