@@ -108,7 +108,7 @@ public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
         repository.upsertCarpoolTrip(carpoolTrip);
       }
     } catch (Exception e) {
-      LOG.warn("Failed to process EstimatedVehicleJourney: {}", e.getMessage());
+     // LOG.warn("Failed to process EstimatedVehicleJourney: {}", e.getMessage());
     }
   }
 

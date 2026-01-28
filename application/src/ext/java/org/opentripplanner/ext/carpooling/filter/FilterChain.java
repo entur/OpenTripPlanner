@@ -43,6 +43,16 @@ public class FilterChain implements TripFilter {
     );
   }
 
+  public static FilterChain accessEgress() {
+    return new FilterChain(
+      List.of(
+        new CapacityFilter(),
+        new TimeBasedFilter(),
+        new DirectionalCompatibilityFilter()
+      )
+    );
+  }
+
   @Override
   public boolean accepts(
     CarpoolTrip trip,
