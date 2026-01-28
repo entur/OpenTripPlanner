@@ -9,7 +9,7 @@ import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
-import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
@@ -21,7 +21,7 @@ public class SiriTestHelper {
 
   SiriTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.siriAdapter = new SiriNewTripUpdateAdapter(
+    this.siriAdapter = new SiriRealTimeTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager()
