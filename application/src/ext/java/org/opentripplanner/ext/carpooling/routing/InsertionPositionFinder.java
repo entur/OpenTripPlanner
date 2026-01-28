@@ -152,33 +152,41 @@ public class InsertionPositionFinder {
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff
   ) {
-    if (pickupPos > 0 && pickupPos < routePoints.size()) {
-      WgsCoordinate prevPoint = routePoints.get(pickupPos - 1);
-      WgsCoordinate nextPoint = routePoints.get(pickupPos);
 
-      if (!maintainsForwardProgress(prevPoint, passengerPickup, nextPoint)) {
-        return false;
-      }
+    if(pickupPos < 1 || pickupPos >= dropoffPos){
+      LOG.error(
+        "Illegal pickup position {}. DropOff position: {}, routePoints length: {}",
+        pickupPos,
+        dropoffPos,
+        routePoints.size()
+      );
     }
 
-    if (dropoffPos > 0 && dropoffPos <= routePoints.size()) {
-      WgsCoordinate prevPoint;
-      if (dropoffPos == pickupPos) {
-        prevPoint = passengerPickup;
-      } else if (dropoffPos - 1 < routePoints.size()) {
-        prevPoint = routePoints.get(dropoffPos - 1);
-      } else {
-        return true;
-      }
-
-      if (dropoffPos < routePoints.size()) {
-        WgsCoordinate nextPoint = routePoints.get(dropoffPos);
-
-        return maintainsForwardProgress(prevPoint, passengerDropoff, nextPoint);
-      }
+    if(dropoffPos > routePoints.size()){
+      LOG.error(
+        "Illegal dropoff position {}. PickUp position: {}, routePoints length: {}",
+        dropoffPos,
+        pickupPos,
+        routePoints.size()
+      );
     }
 
-    return true;
+
+    List<WgsCoordinate> routeAfterInsertion = new ArrayList<>(routePoints);
+    routeAfterInsertion.add(pickupPos, passengerPickup);
+    routeAfterInsertion.add(dropoffPos, passengerPickup);
+
+    WgsCoordinate coordBeforePickup = routeAfterInsertion.get(pickupPos - 1);
+    WgsCoordinate coordAfterPickup = routeAfterInsertion.get(pickupPos + 1);
+
+    if (!maintainsForwardProgress(coordBeforePickup, passengerPickup, coordAfterPickup)) {
+      return false;
+    }
+
+    WgsCoordinate coordBeforeDropoff = routeAfterInsertion.get(dropoffPos - 1);
+    WgsCoordinate coordAfterDropoff = routeAfterInsertion.get(dropoffPos + 1);
+
+    return maintainsForwardProgress(coordBeforeDropoff, passengerDropoff, coordAfterDropoff);
   }
 
   /**
