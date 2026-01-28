@@ -152,7 +152,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     final Map<Integer, PickDrop> dropoffChanges = new HashMap<>();
 
     public boolean hasPatternChanges() {
-      return !stopReplacements.isEmpty() || !pickupChanges.isEmpty() || !dropoffChanges.isEmpty();
+      return (
+        !stopReplacements.isEmpty() ||
+        !pickupChanges.isEmpty() ||
+        !dropoffChanges.isEmpty() ||
+        hasCancellations
+      );
     }
 
     public boolean hasAnyUpdates() {
@@ -289,6 +294,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       if (stopUpdate.isSkipped()) {
         builder.withCanceled(stopIndex);
         result.hasCancellations = true;
+        // Record pickup/dropoff changes to NONE for cancelled stops
+        // This ensures the stop pattern reflects the cancellation
+        result.pickupChanges.put(stopIndex, PickDrop.NONE);
+        result.dropoffChanges.put(stopIndex, PickDrop.NONE);
         continue;
       }
 
