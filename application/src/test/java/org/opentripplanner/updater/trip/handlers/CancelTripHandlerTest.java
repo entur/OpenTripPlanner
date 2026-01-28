@@ -59,11 +59,16 @@ class CancelTripHandlerTest {
     snapshotManager = env.timetableSnapshotManager();
     var tripResolver = new TripResolver(env.transitService());
     var stopResolver = new StopResolver(env.transitService());
+    var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
+      new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
+      env.transitService()::findPattern
+    );
     context = new TripUpdateApplierContext(
       env.feedId(),
       snapshotManager,
       tripResolver,
-      stopResolver
+      stopResolver,
+      tripPatternCache
     );
     handler = new CancelTripHandler();
   }

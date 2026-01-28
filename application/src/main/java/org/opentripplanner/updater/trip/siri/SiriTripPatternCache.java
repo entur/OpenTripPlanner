@@ -26,7 +26,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
  *             the thread-safety, but just by looking at a few lines of code I see problems - a strategy needs to be
  *             analysed, designed and documented.
  */
-class SiriTripPatternCache {
+public class SiriTripPatternCache {
 
   /**
    * We cache the trip pattern based on the stop pattern only in order to de-duplicate them.

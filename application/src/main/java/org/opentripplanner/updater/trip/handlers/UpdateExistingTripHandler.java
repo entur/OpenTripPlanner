@@ -1,10 +1,15 @@
 package org.opentripplanner.updater.trip.handlers;
 
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -74,26 +79,48 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     // Create the builder from scheduled times
     var builder = tripTimes.createRealTimeFromScheduledTimes();
 
-    // Apply stop time updates and track if any were applied
+    // Apply stop time updates - now returns PatternModificationResult
     var applyResult = applyStopTimeUpdates(parsedUpdate, builder, pattern, trip, context);
     if (applyResult.isFailure()) {
       return Result.failure(applyResult.failureValue());
     }
-    boolean hasUpdates = applyResult.successValue();
+    PatternModificationResult modResult = applyResult.successValue();
 
-    // Set real-time state to UPDATED if any updates were applied
-    if (hasUpdates) {
-      builder.withRealTimeState(org.opentripplanner.transit.model.timetable.RealTimeState.UPDATED);
+    // Determine the pattern to use
+    TripPattern finalPattern = pattern;
+    RealTimeState realTimeState = RealTimeState.UPDATED;
+
+    // If stop pattern was modified, create or get cached modified pattern
+    if (modResult.hasPatternChanges()) {
+      StopPattern newStopPattern = buildModifiedStopPattern(
+        pattern,
+        modResult.stopReplacements(),
+        modResult.pickupChanges(),
+        modResult.dropoffChanges()
+      );
+
+      // Check if pattern actually changed (builder deduplicates)
+      if (!pattern.getStopPattern().equals(newStopPattern)) {
+        var tripPatternCache = context.tripPatternCache();
+        // SiriTripPatternCache uses 2-parameter signature (gets original pattern via injected function)
+        finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
+        realTimeState = RealTimeState.MODIFIED;
+      }
     }
 
-    // Create the RealTimeTripUpdate
+    // Set real-time state if any updates were applied
+    if (modResult.hasAnyUpdates()) {
+      builder.withRealTimeState(realTimeState);
+    }
+
+    // Create the RealTimeTripUpdate with the correct pattern
     try {
-      var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
-      LOG.debug("Updated trip {} on {}", trip.getId(), serviceDate);
+      var realTimeTripUpdate = new RealTimeTripUpdate(finalPattern, builder.build(), serviceDate);
+      LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
       return Result.success(realTimeTripUpdate);
     } catch (DataValidationException e) {
       LOG.info(
-        "Invalid real-time data for trip {} - TripTimes failed to validate after applying updates. {}",
+        "Invalid real-time data for trip {} - TripTimes failed to validate. {}",
         trip.getId(),
         e.getMessage()
       );
@@ -102,17 +129,49 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
   }
 
   /**
-   * Apply stop time updates from the parsed update to the builder.
-   * @return Result containing true if any updates were applied, or an error if validation fails
+   * Result of applying stop time updates, tracking both time updates and pattern modifications.
    */
-  private Result<Boolean, UpdateError> applyStopTimeUpdates(
+  private static class PatternModificationResult {
+
+    boolean hasTimeUpdates = false;
+    boolean hasCancellations = false;
+    final Map<Integer, StopLocation> stopReplacements = new HashMap<>();
+    final Map<Integer, PickDrop> pickupChanges = new HashMap<>();
+    final Map<Integer, PickDrop> dropoffChanges = new HashMap<>();
+
+    public boolean hasPatternChanges() {
+      return !stopReplacements.isEmpty() || !pickupChanges.isEmpty() || !dropoffChanges.isEmpty();
+    }
+
+    public boolean hasAnyUpdates() {
+      return hasTimeUpdates || hasCancellations || hasPatternChanges();
+    }
+
+    public Map<Integer, StopLocation> stopReplacements() {
+      return stopReplacements;
+    }
+
+    public Map<Integer, PickDrop> pickupChanges() {
+      return pickupChanges;
+    }
+
+    public Map<Integer, PickDrop> dropoffChanges() {
+      return dropoffChanges;
+    }
+  }
+
+  /**
+   * Apply stop time updates from the parsed update to the builder.
+   * @return Result containing PatternModificationResult tracking all changes, or an error if validation fails
+   */
+  private Result<PatternModificationResult, UpdateError> applyStopTimeUpdates(
     ParsedTripUpdate parsedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
     Trip trip,
     TripUpdateApplierContext context
   ) {
-    boolean hasUpdates = false;
+    var result = new PatternModificationResult();
     var constraint = parsedUpdate.options().stopReplacementConstraint();
     var stopResolver = context.stopResolver();
     var stopReplacementValidator = new StopReplacementValidator();
@@ -122,6 +181,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       int stopIndex;
       StopLocation resolvedStop = null;
 
+      // Determine stop index and resolve stop if needed
       if (stopSequence != null) {
         stopIndex = stopSequence;
         if (stopIndex < 0 || stopIndex >= pattern.numberOfStops()) {
@@ -132,14 +192,15 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
           );
           continue;
         }
-        // When matching by sequence, only resolve assignedStopId for stop replacement validation
+
+        // Resolve stop if assignedStopId is provided (stop replacement)
         if (stopUpdate.stopReference().hasAssignedStopId()) {
           resolvedStop = stopResolver.resolve(
             StopReference.ofStopId(stopUpdate.stopReference().assignedStopId())
           );
         }
       } else {
-        // Try to match by stop reference (SIRI-style matching)
+        // Match by stop reference (SIRI-style)
         var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
         if (matchResult == null) {
           LOG.debug("Could not match stop update by reference: {}", stopUpdate.stopReference());
@@ -152,20 +213,25 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       // Get the scheduled stop from the pattern
       StopLocation scheduledStop = pattern.getStop(stopIndex);
 
-      // Check if we have a stop replacement that we couldn't resolve
+      // Check if we failed to resolve an assigned stop
       if (resolvedStop == null && stopUpdate.stopReference().hasAssignedStopId()) {
         return Result.failure(
           new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
         );
       }
 
-      // Validate stop replacement constraint (if there's a replacement)
-      if (resolvedStop != null) {
+      // Track stop replacements
+      boolean hasStopReplacement =
+        resolvedStop != null && !resolvedStop.getId().equals(scheduledStop.getId());
+
+      if (hasStopReplacement) {
+        // Validate replacement against constraint
         var validationResult = stopReplacementValidator.validate(
           scheduledStop,
           resolvedStop,
           constraint
         );
+
         if (validationResult != StopReplacementValidator.Result.VALID) {
           var errorType = switch (validationResult) {
             case STOP_MISMATCH -> UpdateError.UpdateErrorType.STOP_MISMATCH;
@@ -173,46 +239,104 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
           };
           return Result.failure(new UpdateError(trip.getId(), errorType, stopIndex));
         }
+
+        // Valid replacement - track it
+        result.stopReplacements.put(stopIndex, resolvedStop);
       }
 
       // Handle skipped/cancelled stops
       if (stopUpdate.isSkipped()) {
         builder.withCanceled(stopIndex);
-        hasUpdates = true;
+        result.hasCancellations = true;
         continue;
       }
 
-      // Apply arrival update
+      // Track pickup/dropoff changes
+      if (stopUpdate.pickup() != null) {
+        PickDrop scheduledPickup = pattern.getBoardType(stopIndex);
+        if (!stopUpdate.pickup().equals(scheduledPickup)) {
+          result.pickupChanges.put(stopIndex, stopUpdate.pickup());
+        }
+      }
+
+      if (stopUpdate.dropoff() != null) {
+        PickDrop scheduledDropoff = pattern.getAlightType(stopIndex);
+        if (!stopUpdate.dropoff().equals(scheduledDropoff)) {
+          result.dropoffChanges.put(stopIndex, stopUpdate.dropoff());
+        }
+      }
+
+      // Apply time updates
+      boolean hasTimeUpdate = false;
+
       if (stopUpdate.hasArrivalUpdate()) {
         var arrivalUpdate = stopUpdate.arrivalUpdate();
         int scheduledArrival = builder.getScheduledArrivalTime(stopIndex);
         int newArrivalTime = arrivalUpdate.resolveTime(scheduledArrival);
         builder.withArrivalTime(stopIndex, newArrivalTime);
-        hasUpdates = true;
+        hasTimeUpdate = true;
       }
 
-      // Apply departure update
       if (stopUpdate.hasDepartureUpdate()) {
         var departureUpdate = stopUpdate.departureUpdate();
         int scheduledDeparture = builder.getScheduledDepartureTime(stopIndex);
         int newDepartureTime = departureUpdate.resolveTime(scheduledDeparture);
         builder.withDepartureTime(stopIndex, newDepartureTime);
-        hasUpdates = true;
+        hasTimeUpdate = true;
+      }
+
+      if (hasTimeUpdate) {
+        result.hasTimeUpdates = true;
       }
 
       // Apply stop real-time state flags
       if (stopUpdate.recorded()) {
         builder.withRecorded(stopIndex);
-        hasUpdates = true;
       }
 
       if (stopUpdate.predictionInaccurate()) {
         builder.withInaccuratePredictions(stopIndex);
-        hasUpdates = true;
       }
     }
 
-    return Result.success(hasUpdates);
+    return Result.success(result);
+  }
+
+  /**
+   * Build a modified stop pattern based on detected changes.
+   * Uses StopPattern.StopPatternBuilder to apply stop replacements and pickup/dropoff changes.
+   * The builder automatically deduplicates - if no actual changes, returns the original pattern.
+   *
+   * @param originalPattern The original scheduled pattern
+   * @param stopReplacements Map of stop index to replacement stop
+   * @param pickupChanges Map of stop index to new pickup type
+   * @param dropoffChanges Map of stop index to new dropoff type
+   * @return The modified stop pattern (may be same as original if builder deduplicates)
+   */
+  private StopPattern buildModifiedStopPattern(
+    TripPattern originalPattern,
+    Map<Integer, StopLocation> stopReplacements,
+    Map<Integer, PickDrop> pickupChanges,
+    Map<Integer, PickDrop> dropoffChanges
+  ) {
+    var builder = originalPattern.copyPlannedStopPattern();
+
+    // Apply stop replacements
+    if (!stopReplacements.isEmpty()) {
+      builder.replaceStops(stopReplacements);
+    }
+
+    // Apply pickup changes
+    if (!pickupChanges.isEmpty()) {
+      builder.updatePickups(pickupChanges);
+    }
+
+    // Apply dropoff changes
+    if (!dropoffChanges.isEmpty()) {
+      builder.updateDropoffs(dropoffChanges);
+    }
+
+    return builder.build();
   }
 
   /**
