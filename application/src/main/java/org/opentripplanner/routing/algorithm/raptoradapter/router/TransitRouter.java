@@ -14,6 +14,7 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
@@ -65,6 +66,8 @@ public class TransitRouter {
   private final ViaCoordinateTransferFactory viaTransferResolver;
   private final LinkingContext linkingContext;
   private final AccessEgressRouter accessEgressRouter;
+  private final TransitServiceResolver transitServiceResolver;
+  private final CarpoolingService carpoolingService;
 
   private TransitRouter(
     RouteRequest request,
@@ -73,7 +76,8 @@ public class TransitRouter {
     ZonedDateTime transitSearchTimeZero,
     AdditionalSearchDays additionalSearchDays,
     DebugTimingAggregator debugTimingAggregator,
-    LinkingContext linkingContext
+    LinkingContext linkingContext,
+    CarpoolingService carpoolingService
   ) {
     this.request = request;
     this.serverContext = serverContext;
@@ -83,9 +87,11 @@ public class TransitRouter {
     this.debugTimingAggregator = debugTimingAggregator;
     this.viaTransferResolver = serverContext.viaTransferResolver();
     this.linkingContext = linkingContext;
+    this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
     this.accessEgressRouter = new AccessEgressRouter(
-      new TransitServiceResolver(serverContext.transitService())
+      this.transitServiceResolver
     );
+    this.carpoolingService = carpoolingService;
   }
 
   public static TransitRouterResult route(
@@ -95,7 +101,8 @@ public class TransitRouter {
     ZonedDateTime transitSearchTimeZero,
     AdditionalSearchDays additionalSearchDays,
     DebugTimingAggregator debugTimingAggregator,
-    LinkingContext linkingContext
+    LinkingContext linkingContext,
+    CarpoolingService carpoolingService
   ) {
     TransitRouter transitRouter = new TransitRouter(
       request,
@@ -104,7 +111,8 @@ public class TransitRouter {
       transitSearchTimeZero,
       additionalSearchDays,
       debugTimingAggregator,
-      linkingContext
+      linkingContext,
+      carpoolingService
     );
 
     return transitRouter.route();
@@ -320,6 +328,11 @@ public class TransitRouter {
       );
 
       results.addAll(AccessEgressMapper.mapFlexAccessEgresses(flexAccessList, type));
+    }
+
+    // Special handling of carpool accesses
+    if(OTPFeature.CarPooling.isOn() && mode == StreetMode.CARPOOL){
+      var carPoolAccessList = carpoolingService.routeAccessEgress(accessRequest,streetRequest,type,transitServiceResolver,linkingContext);
     }
 
     return results;

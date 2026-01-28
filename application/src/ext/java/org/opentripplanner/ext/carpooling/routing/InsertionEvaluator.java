@@ -86,6 +86,29 @@ public class InsertionEvaluator {
     return segments;
   }
 
+  public List<InsertionCandidate> findBestInsertions(
+    List<CarpoolTripInsertions> carpoolTripInsertions,
+    WgsCoordinate passengerPickup,
+    WgsCoordinate passengerDropoff
+  ){
+
+    List<GraphPath<State, Edge, Vertex>[]> baselineSegmentsList = carpoolTripInsertions.stream().map(carPoolTripInsertion -> {
+      var carPoolTrip = carPoolTripInsertion.getCarpoolTrip();
+      return routeBaselineSegments(carPoolTrip.routePoints());
+    }).toList();
+
+    List<Duration[]> cumulativeDurationsList = baselineSegmentsList.stream().map(baselineSegments -> {
+      if(baselineSegments == null){
+        return null;
+      }
+      return calculateCumulativeDurations(baselineSegments);
+    }).toList();
+
+
+
+    return List.of();
+  }
+
   /**
    * Evaluates pre-filtered insertion positions using A* routing.
    * <p>

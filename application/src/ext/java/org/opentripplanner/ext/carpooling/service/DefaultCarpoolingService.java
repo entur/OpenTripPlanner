@@ -8,27 +8,36 @@ import java.util.Objects;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
+import org.opentripplanner.ext.carpooling.filter.AccessEgressFilterChain;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
+import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
+import org.opentripplanner.ext.carpooling.routing.CarpoolTripInsertions;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
 import org.opentripplanner.ext.carpooling.routing.InsertionEvaluator;
 import org.opentripplanner.ext.carpooling.routing.InsertionPosition;
 import org.opentripplanner.ext.carpooling.routing.InsertionPositionFinder;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.graph_builder.module.nearbystops.StopResolver;
+import org.opentripplanner.graph_builder.module.nearbystops.StreetNearbyStopFinder;
 import org.opentripplanner.model.plan.Itinerary;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.TransitService;
+import org.opentripplanner.utils.collection.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,10 +88,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final CarpoolingRepository repository;
   private final StreetLimitationParametersService streetLimitationParametersService;
   private final FilterChain preFilters;
+  private final AccessEgressFilterChain accessEgressPreFilters;
   private final CarpoolItineraryMapper itineraryMapper;
   private final PassengerDelayConstraints delayConstraints;
   private final InsertionPositionFinder positionFinder;
   private final VertexLinker vertexLinker;
+
 
   /**
    * Creates a new carpooling service with the specified dependencies.
@@ -106,6 +117,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
+    this.accessEgressPreFilters = AccessEgressFilterChain.standard();
     this.itineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
     this.delayConstraints = new PassengerDelayConstraints();
     this.positionFinder = new InsertionPositionFinder(delayConstraints, new BeelineEstimator());
@@ -220,6 +232,98 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     LOG.info("Returning {} carpool itineraries", itineraries.size());
     return itineraries;
+  }
+
+  @Override
+  public List<NearbyStop> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext)
+    throws RoutingValidationException {
+    if (!StreetMode.CARPOOL.equals(request.journey().access().mode()) && accessOrEgress.isAccess()) {
+      return Collections.emptyList();
+    }
+
+    if (!StreetMode.CARPOOL.equals(request.journey().egress().mode()) && accessOrEgress.isEgress()) {
+      return Collections.emptyList();
+    }
+
+    if(accessOrEgress.isEgress()) {
+      return Collections.emptyList();
+    }
+
+    var allTrips = repository.getCarpoolTrips();
+    LOG.debug("Repository contains {} carpool trips", allTrips.size());
+
+    var searchWindow = request.searchWindow() == null
+      ? DEFAULT_SEARCH_WINDOW
+      : request.searchWindow();
+
+    WgsCoordinate passengerOrigin = new WgsCoordinate(request.from().getCoordinate());
+    WgsCoordinate passengerDestination = new WgsCoordinate(request.to().getCoordinate());
+
+    var passengerDepartureTime = request.dateTime();
+
+    var passengerCoordinate = accessOrEgress.isAccess() ? passengerOrigin : passengerDestination;
+
+    var candidateTrips = allTrips
+      .stream()
+      .filter(trip ->
+        accessEgressPreFilters.accepts(
+          trip,
+          passengerCoordinate,
+          passengerDepartureTime,
+          searchWindow
+        )
+      )
+      .toList();
+
+    if(candidateTrips.isEmpty()) {
+      return List.of();
+    }
+
+    var originVertices = accessOrEgress.isAccess()
+      ? linkingContext.findVertices(request.from())
+      : linkingContext.findVertices(request.to());
+
+    // No reason to use 60 minutes here, change to something more logical
+    var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(5), 0);
+    var nearByStops = streetNearbyStopFinder.build()
+      .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress());
+
+
+    var temporaryVerticesContainer = new TemporaryVerticesContainer();
+
+    var router = new CarpoolStreetRouter(
+      streetLimitationParametersService,
+      request,
+      vertexLinker,
+      temporaryVerticesContainer
+    );
+
+    var insertionEvaluator = new InsertionEvaluator(
+      router::route,
+      delayConstraints,
+      linkingContext
+    );
+
+    var carPoolTripInsertions = nearByStops.stream().flatMap(nearbyStop -> {
+
+      var startOfSegment = accessOrEgress.isAccess() ? passengerOrigin : nearbyStop.stop.getCoordinate();
+      var endOfSegment = accessOrEgress.isAccess() ? nearbyStop.stop.getCoordinate() : passengerDestination;
+
+      return candidateTrips.stream().map(candidateTrip -> {
+
+        List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
+          candidateTrip,
+          startOfSegment,
+          endOfSegment
+        );
+
+        new CarpoolTripInsertions()
+
+        return new Pair(nearbyStop,insertionEvaluator.findBestInsertion(candidateTrip, viablePositions, startOfSegment, endOfSegment));
+      }).filter(it -> it.second() != null);
+    }).toList();
+
+    return List.of();
   }
 
   private void validateRequest(RouteRequest request) throws RoutingValidationException {

@@ -107,6 +107,29 @@ public class CarpoolStreetRouter {
     }
   }
 
+  public GraphPath<State, Edge, Vertex> routeAll(
+    List<GenericLocation> from,
+    List<GenericLocation> to,
+    LinkingContext linkingContext
+  ){
+    var fromVertices = Set.copyOf(from.stream().map(it -> {
+      return getOrCreateVertices(it, linkingContext).stream().toList().getFirst();
+    }).toList());
+
+    var toVertices = Set.copyOf(to.stream().map(it -> {
+      return getOrCreateVertices(it, linkingContext).stream().toList().getFirst();
+    }).toList());
+
+    var routes = carpoolRouting(
+      new StreetRequest(StreetMode.CAR),
+      fromVertices,
+      toVertices,
+      streetLimitationParametersService.maxCarSpeed()
+    );
+
+    return routes;
+  }
+
   /**
    * Gets vertices for a location, either from the LinkingContext or by creating
    * temporary vertices on-demand.
@@ -202,5 +225,52 @@ public class CarpoolStreetRouter {
     }
 
     return paths.getFirst();
+  }
+
+
+  /**
+   * Core A* routing for carpooling optimized for car travel.
+   * <p>
+   * Configures and executes an A* street search with settings optimized for carpooling:
+   * <ul>
+   *   <li><strong>Heuristic:</strong> Euclidean distance with max car speed</li>
+   *   <li><strong>Skip Strategy:</strong> Duration-based edge skipping</li>
+   *   <li><strong>Dominance:</strong> Minimum weight</li>
+   *   <li><strong>Sorting:</strong> Results sorted by arrival/departure time</li>
+   * </ul>
+   *
+   * @param streetRequest the street request specifying CAR mode
+   * @param fromVertices set of origin vertices
+   * @param toVertices set of destination vertices
+   * @param maxCarSpeed maximum car speed in m/s
+   * @return the first (best) path found, or null if no paths exist
+   */
+  private List<GraphPath<State, Edge, Vertex>> carpoolRoutingAll(
+    StreetRequest streetRequest,
+    Set<Vertex> fromVertices,
+    Set<Vertex> toVertices,
+    float maxCarSpeed
+  ) {
+    var preferences = request.preferences().street();
+
+    var streetSearch = StreetSearchBuilder.of()
+      .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
+      .withSkipEdgeStrategy(
+        new DurationSkipEdgeStrategy(preferences.maxDirectDuration().valueOf(streetRequest.mode()))
+      )
+      .withDominanceFunction(new DominanceFunctions.MinimumWeight())
+      .withRequest(request)
+      .withStreetRequest(streetRequest)
+      .withFrom(fromVertices)
+      .withTo(toVertices);
+
+    List<GraphPath<State, Edge, Vertex>> paths = streetSearch.getPathsToTarget();
+    paths.sort(new PathComparator(request.arriveBy()));
+
+    if (paths.isEmpty()) {
+      return null;
+    }
+
+    return paths;
   }
 }
