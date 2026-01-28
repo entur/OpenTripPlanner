@@ -21,6 +21,8 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
+import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
@@ -632,6 +634,247 @@ class UpdateExistingTripHandlerTest {
       // But since B1 is at station2 and the scheduled stop is also B1, there's no replacement
       // This is actually a valid update (no replacement happening)
       assertTrue(result.isSuccess(), "Expected success - B1 matches scheduled B1");
+    }
+  }
+
+  /**
+   * Tests for delay propagation (GTFS-RT style).
+   */
+  @Nested
+  class DelayPropagationTests {
+
+    @Test
+    void forwardsPropagation_delayAtFirstStopPropagates() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Update only stop A with 5 minute delay
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(300))
+        .withDepartureUpdate(TimeUpdate.ofDelay(300))
+        .build();
+
+      // Configure with GTFS-RT defaults: forwards propagation enabled
+      var options = TripUpdateOptions.gtfsRtDefaults(
+        ForwardsDelayPropagationType.DEFAULT,
+        BackwardsDelayPropagationType.NONE
+      );
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopAUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      var updatedTimes = result.successValue().updatedTripTimes();
+
+      // Stop A has explicit 5 minute delay
+      assertEquals(STOP_A_ARRIVAL + 300, updatedTimes.getArrivalTime(0));
+      assertEquals(STOP_A_ARRIVAL + 300, updatedTimes.getDepartureTime(0));
+
+      // Stop B and C should have delay propagated (no explicit updates)
+      assertEquals(STOP_B_ARRIVAL + 300, updatedTimes.getArrivalTime(1));
+      assertEquals(STOP_B_ARRIVAL + 300, updatedTimes.getDepartureTime(1));
+      assertEquals(STOP_C_ARRIVAL + 300, updatedTimes.getArrivalTime(2));
+      assertEquals(STOP_C_ARRIVAL + 300, updatedTimes.getDepartureTime(2));
+    }
+
+    @Test
+    void forwardsPropagation_disabled_noDelayCopied() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Update only stop A with 5 minute delay
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(300))
+        .withDepartureUpdate(TimeUpdate.ofDelay(300))
+        .build();
+
+      // SIRI defaults: no propagation
+      var options = TripUpdateOptions.siriDefaults();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopAUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      var updatedTimes = result.successValue().updatedTripTimes();
+
+      // Stop A has explicit 5 minute delay
+      assertEquals(STOP_A_ARRIVAL + 300, updatedTimes.getArrivalTime(0));
+
+      // Stop B and C should remain at scheduled time (no propagation)
+      assertEquals(STOP_B_ARRIVAL, updatedTimes.getArrivalTime(1));
+      assertEquals(STOP_C_ARRIVAL, updatedTimes.getArrivalTime(2));
+    }
+
+    @Test
+    void backwardsPropagation_maintainsNonDecreasingTimes() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Update only stop B (middle stop) with EARLY arrival (-5 minutes)
+      var stopBUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "B"))
+      )
+        .withStopSequence(1)
+        .withArrivalUpdate(TimeUpdate.ofDelay(-300))
+        .withDepartureUpdate(TimeUpdate.ofDelay(-300))
+        .build();
+
+      // Configure with backwards propagation
+      var options = TripUpdateOptions.gtfsRtDefaults(
+        ForwardsDelayPropagationType.NONE,
+        BackwardsDelayPropagationType.REQUIRED
+      );
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopBUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      var updatedTimes = result.successValue().updatedTripTimes();
+
+      // Stop B has explicit 5 minute early arrival
+      assertEquals(STOP_B_ARRIVAL - 300, updatedTimes.getArrivalTime(1));
+
+      // Stop A should be adjusted to maintain non-decreasing times
+      // It should be at most STOP_B_ARRIVAL - 300
+      assertTrue(
+        updatedTimes.getDepartureTime(0) <= updatedTimes.getArrivalTime(1),
+        "Departure at A should not be after arrival at B"
+      );
+    }
+
+    @Test
+    void mixedPropagation_gtfsRtDefaults() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Update only stop B (middle stop) with 10 minute delay
+      var stopBUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "B"))
+      )
+        .withStopSequence(1)
+        .withArrivalUpdate(TimeUpdate.ofDelay(600))
+        .withDepartureUpdate(TimeUpdate.ofDelay(600))
+        .build();
+
+      // GTFS-RT defaults: both forward and backward propagation
+      var options = TripUpdateOptions.gtfsRtDefaults(
+        ForwardsDelayPropagationType.DEFAULT,
+        BackwardsDelayPropagationType.REQUIRED_NO_DATA
+      );
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopBUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      var updatedTimes = result.successValue().updatedTripTimes();
+
+      // Stop B has explicit 10 minute delay
+      assertEquals(STOP_B_ARRIVAL + 600, updatedTimes.getArrivalTime(1));
+      assertEquals(STOP_B_ARRIVAL + 600, updatedTimes.getDepartureTime(1));
+
+      // Stop A should be at scheduled time (backwards propagation REQUIRED only adjusts if needed)
+      assertEquals(STOP_A_ARRIVAL, updatedTimes.getArrivalTime(0));
+      assertEquals(STOP_A_ARRIVAL, updatedTimes.getDepartureTime(0));
+
+      // Stop C should have delay propagated forward
+      assertEquals(STOP_C_ARRIVAL + 600, updatedTimes.getArrivalTime(2));
+      assertEquals(STOP_C_ARRIVAL + 600, updatedTimes.getDepartureTime(2));
+    }
+
+    @Test
+    void partialUpdate_propagatesToUnupdatedStops() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Update stops A and C, but not B
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(120))
+        .withDepartureUpdate(TimeUpdate.ofDelay(120))
+        .build();
+
+      var stopCUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "C"))
+      )
+        .withStopSequence(2)
+        .withArrivalUpdate(TimeUpdate.ofDelay(360))
+        .withDepartureUpdate(TimeUpdate.ofDelay(360))
+        .build();
+
+      // GTFS-RT defaults with forwards propagation
+      var options = TripUpdateOptions.gtfsRtDefaults(
+        ForwardsDelayPropagationType.DEFAULT,
+        BackwardsDelayPropagationType.NONE
+      );
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .withStopTimeUpdates(List.of(stopAUpdate, stopCUpdate))
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      var updatedTimes = result.successValue().updatedTripTimes();
+
+      // Stop A has explicit 2 minute delay
+      assertEquals(STOP_A_ARRIVAL + 120, updatedTimes.getArrivalTime(0));
+
+      // Stop B should have interpolated time based on propagation
+      // Should be between A's departure and C's arrival
+      int stopBTime = updatedTimes.getArrivalTime(1);
+      assertTrue(
+        stopBTime >= updatedTimes.getDepartureTime(0) &&
+          stopBTime <= updatedTimes.getArrivalTime(2),
+        "Stop B time should be between A departure and C arrival"
+      );
+
+      // Stop C has explicit 6 minute delay
+      assertEquals(STOP_C_ARRIVAL + 360, updatedTimes.getArrivalTime(2));
     }
   }
 }
