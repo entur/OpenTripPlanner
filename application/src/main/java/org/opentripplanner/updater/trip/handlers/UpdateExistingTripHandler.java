@@ -18,6 +18,8 @@ import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
+import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
+import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
@@ -77,7 +79,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
 
     // Create the builder from scheduled times
-    var builder = tripTimes.createRealTimeFromScheduledTimes();
+    // If delay propagation is enabled, start with empty times so interpolators can fill them in
+    // Otherwise, pre-fill with scheduled times (SIRI-style: all stops have explicit times)
+    var options = parsedUpdate.options();
+    var builder = options.propagatesDelays()
+      ? tripTimes.createRealTimeWithoutScheduledTimes()
+      : tripTimes.createRealTimeFromScheduledTimes();
 
     // Apply stop time updates - now returns PatternModificationResult
     var applyResult = applyStopTimeUpdates(parsedUpdate, builder, pattern, trip, context);
@@ -297,6 +304,31 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       if (stopUpdate.predictionInaccurate()) {
         builder.withInaccuratePredictions(stopIndex);
       }
+    }
+
+    // Apply delay propagation according to feed configuration
+    var options = parsedUpdate.options();
+
+    // Forwards delay propagation: propagate delays to subsequent stops
+    var forwardsPropagationType = options.forwardsPropagation();
+    if (ForwardsDelayInterpolator.getInstance(forwardsPropagationType).interpolateDelay(builder)) {
+      LOG.debug("Propagated delays forwards for trip {}", trip.getId());
+      result.hasTimeUpdates = true;
+    }
+
+    // Backwards delay propagation: fill in times before first update
+    var backwardsPropagationType = options.backwardsPropagation();
+    var backwardPropagationIndex = BackwardsDelayInterpolator.getInstance(
+      backwardsPropagationType
+    ).propagateBackwards(builder);
+    backwardPropagationIndex.ifPresent(index ->
+      LOG.debug("Propagated delay from stop index {} backwards for trip {}", index, trip.getId())
+    );
+
+    // Fallback: If there are still missing times after propagation, copy from scheduled timetable
+    // This handles cases where no propagation is configured or updates don't cover all stops
+    if (builder.copyMissingTimesFromScheduledTimetable()) {
+      LOG.trace("Copied remaining scheduled times for trip {}", trip.getId());
     }
 
     return Result.success(result);
