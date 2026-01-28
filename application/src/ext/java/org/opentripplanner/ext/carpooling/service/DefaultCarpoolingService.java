@@ -284,7 +284,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
       : linkingContext.findVertices(request.to());
 
     // No reason to use 60 minutes here, change to something more logical
-    var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(5), 0);
+    var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(60), 0);
     var nearByStops = streetNearbyStopFinder.build()
       .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress());
 
@@ -304,27 +304,36 @@ public class DefaultCarpoolingService implements CarpoolingService {
       linkingContext
     );
 
-    var carPoolTripInsertions = nearByStops.stream().flatMap(nearbyStop -> {
+    var candidateTripsWithViableStopsAndPositions = candidateTrips.stream().map(candidateTrip -> {
+      var viableSegmentInsertions =  nearByStops.stream().map(nearbyStop -> {
 
-      var startOfSegment = accessOrEgress.isAccess() ? passengerOrigin : nearbyStop.stop.getCoordinate();
-      var endOfSegment = accessOrEgress.isAccess() ? nearbyStop.stop.getCoordinate() : passengerDestination;
+        var pickUpCoord = accessOrEgress.isAccess() ? passengerCoordinate : nearbyStop.stop.getCoordinate();
+        var dropOffCoord = accessOrEgress.isAccess() ? nearbyStop.stop.getCoordinate() : passengerCoordinate;
 
-      return candidateTrips.stream().map(candidateTrip -> {
-
-        List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
-          candidateTrip,
-          startOfSegment,
-          endOfSegment
+        var viablePositions = positionFinder.findViablePositions(
+          candidateTrip, pickUpCoord, dropOffCoord
         );
-
-        new CarpoolTripInsertions()
-
-        return new Pair(nearbyStop,insertionEvaluator.findBestInsertion(candidateTrip, viablePositions, startOfSegment, endOfSegment));
-      }).filter(it -> it.second() != null);
+        return new SegmentInsertionPositions(
+          new Segment(pickUpCoord, dropOffCoord), viablePositions
+        );
+      }).toList();
+      return new TripWithViablePassengerSegments(candidateTrip, viableSegmentInsertions);
     }).toList();
 
     return List.of();
   }
+
+  record Segment(
+    WgsCoordinate from, WgsCoordinate to
+  ){}
+
+  record SegmentInsertionPositions(
+    Segment segment, List<InsertionPosition> insertionPositions
+  ){}
+
+  record TripWithViablePassengerSegments(
+    CarpoolTrip trip, List<SegmentInsertionPositions> segmentInsertionPositions
+  ){}
 
   private void validateRequest(RouteRequest request) throws RoutingValidationException {
     Objects.requireNonNull(request.from());
