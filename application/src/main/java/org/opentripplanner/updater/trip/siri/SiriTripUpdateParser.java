@@ -248,7 +248,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     TripUpdateParserContext context
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
+    int totalStops = calls.size();
 
+    int stopIndex = 0;
     for (var call : calls) {
       if (StringUtils.hasNoValueOrNullAsString(call.getStopPointRef())) {
         continue;
@@ -259,7 +261,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       var builder = ParsedStopTimeUpdate.builder(stopReference);
 
       builder.withStatus(determineStopStatus(call));
-      parseStopTimes(call, builder, serviceDate, context);
+      parseStopTimes(call, builder, serviceDate, context, stopIndex, totalStops);
 
       if (call.isExtraCall()) {
         builder.withIsExtraCall(true);
@@ -286,6 +288,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
 
       result.add(builder.build());
+      stopIndex++;
     }
 
     return result;
@@ -305,35 +308,45 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     CallWrapper call,
     ParsedStopTimeUpdate.Builder builder,
     LocalDate serviceDate,
-    TripUpdateParserContext context
+    TripUpdateParserContext context,
+    int stopIndex,
+    int totalStops
   ) {
     ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
       serviceDate,
       context.timeZone()
     );
 
-    ZonedDateTime arrivalTime = call.getActualArrivalTime() != null
-      ? call.getActualArrivalTime()
-      : call.getExpectedArrivalTime();
-    ZonedDateTime aimedArrival = call.getAimedArrivalTime();
+    // Resolve times using the same fallback logic as TimetableHelper
+    var resolvedTimes = SiriTimeResolver.resolveTimes(call, stopIndex, totalStops);
+    var resolvedAimedTimes = SiriTimeResolver.resolveAimedTimes(call, stopIndex, totalStops);
 
-    if (arrivalTime != null) {
-      int seconds = ServiceDateUtils.secondsSinceStartOfService(startOfService, arrivalTime);
-      Integer scheduled = aimedArrival != null
-        ? ServiceDateUtils.secondsSinceStartOfService(startOfService, aimedArrival)
+    // Create arrival TimeUpdate
+    if (resolvedTimes.arrivalTime() != null) {
+      int seconds = ServiceDateUtils.secondsSinceStartOfService(
+        startOfService,
+        resolvedTimes.arrivalTime()
+      );
+      Integer scheduled = resolvedAimedTimes.arrivalTime() != null
+        ? ServiceDateUtils.secondsSinceStartOfService(
+            startOfService,
+            resolvedAimedTimes.arrivalTime()
+          )
         : null;
       builder.withArrivalUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
     }
 
-    ZonedDateTime departureTime = call.getActualDepartureTime() != null
-      ? call.getActualDepartureTime()
-      : call.getExpectedDepartureTime();
-    ZonedDateTime aimedDeparture = call.getAimedDepartureTime();
-
-    if (departureTime != null) {
-      int seconds = ServiceDateUtils.secondsSinceStartOfService(startOfService, departureTime);
-      Integer scheduled = aimedDeparture != null
-        ? ServiceDateUtils.secondsSinceStartOfService(startOfService, aimedDeparture)
+    // Create departure TimeUpdate
+    if (resolvedTimes.departureTime() != null) {
+      int seconds = ServiceDateUtils.secondsSinceStartOfService(
+        startOfService,
+        resolvedTimes.departureTime()
+      );
+      Integer scheduled = resolvedAimedTimes.departureTime() != null
+        ? ServiceDateUtils.secondsSinceStartOfService(
+            startOfService,
+            resolvedAimedTimes.departureTime()
+          )
         : null;
       builder.withDepartureUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
     }
