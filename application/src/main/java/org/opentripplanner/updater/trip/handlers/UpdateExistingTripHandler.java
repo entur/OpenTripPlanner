@@ -330,6 +330,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         result.hasTimeUpdates = true;
       }
 
+      // Apply stop headsign if provided
+      if (stopUpdate.stopHeadsign() != null) {
+        builder.withStopHeadsign(stopIndex, stopUpdate.stopHeadsign());
+      }
+
       // Apply stop real-time state flags
       if (stopUpdate.recorded()) {
         builder.withRecorded(stopIndex);
