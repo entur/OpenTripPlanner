@@ -38,10 +38,10 @@ public class CancelTripHandler implements TripUpdateHandler {
 
     Trip trip = tripResult.successValue();
 
-    // Find the pattern for this trip on this service date
-    TripPattern pattern = transitService.findPattern(trip, serviceDate);
+    // Find the scheduled pattern for this trip (not the real-time modified pattern)
+    TripPattern pattern = transitService.findPattern(trip);
     if (pattern == null) {
-      LOG.warn("No pattern found for trip {} on {}", trip.getId(), serviceDate);
+      LOG.warn("No pattern found for trip {}", trip.getId());
       return Result.failure(
         new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND)
       );
