@@ -1307,7 +1307,7 @@ type QueryType {
     before: String,
     """
     Can be used to filter the results. When paging, the filter should not be changed between pages.
-    
+        
     An empty list of filters or no value means that all trips should be included. Only one filter
     is allowed for now. Once new filtering criteria is introduced, this limitation will be removed.
     """
