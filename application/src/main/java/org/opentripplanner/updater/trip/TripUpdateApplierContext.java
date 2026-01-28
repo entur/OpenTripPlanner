@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip;
 
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 
 /**
  * Context information needed by the applier when converting parsed trip updates
@@ -18,22 +19,30 @@ public final class TripUpdateApplierContext {
 
   private final StopResolver stopResolver;
 
+  private final SiriTripPatternCache tripPatternCache;
+
   /**
    * @param feedId The feed ID for this update source
    * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
    * @param tripResolver The resolver for looking up trips from trip references
    * @param stopResolver The resolver for looking up stops from stop references
+   * @param tripPatternCache The cache for creating and reusing modified trip patterns
    */
   public TripUpdateApplierContext(
     String feedId,
     @Nullable TimetableSnapshotManager snapshotManager,
     TripResolver tripResolver,
-    StopResolver stopResolver
+    StopResolver stopResolver,
+    SiriTripPatternCache tripPatternCache
   ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.snapshotManager = snapshotManager;
     this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
     this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
+    this.tripPatternCache = Objects.requireNonNull(
+      tripPatternCache,
+      "tripPatternCache must not be null"
+    );
   }
 
   public String feedId() {
@@ -53,6 +62,10 @@ public final class TripUpdateApplierContext {
     return stopResolver;
   }
 
+  public SiriTripPatternCache tripPatternCache() {
+    return tripPatternCache;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -66,13 +79,14 @@ public final class TripUpdateApplierContext {
       Objects.equals(feedId, that.feedId) &&
       Objects.equals(snapshotManager, that.snapshotManager) &&
       Objects.equals(tripResolver, that.tripResolver) &&
-      Objects.equals(stopResolver, that.stopResolver)
+      Objects.equals(stopResolver, that.stopResolver) &&
+      Objects.equals(tripPatternCache, that.tripPatternCache)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(feedId, snapshotManager, tripResolver, stopResolver);
+    return Objects.hash(feedId, snapshotManager, tripResolver, stopResolver, tripPatternCache);
   }
 
   @Override
@@ -88,6 +102,8 @@ public final class TripUpdateApplierContext {
       tripResolver +
       ", stopResolver=" +
       stopResolver +
+      ", tripPatternCache=" +
+      tripPatternCache +
       '}'
     );
   }

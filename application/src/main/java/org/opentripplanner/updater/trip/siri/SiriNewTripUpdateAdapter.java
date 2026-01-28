@@ -37,6 +37,19 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriNewTripUpdateAdapter.class);
 
+  /**
+   * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
+   * updates.
+   */
+  private final SiriTripPatternIdGenerator tripPatternIdGenerator =
+    new SiriTripPatternIdGenerator();
+
+  /**
+   * A synchronized cache of trip patterns that are added to the graph due to real-time
+   * messages.
+   */
+  private final SiriTripPatternCache tripPatternCache;
+
   private final SiriTripUpdateParser parser;
   private final DefaultTripUpdateApplier applier;
   private final TransitEditorService transitEditorService;
@@ -50,6 +63,10 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     this.transitEditorService = new DefaultTransitService(
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
+    );
+    this.tripPatternCache = new SiriTripPatternCache(
+      tripPatternIdGenerator,
+      transitEditorService::findPattern
     );
     this.parser = new SiriTripUpdateParser();
     this.applier = new DefaultTripUpdateApplier(transitEditorService);
@@ -99,7 +116,8 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       feedId,
       snapshotManager,
       tripResolver,
-      stopResolver
+      stopResolver,
+      tripPatternCache
     );
 
     for (var etDelivery : updates) {
