@@ -21,6 +21,8 @@ import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +37,19 @@ import org.slf4j.LoggerFactory;
 public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
   private static final Logger LOG = LoggerFactory.getLogger(GtfsNewTripUpdateAdapter.class);
+
+  /**
+   * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
+   * updates.
+   */
+  private final SiriTripPatternIdGenerator tripPatternIdGenerator =
+    new SiriTripPatternIdGenerator();
+
+  /**
+   * A synchronized cache of trip patterns that are added to the graph due to real-time
+   * messages.
+   */
+  private final SiriTripPatternCache tripPatternCache;
 
   private final GtfsRtTripUpdateParser parser;
   private final DefaultTripUpdateApplier applier;
@@ -51,6 +66,10 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     this.transitEditorService = new DefaultTransitService(
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
+    );
+    this.tripPatternCache = new SiriTripPatternCache(
+      tripPatternIdGenerator,
+      transitEditorService::findPattern
     );
     this.parser = new GtfsRtTripUpdateParser(
       forwardsDelayPropagationType,
@@ -105,7 +124,8 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       feedId,
       snapshotManager,
       tripResolver,
-      stopResolver
+      stopResolver,
+      tripPatternCache
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
