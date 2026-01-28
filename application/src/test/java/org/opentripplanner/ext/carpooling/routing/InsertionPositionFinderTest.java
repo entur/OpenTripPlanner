@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.framework.geometry.WgsCoordinate;
 
 /**
  * Tests for {@link InsertionPositionFinder}.
@@ -68,6 +69,30 @@ class InsertionPositionFinderTest {
     var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_WEST);
 
     // Should reject all positions due to capacity
+    assertTrue(viablePositions.isEmpty());
+  }
+
+  @Test
+  void findViablePositions_dropOffPositionDoesNotMaintainForwardDirection_rejectsPosition(){
+
+    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+
+    // Pick up coordinates is between OSLO_CENTER and OSLO_NORTH and is a valid coordinate
+    var pickUpCoords = new WgsCoordinate(
+      (OSLO_CENTER.latitude() + OSLO_NORTH.latitude())/2,
+      OSLO_NORTH.longitude()
+    );
+
+    /*
+     Drop off coordinates is north of OSLO_NORTH and does therefor not maintain forward direction
+     and should be rejected
+     */
+    var dropOffCoords = new WgsCoordinate(
+      OSLO_NORTH.latitude() * 2 - pickUpCoords.latitude(),
+        OSLO_NORTH.longitude()
+    );
+
+    var viablePositions = finder.findViablePositions(trip, pickUpCoords, dropOffCoords);
     assertTrue(viablePositions.isEmpty());
   }
 
