@@ -95,6 +95,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     var stopTimeUpdates = parseStopTimeUpdates(
       tripUpdate.stopTimeUpdates(),
       context,
+      serviceDate,
       updateType == TripUpdateType.ADD_NEW_TRIP
     );
     builder.withStopTimeUpdates(stopTimeUpdates);
@@ -143,6 +144,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     List<StopTimeUpdate> updates,
     TripUpdateParserContext context,
+    LocalDate serviceDate,
     boolean isNewTrip
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
@@ -173,7 +175,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       if (isNewTrip) {
         parseNewTripStopTimeUpdate(update, builder);
       } else {
-        parseScheduledTripStopTimeUpdate(update, builder);
+        parseScheduledTripStopTimeUpdate(update, builder, serviceDate, context);
       }
 
       update.stopHeadsign().ifPresent(builder::withStopHeadsign);
@@ -191,18 +193,51 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     if (update.isSkipped()) {
       return ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED;
     }
+    if (update.isNoData()) {
+      return ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA;
+    }
     return ParsedStopTimeUpdate.StopUpdateStatus.SCHEDULED;
   }
 
   private void parseScheduledTripStopTimeUpdate(
     StopTimeUpdate update,
-    ParsedStopTimeUpdate.Builder builder
+    ParsedStopTimeUpdate.Builder builder,
+    LocalDate serviceDate,
+    TripUpdateParserContext context
   ) {
-    update.arrivalDelay().ifPresent(delay -> builder.withArrivalUpdate(TimeUpdate.ofDelay(delay)));
+    // Calculate midnight seconds for absolute time conversion
+    var midnight = serviceDate.atStartOfDay(context.timeZone());
+    long midnightSecondsSinceEpoch = midnight.toEpochSecond();
 
-    update
-      .departureDelay()
-      .ifPresent(delay -> builder.withDepartureUpdate(TimeUpdate.ofDelay(delay)));
+    // Handle arrival time: prefer absolute time, fall back to delay
+    var arrivalTime = update.arrivalTime();
+    var arrivalDelay = update.arrivalDelay();
+    if (arrivalTime.isPresent()) {
+      int time = (int) (arrivalTime.getAsLong() - midnightSecondsSinceEpoch);
+      // Get scheduled time if available for proper TimeUpdate
+      var scheduledArrival = update.scheduledArrivalTimeWithRealTimeFallback().isPresent()
+        ? (int) (update.scheduledArrivalTimeWithRealTimeFallback().getAsLong() -
+            midnightSecondsSinceEpoch)
+        : null;
+      builder.withArrivalUpdate(TimeUpdate.ofAbsolute(time, scheduledArrival));
+    } else if (arrivalDelay.isPresent()) {
+      builder.withArrivalUpdate(TimeUpdate.ofDelay(arrivalDelay.getAsInt()));
+    }
+
+    // Handle departure time: prefer absolute time, fall back to delay
+    var departureTime = update.departureTime();
+    var departureDelay = update.departureDelay();
+    if (departureTime.isPresent()) {
+      int time = (int) (departureTime.getAsLong() - midnightSecondsSinceEpoch);
+      // Get scheduled time if available for proper TimeUpdate
+      var scheduledDeparture = update.scheduledDepartureTimeWithRealTimeFallback().isPresent()
+        ? (int) (update.scheduledDepartureTimeWithRealTimeFallback().getAsLong() -
+            midnightSecondsSinceEpoch)
+        : null;
+      builder.withDepartureUpdate(TimeUpdate.ofAbsolute(time, scheduledDeparture));
+    } else if (departureDelay.isPresent()) {
+      builder.withDepartureUpdate(TimeUpdate.ofDelay(departureDelay.getAsInt()));
+    }
   }
 
   private void parseNewTripStopTimeUpdate(

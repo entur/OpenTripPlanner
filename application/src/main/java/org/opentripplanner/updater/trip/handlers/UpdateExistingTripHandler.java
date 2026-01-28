@@ -301,6 +301,13 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         continue;
       }
 
+      // Handle NO_DATA stops
+      if (stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA) {
+        builder.withNoData(stopIndex);
+        // Don't process time updates for NO_DATA stops - they should have none
+        continue;
+      }
+
       // Track pickup/dropoff changes
       if (stopUpdate.pickup() != null) {
         PickDrop scheduledPickup = pattern.getBoardType(stopIndex);
