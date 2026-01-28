@@ -70,6 +70,11 @@ public class InsertionPositionFinder {
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff
   ) {
+
+    if(passengerDropoff.equals(new WgsCoordinate(63.191349, 8.855968))){
+      var a = 1;
+    }
+
     List<WgsCoordinate> routePoints = trip.routePoints();
 
     Duration[] beelineTimes = beelineEstimator.calculateCumulativeTimes(routePoints);
