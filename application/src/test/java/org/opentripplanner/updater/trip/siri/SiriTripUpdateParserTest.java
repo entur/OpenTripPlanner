@@ -467,4 +467,192 @@ class SiriTripUpdateParserTest {
 
     assertEquals("DATASOURCE", parsed.dataSource());
   }
+
+  @Test
+  void parseFirstStopMissingArrival_UsesTimeResolver() {
+    // First stop with missing arrival should fallback to departure via SiriTimeResolver
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:05")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:32")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var result = parser.parse(journey, context);
+
+    assertTrue(result.isSuccess());
+    var parsed = result.successValue();
+
+    assertEquals(2, parsed.stopTimeUpdates().size());
+
+    var firstStop = parsed.stopTimeUpdates().get(0);
+    // First stop should have both arrival and departure times (arrival fallback to departure)
+    assertNotNull(firstStop.arrivalUpdate(), "First stop should have arrival update via fallback");
+    assertNotNull(firstStop.departureUpdate());
+
+    // Both should be the same time since arrival falls back to departure
+    assertEquals(
+      firstStop.departureUpdate().absoluteTimeSecondsSinceMidnight(),
+      firstStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight(),
+      "First stop arrival should fallback to departure time"
+    );
+  }
+
+  @Test
+  void parseLastStopMissingDeparture_UsesTimeResolver() {
+    // Last stop with missing departure should fallback to arrival via SiriTimeResolver
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:05")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:32")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var result = parser.parse(journey, context);
+
+    assertTrue(result.isSuccess());
+    var parsed = result.successValue();
+
+    assertEquals(2, parsed.stopTimeUpdates().size());
+
+    var lastStop = parsed.stopTimeUpdates().get(1);
+    // Last stop should have both arrival and departure times (departure fallback to arrival)
+    assertNotNull(lastStop.arrivalUpdate());
+    assertNotNull(
+      lastStop.departureUpdate(),
+      "Last stop should have departure update via fallback"
+    );
+
+    // Both should be the same time since departure falls back to arrival
+    assertEquals(
+      lastStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight(),
+      lastStop.departureUpdate().absoluteTimeSecondsSinceMidnight(),
+      "Last stop departure should fallback to arrival time"
+    );
+  }
+
+  @Test
+  void parseMiddleStopMissingTimes_NoFallback() {
+    // Middle stop with missing times should NOT fallback (no cross-field fallback)
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:05")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:15")
+          .withExpectedArrivalTime("08:17")
+          .next()
+          .call("stop3")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:32")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var result = parser.parse(journey, context);
+
+    assertTrue(result.isSuccess());
+    var parsed = result.successValue();
+
+    assertEquals(3, parsed.stopTimeUpdates().size());
+
+    // Middle stop has only arrival time, should NOT have departure
+    var middleStop = parsed.stopTimeUpdates().get(1);
+    assertNotNull(middleStop.arrivalUpdate());
+    assertNull(
+      middleStop.departureUpdate(),
+      "Middle stop should not fallback departure to arrival"
+    );
+  }
+
+  @Test
+  void parseSingleStopTrip_BothFallbacksApply() {
+    // Single stop trip should apply both first and last stop fallbacks
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls ->
+        calls.call("stop1").withAimedDepartureTime("08:00").withExpectedDepartureTime("08:05")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var result = parser.parse(journey, context);
+
+    assertTrue(result.isSuccess());
+    var parsed = result.successValue();
+
+    assertEquals(1, parsed.stopTimeUpdates().size());
+
+    var singleStop = parsed.stopTimeUpdates().get(0);
+    // Single stop should have both arrival and departure (arrival falls back to departure)
+    assertNotNull(singleStop.arrivalUpdate(), "Single stop should have arrival via fallback");
+    assertNotNull(singleStop.departureUpdate());
+
+    // Both should be the same time
+    assertEquals(
+      singleStop.departureUpdate().absoluteTimeSecondsSinceMidnight(),
+      singleStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight(),
+      "Single stop arrival should fallback to departure time"
+    );
+  }
+
+  @Test
+  void parseActualTimePrecedence_UsesTimeResolver() {
+    // Verify that actual times (from RecordedCalls) are properly handled
+    // RecordedCalls have actual times for past stops, EstimatedCalls have expected times for future
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withRecordedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          // Actual time available for past stop
+          .withActualDepartureTime("08:01")
+      )
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          // Expected time for future stop
+          .withExpectedArrivalTime("08:35")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var result = parser.parse(journey, context);
+
+    assertTrue(result.isSuccess());
+    var parsed = result.successValue();
+
+    assertEquals(2, parsed.stopTimeUpdates().size());
+
+    var firstStop = parsed.stopTimeUpdates().get(0);
+    var lastStop = parsed.stopTimeUpdates().get(1);
+
+    // Verify that first stop (recorded) is marked with actual time
+    assertTrue(firstStop.recorded(), "First stop should be marked as recorded (has actual time)");
+    assertNotNull(firstStop.departureUpdate());
+
+    // Verify that second stop (estimated) is not marked as recorded
+    assertFalse(
+      lastStop.recorded(),
+      "Last stop should not be marked as recorded (only has expected time)"
+    );
+    assertNotNull(lastStop.arrivalUpdate());
+  }
 }
