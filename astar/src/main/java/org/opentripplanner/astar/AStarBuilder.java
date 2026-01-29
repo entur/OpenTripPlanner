@@ -145,7 +145,11 @@ public abstract class AStarBuilder<
     }
 
     prepareInitialStates(initialStates);
-    initializeHeuristic(heuristic, origin, destination, arriveBy);
+    try{
+      initializeHeuristic(heuristic, origin, destination, arriveBy);
+    }catch(Exception e){
+      var a = 1;
+    }
 
     return new AStar<>(
       heuristic,
