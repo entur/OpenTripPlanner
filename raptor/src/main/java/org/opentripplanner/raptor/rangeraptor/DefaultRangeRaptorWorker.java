@@ -170,21 +170,8 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   @Override
   public void findOnBoardAccessForRound(int iterationDepartureTime) {
     for (var accessPath : accessPaths.onBoardAccessPaths()) {
-      RaptorRoute<T> route;
-      try {
-        route = transitData.getRouteForIndex(accessPath.routeIndex());
-      } catch (IndexOutOfBoundsException e) {
-        // No route with the given index exists, thus there is nothing to do
-        return;
-      }
-
-      T trip;
-      try {
-        trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
-      } catch (IndexOutOfBoundsException e) {
-        // No trip with the given index exists in the route, thus there is nothing to do
-        return;
-      }
+      var route = transitData.getRouteForIndex(accessPath.routeIndex());
+      var trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
 
       var boardTime = trip.departure(accessPath.stopPositionInPattern());
       if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
@@ -198,15 +185,9 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     var onBoardStopArrivals = transitWorker.listOnBoardStopArrivals().iterator();
     while (onBoardStopArrivals.hasNext()) {
       var onBoardStopArrival = onBoardStopArrivals.next();
-      RaptorRoute<T> route;
-      try {
-        route = transitData.getRouteForIndex(
-          onBoardStopArrival.onBoardTripConstraint().routeIndex()
-        );
-      } catch (IndexOutOfBoundsException e) {
-        // No route with the given index exists, thus there is nothing to do for this stop arrival
-        continue;
-      }
+      var route = transitData.getRouteForIndex(
+        onBoardStopArrival.onBoardTripConstraint().routeIndex()
+      );
 
       transitWorker.prepareForTransitWith(route);
 
@@ -265,14 +246,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   private boolean tryBoardOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
     var onBoardTripConstraint = onBoardStopArrival.onBoardTripConstraint();
-
-    T trip;
-    try {
-      trip = route.timetable().getTripSchedule(onBoardTripConstraint.tripScheduleIndex());
-    } catch (IndexOutOfBoundsException e) {
-      // No trip with the given index exists in the route, thus there is nothing to do
-      return false;
-    }
+    var trip = route.timetable().getTripSchedule(onBoardTripConstraint.tripScheduleIndex());
 
     return transitWorker.boardAsOnBoardAccess(
       onBoardStopArrival,
