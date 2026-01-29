@@ -104,10 +104,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       snapshotManager.getTimetableSnapshotBuffer()
     );
     this.deduplicator = deduplicator;
-    this.tripTimesUpdater = new TripTimesUpdater(
-      timetableRepository.getTimeZone(),
-      deduplicator
-    );
+    this.tripTimesUpdater = new TripTimesUpdater(timetableRepository.getTimeZone(), deduplicator);
     this.tripPatternCache = new SiriTripPatternCache(
       new SiriTripPatternIdGenerator(),
       transitEditorService::findPattern

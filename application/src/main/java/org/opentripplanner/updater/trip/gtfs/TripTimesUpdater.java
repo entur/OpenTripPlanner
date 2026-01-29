@@ -42,14 +42,14 @@ class TripTimesUpdater {
   private static final Logger LOG = LoggerFactory.getLogger(TripTimesUpdater.class);
 
   private final ZoneId timeZone;
-  private final Deduplicator deduplicator;
+  private final DeduplicatorService deduplicator;
 
   /**
    * Maximum time in seconds since midnight for arrivals and departures
    */
   private static final long MAX_ARRIVAL_DEPARTURE_TIME = 48 * 60 * 60;
 
-  TripTimesUpdater(ZoneId timeZone, Deduplicator deduplicator) {
+  TripTimesUpdater(ZoneId timeZone, DeduplicatorService deduplicator) {
     this.timeZone = timeZone;
     this.deduplicator = deduplicator;
   }
@@ -238,7 +238,6 @@ class TripTimesUpdater {
     TripUpdate tripUpdate,
     List<StopAndStopTimeUpdate> stopAndStopTimeUpdates,
     RealTimeState realTimeState,
-    DeduplicatorService deduplicator,
     int serviceCode
   ) {
     // Calculate seconds since epoch on GTFS midnight (noon minus 12h) of service date
