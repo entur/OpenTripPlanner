@@ -10,7 +10,7 @@ The following are known deployments of OTP in a government- or agency-sponsored 
   and primarily uses OTP2 in production, handling peak loads in excess of 20 requests per second. 
   Most regional agencies in Norway, like **Ruter, Oslo area** uses OTP as a service provided by Entur.
 * **Finland (nationwide)** [Digitransit](https://digitransit.fi/en/) is a collaboration effort between
-  the [Helsinki Region Transport Authority (HSL)](https://www.hsl.fi/en),
+  [Helsinki Region Transport (HSL)](https://www.hsl.fi/en),
   [Fintraffic](https://www.fintraffic.fi/en), and
   other Finnish cities through [Waltti Solutions](https://waltti.fi/en/). 
   Digitransit utilizes OpenTripPlanner through its routing APIs and user interfaces
