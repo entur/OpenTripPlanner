@@ -44,11 +44,11 @@ public final class IndexedListElement<T> {
   @Override
   public String toString() {
     return ValueObjectToStringBuilder.of()
-      .addText("[")
+      .addText("(")
       .addNum(index)
       .addText("=")
       .addObj(element)
-      .addText("]")
+      .addText(")")
       .toString();
   }
 }

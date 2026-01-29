@@ -139,6 +139,6 @@ class ListUtilsTest {
       indexed
     );
 
-    assertEquals("[0=A]", indexed.getFirst().toString());
+    assertEquals("(0=A)", indexed.getFirst().toString());
   }
 }
