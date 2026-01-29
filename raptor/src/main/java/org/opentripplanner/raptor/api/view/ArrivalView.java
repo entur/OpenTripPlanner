@@ -5,7 +5,6 @@ import static org.opentripplanner.raptor.api.model.RaptorValueType.C2;
 
 import java.util.function.IntFunction;
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.api.model.OnBoardTripConstraint;
 import org.opentripplanner.raptor.api.model.PathLegType;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
