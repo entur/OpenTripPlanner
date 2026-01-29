@@ -30,7 +30,7 @@ public class CancelTripHandler implements TripUpdateHandler {
     var tripResolver = context.tripResolver();
 
     // Resolve service date (from parsedUpdate or from tripOnServiceDateId)
-    var serviceDateResult = ServiceDateResolver.resolveServiceDate(parsedUpdate, tripResolver);
+    var serviceDateResult = context.serviceDateResolver().resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {
       return Result.failure(serviceDateResult.failureValue());
     }
