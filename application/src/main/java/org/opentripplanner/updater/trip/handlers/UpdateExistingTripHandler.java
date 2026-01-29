@@ -43,8 +43,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     TransitEditorService transitService
   ) {
     var tripReference = parsedUpdate.tripReference();
-    var serviceDate = parsedUpdate.serviceDate();
     var tripResolver = context.tripResolver();
+
+    // Resolve service date (from parsedUpdate or from tripOnServiceDateId)
+    var serviceDateResult = ServiceDateResolver.resolveServiceDate(parsedUpdate, tripResolver);
+    if (serviceDateResult.isFailure()) {
+      return Result.failure(serviceDateResult.failureValue());
+    }
+    var serviceDate = serviceDateResult.successValue();
 
     // Resolve the trip from the trip reference
     var tripResult = tripResolver.resolveTrip(tripReference);
