@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_A;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_B;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_C;
@@ -196,7 +197,7 @@ class M01_OnBoardAccessTest {
   }
 
   @Test
-  @DisplayName("On-board access to a non-existing route results in no paths")
+  @DisplayName("On-board access to a non-existing route results in exception")
   void nonExistentRoute() {
     data
       .access(new TestRaptorOnBoardAccess(1, 1, 1, STOP_B, 0))
@@ -213,15 +214,13 @@ class M01_OnBoardAccessTest {
 
     var requestBuilder = prepareRequest();
 
-    var raptorResponse = raptorService.route(requestBuilder.build(), data);
-
-    // Since we're trying to board a route with routeIndex 1, but the only existing route pattern
-    // has routeIndex 0, the result contains no paths
-    assertEquals("", pathsToString(raptorResponse));
+    assertThrows(IndexOutOfBoundsException.class, () ->
+      raptorService.route(requestBuilder.build(), data)
+    );
   }
 
   @Test
-  @DisplayName("On-board access to a non-existing trip in route results in no paths")
+  @DisplayName("On-board access to a non-existing trip in route results in exception")
   void nonExistentTrip() {
     data
       .access(new TestRaptorOnBoardAccess(0, 3, 1, STOP_B, 0))
@@ -238,11 +237,9 @@ class M01_OnBoardAccessTest {
 
     var requestBuilder = prepareRequest();
 
-    var raptorResponse = raptorService.route(requestBuilder.build(), data);
-
-    // Since we try to do on-board access starting from B at 0:16, but the latest trip passes B at
-    // 0:15, the result contains no paths
-    assertEquals("", pathsToString(raptorResponse));
+    assertThrows(IndexOutOfBoundsException.class, () ->
+      raptorService.route(requestBuilder.build(), data)
+    );
   }
 
   @Test
