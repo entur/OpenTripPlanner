@@ -27,6 +27,7 @@ import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
+import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateOptions;
@@ -106,6 +107,12 @@ class UpdateExistingTripHandlerTest {
       tripRef,
       env.defaultServiceDate()
     )
+      .withOptions(
+        TripUpdateOptions.gtfsRtDefaults(
+          ForwardsDelayPropagationType.NONE,
+          BackwardsDelayPropagationType.NONE
+        )
+      )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
@@ -158,6 +165,12 @@ class UpdateExistingTripHandlerTest {
       tripRef,
       env.defaultServiceDate()
     )
+      .withOptions(
+        TripUpdateOptions.gtfsRtDefaults(
+          ForwardsDelayPropagationType.NONE,
+          BackwardsDelayPropagationType.NONE
+        )
+      )
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
 
@@ -193,6 +206,12 @@ class UpdateExistingTripHandlerTest {
       tripRef,
       env.defaultServiceDate()
     )
+      .withOptions(
+        TripUpdateOptions.gtfsRtDefaults(
+          ForwardsDelayPropagationType.NONE,
+          BackwardsDelayPropagationType.NONE
+        )
+      )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
@@ -270,6 +289,12 @@ class UpdateExistingTripHandlerTest {
       tripRef,
       env.defaultServiceDate()
     )
+      .withOptions(
+        TripUpdateOptions.gtfsRtDefaults(
+          ForwardsDelayPropagationType.NONE,
+          BackwardsDelayPropagationType.NONE
+        )
+      )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
@@ -303,6 +328,12 @@ class UpdateExistingTripHandlerTest {
       tripRef,
       env.defaultServiceDate()
     )
+      .withOptions(
+        TripUpdateOptions.gtfsRtDefaults(
+          ForwardsDelayPropagationType.NONE,
+          BackwardsDelayPropagationType.NONE
+        )
+      )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
@@ -339,6 +370,12 @@ class UpdateExistingTripHandlerTest {
       tripRef,
       env.defaultServiceDate()
     )
+      .withOptions(
+        TripUpdateOptions.gtfsRtDefaults(
+          ForwardsDelayPropagationType.NONE,
+          BackwardsDelayPropagationType.NONE
+        )
+      )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
@@ -572,7 +609,8 @@ class UpdateExistingTripHandlerTest {
 
       // SIRI-style update: uses stopPointRef for A2 (same station as scheduled A1)
       // No stopSequence - must match by stop reference
-      var stopUpdate = ParsedStopTimeUpdate.builder(
+      // SIRI-style updates require all stops to be present
+      var stopA2Update = ParsedStopTimeUpdate.builder(
         // A2 is in the same station as A1
         StopReference.ofScheduledStopPointOrStopId(new FeedScopedId(FEED_ID, "A2"))
       )
@@ -581,8 +619,16 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(60))
         .build();
 
+      var stopB1Update = ParsedStopTimeUpdate.builder(
+        StopReference.ofScheduledStopPointOrStopId(new FeedScopedId(FEED_ID, "B1"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(120))
+        .withDepartureUpdate(TimeUpdate.ofDelay(120))
+        .build();
+
       var options = TripUpdateOptions.builder()
         .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
         .build();
 
       var parsedUpdate = ParsedTripUpdate.builder(
@@ -591,7 +637,7 @@ class UpdateExistingTripHandlerTest {
         stationEnv.defaultServiceDate()
       )
         .withOptions(options)
-        .addStopTimeUpdate(stopUpdate)
+        .withStopTimeUpdates(List.of(stopA2Update, stopB1Update))
         .build();
 
       var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
@@ -604,10 +650,11 @@ class UpdateExistingTripHandlerTest {
       var tripId = new FeedScopedId(FEED_ID, "stationTrip");
       var tripRef = TripReference.ofTripId(tripId);
 
-      // SIRI-style update: uses stopPointRef for B1 (different station from A1)
-      // This should fail because B1 is in station2, but the trip stops at A1 (station1)
-      var stopUpdate = ParsedStopTimeUpdate.builder(
-        // B1 is in a different station
+      // SIRI-style update: uses stopPointRef for B1 (station2) to replace scheduled A1 (station1)
+      // This should fail because B1 is in a different station from A1
+      // The update must include all stops in the trip (A1 and B1)
+      var stopA1Update = ParsedStopTimeUpdate.builder(
+        // Attempt to replace A1 with B1 (different station)
         StopReference.ofScheduledStopPointOrStopId(new FeedScopedId(FEED_ID, "B1"))
       )
         // No stopSequence - forces matching by stop reference
@@ -615,8 +662,16 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(60))
         .build();
 
+      var stopB1Update = ParsedStopTimeUpdate.builder(
+        StopReference.ofScheduledStopPointOrStopId(new FeedScopedId(FEED_ID, "B1"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(120))
+        .withDepartureUpdate(TimeUpdate.ofDelay(120))
+        .build();
+
       var options = TripUpdateOptions.builder()
         .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
         .build();
 
       var parsedUpdate = ParsedTripUpdate.builder(
@@ -625,15 +680,193 @@ class UpdateExistingTripHandlerTest {
         stationEnv.defaultServiceDate()
       )
         .withOptions(options)
-        .addStopTimeUpdate(stopUpdate)
+        .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
 
       var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
 
-      // B1 is in the trip pattern at index 1, so it will match successfully
-      // But since B1 is at station2 and the scheduled stop is also B1, there's no replacement
-      // This is actually a valid update (no replacement happening)
-      assertTrue(result.isSuccess(), "Expected success - B1 matches scheduled B1");
+      assertTrue(
+        result.isFailure(),
+        "Expected failure when replacing A1 (station1) with B1 (station2)"
+      );
+      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
+      assertEquals(0, result.failureValue().stopIndex());
+    }
+  }
+
+  /**
+   * Tests for stop update strategy differences.
+   */
+  @Nested
+  class StopUpdateStrategyTests {
+
+    @Test
+    void gtfsRtStopIdLookup_matchesStopInPattern() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // GTFS-RT with stopId but no stopSequence - stops provided in different order
+      // Update stop C first, then stop A (reversed order from pattern A->B->C)
+      var stopCUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "C"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(300))
+        .withDepartureUpdate(TimeUpdate.ofDelay(300))
+        .build();
+
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .withDepartureUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.gtfsRtDefaults(
+        ForwardsDelayPropagationType.NONE,
+        BackwardsDelayPropagationType.NONE
+      );
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .withStopTimeUpdates(List.of(stopCUpdate, stopAUpdate))
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      var updatedTimes = result.successValue().updatedTripTimes();
+
+      // Stop A should have 1 minute delay (matched by ID, not position)
+      assertEquals(STOP_A_ARRIVAL + 60, updatedTimes.getArrivalTime(0));
+      // Stop B should remain at scheduled time (not updated)
+      assertEquals(STOP_B_ARRIVAL, updatedTimes.getArrivalTime(1));
+      // Stop C should have 5 minute delay (matched by ID, not position)
+      assertEquals(STOP_C_ARRIVAL + 300, updatedTimes.getArrivalTime(2));
+    }
+
+    @Test
+    void fullUpdateStrategy_rejectsStopSequence() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Try to use FULL_UPDATE with stopSequence - should be rejected
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withStopSequence(0)
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .addStopTimeUpdate(stopAUpdate)
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isFailure(), "Expected failure but got success");
+      assertEquals(
+        UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE,
+        result.failureValue().errorType()
+      );
+    }
+
+    @Test
+    void fullUpdateStrategy_rejectsTooFewStops() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Pattern has 3 stops (A, B, C) but only provide 2
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var stopBUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "B"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(120))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate))
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isFailure(), "Expected failure but got success");
+      assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
+    }
+
+    @Test
+    void fullUpdateStrategy_rejectsTooManyStops() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Pattern has 3 stops (A, B, C) but provide 4
+      var stopAUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(60))
+        .build();
+
+      var stopBUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "B"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(120))
+        .build();
+
+      var stopCUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "C"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(180))
+        .build();
+
+      var stopDUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(240))
+        .build();
+
+      var options = TripUpdateOptions.builder()
+        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
+        .build();
+
+      var parsedUpdate = ParsedTripUpdate.builder(
+        TripUpdateType.UPDATE_EXISTING,
+        tripRef,
+        env.defaultServiceDate()
+      )
+        .withOptions(options)
+        .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate, stopDUpdate))
+        .build();
+
+      var result = handler.handle(parsedUpdate, context, transitService);
+
+      assertTrue(result.isFailure(), "Expected failure but got success");
+      assertEquals(UpdateError.UpdateErrorType.TOO_MANY_STOPS, result.failureValue().errorType());
     }
   }
 
@@ -693,16 +926,29 @@ class UpdateExistingTripHandlerTest {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
 
-      // Update only stop A with 5 minute delay
+      // SIRI-style: all stops must be present, no stopSequence
       var stopAUpdate = ParsedStopTimeUpdate.builder(
         StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
       )
-        .withStopSequence(0)
         .withArrivalUpdate(TimeUpdate.ofDelay(300))
         .withDepartureUpdate(TimeUpdate.ofDelay(300))
         .build();
 
-      // SIRI defaults: no propagation
+      var stopBUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "B"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(0))
+        .withDepartureUpdate(TimeUpdate.ofDelay(0))
+        .build();
+
+      var stopCUpdate = ParsedStopTimeUpdate.builder(
+        StopReference.ofStopId(new FeedScopedId(FEED_ID, "C"))
+      )
+        .withArrivalUpdate(TimeUpdate.ofDelay(0))
+        .withDepartureUpdate(TimeUpdate.ofDelay(0))
+        .build();
+
+      // SIRI defaults: no propagation, FULL_UPDATE strategy
       var options = TripUpdateOptions.siriDefaults();
 
       var parsedUpdate = ParsedTripUpdate.builder(
@@ -711,7 +957,7 @@ class UpdateExistingTripHandlerTest {
         env.defaultServiceDate()
       )
         .withOptions(options)
-        .addStopTimeUpdate(stopAUpdate)
+        .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
         .build();
 
       var result = handler.handle(parsedUpdate, context, transitService);

@@ -14,18 +14,21 @@ public final class TripUpdateOptions {
   private final BackwardsDelayPropagationType backwardsPropagation;
   private final boolean allowStopPatternModification;
   private final StopReplacementConstraint stopReplacementConstraint;
+  private final StopUpdateStrategy stopUpdateStrategy;
 
   /**
    * @param forwardsPropagation How delays should be propagated to future stops
    * @param backwardsPropagation How delays should be propagated to past stops
    * @param allowStopPatternModification Whether stop pattern modifications are allowed
    * @param stopReplacementConstraint Constraint on which stops can replace scheduled stops
+   * @param stopUpdateStrategy Strategy for matching stop updates to stops in the pattern
    */
   public TripUpdateOptions(
     ForwardsDelayPropagationType forwardsPropagation,
     BackwardsDelayPropagationType backwardsPropagation,
     boolean allowStopPatternModification,
-    StopReplacementConstraint stopReplacementConstraint
+    StopReplacementConstraint stopReplacementConstraint,
+    StopUpdateStrategy stopUpdateStrategy
   ) {
     this.forwardsPropagation = Objects.requireNonNull(
       forwardsPropagation,
@@ -40,6 +43,10 @@ public final class TripUpdateOptions {
       stopReplacementConstraint,
       "stopReplacementConstraint must not be null"
     );
+    this.stopUpdateStrategy = Objects.requireNonNull(
+      stopUpdateStrategy,
+      "stopUpdateStrategy must not be null"
+    );
   }
 
   /**
@@ -52,7 +59,8 @@ public final class TripUpdateOptions {
       ForwardsDelayPropagationType.NONE,
       BackwardsDelayPropagationType.NONE,
       true,
-      StopReplacementConstraint.SAME_PARENT_STATION
+      StopReplacementConstraint.SAME_PARENT_STATION,
+      StopUpdateStrategy.FULL_UPDATE
     );
   }
 
@@ -69,7 +77,8 @@ public final class TripUpdateOptions {
       forwardsPropagation,
       backwardsPropagation,
       true,
-      StopReplacementConstraint.ANY_STOP
+      StopReplacementConstraint.ANY_STOP,
+      StopUpdateStrategy.PARTIAL_UPDATE
     );
   }
 
@@ -96,6 +105,10 @@ public final class TripUpdateOptions {
     return stopReplacementConstraint;
   }
 
+  public StopUpdateStrategy stopUpdateStrategy() {
+    return stopUpdateStrategy;
+  }
+
   /**
    * Returns true if this configuration propagates delays (forward or backward).
    */
@@ -119,7 +132,8 @@ public final class TripUpdateOptions {
       allowStopPatternModification == that.allowStopPatternModification &&
       forwardsPropagation == that.forwardsPropagation &&
       backwardsPropagation == that.backwardsPropagation &&
-      stopReplacementConstraint == that.stopReplacementConstraint
+      stopReplacementConstraint == that.stopReplacementConstraint &&
+      stopUpdateStrategy == that.stopUpdateStrategy
     );
   }
 
@@ -129,7 +143,8 @@ public final class TripUpdateOptions {
       forwardsPropagation,
       backwardsPropagation,
       allowStopPatternModification,
-      stopReplacementConstraint
+      stopReplacementConstraint,
+      stopUpdateStrategy
     );
   }
 
@@ -145,6 +160,8 @@ public final class TripUpdateOptions {
       allowStopPatternModification +
       ", stopReplacementConstraint=" +
       stopReplacementConstraint +
+      ", stopUpdateStrategy=" +
+      stopUpdateStrategy +
       '}'
     );
   }
@@ -159,6 +176,7 @@ public final class TripUpdateOptions {
     private boolean allowStopPatternModification = true;
     private StopReplacementConstraint stopReplacementConstraint =
       StopReplacementConstraint.ANY_STOP;
+    private StopUpdateStrategy stopUpdateStrategy = StopUpdateStrategy.PARTIAL_UPDATE;
 
     public Builder withForwardsPropagation(ForwardsDelayPropagationType forwardsPropagation) {
       this.forwardsPropagation = forwardsPropagation;
@@ -182,12 +200,18 @@ public final class TripUpdateOptions {
       return this;
     }
 
+    public Builder withStopUpdateStrategy(StopUpdateStrategy stopUpdateStrategy) {
+      this.stopUpdateStrategy = stopUpdateStrategy;
+      return this;
+    }
+
     public TripUpdateOptions build() {
       return new TripUpdateOptions(
         forwardsPropagation,
         backwardsPropagation,
         allowStopPatternModification,
-        stopReplacementConstraint
+        stopReplacementConstraint,
+        stopUpdateStrategy
       );
     }
   }
