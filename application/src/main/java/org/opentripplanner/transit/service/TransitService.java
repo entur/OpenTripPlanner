@@ -30,7 +30,6 @@ import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -392,8 +391,6 @@ public interface TransitService {
    * So, if more patterns of mode BUS than RAIL visit the stop, the result will be [BUS,RAIL].
    */
   List<TransitMode> findTransitModes(StopLocation stop);
-
-  Deduplicator getDeduplicator();
 
   Set<LocalDate> listServiceDates();
 
