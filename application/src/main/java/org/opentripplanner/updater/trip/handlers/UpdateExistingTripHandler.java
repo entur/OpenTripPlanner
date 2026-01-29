@@ -125,20 +125,22 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     PatternModificationResult modResult = applyResult.successValue();
 
     // Determine the pattern to use
-    TripPattern finalPattern = pattern;
+    // After reverting, start with the scheduled pattern unless new modifications are needed
+    TripPattern finalPattern = scheduledPattern;
     RealTimeState realTimeState = RealTimeState.UPDATED;
 
     // If stop pattern was modified, create or get cached modified pattern
     if (modResult.hasPatternChanges()) {
       StopPattern newStopPattern = buildModifiedStopPattern(
-        pattern,
+        scheduledPattern,
         modResult.stopReplacements(),
         modResult.pickupChanges(),
         modResult.dropoffChanges()
       );
 
       // Check if pattern actually changed (builder deduplicates)
-      if (!pattern.getStopPattern().equals(newStopPattern)) {
+      // Compare against the scheduled pattern to determine if we need a modified pattern
+      if (!scheduledPattern.getStopPattern().equals(newStopPattern)) {
         var tripPatternCache = context.tripPatternCache();
         // SiriTripPatternCache uses 2-parameter signature (gets original pattern via injected function)
         finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
@@ -153,7 +155,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
 
         // Cancel the trip in the scheduled pattern since it's moving to a modified pattern
         // This prevents the trip from appearing in both patterns in the routing data
-        markScheduledTripAsDeleted(trip, pattern, serviceDate, snapshotManager);
+        markScheduledTripAsDeleted(trip, scheduledPattern, serviceDate, snapshotManager);
       }
     }
 
