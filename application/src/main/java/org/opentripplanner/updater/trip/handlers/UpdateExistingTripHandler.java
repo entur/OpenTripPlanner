@@ -24,6 +24,7 @@ import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
+import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -141,6 +142,55 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
   }
 
   /**
+   * Result of matching a stop by reference, containing the matched stop index and resolved stop.
+   */
+  private record StopMatchResult(int stopIndex, StopLocation resolvedStop) {}
+
+  /**
+   * Match a stop in the pattern by stop reference (stop ID lookup).
+   * Used for GTFS-RT updates that omit stopSequence but provide stopId.
+   *
+   * @param stopReference The stop reference to match
+   * @param pattern The trip pattern to search
+   * @param stopResolver The stop resolver to use
+   * @return StopMatchResult with matched index and resolved stop, or null if no match found
+   */
+  @Nullable
+  private StopMatchResult matchStopByReference(
+    StopReference stopReference,
+    TripPattern pattern,
+    StopResolver stopResolver
+  ) {
+    // Resolve the stop from the reference
+    StopLocation resolvedStop = stopResolver.resolve(stopReference);
+    if (resolvedStop == null) {
+      return null;
+    }
+
+    // Search through pattern stops to find a match by ID
+    for (int i = 0; i < pattern.numberOfStops(); i++) {
+      StopLocation patternStop = pattern.getStop(i);
+
+      // Direct match by ID
+      if (patternStop.getId().equals(resolvedStop.getId())) {
+        return new StopMatchResult(i, resolvedStop);
+      }
+
+      // Parent station match (quay changes)
+      if (
+        patternStop.getParentStation() != null &&
+        resolvedStop.getParentStation() != null &&
+        patternStop.getParentStation().getId().equals(resolvedStop.getParentStation().getId())
+      ) {
+        return new StopMatchResult(i, resolvedStop);
+      }
+    }
+
+    // No match found
+    return null;
+  }
+
+  /**
    * Result of applying stop time updates, tracking both time updates and pattern modifications.
    */
   private static class PatternModificationResult {
@@ -188,12 +238,19 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     Trip trip,
     TripUpdateApplierContext context
   ) {
+    var stopUpdateStrategy = parsedUpdate.options().stopUpdateStrategy();
     var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
 
-    // Validate stop count matches pattern (SIRI-style validation)
-    // Only validate for SIRI-style updates where stops are matched by reference (no explicit stop sequence)
-    if (!parsedUpdate.hasStopSequences()) {
-      // SIRI-style: validate exact match of stop count
+    // Validate FULL_UPDATE strategy constraints
+    if (stopUpdateStrategy == StopUpdateStrategy.FULL_UPDATE) {
+      // FULL_UPDATE must not use stopSequence
+      if (parsedUpdate.hasStopSequences()) {
+        return Result.failure(
+          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
+        );
+      }
+
+      // FULL_UPDATE must have exact stop count match
       if (stopTimeUpdates.size() < pattern.numberOfStops()) {
         return Result.failure(
           new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TOO_FEW_STOPS)
@@ -211,50 +268,65 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     var stopResolver = context.stopResolver();
     var stopReplacementValidator = new StopReplacementValidator();
 
+    int listIndex = 0;
     for (ParsedStopTimeUpdate stopUpdate : parsedUpdate.stopTimeUpdates()) {
       Integer stopSequence = stopUpdate.stopSequence();
       int stopIndex;
       StopLocation resolvedStop = null;
 
-      // Determine stop index and resolve stop if needed
-      if (stopSequence != null) {
-        stopIndex = stopSequence;
-        if (stopIndex < 0 || stopIndex >= pattern.numberOfStops()) {
-          LOG.warn(
-            "Stop index {} out of bounds for pattern with {} stops",
-            stopIndex,
-            pattern.numberOfStops()
-          );
-          continue;
-        }
+      if (stopUpdateStrategy == StopUpdateStrategy.FULL_UPDATE) {
+        // SIRI-ET: position in list IS the position in pattern
+        stopIndex = listIndex;
 
-        // Resolve stop if assignedStopId is provided (stop replacement)
-        if (stopUpdate.stopReference().hasAssignedStopId()) {
-          resolvedStop = stopResolver.resolve(
-            StopReference.ofStopId(stopUpdate.stopReference().assignedStopId())
+        // Resolve the stop from the stop reference for validation and replacement
+        resolvedStop = stopResolver.resolve(stopUpdate.stopReference());
+        if (resolvedStop == null) {
+          return Result.failure(
+            new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
           );
         }
       } else {
-        // Match by stop reference (SIRI-style)
-        var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
-        if (matchResult == null) {
-          // Failed to match - determine if it's an unknown stop or a mismatch
-          var resolvedStopForError = stopResolver.resolve(stopUpdate.stopReference());
-          if (resolvedStopForError == null) {
-            // Stop reference couldn't be resolved at all
-            return Result.failure(
-              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
+        // PARTIAL_UPDATE (GTFS-RT): use stopSequence or lookup by stopId
+        if (stopSequence != null) {
+          // GTFS-RT with explicit stop sequence
+          stopIndex = stopSequence;
+          if (stopIndex < 0 || stopIndex >= pattern.numberOfStops()) {
+            LOG.warn(
+              "Stop index {} out of bounds for pattern with {} stops",
+              stopIndex,
+              pattern.numberOfStops()
             );
-          } else {
-            // Stop was resolved but doesn't match any stop in the pattern
-            return Result.failure(
-              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
+            continue;
+          }
+
+          // Resolve stop if assignedStopId is provided (stop replacement)
+          if (stopUpdate.stopReference().hasAssignedStopId()) {
+            resolvedStop = stopResolver.resolve(
+              StopReference.ofStopId(stopUpdate.stopReference().assignedStopId())
             );
           }
+        } else {
+          // GTFS-RT without stopSequence: lookup stop by ID in pattern
+          var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
+          if (matchResult == null) {
+            // Failed to match - determine if unknown stop or mismatch
+            var resolvedStopForError = stopResolver.resolve(stopUpdate.stopReference());
+            if (resolvedStopForError == null) {
+              return Result.failure(
+                new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
+              );
+            } else {
+              return Result.failure(
+                new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
+              );
+            }
+          }
+          stopIndex = matchResult.stopIndex;
+          resolvedStop = matchResult.resolvedStop;
         }
-        stopIndex = matchResult.stopIndex;
-        resolvedStop = matchResult.resolvedStop;
       }
+
+      listIndex++;
 
       // Get the scheduled stop from the pattern
       StopLocation scheduledStop = pattern.getStop(stopIndex);
@@ -294,10 +366,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       if (stopUpdate.isSkipped()) {
         builder.withCanceled(stopIndex);
         result.hasCancellations = true;
-        // Record pickup/dropoff changes to NONE for cancelled stops
-        // This ensures the stop pattern reflects the cancellation
-        result.pickupChanges.put(stopIndex, PickDrop.NONE);
-        result.dropoffChanges.put(stopIndex, PickDrop.NONE);
         continue;
       }
 
@@ -424,54 +492,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
 
     return builder.build();
-  }
-
-  /**
-   * Result of matching a stop update by its stop reference.
-   */
-  private record StopMatchResult(int stopIndex, StopLocation resolvedStop) {}
-
-  /**
-   * Attempts to match a stop update to a position in the pattern by resolving the stop reference.
-   *
-   * @param stopReference The stop reference from the update
-   * @param pattern The trip pattern to match against
-   * @param stopResolver Resolver to convert stop references to stops
-   * @return The match result with stop index and resolved stop, or null if no match found
-   */
-  @Nullable
-  private StopMatchResult matchStopByReference(
-    StopReference stopReference,
-    TripPattern pattern,
-    StopResolver stopResolver
-  ) {
-    // Resolve the stop from the reference (stopId or stopPointRef)
-    StopLocation resolvedStop = stopResolver.resolve(stopReference);
-    if (resolvedStop == null) {
-      return null;
-    }
-
-    // Find this stop in the pattern
-    for (int i = 0; i < pattern.numberOfStops(); i++) {
-      StopLocation patternStop = pattern.getStop(i);
-      if (patternStop.getId().equals(resolvedStop.getId())) {
-        // Exact match - stop is the same
-        return new StopMatchResult(i, resolvedStop);
-      }
-      // Check if they share the same parent station (quay change within station)
-      var patternParent = patternStop.getParentStation();
-      var resolvedParent = resolvedStop.getParentStation();
-      if (
-        patternParent != null &&
-        resolvedParent != null &&
-        patternParent.getId().equals(resolvedParent.getId())
-      ) {
-        // Same station - this is likely the matching stop (quay change)
-        return new StopMatchResult(i, resolvedStop);
-      }
-    }
-
-    return null;
   }
 
   /**
