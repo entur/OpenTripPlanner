@@ -22,7 +22,6 @@ class TripUpdateOptionsTest {
 
     assertEquals(ForwardsDelayPropagationType.NONE, options.forwardsPropagation());
     assertEquals(BackwardsDelayPropagationType.NONE, options.backwardsPropagation());
-    assertTrue(options.allowStopPatternModification());
     assertFalse(options.propagatesDelays());
     assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.FULL_UPDATE, options.stopUpdateStrategy());
@@ -38,7 +37,6 @@ class TripUpdateOptionsTest {
 
     assertEquals(DEFAULT, options.forwardsPropagation());
     assertEquals(REQUIRED_NO_DATA, options.backwardsPropagation());
-    assertTrue(options.allowStopPatternModification());
     assertTrue(options.propagatesDelays());
     assertEquals(ANY_STOP, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.PARTIAL_UPDATE, options.stopUpdateStrategy());
@@ -62,13 +60,11 @@ class TripUpdateOptionsTest {
     var options = TripUpdateOptions.builder()
       .withForwardsPropagation(DEFAULT)
       .withBackwardsPropagation(ALWAYS)
-      .withAllowStopPatternModification(false)
       .withStopReplacementConstraint(SAME_PARENT_STATION)
       .build();
 
     assertEquals(DEFAULT, options.forwardsPropagation());
     assertEquals(ALWAYS, options.backwardsPropagation());
-    assertFalse(options.allowStopPatternModification());
     assertTrue(options.propagatesDelays());
     assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
   }
