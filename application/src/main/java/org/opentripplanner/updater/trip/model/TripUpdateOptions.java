@@ -15,6 +15,7 @@ public final class TripUpdateOptions {
   private final boolean allowStopPatternModification;
   private final StopReplacementConstraint stopReplacementConstraint;
   private final StopUpdateStrategy stopUpdateStrategy;
+  private final RealTimeStateUpdateStrategy realTimeStateStrategy;
 
   /**
    * @param forwardsPropagation How delays should be propagated to future stops
@@ -22,13 +23,15 @@ public final class TripUpdateOptions {
    * @param allowStopPatternModification Whether stop pattern modifications are allowed
    * @param stopReplacementConstraint Constraint on which stops can replace scheduled stops
    * @param stopUpdateStrategy Strategy for matching stop updates to stops in the pattern
+   * @param realTimeStateStrategy Strategy for determining RealTimeState of updated TripTimes
    */
   public TripUpdateOptions(
     ForwardsDelayPropagationType forwardsPropagation,
     BackwardsDelayPropagationType backwardsPropagation,
     boolean allowStopPatternModification,
     StopReplacementConstraint stopReplacementConstraint,
-    StopUpdateStrategy stopUpdateStrategy
+    StopUpdateStrategy stopUpdateStrategy,
+    RealTimeStateUpdateStrategy realTimeStateStrategy
   ) {
     this.forwardsPropagation = Objects.requireNonNull(
       forwardsPropagation,
@@ -47,6 +50,10 @@ public final class TripUpdateOptions {
       stopUpdateStrategy,
       "stopUpdateStrategy must not be null"
     );
+    this.realTimeStateStrategy = Objects.requireNonNull(
+      realTimeStateStrategy,
+      "realTimeStateStrategy must not be null"
+    );
   }
 
   /**
@@ -60,7 +67,8 @@ public final class TripUpdateOptions {
       BackwardsDelayPropagationType.NONE,
       true,
       StopReplacementConstraint.SAME_PARENT_STATION,
-      StopUpdateStrategy.FULL_UPDATE
+      StopUpdateStrategy.FULL_UPDATE,
+      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE
     );
   }
 
@@ -78,7 +86,8 @@ public final class TripUpdateOptions {
       backwardsPropagation,
       true,
       StopReplacementConstraint.ANY_STOP,
-      StopUpdateStrategy.PARTIAL_UPDATE
+      StopUpdateStrategy.PARTIAL_UPDATE,
+      RealTimeStateUpdateStrategy.ALWAYS_UPDATED
     );
   }
 
@@ -109,6 +118,10 @@ public final class TripUpdateOptions {
     return stopUpdateStrategy;
   }
 
+  public RealTimeStateUpdateStrategy realTimeStateStrategy() {
+    return realTimeStateStrategy;
+  }
+
   /**
    * Returns true if this configuration propagates delays (forward or backward).
    */
@@ -133,7 +146,8 @@ public final class TripUpdateOptions {
       forwardsPropagation == that.forwardsPropagation &&
       backwardsPropagation == that.backwardsPropagation &&
       stopReplacementConstraint == that.stopReplacementConstraint &&
-      stopUpdateStrategy == that.stopUpdateStrategy
+      stopUpdateStrategy == that.stopUpdateStrategy &&
+      realTimeStateStrategy == that.realTimeStateStrategy
     );
   }
 
@@ -144,7 +158,8 @@ public final class TripUpdateOptions {
       backwardsPropagation,
       allowStopPatternModification,
       stopReplacementConstraint,
-      stopUpdateStrategy
+      stopUpdateStrategy,
+      realTimeStateStrategy
     );
   }
 
@@ -162,6 +177,8 @@ public final class TripUpdateOptions {
       stopReplacementConstraint +
       ", stopUpdateStrategy=" +
       stopUpdateStrategy +
+      ", realTimeStateStrategy=" +
+      realTimeStateStrategy +
       '}'
     );
   }
@@ -177,6 +194,8 @@ public final class TripUpdateOptions {
     private StopReplacementConstraint stopReplacementConstraint =
       StopReplacementConstraint.ANY_STOP;
     private StopUpdateStrategy stopUpdateStrategy = StopUpdateStrategy.PARTIAL_UPDATE;
+    private RealTimeStateUpdateStrategy realTimeStateStrategy =
+      RealTimeStateUpdateStrategy.ALWAYS_UPDATED;
 
     public Builder withForwardsPropagation(ForwardsDelayPropagationType forwardsPropagation) {
       this.forwardsPropagation = forwardsPropagation;
@@ -205,13 +224,19 @@ public final class TripUpdateOptions {
       return this;
     }
 
+    public Builder withRealTimeStateStrategy(RealTimeStateUpdateStrategy realTimeStateStrategy) {
+      this.realTimeStateStrategy = realTimeStateStrategy;
+      return this;
+    }
+
     public TripUpdateOptions build() {
       return new TripUpdateOptions(
         forwardsPropagation,
         backwardsPropagation,
         allowStopPatternModification,
         stopReplacementConstraint,
-        stopUpdateStrategy
+        stopUpdateStrategy,
+        realTimeStateStrategy
       );
     }
   }
