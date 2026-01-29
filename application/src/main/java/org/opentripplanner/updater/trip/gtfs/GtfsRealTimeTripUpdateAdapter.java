@@ -62,8 +62,8 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -83,7 +83,7 @@ public class GtfsRealTimeTripUpdateAdapter {
    * step. Once this process is complete, we will clean up the name and move it to an appropriate
    * package.
    **/
-  private final SiriTripPatternCache tripPatternCache;
+  private final TripPatternCache tripPatternCache;
 
   private final ZoneId timeZone;
 
@@ -115,8 +115,8 @@ public class GtfsRealTimeTripUpdateAdapter {
       snapshotManager.getTimetableSnapshotBuffer()
     );
     this.deduplicator = timetableRepository.getDeduplicator();
-    this.tripPatternCache = new SiriTripPatternCache(
-      new SiriTripPatternIdGenerator(),
+    this.tripPatternCache = new TripPatternCache(
+      new TripPatternIdGenerator(),
       transitEditorService::findPattern
     );
   }
