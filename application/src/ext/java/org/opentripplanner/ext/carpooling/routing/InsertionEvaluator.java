@@ -24,6 +24,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessE
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -171,7 +172,8 @@ public class InsertionEvaluator {
           position.dropoffPos(),
           pickUpVertix,
           dropOffVertix,
-          carPoolTreeVertexRouter
+          carPoolTreeVertexRouter,
+          segmentInsertion.segment().transitStop()
         );
 
         if (candidate == null) {
@@ -335,7 +337,8 @@ public class InsertionEvaluator {
       dropoffPos,
       modifiedSegments,
       baselineDuration,
-      totalDuration
+      totalDuration,
+      null
     );
   }
 
@@ -349,7 +352,8 @@ public class InsertionEvaluator {
     int dropoffPos,
     Vertex passengerPickup,
     Vertex passengerDropoff,
-    CarpoolTreeVertexRouter carpoolTreeVertexRouter
+    CarpoolTreeVertexRouter carpoolTreeVertexRouter,
+    NearbyStop transitStop
   ){
     List<GraphPath<State, Edge, Vertex>> modifiedSegments = buildModifiedSegmentsAccessEgress(
       originalPoints,
@@ -394,7 +398,8 @@ public class InsertionEvaluator {
       dropoffPos,
       modifiedSegments,
       baselineDuration,
-      totalDuration
+      totalDuration,
+      transitStop
     );
   }
 
