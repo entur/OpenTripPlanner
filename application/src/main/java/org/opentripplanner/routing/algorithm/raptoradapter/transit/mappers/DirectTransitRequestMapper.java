@@ -12,7 +12,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 
 public class DirectTransitRequestMapper {
 
-  ///  Map the request into a request object for the direct transit search. Will return empty if
+  /// Map the request into a request object for the direct transit search. Will return empty if
   /// the direct transit search shouldn't be run.
   public static Optional<RaptorDirectTransitRequest> map(
     RouteRequest request,
