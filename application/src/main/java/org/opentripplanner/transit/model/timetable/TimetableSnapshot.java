@@ -428,11 +428,13 @@ public class TimetableSnapshot {
       feedId
     );
     boolean addedTripPatternsWereCleared = clearEntriesForRealtimeAddedTrips(feedId);
+    boolean patternsForStopWereCleared = clearPatternsForStop(feedId);
     // If this snapshot was modified, it will be dirty after the clear actions.
     if (
       timetablesWereCleared ||
       newTripPatternsForModifiedTripsWereCleared ||
-      addedTripPatternsWereCleared
+      addedTripPatternsWereCleared ||
+      patternsForStopWereCleared
     ) {
       dirty = true;
     }
@@ -615,7 +617,9 @@ public class TimetableSnapshot {
   /**
    * Clear all realtime added routes, trip patterns and trips matching the provided feed id.
    *
-   * */
+   * @param feedId feed id to clear out
+   * @return true if realTimeAddedTrips changed as a result of the call
+   */
   private boolean clearEntriesForRealtimeAddedTrips(String feedId) {
     // it is sufficient to test for the removal of added trips, since other indexed entities are
     // added only if a new trip is added.
@@ -632,6 +636,16 @@ public class TimetableSnapshot {
       .removeIf(route -> feedId.equals(route.getId().getFeedId()));
     realtimeAddedRoutes.keySet().removeIf(id -> feedId.equals(id.getFeedId()));
     return removedEntry;
+  }
+
+  /**
+   * Clear all trip patterns from patternsForStop matching the provided feed id.
+   *
+   * @param feedId feed id to clear out
+   * @return true if patternsForStop changed as a result of the call
+   */
+  private boolean clearPatternsForStop(String feedId) {
+    return patternsForStop.entries().removeIf(entry -> entry.getValue().getFeedId().equals(feedId));
   }
 
   /**
