@@ -64,7 +64,10 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     // Determine update type, service date, and trip reference
     var updateType = determineUpdateType(journey, calls);
     LocalDate serviceDate = resolveServiceDate(journey, context);
-    if (serviceDate == null) {
+
+    // Service date is required UNLESS we have a tripOnServiceDateId
+    var tripOnServiceDateId = resolveTripOnServiceDateId(journey, context);
+    if (serviceDate == null && tripOnServiceDateId == null) {
       return UpdateError.result(null, NO_START_DATE, journey.getDataSource());
     }
 

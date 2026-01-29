@@ -87,4 +87,44 @@ public class TripResolver {
     var result = resolveTrip(reference);
     return result.isSuccess() ? result.successValue() : null;
   }
+
+  /**
+   * Resolve a {@link TripOnServiceDate} from a {@link TripReference}.
+   * <p>
+   * This is useful when the caller needs both the Trip and the service date,
+   * which are both contained in TripOnServiceDate.
+   *
+   * @param reference the trip reference containing tripOnServiceDateId
+   * @return Result containing the resolved TripOnServiceDate on success, or an UpdateError if not found
+   */
+  public Result<TripOnServiceDate, UpdateError> resolveTripOnServiceDate(TripReference reference) {
+    Objects.requireNonNull(reference, "reference must not be null");
+
+    if (reference.hasTripOnServiceDateId()) {
+      TripOnServiceDate tripOnServiceDate = transitService.getTripOnServiceDate(
+        reference.tripOnServiceDateId()
+      );
+      if (tripOnServiceDate != null) {
+        return Result.success(tripOnServiceDate);
+      }
+      return Result.failure(
+        new UpdateError(reference.tripOnServiceDateId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND)
+      );
+    }
+
+    // No TripOnServiceDate ID provided
+    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
+  }
+
+  /**
+   * Resolve a {@link TripOnServiceDate} from a {@link TripReference}, returning null if not found.
+   *
+   * @param reference the trip reference containing tripOnServiceDateId
+   * @return the resolved TripOnServiceDate, or null if not found
+   */
+  @Nullable
+  public TripOnServiceDate resolveTripOnServiceDateOrNull(TripReference reference) {
+    var result = resolveTripOnServiceDate(reference);
+    return result.isSuccess() ? result.successValue() : null;
+  }
 }
