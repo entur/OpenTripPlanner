@@ -44,10 +44,12 @@ class TripUpdateApplierTest {
 
   @Test
   void applierContextHasRequiredFields() {
+    var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var context = new TripUpdateApplierContext(
       feedId,
       null,
       tripResolver,
+      serviceDateResolver,
       stopResolver,
       tripPatternCache
     );
@@ -70,10 +72,12 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(true);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var context = new TripUpdateApplierContext(
       feedId,
       null,
       tripResolver,
+      serviceDateResolver,
       stopResolver,
       tripPatternCache
     );
@@ -94,10 +98,12 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(false);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var context = new TripUpdateApplierContext(
       feedId,
       null,
       tripResolver,
+      serviceDateResolver,
       stopResolver,
       tripPatternCache
     );

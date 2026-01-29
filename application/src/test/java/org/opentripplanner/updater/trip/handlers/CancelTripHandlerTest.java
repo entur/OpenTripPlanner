@@ -14,6 +14,7 @@ import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
@@ -58,6 +59,7 @@ class CancelTripHandlerTest {
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
     var tripResolver = new TripResolver(env.transitService());
+    var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var stopResolver = new StopResolver(env.transitService());
     var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
       new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
@@ -67,6 +69,7 @@ class CancelTripHandlerTest {
       env.feedId(),
       snapshotManager,
       tripResolver,
+      serviceDateResolver,
       stopResolver,
       tripPatternCache
     );
