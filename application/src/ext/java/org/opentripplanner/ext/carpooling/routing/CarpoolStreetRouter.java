@@ -5,6 +5,7 @@ import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.astar.strategy.PathComparator;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -107,29 +108,6 @@ public class CarpoolStreetRouter {
     }
   }
 
-  public GraphPath<State, Edge, Vertex> routeAll(
-    List<GenericLocation> from,
-    List<GenericLocation> to,
-    LinkingContext linkingContext
-  ){
-    var fromVertices = Set.copyOf(from.stream().map(it -> {
-      return getOrCreateVertices(it, linkingContext).stream().toList().getFirst();
-    }).toList());
-
-    var toVertices = Set.copyOf(to.stream().map(it -> {
-      return getOrCreateVertices(it, linkingContext).stream().toList().getFirst();
-    }).toList());
-
-    var routes = carpoolRouting(
-      new StreetRequest(StreetMode.CAR),
-      fromVertices,
-      toVertices,
-      streetLimitationParametersService.maxCarSpeed()
-    );
-
-    return routes;
-  }
-
   /**
    * Gets vertices for a location, either from the LinkingContext or by creating
    * temporary vertices on-demand.
@@ -146,7 +124,7 @@ public class CarpoolStreetRouter {
    * @param linkingContext linking context to check for existing vertices
    * @return set of vertices for the location (either existing or newly created)
    */
-  private Vertex getOrCreateVertex(GenericLocation location, LinkingContext linkingContext) {
+  public Vertex getOrCreateVertex(GenericLocation location, LinkingContext linkingContext) {
     var vertices = linkingContext.findVertices(location);
     if (!vertices.isEmpty()) {
       return vertices.stream().findFirst().get();
@@ -179,6 +157,12 @@ public class CarpoolStreetRouter {
     }
 
     return tempVertex;
+  }
+
+  public Vertex getOrCreateVertex(
+    WgsCoordinate coord, LinkingContext linkingContext
+  ){
+    return getOrCreateVertex(GenericLocation.fromCoordinate(coord.latitude(), coord.longitude()), linkingContext);
   }
 
   /**
@@ -227,50 +211,4 @@ public class CarpoolStreetRouter {
     return paths.getFirst();
   }
 
-
-  /**
-   * Core A* routing for carpooling optimized for car travel.
-   * <p>
-   * Configures and executes an A* street search with settings optimized for carpooling:
-   * <ul>
-   *   <li><strong>Heuristic:</strong> Euclidean distance with max car speed</li>
-   *   <li><strong>Skip Strategy:</strong> Duration-based edge skipping</li>
-   *   <li><strong>Dominance:</strong> Minimum weight</li>
-   *   <li><strong>Sorting:</strong> Results sorted by arrival/departure time</li>
-   * </ul>
-   *
-   * @param streetRequest the street request specifying CAR mode
-   * @param fromVertices set of origin vertices
-   * @param toVertices set of destination vertices
-   * @param maxCarSpeed maximum car speed in m/s
-   * @return the first (best) path found, or null if no paths exist
-   */
-  private List<GraphPath<State, Edge, Vertex>> carpoolRoutingAll(
-    StreetRequest streetRequest,
-    Set<Vertex> fromVertices,
-    Set<Vertex> toVertices,
-    float maxCarSpeed
-  ) {
-    var preferences = request.preferences().street();
-
-    var streetSearch = StreetSearchBuilder.of()
-      .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
-      .withSkipEdgeStrategy(
-        new DurationSkipEdgeStrategy(preferences.maxDirectDuration().valueOf(streetRequest.mode()))
-      )
-      .withDominanceFunction(new DominanceFunctions.MinimumWeight())
-      .withRequest(request)
-      .withStreetRequest(streetRequest)
-      .withFrom(fromVertices)
-      .withTo(toVertices);
-
-    List<GraphPath<State, Edge, Vertex>> paths = streetSearch.getPathsToTarget();
-    paths.sort(new PathComparator(request.arriveBy()));
-
-    if (paths.isEmpty()) {
-      return null;
-    }
-
-    return paths;
-  }
 }
