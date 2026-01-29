@@ -39,9 +39,9 @@ public class DirectTransitPreferences {
     Duration maxAccessEgressDuration
   ) {
     this.enabled = enabled;
-    this.costRelaxFunction = costRelaxFunction;
+    this.costRelaxFunction = Objects.requireNonNull(costRelaxFunction);
     this.extraAccessEgressReluctance = extraAccessEgressReluctance;
-    this.maxAccessEgressDuration = maxAccessEgressDuration;
+    this.maxAccessEgressDuration = Objects.requireNonNull(maxAccessEgressDuration);
   }
 
   public static Builder of() {
