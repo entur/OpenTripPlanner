@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.carpooling.routing;
 
 import java.util.List;
-import java.util.Set;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.astar.strategy.PathComparator;
@@ -93,13 +92,13 @@ public class CarpoolStreetRouter {
     LinkingContext linkingContext
   ) {
     try {
-      var fromVertices = getOrCreateVertices(from, linkingContext);
-      var toVertices = getOrCreateVertices(to, linkingContext);
+      var fromVertex = getOrCreateVertex(from, linkingContext);
+      var toVertex = getOrCreateVertex(to, linkingContext);
 
       return carpoolRouting(
         new StreetRequest(StreetMode.CAR),
-        fromVertices,
-        toVertices,
+        fromVertex,
+        toVertex,
         streetLimitationParametersService.maxCarSpeed()
       );
     } catch (Exception e) {
@@ -124,10 +123,10 @@ public class CarpoolStreetRouter {
    * @param linkingContext linking context to check for existing vertices
    * @return set of vertices for the location (either existing or newly created)
    */
-  private Set<Vertex> getOrCreateVertices(GenericLocation location, LinkingContext linkingContext) {
+  private Vertex getOrCreateVertex(GenericLocation location, LinkingContext linkingContext) {
     var vertices = linkingContext.findVertices(location);
     if (!vertices.isEmpty()) {
-      return vertices;
+      return vertices.stream().findFirst().get();
     }
 
     var coordinate = location.getCoordinate();
@@ -156,7 +155,7 @@ public class CarpoolStreetRouter {
       LOG.debug("Created temporary vertex for coordinate {} (not in LinkingContext)", coordinate);
     }
 
-    return Set.of(tempVertex);
+    return tempVertex;
   }
 
   /**
@@ -171,15 +170,15 @@ public class CarpoolStreetRouter {
    * </ul>
    *
    * @param streetRequest the street request specifying CAR mode
-   * @param fromVertices set of origin vertices
-   * @param toVertices set of destination vertices
+   * @param fromVertex set of origin vertices
+   * @param toVertex set of destination vertices
    * @param maxCarSpeed maximum car speed in m/s
    * @return the first (best) path found, or null if no paths exist
    */
   private GraphPath<State, Edge, Vertex> carpoolRouting(
     StreetRequest streetRequest,
-    Set<Vertex> fromVertices,
-    Set<Vertex> toVertices,
+    Vertex fromVertex,
+    Vertex toVertex,
     float maxCarSpeed
   ) {
     var preferences = request.preferences().street();
@@ -192,8 +191,8 @@ public class CarpoolStreetRouter {
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(request)
       .withStreetRequest(streetRequest)
-      .withFrom(fromVertices)
-      .withTo(toVertices);
+      .withFrom(fromVertex)
+      .withTo(toVertex);
 
     List<GraphPath<State, Edge, Vertex>> paths = streetSearch.getPathsToTarget();
     paths.sort(new PathComparator(request.arriveBy()));
