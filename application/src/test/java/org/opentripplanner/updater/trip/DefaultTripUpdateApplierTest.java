@@ -75,7 +75,7 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testDeleteTrip_notImplemented() {
+  void testDeleteTrip_tripNotFound() {
     var update = ParsedTripUpdate.builder(
       TripUpdateType.DELETE_TRIP,
       TripReference.builder().build(),
@@ -85,7 +85,7 @@ class DefaultTripUpdateApplierTest {
     var result = applier.apply(update, context);
 
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
+    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
   }
 
   @Test
