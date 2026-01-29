@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
@@ -35,6 +36,9 @@ import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
+import org.opentripplanner.street.search.StreetSearchBuilder;
+import org.opentripplanner.street.search.strategy.DominanceFunctions;
+import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.collection.Pair;
@@ -314,24 +318,31 @@ public class DefaultCarpoolingService implements CarpoolingService {
           candidateTrip, pickUpCoord, dropOffCoord
         );
         return new SegmentInsertionPositions(
-          new Segment(pickUpCoord, dropOffCoord), viablePositions
+          new Segment(pickUpCoord, dropOffCoord, nearbyStop), viablePositions
         );
       }).filter(it -> !it.insertionPositions.isEmpty()).toList();
       return new TripWithViablePassengerSegments(candidateTrip, viableSegmentInsertions);
     }).toList();
 
+    candidateTripsWithViableStopsAndPositions.forEach(it -> {
+      insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router);
+    });
+
+    var preferences = request.preferences().street();
+
+
     return List.of();
   }
 
-  record Segment(
-    WgsCoordinate from, WgsCoordinate to
+  public record Segment(
+    WgsCoordinate from, WgsCoordinate to, NearbyStop transitStop
   ){}
 
-  record SegmentInsertionPositions(
+  public record SegmentInsertionPositions(
     Segment segment, List<InsertionPosition> insertionPositions
   ){}
 
-  record TripWithViablePassengerSegments(
+  public record TripWithViablePassengerSegments(
     CarpoolTrip trip, List<SegmentInsertionPositions> segmentInsertionPositions
   ){}
 

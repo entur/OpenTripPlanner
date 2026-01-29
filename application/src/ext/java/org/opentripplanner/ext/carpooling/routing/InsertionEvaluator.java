@@ -4,17 +4,27 @@ import static org.opentripplanner.ext.carpooling.util.GraphPathUtils.calculateCu
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
+import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.ext.carpooling.service.DefaultCarpoolingService;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.street.search.strategy.DominanceFunctions;
+import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,27 +97,45 @@ public class InsertionEvaluator {
   }
 
   public List<InsertionCandidate> findBestInsertions(
-    List<CarpoolTripInsertions> carpoolTripInsertions,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
+    DefaultCarpoolingService.TripWithViablePassengerSegments tripWithViablePassengerSegments,
+    StreetLimitationParametersService streetLimitationParametersService,
+    RouteRequest request,
+    WgsCoordinate passengerCoordinate,
+    CarpoolStreetRouter carpoolStreetRouter
   ){
 
-    List<GraphPath<State, Edge, Vertex>[]> baselineSegmentsList = carpoolTripInsertions.stream().map(carPoolTripInsertion -> {
-      var carPoolTrip = carPoolTripInsertion.getCarpoolTrip();
-      return routeBaselineSegments(carPoolTrip.routePoints());
-    }).toList();
+    GraphPath<State, Edge, Vertex>[] baselineSegments = routeBaselineSegments(
+      tripWithViablePassengerSegments.trip().routePoints()
+    );
 
-    List<Duration[]> cumulativeDurationsList = baselineSegmentsList.stream().map(baselineSegments -> {
-      if(baselineSegments == null){
-        return null;
-      }
-      return calculateCumulativeDurations(baselineSegments);
-    }).toList();
+    var baseLineVertices = tripWithViablePassengerSegments.trip().routePoints().stream().map(it ->
+      carpoolStreetRouter.getOrCreateVertex(it, linkingContext)
+    );
 
 
+    var transitStops = tripWithViablePassengerSegments.segmentInsertionPositions().stream().map(it ->
+      it.segment().transitStop()
+    ).distinct().toList();
 
-    return List.of();
+    var preferences = request.preferences().street();
+    var streetRequest = new StreetRequest(StreetMode.CAR);
+
+
+    var streetSearch = StreetSearchBuilder.of()
+      .withHeuristic(new EuclideanRemainingWeightHeuristic(streetLimitationParametersService.maxCarSpeed()))
+      .withSkipEdgeStrategy(
+        new DurationSkipEdgeStrategy(preferences.maxDirectDuration().valueOf(streetRequest.mode()))
+      )
+      .withDominanceFunction(new DominanceFunctions.MinimumWeight())
+      .withRequest(request)
+      .withStreetRequest(streetRequest);
+
+    var tree = streetSearch.getShortestPathTree();
+
+
+    return new ArrayList<>();
   }
+
 
   /**
    * Evaluates pre-filtered insertion positions using A* routing.
