@@ -324,12 +324,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
       return new TripWithViablePassengerSegments(candidateTrip, viableSegmentInsertions);
     }).toList();
 
-    candidateTripsWithViableStopsAndPositions.forEach(it -> {
-      insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router);
-    });
-
-    var preferences = request.preferences().street();
-
+    var insertionCandidates = candidateTripsWithViableStopsAndPositions.stream().flatMap(it -> {
+      return insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router, accessOrEgress).stream();
+    }).toList();
 
     return List.of();
   }

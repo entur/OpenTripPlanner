@@ -96,10 +96,23 @@ public class CarpoolStreetRouter {
       var fromVertex = getOrCreateVertex(from, linkingContext);
       var toVertex = getOrCreateVertex(to, linkingContext);
 
+      return route(fromVertex, toVertex);
+    } catch (Exception e) {
+      LOG.warn("Failed to get vertices from {} to {}: {}", from, to, e.getMessage());
+      return null;
+    }
+  }
+
+
+  public GraphPath<State, Edge, Vertex> route(
+    Vertex from,
+    Vertex to
+  ){
+    try {
       return carpoolRouting(
         new StreetRequest(StreetMode.CAR),
-        fromVertex,
-        toVertex,
+        from,
+        to,
         streetLimitationParametersService.maxCarSpeed()
       );
     } catch (Exception e) {
