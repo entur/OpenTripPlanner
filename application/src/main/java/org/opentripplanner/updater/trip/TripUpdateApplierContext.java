@@ -17,6 +17,8 @@ public final class TripUpdateApplierContext {
 
   private final TripResolver tripResolver;
 
+  private final ServiceDateResolver serviceDateResolver;
+
   private final StopResolver stopResolver;
 
   private final SiriTripPatternCache tripPatternCache;
@@ -25,6 +27,7 @@ public final class TripUpdateApplierContext {
    * @param feedId The feed ID for this update source
    * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
    * @param tripResolver The resolver for looking up trips from trip references
+   * @param serviceDateResolver The resolver for extracting service dates from trip updates
    * @param stopResolver The resolver for looking up stops from stop references
    * @param tripPatternCache The cache for creating and reusing modified trip patterns
    */
@@ -32,12 +35,17 @@ public final class TripUpdateApplierContext {
     String feedId,
     @Nullable TimetableSnapshotManager snapshotManager,
     TripResolver tripResolver,
+    ServiceDateResolver serviceDateResolver,
     StopResolver stopResolver,
     SiriTripPatternCache tripPatternCache
   ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.snapshotManager = snapshotManager;
     this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
+    this.serviceDateResolver = Objects.requireNonNull(
+      serviceDateResolver,
+      "serviceDateResolver must not be null"
+    );
     this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
     this.tripPatternCache = Objects.requireNonNull(
       tripPatternCache,
@@ -56,6 +64,10 @@ public final class TripUpdateApplierContext {
 
   public TripResolver tripResolver() {
     return tripResolver;
+  }
+
+  public ServiceDateResolver serviceDateResolver() {
+    return serviceDateResolver;
   }
 
   public StopResolver stopResolver() {
@@ -79,6 +91,7 @@ public final class TripUpdateApplierContext {
       Objects.equals(feedId, that.feedId) &&
       Objects.equals(snapshotManager, that.snapshotManager) &&
       Objects.equals(tripResolver, that.tripResolver) &&
+      Objects.equals(serviceDateResolver, that.serviceDateResolver) &&
       Objects.equals(stopResolver, that.stopResolver) &&
       Objects.equals(tripPatternCache, that.tripPatternCache)
     );
@@ -86,7 +99,14 @@ public final class TripUpdateApplierContext {
 
   @Override
   public int hashCode() {
-    return Objects.hash(feedId, snapshotManager, tripResolver, stopResolver, tripPatternCache);
+    return Objects.hash(
+      feedId,
+      snapshotManager,
+      tripResolver,
+      serviceDateResolver,
+      stopResolver,
+      tripPatternCache
+    );
   }
 
   @Override
@@ -100,6 +120,8 @@ public final class TripUpdateApplierContext {
       snapshotManager +
       ", tripResolver=" +
       tripResolver +
+      ", serviceDateResolver=" +
+      serviceDateResolver +
       ", stopResolver=" +
       stopResolver +
       ", tripPatternCache=" +
