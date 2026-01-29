@@ -14,7 +14,10 @@ public final class ParsedTripUpdate {
 
   private final TripUpdateType updateType;
   private final TripReference tripReference;
+
+  @Nullable
   private final LocalDate serviceDate;
+
   private final List<ParsedStopTimeUpdate> stopTimeUpdates;
 
   @Nullable
@@ -31,7 +34,7 @@ public final class ParsedTripUpdate {
   /**
    * @param updateType The type of update (modify existing, cancel, add new, etc.)
    * @param tripReference Reference to the trip being updated
-   * @param serviceDate The service date for which this update applies
+   * @param serviceDate The service date for which this update applies (nullable when tripOnServiceDateId is present)
    * @param stopTimeUpdates Updates for individual stops in the trip
    * @param tripCreationInfo Information for creating a new trip (only for ADD_NEW_TRIP)
    * @param stopPatternModification Modifications to the stop pattern (skipped/added stops)
@@ -41,7 +44,7 @@ public final class ParsedTripUpdate {
   public ParsedTripUpdate(
     TripUpdateType updateType,
     TripReference tripReference,
-    LocalDate serviceDate,
+    @Nullable LocalDate serviceDate,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     @Nullable TripCreationInfo tripCreationInfo,
     @Nullable StopPatternModification stopPatternModification,
@@ -50,7 +53,14 @@ public final class ParsedTripUpdate {
   ) {
     this.updateType = Objects.requireNonNull(updateType, "updateType must not be null");
     this.tripReference = Objects.requireNonNull(tripReference, "tripReference must not be null");
-    this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
+
+    // Service date is required UNLESS tripOnServiceDateId is present
+    if (serviceDate == null && !tripReference.hasTripOnServiceDateId()) {
+      throw new IllegalArgumentException(
+        "serviceDate must not be null when tripOnServiceDateId is not provided"
+      );
+    }
+    this.serviceDate = serviceDate;
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
     this.tripCreationInfo = tripCreationInfo;
     this.stopPatternModification = stopPatternModification;
@@ -64,7 +74,7 @@ public final class ParsedTripUpdate {
   public static Builder builder(
     TripUpdateType updateType,
     TripReference tripReference,
-    LocalDate serviceDate
+    @Nullable LocalDate serviceDate
   ) {
     return new Builder(updateType, tripReference, serviceDate);
   }
@@ -77,6 +87,7 @@ public final class ParsedTripUpdate {
     return tripReference;
   }
 
+  @Nullable
   public LocalDate serviceDate() {
     return serviceDate;
   }
@@ -201,17 +212,24 @@ public final class ParsedTripUpdate {
 
     private final TripUpdateType updateType;
     private final TripReference tripReference;
+
+    @Nullable
     private final LocalDate serviceDate;
+
     private List<ParsedStopTimeUpdate> stopTimeUpdates = new ArrayList<>();
     private TripCreationInfo tripCreationInfo;
     private StopPatternModification stopPatternModification;
     private TripUpdateOptions options = TripUpdateOptions.siriDefaults();
     private String dataSource;
 
-    private Builder(TripUpdateType updateType, TripReference tripReference, LocalDate serviceDate) {
+    private Builder(
+      TripUpdateType updateType,
+      TripReference tripReference,
+      @Nullable LocalDate serviceDate
+    ) {
       this.updateType = Objects.requireNonNull(updateType);
       this.tripReference = Objects.requireNonNull(tripReference);
-      this.serviceDate = Objects.requireNonNull(serviceDate);
+      this.serviceDate = serviceDate;
     }
 
     public Builder withStopTimeUpdates(List<ParsedStopTimeUpdate> stopTimeUpdates) {
