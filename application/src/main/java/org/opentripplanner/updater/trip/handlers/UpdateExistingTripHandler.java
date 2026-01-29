@@ -23,6 +23,7 @@ import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.StopCancellationTrackingStrategy;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.slf4j.Logger;
@@ -386,6 +387,15 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       if (stopUpdate.isSkipped()) {
         builder.withCanceled(stopIndex);
         result.hasCancellations = true;
+
+        // Conditionally track pickup/dropoff changes based on strategy
+        var trackingStrategy = parsedUpdate.options().stopCancellationTracking();
+        if (trackingStrategy == StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE) {
+          // Record pickup/dropoff changes so pattern comparison detects the modification
+          result.pickupChanges.put(stopIndex, PickDrop.CANCELLED);
+          result.dropoffChanges.put(stopIndex, PickDrop.CANCELLED);
+        }
+
         continue;
       }
 

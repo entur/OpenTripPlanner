@@ -26,6 +26,7 @@ class TripUpdateOptionsTest {
     assertFalse(options.propagatesDelays());
     assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.FULL_UPDATE, options.stopUpdateStrategy());
+    assertEquals(StopCancellationTrackingStrategy.NO_TRACK, options.stopCancellationTracking());
   }
 
   @Test
@@ -38,6 +39,10 @@ class TripUpdateOptionsTest {
     assertTrue(options.propagatesDelays());
     assertEquals(ANY_STOP, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.PARTIAL_UPDATE, options.stopUpdateStrategy());
+    assertEquals(
+      StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE,
+      options.stopCancellationTracking()
+    );
   }
 
   @Test
@@ -109,5 +114,24 @@ class TripUpdateOptionsTest {
       .build();
 
     assertEquals(StopUpdateStrategy.FULL_UPDATE, options.stopUpdateStrategy());
+  }
+
+  @Test
+  void builderDefaultsToNoTrackCancellationStrategy() {
+    var options = TripUpdateOptions.builder().build();
+
+    assertEquals(StopCancellationTrackingStrategy.NO_TRACK, options.stopCancellationTracking());
+  }
+
+  @Test
+  void builderCanSetCancellationTrackingStrategy() {
+    var options = TripUpdateOptions.builder()
+      .withStopCancellationTracking(StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE)
+      .build();
+
+    assertEquals(
+      StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE,
+      options.stopCancellationTracking()
+    );
   }
 }

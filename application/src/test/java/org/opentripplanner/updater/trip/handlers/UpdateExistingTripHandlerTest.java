@@ -306,7 +306,9 @@ class UpdateExistingTripHandlerTest {
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
     var updatedTimes = (RealTimeTripTimes) result.successValue().updatedTripTimes();
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    // With GTFS-RT defaults, cancelled stops are tracked as pickup/dropoff changes,
+    // which creates a MODIFIED pattern (matching legacy GTFS-RT behavior)
+    assertEquals(RealTimeState.MODIFIED, updatedTimes.getRealTimeState());
 
     // Stop B (index 1) should be marked as cancelled
     assertTrue(updatedTimes.isCancelledStop(1));
