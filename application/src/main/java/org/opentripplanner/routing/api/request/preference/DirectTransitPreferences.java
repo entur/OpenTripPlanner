@@ -36,12 +36,12 @@ public class DirectTransitPreferences {
     boolean enabled,
     CostLinearFunction costRelaxFunction,
     double extraAccessEgressReluctance,
-    Duration maxAccessEgressDuration
+    @Nullable Duration maxAccessEgressDuration
   ) {
     this.enabled = enabled;
     this.costRelaxFunction = Objects.requireNonNull(costRelaxFunction);
     this.extraAccessEgressReluctance = extraAccessEgressReluctance;
-    this.maxAccessEgressDuration = Objects.requireNonNull(maxAccessEgressDuration);
+    this.maxAccessEgressDuration = maxAccessEgressDuration;
   }
 
   public static Builder of() {
