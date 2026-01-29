@@ -333,6 +333,7 @@ public class TransitRouter {
     // Special handling of carpool accesses
     if(OTPFeature.CarPooling.isOn() && mode == StreetMode.CARPOOL){
       var carPoolAccessList = carpoolingService.routeAccessEgress(accessRequest,streetRequest,type,transitServiceResolver,linkingContext);
+      results.addAll(carPoolAccessList);
     }
 
     return results;
