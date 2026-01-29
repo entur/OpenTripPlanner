@@ -26,7 +26,10 @@ class TripUpdateOptionsTest {
     assertFalse(options.propagatesDelays());
     assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.FULL_UPDATE, options.stopUpdateStrategy());
-    assertEquals(StopCancellationTrackingStrategy.NO_TRACK, options.stopCancellationTracking());
+    assertEquals(
+      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE,
+      options.realTimeStateStrategy()
+    );
   }
 
   @Test
@@ -39,10 +42,7 @@ class TripUpdateOptionsTest {
     assertTrue(options.propagatesDelays());
     assertEquals(ANY_STOP, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.PARTIAL_UPDATE, options.stopUpdateStrategy());
-    assertEquals(
-      StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE,
-      options.stopCancellationTracking()
-    );
+    assertEquals(RealTimeStateUpdateStrategy.ALWAYS_UPDATED, options.realTimeStateStrategy());
   }
 
   @Test
@@ -117,21 +117,21 @@ class TripUpdateOptionsTest {
   }
 
   @Test
-  void builderDefaultsToNoTrackCancellationStrategy() {
+  void builderDefaultsToAlwaysUpdatedStrategy() {
     var options = TripUpdateOptions.builder().build();
 
-    assertEquals(StopCancellationTrackingStrategy.NO_TRACK, options.stopCancellationTracking());
+    assertEquals(RealTimeStateUpdateStrategy.ALWAYS_UPDATED, options.realTimeStateStrategy());
   }
 
   @Test
-  void builderCanSetCancellationTrackingStrategy() {
+  void builderCanSetRealTimeStateStrategy() {
     var options = TripUpdateOptions.builder()
-      .withStopCancellationTracking(StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE)
+      .withRealTimeStateStrategy(RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE)
       .build();
 
     assertEquals(
-      StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE,
-      options.stopCancellationTracking()
+      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE,
+      options.realTimeStateStrategy()
     );
   }
 }

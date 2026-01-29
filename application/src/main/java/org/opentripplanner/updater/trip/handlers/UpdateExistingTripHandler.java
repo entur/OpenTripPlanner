@@ -23,7 +23,7 @@ import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.StopCancellationTrackingStrategy;
+import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.slf4j.Logger;
@@ -87,9 +87,17 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
 
     // Get the trip times from the scheduled timetable
-    TripTimes tripTimes = pattern.getScheduledTimetable().getTripTimes(trip);
+    // If we're working with a realtime-modified pattern, get trip times from the original pattern
+    TripPattern scheduledPattern = pattern.isModified()
+      ? pattern.getOriginalTripPattern()
+      : pattern;
+    TripTimes tripTimes = scheduledPattern.getScheduledTimetable().getTripTimes(trip);
     if (tripTimes == null) {
-      LOG.warn("No trip times found for trip {} in pattern {}", trip.getId(), pattern.getId());
+      LOG.warn(
+        "No trip times found for trip {} in pattern {}",
+        trip.getId(),
+        scheduledPattern.getId()
+      );
       return Result.failure(
         new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
       );
@@ -134,7 +142,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         var tripPatternCache = context.tripPatternCache();
         // SiriTripPatternCache uses 2-parameter signature (gets original pattern via injected function)
         finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
-        realTimeState = RealTimeState.MODIFIED;
+
+        // Conditionally set MODIFIED state based on feed type configuration
+        // GTFS-RT (ALWAYS_UPDATED): Keep UPDATED (legacy behavior from TripTimesUpdater:222)
+        // SIRI-ET (MODIFIED_ON_PATTERN_CHANGE): Set MODIFIED (legacy behavior from ModifiedTripBuilder:150)
+        var stateStrategy = parsedUpdate.options().realTimeStateStrategy();
+        if (stateStrategy == RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE) {
+          realTimeState = RealTimeState.MODIFIED;
+        }
 
         // Cancel the trip in the scheduled pattern since it's moving to a modified pattern
         // This prevents the trip from appearing in both patterns in the routing data
@@ -388,13 +403,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         builder.withCanceled(stopIndex);
         result.hasCancellations = true;
 
-        // Conditionally track pickup/dropoff changes based on strategy
-        var trackingStrategy = parsedUpdate.options().stopCancellationTracking();
-        if (trackingStrategy == StopCancellationTrackingStrategy.TRACK_AS_PICKUP_DROPOFF_CHANGE) {
-          // Record pickup/dropoff changes so pattern comparison detects the modification
-          result.pickupChanges.put(stopIndex, PickDrop.CANCELLED);
-          result.dropoffChanges.put(stopIndex, PickDrop.CANCELLED);
-        }
+        // Track cancelled stops as pickup/dropoff changes for both GTFS-RT and SIRI-ET
+        // This ensures pattern modification is detected and matches legacy behavior
+        result.pickupChanges.put(stopIndex, PickDrop.CANCELLED);
+        result.dropoffChanges.put(stopIndex, PickDrop.CANCELLED);
 
         continue;
       }
