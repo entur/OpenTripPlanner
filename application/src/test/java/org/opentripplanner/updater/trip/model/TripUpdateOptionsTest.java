@@ -26,6 +26,10 @@ class TripUpdateOptionsTest {
     assertFalse(options.propagatesDelays());
     assertEquals(SAME_PARENT_STATION, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.FULL_UPDATE, options.stopUpdateStrategy());
+    assertEquals(
+      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE,
+      options.realTimeStateStrategy()
+    );
   }
 
   @Test
@@ -38,6 +42,7 @@ class TripUpdateOptionsTest {
     assertTrue(options.propagatesDelays());
     assertEquals(ANY_STOP, options.stopReplacementConstraint());
     assertEquals(StopUpdateStrategy.PARTIAL_UPDATE, options.stopUpdateStrategy());
+    assertEquals(RealTimeStateUpdateStrategy.ALWAYS_UPDATED, options.realTimeStateStrategy());
   }
 
   @Test
@@ -109,5 +114,24 @@ class TripUpdateOptionsTest {
       .build();
 
     assertEquals(StopUpdateStrategy.FULL_UPDATE, options.stopUpdateStrategy());
+  }
+
+  @Test
+  void builderDefaultsToAlwaysUpdatedStrategy() {
+    var options = TripUpdateOptions.builder().build();
+
+    assertEquals(RealTimeStateUpdateStrategy.ALWAYS_UPDATED, options.realTimeStateStrategy());
+  }
+
+  @Test
+  void builderCanSetRealTimeStateStrategy() {
+    var options = TripUpdateOptions.builder()
+      .withRealTimeStateStrategy(RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE)
+      .build();
+
+    assertEquals(
+      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE,
+      options.realTimeStateStrategy()
+    );
   }
 }

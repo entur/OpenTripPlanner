@@ -306,6 +306,8 @@ class UpdateExistingTripHandlerTest {
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
     var updatedTimes = (RealTimeTripTimes) result.successValue().updatedTripTimes();
+    // Cancelled stops are tracked as pickup/dropoff changes (unified behavior),
+    // but GTFS-RT uses ALWAYS_UPDATED strategy, so TripTimes state remains UPDATED
     assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
 
     // Stop B (index 1) should be marked as cancelled
