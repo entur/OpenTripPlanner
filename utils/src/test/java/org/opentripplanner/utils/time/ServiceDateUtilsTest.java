@@ -149,7 +149,7 @@ public class ServiceDateUtilsTest {
     );
   }
 
-  /// The input time is in UTC and the the transit service time zone(Europe/Oslo) witch is
+  /// The input time is in UTC and the the transit service time zone(Europe/Oslo) which is
   /// +1 hour in winter and +2 in summer. This means that we switch to a new service-day at
   /// 23:00Z in winter time and at 22:00Z in summer time.
   ///

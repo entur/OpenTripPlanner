@@ -115,7 +115,7 @@ public class ServiceDateUtils {
 
   /// List all running dates given a time window `[startTime, startTime+window]` and the service
   /// `serviceZoneId`. The given `serviceMaxTripSpanDays` is used to expand the running dates ahead.
-  /// This account for night-busses(a service running past midnight) and for a multi-day services
+  /// This accounts for night-busses(a service running past midnight) and for a multi-day services
   /// like coastal ferries spanning several days.
   ///
   /// The time-window is inclusive - inclusive.
@@ -123,8 +123,8 @@ public class ServiceDateUtils {
   /// > **NOTE! Day-light-saving(DST) handling**
   /// >
   /// > In case DST is used for the given `serviceZoneId`, then the service-day overlap when
-  /// > the transition from winter-time to summer-time occours. This method check for this and
-  /// > include the first service-day of summer-time, when the time is last-service-day in
+  /// > the transition from winter-time to summer-time occours. This method checks for this and
+  /// > includes the first service-day of summer-time, when the time is last-service-day in
   /// > winter-time and the clock is between 23:00 to 23:59:59. There is **no** such check performed
   /// > in fall. The method returns the first-day of winter-time, when the time is in the 1 hour gap
   /// > between last day of summer and first day of winter. This overselection should not cause any

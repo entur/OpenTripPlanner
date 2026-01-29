@@ -417,7 +417,7 @@ public final class TripPattern
   /**
    * The maximum number of whole days that any trip in this pattern spans from its service date
    * midnight to the latest arrival at the last stop. For most patterns this is zero(0) - all times
-   * are on the same service-day(opertion day). For a nightbus witch ends at 02:45+1d this is 1.
+   * are on the same service-day(operation day). For a nightbus which ends at 02:45+1d this is 1.
    * And for a multi-day services like coastal ferries it can span several days.
    */
   public int getMaxTripSpanDays() {
