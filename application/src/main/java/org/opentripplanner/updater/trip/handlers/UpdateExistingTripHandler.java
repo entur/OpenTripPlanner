@@ -56,6 +56,20 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     Trip trip = tripResult.successValue();
     LOG.debug("Resolved trip {} for update", trip.getId());
 
+    // Validate that the service date is valid for this trip's service
+    var serviceId = trip.getServiceId();
+    var serviceDates = transitService.getCalendarService().getServiceDatesForServiceId(serviceId);
+    if (!serviceDates.contains(serviceDate)) {
+      LOG.debug(
+        "SCHEDULED trip {} has service date {} for which trip's service is not valid, skipping.",
+        trip.getId(),
+        serviceDate
+      );
+      return Result.failure(
+        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE)
+      );
+    }
+
     // Find the pattern for this trip on this service date
     TripPattern pattern = transitService.findPattern(trip, serviceDate);
     if (pattern == null) {
