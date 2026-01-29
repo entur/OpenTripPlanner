@@ -105,7 +105,10 @@ public interface RaptorTransitCalculator<T extends RaptorTripSchedule>
 
   /**
    * Return TRUE if the subject time is within the iteration given by the provided iteration
-   * departure time.
+   * departure time. Both single-iteration Raptor and Range Raptor are handled. For single-iteration
+   * it means the subject time is within the single iteration of the search, and for multi-iteration
+   * Range Raptor, it means the subject time is within the iteration starting at
+   * iterationDepartureTime.
    */
   boolean isInIteration(int subjectTime, int iterationDepartureTime);
 

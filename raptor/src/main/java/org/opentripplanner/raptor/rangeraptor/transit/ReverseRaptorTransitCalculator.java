@@ -88,7 +88,7 @@ public final class ReverseRaptorTransitCalculator<T extends RaptorTripSchedule>
   /**
    * Note: This implementation is an identical copy of the one in
    * {@link ForwardRaptorTransitCalculator}, because introducing a common ancestor with
-   * iterationStep for these two calculators would be too large a performance hit.
+   * iterationStep for these two calculators could have a performance hit and also add complexity.
    * {@inheritDoc}
    */
   @Override
