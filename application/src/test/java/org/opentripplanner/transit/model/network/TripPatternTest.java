@@ -11,10 +11,13 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 
 class TripPatternTest {
 
@@ -136,5 +139,40 @@ class TripPatternTest {
     assertFalse(subject.containsAnyStopId(List.of(id("not-in-pattern"))));
     assertTrue(subject.containsAnyStopId(List.of(STOP_A.getId())));
     assertTrue(subject.containsAnyStopId(List.of(STOP_A.getId(), id("not-in-pattern"))));
+  }
+
+  @Test
+  void maxTripSpanDaysWithNoTrips() {
+    assertEquals(0, subject.getMaxTripSpanDays());
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+    value = """
+    Description           | Timetable      | Expected number of days
+    Same day              | 08:00 22:00    | 0
+    Same day, exact limit | 08:00 23:59    | 0
+    Night bus             | 22:00 1:00+1d  | 1
+    Overnight exact limit | 22:59 23:59+1d | 1
+    2 overnights          | 1:00 1:00+2d   | 2
+    """,
+    delimiter = '|',
+    useHeadersInDisplayName = true
+  )
+  void maxTripSpanDays(String testCaseName, String schedule, int expectedNumberOfDays) {
+    var pattern = TripPattern.of(id(testCaseName))
+      .withRoute(ROUTE)
+      .withStopPattern(TimetableRepositoryForTest.stopPattern(STOP_A, STOP_C))
+      .withScheduledTimeTableBuilder(builder ->
+        builder.addTripTimes(
+          ScheduledTripTimes.of()
+            .withTrip(TimetableRepositoryForTest.trip("t1").build())
+            .withDepartureTimes(schedule)
+            .build()
+        )
+      )
+      .build();
+
+    assertEquals(expectedNumberOfDays, pattern.getMaxTripSpanDays());
   }
 }
