@@ -82,8 +82,6 @@ class TripTimesUpdater {
     if (tripTimes == null) {
       LOG.debug("tripId {} not found in pattern.", tripId);
       return Result.failure(new UpdateError(tripId, TRIP_NOT_FOUND_IN_PATTERN));
-    } else {
-      LOG.trace("tripId {} found in timetable.", tripId);
     }
 
     RealTimeTripTimesBuilder builder = tripTimes.createRealTimeWithoutScheduledTimes();
@@ -213,10 +211,6 @@ class TripTimesUpdater {
     // Validate for non-increasing times. Log error if present.
     try {
       var result = builder.build();
-      LOG.trace(
-        "A valid TripUpdate object was applied to trip {} using the Timetable class update method.",
-        tripId
-      );
       return success(
         new TripTimesPatch(result, updatedPickups, updatedDropoffs, replacedStopIndices)
       );

@@ -14,9 +14,7 @@ import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_N
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
-import com.google.common.collect.Multimaps;
 import com.google.transit.realtime.GtfsRealtime;
-import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,7 +54,6 @@ import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.event.Level;
 
 /**
  * Adapts from GTFS-RT TripUpdates to OTP's internal real-time data model.
@@ -132,7 +129,6 @@ public class GtfsRealTimeTripUpdateAdapter {
     List<GtfsRealtime.TripUpdate> updates,
     String feedId
   ) {
-    Map<ScheduleRelationship, Integer> failuresByRelationship = new HashMap<>();
     List<Result<UpdateSuccess, UpdateError>> results = new ArrayList<>();
 
     if (updateIncrementality == FULL_DATASET) {
@@ -156,7 +152,6 @@ public class GtfsRealTimeTripUpdateAdapter {
         }
 
         // Determine what kind of trip update this is
-        var scheduleRelationship = tripUpdate.scheduleRelationship();
         if (updateIncrementality == DIFFERENTIAL) {
           purgePatternModifications(tripUpdate);
         }
@@ -167,10 +162,6 @@ public class GtfsRealTimeTripUpdateAdapter {
           backwardsDelayPropagationType,
           forwardsDelayPropagationType
         );
-
-        if (result.isFailure()) {
-          failuresByRelationship.merge(scheduleRelationship, 1, Integer::sum);
-        }
       } catch (DataValidationException e) {
         result = DataValidationExceptionMapper.toResult(e);
       }
@@ -180,7 +171,7 @@ public class GtfsRealTimeTripUpdateAdapter {
     var updateResult = UpdateResult.ofResults(results);
 
     if (updateIncrementality == FULL_DATASET) {
-      logUpdateResult(feedId, failuresByRelationship, updateResult);
+      ResultLogger.logUpdateResult(feedId, "gtfs-rt-trip-updates", updateResult);
     }
     return updateResult;
   }
@@ -245,26 +236,6 @@ public class GtfsRealTimeTripUpdateAdapter {
       return false;
     }
     return tripTimes.getRealTimeState() == RealTimeState.ADDED;
-  }
-
-  private static void logUpdateResult(
-    String feedId,
-    Map<ScheduleRelationship, Integer> failuresByRelationship,
-    UpdateResult updateResult
-  ) {
-    ResultLogger.logUpdateResult(feedId, "gtfs-rt-trip-updates", updateResult);
-
-    if (!failuresByRelationship.isEmpty()) {
-      info(feedId, "Failures by scheduleRelationship {}", failuresByRelationship);
-    }
-
-    var warnings = Multimaps.index(updateResult.warnings(), w -> w);
-    warnings
-      .keySet()
-      .forEach(key -> {
-        var count = warnings.get(key).size();
-        info(feedId, "{} warnings of type {}", count, key);
-      });
   }
 
   private Result<UpdateSuccess, UpdateError> handleScheduledTrip(
@@ -621,38 +592,6 @@ public class GtfsRealTimeTripUpdateAdapter {
   private TripPattern getPatternForTripId(FeedScopedId tripId) {
     Trip trip = transitEditorService.getTrip(tripId);
     return transitEditorService.findPattern(trip);
-  }
-
-  private static void info(String feedId, String message, Object... params) {
-    log(Level.INFO, feedId, null, null, message, params);
-  }
-
-  /**
-   * This adds detailed per-update logging to allow tracking what feeds and updates were applied to
-   * a given trip.
-   * <p>
-   * The INFO level is used for aggregated statistics, while DEBUG/TRACE is used to link specific
-   * messages to a trip.
-   */
-  private static void log(
-    Level logLevel,
-    String feedId,
-    @Nullable String tripId,
-    @Nullable LocalDate serviceDate,
-    String message,
-    Object... params
-  ) {
-    if (LOG.isEnabledForLevel(logLevel)) {
-      String m = tripId != null || serviceDate != null
-        ? "[feedId: %s, tripId: %s, serviceDate: %s] %s".formatted(
-            feedId,
-            tripId,
-            serviceDate,
-            message
-          )
-        : "[feedId: %s] %s".formatted(feedId, message);
-      LOG.makeLoggingEventBuilder(logLevel).log(m, params);
-    }
   }
 
   private enum CancelationType {
