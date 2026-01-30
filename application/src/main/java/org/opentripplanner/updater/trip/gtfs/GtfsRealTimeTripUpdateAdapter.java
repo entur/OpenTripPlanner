@@ -169,12 +169,7 @@ public class GtfsRealTimeTripUpdateAdapter {
         );
 
         if (result.isFailure()) {
-          if (failuresByRelationship.containsKey(scheduleRelationship)) {
-            var c = failuresByRelationship.get(scheduleRelationship);
-            failuresByRelationship.put(scheduleRelationship, ++c);
-          } else {
-            failuresByRelationship.put(scheduleRelationship, 1);
-          }
+          failuresByRelationship.merge(scheduleRelationship, 1, Integer::sum);
         }
       } catch (DataValidationException e) {
         result = DataValidationExceptionMapper.toResult(e);
