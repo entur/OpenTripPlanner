@@ -13,18 +13,24 @@ import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 
-class RouteBuilder {
+/**
+ * Factory for creating routes based on GTFS real-time trip updates.
+ */
+class RouteFactory {
 
   record Result(boolean newRouteCreated, Route route) {}
 
   private final TransitService transitService;
 
-  public RouteBuilder(TransitService transitService) {
+  public RouteFactory(TransitService transitService) {
     this.transitService = transitService;
   }
 
-  Result build(TripUpdate update) {
-    var optionalRoute = getRoute(update);
+  /**
+   * Extract a new route from the given trip update, creating one if it doesn't exist.
+   */
+  Result getOrCreate(TripUpdate update) {
+    var optionalRoute = findRoute(update);
     var route = optionalRoute.orElseGet(() -> createRoute(update));
     return new Result(optionalRoute.isEmpty(), route);
   }
@@ -59,18 +65,21 @@ class RouteBuilder {
         return builder.build();
       })
       .orElseGet(() -> {
-        var builder = Route.of(tripId);
-
-        builder.withAgency(fallbackAgency(tripId.getFeedId()));
-        // Guess the route type as it doesn't exist yet in the specifications
-        // Bus. Used for short- and long-distance bus routes.
-        builder.withGtfsType(3);
-        builder.withMode(TransitMode.BUS);
-        // Create route name
         I18NString longName = NonLocalizedString.ofNullable(tripId.getId());
-        builder.withLongName(longName);
-        return builder.build();
+        return Route.of(tripId)
+          .withAgency(fallbackAgency(tripId.getFeedId()))
+          // Guess the route type as it doesn't exist yet in the specifications
+          // Bus. Used for short- and long-distance bus routes.
+          .withGtfsType(3)
+          .withMode(TransitMode.BUS)
+          // Create route name
+          .withLongName(longName)
+          .build();
       });
+  }
+
+  private Optional<Route> findRoute(TripUpdate tripUpdate) {
+    return tripUpdate.routeId().flatMap(id -> Optional.ofNullable(transitService.getRoute(id)));
   }
 
   /**
@@ -81,9 +90,5 @@ class RouteBuilder {
       .withName("Agency automatically added by GTFS-RT update")
       .withTimezone(transitService.getTimeZone().toString())
       .build();
-  }
-
-  private Optional<Route> getRoute(TripUpdate tripUpdate) {
-    return tripUpdate.routeId().flatMap(id -> Optional.ofNullable(transitService.getRoute(id)));
   }
 }

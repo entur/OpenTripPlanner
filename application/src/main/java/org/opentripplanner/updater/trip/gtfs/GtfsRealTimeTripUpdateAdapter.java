@@ -367,7 +367,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       return UpdateError.result(tripUpdate.tripId(), OUTSIDE_SERVICE_PERIOD);
     }
 
-    var result = new RouteBuilder(transitEditorService).build(tripUpdate);
+    var result = new RouteFactory(transitEditorService).getOrCreate(tripUpdate);
 
     // TODO: which Agency ID to use? Currently use feed id.
     var tripBuilder = Trip.of(tripUpdate.tripId())
