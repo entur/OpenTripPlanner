@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor;
 
 import java.util.Collection;
-import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
@@ -73,7 +72,6 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   private final RaptorTimers timers;
 
-  @Nullable
   private final AccessPaths accessPaths;
 
   private final boolean enableTransferConstraints;
@@ -91,7 +89,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     RoutingStrategy<T> transitWorker,
     RaptorTransitDataProvider<T> transitData,
     SlackProvider slackProvider,
-    @Nullable AccessPaths accessPaths,
+    AccessPaths accessPaths,
     RaptorTransitCalculator<T> calculator,
     WorkerLifeCycle lifeCycle,
     RaptorTimers timers,
