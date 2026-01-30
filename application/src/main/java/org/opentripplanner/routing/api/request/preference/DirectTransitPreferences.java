@@ -106,7 +106,7 @@ public class DirectTransitPreferences {
 
   @Override
   public String toString() {
-    if(!enabled) {
+    if (!enabled) {
       return "DirectTransitPreferences{not enabled}";
     }
     return ToStringBuilder.of(DirectTransitPreferences.class)
