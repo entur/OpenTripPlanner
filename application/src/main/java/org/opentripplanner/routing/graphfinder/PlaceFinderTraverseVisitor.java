@@ -9,8 +9,13 @@ import org.opentripplanner.astar.spi.SkipEdgeStrategy;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
+import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
+import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
+import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.street.model.PropulsionType;
+import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
@@ -34,6 +39,8 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
   private final Set<FeedScopedId> filterByRoutes;
   private final Set<String> filterByNetwork;
   private final Set<String> filterByVehicleRental;
+  private final Set<RentalFormFactor> filterByVehicleFormFactor;
+  private final Set<PropulsionType> filterByVehiclePropulsionType;
   private final Set<String> seenPatternAtStops = new HashSet<>();
   private final Set<FeedScopedId> seenStops = new HashSet<>();
   private final Set<FeedScopedId> seenVehicleRentalPlaces = new HashSet<>();
@@ -71,6 +78,8 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
     List<FeedScopedId> filterByStations,
     List<FeedScopedId> filterByRoutes,
     List<String> filterByBikeRentalStations,
+    List<RentalFormFactor> filterByVehicleFormFactor,
+    List<PropulsionType> filterByVehiclePropulsionType,
     List<String> filterByNetwork,
     int maxResults,
     double radiusMeters
@@ -85,6 +94,8 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
     this.filterByStations = toSet(filterByStations);
     this.filterByRoutes = toSet(filterByRoutes);
     this.filterByVehicleRental = toSet(filterByBikeRentalStations);
+    this.filterByVehicleFormFactor = toSet(filterByVehicleFormFactor);
+    this.filterByVehiclePropulsionType = toSet(filterByVehiclePropulsionType);
     this.filterByNetwork = toSet(filterByNetwork);
     includeStops = shouldInclude(filterByPlaceTypes, PlaceType.STOP);
 
@@ -269,7 +280,39 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
     if (!filterByNetwork.isEmpty() && !filterByNetwork.contains(station.network())) {
       return;
     }
+    if (
+      station instanceof VehicleRentalVehicle vehicle &&
+      !isIncludedByVehicleTypeFilters(vehicle.vehicleType())
+    ) {
+      return;
+    }
+    if (
+      station instanceof VehicleRentalStation rentalStation &&
+      rentalStation
+        .vehicleTypesAvailable()
+        .keySet()
+        .stream()
+        .noneMatch(this::isIncludedByVehicleTypeFilters)
+    ) {
+      return;
+    }
     seenVehicleRentalPlaces.add(station.id());
     placesFound.add(new PlaceAtDistance(station, distance));
+  }
+
+  private boolean isIncludedByVehicleTypeFilters(RentalVehicleType vehicleType) {
+    if (
+      !filterByVehicleFormFactor.isEmpty() &&
+      !filterByVehicleFormFactor.contains(vehicleType.formFactor())
+    ) {
+      return false;
+    }
+    if (
+      !filterByVehiclePropulsionType.isEmpty() &&
+      !filterByVehiclePropulsionType.contains(vehicleType.propulsionType())
+    ) {
+      return false;
+    }
+    return true;
   }
 }

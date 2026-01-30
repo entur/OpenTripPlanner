@@ -354,6 +354,8 @@ public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
             filterByStations,
             filterByRoutes,
             filterByBikeRentalStations,
+            null,
+            null,
             filterByNetwork,
             getTransitService(environment)
           )
