@@ -14,7 +14,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.OptionalInt;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.DataValidationException;
@@ -242,34 +241,8 @@ class TripTimesUpdater {
 
     // Create StopTimes based on the scheduled times
     final List<StopTime> stopTimes = new ArrayList<>(stopAndStopTimeUpdates.size());
-    var lastStopSequence = -1;
     for (final StopAndStopTimeUpdate item : stopAndStopTimeUpdates) {
       final var update = item.stopTimeUpdate();
-
-      // validate stop sequence
-      OptionalInt stopSequence = update.stopSequence();
-      if (stopSequence.isPresent()) {
-        var seq = stopSequence.getAsInt();
-        if (seq < 0) {
-          LOG.debug(
-            "{} trip {} on {} contains negative stop sequence, skipping.",
-            realTimeState,
-            trip.getId(),
-            tripUpdate.serviceDate()
-          );
-          return UpdateError.result(trip.getId(), INVALID_STOP_SEQUENCE);
-        }
-        if (seq <= lastStopSequence) {
-          LOG.debug(
-            "{} trip {} on {} contains decreasing stop sequence, skipping.",
-            realTimeState,
-            trip.getId(),
-            tripUpdate.serviceDate()
-          );
-          return UpdateError.result(trip.getId(), INVALID_STOP_SEQUENCE);
-        }
-        lastStopSequence = seq;
-      }
 
       // Create stop time
       final StopTime stopTime = new StopTime();
@@ -307,7 +280,7 @@ class TripTimesUpdater {
       }
       // Exact time
       stopTime.setTimepoint(1);
-      stopSequence.ifPresent(stopTime::setStopSequence);
+      update.stopSequence().ifPresent(stopTime::setStopSequence);
       stopTime.setPickupType(update.effectivePickup());
       stopTime.setDropOffType(update.effectiveDropoff());
       update.stopHeadsign().ifPresent(stopTime::setStopHeadsign);

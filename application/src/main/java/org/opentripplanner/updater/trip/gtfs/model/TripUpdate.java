@@ -1,6 +1,7 @@
 package org.opentripplanner.updater.trip.gtfs.model;
 
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_INPUT_STRUCTURE;
+import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE;
 import static org.opentripplanner.updater.trip.gtfs.model.GtfsRealtimeMapper.mapWheelchairAccessible;
 
 import com.google.transit.realtime.GtfsRealtime;
@@ -9,6 +10,7 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -116,6 +118,22 @@ public final class TripUpdate {
       tripDescriptor.startDate();
     } catch (ParseException e) {
       return Result.failure(new UpdateError(tripId(), INVALID_INPUT_STRUCTURE));
+    }
+
+    var lastStopSequence = -1;
+    for (StopTimeUpdate update : stopTimeUpdates()) {
+      // validate stop sequence
+      OptionalInt stopSequence = update.stopSequence();
+      if (stopSequence.isPresent()) {
+        var seq = stopSequence.getAsInt();
+        if (seq < 0) {
+          return UpdateError.result(tripId(), INVALID_STOP_SEQUENCE);
+        }
+        if (seq <= lastStopSequence) {
+          return UpdateError.result(tripId(), INVALID_STOP_SEQUENCE);
+        }
+        lastStopSequence = seq;
+      }
     }
     return Result.success(UpdateSuccess.noWarnings());
   }
