@@ -44,7 +44,7 @@ public class VisitViaLocation extends AbstractViaLocation {
     if (stopLocationIds().isEmpty() && this.coordinate == null) {
       throw new IllegalArgumentException(
         "A via location must have at least one stop location or a coordinate." +
-        (label == null ? "" : " Label: " + label)
+          (label == null ? "" : " Label: " + label)
       );
     }
   }

@@ -94,10 +94,10 @@ class ViaLocationMapperTest {
 
     assertEquals(
       "[" +
-      "VisitViaLocation{label: TestLabel1, minimumWaitTime: 5m, stopLocationIds: [F:ID1, F:ID2]}, " +
-      "VisitViaLocation{coordinate: (30.5, 40.2)}, " +
-      "VisitViaLocation{label: TestLabel3, minimumWaitTime: 10m, stopLocationIds: [F:ID3, F:ID4], coordinate: (35.5, 45.5)}" +
-      "]",
+        "VisitViaLocation{label: TestLabel1, minimumWaitTime: 5m, stopLocationIds: [F:ID1, F:ID2]}, " +
+        "VisitViaLocation{coordinate: (30.5, 40.2)}, " +
+        "VisitViaLocation{label: TestLabel3, minimumWaitTime: 10m, stopLocationIds: [F:ID3, F:ID4], coordinate: (35.5, 45.5)}" +
+        "]",
       result.toString()
     );
   }

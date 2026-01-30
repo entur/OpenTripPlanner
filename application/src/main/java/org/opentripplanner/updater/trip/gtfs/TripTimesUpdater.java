@@ -25,7 +25,7 @@ import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
-import org.opentripplanner.transit.model.framework.Deduplicator;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
@@ -253,7 +253,7 @@ class TripTimesUpdater {
     LocalDate serviceDate,
     RealTimeState realTimeState,
     @Nullable I18NString tripHeadsign,
-    Deduplicator deduplicator,
+    DeduplicatorService deduplicator,
     int serviceCode
   ) {
     // Calculate seconds since epoch on GTFS midnight (noon minus 12h) of service date
@@ -305,7 +305,7 @@ class TripTimesUpdater {
         if (arrivalTime < 0 || arrivalTime > MAX_ARRIVAL_DEPARTURE_TIME) {
           LOG.debug(
             "NEW trip {} on {} has invalid arrival time (compared to start date in " +
-            "TripDescriptor), skipping.",
+              "TripDescriptor), skipping.",
             trip.getId(),
             serviceDate
           );
@@ -320,7 +320,7 @@ class TripTimesUpdater {
         if (departureTime < 0 || departureTime > MAX_ARRIVAL_DEPARTURE_TIME) {
           LOG.debug(
             "NEW trip {} on {} has invalid departure time (compared to start date in " +
-            "TripDescriptor), skipping.",
+              "TripDescriptor), skipping.",
             trip.getId(),
             serviceDate
           );
@@ -328,7 +328,8 @@ class TripTimesUpdater {
         }
         stopTime.setDepartureTime((int) departureTime);
       }
-      stopTime.setTimepoint(1); // Exact time
+      // Exact time
+      stopTime.setTimepoint(1);
       stopSequence.ifPresent(stopTime::setStopSequence);
       stopTime.setPickupType(update.effectivePickup());
       stopTime.setDropOffType(update.effectiveDropoff());
