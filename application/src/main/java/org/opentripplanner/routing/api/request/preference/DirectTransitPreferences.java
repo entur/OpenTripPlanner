@@ -107,7 +107,7 @@ public class DirectTransitPreferences {
   @Override
   public String toString() {
     return ToStringBuilder.of(DirectTransitPreferences.class)
-      .addBool("enabled", enabled)
+      .addBool("enabled", enabled, DEFAULT.enabled)
       .addObj("costRelaxFunction", costRelaxFunction, DEFAULT.costRelaxFunction)
       .addNum(
         "extraAccessEgressReluctance",
