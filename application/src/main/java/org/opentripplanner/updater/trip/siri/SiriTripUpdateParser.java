@@ -63,18 +63,21 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     // Determine update type, service date, and trip reference
     var updateType = determineUpdateType(journey, calls);
-    LocalDate serviceDate = resolveServiceDate(journey, context);
 
-    // Service date is required UNLESS we have a tripOnServiceDateId
-    var tripOnServiceDateId = resolveTripOnServiceDateId(journey, context);
-    if (serviceDate == null && tripOnServiceDateId == null) {
+    ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(
+      journey,
+      context.timeZone(),
+      context.feedId()
+    ).parse();
+
+    if (psd.isEmpty()) {
       return UpdateError.result(null, NO_START_DATE, journey.getDataSource());
     }
 
-    var tripReference = buildTripReference(journey, updateType, serviceDate, context);
+    var tripReference = buildTripReference(journey, updateType, psd, context);
 
     // Build parsed update
-    var builder = ParsedTripUpdate.builder(updateType, tripReference, serviceDate)
+    var builder = ParsedTripUpdate.builder(updateType, tripReference, psd.serviceDate())
       .withOptions(TripUpdateOptions.siriDefaults())
       .withDataSource(journey.getDataSource());
 
@@ -84,7 +87,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     // Parse stop time updates
-    var stopTimeUpdates = parseStopTimeUpdates(calls, serviceDate, context);
+    var stopTimeUpdates = parseStopTimeUpdates(calls, psd.serviceDate(), context);
     builder.withStopTimeUpdates(stopTimeUpdates);
 
     // Handle new trip creation info
@@ -117,17 +120,17 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   private TripReference buildTripReference(
     EstimatedVehicleJourney journey,
     TripUpdateType updateType,
-    LocalDate serviceDate,
+    ServiceDateParser.ParsedServiceDate psd,
     TripUpdateParserContext context
   ) {
-    var builder = TripReference.builder().withStartDate(serviceDate);
+    var builder = TripReference.builder().withStartDate(psd.serviceDate());
 
     var tripId = resolveTripId(journey, context);
     if (tripId != null) {
       builder.withTripId(tripId);
     }
 
-    var tripOnServiceDateId = resolveTripOnServiceDateId(journey, context);
+    var tripOnServiceDateId = psd.tripOnServiceDateId();
     if (tripOnServiceDateId != null) {
       builder.withTripOnServiceDateId(tripOnServiceDateId);
     }
@@ -144,9 +147,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         break;
       }
     }
-    if (aimedStartTime != null) {
+    if (aimedStartTime != null && psd.serviceDate() != null) {
       ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-        serviceDate,
+        psd.serviceDate(),
         context.timeZone()
       );
       int seconds = ServiceDateUtils.secondsSinceStartOfService(startOfService, aimedStartTime);
@@ -192,58 +195,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         journey.getEstimatedVehicleJourneyCode()
       );
       return context.createId(adapter.getServiceJourneyId());
-    }
-
-    return null;
-  }
-
-  /**
-   * Resolve the TripOnServiceDate ID (dated service journey id) from the EstimatedVehicleJourney.
-   * This is used when the SIRI message references a trip by its dated service journey id
-   * rather than the underlying service journey id.
-   */
-  @Nullable
-  private FeedScopedId resolveTripOnServiceDateId(
-    EstimatedVehicleJourney journey,
-    TripUpdateParserContext context
-  ) {
-    // journey.getDatedVehicleJourneyRef contains a TripOnServiceDate ID, not a Trip ID
-    if (journey.getDatedVehicleJourneyRef() != null) {
-      return context.createId(journey.getDatedVehicleJourneyRef().getValue());
-    }
-    return null;
-  }
-
-  @Nullable
-  private LocalDate resolveServiceDate(
-    EstimatedVehicleJourney journey,
-    TripUpdateParserContext context
-  ) {
-    if (journey.getFramedVehicleJourneyRef() != null) {
-      var dataFrameRef = journey.getFramedVehicleJourneyRef().getDataFrameRef();
-      if (dataFrameRef != null) {
-        try {
-          return LocalDate.parse(dataFrameRef.getValue());
-        } catch (Exception ignored) {}
-      }
-    }
-
-    // TODO RT_VP should check first if there is a DSJ id
-    // the fallback does not work in case of trip running after midnight but registered on
-    // the previous service date (night bus, ...)
-
-    for (var call : CallWrapper.of(journey)) {
-      ZonedDateTime time = call.getAimedDepartureTime();
-      if (time == null) {
-        time = call.getAimedArrivalTime();
-      }
-      if (time != null) {
-        ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-          time.toInstant(),
-          context.timeZone()
-        );
-        return ServiceDateUtils.asServiceDay(startOfService);
-      }
     }
 
     return null;
