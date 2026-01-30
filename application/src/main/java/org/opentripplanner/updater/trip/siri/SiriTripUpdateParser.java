@@ -228,6 +228,10 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
 
+    // TODO RT_VP should check first if there is a DSJ id
+    // the fallback does not work in case of trip running after midnight but registered on
+    // the previous service date (night bus, ...)
+
     for (var call : CallWrapper.of(journey)) {
       ZonedDateTime time = call.getAimedDepartureTime();
       if (time == null) {
