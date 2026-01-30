@@ -72,7 +72,7 @@
         <logback.version>1.5.23</logback.version>
         <lucene.version>10.3.2</lucene.version>
         <micrometer.version>1.16.2</micrometer.version>
-        <netex-java-model.version>2.0.15.1</netex-java-model.version>
+        <netex-java-model.version>2.0.15.2</netex-java-model.version>
         <netcdf4.version>5.6.0</netcdf4.version>
         <protobuf.version>4.33.4</protobuf.version>
         <siri-java-model.version>2.0.1</siri-java-model.version>
