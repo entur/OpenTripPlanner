@@ -110,7 +110,8 @@ public class InsertionEvaluator {
     RouteRequest request,
     WgsCoordinate passengerCoordinate,
     CarpoolStreetRouter carpoolStreetRouter,
-    AccessEgressType accessEgressType
+    AccessEgressType accessEgressType,
+    Map<NearbyStop, Vertex> stopsWithVertices
   ){
 
     GraphPath<State, Edge, Vertex>[] baselineSegments = routeBaselineSegments(
@@ -126,13 +127,6 @@ public class InsertionEvaluator {
     Set<Vertex> verticesFrom = new HashSet<>(baseLineVertices);
     verticesFrom.add(passengerCoordinateVertex);
 
-    var transitStops = tripWithViablePassengerSegments.segmentInsertionPositions().stream().map(it ->
-      it.segment().transitStop()
-    ).distinct().toList();
-
-    var transitStopVertices = new HashSet<>(transitStops.stream().map(it -> it.state.getVertex()).toList());
-
-    var preferences = request.preferences().street();
     var streetRequest = new StreetRequest(StreetMode.CAR);
 
     Map<Vertex, ShortestPathTree> trees = verticesFrom.stream().collect(
@@ -159,8 +153,10 @@ public class InsertionEvaluator {
       var viablePositions = segmentInsertion.insertionPositions();
       var insertionCandidates = viablePositions.stream().map(position -> {
 
-        var pickUpVertix = accessEgressType == AccessEgressType.ACCESS ? passengerCoordinateVertex : segmentInsertion.segment().transitStop().state.getVertex();
-        var dropOffVertix = accessEgressType == AccessEgressType.ACCESS ? segmentInsertion.segment().transitStop().state.getVertex() : passengerCoordinateVertex;
+        var transitStopVertex = stopsWithVertices.get(segmentInsertion.segment().transitStop());
+        var pickUpVertix = accessEgressType == AccessEgressType.ACCESS ? passengerCoordinateVertex : transitStopVertex;
+        var dropOffVertix = accessEgressType == AccessEgressType.ACCESS ? transitStopVertex : passengerCoordinateVertex;
+
 
         var candidate = evaluateInsertionAccessEgress(
           tripWithViablePassengerSegments.trip(),

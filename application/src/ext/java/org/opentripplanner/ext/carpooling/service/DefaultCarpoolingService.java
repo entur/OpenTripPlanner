@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
@@ -299,15 +300,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
       return List.of();
     }
 
-    var originVertices = accessOrEgress.isAccess()
-      ? linkingContext.findVertices(request.from())
-      : linkingContext.findVertices(request.to());
-
-    // No reason to use 60 minutes here, change to something more logical
-    var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(60), 0);
-    var nearByStops = streetNearbyStopFinder.build()
-      .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress());
-
 
     var temporaryVerticesContainer = new TemporaryVerticesContainer();
 
@@ -317,6 +309,21 @@ public class DefaultCarpoolingService implements CarpoolingService {
       vertexLinker,
       temporaryVerticesContainer
     );
+
+    var originVertices = accessOrEgress.isAccess()
+      ? linkingContext.findVertices(request.from())
+      : linkingContext.findVertices(request.to());
+
+    // No reason to use 60 minutes here, change to something more logical
+    var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(60), 0);
+    var nearByStops = streetNearbyStopFinder.build()
+      .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress());
+
+    var nearByStopsWithVertices = nearByStops.stream().collect(Collectors.toMap(
+      stop -> stop,
+      stop -> router.getOrCreateVertex(stop.stop.getCoordinate(), linkingContext)
+    ));
+
 
     var insertionEvaluator = new InsertionEvaluator(
       router::route,
@@ -341,7 +348,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     }).toList();
 
     var insertionCandidates = candidateTripsWithViableStopsAndPositions.stream().flatMap(it -> {
-      return insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router, accessOrEgress).stream();
+      return insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router, accessOrEgress, nearByStopsWithVertices).stream();
     }).toList();
 
 
