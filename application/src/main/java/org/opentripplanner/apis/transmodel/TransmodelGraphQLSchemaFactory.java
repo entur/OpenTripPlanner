@@ -958,6 +958,8 @@ public class TransmodelGraphQLSchemaFactory {
               filterByStations,
               filterByRoutes,
               filterByBikeRentalStations,
+              null,
+              null,
               filterByNetwork,
               GqlUtil.getTransitService(environment)
             );
