@@ -202,7 +202,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   @Override
   public void findOnBoardAccessTransitForRound() {
-    var onBoardStopArrivals = transitWorker.listOnBoardStopArrivals().iterator();
+    var onBoardStopArrivals = transitWorker.consumeOnBoardStopArrivals();
     while (onBoardStopArrivals.hasNext()) {
       var onBoardStopArrival = onBoardStopArrivals.next();
       var route = transitData.getRouteForIndex(

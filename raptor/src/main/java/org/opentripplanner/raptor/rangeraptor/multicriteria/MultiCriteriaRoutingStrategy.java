@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
 import static org.opentripplanner.raptor.api.model.PathLegType.ACCESS;
 
+import java.util.Iterator;
 import java.util.Objects;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
@@ -124,8 +125,8 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public Iterable<? extends McStopArrival<T>> listOnBoardStopArrivals() {
-    return state.listOnBoardStopArrivals();
+  public Iterator<? extends McStopArrival<T>> consumeOnBoardStopArrivals() {
+    return state.listOnBoardStopArrivals().iterator();
   }
 
   @Override
