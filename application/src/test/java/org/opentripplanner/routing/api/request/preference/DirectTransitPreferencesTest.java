@@ -70,17 +70,22 @@ class DirectTransitPreferencesTest {
   @Test
   void testToString() {
     assertEquals(
-      "DirectTransitPreferences{enabled: false}",
+      "DirectTransitPreferences{not enabled}",
       DirectTransitPreferences.DEFAULT.toString()
     );
     assertEquals(
       "DirectTransitPreferences{" +
-        "enabled: true, " +
         "costRelaxFunction: 1h + 3.0 t, " +
         "extraAccessEgressReluctance: 5.0, " +
         "maxAccessEgressDuration: 0s" +
         "}",
       subject.toString()
+    );
+    // We only want to log "not enabled" if off, the rest of the state
+    // is irelevant.
+    assertEquals(
+      "DirectTransitPreferences{not enabled}",
+      subject.copyOf().withEnabled(false).build().toString()
     );
   }
 }
