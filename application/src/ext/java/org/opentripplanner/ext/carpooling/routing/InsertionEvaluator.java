@@ -160,7 +160,7 @@ public class InsertionEvaluator {
       var insertionCandidates = viablePositions.stream().map(position -> {
 
         var pickUpVertix = accessEgressType == AccessEgressType.ACCESS ? passengerCoordinateVertex : segmentInsertion.segment().transitStop().state.getVertex();
-        var dropOffVertix = accessEgressType == AccessEgressType.EGRESS ? segmentInsertion.segment().transitStop().state.getVertex() : passengerCoordinateVertex;
+        var dropOffVertix = accessEgressType == AccessEgressType.ACCESS ? segmentInsertion.segment().transitStop().state.getVertex() : passengerCoordinateVertex;
 
         var candidate = evaluateInsertionAccessEgress(
           tripWithViablePassengerSegments.trip(),

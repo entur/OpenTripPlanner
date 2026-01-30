@@ -146,7 +146,7 @@ public class CarpoolStreetRouter {
     var coordinate = location.getCoordinate();
     var tempVertex = new TemporaryStreetLocation(
       coordinate,
-      new NonLocalizedString(location.label != null ? location.label : "Waypoint")
+      new NonLocalizedString(location.label != null ? location.label : "Carpooling Waypoint")
     );
 
     var disposableEdges = vertexLinker.linkVertexForRequest(
