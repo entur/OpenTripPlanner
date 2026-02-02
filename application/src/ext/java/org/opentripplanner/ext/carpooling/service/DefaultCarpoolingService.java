@@ -45,6 +45,7 @@ import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.collection.Pair;
 import org.slf4j.Logger;
@@ -317,7 +318,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
     // No reason to use 60 minutes here, change to something more logical
     var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(60), 0);
     var nearByStops = streetNearbyStopFinder.build()
-      .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress());
+      .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress()).stream().filter(stop ->
+        !(stop.stop instanceof AreaStop)
+    ).toList();
 
     var nearByStopsWithVertices = nearByStops.stream().collect(Collectors.toMap(
       stop -> stop,

@@ -124,30 +124,14 @@ public class InsertionEvaluator {
 
     var passengerCoordinateVertex = carpoolStreetRouter.getOrCreateVertex(passengerCoordinate, linkingContext);
 
-    Set<Vertex> verticesFrom = new HashSet<>(baseLineVertices);
-    verticesFrom.add(passengerCoordinateVertex);
-
-    var streetRequest = new StreetRequest(StreetMode.CAR);
-
-    Map<Vertex, ShortestPathTree> trees = verticesFrom.stream().collect(
-        Collectors.toMap(
-          vertex -> vertex,
-          vertex -> StreetSearchBuilder.of()
-            .withSkipEdgeStrategy(
-              new DurationSkipEdgeStrategy<>(Duration.ofMinutes(60))
-            )
-            .withDominanceFunction(new DominanceFunctions.EarliestArrival())
-            .withRequest(request)
-            .withStreetRequest(streetRequest)
-            .withFrom(vertex).getShortestPathTree()
-        )
-    );
+    Set<Vertex> vertices = new HashSet<>(baseLineVertices);
+    vertices.add(passengerCoordinateVertex);
 
 
     Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
     Duration baselineDuration = cumulativeDurations[cumulativeDurations.length - 1];
 
-    var carPoolTreeVertexRouter = new CarpoolTreeVertexRouter(trees, verticesFrom);
+    var carPoolTreeVertexRouter = new CarpoolTreeVertexRouter(vertices, request);
 
     var viableCandidateTrips = tripWithViablePassengerSegments.segmentInsertionPositions().stream().map(segmentInsertion -> {
       var viablePositions = segmentInsertion.insertionPositions();
