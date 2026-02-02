@@ -458,6 +458,16 @@
             <name>Open Source Geospatial Foundation Repository</name>
             <url>https://repo.osgeo.org/repository/release/</url>
         </repository>
+        <repository>
+            <id>maven-snapshots</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
     </repositories>
 
     <dependencyManagement>
