@@ -1,13 +1,13 @@
-package org.opentripplanner.updater.trip.gtfs;
+package org.opentripplanner.updater.trip.gtfs.model;
 
-import com.google.transit.realtime.GtfsRealtime;
+import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor.WheelchairAccessible;
 import java.util.Optional;
 import org.opentripplanner.transit.model.basic.Accessibility;
 
 class GtfsRealtimeMapper {
 
   public static Optional<Accessibility> mapWheelchairAccessible(
-    GtfsRealtime.VehicleDescriptor.WheelchairAccessible wheelchairAccessible
+    WheelchairAccessible wheelchairAccessible
   ) {
     return Optional.ofNullable(
       switch (wheelchairAccessible) {
