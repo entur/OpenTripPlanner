@@ -20,6 +20,7 @@ import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
+import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
@@ -265,48 +266,64 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   private void parseStopTimes(
     CallWrapper call,
     ParsedStopTimeUpdate.Builder builder,
-    LocalDate serviceDate,
+    @Nullable LocalDate serviceDate,
     TripUpdateParserContext context,
     int stopIndex,
     int totalStops
   ) {
-    ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-      serviceDate,
-      context.timeZone()
-    );
-
     // Resolve times using the same fallback logic as TimetableHelper
     var resolvedTimes = SiriTimeResolver.resolveTimes(call, stopIndex, totalStops);
     var resolvedAimedTimes = SiriTimeResolver.resolveAimedTimes(call, stopIndex, totalStops);
 
-    // Create arrival TimeUpdate
-    if (resolvedTimes.arrivalTime() != null) {
-      int seconds = ServiceDateUtils.secondsSinceStartOfService(
-        startOfService,
-        resolvedTimes.arrivalTime()
+    if (serviceDate != null) {
+      // Service date is known - create resolved TimeUpdate
+      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
+        serviceDate,
+        context.timeZone()
       );
-      Integer scheduled = resolvedAimedTimes.arrivalTime() != null
-        ? ServiceDateUtils.secondsSinceStartOfService(
-            startOfService,
-            resolvedAimedTimes.arrivalTime()
-          )
-        : null;
-      builder.withArrivalUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
-    }
 
-    // Create departure TimeUpdate
-    if (resolvedTimes.departureTime() != null) {
-      int seconds = ServiceDateUtils.secondsSinceStartOfService(
-        startOfService,
-        resolvedTimes.departureTime()
-      );
-      Integer scheduled = resolvedAimedTimes.departureTime() != null
-        ? ServiceDateUtils.secondsSinceStartOfService(
-            startOfService,
-            resolvedAimedTimes.departureTime()
-          )
-        : null;
-      builder.withDepartureUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
+      // Create arrival TimeUpdate
+      if (resolvedTimes.arrivalTime() != null) {
+        int seconds = ServiceDateUtils.secondsSinceStartOfService(
+          startOfService,
+          resolvedTimes.arrivalTime()
+        );
+        Integer scheduled = resolvedAimedTimes.arrivalTime() != null
+          ? ServiceDateUtils.secondsSinceStartOfService(
+              startOfService,
+              resolvedAimedTimes.arrivalTime()
+            )
+          : null;
+        builder.withArrivalUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
+      }
+
+      // Create departure TimeUpdate
+      if (resolvedTimes.departureTime() != null) {
+        int seconds = ServiceDateUtils.secondsSinceStartOfService(
+          startOfService,
+          resolvedTimes.departureTime()
+        );
+        Integer scheduled = resolvedAimedTimes.departureTime() != null
+          ? ServiceDateUtils.secondsSinceStartOfService(
+              startOfService,
+              resolvedAimedTimes.departureTime()
+            )
+          : null;
+        builder.withDepartureUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
+      }
+    } else {
+      // Service date is unknown - create DeferredTimeUpdate for resolution in applier stage
+      if (resolvedTimes.arrivalTime() != null) {
+        builder.withArrivalUpdate(
+          DeferredTimeUpdate.of(resolvedTimes.arrivalTime(), resolvedAimedTimes.arrivalTime())
+        );
+      }
+
+      if (resolvedTimes.departureTime() != null) {
+        builder.withDepartureUpdate(
+          DeferredTimeUpdate.of(resolvedTimes.departureTime(), resolvedAimedTimes.departureTime())
+        );
+      }
     }
   }
 

@@ -116,6 +116,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     var stopResolver = new StopResolver(transitEditorService);
     var applierContext = new TripUpdateApplierContext(
       feedId,
+      transitEditorService.getTimeZone(),
       snapshotManager,
       tripResolver,
       serviceDateResolver,

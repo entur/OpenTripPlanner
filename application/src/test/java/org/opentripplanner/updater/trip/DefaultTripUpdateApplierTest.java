@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -26,6 +27,7 @@ class DefaultTripUpdateApplierTest {
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String TRIP_ID = "trip1";
   private static final String TRIP_ON_SERVICE_DATE_ID = "dated-trip1";
+  private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
 
   private TransitTestEnvironment env;
   private DefaultTripUpdateApplier applier;
@@ -63,6 +65,7 @@ class DefaultTripUpdateApplierTest {
     );
     context = new TripUpdateApplierContext(
       env.feedId(),
+      TIME_ZONE,
       snapshotManager,
       tripResolver,
       serviceDateResolver,

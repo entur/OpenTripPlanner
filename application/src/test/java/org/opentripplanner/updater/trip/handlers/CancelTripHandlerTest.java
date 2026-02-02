@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -27,6 +28,8 @@ import org.opentripplanner.updater.trip.model.TripUpdateType;
  * Tests for {@link CancelTripHandler}.
  */
 class CancelTripHandlerTest {
+
+  private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
 
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String TRIP_ID = "trip1";
@@ -67,6 +70,7 @@ class CancelTripHandlerTest {
     );
     context = new TripUpdateApplierContext(
       env.feedId(),
+      TIME_ZONE,
       snapshotManager,
       tripResolver,
       serviceDateResolver,
