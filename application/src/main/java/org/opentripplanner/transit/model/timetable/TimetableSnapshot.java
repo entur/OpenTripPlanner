@@ -570,7 +570,15 @@ public class TimetableSnapshot {
     return (
       dirtyTimetables.isEmpty() &&
       timetables.isEmpty() &&
-      realTimeNewTripPatternsForModifiedTrips.isEmpty()
+      realTimeNewTripPatternsForModifiedTrips.isEmpty() &&
+      patternsForStop.isEmpty() &&
+      realtimeAddedRoutes.isEmpty() &&
+      realTimeAddedTrips.isEmpty() &&
+      realTimeAddedPatternForTrip.isEmpty() &&
+      realTimeAddedPatternsForRoute.isEmpty() &&
+      realTimeAddedTripOnServiceDateById.isEmpty() &&
+      realTimeAddedReplacedByTripOnServiceDateById.isEmpty() &&
+      realTimeAddedTripOnServiceDateForTripAndDay.isEmpty()
     );
   }
 
