@@ -10,7 +10,7 @@ package org.opentripplanner.raptor.api.view;
  *                              currently boarded trip. The next stop position after this is the
  *                              first you can alight.
  */
-public record OnBoardTripConstraint(
+public record TripScheduleStopPosition(
   int routeIndex,
   int tripScheduleIndex,
   int stopPositionInPattern

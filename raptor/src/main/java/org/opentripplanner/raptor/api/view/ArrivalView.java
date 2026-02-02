@@ -153,7 +153,7 @@ public interface ArrivalView<T extends RaptorTripSchedule> {
 
   boolean arrivedOnBoard();
 
-  default OnBoardTripConstraint onBoardTripConstraint() {
+  default TripScheduleStopPosition subsequentBoardingConstraint() {
     throw new UnsupportedOperationException();
   }
 

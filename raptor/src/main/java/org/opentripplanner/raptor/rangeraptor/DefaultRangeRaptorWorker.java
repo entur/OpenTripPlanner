@@ -204,7 +204,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     while (onBoardStopArrivals.hasNext()) {
       var onBoardStopArrival = onBoardStopArrivals.next();
       var route = transitData.getRouteForIndex(
-        onBoardStopArrival.onBoardTripConstraint().routeIndex()
+        onBoardStopArrival.subsequentBoardingConstraint().routeIndex()
       );
 
       transitWorker.prepareForTransitWith(route);
@@ -263,7 +263,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   private boolean tryBoardOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
-    var onBoardTripConstraint = onBoardStopArrival.onBoardTripConstraint();
+    var onBoardTripConstraint = onBoardStopArrival.subsequentBoardingConstraint();
     var trip = route.timetable().getTripSchedule(onBoardTripConstraint.tripScheduleIndex());
 
     return transitWorker.boardAsOnBoardAccess(
@@ -274,7 +274,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   private void alightOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
-    var onBoardTripConstraint = onBoardStopArrival.onBoardTripConstraint();
+    var onBoardTripConstraint = onBoardStopArrival.subsequentBoardingConstraint();
 
     var pattern = route.pattern();
     IntIterator stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());

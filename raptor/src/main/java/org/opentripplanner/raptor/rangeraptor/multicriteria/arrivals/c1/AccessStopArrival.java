@@ -9,7 +9,7 @@ import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.view.AccessPathView;
-import org.opentripplanner.raptor.api.view.OnBoardTripConstraint;
+import org.opentripplanner.raptor.api.view.TripScheduleStopPosition;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 
 /**
@@ -77,9 +77,9 @@ final class AccessStopArrival<T extends RaptorTripSchedule> extends McStopArriva
   }
 
   @Override
-  public OnBoardTripConstraint onBoardTripConstraint() {
+  public TripScheduleStopPosition subsequentBoardingConstraint() {
     if (access instanceof RaptorOnBoardAccess onBoardAccess) {
-      return new OnBoardTripConstraint(
+      return new TripScheduleStopPosition(
         onBoardAccess.routeIndex(),
         onBoardAccess.tripScheduleIndex(),
         onBoardAccess.stopPositionInPattern()
