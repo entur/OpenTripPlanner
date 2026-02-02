@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -22,6 +23,7 @@ import org.opentripplanner.updater.trip.model.TripUpdateType;
 class TripUpdateApplierTest {
 
   private static final LocalDate SERVICE_DATE = LocalDate.of(2024, 1, 15);
+  private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
 
   private String feedId;
   private TransitService transitService;
@@ -47,6 +49,7 @@ class TripUpdateApplierTest {
     var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var context = new TripUpdateApplierContext(
       feedId,
+      TIME_ZONE,
       null,
       tripResolver,
       serviceDateResolver,
@@ -75,6 +78,7 @@ class TripUpdateApplierTest {
     var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var context = new TripUpdateApplierContext(
       feedId,
+      TIME_ZONE,
       null,
       tripResolver,
       serviceDateResolver,
@@ -101,6 +105,7 @@ class TripUpdateApplierTest {
     var serviceDateResolver = new ServiceDateResolver(tripResolver);
     var context = new TripUpdateApplierContext(
       feedId,
+      TIME_ZONE,
       null,
       tripResolver,
       serviceDateResolver,

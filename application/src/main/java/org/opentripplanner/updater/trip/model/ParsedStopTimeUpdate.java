@@ -21,10 +21,10 @@ public final class ParsedStopTimeUpdate {
   private final StopUpdateStatus status;
 
   @Nullable
-  private final TimeUpdate arrivalUpdate;
+  private final ParsedTimeUpdate arrivalUpdate;
 
   @Nullable
-  private final TimeUpdate departureUpdate;
+  private final ParsedTimeUpdate departureUpdate;
 
   @Nullable
   private final PickDrop pickup;
@@ -60,8 +60,8 @@ public final class ParsedStopTimeUpdate {
     StopReference stopReference,
     @Nullable Integer stopSequence,
     StopUpdateStatus status,
-    @Nullable TimeUpdate arrivalUpdate,
-    @Nullable TimeUpdate departureUpdate,
+    @Nullable ParsedTimeUpdate arrivalUpdate,
+    @Nullable ParsedTimeUpdate departureUpdate,
     @Nullable PickDrop pickup,
     @Nullable PickDrop dropoff,
     @Nullable I18NString stopHeadsign,
@@ -135,12 +135,12 @@ public final class ParsedStopTimeUpdate {
   }
 
   @Nullable
-  public TimeUpdate arrivalUpdate() {
+  public ParsedTimeUpdate arrivalUpdate() {
     return arrivalUpdate;
   }
 
   @Nullable
-  public TimeUpdate departureUpdate() {
+  public ParsedTimeUpdate departureUpdate() {
     return departureUpdate;
   }
 
@@ -280,8 +280,8 @@ public final class ParsedStopTimeUpdate {
     private final StopReference stopReference;
     private Integer stopSequence;
     private StopUpdateStatus status = StopUpdateStatus.SCHEDULED;
-    private TimeUpdate arrivalUpdate;
-    private TimeUpdate departureUpdate;
+    private ParsedTimeUpdate arrivalUpdate;
+    private ParsedTimeUpdate departureUpdate;
     private PickDrop pickup;
     private PickDrop dropoff;
     private I18NString stopHeadsign;
@@ -304,12 +304,12 @@ public final class ParsedStopTimeUpdate {
       return this;
     }
 
-    public Builder withArrivalUpdate(TimeUpdate arrivalUpdate) {
+    public Builder withArrivalUpdate(ParsedTimeUpdate arrivalUpdate) {
       this.arrivalUpdate = arrivalUpdate;
       return this;
     }
 
-    public Builder withDepartureUpdate(TimeUpdate departureUpdate) {
+    public Builder withDepartureUpdate(ParsedTimeUpdate departureUpdate) {
       this.departureUpdate = departureUpdate;
       return this;
     }
