@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.model;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -9,8 +11,11 @@ import javax.annotation.Nullable;
  *   <li>GTFS-RT's delay-based times (delay relative to scheduled time)</li>
  *   <li>SIRI's explicit absolute times</li>
  * </ul>
+ * <p>
+ * This class implements {@link ParsedTimeUpdate} and represents an already-resolved
+ * time update (as opposed to {@link DeferredTimeUpdate} which requires service date resolution).
  */
-public final class TimeUpdate {
+public final class TimeUpdate implements ParsedTimeUpdate {
 
   @Nullable
   private final Integer delaySeconds;
@@ -116,6 +121,19 @@ public final class TimeUpdate {
       return absoluteTimeSecondsSinceMidnight - scheduledTime;
     }
     return 0;
+  }
+
+  /**
+   * Implementation of {@link ParsedTimeUpdate#resolve(LocalDate, ZoneId)}.
+   * Since TimeUpdate is already resolved, this simply returns itself.
+   *
+   * @param serviceDate ignored (already resolved)
+   * @param timeZone ignored (already resolved)
+   * @return this TimeUpdate
+   */
+  @Override
+  public TimeUpdate resolve(LocalDate serviceDate, ZoneId timeZone) {
+    return this;
   }
 
   @Override

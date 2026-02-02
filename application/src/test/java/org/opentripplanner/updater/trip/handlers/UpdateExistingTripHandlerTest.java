@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -38,6 +39,8 @@ import org.opentripplanner.updater.trip.model.TripUpdateType;
  * Tests for {@link UpdateExistingTripHandler}.
  */
 class UpdateExistingTripHandlerTest {
+
+  private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
 
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String TRIP_ID = "trip1";
@@ -83,6 +86,7 @@ class UpdateExistingTripHandlerTest {
     );
     context = new TripUpdateApplierContext(
       env.feedId(),
+      TIME_ZONE,
       snapshotManager,
       tripResolver,
       serviceDateResolver,
@@ -432,6 +436,7 @@ class UpdateExistingTripHandlerTest {
       );
       stationContext = new TripUpdateApplierContext(
         stationEnv.feedId(),
+        TIME_ZONE,
         stationEnv.timetableSnapshotManager(),
         tripResolver,
         serviceDateResolver,

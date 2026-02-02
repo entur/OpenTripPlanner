@@ -15,7 +15,9 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
+import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
@@ -41,6 +43,7 @@ class SiriTripUpdateParserTest {
   @Test
   void parseUpdateExistingTripWithDatedVehicleJourneyRef() {
     // getDatedVehicleJourneyRef contains a TripOnServiceDate ID, not a Trip ID
+    // When using DatedVehicleJourneyRef without DataFrameRef, service date is deferred
     var journey = new SiriEtBuilder(timeParser)
       .withDatedVehicleJourneyRef("dated-trip1")
       .withLineRef("route1")
@@ -61,7 +64,8 @@ class SiriTripUpdateParserTest {
       new FeedScopedId(FEED_ID, "dated-trip1"),
       parsed.tripReference().tripOnServiceDateId()
     );
-    assertEquals(TEST_DATE, parsed.serviceDate());
+    // Service date is deferred when only tripOnServiceDateId is provided
+    assertNull(parsed.serviceDate());
     assertEquals(1, parsed.stopTimeUpdates().size());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
@@ -70,8 +74,13 @@ class SiriTripUpdateParserTest {
       StopResolutionStrategy.SCHEDULED_STOP_POINT_FIRST,
       stopUpdate.stopReference().resolutionStrategy()
     );
+    // Time updates are deferred when service date is null
     assertNotNull(stopUpdate.departureUpdate());
-    assertNotNull(stopUpdate.departureUpdate().absoluteTimeSecondsSinceMidnight());
+    assertTrue(
+      stopUpdate.departureUpdate() instanceof
+        org.opentripplanner.updater.trip.model.DeferredTimeUpdate,
+      "Time update should be DeferredTimeUpdate when service date is null"
+    );
   }
 
   @Test
@@ -337,8 +346,11 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseAbsoluteTimes() {
+    // Use FramedVehicleJourneyRef with DataFrameRef to provide service date
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withEstimatedCalls(calls ->
         calls
           .call("stop1")
@@ -358,14 +370,14 @@ class SiriTripUpdateParserTest {
 
     // SIRI provides absolute times, not delays
     assertNotNull(stopUpdate.arrivalUpdate());
-    assertNotNull(stopUpdate.arrivalUpdate().absoluteTimeSecondsSinceMidnight());
-    assertNotNull(stopUpdate.arrivalUpdate().scheduledTimeSecondsSinceMidnight());
-    assertNull(stopUpdate.arrivalUpdate().delaySeconds());
+    assertNotNull(asTimeUpdate(stopUpdate.arrivalUpdate()).absoluteTimeSecondsSinceMidnight());
+    assertNotNull(asTimeUpdate(stopUpdate.arrivalUpdate()).scheduledTimeSecondsSinceMidnight());
+    assertNull(asTimeUpdate(stopUpdate.arrivalUpdate()).delaySeconds());
 
     assertNotNull(stopUpdate.departureUpdate());
-    assertNotNull(stopUpdate.departureUpdate().absoluteTimeSecondsSinceMidnight());
-    assertNotNull(stopUpdate.departureUpdate().scheduledTimeSecondsSinceMidnight());
-    assertNull(stopUpdate.departureUpdate().delaySeconds());
+    assertNotNull(asTimeUpdate(stopUpdate.departureUpdate()).absoluteTimeSecondsSinceMidnight());
+    assertNotNull(asTimeUpdate(stopUpdate.departureUpdate()).scheduledTimeSecondsSinceMidnight());
+    assertNull(asTimeUpdate(stopUpdate.departureUpdate()).delaySeconds());
   }
 
   @Test
@@ -472,7 +484,9 @@ class SiriTripUpdateParserTest {
   void parseFirstStopMissingArrival_UsesTimeResolver() {
     // First stop with missing arrival should fallback to departure via SiriTimeResolver
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withEstimatedCalls(calls ->
         calls
           .call("stop1")
@@ -499,8 +513,8 @@ class SiriTripUpdateParserTest {
 
     // Both should be the same time since arrival falls back to departure
     assertEquals(
-      firstStop.departureUpdate().absoluteTimeSecondsSinceMidnight(),
-      firstStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight(),
+      asTimeUpdate(firstStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
+      asTimeUpdate(firstStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
       "First stop arrival should fallback to departure time"
     );
   }
@@ -509,7 +523,9 @@ class SiriTripUpdateParserTest {
   void parseLastStopMissingDeparture_UsesTimeResolver() {
     // Last stop with missing departure should fallback to arrival via SiriTimeResolver
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withEstimatedCalls(calls ->
         calls
           .call("stop1")
@@ -539,8 +555,8 @@ class SiriTripUpdateParserTest {
 
     // Both should be the same time since departure falls back to arrival
     assertEquals(
-      lastStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight(),
-      lastStop.departureUpdate().absoluteTimeSecondsSinceMidnight(),
+      asTimeUpdate(lastStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
+      asTimeUpdate(lastStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
       "Last stop departure should fallback to arrival time"
     );
   }
@@ -549,7 +565,9 @@ class SiriTripUpdateParserTest {
   void parseMiddleStopMissingTimes_NoFallback() {
     // Middle stop with missing times should NOT fallback (no cross-field fallback)
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withEstimatedCalls(calls ->
         calls
           .call("stop1")
@@ -586,7 +604,9 @@ class SiriTripUpdateParserTest {
   void parseSingleStopTrip_BothFallbacksApply() {
     // Single stop trip should apply both first and last stop fallbacks
     var journey = new SiriEtBuilder(timeParser)
-      .withDatedVehicleJourneyRef("trip1")
+      .withFramedVehicleJourneyRef(ref ->
+        ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
+      )
       .withEstimatedCalls(calls ->
         calls.call("stop1").withAimedDepartureTime("08:00").withExpectedDepartureTime("08:05")
       )
@@ -606,8 +626,8 @@ class SiriTripUpdateParserTest {
 
     // Both should be the same time
     assertEquals(
-      singleStop.departureUpdate().absoluteTimeSecondsSinceMidnight(),
-      singleStop.arrivalUpdate().absoluteTimeSecondsSinceMidnight(),
+      asTimeUpdate(singleStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
+      asTimeUpdate(singleStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
       "Single stop arrival should fallback to departure time"
     );
   }
@@ -654,5 +674,9 @@ class SiriTripUpdateParserTest {
       "Last stop should not be marked as recorded (only has expected time)"
     );
     assertNotNull(lastStop.arrivalUpdate());
+  }
+
+  private static TimeUpdate asTimeUpdate(ParsedTimeUpdate parsedTimeUpdate) {
+    return (TimeUpdate) parsedTimeUpdate;
   }
 }
