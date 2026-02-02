@@ -1,9 +1,10 @@
 package org.opentripplanner.raptor.api.model;
 
 /**
- * An 'access' that happens on-board, meaning that one is already on the vehicle when the path
- * starts. This access is defined by a specific trip within a specific route, starting at a specific
- * stop in the pattern.
+ * RaptorOnBoardAccess allows you to board a specific trip at a given stop. The trip is
+ * identified by the route index and trip schedule index. A typical use-case for this is when you
+ * want to start a trip on-board, meaning that one is already on the vehicle when the path starts.
+ * The returned paths will start with a zero duration access and a boarding at the given stop.
  */
 public interface RaptorOnBoardAccess extends RaptorAccessEgress {
   /**
@@ -17,24 +18,21 @@ public interface RaptorOnBoardAccess extends RaptorAccessEgress {
   int tripScheduleIndex();
 
   /**
-   * The position in the route pattern of the first stop in the journey, where the access path just
-   * arrived at. Since this is an on-board access, this stop represents the most recently visited
-   * stop on the currently boarded trip.
-   * The next stop position after this is the first you can alight.
+   * The stop position in the route pattern for the board stop. It must refer to the same stop as
+   * the {@link #stop()} method. The stop position is required because the stop can be visited twice
+   * in case of a circular stop pattern.
    */
   int stopPositionInPattern();
 
   /**
-   * The first stop in the journey, where the access path just arrived at. Since this is an on-board
-   * access, this stop represents the most recently visited stop on the currently boarded trip.
-   * The next stop position after this is the first you can alight.
+   * The stop index corresponding to {@link #stopPositionInPattern()}.
    * {@inheritDoc}
    */
   @Override
   int stop();
 
   /**
-   * Since this is an on-board access, the duration until ({@link #stop}) is 0 seconds.
+   * Since this is an on-board access, the duration until ({@link #stop()}) is 0 seconds.
    * {@inheritDoc}
    */
   @Override
