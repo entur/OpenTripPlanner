@@ -102,7 +102,7 @@ public class GtfsRealTimeTripUpdateAdapter {
     );
     this.deduplicator = deduplicator;
     this.tripTimesUpdater = new TripTimesUpdater(timetableRepository.getTimeZone(), deduplicator);
-    this.tripPatternCache = new SiriTripPatternCache(
+    this.tripPatternCache = new TripPatternCache(
       new SiriTripPatternIdGenerator(),
       transitEditorService::findPattern
     );
