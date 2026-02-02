@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -118,7 +119,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       : tripTimes.createRealTimeFromScheduledTimes();
 
     // Apply stop time updates - now returns PatternModificationResult
-    var applyResult = applyStopTimeUpdates(parsedUpdate, builder, pattern, trip, context);
+    var applyResult = applyStopTimeUpdates(
+      parsedUpdate,
+      builder,
+      pattern,
+      trip,
+      context,
+      serviceDate
+    );
     if (applyResult.isFailure()) {
       return Result.failure(applyResult.failureValue());
     }
@@ -274,7 +282,8 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
     Trip trip,
-    TripUpdateApplierContext context
+    TripUpdateApplierContext context,
+    LocalDate serviceDate
   ) {
     var stopUpdateStrategy = parsedUpdate.options().stopUpdateStrategy();
     var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
@@ -437,9 +446,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
 
       // Apply time updates
       boolean hasTimeUpdate = false;
+      var timeZone = context.timeZone();
 
       if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate();
+        var parsedArrivalUpdate = stopUpdate.arrivalUpdate();
+        var arrivalUpdate = parsedArrivalUpdate.resolve(serviceDate, timeZone);
         int scheduledArrival = builder.getScheduledArrivalTime(stopIndex);
         int newArrivalTime = arrivalUpdate.resolveTime(scheduledArrival);
         builder.withArrivalTime(stopIndex, newArrivalTime);
@@ -447,7 +458,8 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       }
 
       if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate();
+        var parsedDepartureUpdate = stopUpdate.departureUpdate();
+        var departureUpdate = parsedDepartureUpdate.resolve(serviceDate, timeZone);
         int scheduledDeparture = builder.getScheduledDepartureTime(stopIndex);
         int newDepartureTime = departureUpdate.resolveTime(scheduledDeparture);
         builder.withDepartureTime(stopIndex, newDepartureTime);

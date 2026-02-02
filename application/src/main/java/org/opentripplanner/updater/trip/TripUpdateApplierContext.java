@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.trip;
 
+import java.time.ZoneId;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
@@ -11,6 +12,8 @@ import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 public final class TripUpdateApplierContext {
 
   private final String feedId;
+
+  private final ZoneId timeZone;
 
   @Nullable
   private final TimetableSnapshotManager snapshotManager;
@@ -25,6 +28,7 @@ public final class TripUpdateApplierContext {
 
   /**
    * @param feedId The feed ID for this update source
+   * @param timeZone The timezone for this feed
    * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
    * @param tripResolver The resolver for looking up trips from trip references
    * @param serviceDateResolver The resolver for extracting service dates from trip updates
@@ -33,6 +37,7 @@ public final class TripUpdateApplierContext {
    */
   public TripUpdateApplierContext(
     String feedId,
+    ZoneId timeZone,
     @Nullable TimetableSnapshotManager snapshotManager,
     TripResolver tripResolver,
     ServiceDateResolver serviceDateResolver,
@@ -40,6 +45,7 @@ public final class TripUpdateApplierContext {
     SiriTripPatternCache tripPatternCache
   ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
+    this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
     this.snapshotManager = snapshotManager;
     this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
     this.serviceDateResolver = Objects.requireNonNull(
@@ -55,6 +61,10 @@ public final class TripUpdateApplierContext {
 
   public String feedId() {
     return feedId;
+  }
+
+  public ZoneId timeZone() {
+    return timeZone;
   }
 
   @Nullable
@@ -89,6 +99,7 @@ public final class TripUpdateApplierContext {
     TripUpdateApplierContext that = (TripUpdateApplierContext) o;
     return (
       Objects.equals(feedId, that.feedId) &&
+      Objects.equals(timeZone, that.timeZone) &&
       Objects.equals(snapshotManager, that.snapshotManager) &&
       Objects.equals(tripResolver, that.tripResolver) &&
       Objects.equals(serviceDateResolver, that.serviceDateResolver) &&
@@ -101,6 +112,7 @@ public final class TripUpdateApplierContext {
   public int hashCode() {
     return Objects.hash(
       feedId,
+      timeZone,
       snapshotManager,
       tripResolver,
       serviceDateResolver,
@@ -116,6 +128,8 @@ public final class TripUpdateApplierContext {
       "feedId='" +
       feedId +
       '\'' +
+      ", timeZone=" +
+      timeZone +
       ", snapshotManager=" +
       snapshotManager +
       ", tripResolver=" +
