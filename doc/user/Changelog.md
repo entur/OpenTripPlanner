@@ -81,6 +81,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Make filters for the canceled trips query in the GTFS API a list [#7235](https://github.com/opentripplanner/OpenTripPlanner/pull/7235)
 - Allow setting `maxThreads` lower than `MIN_THREADS` when using parameter [#7224](https://github.com/opentripplanner/OpenTripPlanner/pull/7224)
 - Allow missing arrival time on the first stop in a GTFS RT Trip Update [#7245](https://github.com/opentripplanner/OpenTripPlanner/pull/7245)
+- Direct transit search [#7145](https://github.com/opentripplanner/OpenTripPlanner/pull/7145)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
