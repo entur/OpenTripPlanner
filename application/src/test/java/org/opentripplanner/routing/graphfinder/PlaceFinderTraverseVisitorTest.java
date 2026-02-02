@@ -13,7 +13,10 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.StopTime;
+import org.opentripplanner.service.vehiclerental.model.TestFreeFloatingRentalVehicleBuilder;
 import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationBuilder;
+import org.opentripplanner.street.model.PropulsionType;
+import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -311,7 +314,7 @@ public class PlaceFinderTraverseVisitorTest {
     );
     var station = new TestVehicleRentalStationBuilder().build();
     assertEquals(List.of(), visitor.placesFound);
-    var state1 = TestStateBuilder.ofWalking().rentalStation(station).build();
+    var state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(station).build();
     visitor.visitVertex(state1);
 
     var res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
@@ -337,7 +340,7 @@ public class PlaceFinderTraverseVisitorTest {
     );
     var station = new TestVehicleRentalStationBuilder().build();
     assertEquals(List.of(), visitor.placesFound);
-    var state1 = TestStateBuilder.ofWalking().rentalStation(station).build();
+    var state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(station).build();
     visitor.visitVertex(state1);
 
     var res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
@@ -360,7 +363,7 @@ public class PlaceFinderTraverseVisitorTest {
     );
 
     assertEquals(List.of(), visitor.placesFound);
-    state1 = TestStateBuilder.ofWalking().rentalStation(station).build();
+    state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(station).build();
     visitor.visitVertex(state1);
 
     res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
