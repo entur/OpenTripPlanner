@@ -656,6 +656,12 @@ Used to group requests when monitoring OTP.
       "maxSlope" : 0.083,
       "slopeExceededReluctance" : 1,
       "stairsReluctance" : 100
+    },
+    "directTransitSearch" : {
+      "enabled" : false,
+      "costRelaxFunction" : "15m + 1.5t",
+      "maxAccessEgressDuration" : "5m",
+      "extraAccessEgressReluctance" : 2
     }
   },
   "flex" : {

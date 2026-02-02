@@ -76,7 +76,7 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     this.linkingContext = Objects.requireNonNull(linkingContext);
   }
 
-  public static <T extends RaptorTripSchedule> RaptorRequest<T> mapRequest(
+  public static <T extends RaptorTripSchedule> RaptorRequestMapper<T> of(
     RouteRequest request,
     ZonedDateTime transitSearchTimeZero,
     boolean isMultiThreaded,
@@ -97,10 +97,10 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       viaTransferResolver,
       lookUpStopIndex,
       linkingContext
-    ).doMap();
+    );
   }
 
-  private RaptorRequest<T> doMap() {
+  public RaptorRequest<T> mapRaptorRequest() {
     var builder = new RaptorRequestBuilder<T>();
     var searchParams = builder.searchParams();
     var preferences = request.preferences();
