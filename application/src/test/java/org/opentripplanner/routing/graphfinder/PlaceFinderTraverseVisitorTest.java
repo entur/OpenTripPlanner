@@ -370,4 +370,53 @@ public class PlaceFinderTraverseVisitorTest {
 
     assertEquals(List.of(), res);
   }
+
+  @Test
+  void rentalVehicleWithFormFactorPropulsionFilter() {
+    var visitor = new PlaceFinderTraverseVisitor(
+      transitService,
+      null,
+      List.of(PlaceType.VEHICLE_RENT),
+      null,
+      null,
+      null,
+      null,
+      List.of(RentalFormFactor.SCOOTER),
+      List.of(PropulsionType.ELECTRIC),
+      null,
+      1,
+      500
+    );
+    var scooter = new TestFreeFloatingRentalVehicleBuilder().withVehicleScooter().build();
+    assertEquals(List.of(), visitor.placesFound);
+    var state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(scooter).build();
+    visitor.visitVertex(state1);
+
+    var res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
+
+    assertEquals(List.of(scooter), res);
+
+    visitor = new PlaceFinderTraverseVisitor(
+      transitService,
+      null,
+      List.of(PlaceType.VEHICLE_RENT),
+      null,
+      null,
+      null,
+      null,
+      List.of(RentalFormFactor.BICYCLE),
+      List.of(PropulsionType.HUMAN),
+      null,
+      1,
+      500
+    );
+
+    assertEquals(List.of(), visitor.placesFound);
+    state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(scooter).build();
+    visitor.visitVertex(state1);
+
+    res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
+
+    assertEquals(List.of(), res);
+  }
 }
