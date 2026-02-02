@@ -733,6 +733,10 @@ type QueryType {
     filterByModes: [TransportMode],
     "Only include places of given types if set. Default accepts all types"
     filterByPlaceTypes: [FilterPlaceType] = [quay, stopPlace, bicycleRent, bikePark, carPark],
+    "Only include rental vehicles with this form factor. Only checked for places with a vehicle type."
+    filterByVehicleFormFactor: [RentalFormFactor!],
+    "Only include rental vehicles with this propulsion type. Only checked for places with a vehicle type."
+    filterByVehiclePropulsionType: [PropulsionType!],
     "fetching only the first certain number of nodes"
     first: Int,
     "fetching only the last certain number of nodes"
@@ -1860,6 +1864,17 @@ enum OccupancyStatus {
   standingRoomOnly
 }
 
+enum PropulsionType {
+  combustion
+  combustion_diesel
+  electric
+  electric_assist
+  human
+  hybrid
+  hydrogen_fuel_cell
+  plug_in_hybrid
+}
+
 enum PurchaseWhen {
   advanceAndDayOfTravel
   dayOfTravelOnly
@@ -1898,6 +1913,17 @@ enum RelativeDirection {
   slightlyRight
   uturnLeft
   uturnRight
+}
+
+enum RentalFormFactor {
+  bicycle
+  car
+  cargo_bicycle
+  moped
+  other
+  scooter
+  scooter_seated
+  scooter_standing
 }
 
 enum ReportType {
