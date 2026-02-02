@@ -635,6 +635,9 @@ public class TimetableSnapshot {
       .keySet()
       .removeIf(route -> feedId.equals(route.getId().getFeedId()));
     realtimeAddedRoutes.keySet().removeIf(id -> feedId.equals(id.getFeedId()));
+    realTimeAddedReplacedByTripOnServiceDateById
+      .keySet()
+      .removeIf(id -> feedId.equals(id.getFeedId()));
     return removedEntry;
   }
 
@@ -645,7 +648,7 @@ public class TimetableSnapshot {
    * @return true if patternsForStop changed as a result of the call
    */
   private boolean clearPatternsForStop(String feedId) {
-    return patternsForStop.entries().removeIf(entry -> entry.getValue().getFeedId().equals(feedId));
+    return patternsForStop.values().removeIf(tripPattern -> feedId.equals(tripPattern.getFeedId()));
   }
 
   /**
