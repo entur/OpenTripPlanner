@@ -86,4 +86,13 @@ public class TripPatternCache {
 
     return tripPattern;
   }
+
+  /**
+   * Generate a unique trip pattern ID for a trip.
+   * This is useful when creating patterns outside of the cache (e.g., patterns that need
+   * scheduled times added to them).
+   */
+  public org.opentripplanner.core.model.id.FeedScopedId generatePatternId(Trip trip) {
+    return tripPatternIdGenerator.generateUniqueTripPatternId(trip);
+  }
 }

@@ -133,20 +133,6 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testModifyTrip_notImplemented() {
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.MODIFY_TRIP,
-      TripReference.builder().build(),
-      LocalDate.now()
-    ).build();
-
-    var result = applier.apply(update, context);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
-  }
-
-  @Test
   void testDeleteTrip_byTripId_success() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
