@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.timetable.Direction;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
@@ -37,13 +38,23 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
+  private final boolean fuzzyMatchingEnabled;
 
   public GtfsRtTripUpdateParser(
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType
   ) {
+    this(forwardsDelayPropagationType, backwardsDelayPropagationType, false);
+  }
+
+  public GtfsRtTripUpdateParser(
+    ForwardsDelayPropagationType forwardsDelayPropagationType,
+    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    boolean fuzzyMatchingEnabled
+  ) {
     this.forwardsDelayPropagationType = forwardsDelayPropagationType;
     this.backwardsDelayPropagationType = backwardsDelayPropagationType;
+    this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
   }
 
   @Override
@@ -138,7 +149,21 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         builder.withStartTime(org.opentripplanner.utils.time.TimeUtils.timeToStrCompact(time))
       );
 
+    descriptor.directionId().ifPresent(dirId -> builder.withDirection(mapDirection(dirId)));
+
+    if (fuzzyMatchingEnabled) {
+      builder.withFuzzyMatchingHint(TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED);
+    }
+
     return builder.build();
+  }
+
+  private Direction mapDirection(int gtfsDirectionId) {
+    return switch (gtfsDirectionId) {
+      case 0 -> Direction.OUTBOUND;
+      case 1 -> Direction.INBOUND;
+      default -> Direction.UNKNOWN;
+    };
   }
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
