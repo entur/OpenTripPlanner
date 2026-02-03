@@ -193,7 +193,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
       var boardTime = trip.departure(accessPath.stopPositionInPattern());
       if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
-        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime, trip);
+        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime);
       }
     }
   }

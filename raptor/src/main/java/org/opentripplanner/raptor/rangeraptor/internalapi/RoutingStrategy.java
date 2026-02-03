@@ -76,7 +76,7 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
     RaptorConstrainedBoardingSearch<T> txSearch
   );
 
-  default void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime, T trip) {
+  default void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime) {
     throw new UnsupportedOperationException(
       "On-board access is not yet supported for this routing strategy"
     );

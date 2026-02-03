@@ -120,7 +120,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime, T trip) {
+  public void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime) {
     state.addOnBoardAccessStopArrival(access, boardTime);
   }
 
