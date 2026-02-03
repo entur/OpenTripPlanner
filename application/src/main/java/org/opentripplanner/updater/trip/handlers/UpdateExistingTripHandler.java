@@ -17,8 +17,10 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.TripAndPattern;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
@@ -27,6 +29,7 @@ import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
+import org.opentripplanner.updater.trip.model.TripReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +47,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    var tripReference = parsedUpdate.tripReference();
     var tripResolver = context.tripResolver();
 
     // Resolve service date (from parsedUpdate or from tripOnServiceDateId)
@@ -54,15 +56,23 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
     var serviceDate = serviceDateResult.successValue();
 
-    // Resolve the trip from the trip reference
-    var tripResult = tripResolver.resolveTrip(tripReference);
-    if (tripResult.isFailure()) {
-      LOG.debug("Could not resolve trip for update: {}", tripReference);
-      return Result.failure(tripResult.failureValue());
+    // Resolve the trip and pattern (with optional fuzzy matching fallback)
+    var tripAndPatternResult = resolveTripWithPattern(
+      parsedUpdate,
+      serviceDate,
+      tripResolver,
+      context.fuzzyTripMatcher(),
+      transitService
+    );
+    if (tripAndPatternResult.isFailure()) {
+      LOG.debug("Could not resolve trip for update: {}", parsedUpdate.tripReference());
+      return Result.failure(tripAndPatternResult.failureValue());
     }
 
-    Trip trip = tripResult.successValue();
-    LOG.debug("Resolved trip {} for update", trip.getId());
+    var tripAndPattern = tripAndPatternResult.successValue();
+    Trip trip = tripAndPattern.trip();
+    TripPattern pattern = tripAndPattern.tripPattern();
+    LOG.debug("Resolved trip {} on pattern {} for update", trip.getId(), pattern.getId());
 
     // Validate that the service date is valid for this trip's service
     var serviceId = trip.getServiceId();
@@ -75,15 +85,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
       );
       return Result.failure(
         new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE)
-      );
-    }
-
-    // Find the pattern for this trip on this service date
-    TripPattern pattern = transitService.findPattern(trip, serviceDate);
-    if (pattern == null) {
-      LOG.warn("No pattern found for trip {} on {}", trip.getId(), serviceDate);
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND)
       );
     }
 
@@ -584,5 +585,71 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     );
 
     LOG.debug("Marked scheduled trip {} as deleted on {}", trip.getId(), serviceDate);
+  }
+
+  /**
+   * Resolve a Trip and its TripPattern from a ParsedTripUpdate.
+   * <p>
+   * Resolution order:
+   * <ol>
+   *   <li>Try exact match via TripResolver</li>
+   *   <li>If exact match fails AND fuzzy matching is allowed AND a fuzzy matcher is configured,
+   *       try fuzzy matching</li>
+   * </ol>
+   *
+   * @param parsedUpdate the parsed update containing trip reference and stop info
+   * @param serviceDate the service date for matching
+   * @param tripResolver the resolver for exact trip lookups
+   * @param fuzzyTripMatcher the fuzzy matcher (may be null)
+   * @param transitService the transit service for pattern lookups
+   * @return Result containing the matched trip and pattern, or an error if not found
+   */
+  private Result<TripAndPattern, UpdateError> resolveTripWithPattern(
+    ParsedTripUpdate parsedUpdate,
+    LocalDate serviceDate,
+    org.opentripplanner.updater.trip.TripResolver tripResolver,
+    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
+    TransitEditorService transitService
+  ) {
+    TripReference reference = parsedUpdate.tripReference();
+
+    // Try exact match first
+    var exactResult = tripResolver.resolveTrip(reference);
+    if (exactResult.isSuccess()) {
+      Trip trip = exactResult.successValue();
+      TripPattern pattern = transitService.findPattern(trip, serviceDate);
+      if (pattern == null) {
+        pattern = transitService.findPattern(trip);
+      }
+      if (pattern != null) {
+        return Result.success(new TripAndPattern(trip, pattern));
+      }
+      LOG.warn("Trip {} found but no pattern available", trip.getId());
+      return Result.failure(
+        new UpdateError(reference.tripId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
+      );
+    }
+
+    // Exact match failed - try fuzzy matching if allowed
+    if (shouldTryFuzzyMatching(reference, fuzzyTripMatcher)) {
+      LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
+      return fuzzyTripMatcher.match(reference, parsedUpdate, serviceDate);
+    }
+
+    // Return the original exact match error
+    return Result.failure(exactResult.failureValue());
+  }
+
+  /**
+   * Check if fuzzy matching should be attempted for the given reference.
+   */
+  private boolean shouldTryFuzzyMatching(
+    TripReference reference,
+    @Nullable FuzzyTripMatcher fuzzyTripMatcher
+  ) {
+    if (fuzzyTripMatcher == null) {
+      return false;
+    }
+    return reference.fuzzyMatchingHint() == TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED;
   }
 }

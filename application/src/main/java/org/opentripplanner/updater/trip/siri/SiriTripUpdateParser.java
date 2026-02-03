@@ -168,10 +168,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       } catch (NumberFormatException ignored) {}
     }
 
+    // For SIRI, fuzzy matching is always allowed as a fallback for UPDATE_EXISTING
+    // The old SiriFuzzyTripMatcher was used whenever exact match failed
     builder.withFuzzyMatchingHint(
-      updateType == TripUpdateType.ADD_NEW_TRIP || (tripId == null && tripOnServiceDateId == null)
-        ? TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED
-        : TripReference.FuzzyMatchingHint.EXACT_MATCH_REQUIRED
+      updateType == TripUpdateType.ADD_NEW_TRIP
+        ? TripReference.FuzzyMatchingHint.EXACT_MATCH_REQUIRED
+        : TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED
     );
 
     return builder.build();

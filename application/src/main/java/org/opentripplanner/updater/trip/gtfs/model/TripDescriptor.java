@@ -43,6 +43,12 @@ public class TripDescriptor {
       : Optional.empty();
   }
 
+  public OptionalInt directionId() {
+    return tripDescriptor.hasDirectionId()
+      ? OptionalInt.of(tripDescriptor.getDirectionId())
+      : OptionalInt.empty();
+  }
+
   GtfsRealtime.TripDescriptor original() {
     return tripDescriptor;
   }

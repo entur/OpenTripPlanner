@@ -25,7 +25,8 @@ public class GtfsRtTestHelper {
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false
     );
   }
 
