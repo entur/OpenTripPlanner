@@ -1,31 +1,25 @@
 package org.opentripplanner.updater.trip.siri;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.utils.time.ServiceDateUtils;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 public class ServiceDateParser {
 
   private final EstimatedVehicleJourney journey;
-  private final ZoneId timeZone;
   private final String feedId;
   private FeedScopedId tripOnServiceDateId;
-  private LocalDate serviceDate;
 
-  public ServiceDateParser(EstimatedVehicleJourney journey, ZoneId timeZone, String feedId) {
+  public ServiceDateParser(EstimatedVehicleJourney journey, String feedId) {
     this.journey = journey;
-    this.timeZone = timeZone;
     this.feedId = feedId;
   }
 
   public ParsedServiceDate parse() {
     tripOnServiceDateId = resolveTripOnServiceDateId();
-    serviceDate = resolveServiceDate();
-    return new ParsedServiceDate(serviceDate, tripOnServiceDateId);
+    return resolveServiceDate();
   }
 
   /**
@@ -42,45 +36,58 @@ public class ServiceDateParser {
     return null;
   }
 
-  @Nullable
-  private LocalDate resolveServiceDate() {
+  private ParsedServiceDate resolveServiceDate() {
     if (journey.getFramedVehicleJourneyRef() != null) {
       var dataFrameRef = journey.getFramedVehicleJourneyRef().getDataFrameRef();
       if (dataFrameRef != null) {
         try {
-          return LocalDate.parse(dataFrameRef.getValue());
+          return new ParsedServiceDate(
+            LocalDate.parse(dataFrameRef.getValue()),
+            tripOnServiceDateId,
+            null
+          );
         } catch (Exception ignored) {}
       }
     }
 
     // if a DSJ id is present, this can be used to infer the service date in the applier stage.
     if (tripOnServiceDateId != null) {
-      return null;
+      return new ParsedServiceDate(null, tripOnServiceDateId, null);
     }
 
-    // as a last resort, infer the service date from the first call's aimed departure time
-    // this may be incorrect for trips starting after midnight and registered on the previous
-    // service date
-    var datetime = CallWrapper.of(journey)
+    // Store the aimed departure time for deferred resolution in the applier.
+    // The applier can calculate the correct service date using the Trip's scheduled
+    // departure time to handle overnight trips correctly.
+    var aimedDepartureTime = CallWrapper.of(journey)
       .stream()
       .findFirst()
       .map(CallWrapper::getAimedDepartureTime)
       .orElse(null);
 
-    if (datetime != null) {
-      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-        datetime.toInstant(),
-        timeZone
-      );
-      return ServiceDateUtils.asServiceDay(startOfService);
-    }
-
-    return null;
+    return new ParsedServiceDate(null, null, aimedDepartureTime);
   }
 
-  public record ParsedServiceDate(LocalDate serviceDate, FeedScopedId tripOnServiceDateId) {
+  /**
+   * Result of parsing service date information from a SIRI message.
+   * <p>
+   * The service date can be determined in three ways:
+   * <ol>
+   *   <li>Explicitly from FramedVehicleJourneyRef.DataFrameRef</li>
+   *   <li>By looking up TripOnServiceDate using tripOnServiceDateId (done in applier)</li>
+   *   <li>By calculating from aimedDepartureTime using Trip's scheduled departure offset (done in applier)</li>
+   * </ol>
+   *
+   * @param serviceDate The resolved service date, or null if deferred resolution is needed
+   * @param tripOnServiceDateId The TripOnServiceDate ID for lookup, or null
+   * @param aimedDepartureTime The aimed departure time for deferred resolution, or null
+   */
+  public record ParsedServiceDate(
+    @Nullable LocalDate serviceDate,
+    @Nullable FeedScopedId tripOnServiceDateId,
+    @Nullable ZonedDateTime aimedDepartureTime
+  ) {
     public boolean isEmpty() {
-      return serviceDate == null && tripOnServiceDateId == null;
+      return serviceDate == null && tripOnServiceDateId == null && aimedDepartureTime == null;
     }
   }
 }

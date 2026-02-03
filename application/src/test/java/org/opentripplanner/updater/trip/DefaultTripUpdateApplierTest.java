@@ -57,7 +57,7 @@ class DefaultTripUpdateApplierTest {
     snapshotManager = env.timetableSnapshotManager();
     applier = new DefaultTripUpdateApplier(transitService);
     var tripResolver = new TripResolver(env.transitService());
-    var serviceDateResolver = new ServiceDateResolver(tripResolver);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     var stopResolver = new StopResolver(env.transitService());
     var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
       new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),

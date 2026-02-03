@@ -46,7 +46,7 @@ class TripUpdateApplierTest {
 
   @Test
   void applierContextHasRequiredFields() {
-    var serviceDateResolver = new ServiceDateResolver(tripResolver);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitService);
     var context = new TripUpdateApplierContext(
       feedId,
       TIME_ZONE,
@@ -75,7 +75,7 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(true);
-    var serviceDateResolver = new ServiceDateResolver(tripResolver);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitService);
     var context = new TripUpdateApplierContext(
       feedId,
       TIME_ZONE,
@@ -102,7 +102,7 @@ class TripUpdateApplierTest {
     ).build();
 
     var applier = new MockTripUpdateApplier(false);
-    var serviceDateResolver = new ServiceDateResolver(tripResolver);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitService);
     var context = new TripUpdateApplierContext(
       feedId,
       TIME_ZONE,
