@@ -249,14 +249,11 @@ public class StreetModelForTest {
     boolean endVertex,
     DisposableEdgeCollection tempEdges
   ) {
-    boolean wheelchairAccessible = false;
-
     TemporaryStreetLocation location = new TemporaryStreetLocation(nearestPoint, name);
 
     for (StreetEdge street : edges) {
       Vertex fromv = street.getFromVertex();
       Vertex tov = street.getToVertex();
-      wheelchairAccessible |= street.isWheelchairAccessible();
 
       /* forward edges and vertices */
       Vertex edgeLocation;
@@ -283,7 +280,6 @@ public class StreetModelForTest {
         createHalfLocationForTest(location, name, nearestPoint, street, endVertex, tempEdges);
       }
     }
-    location.setWheelchairAccessible(wheelchairAccessible);
     return location;
   }
 
