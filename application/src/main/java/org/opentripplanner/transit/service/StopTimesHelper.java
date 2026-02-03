@@ -27,7 +27,7 @@ import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
-class StopTimesHelper {
+public class StopTimesHelper {
 
   private final TransitService transitService;
 
@@ -241,16 +241,29 @@ class StopTimesHelper {
       .create();
 
     int timeRangeSeconds = (int) timeRange.toSeconds();
+    int maxTripSpanDays = pattern.getScheduledTimetable().getMaxTripSpanDays();
 
-    int maxTripSpanDays = pattern.getMaxTripSpanDays();
-    var runningDates = calculateRunningDates(startTime, timeRange, zoneId, maxTripSpanDays);
+    // The `maxTripSpanDays + 1` is used to "overselect" the running-dates to account for up to
+    // 24h delays. This has a performance overhead of ~25% when retrieving all calls for an area
+    // around Bergen, Norway, [(60˚N, 5˚E) → (61˚N, 6˚E)], in total 41 800 stop/pattern lookups.
+    // Average response times was 250ms (+1) and 200ms (+0).
+    var runningDates = calculateRunningDates(startTime, timeRange, zoneId, maxTripSpanDays + 1);
+    var firstDay = runningDates.getFirst();
 
-    // Loop through all possible days
     for (LocalDate serviceDate : runningDates) {
       Timetable timetable = transitService.findTimetable(pattern, serviceDate);
-      ZonedDateTime midnight = ServiceDateUtils.asStartOfService(serviceDate, zoneId);
+
+      // Skip the first running date if the maxTripSpanDays is the same for the scheduled
+      // and the realtime timetable. We overselected the runing dates in case the realtime
+      // timetable was delayed into the next service-day. Note! If no realtime data exist this
+      // check is true, and the first running date is skiped.
+      if (firstDay == serviceDate && maxTripSpanDays == timetable.getMaxTripSpanDays()) {
+        continue;
+      }
+
+      var serviceDateMidnight = ServiceDateUtils.asStartOfService(serviceDate, zoneId);
       int secondsSinceMidnight = ServiceDateUtils.secondsSinceStartOfService(
-        midnight,
+        serviceDateMidnight,
         ZonedDateTime.ofInstant(startTime, zoneId)
       );
       var servicesRunning = transitService.getServiceCodesRunningForDate(serviceDate);
@@ -290,7 +303,13 @@ class StopTimesHelper {
               (arrivalDeparture != DEPARTURES && arrivalTimeInRange)
             ) {
               pq.add(
-                new TripTimeOnDate(tripTimes, stopPos, pattern, serviceDate, midnight.toInstant())
+                new TripTimeOnDate(
+                  tripTimes,
+                  stopPos,
+                  pattern,
+                  serviceDate,
+                  serviceDateMidnight.toInstant()
+                )
               );
             }
           }
