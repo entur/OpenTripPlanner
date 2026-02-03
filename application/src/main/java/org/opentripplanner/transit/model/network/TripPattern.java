@@ -2,6 +2,7 @@ package org.opentripplanner.transit.model.network;
 
 import static java.util.Objects.requireNonNull;
 import static org.opentripplanner.utils.lang.ObjectUtils.requireNotInitialized;
+import static org.opentripplanner.utils.time.ServiceDateUtils.wholeDays;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -108,7 +109,7 @@ public final class TripPattern
 
   private final boolean realTimeTripPattern;
   private final boolean stopPatternModifiedInRealTime;
-
+  private final int maxTripSpanDays;
   private final RoutingTripPattern routingTripPattern;
 
   TripPattern(TripPatternBuilder builder) {
@@ -139,6 +140,7 @@ public final class TripPattern
     this.originalTripPattern = builder.getOriginalTripPattern();
 
     this.hopGeometries = builder.hopGeometries();
+    this.maxTripSpanDays = computeMaxTripSpanDays();
     this.routingTripPattern = new RoutingTripPattern(this);
 
     getId().requireSameFeedId(route.getId());
@@ -413,6 +415,16 @@ public final class TripPattern
   }
 
   /**
+   * The maximum number of whole days that any trip in this pattern spans from its service date
+   * midnight to the latest arrival at the last stop. For most patterns this is zero(0) - all times
+   * are on the same service-day(operation day). For a nightbus which ends at 02:45+1d this is 1.
+   * And for a multi-day services like coastal ferries it can span several days.
+   */
+  public int getMaxTripSpanDays() {
+    return maxTripSpanDays;
+  }
+
+  /**
    * The original TripPattern this replaces at least for one modified trip.
    *
    * Currently this seems to only be set (via TripPatternBuilder) from TripPatternCache and
@@ -557,5 +569,21 @@ public final class TripPattern
       return getTripHeadSignFromTripTimes(tripTimes);
     }
     return null;
+  }
+
+  /**
+   * Compute the maximum number of whole days a trip schedule lasts. This method
+   * will use the last stop arrival time of the last trip. Return zero if the
+   * arrival time is negative.
+   */
+  private int computeMaxTripSpanDays() {
+    var tripTimesList = scheduledTimetable.getTripTimes();
+    if (tripTimesList.isEmpty()) {
+      return 0;
+    }
+
+    var lastTrip = tripTimesList.getLast();
+    // We ignore overtaking and return 0 for negative values
+    return wholeDays(lastTrip.getArrivalTime(lastTrip.getNumStops() - 1));
   }
 }
