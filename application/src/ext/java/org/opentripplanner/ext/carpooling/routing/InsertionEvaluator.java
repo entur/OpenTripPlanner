@@ -131,7 +131,7 @@ public class InsertionEvaluator {
     Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
     Duration baselineDuration = cumulativeDurations[cumulativeDurations.length - 1];
 
-    var carPoolTreeVertexRouter = new CarpoolTreeVertexRouter(vertices, request);
+    var carPoolTreeVertexRouter = new CarpoolTreeVertexRouter(vertices);
 
     var viableCandidateTrips = tripWithViablePassengerSegments.segmentInsertionPositions().stream().map(segmentInsertion -> {
       var viablePositions = segmentInsertion.insertionPositions();

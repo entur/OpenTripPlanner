@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.carpooling.service;
 
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -259,107 +260,113 @@ public class DefaultCarpoolingService implements CarpoolingService {
   @Override
   public List<DefaultAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext)
     throws RoutingValidationException {
-    if (!StreetMode.CARPOOL.equals(request.journey().access().mode()) && accessOrEgress.isAccess()) {
-      return Collections.emptyList();
-    }
+    try {
+      if (!StreetMode.CARPOOL.equals(request.journey().access().mode()) && accessOrEgress.isAccess()) {
+        return Collections.emptyList();
+      }
 
-    if (!StreetMode.CARPOOL.equals(request.journey().egress().mode()) && accessOrEgress.isEgress()) {
-      return Collections.emptyList();
-    }
+      if (!StreetMode.CARPOOL.equals(request.journey().egress().mode()) && accessOrEgress.isEgress()) {
+        return Collections.emptyList();
+      }
 
-    if(accessOrEgress.isEgress()) {
-      return Collections.emptyList();
-    }
+      if (accessOrEgress.isEgress()) {
+        return Collections.emptyList();
+      }
 
-    var allTrips = repository.getCarpoolTrips();
-    LOG.debug("Repository contains {} carpool trips", allTrips.size());
+      var allTrips = repository.getCarpoolTrips();
+      LOG.debug("Repository contains {} carpool trips", allTrips.size());
 
-    var searchWindow = request.searchWindow() == null
-      ? DEFAULT_SEARCH_WINDOW
-      : request.searchWindow();
+      var searchWindow = request.searchWindow() == null
+        ? DEFAULT_SEARCH_WINDOW
+        : request.searchWindow();
 
-    WgsCoordinate passengerOrigin = new WgsCoordinate(request.from().getCoordinate());
-    WgsCoordinate passengerDestination = new WgsCoordinate(request.to().getCoordinate());
+      WgsCoordinate passengerOrigin = new WgsCoordinate(request.from().getCoordinate());
+      WgsCoordinate passengerDestination = new WgsCoordinate(request.to().getCoordinate());
 
-    var passengerDepartureTime = request.dateTime();
+      var passengerDepartureTime = request.dateTime();
 
-    var passengerCoordinate = accessOrEgress.isAccess() ? passengerOrigin : passengerDestination;
+      var passengerCoordinate = accessOrEgress.isAccess() ? passengerOrigin : passengerDestination;
 
-    var candidateTrips = allTrips
-      .stream()
-      .filter(trip ->
-        accessEgressPreFilters.accepts(
-          trip,
-          passengerCoordinate,
-          passengerDepartureTime,
-          searchWindow
+      var candidateTrips = allTrips
+        .stream()
+        .filter(trip ->
+          accessEgressPreFilters.accepts(
+            trip,
+            passengerCoordinate,
+            passengerDepartureTime,
+            searchWindow
+          )
         )
-      )
-      .toList();
+        .toList();
 
-    if(candidateTrips.isEmpty()) {
-      return List.of();
-    }
-
-
-    var temporaryVerticesContainer = new TemporaryVerticesContainer();
-
-    var router = new CarpoolStreetRouter(
-      streetLimitationParametersService,
-      request,
-      vertexLinker,
-      temporaryVerticesContainer
-    );
-
-    var originVertices = accessOrEgress.isAccess()
-      ? linkingContext.findVertices(request.from())
-      : linkingContext.findVertices(request.to());
-
-    // No reason to use 60 minutes here, change to something more logical
-    var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(60), 0);
-    var nearByStops = streetNearbyStopFinder.build()
-      .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress()).stream().filter(stop ->
-        !(stop.stop instanceof AreaStop)
-    ).toList();
-
-    var nearByStopsWithVertices = nearByStops.stream().collect(Collectors.toMap(
-      stop -> stop,
-      stop -> router.getOrCreateVertex(stop.stop.getCoordinate(), linkingContext)
-    ));
+      if (candidateTrips.isEmpty()) {
+        return List.of();
+      }
 
 
-    var insertionEvaluator = new InsertionEvaluator(
-      router::route,
-      delayConstraints,
-      linkingContext
-    );
+      var temporaryVerticesContainer = new TemporaryVerticesContainer();
 
-    var candidateTripsWithViableStopsAndPositions = candidateTrips.stream().map(candidateTrip -> {
-      var viableSegmentInsertions = nearByStops.stream().map(nearbyStop -> {
+      var router = new CarpoolStreetRouter(
+        streetLimitationParametersService,
+        request,
+        vertexLinker,
+        temporaryVerticesContainer
+      );
 
-        var pickUpCoord = accessOrEgress.isAccess() ? passengerCoordinate : nearbyStop.stop.getCoordinate();
-        var dropOffCoord = accessOrEgress.isAccess() ? nearbyStop.stop.getCoordinate() : passengerCoordinate;
+      var originVertices = accessOrEgress.isAccess()
+        ? linkingContext.findVertices(request.from())
+        : linkingContext.findVertices(request.to());
 
-        var viablePositions = positionFinder.findViablePositions(
-          candidateTrip, pickUpCoord, dropOffCoord
-        );
-        return new SegmentInsertionPositions(
-          new Segment(pickUpCoord, dropOffCoord, nearbyStop), viablePositions
-        );
-      }).filter(it -> !it.insertionPositions.isEmpty()).toList();
-      return new TripWithViablePassengerSegments(candidateTrip, viableSegmentInsertions);
-    }).toList();
+      // No reason to use 60 minutes here, change to something more logical
+      var streetNearbyStopFinder = StreetNearbyStopFinder.of(stopResolver, Duration.ofMinutes(60), 0);
+      var nearByStops = streetNearbyStopFinder.build()
+        .findNearbyStops(originVertices, request, streetRequest, accessOrEgress.isEgress()).stream().filter(stop ->
+          !(stop.stop instanceof AreaStop)
+        ).toList();
 
-    var insertionCandidates = candidateTripsWithViableStopsAndPositions.stream().flatMap(it -> {
-      return insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router, accessOrEgress, nearByStopsWithVertices).stream();
-    }).toList();
+      var nearByStopsWithVertices = nearByStops.stream().collect(Collectors.toMap(
+        stop -> stop,
+        stop -> router.getOrCreateVertex(stop.stop.getCoordinate(), linkingContext)
+      ));
 
 
-    var accessEgresses = insertionCandidates.stream().map(it ->
-      mapFlexAccessEgresses(it, accessOrEgress)
+      var insertionEvaluator = new InsertionEvaluator(
+        router::route,
+        delayConstraints,
+        linkingContext
+      );
+
+      var candidateTripsWithViableStopsAndPositions = candidateTrips.stream().map(candidateTrip -> {
+        var viableSegmentInsertions = nearByStops.stream().map(nearbyStop -> {
+
+          var pickUpCoord = accessOrEgress.isAccess() ? passengerCoordinate : nearbyStop.stop.getCoordinate();
+          var dropOffCoord = accessOrEgress.isAccess() ? nearbyStop.stop.getCoordinate() : passengerCoordinate;
+
+          var viablePositions = positionFinder.findViablePositions(
+            candidateTrip, pickUpCoord, dropOffCoord
+          );
+          return new SegmentInsertionPositions(
+            new Segment(pickUpCoord, dropOffCoord, nearbyStop), viablePositions
+          );
+        }).filter(it -> !it.insertionPositions.isEmpty()).toList();
+        return new TripWithViablePassengerSegments(candidateTrip, viableSegmentInsertions);
+      }).toList();
+
+      var insertionCandidates = candidateTripsWithViableStopsAndPositions.stream().flatMap(it -> {
+        return insertionEvaluator.findBestInsertions(it, streetLimitationParametersService, request, passengerCoordinate, router, accessOrEgress, nearByStopsWithVertices).stream();
+      }).toList();
+
+
+      var accessEgresses = insertionCandidates.stream().map(it ->
+        mapFlexAccessEgresses(it, accessOrEgress)
       ).toList();
+      return accessEgresses;
 
-    return accessEgresses;
+    } catch (Exception e) {
+      LOG.error(e.getMessage());
+      LOG.error(Arrays.toString(e.getStackTrace()));
+      throw e;
+    }
   }
 
   public record Segment(
