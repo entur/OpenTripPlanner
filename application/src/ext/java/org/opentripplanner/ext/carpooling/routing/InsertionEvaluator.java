@@ -157,6 +157,8 @@ public class InsertionEvaluator {
         );
 
         if (candidate == null) {
+          // check manually what becomes null, and what can be done. Probably stations far away that should be filtered out
+          // with better prefilter anyways
           return null;
         }
 
@@ -344,6 +346,10 @@ public class InsertionEvaluator {
       passengerDropoff,
       carpoolTreeVertexRouter
     );
+
+    if(modifiedSegments == null){
+      return null;
+    }
 
     // Calculate total duration
     Duration totalDuration = Duration.ZERO;
