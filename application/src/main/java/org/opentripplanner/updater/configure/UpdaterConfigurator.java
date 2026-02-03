@@ -292,7 +292,8 @@ public class UpdaterConfigurator {
         timetableRepository,
         snapshotManager,
         config.forwardsDelayPropagationType(),
-        config.backwardsDelayPropagationType()
+        config.backwardsDelayPropagationType(),
+        config.fuzzyTripMatching()
       );
     } else {
       return new GtfsRealTimeTripUpdateAdapter(timetableRepository, snapshotManager, () ->
@@ -307,7 +308,8 @@ public class UpdaterConfigurator {
         timetableRepository,
         snapshotManager,
         config.forwardsDelayPropagationType(),
-        config.backwardsDelayPropagationType()
+        config.backwardsDelayPropagationType(),
+        config.fuzzyTripMatching()
       );
     } else {
       return new GtfsRealTimeTripUpdateAdapter(timetableRepository, snapshotManager, () ->

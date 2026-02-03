@@ -853,7 +853,32 @@ Full implementation of `TripUpdateParser<EstimatedVehicleJourney>` interface:
 
 ### Phase 3: Common Applier Implementation
 
-**Status:** Not started
+**Status:** In Progress - Fuzzy Trip Matching Complete
+
+**Fuzzy Trip Matching Implementation:**
+
+The applier now supports fuzzy trip matching through a unified interface. This allows the system to find trips when exact IDs are not available in real-time feeds.
+
+**New Files Created:**
+- `FuzzyTripMatcher.java` - Interface for fuzzy trip matching
+- `TripAndPattern.java` - Result record containing matched trip and pattern
+- `LastStopArrivalTimeMatcher.java` - SIRI-style matcher (matches by last stop arrival time)
+- `RouteDirectionTimeMatcher.java` - GTFS-RT-style matcher (matches by route/direction/start time)
+- `NoOpFuzzyTripMatcher.java` - No-op implementation for when fuzzy matching is disabled
+
+**TripResolver Extended:**
+- Added optional `FuzzyTripMatcher` parameter to constructor
+- New method `resolveTripWithPattern(ParsedTripUpdate, LocalDate)` that:
+  1. Tries exact match first (trip ID or TripOnServiceDate ID)
+  2. Falls back to fuzzy matching if allowed and configured
+  3. Returns `TripAndPattern` preserving the pattern from fuzzy match
+
+**Handler Updated:**
+- `UpdateExistingTripHandler` now uses `resolveTripWithPattern()` for unified trip resolution
+
+**Test Coverage:**
+- `NoOpFuzzyTripMatcherTest` - Tests no-op matcher behavior
+- `TripResolverTest.FuzzyMatchingTests` - Tests fuzzy matching integration in resolver
 
 ### Phase 4: Integration
 

@@ -14,6 +14,8 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
+import org.opentripplanner.updater.trip.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.LastStopArrivalTimeMatcher;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
@@ -114,6 +116,18 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     var tripResolver = new TripResolver(transitEditorService);
     var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
     var stopResolver = new StopResolver(transitEditorService);
+
+    // TODO RT_VP Create fuzzy matcher if the old SiriFuzzyTripMatcher was configured
+    //  for compatibility with the legacy implementation
+    FuzzyTripMatcher fuzzyMatcher = null;
+    if (fuzzyTripMatcher != null) {
+      fuzzyMatcher = new LastStopArrivalTimeMatcher(
+        transitEditorService,
+        stopResolver,
+        transitEditorService.getTimeZone()
+      );
+    }
+
     var applierContext = new TripUpdateApplierContext(
       feedId,
       transitEditorService.getTimeZone(),
@@ -121,7 +135,8 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       tripResolver,
       serviceDateResolver,
       stopResolver,
-      tripPatternCache
+      tripPatternCache,
+      fuzzyMatcher
     );
 
     for (var etDelivery : updates) {

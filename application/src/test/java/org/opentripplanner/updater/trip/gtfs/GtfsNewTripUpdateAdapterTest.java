@@ -42,7 +42,8 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.timetableRepository(),
       env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false
     );
     assertNotNull(newAdapter);
   }
@@ -54,7 +55,8 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.timetableRepository(),
       env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false
     );
 
     var result = newAdapter.applyTripUpdates(
@@ -78,7 +80,8 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.timetableRepository(),
       env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false
     );
 
     var result = newAdapter.applyTripUpdates(

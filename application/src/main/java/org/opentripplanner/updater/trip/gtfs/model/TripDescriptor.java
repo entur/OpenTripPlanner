@@ -51,6 +51,12 @@ public class TripDescriptor {
       : ScheduleRelationship.SCHEDULED;
   }
 
+  public OptionalInt directionId() {
+    return tripDescriptor.hasDirectionId()
+      ? OptionalInt.of(tripDescriptor.getDirectionId())
+      : OptionalInt.empty();
+  }
+
   GtfsRealtime.TripDescriptor original() {
     return tripDescriptor;
   }

@@ -15,6 +15,8 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
+import org.opentripplanner.updater.trip.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.RouteDirectionTimeMatcher;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
@@ -56,14 +58,17 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
   private final DefaultTripUpdateApplier applier;
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
+  private final boolean fuzzyMatchingEnabled;
 
   public GtfsNewTripUpdateAdapter(
     TimetableRepository timetableRepository,
     TimetableSnapshotManager snapshotManager,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
-    BackwardsDelayPropagationType backwardsDelayPropagationType
+    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    boolean fuzzyMatchingEnabled
   ) {
     this.snapshotManager = snapshotManager;
+    this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
     this.transitEditorService = new DefaultTransitService(
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
@@ -74,7 +79,8 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     );
     this.parser = new GtfsRtTripUpdateParser(
       forwardsDelayPropagationType,
-      backwardsDelayPropagationType
+      backwardsDelayPropagationType,
+      fuzzyMatchingEnabled
     );
     this.applier = new DefaultTripUpdateApplier(transitEditorService);
   }
@@ -122,6 +128,13 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     var tripResolver = new TripResolver(transitEditorService);
     var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
     var stopResolver = new StopResolver(transitEditorService);
+
+    // Create fuzzy matcher if fuzzy matching is enabled
+    FuzzyTripMatcher fuzzyMatcher = null;
+    if (fuzzyMatchingEnabled) {
+      fuzzyMatcher = new RouteDirectionTimeMatcher(transitEditorService);
+    }
+
     var applierContext = new TripUpdateApplierContext(
       feedId,
       transitEditorService.getTimeZone(),
@@ -129,7 +142,8 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       tripResolver,
       serviceDateResolver,
       stopResolver,
-      tripPatternCache
+      tripPatternCache,
+      fuzzyMatcher
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
