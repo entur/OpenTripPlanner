@@ -547,7 +547,6 @@ public class VertexLinker {
         y,
         originalEdge
       );
-      tsv.setWheelchairAccessible(originalEdge.isWheelchairAccessible());
       v = tsv;
     } else {
       v = vertexFactory.splitter(originalEdge, x, y, uniqueSplitLabel);
