@@ -112,7 +112,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
 
     // Create applier context with the trip ID resolver and stop resolver
     var tripResolver = new TripResolver(transitEditorService);
-    var serviceDateResolver = new ServiceDateResolver(tripResolver);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
     var stopResolver = new StopResolver(transitEditorService);
     var applierContext = new TripUpdateApplierContext(
       feedId,

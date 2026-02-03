@@ -67,7 +67,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(
       journey,
-      context.timeZone(),
       context.feedId()
     ).parse();
 
@@ -81,6 +80,11 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     var builder = ParsedTripUpdate.builder(updateType, tripReference, psd.serviceDate())
       .withOptions(TripUpdateOptions.siriDefaults())
       .withDataSource(journey.getDataSource());
+
+    // Pass aimed departure time for deferred service date resolution
+    if (psd.aimedDepartureTime() != null) {
+      builder.withAimedDepartureTime(psd.aimedDepartureTime());
+    }
 
     // Handle cancellation (no stop times needed)
     if (TRUE.equals(journey.isCancellation())) {
