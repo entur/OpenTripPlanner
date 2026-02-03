@@ -28,7 +28,7 @@ import org.opentripplanner.raptor.configure.RaptorTestFactory;
  * specific route and trip. Apart from boarding cost, the cost of the access leg should be
  * considered 'free'.
  */
-class M01_OnBoardAccessTest {
+class N01_OnBoardAccessTest {
 
   private final TestTransitData data = new TestTransitData();
 
