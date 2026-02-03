@@ -25,6 +25,7 @@ group from simple to complex tests (`01` to `99`).
 - `K` - Transit priority
 - `L` - Time penalty
 - `M` - Direct transit search
+- `N` - On-board access
  
 
 
