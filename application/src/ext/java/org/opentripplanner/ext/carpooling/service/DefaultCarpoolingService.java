@@ -247,11 +247,14 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
   public DefaultAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType){
 
-    var position = accessEgressType.isAccess() ? insertionCandidate.dropoffPosition() : insertionCandidate.pickupPosition();
+    var position = accessEgressType.isAccess() ? insertionCandidate.dropoffPosition() - 1 : insertionCandidate.pickupPosition();
+    var state = accessEgressType.isAccess()
+      ? insertionCandidate.routeSegments().get(position).states.getLast()
+      : insertionCandidate.routeSegments().get(position).states.getFirst();
 
     var accessEgress = new DefaultAccessEgress(
       insertionCandidate.transitStop().stop.getIndex(),
-      insertionCandidate.routeSegments().get(position).states.getLast()
+      state
     );
 
     return accessEgress;
