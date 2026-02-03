@@ -27,8 +27,11 @@ public class CarpoolTreeVertexRouter {
   private final HashMap<Pair<Vertex>, GraphPath<State, Edge, Vertex>> pathCache = new HashMap<>();
 
 
-  public CarpoolTreeVertexRouter(Set<Vertex> vertices, RouteRequest routeRequest) {
+  public CarpoolTreeVertexRouter(Set<Vertex> vertices) {
     var streetRequest = new StreetRequest(StreetMode.CAR);
+    var request = RouteRequest.of().buildDefault();
+    var reverseRequest = RouteRequest.of().withArriveBy(true).buildDefault();
+
     Map<Vertex, ShortestPathTree> trees = vertices.stream().collect(
       Collectors.toMap(
         vertex -> vertex,
@@ -37,30 +40,26 @@ public class CarpoolTreeVertexRouter {
             new DurationSkipEdgeStrategy<>(Duration.ofMinutes(60))
           )
           .withDominanceFunction(new DominanceFunctions.EarliestArrival())
-          .withRequest(routeRequest)
+          .withRequest(request)
           .withStreetRequest(streetRequest)
           .withFrom(vertex).getShortestPathTree()
       )
     );
-    try {
-      Map<Vertex, ShortestPathTree> reverseTrees = vertices.stream().collect(
-        Collectors.toMap(
-          vertex -> vertex,
-          vertex -> StreetSearchBuilder.of()
-            .withSkipEdgeStrategy(
-              new DurationSkipEdgeStrategy<>(Duration.ofMinutes(60))
-            )
-            .withDominanceFunction(new DominanceFunctions.EarliestArrival())
-            .withRequest(routeRequest)
-            .withStreetRequest(streetRequest)
-            .withTo(vertex).getShortestPathTree()
-        )
-      );
-    }catch (Exception e){
-      var a = 1;
-    }
+    Map<Vertex, ShortestPathTree> reverseTrees = vertices.stream().collect(
+      Collectors.toMap(
+        vertex -> vertex,
+        vertex -> StreetSearchBuilder.of()
+          .withSkipEdgeStrategy(
+            new DurationSkipEdgeStrategy<>(Duration.ofMinutes(60))
+          )
+          .withDominanceFunction(new DominanceFunctions.EarliestArrival())
+          .withRequest(reverseRequest)
+          .withStreetRequest(streetRequest)
+          .withTo(vertex).getShortestPathTree()
+      )
+    );
     this.trees = trees;
-    this.reverseTrees = null;
+    this.reverseTrees = reverseTrees;
   }
 
   public GraphPath<State, Edge, Vertex> route(
@@ -71,7 +70,7 @@ public class CarpoolTreeVertexRouter {
     var isReverse = false;
     var tree = this.trees.get(from);
     if(tree == null) {
-      tree = this.reverseTrees.get(from);
+      tree = this.reverseTrees.get(to);
       isReverse = true;
     }
     if(tree == null) {
@@ -85,6 +84,9 @@ public class CarpoolTreeVertexRouter {
 
     var path = isReverse ? tree.getPath(from) : tree.getPath(to);
     pathCache.put(new Pair<>(from, to), path);
+    if(path == null){
+      var a = 1;
+    }
     return path;
   }
 
