@@ -58,21 +58,21 @@ public class ServiceDateParser {
       return null;
     }
 
-    // as a last resort, infer the service date from the calls
+    // as a last resort, infer the service date from the first call's aimed departure time
     // this may be incorrect for trips starting after midnight and registered on the previous
     // service date
-    for (var call : CallWrapper.of(journey)) {
-      ZonedDateTime time = call.getAimedDepartureTime();
-      if (time == null) {
-        time = call.getAimedArrivalTime();
-      }
-      if (time != null) {
-        ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-          time.toInstant(),
-          timeZone
-        );
-        return ServiceDateUtils.asServiceDay(startOfService);
-      }
+    var datetime = CallWrapper.of(journey)
+      .stream()
+      .findFirst()
+      .map(CallWrapper::getAimedDepartureTime)
+      .orElse(null);
+
+    if (datetime != null) {
+      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
+        datetime.toInstant(),
+        timeZone
+      );
+      return ServiceDateUtils.asServiceDay(startOfService);
     }
 
     return null;
