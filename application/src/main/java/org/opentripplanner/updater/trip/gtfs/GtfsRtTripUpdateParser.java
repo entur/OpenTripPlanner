@@ -111,7 +111,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     );
     builder.withStopTimeUpdates(stopTimeUpdates);
 
-    if (updateType == TripUpdateType.ADD_NEW_TRIP) {
+    if (updateType == TripUpdateType.ADD_NEW_TRIP || updateType == TripUpdateType.MODIFY_TRIP) {
       var creationInfo = buildTripCreationInfo(tripId, tripDescriptor, tripUpdate);
       builder.withTripCreationInfo(creationInfo);
     }

@@ -566,25 +566,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     java.time.LocalDate serviceDate,
     TimetableSnapshotManager snapshotManager
   ) {
-    // Get the scheduled trip times from the scheduled timetable
-    final var scheduledTimetable = scheduledPattern.getScheduledTimetable();
-    final var scheduledTripTimes = scheduledTimetable.getTripTimes(trip);
-
-    if (scheduledTripTimes == null) {
-      LOG.warn("Could not mark scheduled trip as deleted: {}", trip.getId());
-      return;
-    }
-
-    // Create a deleted version of the trip times
-    final var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    builder.deleteTrip();
-
-    // Update the buffer with the deleted trip times in the scheduled pattern
-    snapshotManager.updateBuffer(
-      new RealTimeTripUpdate(scheduledPattern, builder.build(), serviceDate)
-    );
-
-    LOG.debug("Marked scheduled trip {} as deleted on {}", trip.getId(), serviceDate);
+    HandlerUtils.markScheduledTripAsDeleted(trip, scheduledPattern, serviceDate, snapshotManager);
   }
 
   /**
