@@ -247,10 +247,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
   public DefaultAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType){
 
-    var position = accessEgressType.isAccess() ? insertionCandidate.dropoffPosition() - 1 : insertionCandidate.pickupPosition();
-    var state = accessEgressType.isAccess()
-      ? insertionCandidate.routeSegments().get(position).states.getLast()
-      : insertionCandidate.routeSegments().get(position).states.getFirst();
+    var position = insertionCandidate.dropoffPosition() - 1;
+    var state = insertionCandidate.routeSegments().get(position).states.getLast();
 
     var accessEgress = new DefaultAccessEgress(
       insertionCandidate.transitStop().stop.getIndex(),
@@ -269,10 +267,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
       }
 
       if (!StreetMode.CARPOOL.equals(request.journey().egress().mode()) && accessOrEgress.isEgress()) {
-        return Collections.emptyList();
-      }
-
-      if (accessOrEgress.isEgress()) {
         return Collections.emptyList();
       }
 
@@ -363,7 +357,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var accessEgresses = insertionCandidates.stream().map(it ->
         mapFlexAccessEgresses(it, accessOrEgress)
       ).toList();
-      return accessEgresses;
+       return accessEgresses;
 
     } catch (Exception e) {
       LOG.error(e.getMessage());
