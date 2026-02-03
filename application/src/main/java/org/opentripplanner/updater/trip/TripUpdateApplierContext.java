@@ -26,6 +26,9 @@ public final class TripUpdateApplierContext {
 
   private final SiriTripPatternCache tripPatternCache;
 
+  @Nullable
+  private final FuzzyTripMatcher fuzzyTripMatcher;
+
   /**
    * @param feedId The feed ID for this update source
    * @param timeZone The timezone for this feed
@@ -44,6 +47,38 @@ public final class TripUpdateApplierContext {
     StopResolver stopResolver,
     SiriTripPatternCache tripPatternCache
   ) {
+    this(
+      feedId,
+      timeZone,
+      snapshotManager,
+      tripResolver,
+      serviceDateResolver,
+      stopResolver,
+      tripPatternCache,
+      null
+    );
+  }
+
+  /**
+   * @param feedId The feed ID for this update source
+   * @param timeZone The timezone for this feed
+   * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
+   * @param tripResolver The resolver for looking up trips from trip references
+   * @param serviceDateResolver The resolver for extracting service dates from trip updates
+   * @param stopResolver The resolver for looking up stops from stop references
+   * @param tripPatternCache The cache for creating and reusing modified trip patterns
+   * @param fuzzyTripMatcher The fuzzy matcher for finding trips when exact match fails (may be null)
+   */
+  public TripUpdateApplierContext(
+    String feedId,
+    ZoneId timeZone,
+    @Nullable TimetableSnapshotManager snapshotManager,
+    TripResolver tripResolver,
+    ServiceDateResolver serviceDateResolver,
+    StopResolver stopResolver,
+    SiriTripPatternCache tripPatternCache,
+    @Nullable FuzzyTripMatcher fuzzyTripMatcher
+  ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
     this.snapshotManager = snapshotManager;
@@ -57,6 +92,7 @@ public final class TripUpdateApplierContext {
       tripPatternCache,
       "tripPatternCache must not be null"
     );
+    this.fuzzyTripMatcher = fuzzyTripMatcher;
   }
 
   public String feedId() {
@@ -88,6 +124,11 @@ public final class TripUpdateApplierContext {
     return tripPatternCache;
   }
 
+  @Nullable
+  public FuzzyTripMatcher fuzzyTripMatcher() {
+    return fuzzyTripMatcher;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -104,7 +145,8 @@ public final class TripUpdateApplierContext {
       Objects.equals(tripResolver, that.tripResolver) &&
       Objects.equals(serviceDateResolver, that.serviceDateResolver) &&
       Objects.equals(stopResolver, that.stopResolver) &&
-      Objects.equals(tripPatternCache, that.tripPatternCache)
+      Objects.equals(tripPatternCache, that.tripPatternCache) &&
+      Objects.equals(fuzzyTripMatcher, that.fuzzyTripMatcher)
     );
   }
 
@@ -117,7 +159,8 @@ public final class TripUpdateApplierContext {
       tripResolver,
       serviceDateResolver,
       stopResolver,
-      tripPatternCache
+      tripPatternCache,
+      fuzzyTripMatcher
     );
   }
 
@@ -140,6 +183,8 @@ public final class TripUpdateApplierContext {
       stopResolver +
       ", tripPatternCache=" +
       tripPatternCache +
+      ", fuzzyTripMatcher=" +
+      fuzzyTripMatcher +
       '}'
     );
   }
