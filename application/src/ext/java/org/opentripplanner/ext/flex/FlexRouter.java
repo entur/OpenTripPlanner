@@ -36,7 +36,6 @@ import org.opentripplanner.transit.model.filter.expr.Matcher;
 import org.opentripplanner.transit.model.filter.transit.TripMatcherFactory;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.booking.RoutingBookingInfo;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -59,7 +58,8 @@ public class FlexRouter {
   /* Request data */
   private final ZonedDateTime startOfTime;
   private final int requestedTime;
-  private final int requestedBookingTime;
+  private final Instant requestedBookingTimeInstant;
+  private final ZoneId timeZone;
   private final List<FlexServiceDate> dates;
   private final Matcher<Trip> matcher;
 
@@ -117,9 +117,8 @@ public class FlexRouter {
     LocalDate searchDate = LocalDate.ofInstant(requestedTime, tz);
     this.startOfTime = ServiceDateUtils.asStartOfService(searchDate, tz);
     this.requestedTime = ServiceDateUtils.secondsSinceStartOfTime(startOfTime, requestedTime);
-    this.requestedBookingTime = requestedBookingTime == null
-      ? RoutingBookingInfo.NOT_SET
-      : ServiceDateUtils.secondsSinceStartOfTime(startOfTime, requestedBookingTime);
+    this.requestedBookingTimeInstant = requestedBookingTime;
+    this.timeZone = tz;
     this.dates = createFlexServiceDates(
       transitService,
       additionalPastSearchDays,
@@ -187,10 +186,11 @@ public class FlexRouter {
     for (int d = -additionalPastSearchDays; d <= additionalFutureSearchDays; ++d) {
       LocalDate date = searchDate.plusDays(d);
       dates.add(
-        new FlexServiceDate(
+        FlexServiceDate.of(
           date,
           ServiceDateUtils.secondsSinceStartOfTime(startOfTime, date),
-          requestedBookingTime,
+          requestedBookingTimeInstant,
+          timeZone,
           transitService.getServiceCodesRunningForDate(date)
         )
       );
