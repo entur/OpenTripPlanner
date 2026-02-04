@@ -55,20 +55,27 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
   private final double radiusMeters;
 
   /**
-   * @param transitService             A TransitService used in finding information about the
-   *                                   various places.
-   * @param filterByModes              A list of TransitModes for which to find Stops and
-   *                                   PatternAtStops. Use null to disable the filtering.
-   * @param filterByPlaceTypes         A list of PlaceTypes to search for. Use null to disable the
-   *                                   filtering, and search for all types.
-   * @param filterByStops              A list of Stop ids for which to find Stops and
-   *                                   PatternAtStops. Use null to disable the filtering.
-   * @param filterByRoutes             A list of Route ids used for filtering Stops. Only the stops
-   *                                   which are served by the route are returned. Use null to
-   *                                   disable the filtering.
-   * @param filterByBikeRentalStations A list of VehicleRentalStation ids to use in filtering.  Use
-   *                                   null to disable the filtering.
-   * @param maxResults                 Maximum number of results to return.
+   * @param transitService                A TransitService used in finding information about the
+   *                                      various places.
+   * @param filterByModes                 A list of TransitModes for which to find Stops and
+   *                                      PatternAtStops. Use null to disable the filtering.
+   * @param filterByPlaceTypes            A list of PlaceTypes to search for. Use null to disable
+   *                                      the filtering, and search for all types.
+   * @param filterByStops                 A list of Stop ids for which to find Stops and
+   *                                      PatternAtStops. Use null to disable the filtering.
+   * @param filterByRoutes                A list of Route ids used for filtering Stops. Only the
+   *                                      stops which are served by the route are returned. Use null
+   *                                      to disable the filtering.
+   * @param filterByBikeRentalStations    A list of VehicleRentalStation ids to use in filtering.
+   *                                      Use null to disable the filtering.
+   * @param filterByVehicleFormFactor     A list of RentalFormFactors to use in filtering. Use null
+   *                                      to disable the filtering.
+   * @param filterByVehiclePropulsionType A list of PropulsionTypes to use in filtering. Use null to
+   *                                      disable the filtering.
+   * @param filterByNetwork               A list of networks to use in the filtering. Use null to
+   *                                      disable the filtering.
+   * @param maxResults                    Maximum number of results to return.
+   * @param radiusMeters                  The radius in meters that results are limited to.
    */
   public PlaceFinderTraverseVisitor(
     TransitService transitService,
