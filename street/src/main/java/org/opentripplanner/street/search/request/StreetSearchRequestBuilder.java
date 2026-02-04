@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
@@ -34,6 +35,9 @@ public class StreetSearchRequestBuilder {
   Collection<ExtensionRequestContext> extensionRequestContexts;
   Duration timeout;
 
+  @Nullable
+  GeofencingZoneIndex geofencingZoneIndex;
+
   StreetSearchRequestBuilder(StreetSearchRequest original) {
     this.startTime = original.startTime();
     this.mode = original.mode();
@@ -53,6 +57,7 @@ public class StreetSearchRequestBuilder {
     this.intersectionTraversalCalculator = original.intersectionTraversalCalculator();
     this.extensionRequestContexts = original.listExtensionRequestContexts();
     this.timeout = original.timeout();
+    this.geofencingZoneIndex = original.geofencingZoneIndex();
   }
 
   public StreetSearchRequestBuilder withStartTime(Instant startTime) {
@@ -153,6 +158,13 @@ public class StreetSearchRequestBuilder {
     Collection<ExtensionRequestContext> contexts
   ) {
     this.extensionRequestContexts = contexts;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withGeofencingZoneIndex(
+    @Nullable GeofencingZoneIndex geofencingZoneIndex
+  ) {
+    this.geofencingZoneIndex = geofencingZoneIndex;
     return this;
   }
 

@@ -10,6 +10,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.astar.spi.AStarRequest;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -49,6 +50,9 @@ public class StreetSearchRequest implements AStarRequest {
   private final Duration timeout;
 
   @Nullable
+  private final GeofencingZoneIndex geofencingZoneIndex;
+
+  @Nullable
   private final RentalPeriod rentalPeriod;
 
   /**
@@ -73,6 +77,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.intersectionTraversalCalculator = IntersectionTraversalCalculator.DEFAULT;
     this.extensionRequestContexts = List.of();
     this.timeout = Duration.ofSeconds(5);
+    this.geofencingZoneIndex = null;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -94,6 +99,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.intersectionTraversalCalculator = requireNonNull(builder.intersectionTraversalCalculator);
     this.extensionRequestContexts = List.copyOf(requireNonNull(builder.extensionRequestContexts));
     this.timeout = requireNonNull(builder.timeout);
+    this.geofencingZoneIndex = builder.geofencingZoneIndex;
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -176,6 +182,11 @@ public class StreetSearchRequest implements AStarRequest {
 
   public StreetSearchRequestBuilder copyOfReversed(Instant time) {
     return copyOf(this).withStartTime(time).withArriveBy(!arriveBy);
+  }
+
+  @Nullable
+  public GeofencingZoneIndex geofencingZoneIndex() {
+    return geofencingZoneIndex;
   }
 
   /**

@@ -79,5 +79,7 @@ public interface RentalRestrictionExtension {
     NO_TRAVERSAL,
     NO_DROP_OFF,
     BUSINESS_AREA_BORDER,
+    ZONE_ENTRY,
+    ZONE_EXIT,
   }
 }

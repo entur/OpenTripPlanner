@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.geometry.CompactElevationProfile;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -68,6 +69,13 @@ public class Graph implements Serializable {
   private final OpeningHoursCalendarService openingHoursCalendarService;
 
   private transient StreetIndex streetIndex;
+
+  /**
+   * Spatial index for geofencing zones, used at vehicle pickup to initialize
+   * zone state for boundary-only geofencing.
+   */
+  @Nullable
+  private transient GeofencingZoneIndex geofencingZoneIndex;
 
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;
@@ -363,5 +371,22 @@ public class Graph implements Serializable {
     if (streetIndex == null) {
       throw new IllegalStateException("Graph must be indexed before querying.");
     }
+  }
+
+  /**
+   * Set the geofencing zone spatial index for boundary-only geofencing.
+   * Called during graph updates when geofencing zones are loaded.
+   */
+  public void setGeofencingZoneIndex(@Nullable GeofencingZoneIndex geofencingZoneIndex) {
+    this.geofencingZoneIndex = geofencingZoneIndex;
+  }
+
+  /**
+   * Get the geofencing zone spatial index.
+   * May be null if no geofencing zones are configured.
+   */
+  @Nullable
+  public GeofencingZoneIndex getGeofencingZoneIndex() {
+    return geofencingZoneIndex;
   }
 }

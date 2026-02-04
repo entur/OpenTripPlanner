@@ -1,0 +1,84 @@
+title: |md
+  # Current: VehicleRentalUpdater Dependencies
+| {near: top-center}
+
+direction: down
+
+application: "application module" {
+  style.fill: "#e8f0fe"
+
+  updater: VehicleRentalUpdater {
+    style.fill: "#fff3cd"
+    polling: "runPolling()"
+    writer: "GraphWriterRunnable" {
+      style.fill: "#f8d7da"
+      style.font-size: 13
+    }
+    geofencing-updater: "GeofencingVertexUpdater" {
+      style.fill: "#f8d7da"
+    }
+      datasource: "GbfsVehicleRentalDataSource" {
+        style.fill: "#d4edda"
+      }
+  }
+
+  vertex-linker: "VertexLinker" {
+    style.fill: "#f8d7da"
+  }
+
+  vertex-factory: "VertexFactory" {
+    style.fill: "#f8d7da"
+  }
+}
+
+street: "street module" {
+  style.fill: "#f0e8fe"
+
+  service: "VehicleRentalRepository" {
+    style.fill: "#d4edda"
+    add: "addVehicleRentalStation()"
+    remove: "removeVehicleRentalStation()"
+  }
+
+  graph: Graph {
+    style.fill: "#e2e3e5"
+  }
+
+  edges: "VehicleRentalEdge\nStreetVehicleRentalLink\nVehicleRentalPlaceVertex" {
+    style.fill: "#e2e3e5"
+  }
+
+  geofencing-model: "GeofencingZone\nGeofencingZoneExtension\nBusinessAreaBorder" {
+    style.fill: "#e2e3e5"
+  }
+
+  domain: "VehicleRentalPlace\nVehicleRentalStation\nVehicleRentalVehicle" {
+    style.fill: "#e2e3e5"
+  }
+}
+
+# Updater polls datasource
+application.updater.polling -> application.updater.datasource: "polls & maps" {style.stroke: "#28a745"}
+
+# Datasource produces domain objects
+application.updater.datasource -> street.domain: "produces" {style.stroke: "#28a745"}
+
+# GraphWriterRunnable does ALL the graph mutation work
+application.updater.writer -> street.service: "add/remove places" {style.stroke: "#dc3545"}
+application.updater.writer -> application.vertex-factory: "creates vertices" {style.stroke: "#dc3545"}
+application.updater.writer -> application.vertex-linker: "links to street graph" {style.stroke: "#dc3545"}
+application.updater.writer -> street.edges: "creates edges" {style.stroke: "#dc3545"}
+application.updater.writer -> application.updater.geofencing-updater: "applies zones" {style.stroke: "#dc3545"}
+application.updater.geofencing-updater -> street.graph: "modifies edges" {style.stroke: "#dc3545"}
+application.updater.geofencing-updater -> street.geofencing-model: "creates extensions" {style.stroke: "#dc3545"}
+application.vertex-linker -> street.graph: "splits edges, links" {style.stroke: "#dc3545"}
+application.vertex-factory -> street.graph: "adds vertices" {style.stroke: "#dc3545"}
+
+legend: |md
+  🔴 Red: Graph mutation responsibilities spread across updater
+  🟢 Green: Data fetching & mapping (updater's core job)
+| {
+  near: bottom-center
+  style.fill: "#fff"
+  style.font-size: 13
+}

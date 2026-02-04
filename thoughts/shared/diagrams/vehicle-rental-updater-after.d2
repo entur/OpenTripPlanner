@@ -1,0 +1,106 @@
+title: |md
+  # Proposed: Graph Mutation Moved to Service Domain
+| {near: top-center}
+
+direction: down
+
+application: "application module" {
+  style.fill: "#e8f0fe"
+
+  updater: VehicleRentalUpdater {
+    style.fill: "#fff3cd"
+    polling: "runPolling()"
+    writer: "GraphWriterRunnable" {
+      style.fill: "#d4edda"
+      style.font-size: 13
+    }
+  }
+
+  datasource: "GbfsVehicleRentalDataSource" {
+    style.fill: "#d4edda"
+  }
+}
+
+street: "street module" {
+  style.fill: "#f0e8fe"
+
+  service: "VehicleRentalRepository" {
+    style.fill: "#d4edda"
+    update: "updatePlaces(graph, places, zones)"
+    add: "addVehicleRentalStation()"
+    remove: "removeVehicleRentalStation()"
+  }
+
+  linker-spi: "VehicleRentalPlaceLinker (SPI)" {
+    style.fill: "#cfe2ff"
+    style.stroke: "#0d6efd"
+    style.font-size: 13
+  }
+
+  graph-mutator: "Graph Mutation Logic" {
+    style.fill: "#f8d7da"
+    style.font-size: 13
+    vertex-creation: "create vertices"
+    edge-creation: "create edges & links"
+    geofencing: "apply geofencing zones"
+    indexing: "build GeofencingZoneIndex"
+  }
+
+  graph: Graph {
+    style.fill: "#e2e3e5"
+  }
+
+  edges: "VehicleRentalEdge\nStreetVehicleRentalLink\nVehicleRentalPlaceVertex" {
+    style.fill: "#e2e3e5"
+  }
+
+  geofencing-model: "GeofencingZone\nGeofencingZoneExtension\nBusinessAreaBorder" {
+    style.fill: "#e2e3e5"
+  }
+
+  domain: "VehicleRentalPlace\nVehicleRentalStation\nVehicleRentalVehicle" {
+    style.fill: "#e2e3e5"
+  }
+}
+
+application.linker-impl: "VertexLinker (impl)" {
+  style.fill: "#cfe2ff"
+  style.stroke: "#0d6efd"
+  style.font-size: 13
+}
+
+# Updater polls datasource
+application.updater.polling -> application.datasource: "polls & maps" {style.stroke: "#28a745"}
+
+# Datasource produces domain objects
+application.datasource -> street.domain: "produces" {style.stroke: "#28a745"}
+
+# GraphWriterRunnable delegates to service
+application.updater.writer -> street.service.update: "delegates" {
+  style.stroke: "#28a745"
+  style.stroke-width: 2
+}
+
+# Service owns all graph mutation
+street.service -> street.graph-mutator: "owns" {style.stroke: "#6f42c1"}
+street.graph-mutator -> street.graph: "modifies" {style.stroke: "#dc3545"}
+street.graph-mutator -> street.edges: "creates" {style.stroke: "#dc3545"}
+street.graph-mutator -> street.geofencing-model: "applies" {style.stroke: "#dc3545"}
+street.graph-mutator -> street.linker-spi: "uses" {style.stroke: "#0d6efd"}
+
+# SPI implemented in application module
+application.linker-impl -> street.linker-spi: "implements" {
+  style.stroke: "#0d6efd"
+  style.stroke-dash: 4
+}
+
+legend: |md
+  🔴 Red: Graph mutation (now encapsulated in service)
+  🟢 Green: Updater's responsibilities (fetch, map, delegate)
+  🟣 Purple: Service owns mutation logic
+  🔵 Blue: SPI boundary (VertexLinker injected)
+| {
+  near: bottom-center
+  style.fill: "#fff"
+  style.font-size: 13
+}
