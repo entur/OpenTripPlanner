@@ -75,6 +75,14 @@ public interface RentalRestrictionExtension {
     return Integer.MAX_VALUE;
   }
 
+  /**
+   * Check if this extension contains a geofencing boundary marker.
+   * Used as a fast guard to avoid processing vertices without boundaries during edge traversal.
+   */
+  default boolean hasGeofencingBoundary() {
+    return false;
+  }
+
   enum RestrictionType {
     NO_TRAVERSAL,
     NO_DROP_OFF,

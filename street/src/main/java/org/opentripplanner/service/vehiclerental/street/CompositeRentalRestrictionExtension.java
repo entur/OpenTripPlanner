@@ -122,4 +122,14 @@ public final class CompositeRentalRestrictionExtension implements RentalRestrict
       .flatMap(e -> e.networks().stream())
       .toList();
   }
+
+  @Override
+  public boolean hasGeofencingBoundary() {
+    for (var ext : extensions) {
+      if (ext.hasGeofencingBoundary()) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

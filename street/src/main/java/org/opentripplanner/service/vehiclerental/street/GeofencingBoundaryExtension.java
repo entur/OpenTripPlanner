@@ -81,6 +81,11 @@ public record GeofencingBoundaryExtension(GeofencingZone zone, boolean entering)
   }
 
   @Override
+  public boolean hasGeofencingBoundary() {
+    return true;
+  }
+
+  @Override
   public String toString() {
     return (entering ? "ENTER:" : "EXIT:") + zone.id().toString();
   }
