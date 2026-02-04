@@ -16,7 +16,6 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.StreetVertex;
-import org.opentripplanner.service.vehiclerental.street.GeofencingVertexUpdater;
 
 class GeofencingVertexUpdaterTest {
 
