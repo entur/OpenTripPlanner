@@ -910,7 +910,7 @@ public class TransmodelGraphQLSchemaFactory {
             GraphQLArgument.newArgument()
               .name("filterByVehicleFormFactor")
               .description(
-                "Only include rental vehicles with this form factor. Only checked for places with a vehicle type."
+                "Only include rental vehicles with a form factor that matches one in this list. Only checked for places with a vehicle type."
               )
               .type(new GraphQLList(new GraphQLNonNull(RENTAL_FORM_FACTOR)))
               .build()
@@ -919,7 +919,7 @@ public class TransmodelGraphQLSchemaFactory {
             GraphQLArgument.newArgument()
               .name("filterByVehiclePropulsionType")
               .description(
-                "Only include rental vehicles with this propulsion type. Only checked for places with a vehicle type."
+                "Only include rental vehicles with a propulsion type that matches one in this list. Only checked for places with a vehicle type."
               )
               .type(new GraphQLList(new GraphQLNonNull(PROPULSION_TYPE)))
               .build()
