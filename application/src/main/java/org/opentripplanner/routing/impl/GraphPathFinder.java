@@ -15,6 +15,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
@@ -59,8 +60,11 @@ public class GraphPathFinder {
 
   private final float maxCarSpeed;
 
+  @Nullable
+  private final GeofencingZoneIndex geofencingZoneIndex;
+
   public GraphPathFinder(@Nullable TraverseVisitor<State, Edge> traverseVisitor) {
-    this(traverseVisitor, List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED);
+    this(traverseVisitor, List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED, null);
   }
 
   public GraphPathFinder(
@@ -68,9 +72,19 @@ public class GraphPathFinder {
     Collection<ExtensionRequestContext> extensionRequestContexts,
     float maxCarSpeed
   ) {
+    this(traverseVisitor, extensionRequestContexts, maxCarSpeed, null);
+  }
+
+  public GraphPathFinder(
+    @Nullable TraverseVisitor<State, Edge> traverseVisitor,
+    Collection<ExtensionRequestContext> extensionRequestContexts,
+    float maxCarSpeed,
+    @Nullable GeofencingZoneIndex geofencingZoneIndex
+  ) {
     this.traverseVisitor = traverseVisitor;
     this.extensionRequestContexts = Objects.requireNonNull(extensionRequestContexts);
     this.maxCarSpeed = maxCarSpeed;
+    this.geofencingZoneIndex = geofencingZoneIndex;
   }
 
   /**
@@ -98,7 +112,8 @@ public class GraphPathFinder {
       .withStreetRequest(request.journey().direct())
       .withFrom(from)
       .withTo(to)
-      .withExtensionRequestContexts(extensionRequestContexts);
+      .withExtensionRequestContexts(extensionRequestContexts)
+      .withGeofencingZoneIndex(geofencingZoneIndex);
 
     // If the search has a traverseVisitor(GraphVisualizer) attached to it, set it as a callback
     // for the AStar search

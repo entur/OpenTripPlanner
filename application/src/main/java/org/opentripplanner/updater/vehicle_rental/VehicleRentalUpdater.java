@@ -231,8 +231,12 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestModifiedEdges.forEach(StreetEdge::removeRentalExtension);
 
         var updater = new GeofencingVertexUpdater(context.graph()::findEdges);
-        latestModifiedEdges = updater.applyGeofencingZones(geofencingZones);
+        var result = updater.applyGeofencingZones(geofencingZones);
+        latestModifiedEdges = result.modifiedEdges();
         latestAppliedGeofencingZones = geofencingZones;
+
+        // Store the spatial index on the graph for pickup zone initialization
+        context.graph().setGeofencingZoneIndex(result.index());
 
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);

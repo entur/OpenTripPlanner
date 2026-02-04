@@ -9,6 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiLineString;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
@@ -32,6 +33,7 @@ import org.opentripplanner.street.model.edge.StreetEdge;
  */
 public class GeofencingVertexUpdater {
 
+  private static final GeometryFactory GF = GeometryUtils.getGeometryFactory();
   private final Function<Envelope, Collection<Edge>> getEdgesForEnvelope;
 
   public GeofencingVertexUpdater(Function<Envelope, Collection<Edge>> getEdgesForEnvelope) {
@@ -39,22 +41,30 @@ public class GeofencingVertexUpdater {
   }
 
   /**
-   * Applies the restrictions described in the geofencing zones to eges by adding
-   * {@link RentalRestrictionExtension} to them.
+   * Result of applying geofencing zones, containing both the spatial index
+   * and the map of modified edges (for cleanup during zone updates).
    */
-  public Map<StreetEdge, RentalRestrictionExtension> applyGeofencingZones(
-    Collection<GeofencingZone> geofencingZones
-  ) {
+  public record GeofencingResult(
+    GeofencingZoneIndex index,
+    Map<StreetEdge, RentalRestrictionExtension> modifiedEdges
+  ) {}
+
+  /**
+   * Applies the restrictions described in the geofencing zones to edges by adding
+   * {@link RentalRestrictionExtension} to them.
+   * <p>
+   * For zones with restrictions (no drop-off, no traversal), uses boundary-only processing
+   * where restrictions are tracked in routing state and only boundary-crossing edges are marked.
+   * For business areas (no restrictions), adds traversal ban to boundary edges.
+   *
+   * @return Result containing a spatial index for zone containment queries and modified edges map
+   */
+  public GeofencingResult applyGeofencingZones(Collection<GeofencingZone> geofencingZones) {
+    var modifiedEdges = new HashMap<StreetEdge, RentalRestrictionExtension>();
     var restrictedZones = geofencingZones.stream().filter(GeofencingZone::hasRestriction).toList();
 
-    // these are the edges inside business area where exceptions like "no pass through"
-    // or "no drop-off" are added
-    var restrictedEdges = addExtensionToIntersectingStreetEdges(
-      restrictedZones,
-      GeofencingZoneExtension::new
-    );
-
-    var updates = new HashMap<>(restrictedEdges);
+    // Apply boundary-only restrictions for zones with drop-off/traversal bans
+    modifiedEdges.putAll(applyBoundaryRestrictions(restrictedZones));
 
     var generalBusinessAreas = geofencingZones
       .stream()
@@ -77,56 +87,87 @@ public class GeofencingVertexUpdater {
         .createGeometryCollection(polygons)
         .union();
 
-      var updated = applyExtension(
-        unionOfBusinessAreas.getBoundary(),
-        new BusinessAreaBorder(network)
+      modifiedEdges.putAll(
+        applyExtension(unionOfBusinessAreas.getBoundary(), new BusinessAreaBorder(network))
       );
-
-      updates.putAll(updated);
     }
 
-    return Map.copyOf(updates);
+    // Build and return spatial index for pickup zone queries
+    var index = new GeofencingZoneIndex(geofencingZones);
+    return new GeofencingResult(index, Map.copyOf(modifiedEdges));
   }
 
-  private Map<StreetEdge, RentalRestrictionExtension> addExtensionToIntersectingStreetEdges(
-    List<GeofencingZone> zones,
-    Function<GeofencingZone, RentalRestrictionExtension> createExtension
+  /**
+   * Apply boundary-only restrictions for zones with restrictions.
+   * Only marks edges that cross zone boundaries with entry/exit information.
+   * The actual restrictions are enforced via state-based zone tracking.
+   *
+   * @return Map of modified edges for cleanup tracking
+   */
+  private Map<StreetEdge, RentalRestrictionExtension> applyBoundaryRestrictions(
+    List<GeofencingZone> zones
   ) {
-    var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
+    var modifiedEdges = new HashMap<StreetEdge, RentalRestrictionExtension>();
     for (GeofencingZone zone : zones) {
-      var geom = zone.geometry();
-      var ext = createExtension.apply(zone);
-      edgesUpdated.putAll(applyExtension(geom, ext));
+      var boundary = zone.geometry().getBoundary();
+      var preparedZone = PreparedGeometryFactory.prepare(zone.geometry());
+      var preparedBoundary = PreparedGeometryFactory.prepare(boundary);
+
+      Set<Edge> candidates = getBoundaryEdgeCandidates(boundary);
+
+      for (var e : candidates) {
+        if (
+          e instanceof StreetEdge streetEdge &&
+          preparedBoundary.intersects(streetEdge.getGeometry())
+        ) {
+          // Determine if traversing this edge enters or exits the zone
+          // by checking if the "to" vertex is inside the zone
+          var toPoint = GF.createPoint(streetEdge.getToVertex().getCoordinate());
+          boolean entering = preparedZone.contains(toPoint);
+
+          var boundaryExt = new GeofencingBoundaryExtension(zone, entering);
+          streetEdge.addRentalRestrictionToDestination(boundaryExt);
+          modifiedEdges.put(streetEdge, boundaryExt);
+        }
+      }
     }
-    return edgesUpdated;
+    return modifiedEdges;
   }
 
+  /**
+   * Get candidate edges that might cross a boundary geometry.
+   */
+  private Set<Edge> getBoundaryEdgeCandidates(Geometry boundary) {
+    if (boundary instanceof LineString ring) {
+      return getEdgesAlongLineStrings(List.of(ring));
+    } else if (boundary instanceof MultiLineString mls) {
+      var lineStrings = GeometryUtils.getLineStrings(mls);
+      return getEdgesAlongLineStrings(lineStrings);
+    } else {
+      return Set.copyOf(getEdgesForEnvelope.apply(boundary.getEnvelopeInternal()));
+    }
+  }
+
+  /**
+   * Apply an extension to all edges that intersect a geometry (used for business area borders).
+   *
+   * @return Map of modified edges for cleanup tracking
+   */
   private Map<StreetEdge, RentalRestrictionExtension> applyExtension(
     Geometry geom,
     RentalRestrictionExtension ext
   ) {
-    var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
-    Set<Edge> candidates;
-    // for business areas we only care about the borders so we compute the boundary of the
-    // (multi) polygon. this can either be a MultiLineString or a LineString
-    if (geom instanceof LineString ring) {
-      candidates = getEdgesAlongLineStrings(List.of(ring));
-    } else if (geom instanceof MultiLineString mls) {
-      var lineStrings = GeometryUtils.getLineStrings(mls);
-      candidates = getEdgesAlongLineStrings(lineStrings);
-    } else {
-      candidates = Set.copyOf(getEdgesForEnvelope.apply(geom.getEnvelopeInternal()));
-    }
-
+    var modifiedEdges = new HashMap<StreetEdge, RentalRestrictionExtension>();
+    Set<Edge> candidates = getBoundaryEdgeCandidates(geom);
     PreparedGeometry preparedZone = PreparedGeometryFactory.prepare(geom);
 
     for (var e : candidates) {
       if (e instanceof StreetEdge streetEdge && preparedZone.intersects(streetEdge.getGeometry())) {
         streetEdge.addRentalRestriction(ext);
-        edgesUpdated.put(streetEdge, ext);
+        modifiedEdges.put(streetEdge, ext);
       }
     }
-    return edgesUpdated;
+    return modifiedEdges;
   }
 
   /**

@@ -21,6 +21,7 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.model.calendar.openinghours.OpeningHoursCalendarService;
 import org.opentripplanner.routing.linking.Scope;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.StationCentroidVertex;
@@ -69,6 +70,13 @@ public class Graph implements Serializable {
   private final OpeningHoursCalendarService openingHoursCalendarService;
 
   private transient StreetIndex streetIndex;
+
+  /**
+   * Spatial index for geofencing zones, used at vehicle pickup to initialize
+   * zone state for boundary-only geofencing.
+   */
+  @Nullable
+  private transient GeofencingZoneIndex geofencingZoneIndex;
 
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;
@@ -381,5 +389,22 @@ public class Graph implements Serializable {
     if (streetIndex == null) {
       throw new IllegalStateException("Graph must be indexed before querying.");
     }
+  }
+
+  /**
+   * Set the geofencing zone spatial index for boundary-only geofencing.
+   * Called during graph updates when geofencing zones are loaded.
+   */
+  public void setGeofencingZoneIndex(@Nullable GeofencingZoneIndex geofencingZoneIndex) {
+    this.geofencingZoneIndex = geofencingZoneIndex;
+  }
+
+  /**
+   * Get the geofencing zone spatial index.
+   * May be null if no geofencing zones are configured.
+   */
+  @Nullable
+  public GeofencingZoneIndex getGeofencingZoneIndex() {
+    return geofencingZoneIndex;
   }
 }

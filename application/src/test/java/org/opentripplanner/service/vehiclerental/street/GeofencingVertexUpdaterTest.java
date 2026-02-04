@@ -1,7 +1,10 @@
 package org.opentripplanner.service.vehiclerental.street;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
 import static org.opentripplanner.street.model._data.StreetModelForTest.streetEdge;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
@@ -26,11 +29,15 @@ class GeofencingVertexUpdaterTest {
   StreetVertex insideBusinessZone = intersectionVertex(59.95961972533365, 10.76411762080707);
   StreetVertex outsideBusinessZone = intersectionVertex(59.963673477748955, 10.764723087536936);
 
+  // Edge fully inside Frogner Park
   StreetEdge insideFrognerPark = streetEdge(insideFrognerPark1, insideFrognerPark2);
-  StreetEdge halfInHalfOutFrognerPark = streetEdge(insideFrognerPark2, outsideFrognerPark1);
+  // Edge crossing the Frogner Park boundary (inside -> outside)
+  StreetEdge crossingFrognerParkBoundary = streetEdge(insideFrognerPark2, outsideFrognerPark1);
+  // Edge crossing the business area boundary (inside -> outside)
   StreetEdge businessBorder = streetEdge(insideBusinessZone, outsideBusinessZone);
+
   final GeofencingVertexUpdater updater = new GeofencingVertexUpdater(ignored ->
-    List.of(insideFrognerPark, halfInHalfOutFrognerPark, businessBorder)
+    List.of(insideFrognerPark, crossingFrognerParkBoundary, businessBorder)
   );
 
   static GeometryFactory fac = GeometryUtils.getGeometryFactory();
@@ -52,53 +59,65 @@ class GeofencingVertexUpdaterTest {
   );
 
   @Test
-  void insideZone() {
+  void boundaryOnlyProcessing_edgeInsideZoneNotMarked() {
+    // With boundary-only processing, edges fully inside a zone are NOT marked
+    // (restrictions are tracked in routing state instead)
     assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertInstanceOf(NoRestriction.class, insideFrognerPark.getToVertex().rentalRestrictions());
 
     updater.applyGeofencingZones(List.of(zone, businessArea));
 
-    var ext = insideFrognerPark.getFromVertex().rentalRestrictions();
-
-    assertInstanceOf(GeofencingZoneExtension.class, ext);
-
-    var e = (GeofencingZoneExtension) ext;
-
-    assertEquals(zone, e.zone());
+    // Edge fully inside zone should still have no restrictions
+    // (boundary-only approach doesn't mark interior edges)
+    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertInstanceOf(NoRestriction.class, insideFrognerPark.getToVertex().rentalRestrictions());
   }
 
   @Test
-  void halfInHalfOutZone() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
-
-    updater.applyGeofencingZones(List.of(zone, businessArea));
-
-    var ext = insideFrognerPark.getFromVertex().rentalRestrictions();
-
-    assertInstanceOf(GeofencingZoneExtension.class, ext);
-
-    var e = (GeofencingZoneExtension) ext;
-
-    assertEquals(zone, e.zone());
-  }
-
-  @Test
-  void outsideZone() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
-    updater.applyGeofencingZones(List.of(zone, businessArea));
+  void boundaryOnlyProcessing_boundaryCrossingEdgeMarked() {
+    // Edges crossing the zone boundary should be marked with GeofencingBoundaryExtension
     assertInstanceOf(
-      GeofencingZoneExtension.class,
-      insideFrognerPark.getFromVertex().rentalRestrictions()
+      NoRestriction.class,
+      crossingFrognerParkBoundary.getToVertex().rentalRestrictions()
     );
+
+    updater.applyGeofencingZones(List.of(zone, businessArea));
+
+    // The "to" vertex of the boundary-crossing edge should have the boundary extension
+    // (since we're going from inside to outside, it's an exit)
+    var toRestrictions = crossingFrognerParkBoundary.getToVertex().rentalRestrictions();
+    assertInstanceOf(GeofencingBoundaryExtension.class, toRestrictions);
+
+    var boundaryExt = (GeofencingBoundaryExtension) toRestrictions;
+    assertEquals(zone, boundaryExt.zone());
+    // Going from insideFrognerPark2 to outsideFrognerPark1, so exiting (entering = false)
+    assertFalse(boundaryExt.entering());
   }
 
   @Test
   void businessAreaBorder() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
-    var updated = updater.applyGeofencingZones(List.of(zone, businessArea));
+    assertInstanceOf(NoRestriction.class, businessBorder.getFromVertex().rentalRestrictions());
 
-    assertEquals(3, updated.size());
+    var result = updater.applyGeofencingZones(List.of(zone, businessArea));
 
-    var ext = (BusinessAreaBorder) businessBorder.getFromVertex().rentalRestrictions();
+    // Business area borders use the old BusinessAreaBorder extension
+    var ext = businessBorder.getFromVertex().rentalRestrictions();
     assertInstanceOf(BusinessAreaBorder.class, ext);
+
+    // Result should contain modified edges
+    assertFalse(result.modifiedEdges().isEmpty());
+  }
+
+  @Test
+  void geofencingZoneIndexCreated() {
+    var result = updater.applyGeofencingZones(List.of(zone, businessArea));
+
+    assertNotNull(result.index());
+    assertFalse(result.index().isEmpty());
+    assertEquals(2, result.index().size());
+
+    // Index should be able to find zones containing points
+    var zonesAtFrogner = result.index().getZonesContaining(insideFrognerPark1.getCoordinate());
+    assertTrue(zonesAtFrogner.contains(zone));
   }
 }

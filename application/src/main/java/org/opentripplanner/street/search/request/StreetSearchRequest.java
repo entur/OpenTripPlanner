@@ -11,6 +11,7 @@ import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.astar.spi.AStarRequest;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
@@ -55,6 +56,9 @@ public class StreetSearchRequest implements AStarRequest {
 
   private IntersectionTraversalCalculator intersectionTraversalCalculator =
     IntersectionTraversalCalculator.DEFAULT;
+
+  @Nullable
+  private GeofencingZoneIndex geofencingZoneIndex;
 
   private List<ExtensionRequestContext> extensionRequestContexts;
 
@@ -180,6 +184,15 @@ public class StreetSearchRequest implements AStarRequest {
     IntersectionTraversalCalculator intersectionTraversalCalculator
   ) {
     this.intersectionTraversalCalculator = intersectionTraversalCalculator;
+  }
+
+  @Nullable
+  public GeofencingZoneIndex geofencingZoneIndex() {
+    return geofencingZoneIndex;
+  }
+
+  public void setGeofencingZoneIndex(@Nullable GeofencingZoneIndex geofencingZoneIndex) {
+    this.geofencingZoneIndex = geofencingZoneIndex;
   }
 
   /**
