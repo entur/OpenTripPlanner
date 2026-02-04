@@ -20,9 +20,9 @@ fundedBy:
     uri: https://entur.no
   - name: Fintraffic
     uri: https://www.fintraffic.fi/en
-  - name: Helsinki Regional Transport Authority
-    uri: https://www.hsl.fi
-  - name: Wallti Solutions
+  - name: Helsinki Region Transport
+    uri: https://www.hsl.fi/en
+  - name: Waltti Solutions
     uri: https://waltti.fi/en/
   - name: Skånetrafiken
     uri: https://www.skanetrafiken.se
@@ -31,7 +31,6 @@ usedBy:
   - Finland, Helsinki, Helsinki Region Transport Authority
   - Finland (nationwide), Fintraffic
   - Finland (various cities), Waltti Solutions
-  - Finland (nationwide), Matkahuolto
   - Sweden, Skåne, Skånetrafiken
   - Italy, Piemonte Region and the City of Torino, 5T
   - Italy, Trento Province
