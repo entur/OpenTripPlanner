@@ -1044,7 +1044,7 @@ public class StreetEdge
       }
 
       // Update geofencing zone state if crossing boundary edges
-      if (s0.isRentingVehicle()) {
+      if (s0.isRentingVehicle() && tov.hasGeofencingBoundary()) {
         updateGeofencingZoneState(s0, s1);
       }
     }
