@@ -144,7 +144,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
    */
   @Override
   public void routeTransit() {
-    timers.findTransitForRound(() -> {
+    timers.routeTransit(() -> {
       IntIterator stops = state.stopsTouchedPreviousRound();
       IntIterator routeIndexIterator = transitData.routeIndexIterator(stops);
 
@@ -225,7 +225,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   @Override
   public void applyTransfers() {
-    timers.findTransfersForRound(() -> {
+    timers.applyTransfers(() -> {
       IntIterator it = state.stopsTouchedByTransitCurrentRound();
 
       while (it.hasNext()) {

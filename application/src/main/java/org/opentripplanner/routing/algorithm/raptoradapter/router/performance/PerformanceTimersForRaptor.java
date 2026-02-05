@@ -33,30 +33,18 @@ public class PerformanceTimersForRaptor implements RaptorTimers {
       .register(registry);
   }
 
-  public Timer timerRoute() {
-    return timerRoute;
-  }
-
-  public Timer timerFindTransitPerRound() {
-    return findTransitPerRound;
-  }
-
-  public Timer timerFindTransfersPerRound() {
-    return findTransfersPerRound;
-  }
-
   @Override
   public void route(Runnable body) {
     timerRoute.record(body);
   }
 
   @Override
-  public void findTransitForRound(Runnable body) {
+  public void routeTransit(Runnable body) {
     findTransitPerRound.record(body);
   }
 
   @Override
-  public void findTransfersForRound(Runnable body) {
+  public void applyTransfers(Runnable body) {
     findTransfersPerRound.record(body);
   }
 
