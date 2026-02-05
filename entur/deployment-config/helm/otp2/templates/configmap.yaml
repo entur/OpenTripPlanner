@@ -108,7 +108,7 @@ data:
             "backTravelWaitTimeFactor": 1.0,
             "extraStopBoardAlightCostsFactor": 8.0
           },
-          "relaxTransitGroupPriority" : "20m + 1.2x",
+          "relaxTransitGroupPriority" : "12m + 1.12x",
           "transitGroupPriority": {
             "global": [
               {
