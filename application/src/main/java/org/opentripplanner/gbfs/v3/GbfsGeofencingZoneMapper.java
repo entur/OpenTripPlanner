@@ -61,4 +61,9 @@ class GbfsGeofencingZoneMapper
   protected boolean ruleBansPassThrough(GBFSRule rule) {
     return !rule.getRideThroughAllowed();
   }
+
+  @Override
+  protected @Nullable Integer ruleMaxSpeedKph(GBFSRule rule) {
+    return rule.getMaximumSpeedKph();
+  }
 }

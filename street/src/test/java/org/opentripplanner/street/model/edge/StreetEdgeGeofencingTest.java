@@ -21,6 +21,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
@@ -517,6 +518,157 @@ class StreetEdgeGeofencingTest {
         .withMode(StreetMode.SCOOTER_RENTAL)
         .withArriveBy(true)
         .build();
+    }
+  }
+
+  @Nested
+  class SpeedRestrictions {
+
+    @Test
+    void speedCapAppliesWhenRentingInsideSpeedLimitedZone() {
+      var speedLimitedZone = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "slow-zone"),
+        null,
+        null,
+        false,
+        false,
+        20,
+        0
+      );
+
+      var state = initialState(V1, NETWORK_TIER, false);
+      var editor = state.edit(streetEdge(V1, V2));
+      editor.enterGeofencingZone(speedLimitedZone);
+      var stateInZone = editor.makeState();
+
+      var speedLimit = stateInZone.getMaxSpeedMpsFromCurrentZones();
+      assertTrue(speedLimit.isPresent());
+      assertEquals(20 / 3.6, speedLimit.getAsDouble(), 0.001);
+    }
+
+    @Test
+    void noSpeedCapWhenNotRenting() {
+      var req = StreetSearchRequest.of().withMode(StreetMode.WALK).build();
+      var walkState = new State(V1, req);
+
+      var speedLimit = walkState.getMaxSpeedMpsFromCurrentZones();
+      assertFalse(speedLimit.isPresent());
+    }
+
+    @Test
+    void highestPriorityZoneSpeedLimitApplies() {
+      // Zone A (priority 0): 30 kph speed limit (highest priority)
+      var zoneA = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "zone-a"),
+        null,
+        null,
+        false,
+        false,
+        30,
+        0
+      );
+
+      // Zone B (priority 1): 10 kph speed limit (lower priority, more restrictive)
+      var zoneB = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "zone-b"),
+        null,
+        null,
+        false,
+        false,
+        10,
+        1
+      );
+
+      var state = initialState(V1, NETWORK_TIER, false);
+      var editor = state.edit(streetEdge(V1, V2));
+      editor.enterGeofencingZone(zoneA);
+      editor.enterGeofencingZone(zoneB);
+      var stateInZones = editor.makeState();
+
+      // Zone A has higher priority (0 < 1), so its 30 kph limit applies
+      var speedLimit = stateInZones.getMaxSpeedMpsFromCurrentZones();
+      assertTrue(speedLimit.isPresent());
+      assertEquals(30 / 3.6, speedLimit.getAsDouble(), 0.001);
+    }
+
+    @Test
+    void speedLimitFilteredByNetwork() {
+      var otherNetworkZone = new GeofencingZone(
+        new FeedScopedId(NETWORK_BIRD, "slow-zone"),
+        null,
+        null,
+        false,
+        false,
+        10,
+        0
+      );
+
+      var state = initialState(V1, NETWORK_TIER, false);
+      var editor = state.edit(streetEdge(V1, V2));
+      editor.enterGeofencingZone(otherNetworkZone);
+      var stateInZone = editor.makeState();
+
+      // Speed limit from another network should not apply
+      var speedLimit = stateInZone.getMaxSpeedMpsFromCurrentZones();
+      assertFalse(speedLimit.isPresent());
+    }
+
+    @Test
+    void speedLimitedZoneHasRestriction() {
+      var zone = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "slow-zone"),
+        null,
+        null,
+        false,
+        false,
+        20,
+        0
+      );
+
+      assertTrue(zone.hasRestriction());
+      assertFalse(zone.isBusinessArea());
+      assertTrue(zone.hasSpeedRestriction());
+    }
+
+    @Test
+    void zoneWithoutSpeedLimitAndNoOtherRestrictionIsBusinessArea() {
+      var zone = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "business"),
+        null,
+        null,
+        false,
+        false,
+        0
+      );
+
+      assertFalse(zone.hasRestriction());
+      assertTrue(zone.isBusinessArea());
+      assertFalse(zone.hasSpeedRestriction());
+    }
+
+    @Test
+    void speedCapAppliedDuringTraversal() {
+      var speedLimitedZone = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "slow-zone"),
+        null,
+        null,
+        false,
+        false,
+        10,
+        0
+      );
+
+      var edge = streetEdge(V1, V2);
+      // Add boundary extension so the zone is entered when traversing
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(speedLimitedZone, true));
+
+      var state = initialState(V1, NETWORK_TIER, false);
+      var results = edge.traverse(state);
+
+      // Should traverse successfully (not banned)
+      assertFalse(State.isEmpty(results));
+      assertNotNull(results[0]);
+      assertEquals(RENTING_FLOATING, results[0].getVehicleRentalState());
     }
   }
 

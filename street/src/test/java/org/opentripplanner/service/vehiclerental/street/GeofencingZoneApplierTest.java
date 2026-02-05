@@ -109,6 +109,33 @@ class GeofencingZoneApplierTest {
   }
 
   @Test
+  void speedLimitedZoneGetsBoundaryMarkers() {
+    // A zone with only speed restrictions (no traversal/drop-off ban) should still
+    // be treated as a restricted zone and get boundary markers
+    var speedLimitedZone = new GeofencingZone(
+      id("speed-zone"),
+      null,
+      Polygons.OSLO_FROGNER_PARK,
+      false,
+      false,
+      20,
+      0
+    );
+
+    assertTrue(speedLimitedZone.hasRestriction());
+    assertFalse(speedLimitedZone.isBusinessArea());
+
+    updater.applyGeofencingZones(List.of(speedLimitedZone, businessArea));
+
+    // The boundary-crossing edge should have a GeofencingBoundaryExtension
+    var toRestrictions = crossingFrognerParkBoundary.getToVertex().rentalRestrictions();
+    assertInstanceOf(GeofencingBoundaryExtension.class, toRestrictions);
+
+    var boundaryExt = (GeofencingBoundaryExtension) toRestrictions;
+    assertEquals(speedLimitedZone, boundaryExt.zone());
+  }
+
+  @Test
   void geofencingZoneIndexCreated() {
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 

@@ -49,6 +49,8 @@ public abstract class GbfsGeofencingZoneMapper<F, R> {
 
   protected abstract boolean ruleBansPassThrough(R rule);
 
+  protected abstract @Nullable Integer ruleMaxSpeedKph(R rule);
+
   /**
    * Convert a GBFS feature to internal model(s). Each rule in the feature becomes
    * a separate GeofencingZone with its own priority.
@@ -89,6 +91,7 @@ public abstract class GbfsGeofencingZoneMapper<F, R> {
           geometry,
           ruleBansDropOff(rule),
           ruleBansPassThrough(rule),
+          ruleMaxSpeedKph(rule),
           priority
         )
       );

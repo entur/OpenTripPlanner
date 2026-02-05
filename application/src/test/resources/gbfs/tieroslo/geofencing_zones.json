@@ -471,7 +471,8 @@
                   "YTI:VehicleType:ebicycle_oslo"
                 ],
                 "ride_allowed": false,
-                "ride_through_allowed": true
+                "ride_through_allowed": true,
+                "maximum_speed_kph": 10
               }
             ]
           },

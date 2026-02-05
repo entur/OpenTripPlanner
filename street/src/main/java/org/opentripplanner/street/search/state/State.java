@@ -3,8 +3,10 @@ package org.opentripplanner.street.search.state;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
@@ -487,6 +489,25 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
       .stream()
       .filter(zone -> unknownRentalNetwork() || zone.id().getFeedId().equals(network))
       .anyMatch(GeofencingZone::traversalBanned);
+  }
+
+  /**
+   * Get the maximum speed (m/s) imposed by the highest-priority geofencing zone
+   * the vehicle is currently inside. Per GBFS spec, when multiple overlapping zones
+   * define rules, the earlier listed zone (lowest priority value) takes precedence.
+   */
+  public OptionalDouble getMaxSpeedMpsFromCurrentZones() {
+    if (!isRentingVehicle()) {
+      return OptionalDouble.empty();
+    }
+    var network = getVehicleRentalNetwork();
+    return stateData.currentGeofencingZones
+      .stream()
+      .filter(zone -> zone.maxSpeedKph() != null)
+      .filter(zone -> unknownRentalNetwork() || zone.id().getFeedId().equals(network))
+      .min(Comparator.comparingInt(GeofencingZone::priority))
+      .map(zone -> OptionalDouble.of(zone.maxSpeedKph() / 3.6))
+      .orElse(OptionalDouble.empty());
   }
 
   /**

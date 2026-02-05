@@ -1047,6 +1047,14 @@ public class StreetEdge
     // Automobiles have variable speeds depending on the edge type
     double speed = calculateSpeed(request, traverseMode, walkingBike);
 
+    // Cap speed based on geofencing zone speed restrictions
+    if (s0.isRentingVehicle()) {
+      var zoneSpeedLimit = s1.getMaxSpeedMpsFromCurrentZones();
+      if (zoneSpeedLimit.isPresent()) {
+        speed = Math.min(speed, zoneSpeedLimit.getAsDouble());
+      }
+    }
+
     var traversalCosts = switch (traverseMode) {
       case BICYCLE, SCOOTER -> bicycleOrScooterTraversalCost(request, traverseMode, speed, s0);
       case WALK -> walkingTraversalCosts(

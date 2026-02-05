@@ -2,6 +2,7 @@ package org.opentripplanner.gbfs.v2;
 
 import java.util.List;
 import java.util.stream.IntStream;
+import javax.annotation.Nullable;
 import org.geojson.MultiPolygon;
 import org.mobilitydata.gbfs.v2_3.geofencing_zones.GBFSFeature;
 import org.mobilitydata.gbfs.v2_3.geofencing_zones.GBFSGeofencingZones;
@@ -52,5 +53,10 @@ class GbfsGeofencingZoneMapper
   @Override
   protected boolean ruleBansPassThrough(GBFSRule rule) {
     return !rule.getRideThroughAllowed();
+  }
+
+  @Override
+  protected @Nullable Integer ruleMaxSpeedKph(GBFSRule rule) {
+    return rule.getMaximumSpeedKph();
   }
 }

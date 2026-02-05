@@ -1,6 +1,7 @@
 package org.opentripplanner.street.search.state;
 
 import java.util.HashSet;
+import java.util.OptionalDouble;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
@@ -436,6 +437,10 @@ public class StateEditor {
     var newSet = new HashSet<>(child.stateData.currentGeofencingZones);
     newSet.add(zone);
     child.stateData.currentGeofencingZones = Set.copyOf(newSet);
+  }
+
+  public OptionalDouble getMaxSpeedMpsFromCurrentZones() {
+    return child.getMaxSpeedMpsFromCurrentZones();
   }
 
   /**

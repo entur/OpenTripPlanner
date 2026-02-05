@@ -176,6 +176,8 @@ class GbfsFeedMapperTest {
 
     assertTrue(frognerPark.dropOffBanned());
     assertFalse(frognerPark.traversalBanned());
+    assertEquals(10, frognerPark.maxSpeedKph());
+    assertTrue(frognerPark.hasSpeedRestriction());
 
     var businessAreas = zones.stream().filter(GeofencingZone::isBusinessArea).toList();
 

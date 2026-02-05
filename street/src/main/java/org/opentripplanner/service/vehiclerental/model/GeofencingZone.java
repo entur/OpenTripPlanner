@@ -15,6 +15,7 @@ public record GeofencingZone(
   Geometry geometry,
   boolean dropOffBanned,
   boolean traversalBanned,
+  @Nullable Integer maxSpeedKph,
   int priority
 ) {
   /**
@@ -28,14 +29,28 @@ public record GeofencingZone(
     boolean dropOffBanned,
     boolean traversalBanned
   ) {
-    this(id, name, geometry, dropOffBanned, traversalBanned, 0);
+    this(id, name, geometry, dropOffBanned, traversalBanned, null, 0);
+  }
+
+  /**
+   * Convenience constructor without speed restriction.
+   */
+  public GeofencingZone(
+    FeedScopedId id,
+    @Nullable I18NString name,
+    Geometry geometry,
+    boolean dropOffBanned,
+    boolean traversalBanned,
+    int priority
+  ) {
+    this(id, name, geometry, dropOffBanned, traversalBanned, null, priority);
   }
 
   /**
    * Are there any restrictions in this zone. (It's possible that the data says there are none.)
    */
   public boolean hasRestriction() {
-    return dropOffBanned || traversalBanned;
+    return dropOffBanned || traversalBanned || maxSpeedKph != null;
   }
 
   /**
@@ -44,9 +59,13 @@ public record GeofencingZone(
    * travel inside the zone but cannot leave it.
    * <p>
    * The GBFS spec is remarkably thin in this respect:
-   * https://github.com/MobilityData/gbfs/blob/master/gbfs.md#geofencing_zonesjson
+   * https://github.com/MobilityData/gbfs/blob/master/gbfs.md#geofencing_zonesjson
    */
   public boolean isBusinessArea() {
-    return !dropOffBanned && !traversalBanned;
+    return !dropOffBanned && !traversalBanned && maxSpeedKph == null;
+  }
+
+  public boolean hasSpeedRestriction() {
+    return maxSpeedKph != null;
   }
 }
