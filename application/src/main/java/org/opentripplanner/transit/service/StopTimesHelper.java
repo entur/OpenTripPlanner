@@ -244,9 +244,8 @@ public class StopTimesHelper {
     int maxTripSpanDays = pattern.getScheduledTimetable().getMaxTripSpanDays();
 
     // The `maxTripSpanDays + 1` is used to "overselect" the running-dates to account for up to
-    // 24h delays. This has a performance overhead of ~25% when retrieving all calls for an area
-    // around Bergen, Norway, [(60˚N, 5˚E) → (61˚N, 6˚E)], in total 41 800 stop/pattern lookups.
-    // Average response times was 250ms (+1) and 200ms (+0).
+    // 24h delays. This had a performance overhead of ~25% (Bergen, Norway), so we check if there are delays
+    // in the loop below and remove the extra day if not.
     var runningDates = calculateRunningDates(startTime, timeRange, zoneId, maxTripSpanDays + 1);
     var firstDay = runningDates.getFirst();
 
