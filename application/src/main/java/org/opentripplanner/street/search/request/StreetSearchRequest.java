@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
@@ -58,7 +59,7 @@ public class StreetSearchRequest implements AStarRequest {
     IntersectionTraversalCalculator.DEFAULT;
 
   @Nullable
-  private GeofencingZoneIndex geofencingZoneIndex;
+  private Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
 
   private List<ExtensionRequestContext> extensionRequestContexts;
 
@@ -187,12 +188,14 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   @Nullable
-  public GeofencingZoneIndex geofencingZoneIndex() {
-    return geofencingZoneIndex;
+  public Map<String, GeofencingZoneIndex> geofencingZoneIndexes() {
+    return geofencingZoneIndexes;
   }
 
-  public void setGeofencingZoneIndex(@Nullable GeofencingZoneIndex geofencingZoneIndex) {
-    this.geofencingZoneIndex = geofencingZoneIndex;
+  public void setGeofencingZoneIndexes(
+    @Nullable Map<String, GeofencingZoneIndex> geofencingZoneIndexes
+  ) {
+    this.geofencingZoneIndexes = geofencingZoneIndexes;
   }
 
   /**

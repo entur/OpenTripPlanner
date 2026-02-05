@@ -47,7 +47,7 @@ public class DirectStreetRouter {
         serverContext.traverseVisitor(),
         serverContext.listExtensionRequestContexts(request),
         maxCarSpeed,
-        serverContext.graph().getGeofencingZoneIndex()
+        serverContext.graph().getGeofencingZoneIndexes()
       );
       List<GraphPath<State, Edge, Vertex>> paths = gpFinder.graphPathFinderEntryPoint(
         request,

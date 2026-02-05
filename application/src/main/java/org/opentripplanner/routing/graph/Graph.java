@@ -4,6 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import jakarta.inject.Inject;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -72,11 +73,11 @@ public class Graph implements Serializable {
   private transient StreetIndex streetIndex;
 
   /**
-   * Spatial index for geofencing zones, used at vehicle pickup to initialize
-   * zone state for boundary-only geofencing.
+   * Per-network spatial indexes for geofencing zones, used at vehicle pickup to initialize
+   * zone state for boundary-only geofencing. Each updater stores its own network's index
+   * so that updates from one network don't overwrite another's zones.
    */
-  @Nullable
-  private transient GeofencingZoneIndex geofencingZoneIndex;
+  private transient final Map<String, GeofencingZoneIndex> geofencingZoneIndexes = new HashMap<>();
 
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;
@@ -392,19 +393,27 @@ public class Graph implements Serializable {
   }
 
   /**
-   * Set the geofencing zone spatial index for boundary-only geofencing.
-   * Called during graph updates when geofencing zones are loaded.
+   * Set the geofencing zone spatial index for a specific network.
+   * Each VehicleRentalUpdater stores its own network's index so that
+   * updates from one network don't overwrite another's zones.
    */
-  public void setGeofencingZoneIndex(@Nullable GeofencingZoneIndex geofencingZoneIndex) {
-    this.geofencingZoneIndex = geofencingZoneIndex;
+  public void setGeofencingZoneIndex(String network, GeofencingZoneIndex index) {
+    geofencingZoneIndexes.put(network, index);
   }
 
   /**
-   * Get the geofencing zone spatial index.
-   * May be null if no geofencing zones are configured.
+   * Get the geofencing zone spatial index for a specific network.
+   * May return null if no geofencing zones are configured for that network.
    */
   @Nullable
-  public GeofencingZoneIndex getGeofencingZoneIndex() {
-    return geofencingZoneIndex;
+  public GeofencingZoneIndex getGeofencingZoneIndex(String network) {
+    return geofencingZoneIndexes.get(network);
+  }
+
+  /**
+   * Get all per-network geofencing zone indexes.
+   */
+  public Map<String, GeofencingZoneIndex> getGeofencingZoneIndexes() {
+    return geofencingZoneIndexes;
   }
 }

@@ -251,17 +251,21 @@ public class VehicleRentalEdge extends Edge {
 
   /**
    * Initialize geofencing zone state at vehicle pickup.
-   * Queries the spatial index to find all zones containing the pickup location,
-   * filtered to zones that match the rental network.
+   * Looks up the per-network spatial index and finds all zones containing the pickup location.
+   * No network filtering is needed since each index contains only that network's zones.
    */
   private void initializeGeofencingZones(State s0, StateEditor editor, String network) {
-    var geofencingIndex = s0.getRequest().geofencingZoneIndex();
+    var indexes = s0.getRequest().geofencingZoneIndexes();
+    if (indexes == null) {
+      return;
+    }
+    var geofencingIndex = indexes.get(network);
     if (geofencingIndex == null || geofencingIndex.isEmpty()) {
       return;
     }
 
     var pickupLocation = tov.getCoordinate();
-    Set<GeofencingZone> initialZones = geofencingIndex.getZonesContaining(pickupLocation, network);
+    Set<GeofencingZone> initialZones = geofencingIndex.getZonesContaining(pickupLocation);
     if (!initialZones.isEmpty()) {
       editor.setCurrentGeofencingZones(initialZones);
     }

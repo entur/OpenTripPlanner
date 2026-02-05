@@ -236,7 +236,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestAppliedGeofencingZones = geofencingZones;
 
         // Store the spatial index on the graph for pickup zone initialization
-        context.graph().setGeofencingZoneIndex(result.index());
+        context.graph().setGeofencingZoneIndex(nameForLogging, result.index());
 
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);

@@ -3,6 +3,7 @@ package org.opentripplanner.street.search;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.AStarBuilder;
@@ -29,7 +30,7 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
   private IntersectionTraversalCalculator intersectionTraversalCalculator;
 
   @Nullable
-  private GeofencingZoneIndex geofencingZoneIndex;
+  private Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
 
   private List<ExtensionRequestContext> extensionRequestContexts = List.of();
 
@@ -67,10 +68,10 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
     return this;
   }
 
-  public StreetSearchBuilder withGeofencingZoneIndex(
-    @Nullable GeofencingZoneIndex geofencingZoneIndex
+  public StreetSearchBuilder withGeofencingZoneIndexes(
+    @Nullable Map<String, GeofencingZoneIndex> geofencingZoneIndexes
   ) {
-    this.geofencingZoneIndex = geofencingZoneIndex;
+    this.geofencingZoneIndexes = geofencingZoneIndexes;
     return this;
   }
 
@@ -102,8 +103,8 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
     for (var state : initialStates) {
       state.getRequest().setIntersectionTraversalCalculator(intersectionTraversalCalculator);
       state.getRequest().setExtensionRequestContexts(extensionRequestContexts);
-      if (geofencingZoneIndex != null) {
-        state.getRequest().setGeofencingZoneIndex(geofencingZoneIndex);
+      if (geofencingZoneIndexes != null) {
+        state.getRequest().setGeofencingZoneIndexes(geofencingZoneIndexes);
       }
     }
   }
