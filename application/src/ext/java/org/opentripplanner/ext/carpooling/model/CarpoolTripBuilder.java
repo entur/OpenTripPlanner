@@ -3,6 +3,7 @@ package org.opentripplanner.ext.carpooling.model;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;
@@ -84,7 +85,7 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
   public CarpoolTripBuilder addStop(CarpoolStop stop) {
     this.stops.add(stop);
     // Sort stops by sequence number to maintain order
-    this.stops.sort((a, b) -> Integer.compare(a.getSequenceNumber(), b.getSequenceNumber()));
+    this.stops.sort(Comparator.comparingInt(CarpoolStop::getSequenceNumber));
     return this;
   }
 
@@ -99,24 +100,6 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
 
   @Override
   protected CarpoolTrip buildFromValues() {
-    validateStopSequence();
-
     return new CarpoolTrip(this);
-  }
-
-  private void validateStopSequence() {
-    for (int i = 0; i < stops.size(); i++) {
-      CarpoolStop stop = stops.get(i);
-      if (stop.getSequenceNumber() != i) {
-        throw new IllegalStateException(
-          String.format(
-            "Stop sequence mismatch: expected %d but got %d at position %d",
-            i,
-            stop.getSequenceNumber(),
-            i
-          )
-        );
-      }
-    }
   }
 }
