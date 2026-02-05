@@ -118,27 +118,6 @@ public class GeofencingZoneIndex implements Serializable {
   }
 
   /**
-   * Find all zones containing the given point that belong to the specified network.
-   * Filters by network first (cheap string comparison) before doing geometry checks (expensive).
-   *
-   * @param point The coordinate to check for zone containment
-   * @param network The network ID to filter by
-   * @return Set of GeofencingZone objects for the network that contain the point
-   */
-  public Set<GeofencingZone> getZonesContaining(Coordinate point, String network) {
-    var pointGeom = GF.createPoint(point);
-    @SuppressWarnings("unchecked")
-    var candidates = (List<GeofencingZone>) spatialIndex.query(new Envelope(point));
-
-    // Filter by network first (cheap) before geometry check (expensive)
-    return candidates
-      .stream()
-      .filter(zone -> zone.id().getFeedId().equals(network))
-      .filter(zone -> containsPoint(zone, pointGeom))
-      .collect(Collectors.toSet());
-  }
-
-  /**
    * Check if the index is empty (no zones indexed).
    */
   public boolean isEmpty() {

@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
@@ -50,7 +51,7 @@ public class StreetSearchRequest implements AStarRequest {
   private final Duration timeout;
 
   @Nullable
-  private final GeofencingZoneIndex geofencingZoneIndex;
+  private final Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
 
   @Nullable
   private final RentalPeriod rentalPeriod;
@@ -77,7 +78,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.intersectionTraversalCalculator = IntersectionTraversalCalculator.DEFAULT;
     this.extensionRequestContexts = List.of();
     this.timeout = Duration.ofSeconds(5);
-    this.geofencingZoneIndex = null;
+    this.geofencingZoneIndexes = null;
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -99,7 +100,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.intersectionTraversalCalculator = requireNonNull(builder.intersectionTraversalCalculator);
     this.extensionRequestContexts = List.copyOf(requireNonNull(builder.extensionRequestContexts));
     this.timeout = requireNonNull(builder.timeout);
-    this.geofencingZoneIndex = builder.geofencingZoneIndex;
+    this.geofencingZoneIndexes = builder.geofencingZoneIndexes;
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -185,8 +186,8 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   @Nullable
-  public GeofencingZoneIndex geofencingZoneIndex() {
-    return geofencingZoneIndex;
+  public Map<String, GeofencingZoneIndex> geofencingZoneIndexes() {
+    return geofencingZoneIndexes;
   }
 
   /**

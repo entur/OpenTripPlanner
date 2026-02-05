@@ -127,15 +127,20 @@ class GeofencingZoneIndexTest {
   }
 
   @Test
-  void getZonesForNetwork() {
-    var index = new GeofencingZoneIndex(List.of(frognerParkZone, osloBusinessArea));
+  void perNetworkLookup() {
+    // Each index now contains only one network's zones.
+    // Simulate two per-network indexes and verify independent lookups.
+    var networkAIndex = new GeofencingZoneIndex(List.of(frognerParkZone));
+    var networkBIndex = new GeofencingZoneIndex(List.of(osloBusinessArea));
 
-    // Get zones for specific network (both use feed "F" from TimetableRepositoryForTest.id())
-    var zonesForNetwork = index.getZonesContaining(INSIDE_FROGNER_1, "F");
-    assertEquals(2, zonesForNetwork.size());
+    // Network A only has Frogner Park zone
+    var zonesA = networkAIndex.getZonesContaining(INSIDE_FROGNER_1);
+    assertEquals(1, zonesA.size());
+    assertTrue(zonesA.contains(frognerParkZone));
 
-    // Non-existent network
-    var zonesForUnknown = index.getZonesContaining(INSIDE_FROGNER_1, "unknown-network");
-    assertTrue(zonesForUnknown.isEmpty());
+    // Network B only has Oslo zone
+    var zonesB = networkBIndex.getZonesContaining(INSIDE_FROGNER_1);
+    assertEquals(1, zonesB.size());
+    assertTrue(zonesB.contains(osloBusinessArea));
   }
 }

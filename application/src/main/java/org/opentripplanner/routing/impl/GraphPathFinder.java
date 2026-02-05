@@ -3,6 +3,7 @@ package org.opentripplanner.routing.impl;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -62,7 +63,7 @@ public class GraphPathFinder {
   private final float maxCarSpeed;
 
   @Nullable
-  private final GeofencingZoneIndex geofencingZoneIndex;
+  private final Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
 
   public GraphPathFinder(@Nullable TraverseVisitor<State, Edge> traverseVisitor) {
     this(traverseVisitor, List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED, null);
@@ -80,12 +81,12 @@ public class GraphPathFinder {
     @Nullable TraverseVisitor<State, Edge> traverseVisitor,
     Collection<ExtensionRequestContext> extensionRequestContexts,
     float maxCarSpeed,
-    @Nullable GeofencingZoneIndex geofencingZoneIndex
+    @Nullable Map<String, GeofencingZoneIndex> geofencingZoneIndexes
   ) {
     this.traverseVisitor = traverseVisitor;
     this.extensionRequestContexts = Objects.requireNonNull(extensionRequestContexts);
     this.maxCarSpeed = maxCarSpeed;
-    this.geofencingZoneIndex = geofencingZoneIndex;
+    this.geofencingZoneIndexes = geofencingZoneIndexes;
   }
 
   /**
@@ -112,7 +113,7 @@ public class GraphPathFinder {
       .withRequest(
         StreetSearchRequestMapper.map(request)
           .withExtensionRequestContexts(extensionRequestContexts)
-          .withGeofencingZoneIndex(geofencingZoneIndex)
+          .withGeofencingZoneIndexes(geofencingZoneIndexes)
           .withMode(request.journey().direct().mode())
           .build()
       )
