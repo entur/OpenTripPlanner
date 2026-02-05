@@ -22,7 +22,7 @@ class AllowMainModeFilter implements AllowTransitModeFilter {
   }
 
   @Override
-  public boolean isSubMode() {
+  public boolean matchesOnTripLevel() {
     return true;
   }
 
