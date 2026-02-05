@@ -108,17 +108,35 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     lifeCycle.onPrepareForNextRound(round -> this.round = round);
   }
 
-  @Override
-  public RaptorRouterResult<T> result() {
-    return state.results();
-  }
-
   /**
    * Check if the RangeRaptor should continue with a new round.
    */
   @Override
   public boolean hasMoreRounds() {
     return state.isNewRoundAvailable();
+  }
+
+  @Override
+  public void findAccessOnStreetForRound() {
+    addAccessPaths(accessPaths.arrivedOnStreetByNumOfRides(round));
+  }
+
+  @Override
+  public void findAccessOnBoardForRound() {
+    addAccessPaths(accessPaths.arrivedOnBoardByNumOfRides(round));
+  }
+
+  @Override
+  public void findOnBoardAccessForRound(int iterationDepartureTime) {
+    for (var accessPath : accessPaths.onBoardAccessPaths()) {
+      var route = transitData.getRouteForIndex(accessPath.routeIndex());
+      var trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
+
+      var boardTime = trip.departure(accessPath.stopPositionInPattern());
+      if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
+        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime);
+      }
+    }
   }
 
   /**
@@ -186,19 +204,6 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findOnBoardAccessForRound(int iterationDepartureTime) {
-    for (var accessPath : accessPaths.onBoardAccessPaths()) {
-      var route = transitData.getRouteForIndex(accessPath.routeIndex());
-      var trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
-
-      var boardTime = trip.departure(accessPath.stopPositionInPattern());
-      if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
-        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime);
-      }
-    }
-  }
-
-  @Override
   public void findOnBoardAccessTransitForRound() {
     var onBoardStopArrivals = transitWorker.consumeOnBoardStopArrivals();
     while (onBoardStopArrivals.hasNext()) {
@@ -238,13 +243,8 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findAccessOnStreetForRound() {
-    addAccessPaths(accessPaths.arrivedOnStreetByNumOfRides(round));
-  }
-
-  @Override
-  public void findAccessOnBoardForRound() {
-    addAccessPaths(accessPaths.arrivedOnBoardByNumOfRides(round));
+  public RaptorRouterResult<T> result() {
+    return state.results();
   }
 
   /**

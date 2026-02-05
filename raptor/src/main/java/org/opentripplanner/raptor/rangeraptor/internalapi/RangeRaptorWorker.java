@@ -10,24 +10,30 @@ import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
  */
 public interface RangeRaptorWorker<T extends RaptorTripSchedule> {
   /**
-   * Fetch the result after the search is performed.
-   */
-  RaptorRouterResult<T> result();
-
-  /**
    * Check if the RangeRaptor should continue with a new round.
    */
   boolean hasMoreRounds();
 
   /**
-   * Perform a transit search for the current round.
+   * Apply access for the current round, including round zero - before the first transit.
+   * This is applied in each round because the access may include transit (FLEX).
    */
-  void findTransitForRound();
+  void findAccessOnStreetForRound();
+
+  /**
+   * Apply access for the current round, when the access arrives to the stop on-board (FLEX).
+   */
+  void findAccessOnBoardForRound();
 
   /**
    * Find on-board access for round (accesses on-board an already started trip)
    */
   void findOnBoardAccessForRound(int iterationDepartureTime);
+
+  /**
+   * Perform a transit search for the current round.
+   */
+  void findTransitForRound();
 
   /**
    * Perform on-board (accesses on-board an already started trip) transit search for boardings and
@@ -46,13 +52,7 @@ public interface RangeRaptorWorker<T extends RaptorTripSchedule> {
   boolean isDestinationReachedInCurrentRound();
 
   /**
-   * Apply access for the current round, including round zero - before the first transit.
-   * This is applied in each round because the access may include transit (FLEX).
+   * Fetch the result after the search is performed.
    */
-  void findAccessOnStreetForRound();
-
-  /**
-   * Apply access for the current round, when the access arrives to the stop on-board (FLEX).
-   */
-  void findAccessOnBoardForRound();
+  RaptorRouterResult<T> result();
 }

@@ -55,17 +55,6 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
-  public RaptorRouterResult<T> result() {
-    if (result == null) {
-      this.result = new RouterResultPathAggregator(
-        children.stream().map(RangeRaptorWorker::result).toList(),
-        comparator
-      );
-    }
-    return result;
-  }
-
-  @Override
   public boolean hasMoreRounds() {
     for (RangeRaptorWorker<T> child : children) {
       if (child.hasMoreRounds()) {
@@ -76,9 +65,16 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findTransitForRound() {
+  public void findAccessOnStreetForRound() {
     for (RangeRaptorWorker<T> child : children) {
-      child.findTransitForRound();
+      child.findAccessOnStreetForRound();
+    }
+  }
+
+  @Override
+  public void findAccessOnBoardForRound() {
+    for (RangeRaptorWorker<T> child : children) {
+      child.findAccessOnBoardForRound();
     }
   }
 
@@ -86,6 +82,13 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   public void findOnBoardAccessForRound(int iterationDepartureTime) {
     for (RangeRaptorWorker<T> child : children) {
       child.findOnBoardAccessForRound(iterationDepartureTime);
+    }
+  }
+
+  @Override
+  public void findTransitForRound() {
+    for (RangeRaptorWorker<T> child : children) {
+      child.findTransitForRound();
     }
   }
 
@@ -114,16 +117,13 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findAccessOnStreetForRound() {
-    for (RangeRaptorWorker<T> child : children) {
-      child.findAccessOnStreetForRound();
+  public RaptorRouterResult<T> result() {
+    if (result == null) {
+      this.result = new RouterResultPathAggregator(
+        children.stream().map(RangeRaptorWorker::result).toList(),
+        comparator
+      );
     }
-  }
-
-  @Override
-  public void findAccessOnBoardForRound() {
-    for (RangeRaptorWorker<T> child : children) {
-      child.findAccessOnBoardForRound();
-    }
+    return result;
   }
 }
