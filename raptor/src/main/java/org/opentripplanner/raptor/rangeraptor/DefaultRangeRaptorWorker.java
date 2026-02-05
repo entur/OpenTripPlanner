@@ -117,17 +117,17 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findAccessOnStreetForRound() {
+  public void applyStreetStopAccess() {
     addAccessPaths(accessPaths.arrivedOnStreetByNumOfRides(round));
   }
 
   @Override
-  public void findAccessOnBoardForRound() {
+  public void applyOnBoardStopAccess() {
     addAccessPaths(accessPaths.arrivedOnBoardByNumOfRides(round));
   }
 
   @Override
-  public void findOnBoardAccessForRound(int iterationDepartureTime) {
+  public void applyOnBoardTripAccess(int iterationDepartureTime) {
     for (var accessPath : accessPaths.onBoardAccessPaths()) {
       var route = transitData.getRouteForIndex(accessPath.routeIndex());
       var trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
@@ -143,7 +143,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
    * Perform a scheduled search
    */
   @Override
-  public void findTransitForRound() {
+  public void routeTransit() {
     timers.findTransitForRound(() -> {
       IntIterator stops = state.stopsTouchedPreviousRound();
       IntIterator routeIndexIterator = transitData.routeIndexIterator(stops);
@@ -204,7 +204,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findOnBoardAccessTransitForRound() {
+  public void routeTransitUsingOnBoardTripAccess() {
     var onBoardStopArrivals = transitWorker.consumeOnBoardStopArrivals();
     while (onBoardStopArrivals.hasNext()) {
       var onBoardStopArrival = onBoardStopArrivals.next();
@@ -224,7 +224,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findTransfersForRound() {
+  public void applyTransfers() {
     timers.findTransfersForRound(() -> {
       IntIterator it = state.stopsTouchedByTransitCurrentRound();
 

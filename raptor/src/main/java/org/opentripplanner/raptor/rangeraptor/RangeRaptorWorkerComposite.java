@@ -65,44 +65,44 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void findAccessOnStreetForRound() {
+  public void applyStreetStopAccess() {
     for (RangeRaptorWorker<T> child : children) {
-      child.findAccessOnStreetForRound();
+      child.applyStreetStopAccess();
     }
   }
 
   @Override
-  public void findAccessOnBoardForRound() {
+  public void applyOnBoardStopAccess() {
     for (RangeRaptorWorker<T> child : children) {
-      child.findAccessOnBoardForRound();
+      child.applyOnBoardStopAccess();
     }
   }
 
   @Override
-  public void findOnBoardAccessForRound(int iterationDepartureTime) {
+  public void applyOnBoardTripAccess(int iterationDepartureTime) {
     for (RangeRaptorWorker<T> child : children) {
-      child.findOnBoardAccessForRound(iterationDepartureTime);
+      child.applyOnBoardTripAccess(iterationDepartureTime);
     }
   }
 
   @Override
-  public void findTransitForRound() {
+  public void routeTransit() {
     for (RangeRaptorWorker<T> child : children) {
-      child.findTransitForRound();
+      child.routeTransit();
     }
   }
 
   @Override
-  public void findOnBoardAccessTransitForRound() {
+  public void routeTransitUsingOnBoardTripAccess() {
     for (RangeRaptorWorker<T> child : children) {
-      child.findOnBoardAccessTransitForRound();
+      child.routeTransitUsingOnBoardTripAccess();
     }
   }
 
   @Override
-  public void findTransfersForRound() {
+  public void applyTransfers() {
     for (RangeRaptorWorker<T> child : children) {
-      child.findTransfersForRound();
+      child.applyTransfers();
     }
   }
 
