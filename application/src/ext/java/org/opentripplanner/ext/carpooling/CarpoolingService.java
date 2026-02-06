@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.carpooling;
 
 import java.util.List;
+import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
 import org.opentripplanner.graph_builder.module.nearbystops.StopResolver;
 import org.opentripplanner.model.plan.Itinerary;
@@ -31,5 +32,5 @@ public interface CarpoolingService {
    */
   List<Itinerary> route(RouteRequest request, LinkingContext linkingContext);
 
-  List<DefaultAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext);
+  List<CarpoolAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext);
 }

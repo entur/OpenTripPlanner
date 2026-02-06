@@ -15,6 +15,7 @@ import org.opentripplanner.ext.carpooling.filter.AccessEgressFilterChain;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
 import org.opentripplanner.ext.carpooling.routing.CarpoolTripInsertions;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
@@ -245,12 +246,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
     return itineraries;
   }
 
-  public DefaultAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType){
+  public CarpoolAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType){
 
     var position = insertionCandidate.dropoffPosition() - 1;
     var state = insertionCandidate.routeSegments().get(position).states.getLast();
 
-    var accessEgress = new DefaultAccessEgress(
+    var accessEgress = new CarpoolAccessEgress(
       insertionCandidate.transitStop().stop.getIndex(),
       state
     );
@@ -259,7 +260,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   }
 
   @Override
-  public List<DefaultAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext)
+  public List<CarpoolAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext)
     throws RoutingValidationException {
     try {
       if (!StreetMode.CARPOOL.equals(request.journey().access().mode()) && accessOrEgress.isAccess()) {
