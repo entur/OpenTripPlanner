@@ -51,7 +51,7 @@ public abstract sealed class RaptorViaConnection {
   public static RaptorViaConnection of(
     RaptorViaLocation parent,
     int fromStop,
-    RaptorTransfer transfer
+    @Nullable RaptorTransfer transfer
   ) {
     return transfer == null
       ? new RaptorViaStopConnection(parent, fromStop)
@@ -95,6 +95,8 @@ public abstract sealed class RaptorViaConnection {
   public final boolean isTransfer() {
     return !isSameStop();
   }
+
+  public abstract boolean isPassThrough();
 
   /**
    * This method is used to check that all connections are unique/provide an optimal path.
@@ -152,8 +154,11 @@ public abstract sealed class RaptorViaConnection {
 
   private static final class RaptorViaStopConnection extends RaptorViaConnection {
 
+    private boolean passThrough;
+
     RaptorViaStopConnection(RaptorViaLocation parent, int fromStop) {
       super(parent, fromStop, 0);
+      this.passThrough = parent.isPassThroughSearch();
     }
 
     @Nullable
@@ -175,6 +180,11 @@ public abstract sealed class RaptorViaConnection {
     @Override
     public boolean isSameStop() {
       return true;
+    }
+
+    @Override
+    public boolean isPassThrough() {
+      return passThrough;
     }
   }
 
@@ -208,6 +218,11 @@ public abstract sealed class RaptorViaConnection {
 
     @Override
     public boolean isSameStop() {
+      return false;
+    }
+
+    @Override
+    public boolean isPassThrough() {
       return false;
     }
   }
