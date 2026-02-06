@@ -372,7 +372,7 @@ public class PlaceFinderTraverseVisitorTest {
   }
 
   @Test
-  void rentalVehicleWithFormFactorPropulsionFilter() {
+  void rentalVehicleWithFormFactorFilter() {
     var visitor = new PlaceFinderTraverseVisitor(
       transitService,
       null,
@@ -382,6 +382,57 @@ public class PlaceFinderTraverseVisitorTest {
       null,
       null,
       List.of(RentalFormFactor.SCOOTER),
+      null,
+      null,
+      1,
+      500
+    );
+    var scooter = new TestFreeFloatingRentalVehicleBuilder().withVehicleScooter().build();
+    assertEquals(List.of(), visitor.placesFound);
+    var state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(scooter).build();
+    visitor.visitVertex(state1);
+
+    var res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
+
+    // There is a scooter in the test data
+    assertEquals(List.of(scooter), res);
+
+    visitor = new PlaceFinderTraverseVisitor(
+      transitService,
+      null,
+      List.of(PlaceType.VEHICLE_RENT),
+      null,
+      null,
+      null,
+      null,
+      List.of(RentalFormFactor.BICYCLE),
+      null,
+      null,
+      1,
+      500
+    );
+
+    assertEquals(List.of(), visitor.placesFound);
+    state1 = TestStateBuilder.ofWalking().vehicleRentalPlace(scooter).build();
+    visitor.visitVertex(state1);
+
+    res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
+
+    // There are no bicycles in the test data
+    assertEquals(List.of(), res);
+  }
+
+  @Test
+  void rentalVehicleWithPropulsionFilter() {
+    var visitor = new PlaceFinderTraverseVisitor(
+      transitService,
+      null,
+      List.of(PlaceType.VEHICLE_RENT),
+      null,
+      null,
+      null,
+      null,
+      null,
       List.of(PropulsionType.ELECTRIC),
       null,
       1,
@@ -394,6 +445,7 @@ public class PlaceFinderTraverseVisitorTest {
 
     var res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
 
+    // There is an electric vehicle (scooter) in the test data
     assertEquals(List.of(scooter), res);
 
     visitor = new PlaceFinderTraverseVisitor(
@@ -404,7 +456,7 @@ public class PlaceFinderTraverseVisitorTest {
       null,
       null,
       null,
-      List.of(RentalFormFactor.BICYCLE),
+      null,
       List.of(PropulsionType.HUMAN),
       null,
       1,
@@ -417,6 +469,7 @@ public class PlaceFinderTraverseVisitorTest {
 
     res = visitor.placesFound.stream().map(PlaceAtDistance::place).toList();
 
+    // There are no human-powered vehicles in the test data
     assertEquals(List.of(), res);
   }
 }
