@@ -344,17 +344,7 @@ public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
 
       List<RentalFormFactor> filterByVehicleFormFactor =
         args.getGraphQLFilterByVehicleFormFactor() != null
-          ? args
-              .getGraphQLFilterByVehicleFormFactor()
-              .stream()
-              .map(formFactor -> {
-                try {
-                  return RentalFormFactor.valueOf(formFactor.name());
-                } catch (IllegalArgumentException ignored) {
-                  return null;
-                }
-              })
-              .toList()
+          ? args.getGraphQLFilterByVehicleFormFactor().stream().map(GraphQLUtils::toModel).toList()
           : null;
 
       List<PropulsionType> filterByVehiclePropulsionType =
@@ -362,13 +352,7 @@ public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
           ? args
               .getGraphQLFilterByVehiclePropulsionType()
               .stream()
-              .map(propulsionType -> {
-                try {
-                  return PropulsionType.valueOf(propulsionType.name());
-                } catch (IllegalArgumentException ignored) {
-                  return null;
-                }
-              })
+              .map(GraphQLUtils::toModel)
               .toList()
           : null;
 
