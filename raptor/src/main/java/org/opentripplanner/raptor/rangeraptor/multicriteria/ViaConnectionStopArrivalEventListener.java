@@ -51,7 +51,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     this.stopArrivalFactory = stopArrivalFactory;
     this.connections = requireAtLeastNElements(connections, 1);
     this.next = next;
-    publishTransfersEventHandler.accept(this::publishTransfers);
+    publishTransfersEventHandler.accept(this::applyTransfers);
   }
 
   /**
@@ -71,66 +71,55 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
       return map;
     }
     TIntObjectMap<List<RaptorViaConnection>> connectionsByStop = viaConnections.byFromStop();
-    for (var stop : connectionsByStop.keys()) {
+    for (int stop : connectionsByStop.keys()) {
       var connections = connectionsByStop.get(stop);
-      ParetoSetEventListener<ArrivalView<T>> l = new ViaConnectionStopArrivalEventListener<>(
+      var listener = new ViaConnectionStopArrivalEventListener<>(
         stopArrivalFactory,
         connections,
         nextLegStopArrivals,
         onTransitComplete
       );
-      map.put(stop, l);
+      map.put(stop, listener);
     }
     return map;
   }
 
-  private void publishTransfers() {
+  private void applyTransfers() {
     for (var arrival : transfersCache) {
       next.addStopArrival(arrival);
     }
     transfersCache.clear();
   }
 
-  int fromStop() {
-    return connections.getFirst().fromStop();
-  }
-
   @Override
   public void notifyElementAccepted(ArrivalView<T> newElement) {
+    var e = (McStopArrival<T>) newElement;
     for (RaptorViaConnection c : connections) {
-      var e = (McStopArrival<T>) newElement;
-      var n = createViaStopArrival(e, c);
-      if (n != null) {
-        if (c.isTransfer()) {
-          transfersCache.add(n);
-        } else {
-          next.addStopArrival(n);
-        }
+      if (c.isSameStop()) {
+        next.addStopArrival(createViaStopArrivalWithWaitTime(e, c));
+      } else if (e.arrivedOnBoard()) {
+        transfersCache.add(createViaStopArrivalWithTransfer(e, c));
       }
+      // Ignore arrive-on-foot + via-transfer
     }
   }
 
-  @Nullable
-  private McStopArrival<T> createViaStopArrival(
+  private static <T extends RaptorTripSchedule> McStopArrival<T> createViaStopArrivalWithWaitTime(
+    McStopArrival<T> arrival,
+    RaptorViaConnection viaConnection
+  ) {
+    int d = viaConnection.durationInSeconds();
+    return d == 0 ? arrival : arrival.addSlackToArrivalTime(d);
+  }
+
+  private McStopArrival<T> createViaStopArrivalWithTransfer(
     McStopArrival<T> previous,
     RaptorViaConnection viaConnection
   ) {
-    if (viaConnection.isSameStop()) {
-      if (viaConnection.durationInSeconds() == 0) {
-        return previous;
-      } else {
-        return previous.addSlackToArrivalTime(viaConnection.durationInSeconds());
-      }
-    } else {
-      if (previous.arrivedOnBoard()) {
-        return stopArrivalFactory.createTransferStopArrival(
-          previous,
-          viaConnection.transfer(),
-          previous.arrivalTime() + viaConnection.durationInSeconds()
-        );
-      } else {
-        return null;
-      }
-    }
+    return stopArrivalFactory.createTransferStopArrival(
+      previous,
+      viaConnection.transfer(),
+      previous.arrivalTime() + viaConnection.durationInSeconds()
+    );
   }
 }
