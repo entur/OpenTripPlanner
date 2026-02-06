@@ -110,6 +110,7 @@ public class CarpoolItineraryMapper {
    */
   @Nullable
   public Itinerary toItinerary(RouteRequest request, InsertionCandidate candidate) {
+
     var sharedSegments = candidate.getSharedSegments();
     if (sharedSegments.isEmpty()) {
       return null;
