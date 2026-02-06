@@ -1,5 +1,8 @@
 package org.opentripplanner.street.model;
 
+/**
+ * The type of propulsion for a vehicle
+ */
 public enum PropulsionType {
   HUMAN,
   ELECTRIC_ASSIST,
