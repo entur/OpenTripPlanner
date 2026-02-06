@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
@@ -40,7 +39,6 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   private final List<McStopArrival<T>> arrivalsCache = new ArrayList<>();
   private final RaptorCostCalculator<T> calculatorGeneralizedCost;
   private final RaptorTransitCalculator<T> transitCalculator;
-  private final Collection<McStopArrival<T>> onBoardAccessStopArrivals;
 
   /**
    * create a RaptorState for a network with a particular number of stops, and a given maximum
@@ -61,7 +59,6 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     this.stopArrivalFactory = stopArrivalFactory;
     this.calculatorGeneralizedCost = calculatorGeneralizedCost;
     this.transitCalculator = transitCalculator;
-    this.onBoardAccessStopArrivals = new ArrayList<>();
 
     // Attach to the RR life cycle
     lifeCycle.onSetupIteration(ignore -> setupIteration());
@@ -74,7 +71,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
 
   @Override
   public boolean isNewRoundAvailable() {
-    return arrivals.updateExist() || !onBoardAccessStopArrivals.isEmpty();
+    return arrivals.updateExist();
   }
 
   @Override
@@ -124,12 +121,12 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   Iterable<? extends McStopArrival<T>> listOnBoardStopArrivals() {
-    return onBoardAccessStopArrivals;
+    return arrivals.listOnBoardTripArrivals();
   }
 
   public void addOnBoardAccessStopArrival(RaptorAccessEgress accessPath, int departureTime) {
     var arrival = stopArrivalFactory.createAccessStopArrival(departureTime, accessPath);
-    onBoardAccessStopArrivals.add(arrival);
+    arrivals.addOnBoardTripArrival(arrival);
   }
 
   /**
