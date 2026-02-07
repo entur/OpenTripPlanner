@@ -8,8 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.request.RaptorViaConnection;
 import org.opentripplanner.raptor.api.view.ArrivalView;
+import org.opentripplanner.raptor.api.view.TransitArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
@@ -95,13 +97,29 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   public void notifyElementAccepted(ArrivalView<T> newElement) {
     var e = (McStopArrival<T>) newElement;
     for (RaptorViaConnection c : connections) {
-      if (c.isSameStop()) {
+      if (c.isPassThrough()) {
+        if (e instanceof TransitArrival transitArrival) {
+          var tripBoarding = new RaptorTripScheduleStopPosition(1, 1, 1);
+          next.addOnBoardTripArrival(
+            createViaStopArrivalWithTripBoarding(e.previous(), c),
+            tripBoarding
+          );
+        }
+      } else if (c.isSameStop()) {
         next.addStopArrival(createViaStopArrivalWithWaitTime(e, c));
       } else if (e.arrivedOnBoard()) {
         transfersCache.add(createViaStopArrivalWithTransfer(e, c));
       }
       // Ignore arrive-on-foot + via-transfer
     }
+  }
+
+  @Nullable
+  private McStopArrival<T> createViaStopArrivalWithTripBoarding(
+    McStopArrival<T> previous,
+    RaptorViaConnection viaConnection
+  ) {
+    return previous;
   }
 
   private static <T extends RaptorTripSchedule> McStopArrival<T> createViaStopArrivalWithWaitTime(

@@ -152,6 +152,8 @@ public interface ArrivalView<T extends RaptorTripSchedule> {
 
   boolean arrivedOnBoard();
 
+  @Deprecated
+  /** @deprecated  */
   default RaptorTripScheduleStopPosition subsequentBoardingConstraint() {
     throw new UnsupportedOperationException();
   }
