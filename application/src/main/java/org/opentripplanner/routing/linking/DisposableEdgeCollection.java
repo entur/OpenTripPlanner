@@ -6,14 +6,13 @@ import java.util.HashSet;
 import java.util.Set;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.street.model.linking.EdgeDisposable;
 import org.opentripplanner.street.model.vertex.Vertex;
 
 /**
  * This class is used to keep track of temporary edges added to the graph, so that they can be
  * removed from the graph when no longer needed.
  */
-public class DisposableEdgeCollection implements EdgeDisposable {
+public class DisposableEdgeCollection {
 
   private final Graph graph;
 

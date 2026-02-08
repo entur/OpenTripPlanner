@@ -507,7 +507,11 @@ public class VertexLinker {
     // existing vertices
     var newEdges = scope == Scope.PERMANENT
       ? originalEdge.splitDestructively(v)
-      : originalEdge.splitNonDestructively(v, tempEdges, direction);
+      : originalEdge.splitNonDestructively(v, direction);
+
+    if (scope != Scope.PERMANENT) {
+      newEdges.asIterable().forEach(tempEdges::addEdge);
+    }
 
     if (scope == Scope.REALTIME || scope == Scope.PERMANENT) {
       // update indices of new edges

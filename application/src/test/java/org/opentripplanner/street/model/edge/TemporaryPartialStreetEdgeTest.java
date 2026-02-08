@@ -15,7 +15,6 @@ import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
-import org.opentripplanner.street.model.linking.EdgeDisposable;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
@@ -146,26 +145,17 @@ public class TemporaryPartialStreetEdgeTest {
     List<StreetEdge> edges = new ArrayList<>();
     edges.add(e2);
 
-    EdgeDisposable tempEdges = new EdgeDisposable() {
-      @Override
-      public void addEdge(Edge edge) {}
-    };
-
     TemporaryStreetLocation end = StreetModelForTest.createTemporaryStreetLocationForTest(
-      "middle of e2",
       new NonLocalizedString("foo"),
       edges,
       nearestPoint,
-      true,
-      tempEdges
+      true
     );
     TemporaryStreetLocation start = StreetModelForTest.createTemporaryStreetLocationForTest(
-      "middle of e2",
       new NonLocalizedString("foo"),
       edges,
       nearestPoint,
-      false,
-      tempEdges
+      false
     );
 
     StreetSearchRequest request = StreetSearchRequest.of()
