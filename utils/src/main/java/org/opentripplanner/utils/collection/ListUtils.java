@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 
 public class ListUtils {
@@ -130,16 +129,6 @@ public class ListUtils {
       ret.add(partitionIntoSplit(sublist));
     }
     return ret;
-  }
-
-  /**
-   * Take a list of elements and return a list of {@link IndexedListElement}s. This is useful
-   * when you need the element's index during iteration.
-   */
-  public static <T> List<IndexedListElement<T>> indexedList(List<T> input) {
-    return IntStream.rangeClosed(0, input.size() - 1)
-      .mapToObj(index -> new IndexedListElement<>(index, input.get(index)))
-      .toList();
   }
 
   private static <T> Split<T> partitionIntoSplit(List<T> list) {

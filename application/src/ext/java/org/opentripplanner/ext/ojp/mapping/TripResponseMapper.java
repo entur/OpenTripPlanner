@@ -23,6 +23,7 @@ import jakarta.xml.bind.JAXBElement;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -38,7 +39,6 @@ import org.opentripplanner.model.plan.leg.StopArrival;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.ojp.time.XmlDateTime;
 import org.opentripplanner.routing.api.response.RoutingResponse;
-import org.opentripplanner.utils.collection.ListUtils;
 
 public class TripResponseMapper {
 
@@ -84,21 +84,26 @@ public class TripResponseMapper {
   }
 
   private TripResultStructure mapItinerary(Itinerary itinerary) {
-    var tr = new TripResultStructure().withId(tripId(itinerary));
+    return new TripResultStructure()
+      .withId(tripId(itinerary))
+      .withTrip(
+        new TripStructure()
+          .withId(tripId(itinerary))
+          .withDuration(Duration.between(itinerary.startTime(), itinerary.endTime()))
+          .withTransfers(itinerary.legs().size() - 1)
+          .withStartTime(new XmlDateTime(itinerary.startTime()))
+          .withEndTime(new XmlDateTime(itinerary.endTime()))
+          .withLeg(mapLegs(itinerary))
+      );
+  }
 
-    var legs = ListUtils.indexedList(itinerary.legs())
-      .stream()
-      .map(l -> mapLeg(l.index(), l.element()))
-      .toList();
-    return tr.withTrip(
-      new TripStructure()
-        .withId(tripId(itinerary))
-        .withDuration(Duration.between(itinerary.startTime(), itinerary.endTime()))
-        .withTransfers(itinerary.legs().size() - 1)
-        .withStartTime(new XmlDateTime(itinerary.startTime()))
-        .withEndTime(new XmlDateTime(itinerary.endTime()))
-        .withLeg(legs)
-    );
+  private List<LegStructure> mapLegs(Itinerary itinerary) {
+    var legs = new ArrayList<LegStructure>();
+    for (int i = 0; i < itinerary.legs().size(); i++) {
+      var leg = itinerary.legs().get(i);
+      legs.add(mapLeg(i, leg));
+    }
+    return legs;
   }
 
   private LegStructure mapLeg(int index, Leg leg) {

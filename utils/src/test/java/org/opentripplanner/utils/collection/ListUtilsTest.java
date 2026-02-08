@@ -124,21 +124,4 @@ class ListUtilsTest {
       res
     );
   }
-
-  @Test
-  void indexedList() {
-    var list = List.of("A", "B", "C");
-    var indexed = ListUtils.indexedList(list);
-
-    assertEquals(
-      List.of(
-        new IndexedListElement<>(0, "A"),
-        new IndexedListElement<>(1, "B"),
-        new IndexedListElement<>(2, "C")
-      ),
-      indexed
-    );
-
-    assertEquals("(0=A)", indexed.getFirst().toString());
-  }
 }
