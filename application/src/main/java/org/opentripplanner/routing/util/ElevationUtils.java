@@ -2,22 +2,12 @@ package org.opentripplanner.routing.util;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.geotools.api.referencing.FactoryException;
-import org.geotools.api.referencing.operation.MathTransform;
-import org.geotools.api.referencing.operation.TransformException;
-import org.geotools.geometry.Position3D;
-import org.geotools.referencing.operation.DefaultMathTransformFactory;
-import org.geotools.referencing.operation.transform.EarthGravitationalModel;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.routing.util.elevation.ToblersHikingFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ElevationUtils {
-
-  private static final Logger log = LoggerFactory.getLogger(ElevationUtils.class);
 
   /*
    * These numbers disagree with everything else I (David Turner) have read about the energy cost
@@ -92,18 +82,6 @@ public class ElevationUtils {
     9.4846184210137130E-02,
     5.5464612133430242E-02,
   };
-  // Set up a MathTransform based on the EarthGravitationalModel
-  private static MathTransform mt;
-
-  static {
-    try {
-      mt = new DefaultMathTransformFactory().createParameterizedTransform(
-        new EarthGravitationalModel.Provider().getParameters().createValue()
-      );
-    } catch (FactoryException e) {
-      e.printStackTrace();
-    }
-  }
 
   /**
    * @param elev       The elevation profile, where each (x, y) is (distance along edge, elevation)
@@ -245,38 +223,6 @@ public class ElevationUtils {
 
     Coordinate[] coordArr = new Coordinate[coordList.size()];
     return new PackedCoordinateSequence.Float(coordList.toArray(coordArr), 2);
-  }
-
-  /** checks for units (m/ft) in an OSM ele tag value, and returns the value in meters */
-  public static Double parseEleTag(String ele) {
-    ele = ele.toLowerCase();
-    double unit = 1;
-    if (ele.endsWith("m")) {
-      ele = ele.replaceFirst("\\s*m", "");
-    } else if (ele.endsWith("ft")) {
-      ele = ele.replaceFirst("\\s*ft", "");
-      unit = 0.3048;
-    }
-    try {
-      return Double.parseDouble(ele) * unit;
-    } catch (NumberFormatException e) {
-      return null;
-    }
-  }
-
-  /**
-   * Computes the difference between the ellipsoid and geoid at a specified lat/lon using Geotools
-   * EarthGravitationalModel. For unknown reasons, this method can produce incorrect results if
-   * called at the same time from multiple threads, so the method has been made synchronized.
-   *
-   * @return difference in meters
-   */
-  public static synchronized double computeEllipsoidToGeoidDifference(double lat, double lon)
-    throws TransformException {
-    // Compute the offset
-    Position3D dest = new Position3D();
-    mt.transform(new Position3D(lon, lat, 0), dest);
-    return dest.z;
   }
 
   /**

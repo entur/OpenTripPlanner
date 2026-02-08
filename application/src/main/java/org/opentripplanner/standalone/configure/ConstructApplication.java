@@ -20,7 +20,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.Rapto
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.linking.VertexLinker;
-import org.opentripplanner.routing.util.ElevationUtils;
+import org.opentripplanner.routing.util.EllipsoidUtils;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
@@ -226,7 +226,7 @@ public class ConstructApplication {
   private void initEllipsoidToGeoidDifference() {
     try {
       var c = factory.worldEnvelopeService().envelope().orElseThrow().center();
-      double value = ElevationUtils.computeEllipsoidToGeoidDifference(c.latitude(), c.longitude());
+      double value = EllipsoidUtils.computeEllipsoidToGeoidDifference(c.latitude(), c.longitude());
       graph().initEllipsoidToGeoidDifference(value, c.latitude(), c.longitude());
     } catch (Exception e) {
       LOG.error("Error computing ellipsoid/geoid difference");
