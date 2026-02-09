@@ -23,6 +23,7 @@ public class FlexServiceDate {
 
   private final int requestedBookingTime;
 
+  // sjekk når man går fra 1 dag til en annen!!!
   public FlexServiceDate(
     LocalDate serviceDate,
     int secondsFromStartOfTime,

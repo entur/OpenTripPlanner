@@ -198,6 +198,8 @@ public class RaptorPathToItineraryMapperTest {
       true,
       RoutingBookingInfo.NOT_SET
     );
+
+    flexAccessEgress.earliestDepartureTime(1000);
     RaptorAccessEgress access = new FlexAccessEgressAdapter(
       flexAccessEgress,
       AccessEgressType.ACCESS

@@ -332,7 +332,7 @@ public class TransitRouter {
 
     // Special handling of carpool accesses
     if(OTPFeature.CarPooling.isOn() && mode == StreetMode.CARPOOL){
-      var carPoolAccessList = carpoolingService.routeAccessEgress(accessRequest,streetRequest,type,transitServiceResolver,linkingContext);
+      var carPoolAccessList = carpoolingService.routeAccessEgress(accessRequest,streetRequest,type,transitServiceResolver,linkingContext, transitSearchTimeZero);
       results.removeAll(results.stream().filter(it -> !it.isWalkOnly()).toList());
       results.addAll(carPoolAccessList);
     }

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
+import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.model.Cost;
@@ -111,7 +113,14 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
 
     var accessPathLeg = Objects.requireNonNull(path.accessLeg());
     // Map access leg
-    List<Leg> legs = new ArrayList<>(mapAccessLeg(accessPathLeg));
+    List<Leg> legs = new ArrayList<>();
+
+    CarpoolItineraryMapper carpoolItineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
+    if(Objects.requireNonNull(path.accessLeg()).access() instanceof CarpoolAccessEgress){
+      legs.addAll(carpoolItineraryMapper.toItineary((CarpoolAccessEgress) accessPathLeg.access()).legs());
+    }else{
+      legs.addAll(mapAccessLeg(accessPathLeg));
+    }
 
     PathLeg<T> pathLeg = path.accessLeg().nextLeg();
 
@@ -176,7 +185,8 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       builder.withGeneralizedCost2(path.c2());
     }
 
-    return builder.build();
+    Itinerary finished = builder.build();
+    return finished;
   }
 
   private static <T extends TripSchedule> boolean isPathTransferAtSameStop(

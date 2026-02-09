@@ -41,6 +41,7 @@ public final class FlexAccessEgress {
       requestedBookingTime,
       trip.getPickupBookingInfo(boardStopPosition)
     );
+    var a = 1;
   }
 
   public RegularStop stop() {
@@ -70,7 +71,8 @@ public final class FlexAccessEgress {
     if (earliestDepartureTime == MISSING_VALUE) {
       return MISSING_VALUE;
     }
-    return pathDurations.mapToRouterDepartureTime(earliestDepartureTime);
+    var ret =  pathDurations.mapToRouterDepartureTime(earliestDepartureTime);
+    return ret;
   }
 
   public int latestArrivalTime(int arrivalTime) {
@@ -87,7 +89,8 @@ public final class FlexAccessEgress {
     if (routingBookingInfo.exceedsMinimumBookingNotice(latestArrivalTime - pathDurations.trip())) {
       return MISSING_VALUE;
     }
-    return pathDurations.mapToRouterArrivalTime(latestArrivalTime);
+    var ret = pathDurations.mapToRouterArrivalTime(latestArrivalTime);
+    return ret;
   }
 
   @Override

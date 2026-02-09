@@ -4,8 +4,11 @@ import java.time.Duration;
 import java.time.ZoneId;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
+import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.model.Cost;
@@ -80,6 +83,36 @@ public class CarpoolItineraryMapper {
    */
   public CarpoolItineraryMapper(ZoneId timeZone) {
     this.timeZone = ZoneIdFallback.zoneId(timeZone);
+  }
+
+  public Itinerary toItineary(CarpoolAccessEgress accessEgress) {
+
+    var path = new GraphPath<>(accessEgress.getLastState());
+    var startTime = path.states.getFirst().getTime().atZone(this.timeZone);
+    var endTime = path.states.getLast().getTime().atZone(this.timeZone);
+    var fromVertex = path.states.getFirst().getVertex();
+    var toVertex = path.states.getLast().getVertex();
+    var allEdges = path.edges;
+    LineString geometry = GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry);
+
+
+    var carpoolLeg = CarpoolLeg.of()
+      .withStartTime(startTime)
+      .withEndTime(endTime)
+      .withFrom(Place.normal(fromVertex, new NonLocalizedString("Carpool boarding")))
+      .withTo(Place.normal(toVertex, new NonLocalizedString("Carpool boarding")))
+      .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
+      .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
+      .withGeneralizedCost((int) (path.states.getLast().getWeight() - path.states.getFirst().getWeight()))
+      .withGeometry(geometry)
+      .build();
+
+
+    var itineary = Itinerary.ofDirect(List.of(carpoolLeg))
+      .withGeneralizedCost(Cost.costOfSeconds(carpoolLeg.generalizedCost()))
+      .build();
+
+    return itineary;
   }
 
   /**
