@@ -251,11 +251,29 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
   public CarpoolAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType, ZonedDateTime transitSearchTimeZero) {
 
+    // THIS ONLY WORKS IF THERE ARE NO OTHER PASSENGERS, CHANGE
     var position = insertionCandidate.dropoffPosition() - 1;
+
+    var segmentsBeforeFlexSegment = insertionCandidate.routeSegments().subList(0, position);
+    // WE SHOULD ADD AN CONSTANT HERE FOR HOWEVER LONG IT TAKES TO PICK A NEW PASSENGER, MINUTE PERHAPS
+    // THIS ALSO NEED TO BE TAKEN INTO ACCOUNT AT OTHER PLACES, LIKE WHEN EVALUATING VALID INSERTIONS
+    var durationBeforeFlexSegment = segmentsBeforeFlexSegment.stream().map(
+      it -> Duration.between(
+        it.states.getFirst().getTime(), it.states.getLast().getTime()
+      )
+    ).reduce(Duration.ZERO, Duration::plus);
+
     var segment = insertionCandidate.routeSegments().get(position);
+
     var lastState = segment.states.getLast();
-    var relativeStartTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, Instant.ofEpochSecond(segment.getStartTime()));
-    var relativeEndTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, Instant.ofEpochSecond(segment.getEndTime()));
+
+    var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationBeforeFlexSegment);
+
+    // THIS ONLY WORKS IF THERE ARE NO OTHER PASSENGERS, CHANGE
+    var endTimeOfSegment = startTimeOfSegment.plusSeconds(segment.getEndTime() - segment.getStartTime());
+
+    var relativeStartTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, startTimeOfSegment.toInstant());
+    var relativeEndTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, endTimeOfSegment.toInstant());
 
     var accessEgress = new CarpoolAccessEgress(
       insertionCandidate.transitStop().stop.getIndex(),
