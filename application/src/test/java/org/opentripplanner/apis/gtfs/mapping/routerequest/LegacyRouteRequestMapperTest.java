@@ -50,7 +50,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
 
 class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
-  static final GraphQLRequestContext context;
+  static final GraphQLRequestContext CONTEXT;
 
   static {
     Graph graph = new Graph();
@@ -74,7 +74,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
         return Optional.ofNullable(group).map(locationsGroup -> locationsGroup.getCoordinate());
       }
     );
-    context = new GraphQLRequestContext(
+    CONTEXT = new GraphQLRequestContext(
       new TestRoutingService(List.of()),
       transitService,
       transferService,
@@ -120,7 +120,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var env = executionContext(arguments);
 
-    var routeRequest = LegacyRouteRequestMapper.toRouteRequest(env, context);
+    var routeRequest = LegacyRouteRequestMapper.toRouteRequest(env, CONTEXT);
 
     assertNotNull(routeRequest);
 
@@ -154,7 +154,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
     assertNotNull(routeRequest);
 
@@ -178,7 +178,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
     assertNotNull(routeRequest);
 
@@ -194,7 +194,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     Map<String, Object> arguments = decorateWithRequiredParams(Map.of());
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
     assertEquals(SAFE_STREETS, routeRequest.preferences().bike().optimizeType());
   }
@@ -212,7 +212,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
 
     assertEquals(TRIANGLE, routeRequest.preferences().bike().optimizeType());
@@ -242,7 +242,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
 
     assertEquals(OptimizationTypeMapper.map(bot), routeRequest.preferences().bike().optimizeType());
@@ -261,13 +261,13 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
     assertEquals(reluctance, routeRequest.preferences().walk().reluctance());
 
     var noParamsRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(decorateWithRequiredParams(Map.of())),
-      context
+      CONTEXT
     );
     assertNotEquals(reluctance, noParamsRequest.preferences().walk().reluctance());
   }
@@ -279,13 +279,13 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
     assertEquals(Duration.ofSeconds(seconds), routeRequest.preferences().transfer().slack());
 
     var noParamsReq = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(decorateWithRequiredParams(Map.of())),
-      context
+      CONTEXT
     );
     assertEquals(TransferPreferences.DEFAULT.slack(), noParamsReq.preferences().transfer().slack());
   }
@@ -303,7 +303,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
-      context
+      CONTEXT
     );
     assertEquals(
       "[PassThroughViaLocation{label: a label, stopLocationIds: [F:stop1]}]",
@@ -312,7 +312,7 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
     var noParamsReq = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(decorateWithRequiredParams(Map.of())),
-      context
+      CONTEXT
     );
     assertEquals(List.of(), noParamsReq.listViaLocations());
   }

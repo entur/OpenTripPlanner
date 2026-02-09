@@ -44,7 +44,7 @@ class StreetTransitEntityLinkTest {
   @Nested
   class WheelchairAccessibility {
 
-    static final RegularStop inaccessibleStop = stopForTest(
+    static final RegularStop INACCESSIBLE_STOP = stopForTest(
       "A:inaccessible",
       "wheelchair inaccessible stop",
       10.001,
@@ -53,7 +53,7 @@ class StreetTransitEntityLinkTest {
       NOT_POSSIBLE
     );
 
-    static final RegularStop unknownStop = stopForTest(
+    static final RegularStop UNKNOWN_STOP = stopForTest(
       "A:unknown",
       "unknown",
       10.001,
@@ -64,7 +64,7 @@ class StreetTransitEntityLinkTest {
 
     @Test
     void disallowInaccessibleStop() {
-      var afterTraversal = traverse(inaccessibleStop, true);
+      var afterTraversal = traverse(INACCESSIBLE_STOP, true);
       assertTrue(State.isEmpty(afterTraversal));
     }
 
@@ -77,10 +77,10 @@ class StreetTransitEntityLinkTest {
 
     @Test
     void unknownStop() {
-      var afterTraversal = traverse(unknownStop, false);
+      var afterTraversal = traverse(UNKNOWN_STOP, false);
       assertFalse(State.isEmpty(afterTraversal));
 
-      var afterStrictTraversal = traverse(unknownStop, true);
+      var afterStrictTraversal = traverse(UNKNOWN_STOP, true);
       assertTrue(State.isEmpty(afterStrictTraversal));
     }
 

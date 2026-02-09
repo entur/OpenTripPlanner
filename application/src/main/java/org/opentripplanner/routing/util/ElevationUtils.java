@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 public class ElevationUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(ElevationUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ElevationUtils.class);
 
   /*
    * These numbers disagree with everything else I (David Turner) have read about the energy cost
@@ -31,11 +31,11 @@ public class ElevationUtils {
    */
   private static final double MAX_SLOPE_WALK_EFFECTIVE_LENGTH_FACTOR = 3;
 
-  private static final ToblersHikingFunction toblerWalkingFunction = new ToblersHikingFunction(
+  private static final ToblersHikingFunction TOBLER_WALKING_FUNCTION = new ToblersHikingFunction(
     MAX_SLOPE_WALK_EFFECTIVE_LENGTH_FACTOR
   );
   /** constants for slope computation */
-  static final double[] tx = {
+  static final double[] TX = {
     0.0000000000000000E+00,
     0.0000000000000000E+00,
     0.0000000000000000E+00,
@@ -44,7 +44,7 @@ public class ElevationUtils {
     5.0000000000000000E+03,
     5.0000000000000000E+03,
   };
-  static final double[] ty = {
+  static final double[] TY = {
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
@@ -56,7 +56,7 @@ public class ElevationUtils {
     3.4999999999999998E-01,
     3.4999999999999998E-01,
   };
-  static final double[] coeff = {
+  static final double[] COEFF = {
     4.3843513168660255E+00,
     3.6904323727375652E+00,
     1.6791850199667697E+00,
@@ -290,7 +290,7 @@ public class ElevationUtils {
     int l = kx1;
     int l1 = l + 1;
 
-    while ((altitude >= tx[l1 - 1]) && (l != nkx1)) {
+    while ((altitude >= TX[l1 - 1]) && (l != nkx1)) {
       l = l1;
       l1 = l + 1;
     }
@@ -304,10 +304,10 @@ public class ElevationUtils {
       for (i = 0; i < j; i++) {
         li = l + i;
         lj = li - j;
-        if (tx[li] != tx[lj]) {
-          f = hh[i] / (tx[li] - tx[lj]);
-          h[i] = h[i] + f * (tx[li] - altitude);
-          h[i + 1] = f * (altitude - tx[lj]);
+        if (TX[li] != TX[lj]) {
+          f = hh[i] / (TX[li] - TX[lj]);
+          h[i] = h[i] + f * (TX[li] - altitude);
+          h[i + 1] = f * (altitude - TX[lj]);
         } else {
           h[i + 1 - 1] = 0.0;
         }
@@ -324,7 +324,7 @@ public class ElevationUtils {
     l = ky1;
     l1 = l + 1;
 
-    while ((slope >= ty[l1 - 1]) && (l != nky1)) {
+    while ((slope >= TY[l1 - 1]) && (l != nky1)) {
       l = l1;
       l1 = l + 1;
     }
@@ -338,10 +338,10 @@ public class ElevationUtils {
       for (i = 0; i < j; i++) {
         li = l + i;
         lj = li - j;
-        if (ty[li] != ty[lj]) {
-          f = hh[i] / (ty[li] - ty[lj]);
-          h[i] = h[i] + f * (ty[li] - slope);
-          h[i + 1] = f * (slope - ty[lj]);
+        if (TY[li] != TY[lj]) {
+          f = hh[i] / (TY[li] - TY[lj]);
+          h[i] = h[i] + f * (TY[li] - slope);
+          h[i + 1] = f * (slope - TY[lj]);
         } else {
           h[i + 1 - 1] = 0.0;
         }
@@ -364,7 +364,7 @@ public class ElevationUtils {
       l2 = l1;
       for (j1 = 0; j1 < ky1; j1++) {
         l2 = l2 + 1;
-        temp = temp + coeff[l2 - 1] * h[i1] * w_y[j1];
+        temp = temp + COEFF[l2 - 1] * h[i1] * w_y[j1];
       }
       l1 = l1 + nky1;
     }
@@ -468,7 +468,7 @@ public class ElevationUtils {
    * </p>
    */
   static double calculateEffectiveWalkLength(double run, double rise) {
-    return run * toblerWalkingFunction.calculateHorizontalWalkingDistanceMultiplier(run, rise);
+    return run * TOBLER_WALKING_FUNCTION.calculateHorizontalWalkingDistanceMultiplier(run, rise);
   }
 
   private static double[] getLengthsFromElevation(CoordinateSequence elev) {

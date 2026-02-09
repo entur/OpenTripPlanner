@@ -24,7 +24,7 @@ import org.opentripplanner.framework.geometry.WgsCoordinate;
 
 class TripViaLocationMapperTest {
 
-  private static final Duration D1m = Duration.ofMinutes(1);
+  private static final Duration D1_m = Duration.ofMinutes(1);
   private static final String LABEL = "TestLabel";
   private static final Duration MIN_WAIT_TIME = Duration.ofMinutes(5);
   private static final List<String> LIST_IDS_INPUT = List.of("F:ID1", "F:ID2");
@@ -141,7 +141,7 @@ class TripViaLocationMapperTest {
   @Test
   void testOneOf() {
     Map<String, Object> input = Map.ofEntries(
-      entry(FIELD_VISIT, visitInput("A", D1m, List.of("F:99"), null)),
+      entry(FIELD_VISIT, visitInput("A", D1_m, List.of("F:99"), null)),
       entry(FIELD_PASS_THROUGH, passThroughInput(LABEL, LIST_IDS_INPUT))
     );
     var ex = assertThrows(IllegalArgumentException.class, () ->
