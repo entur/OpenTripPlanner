@@ -10,10 +10,10 @@ import jakarta.inject.Singleton;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -44,7 +44,11 @@ public class DefaultRealtimeVehicleService
     Multimap<TripPattern, RealtimeVehicle> temp = ArrayListMultimap.create();
     temp.putAll(vehicles);
     // remove all previous updates for this specific feed id
-    vehicles.keys().stream().filter(p -> p.getFeedId().equals(feedId)).forEach(temp::removeAll);
+    vehicles
+      .keys()
+      .stream()
+      .filter(p -> p.getFeedId().equals(feedId))
+      .forEach(temp::removeAll);
     // transform keys and put all fresh updates into map
     updates.forEach((pattern, vehicles) -> {
       if (pattern.getOriginalTripPattern() != null) {

@@ -8,7 +8,7 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.alertpatch.TransitAlertBuilder;
@@ -41,8 +41,7 @@ class AlertMetricsTest {
     binder.bindTo(registry);
     binder.recordMetrics();
 
-    var expected =
-      """
+    var expected = """
       alerts(GAUGE)[feedId='F', severity='INFO']; value=1.0
       alerts(GAUGE)[effect='DETOUR', feedId='F']; value=1.0
       """.trim();

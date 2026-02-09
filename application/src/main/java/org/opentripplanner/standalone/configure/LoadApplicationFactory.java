@@ -19,15 +19,20 @@ import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.configure.OsmInfoGraphBuildRepositoryModule;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.configure.StreetDetailsRepositoryModule;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.configure.VehicleParkingRepositoryModule;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeRepositoryModule;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
+import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
 import org.opentripplanner.standalone.config.configure.LoadConfigModule;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.configure.StreetRepositoryModule;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.configure.TransferRepositoryModule;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 /**
@@ -38,13 +43,16 @@ import org.opentripplanner.transit.service.TimetableRepository;
   modules = {
     LoadConfigModule.class,
     DataStoreModule.class,
+    DeduplicatorServiceModule.class,
     GsDataSourceModule.class,
     OsmInfoGraphBuildRepositoryModule.class,
+    StreetDetailsRepositoryModule.class,
     WorldEnvelopeRepositoryModule.class,
     EmissionRepositoryModule.class,
     EmpiricalDelayRepositoryModule.class,
     StopConsolidationRepositoryModule.class,
     StreetRepositoryModule.class,
+    TransferRepositoryModule.class,
     VehicleParkingRepositoryModule.class,
     FareModule.class,
   }
@@ -61,7 +69,13 @@ public interface LoadApplicationFactory {
   OsmInfoGraphBuildRepository emptyOsmInfoGraphBuildRepository();
 
   @Singleton
+  StreetDetailsRepository emptyStreetDetailsRepository();
+
+  @Singleton
   TimetableRepository emptyTimetableRepository();
+
+  @Singleton
+  TransferRepository emptyTransferRepository();
 
   @Singleton
   WorldEnvelopeRepository emptyWorldEnvelopeRepository();

@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.spi;
 
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 
 /**
@@ -21,6 +21,7 @@ public record UpdateError(
   public UpdateError(@Nullable FeedScopedId tripId, UpdateErrorType errorType, Integer stopIndex) {
     this(tripId, errorType, stopIndex, null);
   }
+
   public UpdateError(@Nullable FeedScopedId tripId, UpdateErrorType errorType, String producer) {
     this(tripId, errorType, null, producer);
   }

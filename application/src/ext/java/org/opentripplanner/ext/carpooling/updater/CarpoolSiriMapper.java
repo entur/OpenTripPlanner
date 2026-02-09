@@ -11,12 +11,12 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
 import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,9 @@ public class CarpoolSiriMapper {
   ) {
     String stopId = isFirst
       ? tripId + "_trip_origin"
-      : isLast ? tripId + "_trip_destination" : tripId + "_stop_" + sequenceNumber;
+      : isLast
+        ? tripId + "_trip_destination"
+        : tripId + "_stop_" + sequenceNumber;
 
     var areaStop = buildAreaStop(call, stopId);
 

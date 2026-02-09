@@ -3,9 +3,9 @@ package org.opentripplanner.street.model.edge;
 import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -44,8 +44,9 @@ public class ElevatorBoardEdge extends Edge implements BikeWalkableEdge, Elevato
 
     var req = s0.getRequest();
 
-    s1.incrementWeight(req.elevator().boardCost());
-    s1.incrementTimeInSeconds(req.elevator().boardTime());
+    long time = req.elevator().boardSlack().toSeconds();
+    s1.incrementWeight(req.elevator().boardCost() + req.elevator().reluctance() * time);
+    s1.incrementTimeInSeconds(time);
 
     return s1.makeStateArray();
   }
@@ -53,11 +54,11 @@ public class ElevatorBoardEdge extends Edge implements BikeWalkableEdge, Elevato
   @Override
   public I18NString getName() {
     // TODO: i18n
-    return new NonLocalizedString("Elevator");
+    return new NonLocalizedString("ElevatorBoardEdge");
   }
 
   /**
-   * Since board edges always are called Elevator, the name is utterly and completely bogus but is
+   * Since board edges are always called ElevatorBoardEdge, the name is complete bogus but is
    * never included in plans.
    */
   @Override

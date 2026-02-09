@@ -12,10 +12,10 @@ import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.api.model.FilterValues;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequestBuilder;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.TripAlteration;
 
 /**
@@ -122,16 +122,17 @@ public class DatedServiceJourneyQuery {
         );
 
         TripOnServiceDateRequestBuilder tripOnServiceDateRequestBuilder =
-          TripOnServiceDateRequest.of(operatingDays)
-            .withAgencies(authorities)
-            .withRoutes(lines)
-            .withServiceJourneys(serviceJourneys)
-            .withReplacementFor(replacementFor);
+          TripOnServiceDateRequest.of()
+            .withIncludeServiceDates(operatingDays)
+            .withIncludeAgencies(authorities)
+            .withIncludeRoutes(lines)
+            .withIncludeServiceJourneys(serviceJourneys)
+            .withIncludeReplacementFor(replacementFor);
 
         tripOnServiceDateRequestBuilder =
-          tripOnServiceDateRequestBuilder.withNetexInternalPlanningCodes(privateCodes);
+          tripOnServiceDateRequestBuilder.withIncludeNetexInternalPlanningCodes(privateCodes);
 
-        tripOnServiceDateRequestBuilder = tripOnServiceDateRequestBuilder.withAlterations(
+        tripOnServiceDateRequestBuilder = tripOnServiceDateRequestBuilder.withIncludeAlterations(
           alterations
         );
 

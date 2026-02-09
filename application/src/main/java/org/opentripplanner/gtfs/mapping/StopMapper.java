@@ -6,9 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import org.onebusaway.gtfs.model.Stop;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.FareZone;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.RegularStopBuilder;
@@ -131,10 +131,10 @@ class StopMapper {
     if (gtfsStop.getLocationType() != Stop.LOCATION_TYPE_STOP) {
       throw new IllegalArgumentException(
         "Expected location_type %s, but got %s for stops.txt entry %s".formatted(
-            Stop.LOCATION_TYPE_STOP,
-            gtfsStop.getLocationType(),
-            gtfsStop
-          )
+          Stop.LOCATION_TYPE_STOP,
+          gtfsStop.getLocationType(),
+          gtfsStop
+        )
       );
     }
   }

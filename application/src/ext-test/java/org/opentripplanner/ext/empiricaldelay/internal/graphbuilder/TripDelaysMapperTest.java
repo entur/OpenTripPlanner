@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.empiricaldelay.internal.model.TripDelaysAgregator;
 import org.opentripplanner.ext.empiricaldelay.model.EmpiricalDelay;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class TripDelaysMapperTest {
 
@@ -101,12 +101,12 @@ class TripDelaysMapperTest {
     assertEquals(EMPIRICAL_DELAY_C, res.get(MON_FRI, 2).get());
     assertEquals(
       "There is no empirical delay data for listed stops. Trip: F:Trip-A, ServiceId: " +
-      "Mon-Fri, Missing stops: [F:Stop-B]",
+        "Mon-Fri, Missing stops: [F:Stop-B]",
       issueStore.listIssues().get(0).getMessage()
     );
     assertEquals(
       "There is no empirical delay data for listed stops. Trip: F:Trip-A, ServiceId: Weekend, " +
-      "Missing stops: [F:Stop-A, F:Stop-C]",
+        "Missing stops: [F:Stop-A, F:Stop-C]",
       issueStore.listIssues().get(1).getMessage()
     );
     assertEquals(2, issueStore.listIssues().size(), () -> issueStore.listIssues().toString());
@@ -138,8 +138,8 @@ class TripDelaysMapperTest {
 
     assertEquals(
       "The stop sequence is wrong or the stop is not in the trip pattern. TripId: " +
-      "F:Trip-A, ServiceId: Weekend, delay: DelayAtStopDto[sequence=2, stopId=F:Stop-A, " +
-      "empiricalDelay=[19s, 1m13s]]",
+        "F:Trip-A, ServiceId: Weekend, delay: DelayAtStopDto[sequence=2, stopId=F:Stop-A, " +
+        "empiricalDelay=[19s, 1m13s]]",
       issueStore.listIssues().get(0).getMessage()
     );
     assertEquals(1, issueStore.listIssues().size(), () -> issueStore.listIssues().toString());

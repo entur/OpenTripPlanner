@@ -7,12 +7,11 @@ import java.util.List;
 import java.util.Locale;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.geometry.Polygons;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.vectortiles.VectorTilesResource;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.inspector.vector.LayerParameters;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
-import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.SiteRepository;
@@ -23,8 +22,7 @@ class AreaStopsLayerBuilderTest {
 
   private static final FeedScopedId ID = new FeedScopedId("FEED", "ID");
   private static final I18NString NAME = I18NString.of("Test stop");
-  private static final String CONFIG =
-    """
+  private static final String CONFIG = """
     {
       "vectorTiles": {
         "layers" : [
@@ -55,8 +53,7 @@ class AreaStopsLayerBuilderTest {
     .build();
 
   private final TimetableRepository timetableRepository = new TimetableRepository(
-    siteRepositoryBuilder.withAreaStop(AREA_STOP).build(),
-    new Deduplicator()
+    siteRepositoryBuilder.withAreaStop(AREA_STOP).build()
   );
 
   @Test

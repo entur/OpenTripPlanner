@@ -16,11 +16,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mobilitydata.gbfs.v3_0.station_information.GBFSName;
 import org.mobilitydata.gbfs.v3_0.station_information.GBFSStation;
 import org.mobilitydata.gbfs.v3_0.station_information.GBFSVehicleTypesCapacity;
-import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalSystem;
 import org.opentripplanner.street.model.RentalFormFactor;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class GbfsStationInformationMapperTest {
 
@@ -105,31 +105,27 @@ class GbfsStationInformationMapperTest {
       argumentSet("Empty station name list", validStation().withName(List.of())),
       argumentSet(
         "Station name list contains null name",
-        validStation()
-          .withName(
-            List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withText(null))
-          )
+        validStation().withName(
+          List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withText(null))
+        )
       ),
       argumentSet(
         "Station name list contains empty name",
-        validStation()
-          .withName(
-            List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withText(""))
-          )
+        validStation().withName(
+          List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withText(""))
+        )
       ),
       argumentSet(
         "Station name list contains null language",
-        validStation()
-          .withName(
-            List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withLanguage(null))
-          )
+        validStation().withName(
+          List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withLanguage(null))
+        )
       ),
       argumentSet(
         "Station name list contains empty language",
-        validStation()
-          .withName(
-            List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withLanguage(""))
-          )
+        validStation().withName(
+          List.of(new GBFSName().withText(TEST_STATION_NAME), new GBFSName().withLanguage(""))
+        )
       )
     );
   }

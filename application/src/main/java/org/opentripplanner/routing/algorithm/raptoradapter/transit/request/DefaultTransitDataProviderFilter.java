@@ -4,11 +4,11 @@ import java.util.BitSet;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.transit.model.basic.Accessibility;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
@@ -144,11 +144,10 @@ public class DefaultTransitDataProviderFilter implements TransitDataProviderFilt
       result = new BitSet(nStops);
 
       for (int i = 0; i < nStops; i++) {
-        PickDrop pickDrop =
-          switch (boardAlight) {
-            case BOARD -> pattern.getBoardType(i);
-            case ALIGHT -> pattern.getAlightType(i);
-          };
+        PickDrop pickDrop = switch (boardAlight) {
+          case BOARD -> pattern.getBoardType(i);
+          case ALIGHT -> pattern.getAlightType(i);
+        };
         result.set(i, pickDrop.isRoutable() || pickDrop.is(PickDrop.CANCELLED));
       }
     }

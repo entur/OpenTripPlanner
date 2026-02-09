@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.model.GeneralizedCostRelaxFunction;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
@@ -35,7 +36,6 @@ import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.routing.api.request.via.VisitViaLocation;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.grouppriority.DefaultTransitGroupPriorityCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,7 +76,7 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     this.linkingContext = Objects.requireNonNull(linkingContext);
   }
 
-  public static <T extends RaptorTripSchedule> RaptorRequest<T> mapRequest(
+  public static <T extends RaptorTripSchedule> RaptorRequestMapper<T> of(
     RouteRequest request,
     ZonedDateTime transitSearchTimeZero,
     boolean isMultiThreaded,
@@ -97,10 +97,10 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
       viaTransferResolver,
       lookUpStopIndex,
       linkingContext
-    ).doMap();
+    );
   }
 
-  private RaptorRequest<T> doMap() {
+  public RaptorRequest<T> mapRaptorRequest() {
     var builder = new RaptorRequestBuilder<T>();
     var searchParams = builder.searchParams();
     var preferences = request.preferences();
@@ -149,15 +149,10 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
 
     builder.withMultiCriteria(mcBuilder -> {
       var pt = preferences.transit();
-      var r = pt.raptor();
 
       // relax transit group priority can be used with via-visit-stop, but not with pass-through
       if (pt.isRelaxTransitGroupPrioritySet() && !hasPassThroughOnly()) {
         mapRelaxTransitGroupPriority(mcBuilder, pt);
-      } else if (!request.isViaSearch()) {
-        // The deprecated relaxGeneralizedCostAtDestination is only enabled, if there is no
-        // via location and the relaxTransitGroupPriority is not used (Normal).
-        r.relaxGeneralizedCostAtDestination().ifPresent(mcBuilder::withRelaxCostAtDestination);
       }
     });
 
@@ -222,13 +217,6 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     );
   }
 
-  private boolean hasViaLocationsOnly() {
-    return (
-      request.isViaSearch() &&
-      request.listViaLocations().stream().noneMatch(ViaLocation::isPassThroughLocation)
-    );
-  }
-
   private boolean hasViaLocationsAndPassThroughLocations() {
     var c = request.listViaLocations();
     return (
@@ -258,17 +246,20 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
         builder.addViaStop(stopIndex);
         viaStops.add(stopIndex);
       }
-      for (var coordinate : input.coordinates()) {
+      if (input.coordinate().isPresent()) {
         var vertices = linkingContext.findVertices(((VisitViaLocation) input).coordinateLocation());
         if (vertices.isEmpty()) {
           LOG.warn(
             "Found no vertices for the visit via location {} which indicates a problem.",
             input
           );
-          continue;
         }
         for (var vertex : vertices) {
-          var viaTransfers = viaTransferResolver.createViaTransfers(request, vertex, coordinate);
+          var viaTransfers = viaTransferResolver.createViaTransfers(
+            request,
+            vertex,
+            input.coordinate().get()
+          );
           for (var it : viaTransfers) {
             // If via-stop and via-transfers are used together then walking from a stop
             // to the coordinate and back is not pareto optimal, using just the stop

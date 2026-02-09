@@ -9,17 +9,21 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
 import org.opentripplanner.graph_builder.issues.AllWaysOfElevatorNodeOnSameLevel;
 import org.opentripplanner.graph_builder.issues.CouldNotApplyMultiLevelInfoToElevatorWay;
+import org.opentripplanner.graph_builder.issues.FewerThanTwoIntersectionNodesInElevatorWay;
+import org.opentripplanner.graph_builder.issues.MoreThanTwoIntersectionNodesInElevatorWay;
 import org.opentripplanner.graph_builder.issues.OnlyOneConnectionToElevatorNode;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelFactory;
+import org.opentripplanner.osm.model.OsmLevelSource;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.model.Level;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
@@ -92,12 +96,14 @@ class ElevatorProcessor {
   private final VertexFactory vertexFactory;
   private final Consumer<String> osmEntityDurationIssueConsumer;
   private final DataImportIssueStore issueStore;
+  private final StreetDetailsRepository streetDetailsRepository;
 
   public ElevatorProcessor(
     DataImportIssueStore issueStore,
     OsmDatabase osmdb,
     VertexGenerator vertexGenerator,
-    Graph graph
+    Graph graph,
+    StreetDetailsRepository streetDetailsRepository
   ) {
     this.osmdb = osmdb;
     this.vertexGenerator = vertexGenerator;
@@ -111,6 +117,15 @@ class ElevatorProcessor {
         )
       );
     this.issueStore = issueStore;
+    this.streetDetailsRepository = streetDetailsRepository;
+  }
+
+  /**
+   * Needs to be called after relevant intersection vertices have been created.
+   */
+  public void buildElevatorEdges() {
+    buildElevatorEdgesFromElevatorNodes();
+    buildElevatorEdgesFromElevatorWays();
   }
 
   /**
@@ -118,20 +133,27 @@ class ElevatorProcessor {
    * <p>
    * Needs to be called after elevatorNodes have been created in vertexGenerator.
    */
-  public void buildElevatorEdgesFromElevatorNodes() {
+  private void buildElevatorEdgesFromElevatorNodes() {
     for (Long nodeId : vertexGenerator.elevatorNodes().keySet()) {
       OsmNode node = osmdb.getNode(nodeId);
       Map<OsmElevatorKey, OsmElevatorVertex> vertices = vertexGenerator.elevatorNodes().get(nodeId);
       Map<OsmElevatorKey, OsmLevel> verticeLevels = vertexGenerator.elevatorNodeLevels();
 
-      // Do not create unnecessary ElevatorAlightEdges and ElevatorHopEdges.
       if (vertices.size() < 2) {
         issueStore.add(new OnlyOneConnectionToElevatorNode(node));
+        // Do not create unnecessary ElevatorBoardEdges, ElevatorAlightEdges, or ElevatorHopEdges.
         continue;
       }
 
       List<OsmElevatorKey> osmElevatorKeys = new ArrayList<>(vertices.keySet());
-      if (osmElevatorKeys.stream().map(key -> verticeLevels.get(key)).distinct().count() == 1) {
+      if (
+        osmElevatorKeys
+          .stream()
+          .map(key -> verticeLevels.get(key))
+          .distinct()
+          .count() ==
+        1
+      ) {
         issueStore.add(new AllWaysOfElevatorNodeOnSameLevel(node));
       }
       // Sort to make logic correct and create a deterministic order.
@@ -159,7 +181,10 @@ class ElevatorProcessor {
         .orElse(-1L);
       createElevatorHopEdges(
         elevatorHopVertices,
-        osmElevatorKeys.stream().map(key -> verticeLevels.get(key)).toList(),
+        osmElevatorKeys
+          .stream()
+          .map(key -> verticeLevels.get(key))
+          .toList(),
         wheelchair,
         !node.isBicycleDenied(),
         (int) travelTime
@@ -170,51 +195,87 @@ class ElevatorProcessor {
 
   /**
    * Add way with tag highway=elevator to graph as elevator.
+   * <p>
+   * Needs to be called after:
+   * - intersection vertices have been created in vertexGenerator
+   * - elevator ways have been collected
    */
-  public void buildElevatorEdgeFromElevatorWay(OsmWay elevatorWay) {
-    List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(elevatorWay);
-    List<Long> nodes = Arrays.stream(elevatorWay.getNodeRefs().toArray())
-      .filter(
-        nodeRef ->
-          vertexGenerator.intersectionNodes().containsKey(nodeRef) &&
-          vertexGenerator.intersectionNodes().get(nodeRef) != null
-      )
-      .boxed()
-      .toList();
+  private void buildElevatorEdgesFromElevatorWays() {
+    for (OsmWay way : osmdb.getWays()) {
+      if (!isElevatorWay(way)) {
+        continue;
+      }
+      List<OsmLevel> nodeLevels = osmdb.getLevelsForEntity(way);
+      List<Long> nodes = Arrays.stream(way.getNodeRefs().toArray())
+        .filter(nodeRef -> vertexGenerator.intersectionNodes().get(nodeRef) != null)
+        .boxed()
+        .toList();
 
-    if (nodeLevels.size() != nodes.size()) {
-      issueStore.add(
-        new CouldNotApplyMultiLevelInfoToElevatorWay(elevatorWay, nodeLevels.size(), nodes.size())
-      );
-      nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
-    }
+      if (nodes.size() < 2) {
+        var nodeRefs = way.getNodeRefs();
+        long firstNodeRef = nodeRefs.get(0);
+        long lastNodeRef = nodeRefs.get(nodeRefs.size() - 1);
+        issueStore.add(
+          new FewerThanTwoIntersectionNodesInElevatorWay(
+            way,
+            osmdb.getNode(firstNodeRef).getCoordinate(),
+            osmdb.getNode(lastNodeRef).getCoordinate(),
+            nodes.size()
+          )
+        );
+        // Do not create unnecessary ElevatorBoardEdges, ElevatorAlightEdges, or ElevatorHopEdges.
+        continue;
+      } else if (nodes.size() > 2) {
+        issueStore.add(
+          new MoreThanTwoIntersectionNodesInElevatorWay(
+            way,
+            osmdb.getNode(nodes.getFirst()).getCoordinate(),
+            osmdb.getNode(nodes.getLast()).getCoordinate(),
+            nodes.size()
+          )
+        );
+      }
 
-    List<ElevatorHopVertex> elevatorHopVertices = new ArrayList<>();
-    for (int i = 0; i < nodes.size(); i++) {
-      Long node = nodes.get(i);
-      var sourceVertex = vertexGenerator.intersectionNodes().get(node);
-      OsmLevel level = nodeLevels.get(i);
-      createElevatorVertices(
+      if (nodeLevels.size() != nodes.size()) {
+        issueStore.add(
+          new CouldNotApplyMultiLevelInfoToElevatorWay(
+            way,
+            osmdb.getNode(nodes.getFirst()).getCoordinate(),
+            osmdb.getNode(nodes.getLast()).getCoordinate(),
+            nodeLevels.size(),
+            nodes.size()
+          )
+        );
+        nodeLevels = Collections.nCopies(nodes.size(), OsmLevelFactory.DEFAULT);
+      }
+
+      List<ElevatorHopVertex> elevatorHopVertices = new ArrayList<>();
+      for (int i = 0; i < nodes.size(); i++) {
+        Long node = nodes.get(i);
+        var sourceVertex = vertexGenerator.intersectionNodes().get(node);
+        OsmLevel level = nodeLevels.get(i);
+        createElevatorVertices(
+          elevatorHopVertices,
+          sourceVertex,
+          way.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
+          level
+        );
+      }
+
+      var wheelchair = way.explicitWheelchairAccessibility();
+      long travelTime = way
+        .getDuration(osmEntityDurationIssueConsumer)
+        .map(Duration::toSeconds)
+        .orElse(-1L);
+      createElevatorHopEdges(
         elevatorHopVertices,
-        sourceVertex,
-        elevatorWay.getId() + "_" + i + "_" + sourceVertex.getLabelString(),
-        level
+        nodeLevels,
+        wheelchair,
+        !way.isBicycleDenied(),
+        (int) travelTime
       );
+      LOG.debug("Created elevator edges for way {}", way.getId());
     }
-
-    var wheelchair = elevatorWay.explicitWheelchairAccessibility();
-    long travelTime = elevatorWay
-      .getDuration(osmEntityDurationIssueConsumer)
-      .map(Duration::toSeconds)
-      .orElse(-1L);
-    createElevatorHopEdges(
-      elevatorHopVertices,
-      nodeLevels,
-      wheelchair,
-      !elevatorWay.isBicycleDenied(),
-      (int) travelTime
-    );
-    LOG.debug("Created elevator edges for way {}", elevatorWay.getId());
   }
 
   private void createElevatorVertices(
@@ -225,13 +286,20 @@ class ElevatorProcessor {
   ) {
     ElevatorHopVertex elevatorHopVertex = vertexFactory.elevator(sourceVertex, label);
 
-    ElevatorBoardEdge.createElevatorBoardEdge(sourceVertex, elevatorHopVertex);
-    ElevatorAlightEdge.createElevatorAlightEdge(
-      elevatorHopVertex,
+    ElevatorBoardEdge elevatorBoardEdge = ElevatorBoardEdge.createElevatorBoardEdge(
       sourceVertex,
-      // TODO this will be removed in a later PR and moved to the StreetDetailsService
-      new NonLocalizedString(level.name())
+      elevatorHopVertex
     );
+    ElevatorAlightEdge elevatorAlightEdge = ElevatorAlightEdge.createElevatorAlightEdge(
+      elevatorHopVertex,
+      sourceVertex
+    );
+
+    if (level.source() != OsmLevelSource.DEFAULT) {
+      Level repositoryLevel = new Level(level.level(), level.name());
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(elevatorBoardEdge, repositoryLevel);
+      streetDetailsRepository.addHorizontalEdgeLevelInfo(elevatorAlightEdge, repositoryLevel);
+    }
 
     // Accumulate ElevatorHopVertices so they can be connected by ElevatorHopEdges later.
     elevatorHopVertices.add(elevatorHopVertex);

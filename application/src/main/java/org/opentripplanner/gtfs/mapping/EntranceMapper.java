@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.site.Entrance;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.utils.collection.MapUtils;
@@ -43,9 +43,9 @@ class EntranceMapper {
     if (gtfsStop.getLocationType() != org.onebusaway.gtfs.model.Stop.LOCATION_TYPE_ENTRANCE_EXIT) {
       throw new IllegalArgumentException(
         "Expected type " +
-        org.onebusaway.gtfs.model.Stop.LOCATION_TYPE_ENTRANCE_EXIT +
-        ", but got " +
-        gtfsStop.getLocationType()
+          org.onebusaway.gtfs.model.Stop.LOCATION_TYPE_ENTRANCE_EXIT +
+          ", but got " +
+          gtfsStop.getLocationType()
       );
     }
 

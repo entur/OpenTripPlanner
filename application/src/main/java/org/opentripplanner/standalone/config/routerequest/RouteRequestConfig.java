@@ -3,10 +3,10 @@ package org.opentripplanner.standalone.config.routerequest;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_1;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_3;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_4;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 import static org.opentripplanner.standalone.config.routerequest.ItineraryFiltersConfig.mapItineraryFilterParams;
 import static org.opentripplanner.standalone.config.routerequest.TransferConfig.mapTransferPreferences;
 import static org.opentripplanner.standalone.config.routerequest.TriangleOptimizationConfig.mapOptimizationTriangle;
@@ -234,7 +234,7 @@ public class RouteRequestConfig {
               )
               .description(
                 "Sometimes there is a need to configure a longer alighting times for specific " +
-                "modes, such as airplanes or ferries."
+                  "modes, such as airplanes or ferries."
               )
               .asEnumMap(TransitMode.class, Duration.class)
           )
@@ -341,27 +341,7 @@ public class RouteRequestConfig {
       builder.withRelaxTransitGroupPriority(CostLinearFunction.of(relaxTransitGroupPriorityValue));
     }
 
-    // TODO REMOVE THIS
-    builder.withRaptor(it ->
-      c
-        .of("relaxTransitSearchGeneralizedCostAtDestination")
-        .since(V2_3)
-        .summary("Whether non-optimal transit paths at the destination should be returned")
-        .description(
-          """
-          Let c be the existing minimum pareto optimal generalized cost to beat. Then a trip
-          with cost c' is accepted if the following is true:
-          `c' < Math.round(c * relaxRaptorCostCriteria)`.
-
-          The parameter is optional. If not set a normal comparison is performed.
-
-          Values equals or less than zero is not allowed. Values greater than 2.0 are not
-          supported, due to performance reasons.
-          """
-        )
-        .asDoubleOptional()
-        .ifPresent(it::withRelaxGeneralizedCostAtDestination)
-    );
+    builder.withDirectTransitPreferences(it -> DirectTransitRequestConfig.map(c, it));
   }
 
   private static void mapBikePreferences(NodeAdapter root, BikePreferences.Builder builder) {
@@ -393,7 +373,7 @@ public class RouteRequestConfig {
           )
           .description(
             "This is the cost that is used when boarding while cycling. " +
-            "This is usually higher that walkBoardCost."
+              "This is usually higher that walkBoardCost."
           )
           .asInt(dft.boardCost())
       )
@@ -416,6 +396,11 @@ public class RouteRequestConfig {
 
   private static void mapStreetPreferences(NodeAdapter c, StreetPreferences.Builder builder) {
     var dft = builder.original();
+    NodeAdapter cElevator = c
+      .of("elevator")
+      .since(V2_9)
+      .summary("Elevator preferences.")
+      .asObject();
     NodeAdapter cae = c
       .of("accessEgress")
       .since(V2_4)
@@ -441,32 +426,32 @@ public class RouteRequestConfig {
         var dftElevator = dft.elevator();
         elevator
           .withBoardCost(
-            c
-              .of("elevatorBoardCost")
-              .since(V2_0)
+            cElevator
+              .of("boardCost")
+              .since(V2_9)
               .summary("What is the cost of boarding a elevator?")
               .asInt(dftElevator.boardCost())
           )
-          .withBoardTime(
-            c
-              .of("elevatorBoardTime")
-              .since(V2_0)
-              .summary("How long does it take to get on an elevator, on average.")
-              .asInt(dftElevator.boardTime())
-          )
-          .withHopCost(
-            c
-              .of("elevatorHopCost")
-              .since(V2_0)
-              .summary("What is the cost of travelling one floor on an elevator?")
-              .asInt(dftElevator.hopCost())
+          .withBoardSlack(
+            cElevator
+              .of("boardSlack")
+              .since(V2_9)
+              .summary("How long it takes to get on an elevator, on average.")
+              .asDuration(dftElevator.boardSlack())
           )
           .withHopTime(
-            c
-              .of("elevatorHopTime")
-              .since(V2_0)
-              .summary("How long does it take to advance one floor on an elevator?")
-              .asInt(dftElevator.hopTime())
+            cElevator
+              .of("hopTime")
+              .since(V2_9)
+              .summary("How long it takes to advance one floor on an elevator, on average.")
+              .asDuration(dftElevator.hopTime())
+          )
+          .withReluctance(
+            cElevator
+              .of("reluctance")
+              .since(V2_9)
+              .summary("A multiplier to specify how bad using an elevator is.")
+              .asDouble(dftElevator.reluctance())
           );
       })
       .withAccessEgress(accessEgress -> {
@@ -604,7 +589,7 @@ public class RouteRequestConfig {
           .since(V2_2)
           .summary(
             "The maximum time a street routing request is allowed to take before returning the " +
-            "results."
+              "results."
           )
           .description(
             """
@@ -651,7 +636,7 @@ public class RouteRequestConfig {
           )
           .description(
             "This is the cost that is used when boarding while driving. " +
-            "This can be different compared to the boardCost while walking or cycling."
+              "This can be different compared to the boardCost while walking or cycling."
           )
           .asInt(dft.boardCost())
       )
@@ -763,7 +748,7 @@ public class RouteRequestConfig {
             .of("dataOverlay")
             .since(V2_1)
             .summary("The filled request parameters for penalties and thresholds values")
-            .description(/*TODO DOC*/"TODO")
+            .description(/*TODO DOC*/ "TODO")
             .asObject()
         )
       );

@@ -8,16 +8,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
-import org.opentripplanner.framework.i18n.TranslatedString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.TranslatedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.alertpatch.AlertUrl;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
 import org.opentripplanner.routing.alertpatch.TimePeriod;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.alertpatch.TransitAlertBuilder;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.alert.siri.mapping.AffectsMapper;
 import org.opentripplanner.updater.alert.siri.mapping.SiriSeverityMapper;
@@ -75,9 +75,8 @@ public class SiriAlertsUpdateHandler {
         int addedCounter = 0;
         int expiredCounter = 0;
         for (PtSituationElement sxElement : situations.getPtSituationElements()) {
-          boolean expireSituation =
-            (sxElement.getProgress() != null &&
-              sxElement.getProgress().equals(WorkflowStatusEnumeration.CLOSED));
+          boolean expireSituation = (sxElement.getProgress() != null &&
+            sxElement.getProgress().equals(WorkflowStatusEnumeration.CLOSED));
 
           if (sxElement.getSituationNumber() == null) {
             continue;

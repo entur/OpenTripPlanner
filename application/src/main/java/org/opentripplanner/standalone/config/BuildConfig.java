@@ -7,6 +7,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
 import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayConfig;
 import org.opentripplanner.ext.datastore.gs.config.GsConfig;
@@ -36,7 +38,7 @@ import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParamet
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParametersList;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.gtfs.config.GtfsDefaultParameters;
-import org.opentripplanner.model.calendar.ServiceDateInterval;
+import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.netex.config.NetexFeedParameters;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -53,7 +55,6 @@ import org.opentripplanner.standalone.config.buildconfig.TransitFeeds;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.standalone.config.sandbox.DataOverlayConfigMapper;
 import org.opentripplanner.street.model.StreetConstants;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,6 +180,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   public final TransitFeeds transitFeeds;
   public final boolean staticParkAndRide;
   public final boolean staticBikeParkAndRide;
+  public final boolean includeInclinedEdgeLevelInfo;
   public final double distanceBetweenElevationSamples;
   public final double maxElevationPropagationMeters;
   public final boolean readCachedElevations;
@@ -237,7 +239,7 @@ public class BuildConfig implements OtpDataStoreConfig {
       .summary("The distance between elevation samples in meters.")
       .description(
         "The default is the approximate resolution of 1/3 arc-second NED data. This should not " +
-        "be smaller than the horizontal resolution of the height data used."
+          "be smaller than the horizontal resolution of the height data used."
       )
       .asDouble(CompactElevationProfile.DEFAULT_DISTANCE_BETWEEN_SAMPLES_METERS);
     elevationBucket = S3BucketConfig.fromConfig(root, "elevationBucket");
@@ -246,7 +248,7 @@ public class BuildConfig implements OtpDataStoreConfig {
       .since(V2_0)
       .summary(
         "Embed the Router config in the graph, which allows it to be sent to a server fully " +
-        "configured over the wire."
+          "configured over the wire."
       )
       .asBoolean(true);
     includeEllipsoidToGeoidDifference = root
@@ -254,7 +256,7 @@ public class BuildConfig implements OtpDataStoreConfig {
       .since(V2_0)
       .summary(
         "Include the Ellipsoid to Geoid difference in the calculations of every point along " +
-        "every StreetWithElevationEdge."
+          "every StreetWithElevationEdge."
       )
       .description(
         """
@@ -346,16 +348,23 @@ public class BuildConfig implements OtpDataStoreConfig {
         """
       )
       .asBoolean(true);
-    staticBikeParkAndRide = root
-      .of("staticBikeParkAndRide")
-      .since(V1_5)
-      .summary("Whether we should create bike P+R stations from OSM data.")
-      .asBoolean(false);
     staticParkAndRide = root
       .of("staticParkAndRide")
       .since(V1_5)
       .summary("Whether we should create car P+R stations from OSM data.")
       .asBoolean(true);
+    staticBikeParkAndRide = root
+      .of("staticBikeParkAndRide")
+      .since(V1_5)
+      .summary("Whether we should create bike P+R stations from OSM data.")
+      .asBoolean(false);
+    includeInclinedEdgeLevelInfo = root
+      .of("includeInclinedEdgeLevelInfo")
+      .since(V2_9)
+      .summary(
+        "Whether level info for inclined edges should be stored in the graph for use during runtime."
+      )
+      .asBoolean(false);
     subwayAccessTime = root
       .of("subwayAccessTime")
       .since(V1_5)
@@ -709,8 +718,8 @@ public class BuildConfig implements OtpDataStoreConfig {
     return root.isEmpty() ? "" : root.toJson();
   }
 
-  public ServiceDateInterval getTransitServicePeriod() {
-    return new ServiceDateInterval(transitServiceStart, transitServiceEnd);
+  public LocalDateInterval getTransitServicePeriod() {
+    return new LocalDateInterval(transitServiceStart, transitServiceEnd);
   }
 
   public List<FeedScopedId> transitRouteToStationCentroid() {

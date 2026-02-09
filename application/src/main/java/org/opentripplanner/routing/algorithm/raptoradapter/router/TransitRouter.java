@@ -13,6 +13,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
@@ -31,6 +32,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransit
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.AccessEgressMapper;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.DirectTransitRequestMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.DefaultTransitDataProviderFilter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
@@ -47,7 +49,6 @@ import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.model.site.StopLocation;
 
@@ -136,7 +137,8 @@ public class TransitRouter {
     );
 
     // Prepare transit search
-    var raptorRequest = RaptorRequestMapper.<TripSchedule>mapRequest(
+
+    var mapper = RaptorRequestMapper.<TripSchedule>of(
       request,
       transitSearchTimeZero,
       serverContext.raptorConfig().isMultiThreaded(),
@@ -147,8 +149,9 @@ public class TransitRouter {
       this::listStopIndexes,
       linkingContext
     );
+    var raptorRequest = mapper.mapRaptorRequest();
 
-    // Route transit
+    // Transit routing using Raptor
     var raptorService = new RaptorService<>(
       serverContext.raptorConfig(),
       createExtraMcRouterSearch(accessEgresses, raptorTransitData)
@@ -157,9 +160,26 @@ public class TransitRouter {
 
     checkIfTransitConnectionExists(transitResponse);
 
+    Collection<RaptorPath<TripSchedule>> paths = transitResponse.paths();
+
     debugTimingAggregator.finishedRaptorSearch();
 
-    Collection<RaptorPath<TripSchedule>> paths = transitResponse.paths();
+    // Route Direct transit
+    var directRequest = DirectTransitRequestMapper.map(
+      request,
+      transitResponse.requestUsed().searchParams()
+    );
+    if (directRequest.isPresent()) {
+      debugTimingAggregator.startedDirectTransitSearch();
+      var directPaths = raptorService.findAllDirectTransit(
+        directRequest.get(),
+        requestTransitDataProvider
+      );
+      paths = new ArrayList<>(paths);
+      paths.addAll(directPaths);
+      debugTimingAggregator.finishedDirectTransitSearch();
+    }
+    debugTimingAggregator.startedItineraryCreation();
 
     // TODO VIA - Temporarily turn OptimizeTransfers OFF for VIA search until the service support via
     //            Remove '&& !request.isViaSearch()'
@@ -173,13 +193,13 @@ public class TransitRouter {
       var service = TransferOptimizationServiceConfigurator.createOptimizeTransferService(
         raptorTransitData::getStopByIndex,
         requestTransitDataProvider.stopNameResolver(),
-        serverContext.transitService().getTransferService(),
+        serverContext.transitService().getConstrainedTransferService(),
         requestTransitDataProvider,
         raptorTransitData.getStopBoardAlightTransferCosts(),
         request.preferences().transfer().optimization(),
         raptorRequest.searchParams().viaLocations()
       );
-      paths = service.optimize(transitResponse.paths());
+      paths = service.optimize(paths);
     }
 
     // Create itineraries
@@ -187,6 +207,7 @@ public class TransitRouter {
     RaptorPathToItineraryMapper<TripSchedule> itineraryMapper = new RaptorPathToItineraryMapper<>(
       serverContext.graph(),
       serverContext.transitService(),
+      serverContext.streetDetailsService(),
       raptorTransitData,
       transitSearchTimeZero,
       request

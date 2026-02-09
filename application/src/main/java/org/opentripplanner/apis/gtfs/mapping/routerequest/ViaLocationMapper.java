@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.api.request.via.PassThroughViaLocation;
 import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.routing.api.request.via.VisitViaLocation;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.utils.collection.ListUtils;
 
 /**
@@ -39,7 +39,7 @@ class ViaLocationMapper {
         visit.getGraphQLLabel(),
         visit.getGraphQLMinimumWaitTime(),
         mapStopLocationIds(visit.getGraphQLStopLocationIds()),
-        mapCoordinate(visit.getGraphQLCoordinate()).map(List::of).orElse(List.of())
+        mapCoordinate(visit.getGraphQLCoordinate()).orElse(null)
       );
     } else {
       throw new IllegalArgumentException("ViaLocation must define either pass-through or visit.");

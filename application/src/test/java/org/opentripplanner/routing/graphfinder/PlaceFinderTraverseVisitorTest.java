@@ -10,14 +10,13 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationBuilder;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPatternBuilder;
@@ -55,8 +54,7 @@ public class PlaceFinderTraverseVisitorTest {
   static final Route r = route("r").build();
 
   static final TimetableRepository timetableRepo = new TimetableRepository(
-    model.siteRepositoryBuilder().withRegularStops(List.of(STOP1, STOP2, STOP3, STOP4)).build(),
-    new Deduplicator()
+    model.siteRepositoryBuilder().withRegularStops(List.of(STOP1, STOP2, STOP3, STOP4)).build()
   );
 
   static {

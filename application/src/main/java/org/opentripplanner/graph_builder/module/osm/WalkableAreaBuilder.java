@@ -20,10 +20,10 @@ import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
@@ -101,12 +101,12 @@ class WalkableAreaBuilder {
     this.boardingLocationRefTags = boardingLocationRefTags;
     this.platformLinkingPoints = platformEntriesLinking
       ? graph
-        .getVertices()
-        .stream()
-        .filter(OsmVertex.class::isInstance)
-        .map(OsmVertex.class::cast)
-        .filter(this::isPlatformLinkingPoint)
-        .collect(Collectors.toList())
+          .getVertices()
+          .stream()
+          .filter(OsmVertex.class::isInstance)
+          .map(OsmVertex.class::cast)
+          .filter(this::isPlatformLinkingPoint)
+          .collect(Collectors.toList())
       : List.of();
   }
 
@@ -501,7 +501,7 @@ class WalkableAreaBuilder {
     float carSpeed = parent
       .getOsmProvider()
       .getOsmTagMapper()
-      .getCarSpeedForWay(parent, TraverseDirection.DIRECTIONLESS);
+      .getCarSpeedForWay(parent, TraverseDirection.DIRECTIONLESS, issueStore);
 
     I18NString name = namer.getName(parent, label);
     AreaEdgeBuilder streetEdgeBuilder = new AreaEdgeBuilder()

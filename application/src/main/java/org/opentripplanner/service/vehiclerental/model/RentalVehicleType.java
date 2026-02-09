@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
-import org.opentripplanner.framework.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.street.model.RentalFormFactor;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -75,13 +75,13 @@ public final class RentalVehicleType implements Serializable, Comparable<RentalV
     return defaultVehicleForSystem.computeIfAbsent(
       systemId,
       (id ->
-          new RentalVehicleType(
-            new FeedScopedId(id, "DEFAULT"),
-            I18NString.of("Default vehicle type"),
-            RentalFormFactor.BICYCLE,
-            PropulsionType.HUMAN,
-            null
-          ))
+        new RentalVehicleType(
+          new FeedScopedId(id, "DEFAULT"),
+          I18NString.of("Default vehicle type"),
+          RentalFormFactor.BICYCLE,
+          PropulsionType.HUMAN,
+          null
+        ))
     );
   }
 

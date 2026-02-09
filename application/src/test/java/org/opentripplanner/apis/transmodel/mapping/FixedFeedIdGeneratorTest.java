@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.organization.Agency;
 
 class FixedFeedIdGeneratorTest {
@@ -22,10 +22,10 @@ class FixedFeedIdGeneratorTest {
     );
     assertTrue(
       "AB".contains(
-          FixedFeedIdGenerator.generate(
-            List.of(agency("A", 1), agency("A", 2), agency("B", 1), agency("B", 2))
-          )
-        ),
+        FixedFeedIdGenerator.generate(
+          List.of(agency("A", 1), agency("A", 2), agency("B", 1), agency("B", 2))
+        )
+      ),
       "In case of a tie, A or B should be used"
     );
   }

@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.graph_builder.module.osm.moduletests._support.TestOsmProvider;
 import org.opentripplanner.osm.OsmProvider;
+import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmLevel;
+import org.opentripplanner.osm.model.OsmLevelSource;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.osm.tagmapping.OsmTagMapper;
 
 class OsmAreaGroupTest {
 
@@ -35,8 +35,12 @@ class OsmAreaGroupTest {
   private static final OsmWay BARRIER_3_1 = new OsmWay();
   private static final OsmWay BOLLARD_1_2_3 = new OsmWay();
 
-  private static final Set<OsmLevel> LEVEL_0_SET = Set.of(new OsmLevel(0.0, "0"));
-  private static final Set<OsmLevel> LEVEL_1_SET = Set.of(new OsmLevel(1.0, "1"));
+  private static final Set<OsmLevel> LEVEL_0_SET = Set.of(
+    new OsmLevel(0.0, "0", OsmLevelSource.LEVEL_TAG)
+  );
+  private static final Set<OsmLevel> LEVEL_1_SET = Set.of(
+    new OsmLevel(1.0, "1", OsmLevelSource.LEVEL_TAG)
+  );
 
   private static final TLongObjectHashMap<OsmNode> nodes = new TLongObjectHashMap<>();
 
@@ -171,10 +175,6 @@ class OsmAreaGroupTest {
     ),
     nodes.valueCollection().stream().toList()
   );
-
-  static {
-    new OsmTagMapper().populateProperties(osmProvider.getWayPropertySet());
-  }
 
   @Test
   void shouldGroupWithTwoConsecutiveNodes() {

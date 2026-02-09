@@ -11,10 +11,11 @@ import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.TestOtpModel;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.routing.graph.Graph;
@@ -52,11 +53,10 @@ import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.model.vertex.VertexFactory;
 import org.opentripplanner.street.model.vertex.VertexLabel;
+import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
@@ -75,7 +75,11 @@ public abstract class GraphRoutingTest {
     builder.build();
     Graph graph = builder.graph();
     TimetableRepository timetableRepository = builder.timetableRepository();
-    return new TestOtpModel(graph, timetableRepository).index();
+    return new TestOtpModel(
+      graph,
+      timetableRepository,
+      TransferServiceTestFactory.defaultTransferRepository()
+    ).index();
   }
 
   public abstract static class Builder {
@@ -86,9 +90,8 @@ public abstract class GraphRoutingTest {
     private final VehicleParkingHelper vehicleParkingHelper;
 
     protected Builder() {
-      var deduplicator = new Deduplicator();
       graph = new Graph();
-      timetableRepository = new TimetableRepository(new SiteRepository(), deduplicator);
+      timetableRepository = new TimetableRepository(new SiteRepository());
       vertexFactory = new VertexFactory(graph);
       vehicleParkingHelper = new VehicleParkingHelper(graph);
     }
@@ -207,13 +210,7 @@ public abstract class GraphRoutingTest {
         var onboard = vertexFactory.elevator(v, v.getLabelString() + "_" + i);
 
         edges.add(ElevatorBoardEdge.createElevatorBoardEdge(v, onboard));
-        edges.add(
-          ElevatorAlightEdge.createElevatorAlightEdge(
-            onboard,
-            v,
-            new NonLocalizedString(String.valueOf(i))
-          )
-        );
+        edges.add(ElevatorAlightEdge.createElevatorAlightEdge(onboard, v));
 
         onboardVertices.add(onboard);
       }

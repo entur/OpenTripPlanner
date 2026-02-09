@@ -1,6 +1,6 @@
 package org.opentripplanner.street.model.vertex;
 
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
  * A label for a vertex so it can be identified when finding vertices in the graph.
@@ -61,8 +61,8 @@ public sealed interface VertexLabel {
    * <p>
    * Used for elevator vertices and split vertices.
    */
-  record VertexWithEntityLabel(long nodeId, OsmEntityType osmEntityType, long entityId)
-    implements VertexLabel {
+  record VertexWithEntityLabel(long nodeId, OsmEntityType osmEntityType, long entityId) implements
+    VertexLabel {
     private static final String TEMPLATE = "osm:node:%s:%s:%s";
 
     @Override

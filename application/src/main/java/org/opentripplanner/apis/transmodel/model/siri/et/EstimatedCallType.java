@@ -24,11 +24,11 @@ import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
 import org.opentripplanner.apis.transmodel.model.timetable.EmpiricalDelayType;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.routing.alertpatch.StopCondition;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
@@ -210,10 +210,10 @@ public class EstimatedCallType {
           .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
           .description(
             "Whether stop is cancelled. This means that either the " +
-            "ServiceJourney has a planned cancellation, the ServiceJourney has been " +
-            "cancelled by real-time data, or this particular StopPoint has been " +
-            "cancelled. This also means that both boarding and alighting has been " +
-            "cancelled."
+              "ServiceJourney has a planned cancellation, the ServiceJourney has been " +
+              "cancelled by real-time data, or this particular StopPoint has been " +
+              "cancelled. This also means that both boarding and alighting has been " +
+              "cancelled."
           )
           .dataFetcher(env -> ((TripTimeOnDate) env.getSource()).isCanceledEffectively())
           .build()

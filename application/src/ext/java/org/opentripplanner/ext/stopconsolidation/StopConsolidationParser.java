@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.BooleanUtils;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.stopconsolidation.model.ConsolidatedStopGroup;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public class StopConsolidationParser {
 
@@ -50,7 +50,12 @@ public class StopConsolidationParser {
         .map(key -> {
           var group = groups.get(key);
 
-          var primaryId = group.stream().filter(e -> e.isPrimary).findAny().orElseThrow().stopId;
+          var primaryId = group
+            .stream()
+            .filter(e -> e.isPrimary)
+            .findAny()
+            .orElseThrow()
+            .stopId;
           var secondaries = group
             .stream()
             .filter(e -> !e.isPrimary)

@@ -11,12 +11,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.RouteBuilder;
 import org.opentripplanner.transit.model.network.StopPattern;
@@ -66,7 +65,7 @@ public class TimetableRepositoryTestBuilder {
   }
 
   public TimetableRepository build(SiteRepository siteRepository) {
-    var timetableRepository = new TimetableRepository(siteRepository, new Deduplicator());
+    var timetableRepository = new TimetableRepository(siteRepository);
     timetableRepository.initTimeZone(timeZone);
 
     for (var agency : agencies) {
@@ -183,7 +182,9 @@ public class TimetableRepositoryTestBuilder {
     var tripBuilder = Trip.of(id(tripInput.id()))
       .withRoute(route)
       .withHeadsign(tripInput.headsign())
-      .withServiceId(serviceId);
+      .withServiceId(serviceId)
+      .withMode(tripInput.mode())
+      .withNetexSubmode(tripInput.netexSubmode());
     if (customizer != null) {
       customizer.accept(tripBuilder);
     }

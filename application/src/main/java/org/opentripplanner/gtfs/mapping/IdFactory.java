@@ -3,7 +3,7 @@ package org.opentripplanner.gtfs.mapping;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.onebusaway.gtfs.model.AgencyAndId;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.utils.lang.StringUtils;
 
 /**
@@ -55,7 +55,7 @@ class IdFactory {
 
   private static String idErrorMessage(String entityName) {
     return "Error during GTFS processing: id of %s is null or consists of whitespace only".formatted(
-        entityName
-      );
+      entityName
+    );
   }
 }

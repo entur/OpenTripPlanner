@@ -11,8 +11,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.TripTimeOnDate;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.Trip;
 
@@ -22,9 +22,9 @@ public class JourneyWhiteListed {
     .name("InputWhiteListed")
     .description(
       "Filter trips by only allowing lines involving certain " +
-      "elements. If both lines and authorities are specified, only one must be valid " +
-      "for each line to be used. If a line is both banned and whitelisted, it will " +
-      "be counted as banned."
+        "elements. If both lines and authorities are specified, only one must be valid " +
+        "for each line to be used. If a line is both banned and whitelisted, it will " +
+        "be counted as banned."
     )
     .field(newIdListInputField("lines", "Set of ids for lines that should be used"))
     .field(newIdListInputField("authorities", "Set of ids for authorities that should be used"))

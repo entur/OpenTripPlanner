@@ -5,11 +5,11 @@ import java.time.ZoneId;
 import java.util.OptionalInt;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.plan.leg.LegConstructionSupport;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLegBuilder;
 import org.opentripplanner.routing.algorithm.mapping.AlertToLegMapper;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Timetable;
@@ -36,8 +36,7 @@ public record ScheduledTransitLegReference(
 
   FeedScopedId toStopId,
   @Nullable FeedScopedId tripOnServiceDateId
-)
-  implements LegReference {
+) implements LegReference {
   private static final Logger LOG = LoggerFactory.getLogger(ScheduledTransitLegReference.class);
 
   public ScheduledTransitLegReference {
@@ -137,8 +136,8 @@ public record ScheduledTransitLegReference(
     if (optionalUpdatedFromStopPositionInPattern.isEmpty()) {
       LOG.info(
         "Invalid transit leg reference:" +
-        " The referenced from stop at position {} with id '{}' cannot be found" +
-        " in trip '{}' and service date {}",
+          " The referenced from stop at position {} with id '{}' cannot be found" +
+          " in trip '{}' and service date {}",
         fromStopPositionInPattern,
         fromStopId,
         tripId,
@@ -150,8 +149,8 @@ public record ScheduledTransitLegReference(
     if (optionalUpdatedToStopPositionInPattern.isEmpty()) {
       LOG.info(
         "Invalid transit leg reference:" +
-        " The referenced to stop at position {} with id '{}' cannot be found" +
-        " in trip '{}' and service date {}",
+          " The referenced to stop at position {} with id '{}' cannot be found" +
+          " in trip '{}' and service date {}",
         toStopPositionInPattern,
         toStopId,
         tripId,
@@ -166,8 +165,8 @@ public record ScheduledTransitLegReference(
     if (updatedFromStopPositionInPattern >= updatedToStopPositionInPattern) {
       LOG.info(
         "Invalid transit leg reference:" +
-        " The calling order for stops with id '{}' and '{}' is reversed" +
-        " in trip '{}' and service date {}",
+          " The calling order for stops with id '{}' and '{}' is reversed" +
+          " in trip '{}' and service date {}",
         fromStopId,
         toStopId,
         tripId,
@@ -287,8 +286,8 @@ public record ScheduledTransitLegReference(
   ) {
     LOG.info(
       "Transit leg reference with modified stop id within the same station: " +
-      "The referenced stop at position {} with id '{}' does not match" +
-      " the stop id '{}' in trip {} and service date {}",
+        "The referenced stop at position {} with id '{}' does not match" +
+        " the stop id '{}' in trip {} and service date {}",
       originalStopPosition,
       originalStopId,
       tripPattern.getStop(updatedStopPosition).getId(),

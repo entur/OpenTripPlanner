@@ -10,9 +10,9 @@ import com.google.common.collect.ImmutableListMultimap;
 import java.time.Instant;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -86,7 +86,7 @@ class DefaultRealtimeVehicleServiceTest {
     var realtimePattern = tripPattern("realtime-added", ROUTE)
       .withStopPattern(STOP_PATTERN)
       .withOriginalTripPattern(PATTERN1)
-      .withCreatedByRealtimeUpdater(true)
+      .withRealTimeStopPatternModified()
       .build();
     service.setRealtimeVehiclesForFeed(FEED_ID, ImmutableListMultimap.of(realtimePattern, VEHICLE));
     var updates = service.getRealtimeVehicles(PATTERN1);

@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -21,8 +21,9 @@ class StreetEdgeBuilderTest {
   private static final I18NString NAME = I18NString.of("street-edge-name");
 
   private static final double LENGTH = 10.5;
-  private static final LineString GEOMETRY = GeometryUtils.getGeometryFactory()
-    .createLineString(new Coordinate[] { FROM_VERTEX.getCoordinate(), TO_VERTEX.getCoordinate() });
+  private static final LineString GEOMETRY = GeometryUtils.getGeometryFactory().createLineString(
+    new Coordinate[] { FROM_VERTEX.getCoordinate(), TO_VERTEX.getCoordinate() }
+  );
 
   private static final boolean WHEELCHAIR_ACCESSIBLE = false;
   private static final boolean BACK = false;

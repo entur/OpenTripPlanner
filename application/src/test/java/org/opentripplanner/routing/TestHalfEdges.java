@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -49,7 +49,6 @@ import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.TimetableRepository;
 
 public class TestHalfEdges {
@@ -73,7 +72,6 @@ public class TestHalfEdges {
 
   @BeforeEach
   public void setUp() {
-    var deduplicator = new Deduplicator();
     graph = new Graph();
     var siteRepositoryBuilder = testModel.siteRepositoryBuilder();
     var factory = new VertexFactory(graph);
@@ -161,7 +159,7 @@ public class TestHalfEdges {
     var s2 = testModel.stop("morx station", 40.0099999, -74.002).build();
 
     siteRepositoryBuilder.withRegularStop(s1).withRegularStop(s2);
-    timetableRepository = new TimetableRepository(siteRepositoryBuilder.build(), deduplicator);
+    timetableRepository = new TimetableRepository(siteRepositoryBuilder.build());
 
     station1 = factory.transitStop(ofStop(s1));
     station2 = factory.transitStop(ofStop(s2));

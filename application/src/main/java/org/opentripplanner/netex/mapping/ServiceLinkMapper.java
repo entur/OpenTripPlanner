@@ -1,9 +1,11 @@
 package org.opentripplanner.netex.mapping;
 
 import jakarta.xml.bind.JAXBElement;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import javax.annotation.Nullable;
+import net.opengis.gml._3.DirectPositionType;
 import net.opengis.gml._3.LineStringType;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
@@ -98,7 +100,7 @@ class ServiceLinkMapper {
       var linkInLinkSequence = linksInJourneyPattern.get(i);
       if (
         linkInLinkSequence instanceof
-        ServiceLinkInJourneyPattern_VersionedChildStructure serviceLinkInJourneyPattern
+          ServiceLinkInJourneyPattern_VersionedChildStructure serviceLinkInJourneyPattern
       ) {
         String serviceLinkRef = serviceLinkInJourneyPattern.getServiceLinkRef().getRef();
         ServiceLink serviceLink = serviceLinkById.lookup(serviceLinkRef);
@@ -144,7 +146,7 @@ class ServiceLinkMapper {
           return null;
         }
 
-        List<Double> positionList = lineString.getPosList().getValue();
+        List<Double> positionList = getLineStringCoordinates(lineString);
         Coordinate[] coordinates = new Coordinate[positionList.size() / 2];
         for (int i = 0; i < positionList.size(); i += 2) {
           coordinates[i / 2] = new Coordinate(positionList.get(i + 1), positionList.get(i));
@@ -225,6 +227,29 @@ class ServiceLinkMapper {
     return true;
   }
 
+  private List<Double> getLineStringCoordinates(LineStringType lineString) {
+    if (lineString.getPosList() != null) {
+      return lineString.getPosList().getValue();
+    }
+    var list = new ArrayList<Double>();
+    for (Object o : lineString.getPosOrPointProperty()) {
+      if (o instanceof DirectPositionType directPosition) {
+        var values = directPosition.getValue();
+        if (values == null || values.size() != 2) {
+          continue;
+        }
+        list.addAll(values);
+      } else {
+        issueStore.add(
+          "BadLineStringElementType",
+          "Unhandled and unknown lineString element type: %s",
+          o.getClass().getName()
+        );
+      }
+    }
+    return list;
+  }
+
   private boolean isProjectionValid(LineStringType lineString, String id) {
     if (lineString == null) {
       issueStore.add(
@@ -234,12 +259,12 @@ class ServiceLinkMapper {
       );
       return false;
     }
-    List<Double> coordinates = lineString.getPosList().getValue();
+    List<Double> coordinates = getLineStringCoordinates(lineString);
     if (coordinates.size() < 4) {
       issueStore.add(
         "ServiceLinkGeometryError",
         "Ignore linkSequenceProjection with invalid linestring, " +
-        "containing fewer than two coordinates for: %s",
+          "containing fewer than two coordinates for: %s",
         id
       );
       return false;
@@ -247,7 +272,7 @@ class ServiceLinkMapper {
       issueStore.add(
         "ServiceLinkGeometryError",
         "Ignore linkSequenceProjection with invalid linestring, " +
-        "containing odd number of values for coordinates: %s",
+          "containing odd number of values for coordinates: %s",
         id
       );
       return false;
@@ -261,7 +286,7 @@ class ServiceLinkMapper {
       issueStore.add(
         "ServiceLinkGeometryError",
         "Ignore linkSequenceProjection with invalid linestring, " +
-        "containing fewer than two coordinates for: %s",
+          "containing fewer than two coordinates for: %s",
         id
       );
       return false;
@@ -279,7 +304,7 @@ class ServiceLinkMapper {
         issueStore.add(
           "ServiceLinkGeometryError",
           "Ignore linkSequenceProjection with invalid linestring, " +
-          "containing coordinate with NaN for: %s",
+            "containing coordinate with NaN for: %s",
           id
         );
         return false;
@@ -307,7 +332,7 @@ class ServiceLinkMapper {
       issueStore.add(
         "ServiceLinkGeometryTooFar",
         "Ignore linkSequenceProjection with too long distance between stop and start of linestring, " +
-        " stop %s, distance: %s, link id: %s",
+          " stop %s, distance: %s, link id: %s",
         fromStop,
         SphericalDistanceLibrary.fastDistance(startCoordinate, geometryStartCoordinate),
         id
@@ -320,7 +345,7 @@ class ServiceLinkMapper {
       issueStore.add(
         "ServiceLinkGeometryTooFar",
         "Ignore linkSequenceProjection with too long distance between stop and end of linestring, " +
-        " stop %s, distance: %s, link id: %s",
+          " stop %s, distance: %s, link id: %s",
         toStop,
         SphericalDistanceLibrary.fastDistance(endCoordinate, geometryEndCoordinate),
         id

@@ -1,11 +1,11 @@
 package org.opentripplanner.transit.model.site;
 
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * Acts as the supertype for all entities, except stations, created from the GTFS stops table. Most
@@ -13,7 +13,8 @@ import org.opentripplanner.transit.model.framework.FeedScopedId;
  * used as from and to.
  */
 public abstract class StationElementBuilder<
-  E extends StationElement<E, B>, B extends StationElementBuilder<E, B>
+  E extends StationElement<E, B>,
+  B extends StationElementBuilder<E, B>
 >
   extends AbstractEntityBuilder<E, B> {
 

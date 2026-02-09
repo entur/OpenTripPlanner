@@ -9,7 +9,7 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.Entrance;
 import org.opentripplanner.transit.model.site.GroupOfStations;
@@ -328,8 +328,8 @@ public class SiteRepository implements Serializable {
     if (main.stopIndexCounter != child.stopIndexCounter) {
       throw new IllegalArgumentException(
         "Two Stop repositories can only be merged if they are created with the same stopIndexCounter. " +
-        "This is archived by using the 'SiteRepository.withContext()' method. We do this to avoid " +
-        "duplicates/gaps in the stopIndex."
+          "This is archived by using the 'SiteRepository.withContext()' method. We do this to avoid " +
+          "duplicates/gaps in the stopIndex."
       );
     }
     return main.stopIndexCounter;

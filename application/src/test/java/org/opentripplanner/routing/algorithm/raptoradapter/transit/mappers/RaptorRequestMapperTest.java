@@ -3,7 +3,6 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapperTest.RequestFeature.RELAX_COST_DEST;
 import static org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapperTest.RequestFeature.TRANSIT_GROUP_PRIORITY;
 import static org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapperTest.RequestFeature.VIA_PASS_THROUGH;
 import static org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapperTest.RequestFeature.VIA_VISIT;
@@ -20,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
@@ -37,7 +37,6 @@ import org.opentripplanner.routing.via.model.ViaCoordinateTransfer;
 import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.utils.collection.ListUtils;
 
@@ -53,7 +52,7 @@ class RaptorRequestMapperTest {
     "Via A",
     null,
     List.of(STOP_A.getId()),
-    List.of()
+    null
   );
   private static final int VIA_FROM_STOP_INDEX = 47;
   private static final int VIA_TO_STOP_INDEX = 123;
@@ -73,7 +72,7 @@ class RaptorRequestMapperTest {
     "Via coordinate",
     Duration.ofMinutes(10),
     List.of(),
-    List.of(VIA_COORDINATE)
+    VIA_COORDINATE
   );
 
   private static final CostLinearFunction R1 = CostLinearFunction.of("50 + 1.0x");
@@ -84,7 +83,6 @@ class RaptorRequestMapperTest {
   private static final CostLinearFunction RELAX_TRANSIT_GROUP_PRIORITY = CostLinearFunction.of(
     "30m + 1.2t"
   );
-  private static final double RELAX_GENERALIZED_COST_AT_DESTINATION = 2.0;
 
   static List<Arguments> testCasesRelaxedCost() {
     return List.of(
@@ -112,7 +110,7 @@ class RaptorRequestMapperTest {
     var minWaitTime = Duration.ofMinutes(13);
 
     req.withViaLocations(
-      List.of(new VisitViaLocation("Via A", minWaitTime, List.of(STOP_A.getId()), List.of()))
+      List.of(new VisitViaLocation("Via A", minWaitTime, List.of(STOP_A.getId()), null))
     );
 
     var result = map(req.buildRequest());
@@ -143,6 +141,12 @@ class RaptorRequestMapperTest {
   void testViaCoordinate() {
     var req = requestBuilder();
     req.withViaLocations(List.of(VISIT_VIA_LOCATION_COORDINATE));
+
+    req.withViaLocations(
+      List.of(
+        new VisitViaLocation("Via coordinate", Duration.ofMinutes(10), List.of(), VIA_COORDINATE)
+      )
+    );
 
     var result = map(req.buildRequest());
 
@@ -184,12 +188,6 @@ class RaptorRequestMapperTest {
         null
       ),
       Arguments.of(
-        "RELAX_COST_DEST only",
-        List.of(RELAX_COST_DEST),
-        List.of(RELAX_COST_DEST),
-        null
-      ),
-      Arguments.of(
         "VIA_VISIT is not allowed together VIA_PASS_THROUGH, an error is expected.",
         List.of(VIA_VISIT, VIA_PASS_THROUGH),
         List.of(),
@@ -200,13 +198,13 @@ class RaptorRequestMapperTest {
         VIA_VISIT is not allowed together VIA_PASS_THROUGH, an error is expected.
         Other features are ignored.
         """,
-        List.of(VIA_VISIT, VIA_PASS_THROUGH, TRANSIT_GROUP_PRIORITY, RELAX_COST_DEST),
+        List.of(VIA_VISIT, VIA_PASS_THROUGH, TRANSIT_GROUP_PRIORITY),
         List.of(),
         "A mix of via-locations and pass-through is not allowed in this version."
       ),
       Arguments.of(
         "VIA_PASS_THROUGH cannot be combined with other features, and other features are dropped",
-        List.of(VIA_PASS_THROUGH, TRANSIT_GROUP_PRIORITY, RELAX_COST_DEST),
+        List.of(VIA_PASS_THROUGH, TRANSIT_GROUP_PRIORITY),
         List.of(VIA_PASS_THROUGH),
         null
       ),
@@ -214,24 +212,6 @@ class RaptorRequestMapperTest {
         "VIA_VISIT can be combined with TRANSIT_GROUP_PRIORITY",
         List.of(VIA_VISIT, TRANSIT_GROUP_PRIORITY),
         List.of(VIA_VISIT, TRANSIT_GROUP_PRIORITY),
-        null
-      ),
-      Arguments.of(
-        """
-        VIA_VISIT can only be combined with TRANSIT_GROUP_PRIORITY, and other features are dropped
-        VIA_PASS_THROUGH override VIA_VISIT (see above)
-        """,
-        List.of(VIA_VISIT, TRANSIT_GROUP_PRIORITY, RELAX_COST_DEST),
-        List.of(VIA_VISIT, TRANSIT_GROUP_PRIORITY),
-        null
-      ),
-      Arguments.of(
-        """
-        TRANSIT_GROUP_PRIORITY cannot be combined with other features, override RELAX_COST_DEST
-        VIA_PASS_THROUGH and VIA_VISIT override VIA_VISIT (see above)
-        """,
-        List.of(TRANSIT_GROUP_PRIORITY, RELAX_COST_DEST),
-        List.of(TRANSIT_GROUP_PRIORITY),
         null
       )
     );
@@ -283,7 +263,7 @@ class RaptorRequestMapperTest {
   }
 
   private static RaptorRequest<TestTripSchedule> map(RouteRequest request) {
-    return RaptorRequestMapper.mapRequest(
+    return RaptorRequestMapper.<TestTripSchedule>of(
       request,
       ZonedDateTime.now(),
       false,
@@ -300,7 +280,7 @@ class RaptorRequestMapperTest {
         Set.of(),
         Set.of()
       )
-    );
+    ).mapRaptorRequest();
   }
 
   private static void assertFeatureSet(
@@ -334,13 +314,6 @@ class RaptorRequestMapperTest {
           assertFalse(result.searchParams().isPassThroughSearch());
         }
         break;
-      case RELAX_COST_DEST:
-        assertEquals(expected, result.multiCriteria().relaxCostAtDestination() != null);
-        if (expected) {
-          assertFalse(result.searchParams().isPassThroughSearch());
-          assertFalse(result.searchParams().isVisitViaSearch());
-        }
-        break;
     }
   }
 
@@ -362,13 +335,6 @@ class RaptorRequestMapperTest {
       case TRANSIT_GROUP_PRIORITY -> req.withPreferences(p ->
         p.withTransit(t -> t.withRelaxTransitGroupPriority(RELAX_TRANSIT_GROUP_PRIORITY))
       );
-      case RELAX_COST_DEST -> req.withPreferences(p ->
-        p.withTransit(t ->
-          t.withRaptor(r ->
-            r.withRelaxGeneralizedCostAtDestination(RELAX_GENERALIZED_COST_AT_DESTINATION)
-          )
-        )
-      );
     };
   }
 
@@ -376,7 +342,6 @@ class RaptorRequestMapperTest {
     VIA_VISIT,
     VIA_PASS_THROUGH,
     TRANSIT_GROUP_PRIORITY,
-    RELAX_COST_DEST,
   }
 
   private static class DummyViaCoordinateTransferFactory implements ViaCoordinateTransferFactory {

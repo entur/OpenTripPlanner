@@ -6,11 +6,11 @@ import java.util.Currency;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.fare.FareMedium;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.fare.RiderCategory;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class FareProductMapper {
 
@@ -51,7 +51,10 @@ class FareProductMapper {
   }
 
   public Collection<FareProduct> findFareProducts(FeedScopedId fareProductId) {
-    return mappedFareProducts.stream().filter(p -> p.id().equals(fareProductId)).toList();
+    return mappedFareProducts
+      .stream()
+      .filter(p -> p.id().equals(fareProductId))
+      .toList();
   }
 
   @Nullable
@@ -83,7 +86,8 @@ class FareProductMapper {
       case 2 -> Duration.ofHours(amount);
       case 3 -> Duration.ofDays(amount);
       case 4 -> Duration.ofDays(amount * 7L);
-      case 5 -> Duration.ofDays(amount * 31L); // not totally right but good enough
+      // not totally right but good enough
+      case 5 -> Duration.ofDays(amount * 31L);
       case 6 -> Duration.ofDays(amount * 365L);
       default -> throw new IllegalStateException("Unexpected value: " + unit);
     };

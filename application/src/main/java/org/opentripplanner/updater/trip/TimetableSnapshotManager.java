@@ -4,9 +4,9 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
 import org.opentripplanner.routing.util.ConcurrentPublished;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
@@ -150,7 +150,8 @@ public final class TimetableSnapshotManager {
   private boolean purgeExpiredData() {
     final LocalDate today = localDateNow.get();
     // TODO: Base this on numberOfDaysOfLongestTrip for tripPatterns
-    final LocalDate previously = today.minusDays(2); // Just to be safe...
+    // Just to be safe...
+    final LocalDate previously = today.minusDays(2);
 
     // Purge data only if we have changed date
     if (lastPurgeDate != null && lastPurgeDate.compareTo(previously) >= 0) {

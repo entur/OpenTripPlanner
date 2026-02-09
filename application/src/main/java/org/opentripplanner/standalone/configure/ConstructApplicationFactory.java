@@ -39,6 +39,8 @@ import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.configure.RealtimeVehicleRepositoryModule;
 import org.opentripplanner.service.realtimevehicles.configure.RealtimeVehicleServiceModule;
+import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.configure.StreetDetailsServiceModule;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehicleparking.configure.VehicleParkingServiceModule;
@@ -52,10 +54,14 @@ import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeServiceM
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.configure.ConfigModule;
+import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
 import org.opentripplanner.standalone.server.MetricsLogging;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.service.StreetLimitationParametersServiceModule;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.configure.TransferServiceModule;
 import org.opentripplanner.transit.configure.TransitModule;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
@@ -73,8 +79,10 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     ConstructApplicationModule.class,
     EmissionServiceModule.class,
     EmpiricalDelayServiceModule.class,
+    DeduplicatorServiceModule.class,
     GeocoderModule.class,
     InteractiveLauncherModule.class,
+    StreetDetailsServiceModule.class,
     LinkingServiceModule.class,
     RealtimeVehicleServiceModule.class,
     RealtimeVehicleRepositoryModule.class,
@@ -85,6 +93,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     StopConsolidationServiceModule.class,
     StreetLimitationParametersServiceModule.class,
     TransitModule.class,
+    TransferServiceModule.class,
     VehicleParkingServiceModule.class,
     VehicleRentalRepositoryModule.class,
     VehicleRentalServiceModule.class,
@@ -99,6 +108,7 @@ public interface ConstructApplicationFactory {
   LinkingContextFactory linkingContextFactory();
   VertexLinker vertexLinker();
   TimetableRepository timetableRepository();
+  TransferRepository transferRepository();
   WorldEnvelopeRepository worldEnvelopeRepository();
   WorldEnvelopeService worldEnvelopeService();
   RealtimeVehicleRepository realtimeVehicleRepository();
@@ -118,6 +128,8 @@ public interface ConstructApplicationFactory {
 
   @Nullable
   EmissionRepository emissionRepository();
+
+  StreetDetailsRepository streetDetailsRepository();
 
   @Nullable
   EmpiricalDelayRepository empiricalDelayRepository();
@@ -153,6 +165,8 @@ public interface ConstructApplicationFactory {
 
   FareServiceFactory fareServiceFactory();
 
+  DeduplicatorService deduplicatorService();
+
   @Component.Builder
   interface Builder {
     @BindsInstance
@@ -163,6 +177,9 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder timetableRepository(TimetableRepository timetableRepository);
+
+    @BindsInstance
+    Builder transferRepository(TransferRepository transferRepository);
 
     @BindsInstance
     Builder graphVisualizer(@Nullable GraphVisualizer graphVisualizer);
@@ -183,6 +200,9 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder emissionRepository(EmissionRepository emissionRepository);
+
+    @BindsInstance
+    Builder streetDetailsRepository(StreetDetailsRepository streetDetailsRepository);
 
     @BindsInstance
     Builder empiricalDelayRepository(EmpiricalDelayRepository empiricalDelayRepository);

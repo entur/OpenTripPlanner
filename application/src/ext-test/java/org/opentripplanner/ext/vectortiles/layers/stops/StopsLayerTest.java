@@ -7,12 +7,11 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.TranslatedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.vectortiles.layers.TestTransitService;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.TranslatedString;
-import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -54,8 +53,7 @@ public class StopsLayerTest {
 
   @Test
   public void digitransitStopPropertyMapperTest() {
-    var deduplicator = new Deduplicator();
-    var timetableRepository = new TimetableRepository(new SiteRepository(), deduplicator);
+    var timetableRepository = new TimetableRepository(new SiteRepository());
     timetableRepository.index();
     var transitService = new TestTransitService(timetableRepository);
 
@@ -76,8 +74,7 @@ public class StopsLayerTest {
 
   @Test
   public void digitransitStopPropertyMapperTranslationTest() {
-    var deduplicator = new Deduplicator();
-    var timetableRepository = new TimetableRepository(new SiteRepository(), deduplicator);
+    var timetableRepository = new TimetableRepository(new SiteRepository());
     timetableRepository.index();
     var transitService = new DefaultTransitService(timetableRepository);
 

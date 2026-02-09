@@ -10,11 +10,11 @@ import org.mobilitydata.gbfs.v3_0.station_information.GBFSName;
 import org.mobilitydata.gbfs.v3_0.station_information.GBFSRentalUris;
 import org.mobilitydata.gbfs.v3_0.station_information.GBFSShortName;
 import org.mobilitydata.gbfs.v3_0.station_information.GBFSStation;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStationUris;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalSystem;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.updater.vehicle_rental.datasources.gbfs.support.UnknownVehicleTypeFilter;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.slf4j.Logger;
@@ -74,7 +74,12 @@ class GbfsStationInformationMapper {
         station
           .getVehicleTypesCapacity()
           .stream()
-          .flatMap(e -> e.getVehicleTypeIds().stream().map(t -> Map.entry(t, e.getCount())))
+          .flatMap(e ->
+            e
+              .getVehicleTypeIds()
+              .stream()
+              .map(t -> Map.entry(t, e.getCount()))
+          )
           .filter(e ->
             vehicleTypeFilter.filterUnknownVehicleType(
               e.getKey(),
@@ -91,7 +96,12 @@ class GbfsStationInformationMapper {
         station
           .getVehicleDocksCapacity()
           .stream()
-          .flatMap(e -> e.getVehicleTypeIds().stream().map(t -> Map.entry(t, e.getCount())))
+          .flatMap(e ->
+            e
+              .getVehicleTypeIds()
+              .stream()
+              .map(t -> Map.entry(t, e.getCount()))
+          )
           .filter(e ->
             vehicleTypeFilter.filterUnknownVehicleType(
               e.getKey(),
@@ -130,7 +140,10 @@ class GbfsStationInformationMapper {
       station.getName() != null &&
       !station.getName().isEmpty() &&
       station.getName().stream().allMatch(Objects::nonNull) &&
-      station.getName().stream().allMatch(gbfsName -> StringUtils.hasValue(gbfsName.getText())) &&
+      station
+        .getName()
+        .stream()
+        .allMatch(gbfsName -> StringUtils.hasValue(gbfsName.getText())) &&
       station
         .getName()
         .stream()

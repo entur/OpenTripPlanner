@@ -3,7 +3,7 @@ package org.opentripplanner.transit.model.timetable;
 import java.util.Collection;
 import java.util.SortedSet;
 import java.util.function.Function;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
  * Listener interface for receiving notifications when a {@link TimetableSnapshot}

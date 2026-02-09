@@ -10,7 +10,6 @@ import org.opentripplanner.model.plan.VertexType;
 import org.opentripplanner.model.plan.leg.ViaLocationType;
 import org.opentripplanner.model.plan.walkstep.AbsoluteDirection;
 import org.opentripplanner.model.plan.walkstep.RelativeDirection;
-import org.opentripplanner.model.transfer.TransferPriority;
 import org.opentripplanner.routing.alertpatch.StopCondition;
 import org.opentripplanner.routing.alternativelegs.AlternativeLegsFilter;
 import org.opentripplanner.routing.api.request.StreetMode;
@@ -19,6 +18,7 @@ import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.search.TraverseMode;
+import org.opentripplanner.transfer.constrained.model.TransferPriority;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.BikeAccess;
@@ -58,6 +58,19 @@ public class EnumTypes {
     .value("arrivals", ArrivalDeparture.ARRIVALS, "Only show arrivals")
     .value("departures", ArrivalDeparture.DEPARTURES, "Only show departures")
     .value("both", ArrivalDeparture.BOTH, "Show both arrivals and departures")
+    .build();
+
+  public static final GraphQLEnumType VEHICLE_OPTIMISATION_METHOD = GraphQLEnumType.newEnum()
+    .name("VehicleOptimisationMethod")
+    .description("Optimization methods for vehicle routing (bicycle, scooter, etc.).")
+    .value("quick", VehicleRoutingOptimizeType.SHORTEST_DURATION, "Prefer faster routes")
+    .value("safe", VehicleRoutingOptimizeType.SAFE_STREETS, "Prefer safer routes")
+    .value("flat", VehicleRoutingOptimizeType.FLAT_STREETS, "Prefer flat terrain")
+    .value(
+      "triangle",
+      VehicleRoutingOptimizeType.TRIANGLE,
+      "Custom optimization using triangle factors"
+    )
     .build();
 
   public static final GraphQLEnumType BICYCLE_OPTIMISATION_METHOD = GraphQLEnumType.newEnum()
@@ -103,8 +116,8 @@ public class EnumTypes {
     .value("quay", TransmodelPlaceType.QUAY, "Quay")
     .value("stopPlace", TransmodelPlaceType.STOP_PLACE, "StopPlace")
     .value("bicycleRent", TransmodelPlaceType.BICYCLE_RENT, "Bicycle rent stations")
-    .value("bikePark", TransmodelPlaceType.BIKE_PARK, "Bike parks", "Not supported")
-    .value("carPark", TransmodelPlaceType.CAR_PARK, "Car parks", "Not supported")
+    .value("bikePark", TransmodelPlaceType.BIKE_PARK, "Bike parks")
+    .value("carPark", TransmodelPlaceType.CAR_PARK, "Car parks")
     .build();
 
   public static final GraphQLEnumType INPUT_FIELD = GraphQLEnumType.newEnum()
@@ -153,7 +166,7 @@ public class EnumTypes {
       "discouraged",
       StopTransferPriority.DISCOURAGED,
       "Block transfers from/to this stop. In OTP this is not a definitive block," +
-      " just a huge penalty is added to the cost function. NeTEx equivalent is NO_INTERCHANGE."
+        " just a huge penalty is added to the cost function. NeTEx equivalent is NO_INTERCHANGE."
     )
     .build();
 
@@ -177,6 +190,7 @@ public class EnumTypes {
     .value("funicular", TransitMode.FUNICULAR)
     .value("lift", TransitMode.GONDOLA)
     .value("rail", TransitMode.RAIL)
+    .value("snowAndIce", TransitMode.SNOW_AND_ICE)
     .value("metro", TransitMode.SUBWAY)
     .value("taxi", TransitMode.TAXI)
     .value("tram", TransitMode.TRAM)
@@ -278,8 +292,11 @@ public class EnumTypes {
     .value("followSigns", RelativeDirection.FOLLOW_SIGNS)
     .build();
 
+  /**
+   * SIRI - ReportTypeEnumeration
+   */
   public static final GraphQLEnumType REPORT_TYPE = GraphQLEnumType.newEnum()
-    .name("ReportType") //SIRI - ReportTypeEnumeration
+    .name("ReportType")
     .value("general", "general", "Indicates a general info-message that should not affect trip.")
     .value("incident", "incident", "Indicates an incident that may affect trip.")
     .build();
@@ -331,8 +348,11 @@ public class EnumTypes {
     .value("planned", TripAlteration.PLANNED)
     .build();
 
+  /**
+   * SIRI - SeverityEnumeration
+   */
   public static final GraphQLEnumType SEVERITY = GraphQLEnumType.newEnum()
-    .name("Severity") //SIRI - SeverityEnumeration
+    .name("Severity")
     .value("unknown", "unknown", "Situation has unknown impact on trips.")
     .value("noImpact", "noImpact", "Situation has no impact on trips.")
     .value("verySlight", "verySlight", "Situation has a very slight impact on trips.")
@@ -343,8 +363,11 @@ public class EnumTypes {
     .value("undefined", "undefined", "Severity is undefined.")
     .build();
 
+  /**
+   * SIRI - RoutePointTypeEnumeration
+   */
   public static final GraphQLEnumType STOP_CONDITION_ENUM = GraphQLEnumType.newEnum()
-    .name("StopCondition") //SIRI - RoutePointTypeEnumeration
+    .name("StopCondition")
     .value(
       "destination",
       StopCondition.DESTINATION,
@@ -384,43 +407,43 @@ public class EnumTypes {
       "bike_park",
       StreetMode.BIKE_TO_PARK,
       "Bike to a bike parking area, " +
-      "then walk the rest of the way. Direct mode and access mode only."
+        "then walk the rest of the way. Direct mode and access mode only."
     )
     .value(
       "bike_rental",
       StreetMode.BIKE_RENTAL,
       "Walk to a bike rental point, " +
-      "bike to a bike rental drop-off point, and walk the rest of the way. This can include " +
-      "bike rental at fixed locations or free-floating services."
+        "bike to a bike rental drop-off point, and walk the rest of the way. This can include " +
+        "bike rental at fixed locations or free-floating services."
     )
     .value(
       "scooter_rental",
       StreetMode.SCOOTER_RENTAL,
       "Walk to a scooter " +
-      "rental point, ride a scooter to a scooter rental drop-off point, and walk the " +
-      "rest of the way. This can include scooter rental at fixed locations or " +
-      "free-floating services."
+        "rental point, ride a scooter to a scooter rental drop-off point, and walk the " +
+        "rest of the way. This can include scooter rental at fixed locations or " +
+        "free-floating services."
     )
     .value("car", StreetMode.CAR, "Car only. Direct mode only.")
     .value(
       "car_park",
       StreetMode.CAR_TO_PARK,
       "Start in the car, drive to a " +
-      "parking area, and walk the rest of the way. Direct mode and access mode only."
+        "parking area, and walk the rest of the way. Direct mode and access mode only."
     )
     .value(
       "car_pickup",
       StreetMode.CAR_PICKUP,
       "Walk to a pickup point along " +
-      "the road, drive to a drop-off point along the road, and walk the rest of the way. " +
-      "This can include various taxi-services or kiss & ride."
+        "the road, drive to a drop-off point along the road, and walk the rest of the way. " +
+        "This can include various taxi-services or kiss & ride."
     )
     .value(
       "car_rental",
       StreetMode.CAR_RENTAL,
       "Walk to a car rental point along " +
-      "the road, drive to a drop-off point along the road, and walk the rest of the way. " +
-      "This can include car rentals at fixed locations or free-floating services."
+        "the road, drive to a drop-off point along the road, and walk the rest of the way. " +
+        "This can include car rentals at fixed locations or free-floating services."
     )
     .value(
       "carpool",
@@ -431,8 +454,8 @@ public class EnumTypes {
       "flexible",
       StreetMode.FLEXIBLE,
       "Walk to an eligible pickup area for " +
-      "flexible transportation, ride to an eligible drop-off area and then walk the rest of " +
-      "the way."
+        "flexible transportation, ride to an eligible drop-off area and then walk the rest of " +
+        "the way."
     )
     .build();
 
@@ -476,14 +499,14 @@ public class EnumTypes {
       "passThrough",
       ViaLocationType.PASS_THROUGH,
       "The via stop location must be visited as part of a transit trip as at the " +
-      "boarding stop, the intermediate stop, or the alighting stop."
+        "boarding stop, the intermediate stop, or the alighting stop."
     )
     .value(
       "visit",
       ViaLocationType.VISIT,
       "The location is visited physically by boarding or alighting a transit trip at " +
-      "a given stop, or by traveling via requested coordinate location as part of a access, " +
-      "transfer, egress or direct segment. Intermediate stops visited on-board do not count."
+        "a given stop, or by traveling via requested coordinate location as part of a access, " +
+        "transfer, egress or direct segment. Intermediate stops visited on-board do not count."
     )
     .build();
 

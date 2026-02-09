@@ -11,12 +11,12 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
@@ -68,10 +68,7 @@ class ScheduledTransitLegReferenceTest {
       .withRegularStop(stop3a)
       .withRegularStop(stop3b)
       .build();
-    TimetableRepository timetableRepository = new TimetableRepository(
-      siteRepository,
-      new Deduplicator()
-    );
+    TimetableRepository timetableRepository = new TimetableRepository(siteRepository);
     timetableRepository.setUpdaterManager(
       new GraphUpdaterManager(
         new DefaultRealTimeUpdateContext(new Graph(), timetableRepository, new TimetableSnapshot()),
@@ -421,7 +418,8 @@ class ScheduledTransitLegReferenceTest {
     ScheduledTransitLegReference scheduledTransitLegReference = new ScheduledTransitLegReference(
       SIMPLE_TRIP_ID,
       SERVICE_DATE,
-      15, // Way beyond the 3 stops in the pattern
+      // Way beyond the 3 stops in the pattern
+      15,
       16,
       STOP_1_ID,
       STOP_2_ID,
@@ -442,7 +440,8 @@ class ScheduledTransitLegReferenceTest {
       SIMPLE_TRIP_ID,
       SERVICE_DATE,
       0,
-      15, // Way beyond the 3 stops in the pattern
+      // Way beyond the 3 stops in the pattern
+      15,
       STOP_1_ID,
       STOP_2_ID,
       null
