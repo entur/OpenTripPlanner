@@ -504,6 +504,7 @@ public class LegType {
     return environment.getSource();
   }
 
+  // DENNE FUNKSJONEN AVGJØRER MODE I SLIK VISES I FRONTEND
   private static <S, T> Object onLeg(
     DataFetchingEnvironment environment,
     Function<StreetLeg, S> streetLegAccessor,

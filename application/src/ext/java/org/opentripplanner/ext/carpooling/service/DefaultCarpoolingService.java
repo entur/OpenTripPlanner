@@ -1,6 +1,8 @@
 package org.opentripplanner.ext.carpooling.service;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,6 +52,7 @@ import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.collection.Pair;
+import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -246,21 +249,26 @@ public class DefaultCarpoolingService implements CarpoolingService {
     return itineraries;
   }
 
-  public CarpoolAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType){
+  public CarpoolAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType, ZonedDateTime transitSearchTimeZero) {
 
     var position = insertionCandidate.dropoffPosition() - 1;
-    var state = insertionCandidate.routeSegments().get(position).states.getLast();
+    var segment = insertionCandidate.routeSegments().get(position);
+    var lastState = segment.states.getLast();
+    var relativeStartTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, Instant.ofEpochSecond(segment.getStartTime()));
+    var relativeEndTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, Instant.ofEpochSecond(segment.getEndTime()));
 
     var accessEgress = new CarpoolAccessEgress(
       insertionCandidate.transitStop().stop.getIndex(),
-      state
+      lastState,
+      relativeStartTime,
+      relativeEndTime
     );
 
     return accessEgress;
   }
 
   @Override
-  public List<CarpoolAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext)
+  public List<CarpoolAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext, ZonedDateTime transitSearchTimeZero)
     throws RoutingValidationException {
     try {
       if (!StreetMode.CARPOOL.equals(request.journey().access().mode()) && accessOrEgress.isAccess()) {
@@ -356,7 +364,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
 
       var accessEgresses = insertionCandidates.stream().map(it ->
-        mapFlexAccessEgresses(it, accessOrEgress)
+        mapFlexAccessEgresses(it, accessOrEgress, transitSearchTimeZero)
       ).toList();
        return accessEgresses;
 

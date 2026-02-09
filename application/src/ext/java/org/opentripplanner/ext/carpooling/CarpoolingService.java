@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
@@ -32,5 +33,5 @@ public interface CarpoolingService {
    */
   List<Itinerary> route(RouteRequest request, LinkingContext linkingContext);
 
-  List<CarpoolAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext);
+  List<CarpoolAccessEgress> routeAccessEgress(RouteRequest request, StreetRequest streetRequest, AccessEgressType accessOrEgress, StopResolver stopResolver, LinkingContext linkingContext, ZonedDateTime transitSearchTimeZero);
 }
