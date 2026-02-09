@@ -26,4 +26,8 @@ public class CarpoolAccessEgress extends DefaultAccessEgress {
   public int latestArrivalTime(int requestedArrivalTime) {
     return endOfTrip;
   }
+
+
+  public int getStartOfTrip() {return startOfTrip;}
+  public int getEndOfTrip() {return endOfTrip;}
 }

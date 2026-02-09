@@ -2,6 +2,7 @@ package org.opentripplanner.ext.carpooling.internal;
 
 import java.time.Duration;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.LineString;
@@ -85,11 +86,11 @@ public class CarpoolItineraryMapper {
     this.timeZone = ZoneIdFallback.zoneId(timeZone);
   }
 
-  public Itinerary toItineary(CarpoolAccessEgress accessEgress) {
+  public Itinerary toItineary(CarpoolAccessEgress accessEgress, ZonedDateTime transitSearchTimeZero) {
 
     var path = new GraphPath<>(accessEgress.getLastState());
-    var startTime = path.states.getFirst().getTime().atZone(this.timeZone);
-    var endTime = path.states.getLast().getTime().atZone(this.timeZone);
+    var startTime = transitSearchTimeZero.plusSeconds(accessEgress.getStartOfTrip());
+    var endTime = transitSearchTimeZero.plusSeconds(accessEgress.getEndOfTrip());
     var fromVertex = path.states.getFirst().getVertex();
     var toVertex = path.states.getLast().getVertex();
     var allEdges = path.edges;
