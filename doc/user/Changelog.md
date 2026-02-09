@@ -83,6 +83,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Allow missing arrival time on the first stop in a GTFS RT Trip Update [#7245](https://github.com/opentripplanner/OpenTripPlanner/pull/7245)
 - Direct transit search [#7145](https://github.com/opentripplanner/OpenTripPlanner/pull/7145)
 - Add ability to start a Raptor search from on-board a trip in MC range raptor [#7241](https://github.com/opentripplanner/OpenTripPlanner/pull/7241)
+- Change `@timingData` annotations in GTFS GraphQL API [#7261](https://github.com/opentripplanner/OpenTripPlanner/pull/7261)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
