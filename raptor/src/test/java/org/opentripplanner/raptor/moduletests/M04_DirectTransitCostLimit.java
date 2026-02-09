@@ -68,7 +68,7 @@ public class M04_DirectTransitCostLimit implements RaptorTestConstants {
     return RaptorDirectTransitRequest.of()
       .withRelaxC1(GeneralizedCostRelaxFunction.of(2))
       .earliestDepartureTime(T00_00)
-      .searchWindowInSeconds(D24h)
+      .searchWindowInSeconds(D24_h)
       .addAccessPaths(TestAccessEgress.free(STOP_A))
       .addEgressPaths(TestAccessEgress.free(STOP_B))
       .build();

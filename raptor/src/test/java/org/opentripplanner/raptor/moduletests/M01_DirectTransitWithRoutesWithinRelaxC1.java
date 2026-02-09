@@ -42,10 +42,10 @@ class M01_DirectTransitWithRoutesWithinRelaxC1 implements RaptorTestConstants {
   void testRelaxedLimitedTransferSearch() {
     var request = RaptorDirectTransitRequest.of()
       .earliestDepartureTime(T00_00)
-      .searchWindowInSeconds(D10m)
-      .addAccessPaths(TestAccessEgress.walk(STOP_B, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_D, D20s))
-      .withRelaxC1(GeneralizedCostRelaxFunction.of(2.0, RaptorCostConverter.toRaptorCost(D2m)))
+      .searchWindowInSeconds(D10_m)
+      .addAccessPaths(TestAccessEgress.walk(STOP_B, D30_s))
+      .addEgressPaths(TestAccessEgress.walk(STOP_D, D20_s))
+      .withRelaxC1(GeneralizedCostRelaxFunction.of(2.0, RaptorCostConverter.toRaptorCost(D2_m)))
       .build();
 
     var paths = raptorService.findAllDirectTransit(request, data);
