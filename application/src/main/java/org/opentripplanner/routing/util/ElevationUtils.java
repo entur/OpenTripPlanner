@@ -236,7 +236,7 @@ public class ElevationUtils {
    * </p>
    */
   static double calculateEffectiveWalkLength(double run, double rise) {
-    return run * toblerWalkingFunction.calculateHorizontalWalkingDistanceMultiplier(run, rise);
+    return run * TOBLER_WALKING_FUNCTION.calculateHorizontalWalkingDistanceMultiplier(run, rise);
   }
 
   private static double slopeSpeedCoefficient(double slope, double altitude) {

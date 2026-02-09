@@ -36,9 +36,9 @@ class StreetTransitEntityLinkTest {
   @Nested
   class WheelchairAccessibility {
 
-    static final Stop inaccessibleStop = stop("A:inaccessible", NOT_POSSIBLE);
+    static final Stop INACCESSIBLE_STOP = stop("A:inaccessible", NOT_POSSIBLE);
 
-    static final Stop unknownStop = stop("A:unknown", NO_INFORMATION);
+    static final Stop UNKNOWN_STOP = stop("A:unknown", NO_INFORMATION);
 
     @Test
     void disallowInaccessibleStop() {

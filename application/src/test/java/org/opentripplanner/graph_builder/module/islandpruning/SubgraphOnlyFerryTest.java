@@ -17,7 +17,9 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasOnlyFerry() {
-    TransitStopVertex transitStopVertex = vertexBuilder(REGULAR_STOP1).withIsFerryStop(true).build();
+    TransitStopVertex transitStopVertex = vertexBuilder(REGULAR_STOP1)
+      .withIsFerryStop(true)
+      .build();
 
     Subgraph subgraph = new Subgraph();
     subgraph.addVertex(transitStopVertex);
