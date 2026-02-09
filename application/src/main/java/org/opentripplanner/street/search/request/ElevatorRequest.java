@@ -144,7 +144,7 @@ public final class ElevatorRequest implements Serializable {
       return this;
     }
 
-    public ElevatorRequest build() {
+    ElevatorRequest build() {
       var value = new ElevatorRequest(this);
       return original.equals(value) ? original : value;
     }
