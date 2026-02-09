@@ -2,7 +2,8 @@ package org.opentripplanner.ext.ojp.service;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.transit.model.basic.TransitMode.BUS;
 import static org.opentripplanner.transit.model.basic.TransitMode.FERRY;
 
@@ -17,43 +18,42 @@ import de.vdv.ojp20.StopEventParamStructure;
 import de.vdv.ojp20.siri.LineDirectionStructure;
 import de.vdv.ojp20.siri.LineRefStructure;
 import de.vdv.ojp20.siri.VehicleModesOfTransportEnumeration;
-import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.ojp.mapping.StopEventParamsMapper;
 import org.opentripplanner.ojp.time.XmlDateTime;
 
-class OjpServiceMapperTest {
+class StopEventParamsMapperTest {
 
   private static final ZonedDateTime ZDT = ZonedDateTime.parse("2025-02-17T14:24:02+01:00");
   private static final DefaultFeedIdMapper FEED_ID_MAPPER = new DefaultFeedIdMapper();
-  private static final OjpServiceMapper SERVICE = new OjpServiceMapper(
-    null,
-    FEED_ID_MAPPER,
-    ZoneIds.BERLIN
+  private static final StopEventParamsMapper MAPPER = new StopEventParamsMapper(
+    ZoneIds.BERLIN,
+    FEED_ID_MAPPER
   );
 
   private static final FeedScopedId LINE_ID = id("line1");
 
   @Test
   void defaultCase() {
-    var params = SERVICE.extractStopEventParams(stopEvent(new StopEventParamStructure()));
+    var params = MAPPER.extractStopEventParams(stopEvent(new StopEventParamStructure()));
     assertThat(params.includedAgencies()).isEmpty();
     assertThat(params.excludedAgencies()).isEmpty();
     assertThat(params.includedRoutes()).isEmpty();
     assertThat(params.excludedAgencies()).isEmpty();
     assertThat(params.includedModes()).isEmpty();
     assertThat(params.excludedModes()).isEmpty();
-    assertEquals(OjpServiceMapper.DEFAULT_RADIUS_METERS, params.maximumWalkDistance());
-    assertEquals(OjpServiceMapper.DEFAULT_NUM_DEPARTURES, params.numDepartures());
+    assertEquals(StopEventParamsMapper.DEFAULT_RADIUS_METERS, params.maximumWalkDistance());
+    assertEquals(StopEventParamsMapper.DEFAULT_NUM_DEPARTURES, params.numDepartures());
   }
 
   @Test
   void maxDistance() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       new OJPStopEventRequestStructure().withLocation(
         new PlaceContextStructure()
           .withDepArrTime(new XmlDateTime(ZDT))
@@ -62,7 +62,7 @@ class OjpServiceMapperTest {
               .withItModeAndModeOfOperation(
                 new ItModesStructure().withPersonalMode(PersonalModesEnumeration.FOOT)
               )
-              .withMaxDistance(BigInteger.TEN)
+              .withMaxDistance(10)
           )
       )
     );
@@ -71,15 +71,15 @@ class OjpServiceMapperTest {
 
   @Test
   void numDepartures() {
-    var params = SERVICE.extractStopEventParams(
-      stopEvent(new StopEventParamStructure().withNumberOfResults(BigInteger.TWO))
+    var params = MAPPER.extractStopEventParams(
+      stopEvent(new StopEventParamStructure().withNumberOfResults(2))
     );
     assertEquals(2, params.numDepartures());
   }
 
   @Test
   void lineFilterImplicitExclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       lineFilter(
         new LineDirectionFilterStructure().withLine(
           new LineDirectionStructure().withLineRef(
@@ -98,7 +98,7 @@ class OjpServiceMapperTest {
 
   @Test
   void lineFilterInclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       lineFilter(
         new LineDirectionFilterStructure()
           .withExclude(true)
@@ -119,7 +119,7 @@ class OjpServiceMapperTest {
 
   @Test
   void lineFilterExclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       lineFilter(
         new LineDirectionFilterStructure()
           .withExclude(false)
@@ -140,7 +140,7 @@ class OjpServiceMapperTest {
 
   @Test
   void modeFilter() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       stopEvent(
         new StopEventParamStructure().withModeFilter(
           new ModeFilterStructure().withPtMode(
@@ -160,7 +160,7 @@ class OjpServiceMapperTest {
 
   @Test
   void modeFilterExclude() {
-    var params = SERVICE.extractStopEventParams(
+    var params = MAPPER.extractStopEventParams(
       stopEvent(
         new StopEventParamStructure().withModeFilter(
           new ModeFilterStructure()
@@ -175,6 +175,17 @@ class OjpServiceMapperTest {
     assertThat(params.excludedRoutes()).isEmpty();
     assertEquals(Set.of(BUS), params.includedModes());
     assertThat(params.excludedModes()).isEmpty();
+  }
+
+  /**
+   * When a depArrTime is not specified, the current time should be used.
+   */
+  @Test
+  void noDateTime() {
+    var ser = new OJPStopEventRequestStructure().withLocation(new PlaceContextStructure());
+
+    var params = MAPPER.extractStopEventParams(ser);
+    assertNotNull(params.time());
   }
 
   private static OJPStopEventRequestStructure lineFilter(LineDirectionFilterStructure value) {

@@ -4,10 +4,10 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.generate.doc.framework.GeneratesDocumentation;
 
 @GeneratesDocumentation
-public class TriasApiDocTest {
+public class OjpApiDocTest {
 
   @Test
   public void update() {
-    new DocTest("TriasApi.md", "trias-config.json", "triasApi").build();
+    new DocTest("OjpApi.md", "ojp-config.json", "ojpApi").build();
   }
 }

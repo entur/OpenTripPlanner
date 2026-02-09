@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.ojp.trias;
+package org.opentripplanner.ext.ojp.resource;
 
 import static jakarta.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
@@ -6,7 +6,6 @@ import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest
 import de.vdv.ojp20.OJP;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
-import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -98,17 +97,5 @@ class OjpMapperTest {
 
     // Print the XML output
     System.out.println(xmlWriter);
-  }
-
-  @Test
-  void ojpToTrias() {
-    var mapper = new StopEventResponseMapper(
-      Set.of(),
-      ZoneIds.BERLIN,
-      new DefaultFeedIdMapper(),
-      RESOLVE_FEED_LANG
-    );
-    var ojp = mapper.mapCalls(List.of(new CallAtStop(TRIP_TIMES_ON_DATE, WALK_TIME)), timestamp);
-    OjpToTriasTransformer.ojpToTrias(ojp, new PrintWriter(System.out));
   }
 }

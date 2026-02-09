@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.ojp.trias;
+package org.opentripplanner.ext.ojp.resource;
 
 import de.vdv.ojp20.OJP;
 import jakarta.xml.bind.JAXBContext;

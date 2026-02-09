@@ -1,4 +1,4 @@
-package org.opentripplanner.ext.ojp.trias;
+package org.opentripplanner.ext.ojp.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.framework.io.FileUtils.assertFileEquals;
@@ -26,10 +26,10 @@ class OjpToTriasTransformerTest {
   @ParameterizedTest
   @ValueSource(strings = { "stop-event-request.xml", "stop-event-request-coordinates.xml" })
   void stopEventRequest(String name) throws JAXBException, TransformerException {
-    var triasReq = LOADER.fileToString(name);
+    var triasReq = LOADER.fileToString("../trias/" + name);
     var transformed = OjpToTriasTransformer.triasToOjp(triasReq);
     var actual = toString(transformed);
-    var file = LOADER.extTestResourceFile("../ojp/" + name);
+    var file = LOADER.extTestResourceFile(name);
     var original = readFile(file);
     writeFile(file, actual);
     assertFileEquals(original, file);
