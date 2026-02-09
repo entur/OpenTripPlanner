@@ -12,12 +12,12 @@ import org.opentripplanner.transit.model.site.RegularStop;
 class SubgraphOnlyFerryTest {
 
   private static final TimetableRepositoryForTest TEST_MODEL = TimetableRepositoryForTest.of();
-  private static final RegularStop regularStop1 = TEST_MODEL.stop("TEST-1").build();
-  private static final RegularStop regularStop2 = TEST_MODEL.stop("TEST-2").build();
+  private static final RegularStop REGULAR_STOP1 = TEST_MODEL.stop("TEST-1").build();
+  private static final RegularStop REGULAR_STOP2 = TEST_MODEL.stop("TEST-2").build();
 
   @Test
   void subgraphHasOnlyFerry() {
-    TransitStopVertex transitStopVertex = vertexBuilder(regularStop1).withIsFerryStop(true).build();
+    TransitStopVertex transitStopVertex = vertexBuilder(REGULAR_STOP1).withIsFerryStop(true).build();
 
     Subgraph subgraph = new Subgraph();
     subgraph.addVertex(transitStopVertex);
@@ -27,7 +27,7 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasOnlyNoFerry() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(regularStop1)
+    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(false)
       .build();
 
@@ -39,7 +39,7 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasOnlyNoMode() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(regularStop1)
+    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(false)
       .build();
 
@@ -51,10 +51,10 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasOnlyFerryMoreStops() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(regularStop1)
+    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(true)
       .build();
-    TransitStopVertex transitStopVertex2 = vertexBuilder(regularStop1)
+    TransitStopVertex transitStopVertex2 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(true)
       .build();
 
@@ -67,10 +67,10 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasNotOnlyFerryMoreStops() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(regularStop1)
+    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(true)
       .build();
-    TransitStopVertex transitStopVertex2 = vertexBuilder(regularStop2)
+    TransitStopVertex transitStopVertex2 = vertexBuilder(REGULAR_STOP2)
       .withIsFerryStop(false)
       .build();
 
@@ -83,10 +83,10 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasNoModeMoreStops() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(regularStop1)
+    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(true)
       .build();
-    TransitStopVertex transitStopVertex2 = vertexBuilder(regularStop2)
+    TransitStopVertex transitStopVertex2 = vertexBuilder(REGULAR_STOP2)
       .withIsFerryStop(false)
       .build();
 

@@ -30,9 +30,9 @@ class TripResponseMapperTest implements PlanTestConstants {
   @Test
   void map() throws JAXBException {
     Itinerary itinerary = TestItineraryBuilder.newItinerary(A, T11_00)
-      .walk(D3m, B)
+      .walk(D3_m, B)
       .bus(1, T11_05, T11_15, C)
-      .walk(D2m, D)
+      .walk(D2_m, D)
       .build();
 
     // Create routing response with the itinerary

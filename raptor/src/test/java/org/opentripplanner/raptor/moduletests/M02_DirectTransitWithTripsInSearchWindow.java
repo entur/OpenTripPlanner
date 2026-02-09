@@ -42,9 +42,9 @@ public class M02_DirectTransitWithTripsInSearchWindow implements RaptorTestConst
   void testRelaxedLimitedTransferSearch() {
     var request = RaptorDirectTransitRequest.of()
       .earliestDepartureTime(T00_00)
-      .searchWindowInSeconds(D3m)
-      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_B, D20s))
+      .searchWindowInSeconds(D3_m)
+      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30_s))
+      .addEgressPaths(TestAccessEgress.walk(STOP_B, D20_s))
       .build();
 
     var result = raptorService.findAllDirectTransit(request, data);

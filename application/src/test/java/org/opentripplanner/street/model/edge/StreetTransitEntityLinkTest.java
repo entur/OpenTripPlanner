@@ -42,7 +42,7 @@ class StreetTransitEntityLinkTest {
 
     @Test
     void disallowInaccessibleStop() {
-      var afterTraversal = traverse(inaccessibleStop, true);
+      var afterTraversal = traverse(INACCESSIBLE_STOP, true);
       assertTrue(State.isEmpty(afterTraversal));
     }
 
@@ -55,10 +55,10 @@ class StreetTransitEntityLinkTest {
 
     @Test
     void unknownStop() {
-      var afterTraversal = traverse(unknownStop, false);
+      var afterTraversal = traverse(UNKNOWN_STOP, false);
       assertFalse(State.isEmpty(afterTraversal));
 
-      var afterStrictTraversal = traverse(unknownStop, true);
+      var afterStrictTraversal = traverse(UNKNOWN_STOP, true);
       assertTrue(State.isEmpty(afterStrictTraversal));
     }
 
