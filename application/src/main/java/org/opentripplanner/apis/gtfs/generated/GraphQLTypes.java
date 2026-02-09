@@ -468,6 +468,12 @@ public class GraphQLTypes {
     NO_INFORMATION,
   }
 
+  public enum GraphQLCarsAllowed {
+    ALLOWED,
+    NOT_ALLOWED,
+    NO_INFORMATION,
+  }
+
   public static class GraphQLBoardPreferencesInput {
 
     private java.time.Duration slack;

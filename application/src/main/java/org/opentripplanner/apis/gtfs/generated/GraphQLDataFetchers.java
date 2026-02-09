@@ -16,6 +16,7 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertCauseTyp
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertEffectType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertSeverityLevelType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLBikesAllowed;
+import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLCarsAllowed;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInputField;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLOccupancyStatus;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLPickupDropoffType;
@@ -1316,6 +1317,8 @@ public class GraphQLDataFetchers {
     public DataFetcher<TripTimeOnDate> arrivalStoptime();
 
     public DataFetcher<GraphQLBikesAllowed> bikesAllowed();
+
+    public DataFetcher<GraphQLCarsAllowed> carsAllowed();
 
     public DataFetcher<String> blockId();
 
