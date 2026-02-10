@@ -116,8 +116,8 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
     List<Leg> legs = new ArrayList<>();
 
     CarpoolItineraryMapper carpoolItineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
-    if(Objects.requireNonNull(path.accessLeg()).access() instanceof CarpoolAccessEgress){
-      legs.addAll(carpoolItineraryMapper.toItineary((CarpoolAccessEgress) accessPathLeg.access(), transitSearchTimeZero).legs());
+    if(accessPathLeg.access() instanceof CarpoolAccessEgress){
+      legs.addAll(carpoolItineraryMapper.toItinerary((CarpoolAccessEgress) accessPathLeg.access(), transitSearchTimeZero).legs());
     }else{
       legs.addAll(mapAccessLeg(accessPathLeg));
     }
