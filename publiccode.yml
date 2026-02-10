@@ -26,6 +26,8 @@ fundedBy:
     uri: https://waltti.fi/en/
   - name: Skånetrafiken
     uri: https://www.skanetrafiken.se
+  - name: HBT, Hamburg
+    uri: https://hbt.de  
 usedBy:
   - Norway (nationwide), Entur
   - Finland, Helsinki, Helsinki Region Transport Authority
