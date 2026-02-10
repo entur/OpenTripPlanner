@@ -19,6 +19,7 @@ import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.RaptorService;
+import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
 import org.opentripplanner.raptor.spi.ExtraMcRouterSearch;
@@ -39,6 +40,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.Rapto
 import org.opentripplanner.routing.algorithm.transferoptimization.configure.TransferOptimizationServiceConfigurator;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.routing.api.request.TripLocation;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
@@ -129,21 +131,49 @@ public class TransitRouter {
 
     debugTimingAggregator.finishedPatternFiltering();
 
-    var accessEgresses = fetchAccessEgresses();
+    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
 
-    debugTimingAggregator.finishedAccessEgress(
-      accessEgresses.getAccesses().size(),
-      accessEgresses.getEgresses().size()
-    );
+    Collection<? extends RaptorAccessEgress> accessPaths;
+    Collection<? extends RaptorAccessEgress> egressPaths;
+    ExtraMcRouterSearch<TripSchedule> extraSearch;
+    RouteRequest effectiveRequest;
+
+    if (onBoardTripLocation != null) {
+      // On-board access: resolve the trip location and use a single-iteration search
+      var onBoardAccess = resolveOnBoardAccess(onBoardTripLocation, requestTransitDataProvider);
+      accessPaths = List.of(onBoardAccess);
+
+      // Still need egress paths for the destination
+      egressPaths = fetchEgress();
+
+      verifyEgress(egressPaths);
+
+      debugTimingAggregator.finishedAccessEgress(accessPaths.size(), egressPaths.size());
+
+      // Force single-iteration search since the departure time is known exactly
+      effectiveRequest = request.copyOf().withSearchWindow(Duration.ZERO).buildRequest();
+
+      // Skip extra MC search for on-board access
+      extraSearch = null;
+    } else {
+      var accessEgresses = fetchAccessEgresses();
+      accessPaths = accessEgresses.getAccesses();
+      egressPaths = accessEgresses.getEgresses();
+
+      debugTimingAggregator.finishedAccessEgress(accessPaths.size(), egressPaths.size());
+
+      effectiveRequest = request;
+      extraSearch = createExtraMcRouterSearch(accessEgresses, raptorTransitData);
+    }
 
     // Prepare transit search
 
     var mapper = RaptorRequestMapper.<TripSchedule>of(
-      request,
+      effectiveRequest,
       transitSearchTimeZero,
       serverContext.raptorConfig().isMultiThreaded(),
-      accessEgresses.getAccesses(),
-      accessEgresses.getEgresses(),
+      accessPaths,
+      egressPaths,
       serverContext.meterRegistry(),
       viaTransferResolver,
       this::listStopIndexes,
@@ -152,10 +182,7 @@ public class TransitRouter {
     var raptorRequest = mapper.mapRaptorRequest();
 
     // Transit routing using Raptor
-    var raptorService = new RaptorService<>(
-      serverContext.raptorConfig(),
-      createExtraMcRouterSearch(accessEgresses, raptorTransitData)
-    );
+    var raptorService = new RaptorService<>(serverContext.raptorConfig(), extraSearch);
     var transitResponse = raptorService.route(raptorRequest, requestTransitDataProvider);
 
     checkIfTransitConnectionExists(transitResponse);
@@ -166,7 +193,7 @@ public class TransitRouter {
 
     // Route Direct transit
     var directRequest = DirectTransitRequestMapper.map(
-      request,
+      effectiveRequest,
       transitResponse.requestUsed().searchParams()
     );
     if (directRequest.isPresent()) {
@@ -188,7 +215,7 @@ public class TransitRouter {
       !transitResponse.containsUnknownPaths() &&
       // TODO VIA - This is temporary, we want pass via info in paths so transfer optimizer can
       //            skip legs containing via points.
-      request.allowTransferOptimization()
+      effectiveRequest.allowTransferOptimization()
     ) {
       var service = TransferOptimizationServiceConfigurator.createOptimizeTransferService(
         raptorTransitData::getStopByIndex,
@@ -196,7 +223,7 @@ public class TransitRouter {
         serverContext.transitService().getConstrainedTransferService(),
         requestTransitDataProvider,
         raptorTransitData.getStopBoardAlightTransferCosts(),
-        request.preferences().transfer().optimization(),
+        effectiveRequest.preferences().transfer().optimization(),
         raptorRequest.searchParams().viaLocations()
       );
       paths = service.optimize(paths);
@@ -210,7 +237,7 @@ public class TransitRouter {
       serverContext.streetDetailsService(),
       raptorTransitData,
       transitSearchTimeZero,
-      request
+      effectiveRequest
     );
 
     List<Itinerary> itineraries = paths.stream().map(itineraryMapper::createItinerary).toList();
@@ -218,6 +245,14 @@ public class TransitRouter {
     debugTimingAggregator.finishedItineraryCreation();
 
     return new TransitRouterResult(itineraries, transitResponse.requestUsed().searchParams());
+  }
+
+  private RaptorAccessEgress resolveOnBoardAccess(
+    TripLocation tripLocation,
+    RaptorRoutingRequestTransitData requestTransitDataProvider
+  ) {
+    var resolver = new OnBoardAccessResolver(serverContext.transitService());
+    return resolver.resolve(tripLocation, requestTransitDataProvider.getPatternIndex());
   }
 
   private AccessEgresses fetchAccessEgresses() {
@@ -362,6 +397,15 @@ public class TransitRouter {
       additionalSearchDays.additionalSearchDaysInFuture(),
       DefaultTransitDataProviderFilter.ofRequest(request),
       request
+    );
+  }
+
+  private void verifyEgress(Collection<?> egress) {
+    if (!egress.isEmpty()) {
+      return;
+    }
+    throw new RoutingValidationException(
+      List.of(new RoutingError(RoutingErrorCode.NO_STOPS_IN_RANGE, InputField.TO_PLACE))
     );
   }
 

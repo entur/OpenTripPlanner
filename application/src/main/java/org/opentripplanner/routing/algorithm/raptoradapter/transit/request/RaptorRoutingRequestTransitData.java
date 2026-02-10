@@ -175,6 +175,14 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
     return patternIndex.get(routeIndex);
   }
 
+  /**
+   * Return the list of {@link TripPatternForDates} indexed by route index. This is used by the
+   * on-board access resolver to find the trip schedule index for a specific trip.
+   */
+  public List<TripPatternForDates> getPatternIndex() {
+    return patternIndex;
+  }
+
   @Override
   public int numberOfStops() {
     return raptorTransitData.getStopCount();
