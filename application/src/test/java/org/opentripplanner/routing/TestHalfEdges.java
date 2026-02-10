@@ -161,8 +161,6 @@ public class TestHalfEdges {
 
   @Test
   public void testRouteToSameEdge() {
-    DisposableEdgeCollection tempEdges = new DisposableEdgeCollection(graph);
-
     HashSet<Edge> turns = new HashSet<>();
     turns.add(left);
     turns.add(leftBack);
@@ -203,14 +201,11 @@ public class TestHalfEdges {
     GraphPath<State, Edge, Vertex> path = spt.getPath(end);
     assertNotNull(path, "There must be a path from start to end");
     assertEquals(1, path.edges.size());
-    tempEdges.disposeEdges();
     connection.disposeEdges();
   }
 
   @Test
   public void testRouteToSameEdgeBackwards() {
-    DisposableEdgeCollection tempEdges = new DisposableEdgeCollection(graph);
-
     // Sits only on the leftmost edge, not on its reverse.
     HashSet<Edge> turns = new HashSet<>();
     turns.add(left);
@@ -250,7 +245,6 @@ public class TestHalfEdges {
     GraphPath<State, Edge, Vertex> path = spt.getPath(end);
     assertNotNull(path, "There must be a path from start to end");
     assertTrue(path.edges.size() > 1);
-    tempEdges.disposeEdges();
     connection.disposeEdges();
   }
 
@@ -260,8 +254,6 @@ public class TestHalfEdges {
    */
   @Test
   public void testStreetSplittingAlerts() {
-    DisposableEdgeCollection tempEdges = new DisposableEdgeCollection(graph);
-
     HashSet<Edge> turns = new HashSet<>();
     turns.add(left);
     turns.add(leftBack);
@@ -335,7 +327,6 @@ public class TestHalfEdges {
     assertEquals(wheelchairAlerts, graph.streetNotesService.getNotes(traversedOne));
     assertNotSame(left, traversedOne.getBackEdge().getFromVertex());
     assertNotSame(leftBack, traversedOne.getBackEdge().getFromVertex());
-    tempEdges.disposeEdges();
   }
 
   @Test
