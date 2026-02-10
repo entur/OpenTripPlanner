@@ -24,7 +24,7 @@ import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
  * The direct transit search should return both the optimal path and the slightly slower
  * path - the `relaxC1` define the slack.  Non-optimal paths should not be returned.
  */
-class M01_DirectTransitWithRoutesWithinRelaxC1 implements RaptorTestConstants {
+class M01_DirectTransitWithRoutesWithinRelaxC1Test implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
@@ -39,7 +39,7 @@ class M01_DirectTransitWithRoutesWithinRelaxC1 implements RaptorTestConstants {
   }
 
   @Test
-  void testRelaxedLimitedTransferSearch() {
+  void testDirectTransitSearch() {
     var request = RaptorDirectTransitRequest.of()
       .earliestDepartureTime(T00_00)
       .searchWindowInSeconds(D10_m)
