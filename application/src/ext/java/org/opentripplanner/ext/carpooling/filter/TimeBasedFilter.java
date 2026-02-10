@@ -55,6 +55,7 @@ public class TimeBasedFilter implements TripFilter, AccessEgressTripFilter {
     return withinWindow;
   }
 
+  // FOR NOW USING SEARCH WINDOW OF 12 HOURS, MAYBE CHANGE TO SOMETHING MORE REASONABLE, BUT NOT OBVIOUS HOW
   @Override
   public boolean acceptsAccessEgress(CarpoolTrip trip, WgsCoordinate coordinateOfPassenger, Instant passengerDepartureTime, Duration searchWindow) {
     var earliestDepartureTime = trip.startTime().minus(searchWindow);
