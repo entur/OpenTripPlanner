@@ -40,18 +40,6 @@ class SubgraphOnlyFerryTest {
   }
 
   @Test
-  void subgraphHasOnlyNoMode() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
-      .withIsFerryStop(false)
-      .build();
-
-    Subgraph subgraph = new Subgraph();
-    subgraph.addVertex(transitStopVertex1);
-
-    assertFalse(subgraph.hasOnlyFerryStops());
-  }
-
-  @Test
   void subgraphHasOnlyFerryMoreStops() {
     TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(true)
@@ -69,22 +57,6 @@ class SubgraphOnlyFerryTest {
 
   @Test
   void subgraphHasNotOnlyFerryMoreStops() {
-    TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
-      .withIsFerryStop(true)
-      .build();
-    TransitStopVertex transitStopVertex2 = vertexBuilder(REGULAR_STOP2)
-      .withIsFerryStop(false)
-      .build();
-
-    Subgraph subgraph = new Subgraph();
-    subgraph.addVertex(transitStopVertex1);
-    subgraph.addVertex(transitStopVertex2);
-
-    assertFalse(subgraph.hasOnlyFerryStops());
-  }
-
-  @Test
-  void subgraphHasNoModeMoreStops() {
     TransitStopVertex transitStopVertex1 = vertexBuilder(REGULAR_STOP1)
       .withIsFerryStop(true)
       .build();
