@@ -16,9 +16,9 @@ import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
 /**
  * FEATURE UNDER TEST
  * <p>
- * The direct transit search should return all trips on the same route within the search window.
+ * The direct transit search should only return trips in the search window
  */
-public class M02_DirectTransitWithTripsInSearchWindow implements RaptorTestConstants {
+public class M03_DirectTransitSearchWindowTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
@@ -27,31 +27,30 @@ public class M02_DirectTransitWithTripsInSearchWindow implements RaptorTestConst
   void setup() {
     data.withTimetable(
       "R1",
-      // The searchWindow is set to 00:00 to 00:03, so with 30s access the last trip starts after
-      // the latest-depature-time.
       """
-      A      B
-      00:02  00:04
-      00:03  00:05
-      00:04  00:06
+      A     B
+      00:02 00:03
+      00:03 00:04
+      00:04 00:05
+      00:05 00:06
       """
     );
   }
 
   @Test
-  void testRelaxedLimitedTransferSearch() {
+  void testRelaxedSearchWindow() {
     var request = RaptorDirectTransitRequest.of()
-      .earliestDepartureTime(T00_00)
-      .searchWindowInSeconds(D3_m)
-      .addAccessPaths(TestAccessEgress.walk(STOP_A, D30_s))
-      .addEgressPaths(TestAccessEgress.walk(STOP_B, D20_s))
+      .earliestDepartureTime(T00_02)
+      .searchWindowInSeconds(D1_m)
+      .addAccessPaths(TestAccessEgress.walk(STOP_A, D1_m))
+      .addEgressPaths(TestAccessEgress.walk(STOP_B, D1_m))
       .build();
 
     var result = raptorService.findAllDirectTransit(request, data);
+
     assertEquals(
-      """
-      Walk 30s ~ A ~ BUS R1 0:02 0:04 ~ B ~ Walk 20s [0:01:30 0:04:20 2m50s Tₙ0 C₁820]
-      Walk 30s ~ A ~ BUS R1 0:03 0:05 ~ B ~ Walk 20s [0:02:30 0:05:20 2m50s Tₙ0 C₁820]""",
+      "Walk 1m ~ A ~ BUS R1 0:03 0:04 ~ B ~ Walk 1m [0:02 0:05 3m Tₙ0 C₁900]\n" +
+        "Walk 1m ~ A ~ BUS R1 0:04 0:05 ~ B ~ Walk 1m [0:03 0:06 3m Tₙ0 C₁900]",
       pathsToString(result)
     );
   }

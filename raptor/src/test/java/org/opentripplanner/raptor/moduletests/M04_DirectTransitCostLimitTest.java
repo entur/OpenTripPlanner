@@ -21,7 +21,7 @@ import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
  * <p>
  * The direct transit search should include trips within the cost limit
  */
-public class M04_DirectTransitCostLimit implements RaptorTestConstants {
+public class M04_DirectTransitCostLimitTest implements RaptorTestConstants {
 
   private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
