@@ -381,34 +381,21 @@ class DefaultTransitDataProviderFilterTest {
   }
 
   /**
-   * Test filtering by main mode only (no submode) on a pattern with multiple modes.
-   * This tests the scenario where a TripPattern contains trips with different modes
-   * (e.g., BUS and COACH), and we want to filter by just BUS.
+   * When the filter matches the pattern's declared mode, trips with a different mode
+   * should still be excluded by trip-level filtering.
    */
   @Test
-  void filterByMainModeOnMultiModePattern() {
-    // Create a pattern with containsMultipleModes=true
-    // The pattern itself is marked as BUS, but contains multiple modes
-    var busTrip = createPatternAndTimesWithMultipleModes(
-      TimetableRepositoryForTest.id("T1"),
-      TransitMode.BUS
-    );
+  void multiModePatternFilterMatchesPatternModeExcludesNonMatchingTrips() {
+    var patternMode = TransitMode.BUS;
 
-    var coachTrip = createPatternAndTimesWithMultipleModes(
-      TimetableRepositoryForTest.id("T2"),
-      TransitMode.COACH
-    );
+    var busTrip = createMultiModePatternAndTimes("T1", patternMode, TransitMode.BUS);
+    var coachTrip = createMultiModePatternAndTimes("T2", patternMode, TransitMode.COACH);
 
-    // Filter for BUS only (no submode specified)
     var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(filterForMode(TransitMode.BUS))
       .build();
 
-    // BUS trip should pass the filter
     assertTrue(validate(filter, busTrip), "BUS trip should be included when filtering for BUS");
-
-    // COACH trip should NOT pass the filter - this is the bug!
-    // Currently this incorrectly returns true because trip-level filtering is skipped
     assertFalse(
       validate(filter, coachTrip),
       "COACH trip should be excluded when filtering for BUS"
@@ -416,22 +403,16 @@ class DefaultTransitDataProviderFilterTest {
   }
 
   /**
-   * Test filtering by main mode on a pattern with multiple modes, verifying that
-   * multiple different modes can be correctly filtered.
+   * When the filter does NOT match the pattern's declared mode, trips whose mode matches
+   * the filter should still be included by trip-level filtering.
    */
   @Test
-  void filterByDifferentMainModesOnMultiModePattern() {
-    var busTrip = createPatternAndTimesWithMultipleModes(
-      TimetableRepositoryForTest.id("T1"),
-      TransitMode.BUS
-    );
+  void multiModePatternFilterDoesNotMatchPatternModeIncludesMatchingTrips() {
+    var patternMode = TransitMode.BUS;
 
-    var railTrip = createPatternAndTimesWithMultipleModes(
-      TimetableRepositoryForTest.id("T2"),
-      TransitMode.RAIL
-    );
+    var busTrip = createMultiModePatternAndTimes("T1", patternMode, TransitMode.BUS);
+    var railTrip = createMultiModePatternAndTimes("T2", patternMode, TransitMode.RAIL);
 
-    // Filter for RAIL only
     var filter = DefaultTransitDataProviderFilter.of()
       .withFilters(filterForMode(TransitMode.RAIL))
       .build();
@@ -1035,16 +1016,12 @@ class DefaultTransitDataProviderFilterTest {
     );
   }
 
-  /**
-   * Creates a PatternAndTimes where the pattern has containsMultipleModes=true,
-   * simulating a NeTEx JourneyPattern with trips of different modes.
-   * The trip's mode is set to the specified mode.
-   */
-  private PatternAndTimes createPatternAndTimesWithMultipleModes(
-    FeedScopedId tripId,
+  private PatternAndTimes createMultiModePatternAndTimes(
+    String tripIdSuffix,
+    TransitMode patternMode,
     TransitMode tripMode
   ) {
-    Trip trip = Trip.of(tripId)
+    Trip trip = Trip.of(TimetableRepositoryForTest.id(tripIdSuffix))
       .withRoute(ROUTE)
       .withMode(tripMode)
       .withBikesAllowed(BikeAccess.NOT_ALLOWED)
@@ -1060,11 +1037,10 @@ class DefaultTransitDataProviderFilterTest {
 
     StopPattern stopPattern = new StopPattern(List.of(stopTime));
 
-    // Pattern is marked as BUS (first trip's mode) but contains multiple modes
     var tripPattern = TripPattern.of(TimetableRepositoryForTest.id("P1"))
       .withRoute(ROUTE)
       .withStopPattern(stopPattern)
-      .withMode(TransitMode.BUS)
+      .withMode(patternMode)
       .withContainsMultipleModes(true)
       .build();
 
