@@ -1,5 +1,6 @@
 package org.opentripplanner.apis.gtfs.mapping.routerequest;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -27,6 +28,7 @@ import org.opentripplanner.apis.gtfs.SchemaFactory;
 import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -185,8 +187,18 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     assertEquals(expectedFilters, routeRequest.journey().transit().filters().toString());
   }
 
-  private static Map<String, Object> mode(String mode) {
-    return Map.of("mode", mode);
+  @Test
+  void bannedTrips() {
+    var tripId = FeedScopedId.parse("trimet:777");
+    Map<String, Object> arguments = decorateWithRequiredParams(
+      Map.of("banned", Map.of("trips", tripId.toString()))
+    );
+
+    var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
+      executionContext(arguments),
+      CONTEXT
+    );
+    assertThat(routeRequest.journey().transit().bannedTrips()).containsExactly(tripId);
   }
 
   @Test
@@ -315,6 +327,10 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
       CONTEXT
     );
     assertEquals(List.of(), noParamsReq.listViaLocations());
+  }
+
+  private static Map<String, Object> mode(String mode) {
+    return Map.of("mode", mode);
   }
 
   private DataFetchingEnvironment executionContext(Map<String, Object> arguments) {
