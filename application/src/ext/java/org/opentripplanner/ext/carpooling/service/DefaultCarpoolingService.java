@@ -297,7 +297,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
         return Collections.emptyList();
       }
 
-      var allTrips = repository.getCarpoolTrips();
+      var allTrips = repository.getCarpoolTrips().stream().filter(it -> it.stops().getFirst().getAimedDepartureTime().equals(ZonedDateTime.parse("2026-02-13T15:00+01:00[Europe/Oslo]"))).toList();
       LOG.debug("Repository contains {} carpool trips", allTrips.size());
 
       var searchWindow = request.searchWindow() == null
@@ -318,7 +318,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
             trip,
             passengerCoordinate,
             passengerDepartureTime,
-            searchWindow
+            Duration.ofHours(12) // TEMPORARY
           )
         )
         .toList();
