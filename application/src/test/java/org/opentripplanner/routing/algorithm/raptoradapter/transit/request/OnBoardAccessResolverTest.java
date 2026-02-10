@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
@@ -299,7 +299,7 @@ class OnBoardAccessResolverTest {
     var secondVisit = new TripLocation(
       TripOnDateReference.ofTripIdAndServiceDate(ringTrip.getId(), SERVICE_DATE),
       STOP_A.getId(),
-      LocalDateTime.of(SERVICE_DATE, java.time.LocalTime.ofSecondOfDay(depTimeA2))
+      Instant.ofEpochSecond(SERVICE_DATE.toEpochDay() * 86400 + depTimeA2)
     );
 
     var result = resolver.resolve(secondVisit, patternIndex);
@@ -308,7 +308,7 @@ class OnBoardAccessResolverTest {
     var firstVisit = new TripLocation(
       TripOnDateReference.ofTripIdAndServiceDate(ringTrip.getId(), SERVICE_DATE),
       STOP_A.getId(),
-      LocalDateTime.of(SERVICE_DATE, java.time.LocalTime.ofSecondOfDay(depTimeA1))
+      Instant.ofEpochSecond(SERVICE_DATE.toEpochDay() * 86400 + depTimeA1)
     );
 
     var result2 = resolver.resolve(firstVisit, patternIndex);

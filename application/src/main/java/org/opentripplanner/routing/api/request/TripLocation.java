@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.api.request;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
@@ -20,7 +20,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 public record TripLocation(
   TripOnDateReference tripOnDateReference,
   FeedScopedId stopId,
-  @Nullable LocalDateTime scheduledDepartureTime
+  @Nullable Instant scheduledDepartureTime
 ) {
   public TripLocation {
     if (tripOnDateReference == null) {

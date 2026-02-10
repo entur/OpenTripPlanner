@@ -1,7 +1,8 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router;
 
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -116,7 +117,7 @@ public class OnBoardAccessResolver {
     StopLocation stop,
     Trip trip,
     LocalDate serviceDate,
-    @Nullable LocalDateTime scheduledDepartureTime
+    @Nullable Instant scheduledDepartureTime
   ) {
     // Collect all positions where this stop appears
     int firstMatch = -1;
@@ -163,7 +164,10 @@ public class OnBoardAccessResolver {
       );
     }
 
-    int targetSeconds = scheduledDepartureTime.toLocalTime().toSecondOfDay();
+    int targetSeconds = LocalTime.ofInstant(
+      scheduledDepartureTime,
+      transitService.getTimeZone()
+    ).toSecondOfDay();
 
     for (int i = 0; i < tripPattern.numberOfStops(); i++) {
       if (

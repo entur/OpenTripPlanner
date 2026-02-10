@@ -1,9 +1,16 @@
 package org.opentripplanner.apis.transmodel.mapping;
 
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
+import org.opentripplanner.apis.transmodel.model.framework.TripOnDateReferenceInputType;
+import org.opentripplanner.apis.transmodel.support.OneOfInputValidator;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.api.request.TripLocation;
+import org.opentripplanner.routing.api.request.TripOnDateReference;
 
 class GenericLocationMapper {
 
@@ -13,9 +20,7 @@ class GenericLocationMapper {
     this.idMapper = idMapper;
   }
 
-  /**
-   * Maps a GraphQL Location input type to a GenericLocation
-   */
+  @SuppressWarnings("unchecked")
   GenericLocation toGenericLocation(Map<String, Object> m) {
     Map<String, Object> coordinates = (Map<String, Object>) m.get("coordinates");
     Double lat = null;
@@ -30,6 +35,52 @@ class GenericLocationMapper {
     String name = (String) m.get("name");
     name = name == null ? "" : name;
 
-    return new GenericLocation(name, stopId, lat, lon);
+    TripLocation tripLocation = mapTripLocation((Map<String, Object>) m.get("tripLocation"));
+
+    return new GenericLocation(name, stopId, lat, lon, tripLocation);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Nullable
+  private TripLocation mapTripLocation(@Nullable Map<String, Object> m) {
+    if (m == null) {
+      return null;
+    }
+
+    var tripOnDateReference = mapTripOnDateReference((Map<String, Object>) m.get("tripReference"));
+
+    FeedScopedId stopId = idMapper.parse((String) m.get("stopId"));
+
+    Instant scheduledDepartureTime = null;
+    Object depTimeValue = m.get("scheduledDepartureTime");
+    if (depTimeValue != null) {
+      scheduledDepartureTime = Instant.ofEpochMilli((long) depTimeValue);
+    }
+
+    return new TripLocation(tripOnDateReference, stopId, scheduledDepartureTime);
+  }
+
+  @SuppressWarnings("unchecked")
+  private TripOnDateReference mapTripOnDateReference(Map<String, Object> m) {
+    var fieldName = OneOfInputValidator.validateOneOf(
+      m,
+      "TripOnDateReference",
+      TripOnDateReferenceInputType.FIELD_TRIP_ID_ON_SERVICE_DATE,
+      TripOnDateReferenceInputType.FIELD_TRIP_ON_DATE_ID
+    );
+
+    return switch (fieldName) {
+      case TripOnDateReferenceInputType.FIELD_TRIP_ID_ON_SERVICE_DATE -> {
+        var tripIdOnDate = (Map<String, Object>) m.get(fieldName);
+        FeedScopedId tripId = idMapper.parse((String) tripIdOnDate.get("tripId"));
+        LocalDate serviceDate = (LocalDate) tripIdOnDate.get("serviceDate");
+        yield TripOnDateReference.ofTripIdAndServiceDate(tripId, serviceDate);
+      }
+      case TripOnDateReferenceInputType.FIELD_TRIP_ON_DATE_ID -> {
+        FeedScopedId tripOnDateId = idMapper.parse((String) m.get(fieldName));
+        yield TripOnDateReference.ofTripOnDateId(tripOnDateId);
+      }
+      default -> throw new IllegalArgumentException("Unknown field: " + fieldName);
+    };
   }
 }

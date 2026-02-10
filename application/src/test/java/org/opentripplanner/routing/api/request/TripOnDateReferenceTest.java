@@ -40,10 +40,7 @@ class TripOnDateReferenceTest {
   void throwsWhenBothSet() {
     assertThrows(IllegalArgumentException.class, () ->
       new TripOnDateReference(
-        new org.opentripplanner.transit.model.timetable.TripIdAndServiceDate(
-          TRIP_ID,
-          SERVICE_DATE
-        ),
+        new org.opentripplanner.transit.model.timetable.TripIdAndServiceDate(TRIP_ID, SERVICE_DATE),
         TRIP_ON_DATE_ID
       )
     );
