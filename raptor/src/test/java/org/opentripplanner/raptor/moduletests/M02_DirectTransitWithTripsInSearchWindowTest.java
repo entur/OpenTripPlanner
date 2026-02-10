@@ -39,7 +39,7 @@ public class M02_DirectTransitWithTripsInSearchWindowTest implements RaptorTestC
   }
 
   @Test
-  void testRelaxedLimitedTransferSearch() {
+  void testDirectTransitSearchWindow() {
     var request = RaptorDirectTransitRequest.of()
       .earliestDepartureTime(T00_00)
       .searchWindowInSeconds(D3_m)

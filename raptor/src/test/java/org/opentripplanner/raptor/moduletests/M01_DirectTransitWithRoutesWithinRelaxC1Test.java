@@ -39,7 +39,7 @@ class M01_DirectTransitWithRoutesWithinRelaxC1Test implements RaptorTestConstant
   }
 
   @Test
-  void testRelaxedLimitedTransferSearch() {
+  void testDirectTransitSearch() {
     var request = RaptorDirectTransitRequest.of()
       .earliestDepartureTime(T00_00)
       .searchWindowInSeconds(D10_m)
