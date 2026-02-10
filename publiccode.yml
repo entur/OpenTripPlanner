@@ -20,7 +20,7 @@ fundedBy:
     uri: https://entur.no
   - name: Fintraffic
     uri: https://www.fintraffic.fi/en
-  - name: Helsinki Region Transport
+  - name: Helsinki Region Transport (HSL)
     uri: https://www.hsl.fi/en
   - name: Waltti Solutions
     uri: https://waltti.fi/en/
@@ -28,11 +28,11 @@ fundedBy:
     uri: https://aubin.app/
   - name: Skånetrafiken
     uri: https://www.skanetrafiken.se
-  - name: HBT, Hamburg
-    uri: https://hbt.de  
+  - name: Hamburger Berater Team (HBT)
+    uri: https://hbt.de
 usedBy:
   - Norway (nationwide), Entur
-  - Finland, Helsinki, Helsinki Region Transport Authority
+  - Finland, Helsinki, Helsinki Region Transport (HSL)
   - Finland (nationwide), Fintraffic
   - Finland (various cities), Waltti Solutions
   - Sweden, Skåne, Skånetrafiken
