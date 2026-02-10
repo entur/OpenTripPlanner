@@ -12,6 +12,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +35,6 @@ import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.booking.RoutingBookingInfo;
 
 class FlexTemplateFactoryTest {
 
@@ -59,10 +59,11 @@ class FlexTemplateFactoryTest {
   /**
    * The date is pass-through information in this test, so one date is enough.
    */
-  private static final FlexServiceDate DATE = new FlexServiceDate(
+  private static final FlexServiceDate DATE = FlexServiceDate.of(
     LocalDate.of(2024, Month.MAY, 17),
     SERVICE_TIME_OFFSET,
-    RoutingBookingInfo.NOT_SET,
+    null,
+    ZoneId.of("Europe/Oslo"),
     new TIntHashSet()
   );
 
