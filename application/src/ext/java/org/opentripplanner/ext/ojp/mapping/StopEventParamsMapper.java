@@ -22,9 +22,6 @@ import java.util.stream.Collectors;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.ojp.service.CallAtStopService;
-import org.opentripplanner.ext.ojp.mapping.PtModeMapper;
-import org.opentripplanner.ext.ojp.mapping.StopEventResponseMapper;
-import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.service.ArrivalDeparture;
 

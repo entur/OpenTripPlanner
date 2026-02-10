@@ -18,16 +18,12 @@ import org.opentripplanner.street.model.edge.AreaEdgeBuilder;
 import org.opentripplanner.street.model.edge.AreaGroup;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
-import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
-import org.opentripplanner.street.model.edge.TemporaryPartialStreetEdge;
 import org.opentripplanner.street.model.edge.TemporaryPartialStreetEdgeBuilder;
-import org.opentripplanner.street.model.edge.linking.EdgeDisposable;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
-import org.opentripplanner.street.model.vertex.Vertex;
 
 public class StreetModelFactory {
 
@@ -174,44 +170,15 @@ public static VehicleRentalPlaceVertex rentalVertex(
     I18NString name,
     Iterable<StreetEdge> edges,
     Coordinate nearestPoint,
-    boolean endVertex,
-    EdgeDisposable tempEdges
+    boolean endVertex
   ) {
-    boolean wheelchairAccessible = false;
 
     TemporaryStreetLocation location = new TemporaryStreetLocation(nearestPoint, name);
 
     for (StreetEdge street : edges) {
-      Vertex fromv = street.getFromVertex();
-      Vertex tov = street.getToVertex();
-      wheelchairAccessible |= street.isWheelchairAccessible();
-
       /* forward edges and vertices */
-      Vertex edgeLocation;
-      if (SphericalDistanceLibrary.distance(nearestPoint, fromv.getCoordinate()) < 1) {
-        // no need to link to area edges caught on-end
-        edgeLocation = fromv;
-
-        if (endVertex) {
-          tempEdges.addEdge(TemporaryFreeEdge.createTemporaryFreeEdge(edgeLocation, location));
-        } else {
-          tempEdges.addEdge(TemporaryFreeEdge.createTemporaryFreeEdge(location, edgeLocation));
-        }
-      } else if (SphericalDistanceLibrary.distance(nearestPoint, tov.getCoordinate()) < 1) {
-        // no need to link to area edges caught on-end
-        edgeLocation = tov;
-
-        if (endVertex) {
-          tempEdges.addEdge(TemporaryFreeEdge.createTemporaryFreeEdge(edgeLocation, location));
-        } else {
-          tempEdges.addEdge(TemporaryFreeEdge.createTemporaryFreeEdge(location, edgeLocation));
-        }
-      } else {
-        // creates links from street head -> location -> street tail.
-        createHalfLocationForTest(location, name, nearestPoint, street, endVertex, tempEdges);
-      }
+      createHalfLocationForTest(location, name, nearestPoint, street, endVertex);
     }
-    location.setWheelchairAccessible(wheelchairAccessible);
     return location;
   }
 
@@ -220,8 +187,7 @@ public static VehicleRentalPlaceVertex rentalVertex(
     I18NString name,
     Coordinate nearestPoint,
     StreetEdge street,
-    boolean endVertex,
-    EdgeDisposable tempEdges
+    boolean endVertex
   ) {
     StreetVertex tov = (StreetVertex) street.getToVertex();
     StreetVertex fromv = (StreetVertex) street.getFromVertex();
@@ -236,7 +202,7 @@ public static VehicleRentalPlaceVertex rentalVertex(
     double lengthOut = street.getDistanceMeters() * (1 - lengthRatioIn);
 
     if (endVertex) {
-      TemporaryPartialStreetEdge tpse = new TemporaryPartialStreetEdgeBuilder()
+      new TemporaryPartialStreetEdgeBuilder()
         .withParentEdge(street)
         .withFromVertex(fromv)
         .withToVertex(base)
@@ -248,9 +214,8 @@ public static VehicleRentalPlaceVertex rentalVertex(
         .withWalkNoThruTraffic(street.isWalkNoThruTraffic())
         .withLink(street.isLink())
         .buildAndConnect();
-      tempEdges.addEdge(tpse);
     } else {
-      TemporaryPartialStreetEdge tpse = new TemporaryPartialStreetEdgeBuilder()
+      new TemporaryPartialStreetEdgeBuilder()
         .withParentEdge(street)
         .withFromVertex(base)
         .withToVertex(tov)
@@ -262,7 +227,6 @@ public static VehicleRentalPlaceVertex rentalVertex(
         .withBicycleNoThruTraffic(street.isBicycleNoThruTraffic())
         .withWalkNoThruTraffic(street.isWalkNoThruTraffic())
         .buildAndConnect();
-      tempEdges.addEdge(tpse);
     }
   }
 

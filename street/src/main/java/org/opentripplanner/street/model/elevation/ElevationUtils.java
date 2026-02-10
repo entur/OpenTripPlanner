@@ -5,7 +5,6 @@ import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner.routing.util.elevation.ToblersHikingFunction;
 
 public class ElevationUtils {
 
