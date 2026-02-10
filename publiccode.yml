@@ -28,6 +28,8 @@ fundedBy:
     uri: https://aubin.app/
   - name: Skånetrafiken
     uri: https://www.skanetrafiken.se
+  - name: Hamburger Berater Team (HBT)
+    uri: https://hbt.de
 usedBy:
   - Norway (nationwide), Entur
   - Finland, Helsinki, Helsinki Region Transport (HSL)
