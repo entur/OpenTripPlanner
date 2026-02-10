@@ -86,7 +86,7 @@ public class CarpoolItineraryMapper {
     this.timeZone = ZoneIdFallback.zoneId(timeZone);
   }
 
-  public Itinerary toItineary(CarpoolAccessEgress accessEgress, ZonedDateTime transitSearchTimeZero) {
+  public Itinerary toItinerary(CarpoolAccessEgress accessEgress, ZonedDateTime transitSearchTimeZero) {
 
     var path = new GraphPath<>(accessEgress.getLastState());
     var startTime = transitSearchTimeZero.plusSeconds(accessEgress.getStartOfTrip());
@@ -109,11 +109,11 @@ public class CarpoolItineraryMapper {
       .build();
 
 
-    var itineary = Itinerary.ofDirect(List.of(carpoolLeg))
+    var itinerary = Itinerary.ofDirect(List.of(carpoolLeg))
       .withGeneralizedCost(Cost.costOfSeconds(carpoolLeg.generalizedCost()))
       .build();
 
-    return itineary;
+    return itinerary;
   }
 
   /**
