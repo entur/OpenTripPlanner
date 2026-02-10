@@ -421,6 +421,26 @@ class DefaultTransitDataProviderFilterTest {
     assertTrue(validate(filter, railTrip), "RAIL trip should be included when filtering for RAIL");
   }
 
+  /**
+   * On a single-mode pattern, filtering is done at the pattern level only. This test uses
+   * a contrived scenario where the trip mode differs from the pattern mode (which would not
+   * happen in practice) to verify that only the pattern-level mode is checked.
+   */
+  @Test
+  void singleModePatternDoesNotApplyTripLevelModeFiltering() {
+    var patternMode = TransitMode.BUS;
+    var coachTrip = createPatternAndTimes("T1", patternMode, TransitMode.COACH, false);
+
+    var filter = DefaultTransitDataProviderFilter.of()
+      .withFilters(filterForMode(TransitMode.BUS))
+      .build();
+
+    assertTrue(
+      validate(filter, coachTrip),
+      "Trip-level mode filtering should not be applied on a single-mode pattern"
+    );
+  }
+
   @Ignore
   void selectCombinationTest() {
     // This test illustrates a bug in the filtering logic.
@@ -1016,10 +1036,11 @@ class DefaultTransitDataProviderFilterTest {
     );
   }
 
-  private PatternAndTimes createMultiModePatternAndTimes(
+  private PatternAndTimes createPatternAndTimes(
     String tripIdSuffix,
     TransitMode patternMode,
-    TransitMode tripMode
+    TransitMode tripMode,
+    boolean containsMultipleModes
   ) {
     Trip trip = Trip.of(TimetableRepositoryForTest.id(tripIdSuffix))
       .withRoute(ROUTE)
@@ -1041,7 +1062,7 @@ class DefaultTransitDataProviderFilterTest {
       .withRoute(ROUTE)
       .withStopPattern(stopPattern)
       .withMode(patternMode)
-      .withContainsMultipleModes(true)
+      .withContainsMultipleModes(containsMultipleModes)
       .build();
 
     TripTimes tripTimes = TripTimesFactory.tripTimes(
@@ -1051,6 +1072,14 @@ class DefaultTransitDataProviderFilterTest {
     );
 
     return new PatternAndTimes(tripPattern, tripTimes);
+  }
+
+  private PatternAndTimes createMultiModePatternAndTimes(
+    String tripIdSuffix,
+    TransitMode patternMode,
+    TransitMode tripMode
+  ) {
+    return createPatternAndTimes(tripIdSuffix, patternMode, tripMode, true);
   }
 
   public static RegularStop stopForTest(
