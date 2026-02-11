@@ -1,14 +1,10 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
@@ -43,7 +39,7 @@ public class ModifyTripHandler implements TripUpdateHandler {
   private static final Logger LOG = LoggerFactory.getLogger(ModifyTripHandler.class);
 
   @Override
-  public Result<RealTimeTripUpdate, UpdateError> handle(
+  public Result<TripUpdateResult, UpdateError> handle(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
@@ -127,7 +123,7 @@ public class ModifyTripHandler implements TripUpdateHandler {
     }
 
     // Build the new stop pattern from stop time updates
-    var stopPatternResult = buildNewStopPattern(
+    var stopPatternResult = HandlerUtils.buildNewStopPattern(
       trip,
       stopTimeUpdates,
       context.stopResolver(),
@@ -174,15 +170,14 @@ public class ModifyTripHandler implements TripUpdateHandler {
     // Create real-time trip times builder from scheduled
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
 
-    // Apply trip-level headsign from trip creation info
-    if (
-      parsedUpdate.tripCreationInfo() != null && parsedUpdate.tripCreationInfo().headsign() != null
-    ) {
-      builder.withTripHeadsign(parsedUpdate.tripCreationInfo().headsign());
-    }
-
     // Apply real-time updates
-    applyRealTimeUpdates(parsedUpdate, builder, stopTimeUpdates, serviceDate, context.timeZone());
+    HandlerUtils.applyRealTimeUpdates(
+      parsedUpdate,
+      builder,
+      stopTimeUpdates,
+      serviceDate,
+      context.timeZone()
+    );
 
     // Set state to MODIFIED
     builder.withRealTimeState(RealTimeState.MODIFIED);
@@ -199,150 +194,10 @@ public class ModifyTripHandler implements TripUpdateHandler {
         serviceDate,
         newPattern.getId()
       );
-      return Result.success(realTimeTripUpdate);
+      return Result.success(new TripUpdateResult(realTimeTripUpdate));
     } catch (DataValidationException e) {
       LOG.info("Invalid real-time data for modified trip {}: {}", trip.getId(), e.getMessage());
       return DataValidationExceptionMapper.toResult(e);
-    }
-  }
-
-  /**
-   * Result of building a new stop pattern.
-   */
-  private record StopTimesAndPattern(List<StopTime> stopTimes, StopPattern stopPattern) {}
-
-  /**
-   * Build a new stop pattern and stop times from the parsed stop time updates.
-   */
-  private Result<StopTimesAndPattern, UpdateError> buildNewStopPattern(
-    Trip trip,
-    List<ParsedStopTimeUpdate> stopTimeUpdates,
-    StopResolver stopResolver,
-    LocalDate serviceDate,
-    java.time.ZoneId timeZone
-  ) {
-    var stopTimes = new ArrayList<StopTime>();
-
-    for (int i = 0; i < stopTimeUpdates.size(); i++) {
-      var stopUpdate = stopTimeUpdates.get(i);
-
-      // Resolve the stop
-      StopLocation stop = stopResolver.resolve(stopUpdate.stopReference());
-      if (stop == null) {
-        LOG.debug("Unknown stop in MODIFY_TRIP: {}", stopUpdate.stopReference());
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
-        );
-      }
-
-      // Create stop time
-      var stopTime = new StopTime();
-      stopTime.setTrip(trip);
-      stopTime.setStop(stop);
-      stopTime.setStopSequence(i);
-
-      // Resolve times
-      boolean isFirstStop = (i == 0);
-      boolean isLastStop = (i == stopTimeUpdates.size() - 1);
-
-      // Get arrival time
-      if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate().resolve(serviceDate, timeZone);
-        // Use 0 as scheduled time for new patterns since we're creating scheduled times
-        stopTime.setArrivalTime(arrivalUpdate.resolveTime(0));
-      } else if (!isFirstStop) {
-        // Propagate from previous stop if no arrival
-        var prevStopTime = stopTimes.get(i - 1);
-        stopTime.setArrivalTime(prevStopTime.getDepartureTime());
-      }
-
-      // Get departure time
-      if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
-        stopTime.setDepartureTime(departureUpdate.resolveTime(0));
-      } else if (!isLastStop) {
-        // Use arrival time if no departure
-        stopTime.setDepartureTime(stopTime.getArrivalTime());
-      } else {
-        stopTime.setDepartureTime(stopTime.getArrivalTime());
-      }
-
-      // Handle pickup/dropoff
-      if (stopUpdate.pickup() != null) {
-        stopTime.setPickupType(stopUpdate.pickup());
-      } else {
-        stopTime.setPickupType(isLastStop ? PickDrop.NONE : PickDrop.SCHEDULED);
-      }
-
-      if (stopUpdate.dropoff() != null) {
-        stopTime.setDropOffType(stopUpdate.dropoff());
-      } else {
-        stopTime.setDropOffType(isFirstStop ? PickDrop.NONE : PickDrop.SCHEDULED);
-      }
-
-      // Handle headsign
-      if (stopUpdate.stopHeadsign() != null) {
-        stopTime.setStopHeadsign(stopUpdate.stopHeadsign());
-      }
-
-      // Handle skipped stops
-      if (stopUpdate.isSkipped()) {
-        stopTime.setPickupType(PickDrop.CANCELLED);
-        stopTime.setDropOffType(PickDrop.CANCELLED);
-      }
-
-      stopTimes.add(stopTime);
-    }
-
-    var stopPattern = new StopPattern(stopTimes);
-    return Result.success(new StopTimesAndPattern(stopTimes, stopPattern));
-  }
-
-  /**
-   * Apply real-time updates to the trip times builder.
-   */
-  private void applyRealTimeUpdates(
-    ParsedTripUpdate parsedUpdate,
-    org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
-    List<ParsedStopTimeUpdate> stopTimeUpdates,
-    LocalDate serviceDate,
-    java.time.ZoneId timeZone
-  ) {
-    for (int i = 0; i < stopTimeUpdates.size(); i++) {
-      var stopUpdate = stopTimeUpdates.get(i);
-
-      // Apply time updates
-      if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate().resolve(serviceDate, timeZone);
-        int scheduledArrival = builder.getScheduledArrivalTime(i);
-        builder.withArrivalTime(i, arrivalUpdate.resolveTime(scheduledArrival));
-      }
-
-      if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
-        int scheduledDeparture = builder.getScheduledDepartureTime(i);
-        builder.withDepartureTime(i, departureUpdate.resolveTime(scheduledDeparture));
-      }
-
-      // Apply headsign
-      if (stopUpdate.stopHeadsign() != null) {
-        builder.withStopHeadsign(i, stopUpdate.stopHeadsign());
-      }
-
-      // Apply skipped
-      if (stopUpdate.isSkipped()) {
-        builder.withCanceled(i);
-      }
-
-      // Apply recorded flag
-      if (stopUpdate.recorded()) {
-        builder.withRecorded(i);
-      }
-
-      // Apply prediction inaccurate flag
-      if (stopUpdate.predictionInaccurate()) {
-        builder.withInaccuratePredictions(i);
-      }
     }
   }
 

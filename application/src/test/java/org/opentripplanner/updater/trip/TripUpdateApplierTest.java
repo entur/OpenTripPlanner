@@ -13,9 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
@@ -131,7 +131,7 @@ class TripUpdateApplierTest {
     }
 
     @Override
-    public Result<RealTimeTripUpdate, UpdateError> apply(
+    public Result<TripUpdateResult, UpdateError> apply(
       ParsedTripUpdate parsedUpdate,
       TripUpdateApplierContext context
     ) {

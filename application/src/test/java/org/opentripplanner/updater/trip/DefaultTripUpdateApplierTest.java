@@ -201,7 +201,7 @@ class DefaultTripUpdateApplierTest {
 
     // Apply the update to the snapshot manager
     var updateResult = result.successValue();
-    snapshotManager.updateBuffer(updateResult);
+    snapshotManager.updateBuffer(updateResult.realTimeTripUpdate());
 
     // Commit the snapshot to make the update visible
     snapshotManager.purgeAndCommit();
@@ -280,7 +280,7 @@ class DefaultTripUpdateApplierTest {
 
     // Apply the update to the snapshot manager
     var updateResult = result.successValue();
-    snapshotManager.updateBuffer(updateResult);
+    snapshotManager.updateBuffer(updateResult.realTimeTripUpdate());
 
     // Commit the snapshot to make the update visible
     snapshotManager.purgeAndCommit();

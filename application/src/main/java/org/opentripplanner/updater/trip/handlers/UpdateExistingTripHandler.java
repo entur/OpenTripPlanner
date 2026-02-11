@@ -42,7 +42,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
   private static final Logger LOG = LoggerFactory.getLogger(UpdateExistingTripHandler.class);
 
   @Override
-  public Result<RealTimeTripUpdate, UpdateError> handle(
+  public Result<TripUpdateResult, UpdateError> handle(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
@@ -177,7 +177,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     try {
       var realTimeTripUpdate = new RealTimeTripUpdate(finalPattern, builder.build(), serviceDate);
       LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
-      return Result.success(realTimeTripUpdate);
+      return Result.success(new TripUpdateResult(realTimeTripUpdate));
     } catch (DataValidationException e) {
       LOG.info(
         "Invalid real-time data for trip {} - TripTimes failed to validate. {}",

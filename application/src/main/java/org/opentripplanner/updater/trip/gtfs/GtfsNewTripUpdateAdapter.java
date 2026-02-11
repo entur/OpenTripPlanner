@@ -5,9 +5,13 @@ import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET
 import com.google.transit.realtime.GtfsRealtime;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitEditorService;
@@ -53,6 +57,13 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
    * messages.
    */
   private final SiriTripPatternCache tripPatternCache;
+
+  /**
+   * A cache of routes created by real-time updates that persists across buffer clears.
+   * This is needed because FULL_DATASET clears the buffer, but we want to reuse routes
+   * when the same trip update is applied again.
+   */
+  private final Map<FeedScopedId, Route> realtimeRouteCache = new HashMap<>();
 
   private final GtfsRtTripUpdateParser parser;
   private final DefaultTripUpdateApplier applier;
@@ -143,7 +154,8 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       serviceDateResolver,
       stopResolver,
       tripPatternCache,
-      fuzzyMatcher
+      fuzzyMatcher,
+      realtimeRouteCache::get
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
@@ -174,9 +186,18 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       return applyResult.toFailureResult();
     }
 
-    var realTimeTripUpdate = applyResult.successValue();
+    var tripUpdateResult = applyResult.successValue();
+    var realTimeTripUpdate = tripUpdateResult.realTimeTripUpdate();
 
-    // Commit the update to the snapshot
-    return snapshotManager.updateBuffer(realTimeTripUpdate);
+    // Cache the route if it's a new trip with route creation
+    if (realTimeTripUpdate.tripCreation() && realTimeTripUpdate.routeCreation()) {
+      Route route = realTimeTripUpdate.pattern().getRoute();
+      realtimeRouteCache.put(route.getId(), route);
+    }
+
+    // Commit the update to the snapshot and add any warnings
+    return snapshotManager
+      .updateBuffer(realTimeTripUpdate)
+      .mapSuccess(s -> s.addWarnings(tripUpdateResult.warnings()));
   }
 }
