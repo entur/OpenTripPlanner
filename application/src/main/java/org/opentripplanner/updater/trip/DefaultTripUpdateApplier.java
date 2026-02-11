@@ -12,7 +12,6 @@ import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,31 +23,42 @@ import org.slf4j.LoggerFactory;
  * - SIRI: ModifiedTripBuilder, AddedTripBuilder, ExtraCallTripBuilder
  * - GTFS-RT: GtfsRealTimeTripUpdateAdapter, TripTimesUpdater
  * <p>
- * The applier first resolves the parsed update using {@link TripUpdateResolver} to look up
- * all referenced entities (trip, pattern, service date, etc.), then delegates to the
- * appropriate handler based on update type.
+ * The applier uses dedicated resolvers for each update type category:
+ * <ul>
+ *   <li>{@link ExistingTripResolver} for UPDATE_EXISTING and MODIFY_TRIP</li>
+ *   <li>{@link NewTripResolver} for ADD_NEW_TRIP</li>
+ *   <li>{@link TripRemovalResolver} for CANCEL_TRIP and DELETE_TRIP</li>
+ * </ul>
  */
 public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultTripUpdateApplier.class);
 
   private final TransitEditorService transitService;
-  private final TripUpdateResolver resolver;
-  private final TripUpdateHandler updateExistingHandler;
-  private final TripUpdateHandler cancelTripHandler;
-  private final TripUpdateHandler deleteTripHandler;
-  private final TripUpdateHandler addNewTripHandler;
-  private final TripUpdateHandler modifyTripHandler;
+
+  // Resolvers for each update type category
+  private final ExistingTripResolver existingTripResolver;
+  private final NewTripResolver newTripResolver;
+  private final TripRemovalResolver tripRemovalResolver;
+
+  // Handlers for each update type
+  private final TripUpdateHandler.ForExistingTrip updateExistingHandler;
+  private final TripUpdateHandler.ForExistingTrip modifyTripHandler;
+  private final TripUpdateHandler.ForNewTrip addNewTripHandler;
+  private final TripUpdateHandler.ForTripRemoval cancelTripHandler;
+  private final TripUpdateHandler.ForTripRemoval deleteTripHandler;
 
   public DefaultTripUpdateApplier(TransitEditorService transitService) {
     this(
       transitService,
-      new TripUpdateResolver(transitService),
+      new ExistingTripResolver(transitService),
+      new NewTripResolver(transitService),
+      new TripRemovalResolver(transitService),
       new UpdateExistingTripHandler(),
-      new CancelTripHandler(),
-      new DeleteTripHandler(),
+      new ModifyTripHandler(),
       new AddNewTripHandler(),
-      new ModifyTripHandler()
+      new CancelTripHandler(),
+      new DeleteTripHandler()
     );
   }
 
@@ -57,20 +67,24 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
    */
   public DefaultTripUpdateApplier(
     TransitEditorService transitService,
-    TripUpdateResolver resolver,
-    TripUpdateHandler updateExistingHandler,
-    TripUpdateHandler cancelTripHandler,
-    TripUpdateHandler deleteTripHandler,
-    TripUpdateHandler addNewTripHandler,
-    TripUpdateHandler modifyTripHandler
+    ExistingTripResolver existingTripResolver,
+    NewTripResolver newTripResolver,
+    TripRemovalResolver tripRemovalResolver,
+    TripUpdateHandler.ForExistingTrip updateExistingHandler,
+    TripUpdateHandler.ForExistingTrip modifyTripHandler,
+    TripUpdateHandler.ForNewTrip addNewTripHandler,
+    TripUpdateHandler.ForTripRemoval cancelTripHandler,
+    TripUpdateHandler.ForTripRemoval deleteTripHandler
   ) {
     this.transitService = Objects.requireNonNull(transitService);
-    this.resolver = Objects.requireNonNull(resolver);
+    this.existingTripResolver = Objects.requireNonNull(existingTripResolver);
+    this.newTripResolver = Objects.requireNonNull(newTripResolver);
+    this.tripRemovalResolver = Objects.requireNonNull(tripRemovalResolver);
     this.updateExistingHandler = Objects.requireNonNull(updateExistingHandler);
+    this.modifyTripHandler = Objects.requireNonNull(modifyTripHandler);
+    this.addNewTripHandler = Objects.requireNonNull(addNewTripHandler);
     this.cancelTripHandler = Objects.requireNonNull(cancelTripHandler);
     this.deleteTripHandler = Objects.requireNonNull(deleteTripHandler);
-    this.addNewTripHandler = Objects.requireNonNull(addNewTripHandler);
-    this.modifyTripHandler = Objects.requireNonNull(modifyTripHandler);
   }
 
   @Override
@@ -79,22 +93,43 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     TripUpdateApplierContext context
   ) {
     try {
-      // Resolve the parsed update to get all referenced entities
-      var resolveResult = resolver.resolve(parsedUpdate, context);
-      if (resolveResult.isFailure()) {
-        return Result.failure(resolveResult.failureValue());
-      }
-      ResolvedTripUpdate resolvedUpdate = resolveResult.successValue();
-
-      // Dispatch to the appropriate handler based on update type
-      TripUpdateHandler handler = switch (resolvedUpdate.updateType()) {
-        case UPDATE_EXISTING -> updateExistingHandler;
-        case CANCEL_TRIP -> cancelTripHandler;
-        case DELETE_TRIP -> deleteTripHandler;
-        case ADD_NEW_TRIP -> addNewTripHandler;
-        case MODIFY_TRIP -> modifyTripHandler;
+      return switch (parsedUpdate.updateType()) {
+        case UPDATE_EXISTING -> {
+          var resolveResult = existingTripResolver.resolve(parsedUpdate, context);
+          if (resolveResult.isFailure()) {
+            yield Result.failure(resolveResult.failureValue());
+          }
+          yield updateExistingHandler.handle(resolveResult.successValue(), context, transitService);
+        }
+        case MODIFY_TRIP -> {
+          var resolveResult = existingTripResolver.resolve(parsedUpdate, context);
+          if (resolveResult.isFailure()) {
+            yield Result.failure(resolveResult.failureValue());
+          }
+          yield modifyTripHandler.handle(resolveResult.successValue(), context, transitService);
+        }
+        case ADD_NEW_TRIP -> {
+          var resolveResult = newTripResolver.resolve(parsedUpdate, context);
+          if (resolveResult.isFailure()) {
+            yield Result.failure(resolveResult.failureValue());
+          }
+          yield addNewTripHandler.handle(resolveResult.successValue(), context, transitService);
+        }
+        case CANCEL_TRIP -> {
+          var resolveResult = tripRemovalResolver.resolve(parsedUpdate, context);
+          if (resolveResult.isFailure()) {
+            yield Result.failure(resolveResult.failureValue());
+          }
+          yield cancelTripHandler.handle(resolveResult.successValue(), context, transitService);
+        }
+        case DELETE_TRIP -> {
+          var resolveResult = tripRemovalResolver.resolve(parsedUpdate, context);
+          if (resolveResult.isFailure()) {
+            yield Result.failure(resolveResult.failureValue());
+          }
+          yield deleteTripHandler.handle(resolveResult.successValue(), context, transitService);
+        }
       };
-      return handler.handle(resolvedUpdate, context, transitService);
     } catch (Exception e) {
       LOG.error("Error applying trip update: {}", e.getMessage(), e);
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));

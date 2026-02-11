@@ -19,11 +19,11 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.TripRemovalResolver;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.TripUpdateResolver;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 
@@ -42,7 +42,7 @@ class CancelTripHandlerTest {
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
   private TripUpdateApplierContext context;
-  private TripUpdateResolver resolver;
+  private TripRemovalResolver resolver;
   private CancelTripHandler handler;
 
   @BeforeEach
@@ -81,11 +81,11 @@ class CancelTripHandlerTest {
       stopResolver,
       tripPatternCache
     );
-    resolver = new TripUpdateResolver(transitService);
+    resolver = new TripRemovalResolver(transitService);
     handler = new CancelTripHandler();
   }
 
-  private ResolvedTripUpdate resolve(ParsedTripUpdate parsedUpdate) {
+  private ResolvedTripRemoval resolve(ParsedTripUpdate parsedUpdate) {
     var result = resolver.resolve(parsedUpdate, context);
     if (result.isFailure()) {
       throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -93,7 +93,7 @@ class CancelTripHandlerTest {
     return result.successValue();
   }
 
-  private Result<ResolvedTripUpdate, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+  private Result<ResolvedTripRemoval, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
     return resolver.resolve(parsedUpdate, context);
   }
 
