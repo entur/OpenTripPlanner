@@ -18,11 +18,13 @@ import org.opentripplanner.transit.model.timetable.Direction;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.TripUpdateParserContext;
+import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
 import org.opentripplanner.updater.trip.gtfs.model.TripDescriptor;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
@@ -198,7 +200,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       builder.withStatus(status);
 
       if (isNewTrip) {
-        parseNewTripStopTimeUpdate(update, builder);
+        parseNewTripStopTimeUpdate(update, builder, serviceDate, context);
       } else {
         parseScheduledTripStopTimeUpdate(update, builder, serviceDate, context);
       }
@@ -267,25 +269,31 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   private void parseNewTripStopTimeUpdate(
     StopTimeUpdate update,
-    ParsedStopTimeUpdate.Builder builder
+    ParsedStopTimeUpdate.Builder builder,
+    LocalDate serviceDate,
+    TripUpdateParserContext context
   ) {
+    // Calculate midnight seconds for absolute time conversion
+    var midnight = serviceDate.atStartOfDay(context.timeZone());
+    long midnightSecondsSinceEpoch = midnight.toEpochSecond();
+
     var arrivalTimeOpt = update.arrivalTime();
     var departureTimeOpt = update.departureTime();
     var scheduledArrivalOpt = update.scheduledArrivalTimeWithRealTimeFallback();
     var scheduledDepartureOpt = update.scheduledDepartureTimeWithRealTimeFallback();
 
     if (arrivalTimeOpt.isPresent()) {
-      int arrivalTime = (int) arrivalTimeOpt.getAsLong();
+      int arrivalTime = (int) (arrivalTimeOpt.getAsLong() - midnightSecondsSinceEpoch);
       Integer scheduledArrival = scheduledArrivalOpt.isPresent()
-        ? (int) scheduledArrivalOpt.getAsLong()
+        ? (int) (scheduledArrivalOpt.getAsLong() - midnightSecondsSinceEpoch)
         : null;
       builder.withArrivalUpdate(TimeUpdate.ofAbsolute(arrivalTime, scheduledArrival));
     }
 
     if (departureTimeOpt.isPresent()) {
-      int departureTime = (int) departureTimeOpt.getAsLong();
+      int departureTime = (int) (departureTimeOpt.getAsLong() - midnightSecondsSinceEpoch);
       Integer scheduledDeparture = scheduledDepartureOpt.isPresent()
-        ? (int) scheduledDepartureOpt.getAsLong()
+        ? (int) (scheduledDepartureOpt.getAsLong() - midnightSecondsSinceEpoch)
         : null;
       builder.withDepartureUpdate(TimeUpdate.ofAbsolute(departureTime, scheduledDeparture));
     }
@@ -298,10 +306,15 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   ) {
     var builder = TripCreationInfo.builder(tripId);
 
-    descriptor
+    // Get route ID from descriptor
+    var routeId = descriptor
       .routeId()
       .map(id -> new FeedScopedId(tripId.getFeedId(), id))
-      .ifPresent(builder::withRouteId);
+      .orElse(null);
+
+    if (routeId != null) {
+      builder.withRouteId(routeId);
+    }
 
     tripUpdate.tripHeadsign().ifPresent(builder::withHeadsign);
     tripUpdate.tripShortName().ifPresent(builder::withShortName);
@@ -316,6 +329,25 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
           builder.withWheelchairAccessibility(accessibility);
         }
       });
+
+    // Extract route creation info from MFDZ extensions
+    var addedRoute = AddedRoute.ofTripDescriptor(descriptor);
+    if (routeId != null && (addedRoute.routeUrl() != null || addedRoute.routeLongName() != null)) {
+      var agencyId = addedRoute.agencyId() != null
+        ? new FeedScopedId(tripId.getFeedId(), addedRoute.agencyId())
+        : null;
+      var mode = org.opentripplanner.gtfs.mapping.TransitModeMapper.mapMode(addedRoute.routeType());
+      var routeCreationInfo = new RouteCreationInfo(
+        routeId,
+        addedRoute.routeLongName(),
+        mode,
+        null,
+        null,
+        addedRoute.routeUrl(),
+        agencyId
+      );
+      builder.withRouteCreationInfo(routeCreationInfo);
+    }
 
     return builder.build();
   }

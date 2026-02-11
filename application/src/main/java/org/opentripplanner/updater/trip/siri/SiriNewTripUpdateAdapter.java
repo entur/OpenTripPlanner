@@ -173,9 +173,11 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       return applyResult.toFailureResult();
     }
 
-    var realTimeTripUpdate = applyResult.successValue();
+    var tripUpdateResult = applyResult.successValue();
 
-    // Commit the update to the snapshot
-    return snapshotManager.updateBuffer(realTimeTripUpdate);
+    // Commit the update to the snapshot and add any warnings
+    return snapshotManager
+      .updateBuffer(tripUpdateResult.realTimeTripUpdate())
+      .mapSuccess(s -> s.addWarnings(tripUpdateResult.warnings()));
   }
 }

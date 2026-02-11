@@ -216,7 +216,7 @@ class DeleteTripHandlerTest {
 
     // Apply the update to the snapshot manager
     var update = result.successValue();
-    snapshotManager.updateBuffer(update);
+    snapshotManager.updateBuffer(update.realTimeTripUpdate());
 
     // Commit the snapshot to make the update visible
     snapshotManager.purgeAndCommit();

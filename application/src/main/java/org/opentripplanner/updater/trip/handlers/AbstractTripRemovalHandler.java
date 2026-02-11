@@ -8,6 +8,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTripRemovalHandler.class);
 
   @Override
-  public final Result<RealTimeTripUpdate, UpdateError> handle(
+  public final Result<TripUpdateResult, UpdateError> handle(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
@@ -37,7 +38,20 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
     }
     var serviceDate = serviceDateResult.successValue();
 
-    // Resolve the trip from the trip reference
+    // First, try to cancel a previously added (real-time) trip
+    var snapshotManager = context.snapshotManager();
+    if (snapshotManager != null) {
+      var addedTripResult = cancelPreviouslyAddedTrip(
+        tripReference.tripId(),
+        serviceDate,
+        snapshotManager
+      );
+      if (addedTripResult != null) {
+        return addedTripResult;
+      }
+    }
+
+    // Resolve the trip from the trip reference (for scheduled trips)
     var tripResult = tripResolver.resolveTrip(tripReference);
     if (tripResult.isFailure()) {
       return Result.failure(tripResult.failureValue());
@@ -45,7 +59,7 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
 
     Trip trip = tripResult.successValue();
 
-    // Find the scheduled pattern for this trip (not the real-time modified pattern)
+    // Find the scheduled pattern for this trip
     TripPattern pattern = transitService.findPattern(trip);
     if (pattern == null) {
       LOG.warn("No pattern found for trip {}", trip.getId());
@@ -64,7 +78,6 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
     }
 
     // Revert any previous real-time modifications to this trip on this service date
-    var snapshotManager = context.snapshotManager();
     if (snapshotManager != null) {
       snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
     }
@@ -78,7 +91,61 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
 
     LOG.debug("{} trip {} on {}", getLogAction(), trip.getId(), serviceDate);
 
-    return Result.success(realTimeTripUpdate);
+    return Result.success(new TripUpdateResult(realTimeTripUpdate));
+  }
+
+  /**
+   * Attempt to cancel a previously added (real-time) trip.
+   * Returns a success result if the trip was found and cancelled, null otherwise.
+   */
+  private Result<TripUpdateResult, UpdateError> cancelPreviouslyAddedTrip(
+    org.opentripplanner.core.model.id.FeedScopedId tripId,
+    java.time.LocalDate serviceDate,
+    TimetableSnapshotManager snapshotManager
+  ) {
+    // Check if there's a real-time pattern for this trip
+    TripPattern pattern = snapshotManager.getNewTripPatternForModifiedTrip(tripId, serviceDate);
+
+    if (pattern == null) {
+      LOG.debug("No real-time pattern found for trip {} on {}", tripId, serviceDate);
+      return null;
+    }
+
+    // Check if this is actually a previously added trip (not just a modified scheduled trip)
+    var timetable = snapshotManager.resolve(pattern, serviceDate);
+    var tripTimes = timetable.getTripTimes(tripId);
+
+    if (tripTimes == null) {
+      LOG.debug(
+        "No trip times found in real-time timetable for trip {} in pattern {}",
+        tripId,
+        pattern.getId()
+      );
+      return null;
+    }
+
+    // Check if this trip was added via real-time (not in scheduled timetable)
+    if (!isAddedTrip(tripTimes)) {
+      LOG.debug("Trip {} is not an added trip, state is {}", tripId, tripTimes.getRealTimeState());
+      return null;
+    }
+
+    // Cancel the added trip
+    var builder = tripTimes.createRealTimeFromScheduledTimes();
+    applyRemoval(builder);
+
+    LOG.debug("{} previously added trip {} on {}", getLogAction(), tripId, serviceDate);
+
+    return Result.success(
+      new TripUpdateResult(new RealTimeTripUpdate(pattern, builder.build(), serviceDate))
+    );
+  }
+
+  private boolean isAddedTrip(TripTimes tripTimes) {
+    return (
+      tripTimes.getRealTimeState() ==
+      org.opentripplanner.transit.model.timetable.RealTimeState.ADDED
+    );
   }
 
   /**

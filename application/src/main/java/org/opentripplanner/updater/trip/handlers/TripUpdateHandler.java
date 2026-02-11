@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
@@ -18,9 +17,9 @@ public interface TripUpdateHandler {
    * @param parsedUpdate the parsed update to handle
    * @param context the applier context
    * @param transitService the transit editor service
-   * @return Result containing RealTimeTripUpdate on success, or UpdateError on failure
+   * @return Result containing TripUpdateResult on success, or UpdateError on failure
    */
-  Result<RealTimeTripUpdate, UpdateError> handle(
+  Result<TripUpdateResult, UpdateError> handle(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService

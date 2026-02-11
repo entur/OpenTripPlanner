@@ -25,12 +25,41 @@ public final class RouteCreationInfo {
   @Nullable
   private final FeedScopedId operatorId;
 
+  @Nullable
+  private final String url;
+
+  @Nullable
+  private final FeedScopedId agencyId;
+
   /**
    * @param routeId The ID to use for the new route
    * @param routeName The name of the route
    * @param mode The transit mode of the route
    * @param submode The submode of the route (e.g., "localBus", "expressBus")
    * @param operatorId The operator ID for the route
+   * @param url The URL for the route
+   * @param agencyId The agency ID for the route
+   */
+  public RouteCreationInfo(
+    FeedScopedId routeId,
+    @Nullable String routeName,
+    @Nullable TransitMode mode,
+    @Nullable String submode,
+    @Nullable FeedScopedId operatorId,
+    @Nullable String url,
+    @Nullable FeedScopedId agencyId
+  ) {
+    this.routeId = Objects.requireNonNull(routeId, "routeId must not be null");
+    this.routeName = routeName;
+    this.mode = mode;
+    this.submode = submode;
+    this.operatorId = operatorId;
+    this.url = url;
+    this.agencyId = agencyId;
+  }
+
+  /**
+   * Convenience constructor without URL and agencyId.
    */
   public RouteCreationInfo(
     FeedScopedId routeId,
@@ -39,11 +68,7 @@ public final class RouteCreationInfo {
     @Nullable String submode,
     @Nullable FeedScopedId operatorId
   ) {
-    this.routeId = Objects.requireNonNull(routeId, "routeId must not be null");
-    this.routeName = routeName;
-    this.mode = mode;
-    this.submode = submode;
-    this.operatorId = operatorId;
+    this(routeId, routeName, mode, submode, operatorId, null, null);
   }
 
   public FeedScopedId routeId() {
@@ -70,6 +95,16 @@ public final class RouteCreationInfo {
     return operatorId;
   }
 
+  @Nullable
+  public String url() {
+    return url;
+  }
+
+  @Nullable
+  public FeedScopedId agencyId() {
+    return agencyId;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -84,13 +119,15 @@ public final class RouteCreationInfo {
       Objects.equals(routeName, that.routeName) &&
       mode == that.mode &&
       Objects.equals(submode, that.submode) &&
-      Objects.equals(operatorId, that.operatorId)
+      Objects.equals(operatorId, that.operatorId) &&
+      Objects.equals(url, that.url) &&
+      Objects.equals(agencyId, that.agencyId)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(routeId, routeName, mode, submode, operatorId);
+    return Objects.hash(routeId, routeName, mode, submode, operatorId, url, agencyId);
   }
 
   @Override
@@ -109,6 +146,11 @@ public final class RouteCreationInfo {
       '\'' +
       ", operatorId=" +
       operatorId +
+      ", url='" +
+      url +
+      '\'' +
+      ", agencyId=" +
+      agencyId +
       '}'
     );
   }
