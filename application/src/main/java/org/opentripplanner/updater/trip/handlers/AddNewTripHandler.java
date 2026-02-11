@@ -27,9 +27,9 @@ import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
-import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
-import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
+import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
+import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -97,7 +97,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
     var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
     var filtered = filterStopTimeUpdates(
       stopTimeUpdates,
-      parsedUpdate.options().stopReplacementConstraint(),
+      parsedUpdate.options().unknownStopBehavior(),
       context,
       tripId
     );
@@ -152,11 +152,12 @@ public class AddNewTripHandler implements TripUpdateHandler {
     }
 
     // Create the new pattern
-    // For SIRI (FULL_UPDATE), we add scheduled trip times so queries for aimed times work
-    // For GTFS-RT (PARTIAL_UPDATE), we don't add to scheduled timetable
+    // For SIRI (INCLUDE), we add scheduled trip times so queries for aimed times work
+    // For GTFS-RT (EXCLUDE), we don't add to scheduled timetable
     var tripPatternCache = context.tripPatternCache();
     var options = parsedUpdate.options();
-    boolean includeScheduledData = options.stopUpdateStrategy() == StopUpdateStrategy.FULL_UPDATE;
+    boolean includeScheduledData =
+      options.scheduledDataInclusion() == ScheduledDataInclusion.INCLUDE;
 
     TripPattern pattern;
     if (includeScheduledData) {
@@ -249,7 +250,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
     var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
     var filtered = filterStopTimeUpdates(
       stopTimeUpdates,
-      parsedUpdate.options().stopReplacementConstraint(),
+      parsedUpdate.options().unknownStopBehavior(),
       context,
       tripId
     );
@@ -320,25 +321,24 @@ public class AddNewTripHandler implements TripUpdateHandler {
 
   /**
    * Filter stop time updates to remove unknown stops.
-   * For GTFS-RT: filter out unknown stops and add warning
-   * For SIRI: fail if any stop is unknown
+   * For GTFS-RT (IGNORE): filter out unknown stops and add warning
+   * For SIRI (FAIL): fail if any stop is unknown
    */
   private Result<FilteredStopTimeUpdates, UpdateError> filterStopTimeUpdates(
     List<ParsedStopTimeUpdate> updates,
-    StopReplacementConstraint constraint,
+    UnknownStopBehavior unknownStopBehavior,
     TripUpdateApplierContext context,
     FeedScopedId tripId
   ) {
     var stopResolver = context.stopResolver();
     var warnings = new ArrayList<UpdateSuccess.WarningType>();
 
-    // SIRI mode: strict validation - fail on unknown stops
-    boolean strictMode = constraint == StopReplacementConstraint.SAME_PARENT_STATION;
-    if (strictMode) {
+    // FAIL mode: strict validation - fail on unknown stops
+    if (unknownStopBehavior == UnknownStopBehavior.FAIL) {
       for (int i = 0; i < updates.size(); i++) {
         var stopUpdate = updates.get(i);
         if (stopResolver.resolve(stopUpdate.stopReference()) == null) {
-          LOG.debug("ADD_TRIP: Unknown stop {} in SIRI extra journey", stopUpdate.stopReference());
+          LOG.debug("ADD_TRIP: Unknown stop {} in added trip", stopUpdate.stopReference());
           return Result.failure(
             new UpdateError(tripId, UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
           );
@@ -347,7 +347,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
       return Result.success(new FilteredStopTimeUpdates(updates, warnings));
     }
 
-    // GTFS-RT mode: filter unknown stops
+    // IGNORE mode: filter unknown stops
     var filteredUpdates = new ArrayList<ParsedStopTimeUpdate>();
     for (var stopUpdate : updates) {
       if (stopResolver.resolve(stopUpdate.stopReference()) != null) {

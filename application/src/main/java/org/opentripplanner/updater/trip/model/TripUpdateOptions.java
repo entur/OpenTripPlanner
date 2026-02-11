@@ -16,6 +16,8 @@ public final class TripUpdateOptions {
   private final StopUpdateStrategy stopUpdateStrategy;
   private final RealTimeStateUpdateStrategy realTimeStateStrategy;
   private final FirstLastStopTimeAdjustment firstLastStopTimeAdjustment;
+  private final ScheduledDataInclusion scheduledDataInclusion;
+  private final UnknownStopBehavior unknownStopBehavior;
 
   /**
    * @param forwardsPropagation How delays should be propagated to future stops
@@ -24,6 +26,8 @@ public final class TripUpdateOptions {
    * @param stopUpdateStrategy Strategy for matching stop updates to stops in the pattern
    * @param realTimeStateStrategy Strategy for determining RealTimeState of updated TripTimes
    * @param firstLastStopTimeAdjustment Strategy for adjusting times at first/last stops
+   * @param scheduledDataInclusion Whether to include scheduled data for added trips
+   * @param unknownStopBehavior Behavior when encountering unknown stops in added trips
    */
   public TripUpdateOptions(
     ForwardsDelayPropagationType forwardsPropagation,
@@ -31,7 +35,9 @@ public final class TripUpdateOptions {
     StopReplacementConstraint stopReplacementConstraint,
     StopUpdateStrategy stopUpdateStrategy,
     RealTimeStateUpdateStrategy realTimeStateStrategy,
-    FirstLastStopTimeAdjustment firstLastStopTimeAdjustment
+    FirstLastStopTimeAdjustment firstLastStopTimeAdjustment,
+    ScheduledDataInclusion scheduledDataInclusion,
+    UnknownStopBehavior unknownStopBehavior
   ) {
     this.forwardsPropagation = Objects.requireNonNull(
       forwardsPropagation,
@@ -57,6 +63,14 @@ public final class TripUpdateOptions {
       firstLastStopTimeAdjustment,
       "firstLastStopTimeAdjustment must not be null"
     );
+    this.scheduledDataInclusion = Objects.requireNonNull(
+      scheduledDataInclusion,
+      "scheduledDataInclusion must not be null"
+    );
+    this.unknownStopBehavior = Objects.requireNonNull(
+      unknownStopBehavior,
+      "unknownStopBehavior must not be null"
+    );
   }
 
   /**
@@ -64,6 +78,8 @@ public final class TripUpdateOptions {
    * SIRI provides explicit times for all stops, so no delay interpolation is needed.
    * Stop replacements are constrained to the same parent station (quay/platform changes).
    * First/last stop times are adjusted to avoid negative dwell times.
+   * Scheduled data is included so aimed times are queryable.
+   * Unknown stops cause the update to fail.
    */
   public static TripUpdateOptions siriDefaults() {
     return new TripUpdateOptions(
@@ -72,7 +88,9 @@ public final class TripUpdateOptions {
       StopReplacementConstraint.SAME_PARENT_STATION,
       StopUpdateStrategy.FULL_UPDATE,
       RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE,
-      FirstLastStopTimeAdjustment.ADJUST
+      FirstLastStopTimeAdjustment.ADJUST,
+      ScheduledDataInclusion.INCLUDE,
+      UnknownStopBehavior.FAIL
     );
   }
 
@@ -81,6 +99,8 @@ public final class TripUpdateOptions {
    * GTFS-RT may need delay interpolation for stops without explicit times.
    * Stop replacements have no constraints (replacement trips can use any stops).
    * First/last stop times are preserved as provided in the message.
+   * Scheduled data is not included for added trips.
+   * Unknown stops are silently ignored.
    */
   public static TripUpdateOptions gtfsRtDefaults(
     ForwardsDelayPropagationType forwardsPropagation,
@@ -92,7 +112,9 @@ public final class TripUpdateOptions {
       StopReplacementConstraint.ANY_STOP,
       StopUpdateStrategy.PARTIAL_UPDATE,
       RealTimeStateUpdateStrategy.ALWAYS_UPDATED,
-      FirstLastStopTimeAdjustment.PRESERVE
+      FirstLastStopTimeAdjustment.PRESERVE,
+      ScheduledDataInclusion.EXCLUDE,
+      UnknownStopBehavior.IGNORE
     );
   }
 
@@ -127,6 +149,14 @@ public final class TripUpdateOptions {
     return firstLastStopTimeAdjustment;
   }
 
+  public ScheduledDataInclusion scheduledDataInclusion() {
+    return scheduledDataInclusion;
+  }
+
+  public UnknownStopBehavior unknownStopBehavior() {
+    return unknownStopBehavior;
+  }
+
   /**
    * Returns true if this configuration propagates delays (forward or backward).
    */
@@ -152,7 +182,9 @@ public final class TripUpdateOptions {
       stopReplacementConstraint == that.stopReplacementConstraint &&
       stopUpdateStrategy == that.stopUpdateStrategy &&
       realTimeStateStrategy == that.realTimeStateStrategy &&
-      firstLastStopTimeAdjustment == that.firstLastStopTimeAdjustment
+      firstLastStopTimeAdjustment == that.firstLastStopTimeAdjustment &&
+      scheduledDataInclusion == that.scheduledDataInclusion &&
+      unknownStopBehavior == that.unknownStopBehavior
     );
   }
 
@@ -164,7 +196,9 @@ public final class TripUpdateOptions {
       stopReplacementConstraint,
       stopUpdateStrategy,
       realTimeStateStrategy,
-      firstLastStopTimeAdjustment
+      firstLastStopTimeAdjustment,
+      scheduledDataInclusion,
+      unknownStopBehavior
     );
   }
 
@@ -184,6 +218,10 @@ public final class TripUpdateOptions {
       realTimeStateStrategy +
       ", firstLastStopTimeAdjustment=" +
       firstLastStopTimeAdjustment +
+      ", scheduledDataInclusion=" +
+      scheduledDataInclusion +
+      ", unknownStopBehavior=" +
+      unknownStopBehavior +
       '}'
     );
   }
@@ -202,6 +240,8 @@ public final class TripUpdateOptions {
       RealTimeStateUpdateStrategy.ALWAYS_UPDATED;
     private FirstLastStopTimeAdjustment firstLastStopTimeAdjustment =
       FirstLastStopTimeAdjustment.PRESERVE;
+    private ScheduledDataInclusion scheduledDataInclusion = ScheduledDataInclusion.EXCLUDE;
+    private UnknownStopBehavior unknownStopBehavior = UnknownStopBehavior.IGNORE;
 
     public Builder withForwardsPropagation(ForwardsDelayPropagationType forwardsPropagation) {
       this.forwardsPropagation = forwardsPropagation;
@@ -237,6 +277,16 @@ public final class TripUpdateOptions {
       return this;
     }
 
+    public Builder withScheduledDataInclusion(ScheduledDataInclusion scheduledDataInclusion) {
+      this.scheduledDataInclusion = scheduledDataInclusion;
+      return this;
+    }
+
+    public Builder withUnknownStopBehavior(UnknownStopBehavior unknownStopBehavior) {
+      this.unknownStopBehavior = unknownStopBehavior;
+      return this;
+    }
+
     public TripUpdateOptions build() {
       return new TripUpdateOptions(
         forwardsPropagation,
@@ -244,7 +294,9 @@ public final class TripUpdateOptions {
         stopReplacementConstraint,
         stopUpdateStrategy,
         realTimeStateStrategy,
-        firstLastStopTimeAdjustment
+        firstLastStopTimeAdjustment,
+        scheduledDataInclusion,
+        unknownStopBehavior
       );
     }
   }
