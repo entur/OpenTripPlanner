@@ -18,7 +18,7 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -201,24 +201,22 @@ public final class HandlerUtils {
   /**
    * Apply real-time updates to a trip times builder.
    *
-   * @param parsedUpdate The parsed trip update (for trip-level headsign)
+   * @param tripCreationInfo Optional trip creation info (for trip-level headsign)
    * @param builder The builder to apply updates to
    * @param stopTimeUpdates The stop time updates to apply
    * @param serviceDate The service date
    * @param timeZone The timezone for time resolution
    */
   public static void applyRealTimeUpdates(
-    ParsedTripUpdate parsedUpdate,
+    TripCreationInfo tripCreationInfo,
     RealTimeTripTimesBuilder builder,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     LocalDate serviceDate,
     ZoneId timeZone
   ) {
     // Apply trip-level headsign from trip creation info
-    if (
-      parsedUpdate.tripCreationInfo() != null && parsedUpdate.tripCreationInfo().headsign() != null
-    ) {
-      builder.withTripHeadsign(parsedUpdate.tripCreationInfo().headsign());
+    if (tripCreationInfo != null && tripCreationInfo.headsign() != null) {
+      builder.withTripHeadsign(tripCreationInfo.headsign());
     }
 
     for (int i = 0; i < stopTimeUpdates.size(); i++) {

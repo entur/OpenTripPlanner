@@ -117,10 +117,6 @@ public final class ResolvedNewTrip {
 
   // ========== Delegated accessors from parsedUpdate ==========
 
-  public ParsedTripUpdate parsedUpdate() {
-    return parsedUpdate;
-  }
-
   public TripUpdateOptions options() {
     return parsedUpdate.options();
   }
