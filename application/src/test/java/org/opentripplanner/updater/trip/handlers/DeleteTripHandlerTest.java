@@ -12,6 +12,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
@@ -20,7 +21,9 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
+import org.opentripplanner.updater.trip.TripUpdateResolver;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 
@@ -39,6 +42,7 @@ class DeleteTripHandlerTest {
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
   private TripUpdateApplierContext context;
+  private TripUpdateResolver resolver;
   private DeleteTripHandler handler;
 
   @BeforeEach
@@ -77,7 +81,20 @@ class DeleteTripHandlerTest {
       stopResolver,
       tripPatternCache
     );
+    resolver = new TripUpdateResolver(transitService);
     handler = new DeleteTripHandler();
+  }
+
+  private ResolvedTripUpdate resolve(ParsedTripUpdate parsedUpdate) {
+    var result = resolver.resolve(parsedUpdate, context);
+    if (result.isFailure()) {
+      throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
+    }
+    return result.successValue();
+  }
+
+  private Result<ResolvedTripUpdate, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+    return resolver.resolve(parsedUpdate, context);
   }
 
   @Test
@@ -93,7 +110,7 @@ class DeleteTripHandlerTest {
     // Verify trip is scheduled before deletion
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
@@ -117,7 +134,7 @@ class DeleteTripHandlerTest {
     // Verify trip is scheduled before deletion
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
@@ -140,10 +157,18 @@ class DeleteTripHandlerTest {
       env.defaultServiceDate()
     ).build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    // For DELETE_TRIP, resolver returns success with null values when trip not found
+    // The handler then checks and returns NO_TRIP_FOR_CANCELLATION_FOUND
+    var resolveResult = resolveForTest(parsedUpdate);
+    assertTrue(resolveResult.isSuccess());
 
+    // Handler returns error because no scheduled trip and no previously added trip
+    var result = handler.handle(resolveResult.successValue(), context, transitService);
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    assertEquals(
+      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+      result.failureValue().errorType()
+    );
   }
 
   @Test
@@ -162,23 +187,10 @@ class DeleteTripHandlerTest {
       differentDate
     ).build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
-
-    // Trip is found but pattern might not be, depending on implementation
-    // The behavior should be that pattern is still found (scheduled pattern is used as fallback)
-    // so this might actually succeed. Let's test the actual behavior.
-    // If the implementation falls back to scheduled pattern, this will succeed.
-    // If not, this will fail with TRIP_NOT_FOUND or similar.
-    if (result.isSuccess()) {
-      // Handler correctly falls back to scheduled pattern
-      assertEquals(
-        RealTimeState.DELETED,
-        result.successValue().updatedTripTimes().getRealTimeState()
-      );
-    } else {
-      // Handler correctly returns an error when pattern is not found
-      assertNotNull(result.failureValue());
-    }
+    // Resolution succeeds for DELETE_TRIP because we find the scheduled pattern regardless of date.
+    // The trip can be deleted on any date, the pattern is found from the scheduled timetable.
+    var resolveResult = resolveForTest(parsedUpdate);
+    assertTrue(resolveResult.isSuccess(), "Expected success but got: " + resolveResult);
   }
 
   @Test
@@ -191,10 +203,18 @@ class DeleteTripHandlerTest {
       env.defaultServiceDate()
     ).build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    // For DELETE_TRIP, resolver returns success with null values when no trip reference
+    // The handler then checks and returns NO_TRIP_FOR_CANCELLATION_FOUND
+    var resolveResult = resolveForTest(parsedUpdate);
+    assertTrue(resolveResult.isSuccess());
 
+    // Handler returns error because no scheduled trip and no previously added trip
+    var result = handler.handle(resolveResult.successValue(), context, transitService);
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    assertEquals(
+      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+      result.failureValue().errorType()
+    );
   }
 
   @Test
@@ -210,7 +230,7 @@ class DeleteTripHandlerTest {
     // Before deletion, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess());
 

@@ -17,25 +17,25 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripAndPattern;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
+import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
-import org.opentripplanner.updater.trip.model.TripReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Handles updates to existing trips (delay updates, time changes).
  * Maps to GTFS-RT SCHEDULED and SIRI-ET regular updates.
+ * <p>
+ * This handler receives a {@link ResolvedTripUpdate} with trip, pattern, and service date
+ * already resolved, so it focuses on applying stop time updates and pattern modifications.
  */
 public class UpdateExistingTripHandler implements TripUpdateHandler {
 
@@ -43,67 +43,23 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
 
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
-    ParsedTripUpdate parsedUpdate,
+    ResolvedTripUpdate resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    var tripResolver = context.tripResolver();
+    // All resolution already done by TripUpdateResolver
+    Trip trip = resolvedUpdate.trip();
+    TripPattern pattern = resolvedUpdate.pattern();
+    TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
+    TripTimes tripTimes = resolvedUpdate.scheduledTripTimes();
+    LocalDate serviceDate = resolvedUpdate.serviceDate();
 
-    // Resolve service date (from parsedUpdate or from tripOnServiceDateId)
-    var serviceDateResult = context.serviceDateResolver().resolveServiceDate(parsedUpdate);
-    if (serviceDateResult.isFailure()) {
-      return Result.failure(serviceDateResult.failureValue());
-    }
-    var serviceDate = serviceDateResult.successValue();
-
-    // Resolve the trip and pattern (with optional fuzzy matching fallback)
-    var tripAndPatternResult = resolveTripWithPattern(
-      parsedUpdate,
-      serviceDate,
-      tripResolver,
-      context.fuzzyTripMatcher(),
-      transitService
+    LOG.debug(
+      "Updating trip {} on pattern {} for date {}",
+      trip.getId(),
+      pattern.getId(),
+      serviceDate
     );
-    if (tripAndPatternResult.isFailure()) {
-      LOG.debug("Could not resolve trip for update: {}", parsedUpdate.tripReference());
-      return Result.failure(tripAndPatternResult.failureValue());
-    }
-
-    var tripAndPattern = tripAndPatternResult.successValue();
-    Trip trip = tripAndPattern.trip();
-    TripPattern pattern = tripAndPattern.tripPattern();
-    LOG.debug("Resolved trip {} on pattern {} for update", trip.getId(), pattern.getId());
-
-    // Validate that the service date is valid for this trip's service
-    var serviceId = trip.getServiceId();
-    var serviceDates = transitService.getCalendarService().getServiceDatesForServiceId(serviceId);
-    if (!serviceDates.contains(serviceDate)) {
-      LOG.debug(
-        "SCHEDULED trip {} has service date {} for which trip's service is not valid, skipping.",
-        trip.getId(),
-        serviceDate
-      );
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE)
-      );
-    }
-
-    // Get the trip times from the scheduled timetable
-    // If we're working with a realtime-modified pattern, get trip times from the original pattern
-    TripPattern scheduledPattern = pattern.isModified()
-      ? pattern.getOriginalTripPattern()
-      : pattern;
-    TripTimes tripTimes = scheduledPattern.getScheduledTimetable().getTripTimes(trip);
-    if (tripTimes == null) {
-      LOG.warn(
-        "No trip times found for trip {} in pattern {}",
-        trip.getId(),
-        scheduledPattern.getId()
-      );
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-      );
-    }
 
     // Revert any previous real-time modifications to this trip on this service date
     var snapshotManager = context.snapshotManager();
@@ -114,14 +70,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     // Create the builder from scheduled times
     // If delay propagation is enabled, start with empty times so interpolators can fill them in
     // Otherwise, pre-fill with scheduled times (SIRI-style: all stops have explicit times)
-    var options = parsedUpdate.options();
+    var options = resolvedUpdate.options();
     var builder = options.propagatesDelays()
       ? tripTimes.createRealTimeWithoutScheduledTimes()
       : tripTimes.createRealTimeFromScheduledTimes();
 
-    // Apply stop time updates - now returns PatternModificationResult
+    // Apply stop time updates - returns PatternModificationResult
     var applyResult = applyStopTimeUpdates(
-      parsedUpdate,
+      resolvedUpdate,
       builder,
       pattern,
       trip,
@@ -157,7 +113,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
         // Conditionally set MODIFIED state based on feed type configuration
         // GTFS-RT (ALWAYS_UPDATED): Keep UPDATED (legacy behavior from TripTimesUpdater:222)
         // SIRI-ET (MODIFIED_ON_PATTERN_CHANGE): Set MODIFIED (legacy behavior from ModifiedTripBuilder:150)
-        var stateStrategy = parsedUpdate.options().realTimeStateStrategy();
+        var stateStrategy = resolvedUpdate.options().realTimeStateStrategy();
         if (stateStrategy == RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE) {
           realTimeState = RealTimeState.MODIFIED;
         }
@@ -275,24 +231,24 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
   }
 
   /**
-   * Apply stop time updates from the parsed update to the builder.
+   * Apply stop time updates from the resolved update to the builder.
    * @return Result containing PatternModificationResult tracking all changes, or an error if validation fails
    */
   private Result<PatternModificationResult, UpdateError> applyStopTimeUpdates(
-    ParsedTripUpdate parsedUpdate,
+    ResolvedTripUpdate resolvedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
     Trip trip,
     TripUpdateApplierContext context,
     LocalDate serviceDate
   ) {
-    var stopUpdateStrategy = parsedUpdate.options().stopUpdateStrategy();
-    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+    var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
+    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
     // Validate FULL_UPDATE strategy constraints
     if (stopUpdateStrategy == StopUpdateStrategy.FULL_UPDATE) {
       // FULL_UPDATE must not use stopSequence
-      if (parsedUpdate.hasStopSequences()) {
+      if (resolvedUpdate.hasStopSequences()) {
         return Result.failure(
           new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
         );
@@ -312,12 +268,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
 
     var result = new PatternModificationResult();
-    var constraint = parsedUpdate.options().stopReplacementConstraint();
+    var constraint = resolvedUpdate.options().stopReplacementConstraint();
     var stopResolver = context.stopResolver();
     var stopReplacementValidator = new StopReplacementValidator();
 
     int listIndex = 0;
-    for (ParsedStopTimeUpdate stopUpdate : parsedUpdate.stopTimeUpdates()) {
+    for (ParsedStopTimeUpdate stopUpdate : resolvedUpdate.stopTimeUpdates()) {
       Integer stopSequence = stopUpdate.stopSequence();
       int stopIndex;
       StopLocation resolvedStop = null;
@@ -487,7 +443,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     }
 
     // Apply delay propagation according to feed configuration
-    var options = parsedUpdate.options();
+    var options = resolvedUpdate.options();
 
     // Forwards delay propagation: propagate delays to subsequent stops
     var forwardsPropagationType = options.forwardsPropagation();
@@ -567,71 +523,5 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
     TimetableSnapshotManager snapshotManager
   ) {
     HandlerUtils.markScheduledTripAsDeleted(trip, scheduledPattern, serviceDate, snapshotManager);
-  }
-
-  /**
-   * Resolve a Trip and its TripPattern from a ParsedTripUpdate.
-   * <p>
-   * Resolution order:
-   * <ol>
-   *   <li>Try exact match via TripResolver</li>
-   *   <li>If exact match fails AND fuzzy matching is allowed AND a fuzzy matcher is configured,
-   *       try fuzzy matching</li>
-   * </ol>
-   *
-   * @param parsedUpdate the parsed update containing trip reference and stop info
-   * @param serviceDate the service date for matching
-   * @param tripResolver the resolver for exact trip lookups
-   * @param fuzzyTripMatcher the fuzzy matcher (may be null)
-   * @param transitService the transit service for pattern lookups
-   * @return Result containing the matched trip and pattern, or an error if not found
-   */
-  private Result<TripAndPattern, UpdateError> resolveTripWithPattern(
-    ParsedTripUpdate parsedUpdate,
-    LocalDate serviceDate,
-    org.opentripplanner.updater.trip.TripResolver tripResolver,
-    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
-    TransitEditorService transitService
-  ) {
-    TripReference reference = parsedUpdate.tripReference();
-
-    // Try exact match first
-    var exactResult = tripResolver.resolveTrip(reference);
-    if (exactResult.isSuccess()) {
-      Trip trip = exactResult.successValue();
-      TripPattern pattern = transitService.findPattern(trip, serviceDate);
-      if (pattern == null) {
-        pattern = transitService.findPattern(trip);
-      }
-      if (pattern != null) {
-        return Result.success(new TripAndPattern(trip, pattern));
-      }
-      LOG.warn("Trip {} found but no pattern available", trip.getId());
-      return Result.failure(
-        new UpdateError(reference.tripId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-      );
-    }
-
-    // Exact match failed - try fuzzy matching if allowed
-    if (shouldTryFuzzyMatching(reference, fuzzyTripMatcher)) {
-      LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
-      return fuzzyTripMatcher.match(reference, parsedUpdate, serviceDate);
-    }
-
-    // Return the original exact match error
-    return Result.failure(exactResult.failureValue());
-  }
-
-  /**
-   * Check if fuzzy matching should be attempted for the given reference.
-   */
-  private boolean shouldTryFuzzyMatching(
-    TripReference reference,
-    @Nullable FuzzyTripMatcher fuzzyTripMatcher
-  ) {
-    if (fuzzyTripMatcher == null) {
-      return false;
-    }
-    return reference.fuzzyMatchingHint() == TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED;
   }
 }
