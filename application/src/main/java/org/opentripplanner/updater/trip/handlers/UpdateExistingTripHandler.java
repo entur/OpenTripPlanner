@@ -24,7 +24,7 @@ import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.slf4j.Logger;
@@ -34,20 +34,20 @@ import org.slf4j.LoggerFactory;
  * Handles updates to existing trips (delay updates, time changes).
  * Maps to GTFS-RT SCHEDULED and SIRI-ET regular updates.
  * <p>
- * This handler receives a {@link ResolvedTripUpdate} with trip, pattern, and service date
+ * This handler receives a {@link ResolvedExistingTrip} with trip, pattern, and service date
  * already resolved, so it focuses on applying stop time updates and pattern modifications.
  */
-public class UpdateExistingTripHandler implements TripUpdateHandler {
+public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingTrip {
 
   private static final Logger LOG = LoggerFactory.getLogger(UpdateExistingTripHandler.class);
 
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
-    ResolvedTripUpdate resolvedUpdate,
+    ResolvedExistingTrip resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    // All resolution already done by TripUpdateResolver
+    // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern pattern = resolvedUpdate.pattern();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
@@ -235,7 +235,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler {
    * @return Result containing PatternModificationResult tracking all changes, or an error if validation fails
    */
   private Result<PatternModificationResult, UpdateError> applyStopTimeUpdates(
-    ResolvedTripUpdate resolvedUpdate,
+    ResolvedExistingTrip resolvedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
     Trip trip,

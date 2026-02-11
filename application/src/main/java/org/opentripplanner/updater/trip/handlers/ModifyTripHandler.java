@@ -16,7 +16,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,20 +30,20 @@ import org.slf4j.LoggerFactory;
  *   <li><b>SIRI-ET EXTRA_CALL</b>: Insert extra stops, non-extra stops must match original</li>
  * </ul>
  * <p>
- * This handler receives a {@link ResolvedTripUpdate} with trip, pattern, and service date
- * already resolved by {@link org.opentripplanner.updater.trip.TripUpdateResolver}.
+ * This handler receives a {@link ResolvedExistingTrip} with trip, pattern, and service date
+ * already resolved by {@link org.opentripplanner.updater.trip.ExistingTripResolver}.
  */
-public class ModifyTripHandler implements TripUpdateHandler {
+public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
 
   private static final Logger LOG = LoggerFactory.getLogger(ModifyTripHandler.class);
 
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
-    ResolvedTripUpdate resolvedUpdate,
+    ResolvedExistingTrip resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    // All resolution already done by TripUpdateResolver
+    // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
