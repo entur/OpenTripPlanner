@@ -101,7 +101,10 @@ class DefaultTripUpdateApplierTest {
     var result = applier.apply(update, context);
 
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    assertEquals(
+      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+      result.failureValue().errorType()
+    );
   }
 
   @Test
@@ -115,7 +118,10 @@ class DefaultTripUpdateApplierTest {
     var result = applier.apply(update, context);
 
     assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    assertEquals(
+      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+      result.failureValue().errorType()
+    );
   }
 
   @Test

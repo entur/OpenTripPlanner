@@ -14,6 +14,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
@@ -23,10 +24,12 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
+import org.opentripplanner.updater.trip.TripUpdateResolver;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
@@ -56,6 +59,7 @@ class UpdateExistingTripHandlerTest {
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
   private TripUpdateApplierContext context;
+  private TripUpdateResolver resolver;
   private UpdateExistingTripHandler handler;
 
   @BeforeEach
@@ -93,7 +97,20 @@ class UpdateExistingTripHandlerTest {
       stopResolver,
       tripPatternCache
     );
+    resolver = new TripUpdateResolver(transitService);
     handler = new UpdateExistingTripHandler();
+  }
+
+  private ResolvedTripUpdate resolve(ParsedTripUpdate parsedUpdate) {
+    var result = resolver.resolve(parsedUpdate, context);
+    if (result.isFailure()) {
+      throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
+    }
+    return result.successValue();
+  }
+
+  private Result<ResolvedTripUpdate, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+    return resolver.resolve(parsedUpdate, context);
   }
 
   @Test
@@ -123,7 +140,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
     assertNotNull(result.successValue());
@@ -181,7 +198,7 @@ class UpdateExistingTripHandlerTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -222,7 +239,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -245,10 +262,13 @@ class UpdateExistingTripHandlerTest {
       env.defaultServiceDate()
     ).build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    // Resolution should fail because trip not found
+    var resolveResult = resolveForTest(parsedUpdate);
+    assertTrue(resolveResult.isFailure());
+    assertEquals(
+      UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
+      resolveResult.failureValue().errorType()
+    );
   }
 
   @Test
@@ -264,19 +284,13 @@ class UpdateExistingTripHandlerTest {
       differentDate
     ).build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
-
-    // Trip exists but pattern might not be found for different date
-    // The behavior depends on implementation - either success (fallback to scheduled)
-    // or failure (no pattern for date)
-    if (result.isSuccess()) {
-      // Handler correctly falls back to scheduled pattern.
-      // No updates were provided, so state remains SCHEDULED.
-      assertNotNull(result.successValue().updatedTripTimes());
-    } else {
-      // Handler correctly returns an error
-      assertNotNull(result.failureValue());
-    }
+    // Resolution should fail because trip not running on this date
+    var resolveResult = resolveForTest(parsedUpdate);
+    assertTrue(resolveResult.isFailure());
+    assertEquals(
+      UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE,
+      resolveResult.failureValue().errorType()
+    );
   }
 
   @Test
@@ -305,7 +319,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -346,7 +360,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -388,7 +402,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(parsedUpdate, context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -408,6 +422,7 @@ class UpdateExistingTripHandlerTest {
     private TransitTestEnvironment stationEnv;
     private TransitEditorService stationTransitService;
     private TripUpdateApplierContext stationContext;
+    private TripUpdateResolver stationResolver;
 
     @BeforeEach
     void setUpStationEnvironment() {
@@ -443,6 +458,15 @@ class UpdateExistingTripHandlerTest {
         stopResolver,
         tripPatternCache
       );
+      stationResolver = new TripUpdateResolver(stationTransitService);
+    }
+
+    private ResolvedTripUpdate resolveStation(ParsedTripUpdate parsedUpdate) {
+      var result = stationResolver.resolve(parsedUpdate, stationContext);
+      if (result.isFailure()) {
+        throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
+      }
+      return result.successValue();
     }
 
     @Test
@@ -475,7 +499,11 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -509,7 +537,11 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
@@ -543,7 +575,11 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -574,7 +610,11 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
@@ -609,7 +649,11 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -652,7 +696,11 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopA2Update, stopB1Update))
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -695,7 +743,11 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
 
-      var result = handler.handle(parsedUpdate, stationContext, stationTransitService);
+      var result = handler.handle(
+        resolveStation(parsedUpdate),
+        stationContext,
+        stationTransitService
+      );
 
       assertTrue(
         result.isFailure(),
@@ -747,7 +799,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopCUpdate, stopAUpdate))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -786,7 +838,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopAUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(
@@ -826,7 +878,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
@@ -875,7 +927,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate, stopDUpdate))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.TOO_MANY_STOPS, result.failureValue().errorType());
@@ -917,7 +969,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopAUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -972,7 +1024,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -1014,7 +1066,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -1059,7 +1111,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -1114,7 +1166,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopCUpdate))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();

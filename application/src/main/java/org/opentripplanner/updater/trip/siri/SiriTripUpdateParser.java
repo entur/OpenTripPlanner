@@ -5,6 +5,7 @@ import static org.opentripplanner.updater.alert.siri.mapping.SiriTransportModeMa
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.EMPTY_STOP_POINT_REF;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NOT_MONITORED;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NO_START_DATE;
+import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.UNKNOWN;
 import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
 
 import java.time.LocalDate;
@@ -35,6 +36,8 @@ import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.rutebanken.netex.model.BusSubmodeEnumeration;
 import org.rutebanken.netex.model.RailSubmodeEnumeration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 /**
@@ -42,6 +45,8 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
  * This parser only parses SIRI messages - entity resolution and validation is done by the applier.
  */
 public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJourney> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(SiriTripUpdateParser.class);
 
   @Override
   public Result<ParsedTripUpdate, UpdateError> parse(
@@ -64,6 +69,14 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     // Determine update type, service date, and trip reference
     var updateType = determineUpdateType(journey, calls);
+
+    // For ADD_NEW_TRIP, EstimatedVehicleJourneyCode is required (SIRI Profile requirement)
+    if (
+      updateType == TripUpdateType.ADD_NEW_TRIP && journey.getEstimatedVehicleJourneyCode() == null
+    ) {
+      LOG.debug("ADD_NEW_TRIP requires EstimatedVehicleJourneyCode");
+      return UpdateError.result(null, UNKNOWN, journey.getDataSource());
+    }
 
     ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(
       journey,
@@ -135,9 +148,14 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withTripId(tripId);
     }
 
-    var tripOnServiceDateId = psd.tripOnServiceDateId();
-    if (tripOnServiceDateId != null) {
-      builder.withTripOnServiceDateId(tripOnServiceDateId);
+    // For ADD_NEW_TRIP, the tripOnServiceDateId is the ID of the NEW trip being created,
+    // not an existing TripOnServiceDate to resolve. Don't set it in the reference.
+    // For other update types, set it so we can look up the existing TripOnServiceDate.
+    if (updateType != TripUpdateType.ADD_NEW_TRIP) {
+      var tripOnServiceDateId = psd.tripOnServiceDateId();
+      if (tripOnServiceDateId != null) {
+        builder.withTripOnServiceDateId(tripOnServiceDateId);
+      }
     }
 
     if (journey.getLineRef() != null) {
