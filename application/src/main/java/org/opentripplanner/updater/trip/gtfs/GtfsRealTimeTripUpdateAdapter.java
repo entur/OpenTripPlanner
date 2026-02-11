@@ -52,15 +52,11 @@ import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Adapts from GTFS-RT TripUpdates to OTP's internal real-time data model.
  */
 public class GtfsRealTimeTripUpdateAdapter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GtfsRealTimeTripUpdateAdapter.class);
 
   /**
    * A synchronized cache of trip patterns added to the timetable repository
@@ -78,8 +74,6 @@ public class GtfsRealTimeTripUpdateAdapter {
    * timetable snapshot.
    */
   private final TransitEditorService transitEditorService;
-
-  private final DeduplicatorService deduplicator;
 
   private final TimetableSnapshotManager snapshotManager;
   private final Supplier<LocalDate> localDateNow;
@@ -100,7 +94,6 @@ public class GtfsRealTimeTripUpdateAdapter {
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
     );
-    this.deduplicator = deduplicator;
     this.tripTimesUpdater = new TripTimesUpdater(timetableRepository.getTimeZone(), deduplicator);
     this.tripPatternCache = new TripPatternCache(
       new TripPatternIdGenerator(),
