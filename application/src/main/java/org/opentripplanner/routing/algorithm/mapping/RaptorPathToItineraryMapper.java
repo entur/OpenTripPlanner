@@ -157,7 +157,9 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
 
     // Map egress leg
     EgressPathLeg<T> egressPathLeg = pathLeg.asEgressLeg();
-    Itinerary mapped = mapEgressLeg(egressPathLeg);
+    Itinerary mapped = egressPathLeg.egress() instanceof CarpoolAccessEgress
+      ? carpoolItineraryMapper.toItinerary((CarpoolAccessEgress) egressPathLeg.egress(),  transitSearchTimeZero)
+      : mapEgressLeg(egressPathLeg);
     legs.addAll(mapped == null ? List.of() : mapped.legs());
 
     var generalizedCost = Cost.costOfCentiSeconds(path.c1()).normalize();
