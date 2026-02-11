@@ -13,7 +13,6 @@ import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -74,7 +73,6 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
       var validationResult = validateSiriExtraCalls(
         stopTimeUpdates,
         scheduledPattern,
-        context.stopResolver(),
         trip,
         resolvedUpdate.options().stopReplacementConstraint()
       );
@@ -87,7 +85,6 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     var stopPatternResult = HandlerUtils.buildNewStopPattern(
       trip,
       stopTimeUpdates,
-      context.stopResolver(),
       resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
     if (stopPatternResult.isFailure()) {
@@ -162,7 +159,6 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
   private Result<Void, UpdateError> validateSiriExtraCalls(
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
     TripPattern originalPattern,
-    StopResolver stopResolver,
     Trip trip,
     StopReplacementConstraint constraint
   ) {
@@ -192,7 +188,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
         continue;
       }
 
-      StopLocation updateStop = stopResolver.resolve(stopUpdate.stopReference());
+      StopLocation updateStop = stopUpdate.stop();
       if (updateStop == null) {
         return Result.failure(
           new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, i)

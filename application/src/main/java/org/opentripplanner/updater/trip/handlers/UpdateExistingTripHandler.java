@@ -3,7 +3,6 @@ package org.opentripplanner.updater.trip.handlers;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
@@ -17,7 +16,6 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
@@ -26,7 +24,6 @@ import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,52 +143,35 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   }
 
   /**
-   * Result of matching a stop by reference, containing the matched stop index and resolved stop.
-   */
-  private record StopMatchResult(int stopIndex, StopLocation resolvedStop) {}
-
-  /**
-   * Match a stop in the pattern by stop reference (stop ID lookup).
+   * Match a pre-resolved stop in the pattern by ID lookup.
    * Used for GTFS-RT updates that omit stopSequence but provide stopId.
    *
-   * @param stopReference The stop reference to match
+   * @param stop The pre-resolved stop location
    * @param pattern The trip pattern to search
-   * @param stopResolver The stop resolver to use
-   * @return StopMatchResult with matched index and resolved stop, or null if no match found
+   * @return The matched stop index, or -1 if no match found
    */
-  @Nullable
-  private StopMatchResult matchStopByReference(
-    StopReference stopReference,
-    TripPattern pattern,
-    StopResolver stopResolver
-  ) {
-    // Resolve the stop from the reference
-    StopLocation resolvedStop = stopResolver.resolve(stopReference);
-    if (resolvedStop == null) {
-      return null;
-    }
-
+  private int matchStopInPattern(StopLocation stop, TripPattern pattern) {
     // Search through pattern stops to find a match by ID
     for (int i = 0; i < pattern.numberOfStops(); i++) {
       StopLocation patternStop = pattern.getStop(i);
 
       // Direct match by ID
-      if (patternStop.getId().equals(resolvedStop.getId())) {
-        return new StopMatchResult(i, resolvedStop);
+      if (patternStop.getId().equals(stop.getId())) {
+        return i;
       }
 
       // Parent station match (quay changes)
       if (
         patternStop.getParentStation() != null &&
-        resolvedStop.getParentStation() != null &&
-        patternStop.getParentStation().getId().equals(resolvedStop.getParentStation().getId())
+        stop.getParentStation() != null &&
+        patternStop.getParentStation().getId().equals(stop.getParentStation().getId())
       ) {
-        return new StopMatchResult(i, resolvedStop);
+        return i;
       }
     }
 
     // No match found
-    return null;
+    return -1;
   }
 
   /**
@@ -270,7 +250,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
     var result = new PatternModificationResult();
     var constraint = resolvedUpdate.options().stopReplacementConstraint();
-    var stopResolver = context.stopResolver();
     var stopReplacementValidator = new StopReplacementValidator();
 
     int listIndex = 0;
@@ -283,8 +262,8 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         // SIRI-ET: position in list IS the position in pattern
         stopIndex = listIndex;
 
-        // Resolve the stop from the stop reference for validation and replacement
-        resolvedStop = stopResolver.resolve(stopUpdate.stopReference());
+        // Use the pre-resolved stop for validation and replacement
+        resolvedStop = stopUpdate.stop();
         if (resolvedStop == null) {
           return Result.failure(
             new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
@@ -304,30 +283,25 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
             continue;
           }
 
-          // Resolve stop if assignedStopId is provided (stop replacement)
+          // Use pre-resolved stop if assignedStopId is provided (stop replacement)
           if (stopUpdate.stopReference().hasAssignedStopId()) {
-            resolvedStop = stopResolver.resolve(
-              StopReference.ofStopId(stopUpdate.stopReference().assignedStopId())
-            );
+            resolvedStop = stopUpdate.stop();
           }
         } else {
           // GTFS-RT without stopSequence: lookup stop by ID in pattern
-          var matchResult = matchStopByReference(stopUpdate.stopReference(), pattern, stopResolver);
-          if (matchResult == null) {
-            // Failed to match - determine if unknown stop or mismatch
-            var resolvedStopForError = stopResolver.resolve(stopUpdate.stopReference());
-            if (resolvedStopForError == null) {
-              return Result.failure(
-                new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
-              );
-            } else {
-              return Result.failure(
-                new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
-              );
-            }
+          resolvedStop = stopUpdate.stop();
+          if (resolvedStop == null) {
+            return Result.failure(
+              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
+            );
           }
-          stopIndex = matchResult.stopIndex;
-          resolvedStop = matchResult.resolvedStop;
+          int matchIndex = matchStopInPattern(resolvedStop, pattern);
+          if (matchIndex < 0) {
+            return Result.failure(
+              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
+            );
+          }
+          stopIndex = matchIndex;
         }
       }
 
