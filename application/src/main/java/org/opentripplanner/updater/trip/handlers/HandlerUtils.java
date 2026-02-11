@@ -16,6 +16,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.slf4j.Logger;
@@ -85,6 +86,7 @@ public final class HandlerUtils {
    * @param stopResolver Resolver to look up stops
    * @param serviceDate The service date
    * @param timeZone The timezone for time resolution
+   * @param firstLastAdjustment Strategy for adjusting first/last stop times
    * @return Result containing stop times and pattern, or error if stops cannot be resolved
    */
   public static Result<StopTimesAndPattern, UpdateError> buildNewStopPattern(
@@ -92,7 +94,8 @@ public final class HandlerUtils {
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     StopResolver stopResolver,
     LocalDate serviceDate,
-    ZoneId timeZone
+    ZoneId timeZone,
+    FirstLastStopTimeAdjustment firstLastAdjustment
   ) {
     var stopTimes = new ArrayList<StopTime>();
 
@@ -153,14 +156,15 @@ public final class HandlerUtils {
         stopTime.setDepartureTime(stopTime.getArrivalTime());
       }
 
-      // Handle first stop without arrival: set arrival = departure to avoid negative dwell time
-      if (isFirstStop && !stopTime.isArrivalTimeSet()) {
-        stopTime.setArrivalTime(stopTime.getDepartureTime());
-      }
-
-      // Handle last stop: departure = arrival (matches StopTimesMapper line 70)
-      if (isLastStop && stopTime.isArrivalTimeSet()) {
-        stopTime.setDepartureTime(stopTime.getArrivalTime());
+      // Use departure time for first stop, and arrival time for last stop, to avoid negative dwell times
+      // This matches StopTimesMapper lines 68-70 - only apply if adjustment strategy is ADJUST
+      if (firstLastAdjustment == FirstLastStopTimeAdjustment.ADJUST) {
+        if (isFirstStop && stopTime.isDepartureTimeSet()) {
+          stopTime.setArrivalTime(stopTime.getDepartureTime());
+        }
+        if (isLastStop && stopTime.isArrivalTimeSet()) {
+          stopTime.setDepartureTime(stopTime.getArrivalTime());
+        }
       }
 
       // Handle pickup/dropoff
