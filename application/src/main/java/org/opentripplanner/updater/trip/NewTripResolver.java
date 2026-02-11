@@ -10,6 +10,7 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,10 +103,18 @@ public class NewTripResolver {
         );
       }
 
+      // Resolve stop time updates now that service date is known
+      var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
+        parsedUpdate.stopTimeUpdates(),
+        serviceDate,
+        context.timeZone()
+      );
+
       return Result.success(
         ResolvedNewTrip.forExistingAddedTrip(
           parsedUpdate,
           serviceDate,
+          resolvedStopTimeUpdates,
           existingRealTimeTrip,
           existingPattern,
           scheduledTripTimes
@@ -113,7 +122,16 @@ public class NewTripResolver {
       );
     }
 
+    // Resolve stop time updates now that service date is known
+    var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
+      parsedUpdate.stopTimeUpdates(),
+      serviceDate,
+      context.timeZone()
+    );
+
     // New trip - no existing trip to resolve
-    return Result.success(ResolvedNewTrip.forNewTrip(parsedUpdate, serviceDate));
+    return Result.success(
+      ResolvedNewTrip.forNewTrip(parsedUpdate, serviceDate, resolvedStopTimeUpdates)
+    );
   }
 }

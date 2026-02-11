@@ -20,6 +20,7 @@ public final class ResolvedNewTrip {
 
   private final ParsedTripUpdate parsedUpdate;
   private final LocalDate serviceDate;
+  private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
   // For updates to existing added trips
   @Nullable
@@ -34,12 +35,17 @@ public final class ResolvedNewTrip {
   private ResolvedNewTrip(
     ParsedTripUpdate parsedUpdate,
     LocalDate serviceDate,
+    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     @Nullable Trip existingTrip,
     @Nullable TripPattern existingPattern,
     @Nullable TripTimes existingTripTimes
   ) {
     this.parsedUpdate = Objects.requireNonNull(parsedUpdate, "parsedUpdate must not be null");
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
+    this.resolvedStopTimeUpdates = Objects.requireNonNull(
+      resolvedStopTimeUpdates,
+      "resolvedStopTimeUpdates must not be null"
+    );
     this.existingTrip = existingTrip;
     this.existingPattern = existingPattern;
     this.existingTripTimes = existingTripTimes;
@@ -48,8 +54,19 @@ public final class ResolvedNewTrip {
   /**
    * Create for a brand new trip (no existing trip).
    */
-  public static ResolvedNewTrip forNewTrip(ParsedTripUpdate parsedUpdate, LocalDate serviceDate) {
-    return new ResolvedNewTrip(parsedUpdate, serviceDate, null, null, null);
+  public static ResolvedNewTrip forNewTrip(
+    ParsedTripUpdate parsedUpdate,
+    LocalDate serviceDate,
+    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
+  ) {
+    return new ResolvedNewTrip(
+      parsedUpdate,
+      serviceDate,
+      resolvedStopTimeUpdates,
+      null,
+      null,
+      null
+    );
   }
 
   /**
@@ -58,6 +75,7 @@ public final class ResolvedNewTrip {
   public static ResolvedNewTrip forExistingAddedTrip(
     ParsedTripUpdate parsedUpdate,
     LocalDate serviceDate,
+    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     Trip existingTrip,
     TripPattern existingPattern,
     TripTimes existingTripTimes
@@ -65,6 +83,7 @@ public final class ResolvedNewTrip {
     return new ResolvedNewTrip(
       parsedUpdate,
       serviceDate,
+      resolvedStopTimeUpdates,
       Objects.requireNonNull(existingTrip),
       Objects.requireNonNull(existingPattern),
       Objects.requireNonNull(existingTripTimes)
@@ -121,8 +140,8 @@ public final class ResolvedNewTrip {
     return parsedUpdate.options();
   }
 
-  public List<ParsedStopTimeUpdate> stopTimeUpdates() {
-    return parsedUpdate.stopTimeUpdates();
+  public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
+    return resolvedStopTimeUpdates;
   }
 
   @Nullable
