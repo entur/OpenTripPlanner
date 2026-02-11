@@ -65,12 +65,16 @@ class HandlerUtilsTest {
         .withDepartureUpdate(TimeUpdate.ofAbsolute(dep2Seconds + 60, dep2Seconds))
         .build()
     );
-    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(parsedUpdates, SERVICE_DATE, ZONE_ID);
+    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(
+      parsedUpdates,
+      SERVICE_DATE,
+      ZONE_ID,
+      stopResolver
+    );
 
     var result = HandlerUtils.buildNewStopPattern(
       trip,
       stopUpdates,
-      stopResolver,
       FirstLastStopTimeAdjustment.ADJUST
     );
 
@@ -119,12 +123,16 @@ class HandlerUtilsTest {
         .withArrivalUpdate(TimeUpdate.ofAbsolute(arr2Seconds + 60, arr2Seconds))
         .build()
     );
-    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(parsedUpdates, SERVICE_DATE, ZONE_ID);
+    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(
+      parsedUpdates,
+      SERVICE_DATE,
+      ZONE_ID,
+      stopResolver
+    );
 
     var result = HandlerUtils.buildNewStopPattern(
       trip,
       stopUpdates,
-      stopResolver,
       FirstLastStopTimeAdjustment.ADJUST
     );
 

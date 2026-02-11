@@ -77,7 +77,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     var filtered = filterStopTimeUpdates(
       stopTimeUpdates,
       resolvedUpdate.options().unknownStopBehavior(),
-      context,
       tripId
     );
     if (filtered.isFailure()) {
@@ -105,7 +104,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     var stopPatternResult = HandlerUtils.buildNewStopPattern(
       trip,
       filteredUpdates.updates(),
-      context.stopResolver(),
       resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
     if (stopPatternResult.isFailure()) {
@@ -226,7 +224,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     var filtered = filterStopTimeUpdates(
       stopTimeUpdates,
       resolvedUpdate.options().unknownStopBehavior(),
-      context,
       tripId
     );
     if (filtered.isFailure()) {
@@ -277,17 +274,15 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private Result<FilteredStopTimeUpdates, UpdateError> filterStopTimeUpdates(
     List<ResolvedStopTimeUpdate> updates,
     UnknownStopBehavior unknownStopBehavior,
-    TripUpdateApplierContext context,
     FeedScopedId tripId
   ) {
-    var stopResolver = context.stopResolver();
     var warnings = new ArrayList<UpdateSuccess.WarningType>();
 
     // FAIL mode: strict validation - fail on unknown stops
     if (unknownStopBehavior == UnknownStopBehavior.FAIL) {
       for (int i = 0; i < updates.size(); i++) {
         var stopUpdate = updates.get(i);
-        if (stopResolver.resolve(stopUpdate.stopReference()) == null) {
+        if (stopUpdate.stop() == null) {
           LOG.debug("ADD_TRIP: Unknown stop {} in added trip", stopUpdate.stopReference());
           return Result.failure(
             new UpdateError(tripId, UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
@@ -300,7 +295,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // IGNORE mode: filter unknown stops
     var filteredUpdates = new ArrayList<ResolvedStopTimeUpdate>();
     for (var stopUpdate : updates) {
-      if (stopResolver.resolve(stopUpdate.stopReference()) != null) {
+      if (stopUpdate.stop() != null) {
         filteredUpdates.add(stopUpdate);
       } else {
         LOG.debug("ADD_TRIP: Removing unknown stop {} from added trip", stopUpdate.stopReference());

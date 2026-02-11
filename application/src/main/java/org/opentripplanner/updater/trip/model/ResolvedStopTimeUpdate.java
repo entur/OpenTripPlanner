@@ -7,7 +7,9 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.model.PickDrop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.updater.trip.StopResolver;
 
 /**
  * A stop time update with pre-resolved {@link TimeUpdate} values.
@@ -25,24 +27,30 @@ public final class ResolvedStopTimeUpdate {
   @Nullable
   private final TimeUpdate departureUpdate;
 
+  @Nullable
+  private final StopLocation stop;
+
   private ResolvedStopTimeUpdate(
     ParsedStopTimeUpdate parsed,
     @Nullable TimeUpdate arrivalUpdate,
-    @Nullable TimeUpdate departureUpdate
+    @Nullable TimeUpdate departureUpdate,
+    @Nullable StopLocation stop
   ) {
     this.parsed = Objects.requireNonNull(parsed, "parsed must not be null");
     this.arrivalUpdate = arrivalUpdate;
     this.departureUpdate = departureUpdate;
+    this.stop = stop;
   }
 
   /**
    * Resolve a single {@link ParsedStopTimeUpdate} by converting its
-   * {@link ParsedTimeUpdate} values to {@link TimeUpdate}.
+   * {@link ParsedTimeUpdate} values to {@link TimeUpdate} and resolving the stop.
    */
   public static ResolvedStopTimeUpdate resolve(
     ParsedStopTimeUpdate parsed,
     LocalDate serviceDate,
-    ZoneId timeZone
+    ZoneId timeZone,
+    StopResolver stopResolver
   ) {
     var arrival = parsed.arrivalUpdate() != null
       ? parsed.arrivalUpdate().resolve(serviceDate, timeZone)
@@ -50,7 +58,8 @@ public final class ResolvedStopTimeUpdate {
     var departure = parsed.departureUpdate() != null
       ? parsed.departureUpdate().resolve(serviceDate, timeZone)
       : null;
-    return new ResolvedStopTimeUpdate(parsed, arrival, departure);
+    var stop = stopResolver.resolve(parsed.stopReference());
+    return new ResolvedStopTimeUpdate(parsed, arrival, departure, stop);
   }
 
   /**
@@ -59,11 +68,12 @@ public final class ResolvedStopTimeUpdate {
   public static List<ResolvedStopTimeUpdate> resolveAll(
     List<ParsedStopTimeUpdate> updates,
     LocalDate serviceDate,
-    ZoneId timeZone
+    ZoneId timeZone,
+    StopResolver stopResolver
   ) {
     return updates
       .stream()
-      .map(u -> resolve(u, serviceDate, timeZone))
+      .map(u -> resolve(u, serviceDate, timeZone, stopResolver))
       .toList();
   }
 
@@ -82,6 +92,14 @@ public final class ResolvedStopTimeUpdate {
   @Nullable
   public TimeUpdate departureUpdate() {
     return departureUpdate;
+  }
+
+  /**
+   * The resolved stop location, or null if the stop could not be resolved.
+   */
+  @Nullable
+  public StopLocation stop() {
+    return stop;
   }
 
   // ========== Delegated accessors ==========
