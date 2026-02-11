@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.params.provider.Arguments.of;
 import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.SAFE_STREETS;
 import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.TRIANGLE;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingEnvironmentImpl;
@@ -52,7 +53,9 @@ import org.opentripplanner.transit.service.TimetableRepository;
 
 class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
-  static final GraphQLRequestContext CONTEXT;
+  private static final GraphQLRequestContext CONTEXT;
+  private static final FeedScopedId TRIP_ID_1 = id("t1");
+  private static final FeedScopedId TRIP_ID_2 = id("t2");
 
   static {
     Graph graph = new Graph();
@@ -187,18 +190,27 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     assertEquals(expectedFilters, routeRequest.journey().transit().filters().toString());
   }
 
-  @Test
-  void bannedTrips() {
-    var tripId = FeedScopedId.parse("trimet:777");
+  static Stream<Arguments> bannedTripsCases() {
+    return Stream.of(
+      Arguments.of("F:t1", List.of(TRIP_ID_1)),
+      Arguments.of("F:t1,F:t2", List.of(TRIP_ID_1, TRIP_ID_2)),
+      Arguments.of("F:t1, F:t2", List.of(TRIP_ID_1, TRIP_ID_2)),
+      Arguments.of(",F:t1, F:t2,", List.of(TRIP_ID_1, TRIP_ID_2))
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("bannedTripsCases")
+  void bannedTrips(String value, List<FeedScopedId> expected) {
     Map<String, Object> arguments = decorateWithRequiredParams(
-      Map.of("banned", Map.of("trips", tripId.toString()))
+      Map.of("banned", Map.of("trips", value))
     );
 
     var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
       executionContext(arguments),
       CONTEXT
     );
-    assertThat(routeRequest.journey().transit().bannedTrips()).containsExactly(tripId);
+    assertThat(routeRequest.journey().transit().bannedTrips()).containsExactlyElementsIn(expected);
   }
 
   @Test
