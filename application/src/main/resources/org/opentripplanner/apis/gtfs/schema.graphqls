@@ -2629,7 +2629,7 @@ type Trip implements Node {
   bikesAllowed: BikesAllowed
   blockId: String
   "Whether cars are allowed on board the vehicle running this trip"
-  carsAllowed: CarsAllowed
+  carsAllowed: CarsAllowed!
   """
   Departure time from the first stop. If the trip does not run on the given date,
   it will return scheduled times from another date. This field is slightly
