@@ -128,7 +128,8 @@ public class ModifyTripHandler implements TripUpdateHandler {
       stopTimeUpdates,
       context.stopResolver(),
       serviceDate,
-      context.timeZone()
+      context.timeZone(),
+      parsedUpdate.options().firstLastStopTimeAdjustment()
     );
     if (stopPatternResult.isFailure()) {
       return Result.failure(stopPatternResult.failureValue());
