@@ -15,8 +15,8 @@ import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +67,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     // Check if this is a SIRI extra call (has isExtraCall flags)
     boolean hasSiriExtraCalls = stopTimeUpdates
       .stream()
-      .anyMatch(ParsedStopTimeUpdate::isExtraCall);
+      .anyMatch(ResolvedStopTimeUpdate::isExtraCall);
 
     // Validate SIRI extra call constraints
     if (hasSiriExtraCalls) {
@@ -88,8 +88,6 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
       trip,
       stopTimeUpdates,
       context.stopResolver(),
-      serviceDate,
-      context.timeZone(),
       resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
     if (stopPatternResult.isFailure()) {
@@ -133,13 +131,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
 
     // Apply real-time updates
-    HandlerUtils.applyRealTimeUpdates(
-      resolvedUpdate.tripCreationInfo(),
-      builder,
-      stopTimeUpdates,
-      serviceDate,
-      context.timeZone()
-    );
+    HandlerUtils.applyRealTimeUpdates(resolvedUpdate.tripCreationInfo(), builder, stopTimeUpdates);
 
     // Set state to MODIFIED
     builder.withRealTimeState(RealTimeState.MODIFIED);
@@ -168,7 +160,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
    * Non-extra stops must match the original pattern according to the stop replacement constraint.
    */
   private Result<Void, UpdateError> validateSiriExtraCalls(
-    List<ParsedStopTimeUpdate> stopTimeUpdates,
+    List<ResolvedStopTimeUpdate> stopTimeUpdates,
     TripPattern originalPattern,
     StopResolver stopResolver,
     Trip trip,

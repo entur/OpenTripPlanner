@@ -23,8 +23,8 @@ import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
@@ -106,8 +106,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       trip,
       filteredUpdates.updates(),
       context.stopResolver(),
-      serviceDate,
-      context.timeZone(),
       resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
     if (stopPatternResult.isFailure()) {
@@ -162,13 +160,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    HandlerUtils.applyRealTimeUpdates(
-      tripCreationInfo,
-      builder,
-      filteredUpdates.updates(),
-      serviceDate,
-      context.timeZone()
-    );
+    HandlerUtils.applyRealTimeUpdates(tripCreationInfo, builder, filteredUpdates.updates());
     builder.withRealTimeState(RealTimeState.ADDED);
 
     // Apply wheelchair accessibility
@@ -247,9 +239,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     HandlerUtils.applyRealTimeUpdates(
       resolvedUpdate.tripCreationInfo(),
       builder,
-      filteredUpdates.updates(),
-      serviceDate,
-      context.timeZone()
+      filteredUpdates.updates()
     );
     builder.withRealTimeState(RealTimeState.UPDATED);
 
@@ -275,7 +265,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    * Result of filtering stop time updates.
    */
   private record FilteredStopTimeUpdates(
-    List<ParsedStopTimeUpdate> updates,
+    List<ResolvedStopTimeUpdate> updates,
     List<UpdateSuccess.WarningType> warnings
   ) {}
 
@@ -285,7 +275,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    * For SIRI (FAIL): fail if any stop is unknown
    */
   private Result<FilteredStopTimeUpdates, UpdateError> filterStopTimeUpdates(
-    List<ParsedStopTimeUpdate> updates,
+    List<ResolvedStopTimeUpdate> updates,
     UnknownStopBehavior unknownStopBehavior,
     TripUpdateApplierContext context,
     FeedScopedId tripId
@@ -308,7 +298,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     }
 
     // IGNORE mode: filter unknown stops
-    var filteredUpdates = new ArrayList<ParsedStopTimeUpdate>();
+    var filteredUpdates = new ArrayList<ResolvedStopTimeUpdate>();
     for (var stopUpdate : updates) {
       if (stopResolver.resolve(stopUpdate.stopReference()) != null) {
         filteredUpdates.add(stopUpdate);

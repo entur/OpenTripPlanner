@@ -17,6 +17,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 
@@ -56,7 +57,7 @@ class HandlerUtilsTest {
     int dep1Seconds = 12 * 3600;
     int dep2Seconds = 12 * 3600 + 10 * 60;
 
-    var stopUpdates = List.of(
+    var parsedUpdates = List.of(
       ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA.getId()))
         .withDepartureUpdate(TimeUpdate.ofAbsolute(dep1Seconds + 60, dep1Seconds))
         .build(),
@@ -64,13 +65,12 @@ class HandlerUtilsTest {
         .withDepartureUpdate(TimeUpdate.ofAbsolute(dep2Seconds + 60, dep2Seconds))
         .build()
     );
+    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(parsedUpdates, SERVICE_DATE, ZONE_ID);
 
     var result = HandlerUtils.buildNewStopPattern(
       trip,
       stopUpdates,
       stopResolver,
-      SERVICE_DATE,
-      ZONE_ID,
       FirstLastStopTimeAdjustment.ADJUST
     );
 
@@ -111,7 +111,7 @@ class HandlerUtilsTest {
     int arr1Seconds = 12 * 3600;
     int arr2Seconds = 12 * 3600 + 10 * 60;
 
-    var stopUpdates = List.of(
+    var parsedUpdates = List.of(
       ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA.getId()))
         .withArrivalUpdate(TimeUpdate.ofAbsolute(arr1Seconds + 60, arr1Seconds))
         .build(),
@@ -119,13 +119,12 @@ class HandlerUtilsTest {
         .withArrivalUpdate(TimeUpdate.ofAbsolute(arr2Seconds + 60, arr2Seconds))
         .build()
     );
+    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(parsedUpdates, SERVICE_DATE, ZONE_ID);
 
     var result = HandlerUtils.buildNewStopPattern(
       trip,
       stopUpdates,
       stopResolver,
-      SERVICE_DATE,
-      ZONE_ID,
       FirstLastStopTimeAdjustment.ADJUST
     );
 
