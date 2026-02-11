@@ -679,4 +679,39 @@ class SiriTripUpdateParserTest {
   private static TimeUpdate asTimeUpdate(ParsedTimeUpdate parsedTimeUpdate) {
     return (TimeUpdate) parsedTimeUpdate;
   }
+
+  @Test
+  void parseExtraJourneyWithReplacementTrip() {
+    // Extra journey with VehicleJourneyRef indicates this trip replaces another
+    var journey = new SiriEtBuilder(timeParser)
+      .withIsExtraJourney(true)
+      .withEstimatedVehicleJourneyCode("NSB:ServiceJourney:newtrip1-2024-01-15")
+      .withVehicleJourneyRef("replaced-trip-id")
+      .withOperatorRef("operator1")
+      .withLineRef("route1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:00")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:30")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var result = parser.parse(journey, context);
+
+    assertTrue(result.isSuccess());
+    var parsed = result.successValue();
+
+    assertEquals(TripUpdateType.ADD_NEW_TRIP, parsed.updateType());
+    assertNotNull(parsed.tripCreationInfo());
+
+    // VehicleJourneyRef should be captured as replaced trip
+    var replacedTrips = parsed.tripCreationInfo().replacedTrips();
+    assertEquals(1, replacedTrips.size(), "Should have one replaced trip from VehicleJourneyRef");
+    assertEquals(new FeedScopedId(FEED_ID, "replaced-trip-id"), replacedTrips.get(0));
+  }
 }

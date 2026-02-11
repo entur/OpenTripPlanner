@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.handlers;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -195,9 +196,18 @@ public class AddNewTripHandler implements TripUpdateHandler {
     }
 
     // Create TripOnServiceDate for lookup by dated vehicle journey
+    // Resolve replacement trips from TripCreationInfo
+    List<TripOnServiceDate> replacedTrips = tripCreationInfo
+      .replacedTrips()
+      .stream()
+      .map(transitService::getTripOnServiceDate)
+      .filter(Objects::nonNull)
+      .toList();
+
     TripOnServiceDate tripOnServiceDate = TripOnServiceDate.of(tripId)
       .withTrip(trip)
       .withServiceDate(serviceDate)
+      .withReplacementFor(replacedTrips)
       .build();
 
     // Build and return result
