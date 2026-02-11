@@ -163,7 +163,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
     HandlerUtils.applyRealTimeUpdates(
-      resolvedUpdate.parsedUpdate(),
+      tripCreationInfo,
       builder,
       filteredUpdates.updates(),
       serviceDate,
@@ -245,7 +245,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Create real-time trip times from the scheduled times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
     HandlerUtils.applyRealTimeUpdates(
-      resolvedUpdate.parsedUpdate(),
+      resolvedUpdate.tripCreationInfo(),
       builder,
       filteredUpdates.updates(),
       serviceDate,

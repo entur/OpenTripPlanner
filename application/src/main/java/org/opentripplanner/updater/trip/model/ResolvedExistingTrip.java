@@ -87,10 +87,6 @@ public final class ResolvedExistingTrip {
 
   // ========== Delegated accessors from parsedUpdate ==========
 
-  public ParsedTripUpdate parsedUpdate() {
-    return parsedUpdate;
-  }
-
   public TripUpdateType updateType() {
     return parsedUpdate.updateType();
   }
@@ -110,6 +106,11 @@ public final class ResolvedExistingTrip {
   @Nullable
   public StopPatternModification stopPatternModification() {
     return parsedUpdate.stopPatternModification();
+  }
+
+  @Nullable
+  public TripCreationInfo tripCreationInfo() {
+    return parsedUpdate.tripCreationInfo();
   }
 
   @Nullable
