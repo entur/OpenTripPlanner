@@ -16,6 +16,7 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
@@ -26,6 +27,7 @@ import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
+import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +55,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
 
     FeedScopedId tripId = tripCreationInfo.tripId();
 
-    // Check if trip already exists
+    // Check if trip already exists in scheduled data
     if (transitService.getScheduledTrip(tripId) != null) {
       LOG.debug("ADD_TRIP: Trip {} already exists in scheduled data", tripId);
       return Result.failure(
@@ -67,6 +69,19 @@ public class AddNewTripHandler implements TripUpdateHandler {
       return Result.failure(serviceDateResult.failureValue());
     }
     LocalDate serviceDate = serviceDateResult.successValue();
+
+    // Check if trip was already added in real-time (update rather than add)
+    Trip existingRealTimeTrip = transitService.getTrip(tripId);
+    if (existingRealTimeTrip != null) {
+      LOG.debug("ADD_TRIP: Trip {} already exists as real-time added trip, updating", tripId);
+      return updateExistingAddedTrip(
+        existingRealTimeTrip,
+        parsedUpdate,
+        serviceDate,
+        context,
+        transitService
+      );
+    }
 
     // Get or create service ID for this date
     FeedScopedId serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
@@ -135,14 +150,33 @@ public class AddNewTripHandler implements TripUpdateHandler {
     }
 
     // Create the new pattern
+    // For SIRI (FULL_UPDATE), we add scheduled trip times so queries for aimed times work
+    // For GTFS-RT (PARTIAL_UPDATE), we don't add to scheduled timetable
     var tripPatternCache = context.tripPatternCache();
-    TripPattern pattern = TripPattern.of(tripPatternCache.generatePatternId(trip))
-      .withRoute(route)
-      .withMode(trip.getMode())
-      .withNetexSubmode(trip.getNetexSubMode())
-      .withStopPattern(stopTimesAndPattern.stopPattern())
-      .withRealTimeStopPatternModified()
-      .build();
+    var options = parsedUpdate.options();
+    boolean includeScheduledData = options.stopUpdateStrategy() == StopUpdateStrategy.FULL_UPDATE;
+
+    TripPattern pattern;
+    if (includeScheduledData) {
+      // SIRI-style: include scheduled times
+      pattern = TripPattern.of(tripPatternCache.generatePatternId(trip))
+        .withRoute(route)
+        .withMode(trip.getMode())
+        .withNetexSubmode(trip.getNetexSubMode())
+        .withStopPattern(stopTimesAndPattern.stopPattern())
+        .withRealTimeAddedTrip()
+        .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(scheduledTripTimes))
+        .build();
+    } else {
+      // GTFS-RT style: no scheduled times
+      pattern = TripPattern.of(tripPatternCache.generatePatternId(trip))
+        .withRoute(route)
+        .withMode(trip.getMode())
+        .withNetexSubmode(trip.getNetexSubMode())
+        .withStopPattern(stopTimesAndPattern.stopPattern())
+        .withRealTimeStopPatternModified()
+        .build();
+    }
 
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
@@ -183,6 +217,84 @@ public class AddNewTripHandler implements TripUpdateHandler {
       return Result.success(new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings()));
     } catch (DataValidationException e) {
       LOG.info("Invalid real-time data for added trip {}: {}", tripId, e.getMessage());
+      return DataValidationExceptionMapper.toResult(e);
+    }
+  }
+
+  /**
+   * Update an existing real-time added trip with new data.
+   * This is called when the same trip is added again (subsequent updates to an extra journey).
+   */
+  private Result<TripUpdateResult, UpdateError> updateExistingAddedTrip(
+    Trip existingTrip,
+    ParsedTripUpdate parsedUpdate,
+    LocalDate serviceDate,
+    TripUpdateApplierContext context,
+    TransitEditorService transitService
+  ) {
+    FeedScopedId tripId = existingTrip.getId();
+
+    // Filter stop time updates
+    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+    var filtered = filterStopTimeUpdates(
+      stopTimeUpdates,
+      parsedUpdate.options().stopReplacementConstraint(),
+      context,
+      tripId
+    );
+    if (filtered.isFailure()) {
+      return Result.failure(filtered.failureValue());
+    }
+    var filteredUpdates = filtered.successValue();
+
+    // Find the existing pattern for this trip
+    TripPattern existingPattern = transitService.findPattern(existingTrip, serviceDate);
+    if (existingPattern == null) {
+      existingPattern = transitService.findPattern(existingTrip);
+    }
+    if (existingPattern == null) {
+      LOG.warn("UPDATE_ADDED_TRIP: Could not find pattern for existing trip {}", tripId);
+      return Result.failure(
+        new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
+      );
+    }
+
+    // Get the scheduled trip times from the pattern (for added trips, this is the original aimed times)
+    TripTimes scheduledTripTimes = existingPattern
+      .getScheduledTimetable()
+      .getTripTimes(existingTrip);
+    if (scheduledTripTimes == null) {
+      LOG.warn("UPDATE_ADDED_TRIP: Could not find scheduled trip times for trip {}", tripId);
+      return Result.failure(
+        new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
+      );
+    }
+
+    // Create real-time trip times from the scheduled times
+    var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+    HandlerUtils.applyRealTimeUpdates(
+      parsedUpdate,
+      builder,
+      filteredUpdates.updates(),
+      serviceDate,
+      context.timeZone()
+    );
+    builder.withRealTimeState(RealTimeState.UPDATED);
+
+    // Build and return result
+    // tripCreation=false since this is an update to an existing added trip
+    // routeCreation=false since the route already exists
+    try {
+      var realTimeTripUpdate = new RealTimeTripUpdate(
+        existingPattern,
+        builder.build(),
+        serviceDate
+      );
+
+      LOG.debug("Updated existing added trip {} on {}", tripId, serviceDate);
+      return Result.success(new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings()));
+    } catch (DataValidationException e) {
+      LOG.info("Invalid real-time data for updated added trip {}: {}", tripId, e.getMessage());
       return DataValidationExceptionMapper.toResult(e);
     }
   }
@@ -280,6 +392,16 @@ public class AddNewTripHandler implements TripUpdateHandler {
       );
     }
 
+    // No routeCreationInfo, but we have a routeId - create a route using that ID
+    if (tripCreationInfo.routeId() != null) {
+      return createRouteFromRouteId(
+        tripCreationInfo.routeId(),
+        tripCreationInfo,
+        context,
+        transitService
+      );
+    }
+
     // No route info - create minimal route using trip ID
     return createFallbackRoute(tripId, context, transitService);
   }
@@ -361,6 +483,39 @@ public class AddNewTripHandler implements TripUpdateHandler {
   }
 
   /**
+   * Create a new route using the routeId from TripCreationInfo when no routeCreationInfo is
+   * provided. This happens for SIRI extra journeys where lineRef doesn't match an existing route.
+   */
+  private Result<Route, UpdateError> createRouteFromRouteId(
+    FeedScopedId routeId,
+    TripCreationInfo tripCreationInfo,
+    TripUpdateApplierContext context,
+    TransitEditorService transitService
+  ) {
+    var builder = Route.of(routeId);
+
+    // Find an agency
+    Agency agency = findFallbackAgencyFromTripInfo(tripCreationInfo, context, transitService);
+    builder.withAgency(agency);
+
+    // Set mode from trip creation info or default to BUS
+    TransitMode mode = tripCreationInfo.mode() != null ? tripCreationInfo.mode() : TransitMode.BUS;
+    builder.withMode(mode);
+
+    // Set submode if provided
+    if (tripCreationInfo.submode() != null) {
+      builder.withNetexSubmode(tripCreationInfo.submode());
+    }
+
+    // Use route ID as name
+    builder.withLongName(NonLocalizedString.ofNullable(routeId.getId()));
+
+    Route route = builder.build();
+    LOG.debug("ADD_TRIP: Created new route from routeId {}", routeId);
+    return Result.success(route);
+  }
+
+  /**
    * Create a fallback route when no route info is provided.
    */
   private Result<Route, UpdateError> createFallbackRoute(
@@ -399,6 +554,33 @@ public class AddNewTripHandler implements TripUpdateHandler {
       }
     }
 
+    // Try operator from trip creation info
+    if (tripCreationInfo.operatorId() != null) {
+      var agency = transitService.findAgency(tripCreationInfo.operatorId());
+      if (agency.isPresent()) {
+        return agency.get();
+      }
+    }
+
+    // Try to find agency from replaced trips
+    for (FeedScopedId replacedTripId : tripCreationInfo.replacedTrips()) {
+      Trip replacedTrip = transitService.getScheduledTrip(replacedTripId);
+      if (replacedTrip != null) {
+        return replacedTrip.getRoute().getAgency();
+      }
+    }
+
+    return findFallbackAgency(context.feedId(), transitService);
+  }
+
+  /**
+   * Find an agency for a route when we only have TripCreationInfo (no RouteCreationInfo).
+   */
+  private Agency findFallbackAgencyFromTripInfo(
+    TripCreationInfo tripCreationInfo,
+    TripUpdateApplierContext context,
+    TransitEditorService transitService
+  ) {
     // Try operator from trip creation info
     if (tripCreationInfo.operatorId() != null) {
       var agency = transitService.findAgency(tripCreationInfo.operatorId());
