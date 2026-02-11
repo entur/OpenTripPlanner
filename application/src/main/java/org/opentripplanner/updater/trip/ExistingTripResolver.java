@@ -105,7 +105,8 @@ public class ExistingTripResolver {
     var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
       parsedUpdate.stopTimeUpdates(),
       serviceDate,
-      context.timeZone()
+      context.timeZone(),
+      context.stopResolver()
     );
 
     return Result.success(

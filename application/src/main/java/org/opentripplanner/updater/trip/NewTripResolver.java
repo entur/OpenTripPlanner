@@ -107,7 +107,8 @@ public class NewTripResolver {
       var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
         parsedUpdate.stopTimeUpdates(),
         serviceDate,
-        context.timeZone()
+        context.timeZone(),
+        context.stopResolver()
       );
 
       return Result.success(
@@ -126,7 +127,8 @@ public class NewTripResolver {
     var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
       parsedUpdate.stopTimeUpdates(),
       serviceDate,
-      context.timeZone()
+      context.timeZone(),
+      context.stopResolver()
     );
 
     // New trip - no existing trip to resolve
