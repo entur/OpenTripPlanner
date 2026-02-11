@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import org.opentripplanner.model.PickDrop;
@@ -17,7 +16,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
-import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,23 +77,19 @@ public final class HandlerUtils {
   }
 
   /**
-   * Build a new stop pattern and stop times from parsed stop time updates.
+   * Build a new stop pattern and stop times from resolved stop time updates.
    * This creates stop times with scheduled times from the updates.
    *
    * @param trip The trip being modified or created
-   * @param stopTimeUpdates The parsed stop time updates
+   * @param stopTimeUpdates The resolved stop time updates
    * @param stopResolver Resolver to look up stops
-   * @param serviceDate The service date
-   * @param timeZone The timezone for time resolution
    * @param firstLastAdjustment Strategy for adjusting first/last stop times
    * @return Result containing stop times and pattern, or error if stops cannot be resolved
    */
   public static Result<StopTimesAndPattern, UpdateError> buildNewStopPattern(
     Trip trip,
-    List<ParsedStopTimeUpdate> stopTimeUpdates,
+    List<ResolvedStopTimeUpdate> stopTimeUpdates,
     StopResolver stopResolver,
-    LocalDate serviceDate,
-    ZoneId timeZone,
     FirstLastStopTimeAdjustment firstLastAdjustment
   ) {
     var stopTimes = new ArrayList<StopTime>();
@@ -124,7 +119,7 @@ public final class HandlerUtils {
       // Get departure time first (needed for arrival fallback)
       Integer departureTime = null;
       if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
+        var departureUpdate = stopUpdate.departureUpdate();
         Integer scheduledTime = departureUpdate.scheduledTimeSecondsSinceMidnight();
         departureTime = scheduledTime != null && scheduledTime > 0
           ? scheduledTime
@@ -134,7 +129,7 @@ public final class HandlerUtils {
       // Get arrival time - use scheduled time if available, otherwise fallback to departure
       // This matches StopTimesMapper: aimedArrivalTime ?? aimedDepartureTime
       if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate().resolve(serviceDate, timeZone);
+        var arrivalUpdate = stopUpdate.arrivalUpdate();
         Integer scheduledTime = arrivalUpdate.scheduledTimeSecondsSinceMidnight();
         stopTime.setArrivalTime(
           scheduledTime != null && scheduledTime > 0 ? scheduledTime : arrivalUpdate.resolveTime(0)
@@ -203,16 +198,12 @@ public final class HandlerUtils {
    *
    * @param tripCreationInfo Optional trip creation info (for trip-level headsign)
    * @param builder The builder to apply updates to
-   * @param stopTimeUpdates The stop time updates to apply
-   * @param serviceDate The service date
-   * @param timeZone The timezone for time resolution
+   * @param stopTimeUpdates The resolved stop time updates to apply
    */
   public static void applyRealTimeUpdates(
     TripCreationInfo tripCreationInfo,
     RealTimeTripTimesBuilder builder,
-    List<ParsedStopTimeUpdate> stopTimeUpdates,
-    LocalDate serviceDate,
-    ZoneId timeZone
+    List<ResolvedStopTimeUpdate> stopTimeUpdates
   ) {
     // Apply trip-level headsign from trip creation info
     if (tripCreationInfo != null && tripCreationInfo.headsign() != null) {
@@ -224,14 +215,14 @@ public final class HandlerUtils {
 
       // Apply arrival update - if no update, scheduled time is used (already in builder)
       if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate().resolve(serviceDate, timeZone);
+        var arrivalUpdate = stopUpdate.arrivalUpdate();
         int scheduledArrival = builder.getScheduledArrivalTime(i);
         builder.withArrivalTime(i, arrivalUpdate.resolveTime(scheduledArrival));
       }
 
       // Apply departure update - if no update, scheduled time is used (already in builder)
       if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
+        var departureUpdate = stopUpdate.departureUpdate();
         int scheduledDeparture = builder.getScheduledDepartureTime(i);
         builder.withDepartureTime(i, departureUpdate.resolveTime(scheduledDeparture));
       }
