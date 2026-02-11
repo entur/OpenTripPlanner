@@ -118,34 +118,48 @@ public final class HandlerUtils {
       boolean isFirstStop = (i == 0);
       boolean isLastStop = (i == stopTimeUpdates.size() - 1);
 
-      // Get arrival time - use scheduled time if available, otherwise actual time
+      // Get departure time first (needed for arrival fallback)
+      Integer departureTime = null;
+      if (stopUpdate.hasDepartureUpdate()) {
+        var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
+        Integer scheduledTime = departureUpdate.scheduledTimeSecondsSinceMidnight();
+        departureTime = scheduledTime != null && scheduledTime > 0
+          ? scheduledTime
+          : departureUpdate.resolveTime(0);
+      }
+
+      // Get arrival time - use scheduled time if available, otherwise fallback to departure
+      // This matches StopTimesMapper: aimedArrivalTime ?? aimedDepartureTime
       if (stopUpdate.hasArrivalUpdate()) {
         var arrivalUpdate = stopUpdate.arrivalUpdate().resolve(serviceDate, timeZone);
         Integer scheduledTime = arrivalUpdate.scheduledTimeSecondsSinceMidnight();
-        // Use scheduled time if available, otherwise resolve from actual
         stopTime.setArrivalTime(
           scheduledTime != null && scheduledTime > 0 ? scheduledTime : arrivalUpdate.resolveTime(0)
         );
+      } else if (departureTime != null) {
+        // Fallback: use departure time as arrival (matches old StopTimesMapper logic)
+        stopTime.setArrivalTime(departureTime);
       } else if (!isFirstStop) {
-        // Propagate from previous stop if no arrival
+        // Last resort: propagate from previous stop
         var prevStopTime = stopTimes.get(i - 1);
         stopTime.setArrivalTime(prevStopTime.getDepartureTime());
       }
 
-      // Get departure time - use scheduled time if available, otherwise actual time
-      if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
-        Integer scheduledTime = departureUpdate.scheduledTimeSecondsSinceMidnight();
-        // Use scheduled time if available, otherwise resolve from actual
-        stopTime.setDepartureTime(
-          scheduledTime != null && scheduledTime > 0
-            ? scheduledTime
-            : departureUpdate.resolveTime(0)
-        );
-      } else if (!isLastStop) {
-        // Use arrival time if no departure
+      // Set departure time
+      if (departureTime != null) {
+        stopTime.setDepartureTime(departureTime);
+      } else if (stopTime.isArrivalTimeSet()) {
+        // Fallback: use arrival time as departure (matches old StopTimesMapper logic)
         stopTime.setDepartureTime(stopTime.getArrivalTime());
-      } else {
+      }
+
+      // Handle first stop without arrival: set arrival = departure to avoid negative dwell time
+      if (isFirstStop && !stopTime.isArrivalTimeSet()) {
+        stopTime.setArrivalTime(stopTime.getDepartureTime());
+      }
+
+      // Handle last stop: departure = arrival (matches StopTimesMapper line 70)
+      if (isLastStop && stopTime.isArrivalTimeSet()) {
         stopTime.setDepartureTime(stopTime.getArrivalTime());
       }
 
@@ -206,13 +220,14 @@ public final class HandlerUtils {
     for (int i = 0; i < stopTimeUpdates.size(); i++) {
       var stopUpdate = stopTimeUpdates.get(i);
 
-      // Apply time updates
+      // Apply arrival update - if no update, scheduled time is used (already in builder)
       if (stopUpdate.hasArrivalUpdate()) {
         var arrivalUpdate = stopUpdate.arrivalUpdate().resolve(serviceDate, timeZone);
         int scheduledArrival = builder.getScheduledArrivalTime(i);
         builder.withArrivalTime(i, arrivalUpdate.resolveTime(scheduledArrival));
       }
 
+      // Apply departure update - if no update, scheduled time is used (already in builder)
       if (stopUpdate.hasDepartureUpdate()) {
         var departureUpdate = stopUpdate.departureUpdate().resolve(serviceDate, timeZone);
         int scheduledDeparture = builder.getScheduledDepartureTime(i);
