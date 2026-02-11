@@ -24,8 +24,7 @@ public class DataOverlayFactory {
       return new EdgeUpdaterModule(
         graph,
         new GenericDataFile(dataFile, config),
-        config.getTimeFormat(),
-        config.getParameterBindings()
+        config.getTimeFormat()
       );
     } else {
       LOG.error("No data input {} found!", dataFile);

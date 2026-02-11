@@ -77,6 +77,7 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     CarpoolingModule.class,
     ConfigModule.class,
     ConstructApplicationModule.class,
+    org.opentripplanner.ext.dataoverlay.configure.DataOverlayParameterBindingsModule.class,
     EmissionServiceModule.class,
     EmpiricalDelayServiceModule.class,
     DeduplicatorServiceModule.class,
@@ -138,6 +139,7 @@ public interface ConstructApplicationFactory {
   GraphVisualizer graphVisualizer();
 
   TransitService transitService();
+
   OtpServerRequestContext createServerContext();
 
   MetricsLogging metricsLogging();
