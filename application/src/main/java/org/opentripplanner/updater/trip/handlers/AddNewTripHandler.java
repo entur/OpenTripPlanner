@@ -24,7 +24,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
@@ -36,19 +36,19 @@ import org.slf4j.LoggerFactory;
  * Handles adding new trips that are not in the schedule.
  * Maps to GTFS-RT NEW/ADDED and SIRI-ET extra journeys.
  * <p>
- * This handler receives a {@link ResolvedTripUpdate} which may contain:
+ * This handler receives a {@link ResolvedNewTrip} which may contain:
  * <ul>
  *   <li>No trip (new trip creation)</li>
  *   <li>Existing trip (update to previously added trip)</li>
  * </ul>
  */
-public class AddNewTripHandler implements TripUpdateHandler {
+public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripHandler.class);
 
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
-    ResolvedTripUpdate resolvedUpdate,
+    ResolvedNewTrip resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
@@ -56,7 +56,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
     LocalDate serviceDate = resolvedUpdate.serviceDate();
 
     // Check if this is an update to an existing added trip
-    if (resolvedUpdate.hasTrip()) {
+    if (resolvedUpdate.isUpdateToExistingTrip()) {
       return updateExistingAddedTrip(resolvedUpdate, context, transitService);
     }
 
@@ -217,13 +217,13 @@ public class AddNewTripHandler implements TripUpdateHandler {
    * This is called when the same trip is added again (subsequent updates to an extra journey).
    */
   private Result<TripUpdateResult, UpdateError> updateExistingAddedTrip(
-    ResolvedTripUpdate resolvedUpdate,
+    ResolvedNewTrip resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    Trip existingTrip = resolvedUpdate.trip();
-    TripPattern existingPattern = resolvedUpdate.pattern();
-    var scheduledTripTimes = resolvedUpdate.scheduledTripTimes();
+    Trip existingTrip = resolvedUpdate.existingTrip();
+    TripPattern existingPattern = resolvedUpdate.existingPattern();
+    var scheduledTripTimes = resolvedUpdate.existingTripTimes();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
     FeedScopedId tripId = existingTrip.getId();
 

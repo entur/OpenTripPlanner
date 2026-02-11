@@ -12,7 +12,7 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,19 +22,19 @@ import org.slf4j.LoggerFactory;
  * This handler first tries to cancel/delete a previously added real-time trip,
  * then falls back to cancelling/deleting a scheduled trip.
  */
-public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
+public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.ForTripRemoval {
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTripRemovalHandler.class);
 
   @Override
   public final Result<TripUpdateResult, UpdateError> handle(
-    ResolvedTripUpdate resolvedUpdate,
+    ResolvedTripRemoval resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     var serviceDate = resolvedUpdate.serviceDate();
     var snapshotManager = context.snapshotManager();
-    var tripId = resolvedUpdate.tripReference().tripId();
+    var tripId = resolvedUpdate.tripId();
 
     // First, try to cancel/delete a previously added trip
     if (snapshotManager != null && tripId != null) {
@@ -45,8 +45,8 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
     }
 
     // Not a previously added trip - try scheduled trip from resolved data
-    Trip trip = resolvedUpdate.trip();
-    TripPattern pattern = resolvedUpdate.pattern();
+    Trip trip = resolvedUpdate.scheduledTrip();
+    TripPattern pattern = resolvedUpdate.scheduledPattern();
     TripTimes tripTimes = resolvedUpdate.scheduledTripTimes();
 
     if (trip == null || pattern == null || tripTimes == null) {
@@ -91,7 +91,11 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler {
     var timetable = snapshotManager.resolve(pattern, serviceDate);
     var tripTimes = timetable.getTripTimes(tripId);
     if (tripTimes == null) {
-      LOG.debug("Could not find trip times for previously added trip {} on {}", tripId, serviceDate);
+      LOG.debug(
+        "Could not find trip times for previously added trip {} on {}",
+        tripId,
+        serviceDate
+      );
       return null;
     }
 

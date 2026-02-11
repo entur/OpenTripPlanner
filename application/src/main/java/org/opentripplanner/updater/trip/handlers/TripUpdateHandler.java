@@ -4,28 +4,56 @@ import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 
 /**
- * Interface for handling a specific type of trip update.
- * Each implementation handles one {@link org.opentripplanner.updater.trip.model.TripUpdateType}.
+ * Handler interfaces for different types of trip updates.
  * <p>
- * Handlers receive a {@link ResolvedTripUpdate} which contains all resolved data (trip, pattern,
- * service date, trip times) so handlers can focus on their specific transformation logic without
- * duplicating resolution code.
+ * Each handler type receives a specific resolved type containing only the data
+ * relevant for that handler's operation.
  */
-public interface TripUpdateHandler {
+public final class TripUpdateHandler {
+
+  private TripUpdateHandler() {}
+
   /**
-   * Handle a resolved trip update and produce a real-time trip update.
-   *
-   * @param resolvedUpdate the resolved update to handle (with trip, pattern, etc. already resolved)
-   * @param context the applier context
-   * @param transitService the transit editor service
-   * @return Result containing TripUpdateResult on success, or UpdateError on failure
+   * Handler for updates to existing scheduled trips.
+   * Used for UPDATE_EXISTING and MODIFY_TRIP update types.
    */
-  Result<TripUpdateResult, UpdateError> handle(
-    ResolvedTripUpdate resolvedUpdate,
-    TripUpdateApplierContext context,
-    TransitEditorService transitService
-  );
+  @FunctionalInterface
+  public interface ForExistingTrip {
+    Result<TripUpdateResult, UpdateError> handle(
+      ResolvedExistingTrip resolvedUpdate,
+      TripUpdateApplierContext context,
+      TransitEditorService transitService
+    );
+  }
+
+  /**
+   * Handler for adding new trips or updating previously added trips.
+   * Used for ADD_NEW_TRIP update type.
+   */
+  @FunctionalInterface
+  public interface ForNewTrip {
+    Result<TripUpdateResult, UpdateError> handle(
+      ResolvedNewTrip resolvedUpdate,
+      TripUpdateApplierContext context,
+      TransitEditorService transitService
+    );
+  }
+
+  /**
+   * Handler for cancelling or deleting trips.
+   * Used for CANCEL_TRIP and DELETE_TRIP update types.
+   */
+  @FunctionalInterface
+  public interface ForTripRemoval {
+    Result<TripUpdateResult, UpdateError> handle(
+      ResolvedTripRemoval resolvedUpdate,
+      TripUpdateApplierContext context,
+      TransitEditorService transitService
+    );
+  }
 }

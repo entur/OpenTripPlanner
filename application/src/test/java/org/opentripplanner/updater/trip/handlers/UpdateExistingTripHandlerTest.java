@@ -19,17 +19,17 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.ExistingTripResolver;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.TripUpdateResolver;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
@@ -59,7 +59,7 @@ class UpdateExistingTripHandlerTest {
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
   private TripUpdateApplierContext context;
-  private TripUpdateResolver resolver;
+  private ExistingTripResolver resolver;
   private UpdateExistingTripHandler handler;
 
   @BeforeEach
@@ -97,11 +97,11 @@ class UpdateExistingTripHandlerTest {
       stopResolver,
       tripPatternCache
     );
-    resolver = new TripUpdateResolver(transitService);
+    resolver = new ExistingTripResolver(transitService);
     handler = new UpdateExistingTripHandler();
   }
 
-  private ResolvedTripUpdate resolve(ParsedTripUpdate parsedUpdate) {
+  private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
     var result = resolver.resolve(parsedUpdate, context);
     if (result.isFailure()) {
       throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -109,7 +109,7 @@ class UpdateExistingTripHandlerTest {
     return result.successValue();
   }
 
-  private Result<ResolvedTripUpdate, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+  private Result<ResolvedExistingTrip, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
     return resolver.resolve(parsedUpdate, context);
   }
 
@@ -422,7 +422,7 @@ class UpdateExistingTripHandlerTest {
     private TransitTestEnvironment stationEnv;
     private TransitEditorService stationTransitService;
     private TripUpdateApplierContext stationContext;
-    private TripUpdateResolver stationResolver;
+    private ExistingTripResolver stationResolver;
 
     @BeforeEach
     void setUpStationEnvironment() {
@@ -458,10 +458,10 @@ class UpdateExistingTripHandlerTest {
         stopResolver,
         tripPatternCache
       );
-      stationResolver = new TripUpdateResolver(stationTransitService);
+      stationResolver = new ExistingTripResolver(stationTransitService);
     }
 
-    private ResolvedTripUpdate resolveStation(ParsedTripUpdate parsedUpdate) {
+    private ResolvedExistingTrip resolveStation(ParsedTripUpdate parsedUpdate) {
       var result = stationResolver.resolve(parsedUpdate, stationContext);
       if (result.isFailure()) {
         throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
