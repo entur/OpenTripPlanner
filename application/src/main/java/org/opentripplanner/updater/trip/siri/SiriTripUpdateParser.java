@@ -385,6 +385,20 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withOperatorId(context.createId(journey.getOperatorRef().getValue()));
     }
 
+    // Extract replacement trip references
+    // VehicleJourneyRef indicates which trip this extra journey replaces
+    var vehicleJourneyRef = journey.getVehicleJourneyRef();
+    if (vehicleJourneyRef != null && vehicleJourneyRef.getValue() != null) {
+      builder.addReplacedTrip(context.createId(vehicleJourneyRef.getValue()));
+    }
+
+    // AdditionalVehicleJourneyReves contains additional trips being replaced
+    for (var ref : journey.getAdditionalVehicleJourneyReves()) {
+      if (ref != null && ref.getDatedVehicleJourneyRef() != null) {
+        builder.addReplacedTrip(context.createId(ref.getDatedVehicleJourneyRef()));
+      }
+    }
+
     builder.withWheelchairAccessibility(Accessibility.NO_INFORMATION);
     return builder.build();
   }
