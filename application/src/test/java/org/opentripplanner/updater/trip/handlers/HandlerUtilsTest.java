@@ -15,6 +15,7 @@ import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.trip.StopResolver;
+import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
@@ -69,7 +70,8 @@ class HandlerUtilsTest {
       stopUpdates,
       stopResolver,
       SERVICE_DATE,
-      ZONE_ID
+      ZONE_ID,
+      FirstLastStopTimeAdjustment.ADJUST
     );
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
@@ -123,7 +125,8 @@ class HandlerUtilsTest {
       stopUpdates,
       stopResolver,
       SERVICE_DATE,
-      ZONE_ID
+      ZONE_ID,
+      FirstLastStopTimeAdjustment.ADJUST
     );
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);

@@ -15,6 +15,7 @@ public final class TripUpdateOptions {
   private final StopReplacementConstraint stopReplacementConstraint;
   private final StopUpdateStrategy stopUpdateStrategy;
   private final RealTimeStateUpdateStrategy realTimeStateStrategy;
+  private final FirstLastStopTimeAdjustment firstLastStopTimeAdjustment;
 
   /**
    * @param forwardsPropagation How delays should be propagated to future stops
@@ -22,13 +23,15 @@ public final class TripUpdateOptions {
    * @param stopReplacementConstraint Constraint on which stops can replace scheduled stops
    * @param stopUpdateStrategy Strategy for matching stop updates to stops in the pattern
    * @param realTimeStateStrategy Strategy for determining RealTimeState of updated TripTimes
+   * @param firstLastStopTimeAdjustment Strategy for adjusting times at first/last stops
    */
   public TripUpdateOptions(
     ForwardsDelayPropagationType forwardsPropagation,
     BackwardsDelayPropagationType backwardsPropagation,
     StopReplacementConstraint stopReplacementConstraint,
     StopUpdateStrategy stopUpdateStrategy,
-    RealTimeStateUpdateStrategy realTimeStateStrategy
+    RealTimeStateUpdateStrategy realTimeStateStrategy,
+    FirstLastStopTimeAdjustment firstLastStopTimeAdjustment
   ) {
     this.forwardsPropagation = Objects.requireNonNull(
       forwardsPropagation,
@@ -50,12 +53,17 @@ public final class TripUpdateOptions {
       realTimeStateStrategy,
       "realTimeStateStrategy must not be null"
     );
+    this.firstLastStopTimeAdjustment = Objects.requireNonNull(
+      firstLastStopTimeAdjustment,
+      "firstLastStopTimeAdjustment must not be null"
+    );
   }
 
   /**
    * Returns default options for SIRI-ET updates.
    * SIRI provides explicit times for all stops, so no delay interpolation is needed.
    * Stop replacements are constrained to the same parent station (quay/platform changes).
+   * First/last stop times are adjusted to avoid negative dwell times.
    */
   public static TripUpdateOptions siriDefaults() {
     return new TripUpdateOptions(
@@ -63,7 +71,8 @@ public final class TripUpdateOptions {
       BackwardsDelayPropagationType.NONE,
       StopReplacementConstraint.SAME_PARENT_STATION,
       StopUpdateStrategy.FULL_UPDATE,
-      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE
+      RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE,
+      FirstLastStopTimeAdjustment.ADJUST
     );
   }
 
@@ -71,6 +80,7 @@ public final class TripUpdateOptions {
    * Returns default options for GTFS-RT updates.
    * GTFS-RT may need delay interpolation for stops without explicit times.
    * Stop replacements have no constraints (replacement trips can use any stops).
+   * First/last stop times are preserved as provided in the message.
    */
   public static TripUpdateOptions gtfsRtDefaults(
     ForwardsDelayPropagationType forwardsPropagation,
@@ -81,7 +91,8 @@ public final class TripUpdateOptions {
       backwardsPropagation,
       StopReplacementConstraint.ANY_STOP,
       StopUpdateStrategy.PARTIAL_UPDATE,
-      RealTimeStateUpdateStrategy.ALWAYS_UPDATED
+      RealTimeStateUpdateStrategy.ALWAYS_UPDATED,
+      FirstLastStopTimeAdjustment.PRESERVE
     );
   }
 
@@ -112,6 +123,10 @@ public final class TripUpdateOptions {
     return realTimeStateStrategy;
   }
 
+  public FirstLastStopTimeAdjustment firstLastStopTimeAdjustment() {
+    return firstLastStopTimeAdjustment;
+  }
+
   /**
    * Returns true if this configuration propagates delays (forward or backward).
    */
@@ -136,7 +151,8 @@ public final class TripUpdateOptions {
       backwardsPropagation == that.backwardsPropagation &&
       stopReplacementConstraint == that.stopReplacementConstraint &&
       stopUpdateStrategy == that.stopUpdateStrategy &&
-      realTimeStateStrategy == that.realTimeStateStrategy
+      realTimeStateStrategy == that.realTimeStateStrategy &&
+      firstLastStopTimeAdjustment == that.firstLastStopTimeAdjustment
     );
   }
 
@@ -147,7 +163,8 @@ public final class TripUpdateOptions {
       backwardsPropagation,
       stopReplacementConstraint,
       stopUpdateStrategy,
-      realTimeStateStrategy
+      realTimeStateStrategy,
+      firstLastStopTimeAdjustment
     );
   }
 
@@ -165,6 +182,8 @@ public final class TripUpdateOptions {
       stopUpdateStrategy +
       ", realTimeStateStrategy=" +
       realTimeStateStrategy +
+      ", firstLastStopTimeAdjustment=" +
+      firstLastStopTimeAdjustment +
       '}'
     );
   }
@@ -181,6 +200,8 @@ public final class TripUpdateOptions {
     private StopUpdateStrategy stopUpdateStrategy = StopUpdateStrategy.PARTIAL_UPDATE;
     private RealTimeStateUpdateStrategy realTimeStateStrategy =
       RealTimeStateUpdateStrategy.ALWAYS_UPDATED;
+    private FirstLastStopTimeAdjustment firstLastStopTimeAdjustment =
+      FirstLastStopTimeAdjustment.PRESERVE;
 
     public Builder withForwardsPropagation(ForwardsDelayPropagationType forwardsPropagation) {
       this.forwardsPropagation = forwardsPropagation;
@@ -209,13 +230,21 @@ public final class TripUpdateOptions {
       return this;
     }
 
+    public Builder withFirstLastStopTimeAdjustment(
+      FirstLastStopTimeAdjustment firstLastStopTimeAdjustment
+    ) {
+      this.firstLastStopTimeAdjustment = firstLastStopTimeAdjustment;
+      return this;
+    }
+
     public TripUpdateOptions build() {
       return new TripUpdateOptions(
         forwardsPropagation,
         backwardsPropagation,
         stopReplacementConstraint,
         stopUpdateStrategy,
-        realTimeStateStrategy
+        realTimeStateStrategy,
+        firstLastStopTimeAdjustment
       );
     }
   }
