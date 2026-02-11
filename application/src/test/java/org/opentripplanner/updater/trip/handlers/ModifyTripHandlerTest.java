@@ -14,6 +14,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
@@ -22,10 +23,12 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
+import org.opentripplanner.updater.trip.TripUpdateResolver;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -58,6 +61,7 @@ class ModifyTripHandlerTest {
     private TransitEditorService transitService;
     private TimetableSnapshotManager snapshotManager;
     private TripUpdateApplierContext context;
+    private TripUpdateResolver resolver;
     private ModifyTripHandler handler;
 
     @BeforeEach
@@ -96,7 +100,20 @@ class ModifyTripHandlerTest {
         stopResolver,
         tripPatternCache
       );
+      resolver = new TripUpdateResolver(transitService);
       handler = new ModifyTripHandler();
+    }
+
+    private ResolvedTripUpdate resolve(ParsedTripUpdate parsedUpdate) {
+      var result = resolver.resolve(parsedUpdate, context);
+      if (result.isFailure()) {
+        throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
+      }
+      return result.successValue();
+    }
+
+    private Result<ResolvedTripUpdate, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+      return resolver.resolve(parsedUpdate, context);
     }
 
     @Test
@@ -123,7 +140,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 3, 11 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -163,7 +180,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -207,7 +224,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopCUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -236,7 +253,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
       assertTrue(result.isSuccess());
 
       // Apply the update to the snapshot manager
@@ -274,10 +291,13 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
-
-      assertTrue(result.isFailure());
-      assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+      // Resolution should fail because trip not found
+      var resolveResult = resolveForTest(parsedUpdate);
+      assertTrue(resolveResult.isFailure());
+      assertEquals(
+        UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
+        resolveResult.failureValue().errorType()
+      );
     }
 
     @Test
@@ -299,12 +319,12 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
-
-      assertTrue(result.isFailure());
+      // Resolution should fail because trip not running on this date
+      var resolveResult = resolveForTest(parsedUpdate);
+      assertTrue(resolveResult.isFailure());
       assertEquals(
         UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE,
-        result.failureValue().errorType()
+        resolveResult.failureValue().errorType()
       );
     }
 
@@ -329,7 +349,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure());
       assertEquals(UpdateError.UpdateErrorType.UNKNOWN_STOP, result.failureValue().errorType());
@@ -355,7 +375,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure());
       assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
@@ -384,6 +404,7 @@ class ModifyTripHandlerTest {
     private TransitEditorService transitService;
     private TimetableSnapshotManager snapshotManager;
     private TripUpdateApplierContext context;
+    private TripUpdateResolver resolver;
     private ModifyTripHandler handler;
 
     @BeforeEach
@@ -425,7 +446,16 @@ class ModifyTripHandlerTest {
         stopResolver,
         tripPatternCache
       );
+      resolver = new TripUpdateResolver(transitService);
       handler = new ModifyTripHandler();
+    }
+
+    private ResolvedTripUpdate resolve(ParsedTripUpdate parsedUpdate) {
+      var result = resolver.resolve(parsedUpdate, context);
+      if (result.isFailure()) {
+        throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
+      }
+      return result.successValue();
     }
 
     @Test
@@ -451,7 +481,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -488,7 +518,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -517,7 +547,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopDUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure());
       assertEquals(
@@ -549,7 +579,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopDNonExtraUpdate)
         .build();
 
-      var result = handler.handle(parsedUpdate, context, transitService);
+      var result = handler.handle(resolve(parsedUpdate), context, transitService);
 
       assertTrue(result.isFailure());
       assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
