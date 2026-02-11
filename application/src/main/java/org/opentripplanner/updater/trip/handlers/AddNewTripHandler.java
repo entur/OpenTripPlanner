@@ -17,7 +17,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
-import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
@@ -25,7 +24,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
@@ -36,6 +35,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Handles adding new trips that are not in the schedule.
  * Maps to GTFS-RT NEW/ADDED and SIRI-ET extra journeys.
+ * <p>
+ * This handler receives a {@link ResolvedTripUpdate} which may contain:
+ * <ul>
+ *   <li>No trip (new trip creation)</li>
+ *   <li>Existing trip (update to previously added trip)</li>
+ * </ul>
  */
 public class AddNewTripHandler implements TripUpdateHandler {
 
@@ -43,46 +48,20 @@ public class AddNewTripHandler implements TripUpdateHandler {
 
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
-    ParsedTripUpdate parsedUpdate,
+    ResolvedTripUpdate resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
-    // Validate tripCreationInfo is present
-    var tripCreationInfo = parsedUpdate.tripCreationInfo();
-    if (tripCreationInfo == null) {
-      LOG.debug("ADD_TRIP: No trip creation info provided");
-      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
+    var tripCreationInfo = resolvedUpdate.tripCreationInfo();
+    LocalDate serviceDate = resolvedUpdate.serviceDate();
+
+    // Check if this is an update to an existing added trip
+    if (resolvedUpdate.hasTrip()) {
+      return updateExistingAddedTrip(resolvedUpdate, context, transitService);
     }
 
+    // Creating a new trip
     FeedScopedId tripId = tripCreationInfo.tripId();
-
-    // Check if trip already exists in scheduled data
-    if (transitService.getScheduledTrip(tripId) != null) {
-      LOG.debug("ADD_TRIP: Trip {} already exists in scheduled data", tripId);
-      return Result.failure(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_ALREADY_EXISTS)
-      );
-    }
-
-    // Resolve service date
-    var serviceDateResult = context.serviceDateResolver().resolveServiceDate(parsedUpdate);
-    if (serviceDateResult.isFailure()) {
-      return Result.failure(serviceDateResult.failureValue());
-    }
-    LocalDate serviceDate = serviceDateResult.successValue();
-
-    // Check if trip was already added in real-time (update rather than add)
-    Trip existingRealTimeTrip = transitService.getTrip(tripId);
-    if (existingRealTimeTrip != null) {
-      LOG.debug("ADD_TRIP: Trip {} already exists as real-time added trip, updating", tripId);
-      return updateExistingAddedTrip(
-        existingRealTimeTrip,
-        parsedUpdate,
-        serviceDate,
-        context,
-        transitService
-      );
-    }
 
     // Get or create service ID for this date
     FeedScopedId serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
@@ -94,10 +73,10 @@ public class AddNewTripHandler implements TripUpdateHandler {
     }
 
     // Filter stop time updates (GTFS-RT: filter unknown stops, SIRI: fail on unknown stops)
-    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
     var filtered = filterStopTimeUpdates(
       stopTimeUpdates,
-      parsedUpdate.options().unknownStopBehavior(),
+      resolvedUpdate.options().unknownStopBehavior(),
       context,
       tripId
     );
@@ -129,7 +108,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
       context.stopResolver(),
       serviceDate,
       context.timeZone(),
-      parsedUpdate.options().firstLastStopTimeAdjustment()
+      resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
     if (stopPatternResult.isFailure()) {
       return Result.failure(stopPatternResult.failureValue());
@@ -155,7 +134,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
     // For SIRI (INCLUDE), we add scheduled trip times so queries for aimed times work
     // For GTFS-RT (EXCLUDE), we don't add to scheduled timetable
     var tripPatternCache = context.tripPatternCache();
-    var options = parsedUpdate.options();
+    var options = resolvedUpdate.options();
     boolean includeScheduledData =
       options.scheduledDataInclusion() == ScheduledDataInclusion.INCLUDE;
 
@@ -184,7 +163,7 @@ public class AddNewTripHandler implements TripUpdateHandler {
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
     HandlerUtils.applyRealTimeUpdates(
-      parsedUpdate,
+      resolvedUpdate.parsedUpdate(),
       builder,
       filteredUpdates.updates(),
       serviceDate,
@@ -238,19 +217,23 @@ public class AddNewTripHandler implements TripUpdateHandler {
    * This is called when the same trip is added again (subsequent updates to an extra journey).
    */
   private Result<TripUpdateResult, UpdateError> updateExistingAddedTrip(
-    Trip existingTrip,
-    ParsedTripUpdate parsedUpdate,
-    LocalDate serviceDate,
+    ResolvedTripUpdate resolvedUpdate,
     TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
+    Trip existingTrip = resolvedUpdate.trip();
+    TripPattern existingPattern = resolvedUpdate.pattern();
+    var scheduledTripTimes = resolvedUpdate.scheduledTripTimes();
+    LocalDate serviceDate = resolvedUpdate.serviceDate();
     FeedScopedId tripId = existingTrip.getId();
 
+    LOG.debug("Updating existing added trip {} on {}", tripId, serviceDate);
+
     // Filter stop time updates
-    var stopTimeUpdates = parsedUpdate.stopTimeUpdates();
+    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
     var filtered = filterStopTimeUpdates(
       stopTimeUpdates,
-      parsedUpdate.options().unknownStopBehavior(),
+      resolvedUpdate.options().unknownStopBehavior(),
       context,
       tripId
     );
@@ -259,33 +242,10 @@ public class AddNewTripHandler implements TripUpdateHandler {
     }
     var filteredUpdates = filtered.successValue();
 
-    // Find the existing pattern for this trip
-    TripPattern existingPattern = transitService.findPattern(existingTrip, serviceDate);
-    if (existingPattern == null) {
-      existingPattern = transitService.findPattern(existingTrip);
-    }
-    if (existingPattern == null) {
-      LOG.warn("UPDATE_ADDED_TRIP: Could not find pattern for existing trip {}", tripId);
-      return Result.failure(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-      );
-    }
-
-    // Get the scheduled trip times from the pattern (for added trips, this is the original aimed times)
-    TripTimes scheduledTripTimes = existingPattern
-      .getScheduledTimetable()
-      .getTripTimes(existingTrip);
-    if (scheduledTripTimes == null) {
-      LOG.warn("UPDATE_ADDED_TRIP: Could not find scheduled trip times for trip {}", tripId);
-      return Result.failure(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-      );
-    }
-
     // Create real-time trip times from the scheduled times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
     HandlerUtils.applyRealTimeUpdates(
-      parsedUpdate,
+      resolvedUpdate.parsedUpdate(),
       builder,
       filteredUpdates.updates(),
       serviceDate,
