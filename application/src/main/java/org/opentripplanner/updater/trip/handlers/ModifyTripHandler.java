@@ -134,7 +134,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
 
     // Apply real-time updates
     HandlerUtils.applyRealTimeUpdates(
-      resolvedUpdate.parsedUpdate(),
+      resolvedUpdate.tripCreationInfo(),
       builder,
       stopTimeUpdates,
       serviceDate,
