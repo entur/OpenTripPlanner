@@ -7,7 +7,6 @@ import static org.opentripplanner.ext.fares.service.gtfs.v2.custom.OregonHopFare
 import static org.opentripplanner.ext.fares.service.gtfs.v2.custom.OregonHopFareFactory.LG_TRIMET_TRIMET;
 import static org.opentripplanner.ext.fares.service.gtfs.v2.custom.OregonHopFareFactory.MEDIUM_HOP_FASTPASS;
 import static org.opentripplanner.ext.fares.service.gtfs.v2.custom.OregonHopFareFactory.TRIMET_ADULT_SINGLE_RIDE;
-import static org.opentripplanner.ext.fares.service.gtfs.v2.custom.OregonHopFareFactory.TRIMET_TO_CTRAN_YOUTH_TRANSFER;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.util.List;
@@ -39,12 +38,6 @@ class OregonHopFareFactoryTest implements FareTestConstants {
     ADULT_REGIONAL_SINGLE_RIDE,
     "regular",
     Money.usDollars(5)
-  ).build();
-
-  private static final FareProduct FP_CTRAN_YOUTH = FareProduct.of(
-    TRIMET_TO_CTRAN_YOUTH_TRANSFER,
-    "youth transfer",
-    Money.usDollars(2)
   ).build();
 
   private static final FareProduct FP_TRIMET_TO_CTRAN_TRANSFER = FareProduct.of(
@@ -102,8 +95,7 @@ class OregonHopFareFactoryTest implements FareTestConstants {
           FareLegRule.of(id("ctran-regional"), FP_CTRAN_REGIONAL)
             .withLegGroupId(LG_CTRAN_REGIONAL)
             .withNetworkId(NETWORK_CTRAN)
-            .build(),
-          FareLegRule.of(id("youth"), FP_CTRAN_YOUTH).withLegGroupId(id("youth-leg")).build()
+            .build()
         )
       );
 

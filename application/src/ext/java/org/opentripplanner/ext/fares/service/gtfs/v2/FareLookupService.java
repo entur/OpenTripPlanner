@@ -85,14 +85,13 @@ class FareLookupService implements Serializable {
     if (legs.size() < 2) {
       return Set.of();
     }
-    var x = this.transferRules.stream()
+    return this.transferRules.stream()
       .filter(FareTransferRule::unlimitedTransfers)
       .filter(FareTransferRule::isFree)
       .filter(r -> TimeLimitEvaluator.withinTimeLimit(r, legs.getFirst(), legs.getLast()))
       .flatMap(r -> findTransferMatches(r, legs).stream())
       .filter(transferMatch -> appliesToAllLegs(legs, transferMatch))
-      .toList();
-    return x
+      .toList()
       .stream()
       .flatMap(transferRule -> transferRule.fromLegRule().fareProducts().stream())
       .collect(Collectors.toUnmodifiableSet());

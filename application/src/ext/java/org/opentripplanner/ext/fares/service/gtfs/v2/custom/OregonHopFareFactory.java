@@ -61,18 +61,18 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
     DefaultFareService fareService = new DefaultFareService();
     fareService.addFareRules(FareType.regular, regularFareRules.values());
 
-    final Money ADULT_TRIMET = findFareProduct(TRIMET_ADULT_SINGLE_RIDE).price();
-    final Money REDUCED_TRIMET = findFareProduct(TRIMET_HC_SINGLE_RIDE).price();
-    final Money ADULT_STREETCAR = findFareProduct(STREETCAR_ADULT_SINGLE_RIDE).price();
-    final Money REDUCED_STREETCAR = findFareProduct(STREETCAR_HC_SINGLE_RIDE).price();
+    final Money ADULT_TRIMET = findFareProduct(TRIMET_ADULT_SINGLE_RIDE);
+    final Money REDUCED_TRIMET = findFareProduct(TRIMET_HC_SINGLE_RIDE);
+    final Money ADULT_STREETCAR = findFareProduct(STREETCAR_ADULT_SINGLE_RIDE);
+    final Money REDUCED_STREETCAR = findFareProduct(STREETCAR_HC_SINGLE_RIDE);
 
-    final Money CTRAN_EXP = findFareProduct(ADULT_EXPRESS_SINGLE_RIDE).price();
+    final Money CTRAN_EXP = findFareProduct(ADULT_EXPRESS_SINGLE_RIDE);
 
-    final Money ADULT_CTRAN_REGIONAL = findFareProduct(ADULT_REGIONAL_SINGLE_RIDE).price();
-    final Money REDUCED_CTRAN_REGIONAL = findFareProduct(HC_REGIONAL_SINGLE_RIDE).price();
+    final Money ADULT_CTRAN_REGIONAL = findFareProduct(ADULT_REGIONAL_SINGLE_RIDE);
+    final Money REDUCED_CTRAN_REGIONAL = findFareProduct(HC_REGIONAL_SINGLE_RIDE);
 
-    final Money ADULT_CTRAN_LOCAL = findFareProduct(ADULT_LOCAL_SINGLE_RIDE).price();
-    final Money REDUCED_CTRAN_LOCAL = findFareProduct(HC_LOCAL_SINGLE_RIDE).price();
+    final Money ADULT_CTRAN_LOCAL = findFareProduct(ADULT_LOCAL_SINGLE_RIDE);
+    final Money REDUCED_CTRAN_LOCAL = findFareProduct(HC_LOCAL_SINGLE_RIDE);
 
     // TODO: Senior discounted express upcharge during the mornings
     // Handle senior off-peak fares
@@ -447,7 +447,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
    * @param fareProductId The fare product to find
    * @return              The fare product from the GTFS, or a generated $0 fare product.
    */
-  private FareProduct findFareProduct(FeedScopedId fareProductId) {
+  private Money findFareProduct(FeedScopedId fareProductId) {
     Optional<FareLegRule> potentialRuleMatch = this.fareLegRules.stream()
       .filter(f ->
         f
@@ -465,7 +465,8 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
           .filter(fp -> fp.id().equals(fareProductId))
           .findFirst()
       )
-      .orElse(FareProduct.of(fareProductId, "Could not find fare in data", Money.ZERO_USD).build());
+      .map(FareProduct::price)
+      .orElse(Money.ZERO_USD);
   }
 
   /**
