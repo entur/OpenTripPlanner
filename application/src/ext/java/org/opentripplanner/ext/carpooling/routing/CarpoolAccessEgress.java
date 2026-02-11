@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.carpooling.routing;
 
 import org.opentripplanner.framework.model.TimeAndCost;
+import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.street.search.state.State;
@@ -19,15 +20,27 @@ public class CarpoolAccessEgress extends DefaultAccessEgress {
 
   @Override
   public int earliestDepartureTime(int requestedDepartureTime) {
+    if(requestedDepartureTime > startOfTrip){
+      return RaptorConstants.TIME_NOT_SET;
+    }
     return startOfTrip;
   }
 
   @Override
   public int latestArrivalTime(int requestedArrivalTime) {
+    if(requestedArrivalTime < endOfTrip){
+      return RaptorConstants.TIME_NOT_SET;
+    }
     return endOfTrip;
+  }
+
+  @Override
+  public boolean hasOpeningHours() {
+    return true;
   }
 
 
   public int getStartOfTrip() {return startOfTrip;}
   public int getEndOfTrip() {return endOfTrip;}
 }
+
