@@ -6,12 +6,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.routing.util.elevation.ToblersHikingFunction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class ElevationUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ElevationUtils.class);
 
   /*
    * These numbers disagree with everything else I (David Turner) have read about the energy cost
@@ -35,7 +31,7 @@ public class ElevationUtils {
     MAX_SLOPE_WALK_EFFECTIVE_LENGTH_FACTOR
   );
   /** constants for slope computation */
-  static final double[] TX = {
+  private static final double[] TX = {
     0.0000000000000000E+00,
     0.0000000000000000E+00,
     0.0000000000000000E+00,
@@ -44,7 +40,7 @@ public class ElevationUtils {
     5.0000000000000000E+03,
     5.0000000000000000E+03,
   };
-  static final double[] TY = {
+  private static final double[] TY = {
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
@@ -56,7 +52,7 @@ public class ElevationUtils {
     3.4999999999999998E-01,
     3.4999999999999998E-01,
   };
-  static final double[] COEFF = {
+  private static final double[] COEFF = {
     4.3843513168660255E+00,
     3.6904323727375652E+00,
     1.6791850199667697E+00,
@@ -161,7 +157,89 @@ public class ElevationUtils {
     );
   }
 
-  public static double slopeSpeedCoefficient(double slope, double altitude) {
+  public static PackedCoordinateSequence getPartialElevationProfile(
+    PackedCoordinateSequence elevationProfile,
+    double start,
+    double end
+  ) {
+    if (elevationProfile == null) {
+      return null;
+    }
+
+    if (start < 0) {
+      start = 0;
+    }
+
+    Coordinate[] coordinateArray = elevationProfile.toCoordinateArray();
+    double length = coordinateArray[coordinateArray.length - 1].x;
+    if (end > length) {
+      end = length;
+    }
+
+    double newLength = end - start;
+
+    boolean started = false;
+    Coordinate lastCoord = null;
+    List<Coordinate> coordList = new LinkedList<>();
+    for (Coordinate coord : coordinateArray) {
+      if (coord.x >= start && !started) {
+        started = true;
+
+        if (lastCoord != null) {
+          double run = coord.x - lastCoord.x;
+          double p = (start - lastCoord.x) / run;
+          double rise = coord.y - lastCoord.y;
+          double newX = lastCoord.x + p * run - start;
+          double newY = lastCoord.y + p * rise;
+
+          if (p > 0 && p < 1) {
+            coordList.add(new Coordinate(newX, newY));
+          }
+        }
+      }
+
+      if (started && coord.x >= start && coord.x <= end) {
+        coordList.add(new Coordinate(coord.x - start, coord.y));
+      }
+
+      if (started && coord.x >= end) {
+        if (lastCoord != null && lastCoord.x < end && coord.x > end) {
+          double run = coord.x - lastCoord.x;
+          // interpolate end coordinate
+          double p = (end - lastCoord.x) / run;
+          double rise = coord.y - lastCoord.y;
+          double newY = lastCoord.y + p * rise;
+          coordList.add(new Coordinate(newLength, newY));
+        }
+        break;
+      }
+
+      lastCoord = coord;
+    }
+
+    if (coordList.size() < 2) {
+      return null;
+    }
+
+    Coordinate[] coordArr = new Coordinate[coordList.size()];
+    return new PackedCoordinateSequence.Float(coordList.toArray(coordArr), 2);
+  }
+
+  /**
+   * <p>
+   * We use the Tobler function {@link ToblersHikingFunction} to calculate this.
+   * </p>
+   * <p>
+   * When testing this we get good results in general, but for some edges the elevation profile is
+   * not accurate. A (serpentine) road is usually build with a constant slope, but the elevation
+   * profile in OTP is not as smooth, resulting in an extra penalty for these roads.
+   * </p>
+   */
+  static double calculateEffectiveWalkLength(double run, double rise) {
+    return run * TOBLER_WALKING_FUNCTION.calculateHorizontalWalkingDistanceMultiplier(run, rise);
+  }
+
+  private static double slopeSpeedCoefficient(double slope, double altitude) {
     /*
      * computed by asking ZunZun for a quadratic b-spline approximating some values from
      * http://www.analyticcycling.com/ForcesSpeed_Page.html fixme: should clamp to local speed
@@ -370,105 +448,6 @@ public class ElevationUtils {
     }
 
     return temp;
-  }
-
-  public static PackedCoordinateSequence getPartialElevationProfile(
-    PackedCoordinateSequence elevationProfile,
-    double start,
-    double end
-  ) {
-    if (elevationProfile == null) {
-      return null;
-    }
-
-    if (start < 0) {
-      start = 0;
-    }
-
-    Coordinate[] coordinateArray = elevationProfile.toCoordinateArray();
-    double length = coordinateArray[coordinateArray.length - 1].x;
-    if (end > length) {
-      end = length;
-    }
-
-    double newLength = end - start;
-
-    boolean started = false;
-    Coordinate lastCoord = null;
-    List<Coordinate> coordList = new LinkedList<>();
-    for (Coordinate coord : coordinateArray) {
-      if (coord.x >= start && !started) {
-        started = true;
-
-        if (lastCoord != null) {
-          double run = coord.x - lastCoord.x;
-          double p = (start - lastCoord.x) / run;
-          double rise = coord.y - lastCoord.y;
-          double newX = lastCoord.x + p * run - start;
-          double newY = lastCoord.y + p * rise;
-
-          if (p > 0 && p < 1) {
-            coordList.add(new Coordinate(newX, newY));
-          }
-        }
-      }
-
-      if (started && coord.x >= start && coord.x <= end) {
-        coordList.add(new Coordinate(coord.x - start, coord.y));
-      }
-
-      if (started && coord.x >= end) {
-        if (lastCoord != null && lastCoord.x < end && coord.x > end) {
-          double run = coord.x - lastCoord.x;
-          // interpolate end coordinate
-          double p = (end - lastCoord.x) / run;
-          double rise = coord.y - lastCoord.y;
-          double newY = lastCoord.y + p * rise;
-          coordList.add(new Coordinate(newLength, newY));
-        }
-        break;
-      }
-
-      lastCoord = coord;
-    }
-
-    if (coordList.size() < 2) {
-      return null;
-    }
-
-    Coordinate[] coordArr = new Coordinate[coordList.size()];
-    return new PackedCoordinateSequence.Float(coordList.toArray(coordArr), 2);
-  }
-
-  /** checks for units (m/ft) in an OSM ele tag value, and returns the value in meters */
-  public static Double parseEleTag(String ele) {
-    ele = ele.toLowerCase();
-    double unit = 1;
-    if (ele.endsWith("m")) {
-      ele = ele.replaceFirst("\\s*m", "");
-    } else if (ele.endsWith("ft")) {
-      ele = ele.replaceFirst("\\s*ft", "");
-      unit = 0.3048;
-    }
-    try {
-      return Double.parseDouble(ele) * unit;
-    } catch (NumberFormatException e) {
-      return null;
-    }
-  }
-
-  /**
-   * <p>
-   * We use the Tobler function {@link ToblersHikingFunction} to calculate this.
-   * </p>
-   * <p>
-   * When testing this we get good results in general, but for some edges the elevation profile is
-   * not accurate. A (serpentine) road is usually build with a constant slope, but the elevation
-   * profile in OTP is not as smooth, resulting in an extra penalty for these roads.
-   * </p>
-   */
-  static double calculateEffectiveWalkLength(double run, double rise) {
-    return run * TOBLER_WALKING_FUNCTION.calculateHorizontalWalkingDistanceMultiplier(run, rise);
   }
 
   private static double[] getLengthsFromElevation(CoordinateSequence elev) {

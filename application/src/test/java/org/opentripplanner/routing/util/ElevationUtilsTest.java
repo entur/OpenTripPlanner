@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequenceFactory;
 
-public class TestElevationUtils {
+public class ElevationUtilsTest {
 
   @Test
   public void testLengthMultiplier() {
