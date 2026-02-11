@@ -53,7 +53,7 @@ configuration:
   apiProcessingTimeout: "20s"
   carpooling: false
   emission: true
-  empiricalDelay: false
+  empiricalDelay: true
   flexRouting: true
   floatingBike: true
   gtfsGraphQlApi: false
