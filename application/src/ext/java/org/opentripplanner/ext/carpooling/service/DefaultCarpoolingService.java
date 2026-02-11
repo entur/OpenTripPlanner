@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.carpooling.service;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,7 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
+import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
@@ -19,21 +18,17 @@ import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
-import org.opentripplanner.ext.carpooling.routing.CarpoolTripInsertions;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
 import org.opentripplanner.ext.carpooling.routing.InsertionEvaluator;
 import org.opentripplanner.ext.carpooling.routing.InsertionPosition;
 import org.opentripplanner.ext.carpooling.routing.InsertionPositionFinder;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
-import org.opentripplanner.ext.flex.FlexAccessEgress;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.graph_builder.module.nearbystops.StopResolver;
 import org.opentripplanner.graph_builder.module.nearbystops.StreetNearbyStopFinder;
 import org.opentripplanner.model.plan.Itinerary;
-import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultAccessEgress;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
@@ -45,16 +40,16 @@ import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinker;
-import org.opentripplanner.street.search.StreetSearchBuilder;
-import org.opentripplanner.street.search.strategy.DominanceFunctions;
-import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.utils.collection.Pair;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.opentripplanner.street.model.edge.Edge;
+import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.state.State;
+
 
 /**
  * Default implementation of {@link CarpoolingService} that orchestrates the two-phase
@@ -99,6 +94,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCarpoolingService.class);
   private static final int DEFAULT_MAX_CARPOOL_RESULTS = 3;
   private static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(30);
+  /*
+    The time it takes to pick up or dropp off a passenger and start driving again. This might be baked into Siri,
+    and is a temporary solution. But it seems smart to for now have an estimate of 1 minute so this issue
+    is not forgotten.
+   */
+  private static final Duration CARPOOL_STOP_DURATION = Duration.ofMinutes(1);
 
   private final CarpoolingRepository repository;
   private final StreetLimitationParametersService streetLimitationParametersService;
@@ -249,37 +250,40 @@ public class DefaultCarpoolingService implements CarpoolingService {
     return itineraries;
   }
 
-  public CarpoolAccessEgress mapFlexAccessEgresses(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType, ZonedDateTime transitSearchTimeZero) {
-
-    // THIS ONLY WORKS IF THERE ARE NO OTHER PASSENGERS, CHANGE
-    var position = insertionCandidate.dropoffPosition() - 1;
-
-    var segmentsBeforeFlexSegment = insertionCandidate.routeSegments().subList(0, position);
-    // WE SHOULD ADD AN CONSTANT HERE FOR HOWEVER LONG IT TAKES TO PICK A NEW PASSENGER, MINUTE PERHAPS
-    // THIS ALSO NEED TO BE TAKEN INTO ACCOUNT AT OTHER PLACES, LIKE WHEN EVALUATING VALID INSERTIONS
-    var durationBeforeFlexSegment = segmentsBeforeFlexSegment.stream().map(
+  private Duration getTotalDurationOfSegments(List<GraphPath<State, Edge, Vertex>> segments, Duration extraTimeForStop){
+    return segments.stream().map(
       it -> Duration.between(
         it.states.getFirst().getTime(), it.states.getLast().getTime()
       )
-    ).reduce(Duration.ZERO, Duration::plus);
+    ).reduce(Duration.ZERO, Duration::plus).plus(
+      extraTimeForStop.multipliedBy(segments.size() - 1)
+    );
+  }
 
-    var segment = insertionCandidate.routeSegments().get(position);
+  public CarpoolAccessEgress createCarpoolAccessEgress(InsertionCandidate insertionCandidate, AccessEgressType accessEgressType, ZonedDateTime transitSearchTimeZero) {
 
-    var lastState = segment.states.getLast();
+    var pickUpIndex = insertionCandidate.pickupPosition();
+    var dropOffIndex = insertionCandidate.dropoffPosition() - 1;
 
-    var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationBeforeFlexSegment);
+    var segmentsBeforeInsertion = insertionCandidate.routeSegments().subList(0, pickUpIndex);
+    var segmentsWithPassenger = insertionCandidate.routeSegments().subList(pickUpIndex, dropOffIndex + 1);
+    var durationBeforeInsertion = getTotalDurationOfSegments(segmentsBeforeInsertion, CARPOOL_STOP_DURATION);
+    var durationWithPassenger = getTotalDurationOfSegments(segmentsWithPassenger, CARPOOL_STOP_DURATION);
 
-    // THIS ONLY WORKS IF THERE ARE NO OTHER PASSENGERS, CHANGE
-    var endTimeOfSegment = startTimeOfSegment.plusSeconds(segment.getEndTime() - segment.getStartTime());
+    var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationBeforeInsertion);
+    var endTimeOfSegment = startTimeOfSegment.plus(durationWithPassenger);
 
     var relativeStartTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, startTimeOfSegment.toInstant());
     var relativeEndTime = TimeUtils.toTransitTimeSeconds(transitSearchTimeZero, endTimeOfSegment.toInstant());
 
     var accessEgress = new CarpoolAccessEgress(
       insertionCandidate.transitStop().stop.getIndex(),
-      lastState,
+      durationWithPassenger,
+      CARPOOL_STOP_DURATION,
       relativeStartTime,
-      relativeEndTime
+      relativeEndTime,
+      segmentsWithPassenger,
+      TimeAndCost.ZERO
     );
 
     return accessEgress;
@@ -382,7 +386,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
 
       var accessEgresses = insertionCandidates.stream().map(it ->
-        mapFlexAccessEgresses(it, accessOrEgress, transitSearchTimeZero)
+        createCarpoolAccessEgress(it, accessOrEgress, transitSearchTimeZero)
       ).toList();
        return accessEgresses;
 
