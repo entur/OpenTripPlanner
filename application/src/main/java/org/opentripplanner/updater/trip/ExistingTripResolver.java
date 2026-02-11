@@ -12,6 +12,7 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +101,13 @@ public class ExistingTripResolver {
     // Resolve TripOnServiceDate if available
     TripOnServiceDate tripOnServiceDate = resolveTripOnServiceDate(tripReference, context);
 
+    // Resolve stop time updates now that service date is known
+    var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
+      parsedUpdate.stopTimeUpdates(),
+      serviceDate,
+      context.timeZone()
+    );
+
     return Result.success(
       new ResolvedExistingTrip(
         parsedUpdate,
@@ -108,7 +116,8 @@ public class ExistingTripResolver {
         pattern,
         scheduledPattern,
         tripTimes,
-        tripOnServiceDate
+        tripOnServiceDate,
+        resolvedStopTimeUpdates
       )
     );
   }

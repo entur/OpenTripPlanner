@@ -25,6 +25,7 @@ public final class ResolvedExistingTrip {
   private final TripPattern pattern;
   private final TripPattern scheduledPattern;
   private final TripTimes scheduledTripTimes;
+  private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
   @Nullable
   private final TripOnServiceDate tripOnServiceDate;
@@ -36,7 +37,8 @@ public final class ResolvedExistingTrip {
     TripPattern pattern,
     TripPattern scheduledPattern,
     TripTimes scheduledTripTimes,
-    @Nullable TripOnServiceDate tripOnServiceDate
+    @Nullable TripOnServiceDate tripOnServiceDate,
+    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
     this.parsedUpdate = Objects.requireNonNull(parsedUpdate, "parsedUpdate must not be null");
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
@@ -51,6 +53,10 @@ public final class ResolvedExistingTrip {
       "scheduledTripTimes must not be null"
     );
     this.tripOnServiceDate = tripOnServiceDate;
+    this.resolvedStopTimeUpdates = Objects.requireNonNull(
+      resolvedStopTimeUpdates,
+      "resolvedStopTimeUpdates must not be null"
+    );
   }
 
   // ========== Resolved data accessors ==========
@@ -99,8 +105,8 @@ public final class ResolvedExistingTrip {
     return parsedUpdate.options();
   }
 
-  public List<ParsedStopTimeUpdate> stopTimeUpdates() {
-    return parsedUpdate.stopTimeUpdates();
+  public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
+    return resolvedStopTimeUpdates;
   }
 
   @Nullable
