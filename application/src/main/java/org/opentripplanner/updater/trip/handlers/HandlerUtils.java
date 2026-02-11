@@ -13,7 +13,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -81,15 +80,13 @@ public final class HandlerUtils {
    * This creates stop times with scheduled times from the updates.
    *
    * @param trip The trip being modified or created
-   * @param stopTimeUpdates The resolved stop time updates
-   * @param stopResolver Resolver to look up stops
+   * @param stopTimeUpdates The resolved stop time updates (with pre-resolved stops)
    * @param firstLastAdjustment Strategy for adjusting first/last stop times
    * @return Result containing stop times and pattern, or error if stops cannot be resolved
    */
   public static Result<StopTimesAndPattern, UpdateError> buildNewStopPattern(
     Trip trip,
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
-    StopResolver stopResolver,
     FirstLastStopTimeAdjustment firstLastAdjustment
   ) {
     var stopTimes = new ArrayList<StopTime>();
@@ -97,8 +94,8 @@ public final class HandlerUtils {
     for (int i = 0; i < stopTimeUpdates.size(); i++) {
       var stopUpdate = stopTimeUpdates.get(i);
 
-      // Resolve the stop
-      StopLocation stop = stopResolver.resolve(stopUpdate.stopReference());
+      // Use the pre-resolved stop
+      StopLocation stop = stopUpdate.stop();
       if (stop == null) {
         LOG.debug("Unknown stop in pattern: {}", stopUpdate.stopReference());
         return Result.failure(
