@@ -240,7 +240,7 @@ class ModifyTripHandlerTest {
       assertTrue(result.isSuccess());
 
       // Apply the update to the snapshot manager
-      snapshotManager.updateBuffer(result.successValue());
+      snapshotManager.updateBuffer(result.successValue().realTimeTripUpdate());
       snapshotManager.purgeAndCommit();
 
       // Get the original pattern and verify the trip is DELETED there
