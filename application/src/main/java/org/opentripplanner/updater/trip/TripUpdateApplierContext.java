@@ -2,7 +2,10 @@ package org.opentripplanner.updater.trip;
 
 import java.time.ZoneId;
 import java.util.Objects;
+import java.util.function.Function;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 
 /**
@@ -28,6 +31,9 @@ public final class TripUpdateApplierContext {
 
   @Nullable
   private final FuzzyTripMatcher fuzzyTripMatcher;
+
+  @Nullable
+  private final java.util.function.Function<FeedScopedId, Route> routeCache;
 
   /**
    * @param feedId The feed ID for this update source
@@ -79,6 +85,41 @@ public final class TripUpdateApplierContext {
     SiriTripPatternCache tripPatternCache,
     @Nullable FuzzyTripMatcher fuzzyTripMatcher
   ) {
+    this(
+      feedId,
+      timeZone,
+      snapshotManager,
+      tripResolver,
+      serviceDateResolver,
+      stopResolver,
+      tripPatternCache,
+      fuzzyTripMatcher,
+      null
+    );
+  }
+
+  /**
+   * @param feedId The feed ID for this update source
+   * @param timeZone The timezone for this feed
+   * @param snapshotManager The timetable snapshot manager for accessing and updating trip data
+   * @param tripResolver The resolver for looking up trips from trip references
+   * @param serviceDateResolver The resolver for extracting service dates from trip updates
+   * @param stopResolver The resolver for looking up stops from stop references
+   * @param tripPatternCache The cache for creating and reusing modified trip patterns
+   * @param fuzzyTripMatcher The fuzzy matcher for finding trips when exact match fails (may be null)
+   * @param routeCache Optional route cache for looking up previously created routes
+   */
+  public TripUpdateApplierContext(
+    String feedId,
+    ZoneId timeZone,
+    @Nullable TimetableSnapshotManager snapshotManager,
+    TripResolver tripResolver,
+    ServiceDateResolver serviceDateResolver,
+    StopResolver stopResolver,
+    SiriTripPatternCache tripPatternCache,
+    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
+    @Nullable Function<FeedScopedId, Route> routeCache
+  ) {
     this.feedId = Objects.requireNonNull(feedId, "feedId must not be null");
     this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
     this.snapshotManager = snapshotManager;
@@ -93,6 +134,7 @@ public final class TripUpdateApplierContext {
       "tripPatternCache must not be null"
     );
     this.fuzzyTripMatcher = fuzzyTripMatcher;
+    this.routeCache = routeCache;
   }
 
   public String feedId() {
@@ -129,6 +171,11 @@ public final class TripUpdateApplierContext {
     return fuzzyTripMatcher;
   }
 
+  @Nullable
+  public Function<FeedScopedId, Route> routeCache() {
+    return routeCache;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -146,7 +193,8 @@ public final class TripUpdateApplierContext {
       Objects.equals(serviceDateResolver, that.serviceDateResolver) &&
       Objects.equals(stopResolver, that.stopResolver) &&
       Objects.equals(tripPatternCache, that.tripPatternCache) &&
-      Objects.equals(fuzzyTripMatcher, that.fuzzyTripMatcher)
+      Objects.equals(fuzzyTripMatcher, that.fuzzyTripMatcher) &&
+      Objects.equals(routeCache, that.routeCache)
     );
   }
 
@@ -160,7 +208,8 @@ public final class TripUpdateApplierContext {
       serviceDateResolver,
       stopResolver,
       tripPatternCache,
-      fuzzyTripMatcher
+      fuzzyTripMatcher,
+      routeCache
     );
   }
 

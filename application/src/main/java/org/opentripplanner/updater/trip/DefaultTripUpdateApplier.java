@@ -2,7 +2,6 @@ package org.opentripplanner.updater.trip;
 
 import java.util.Objects;
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
@@ -10,6 +9,7 @@ import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
 import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
+import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.slf4j.Logger;
@@ -67,7 +67,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   }
 
   @Override
-  public Result<RealTimeTripUpdate, UpdateError> apply(
+  public Result<TripUpdateResult, UpdateError> apply(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   ) {

@@ -21,6 +21,17 @@ class GtfsRtTripUpdateParserTest {
 
   private static final String FEED_ID = "TEST";
   private static final LocalDate TEST_DATE = LocalDate.of(2024, 1, 15);
+  private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
+  // Midnight on TEST_DATE in TIME_ZONE as Unix epoch seconds
+  private static final long MIDNIGHT_EPOCH = TEST_DATE.atStartOfDay(TIME_ZONE).toEpochSecond();
+  // 8:30 AM (30600 seconds since midnight) as Unix epoch
+  private static final long TIME_0830 = MIDNIGHT_EPOCH + 30600;
+  // 8:31 AM (30660 seconds since midnight) as Unix epoch
+  private static final long TIME_0831 = MIDNIGHT_EPOCH + 30660;
+  // 8:20 AM (30000 seconds since midnight) for scheduled time
+  private static final long TIME_0820 = MIDNIGHT_EPOCH + 30000;
+  // 8:21 AM (30060 seconds since midnight) for scheduled time
+  private static final long TIME_0821 = MIDNIGHT_EPOCH + 30060;
   private GtfsRtTripUpdateParser parser;
   private TripUpdateParserContext context;
 
@@ -30,7 +41,7 @@ class GtfsRtTripUpdateParserTest {
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.ALWAYS
     );
-    context = new TripUpdateParserContext(FEED_ID, ZoneId.of("America/New_York"), () -> TEST_DATE);
+    context = new TripUpdateParserContext(FEED_ID, TIME_ZONE, () -> TEST_DATE);
   }
 
   @Test
@@ -128,8 +139,8 @@ class GtfsRtTripUpdateParserTest {
         GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
           .setStopId("stop1")
           .setStopSequence(0)
-          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(30600))
-          .setDeparture(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(30660))
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0830))
+          .setDeparture(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0831))
       )
       .build();
 
@@ -262,7 +273,7 @@ class GtfsRtTripUpdateParserTest {
       .addStopTimeUpdate(
         GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
           .setStopId("stop1")
-          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(30600))
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0830))
       )
       .build();
 
@@ -430,13 +441,13 @@ class GtfsRtTripUpdateParserTest {
           .setStopSequence(0)
           .setArrival(
             GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder()
-              .setTime(30600)
-              .setScheduledTime(30000)
+              .setTime(TIME_0830)
+              .setScheduledTime(TIME_0820)
           )
           .setDeparture(
             GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder()
-              .setTime(30660)
-              .setScheduledTime(30060)
+              .setTime(TIME_0831)
+              .setScheduledTime(TIME_0821)
           )
       )
       .build();

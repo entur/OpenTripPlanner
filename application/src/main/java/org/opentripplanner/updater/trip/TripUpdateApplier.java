@@ -1,8 +1,8 @@
 package org.opentripplanner.updater.trip;
 
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 
 /**
@@ -24,9 +24,9 @@ public interface TripUpdateApplier {
    *
    * @param parsedUpdate The format-independent parsed update
    * @param context      Application context containing snapshot manager and other resources
-   * @return Result containing the RealTimeTripUpdate for the snapshot manager, or an error
+   * @return Result containing the TripUpdateResult (with RealTimeTripUpdate and warnings), or an error
    */
-  Result<RealTimeTripUpdate, UpdateError> apply(
+  Result<TripUpdateResult, UpdateError> apply(
     ParsedTripUpdate parsedUpdate,
     TripUpdateApplierContext context
   );
