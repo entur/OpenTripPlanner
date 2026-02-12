@@ -1,6 +1,6 @@
 otpFeatures:
   emission: true
-  empiricalDelay: false
+  empiricalDelay: true
   gbfsGeofencingBuildTime: false
 journeyPlanner:
   enabled: false
