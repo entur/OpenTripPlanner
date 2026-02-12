@@ -86,6 +86,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Change `@timingData` annotations in GTFS GraphQL API [#7261](https://github.com/opentripplanner/OpenTripPlanner/pull/7261)
 - Account for DST and multi-day trips in departure boards [#7250](https://github.com/opentripplanner/OpenTripPlanner/pull/7250)
 - Add publiccode.yml for OpenTripPlanner [#7212](https://github.com/opentripplanner/OpenTripPlanner/pull/7212)
+- Expose boolean extraCall field on EstimatedCall in Transmodel API [#7272](https://github.com/opentripplanner/OpenTripPlanner/pull/7272)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
