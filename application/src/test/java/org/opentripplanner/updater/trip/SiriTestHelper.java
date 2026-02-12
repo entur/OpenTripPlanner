@@ -23,8 +23,8 @@ public class SiriTestHelper {
     this.transitTestEnvironment = transitTestEnvironment;
     this.siriAdapter = new SiriNewTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
-      DeduplicatorService.NOOP,
-      transitTestEnvironment.timetableSnapshotManager()
+      transitTestEnvironment.timetableSnapshotManager(),
+      transitTestEnvironment.feedId()
     );
   }
 
