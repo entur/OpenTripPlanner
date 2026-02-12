@@ -365,7 +365,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
       );
 
       var candidateTripsWithViableStopsAndPositions = candidateTrips.stream().map(candidateTrip -> {
-        var viableSegmentInsertions = nearByStops.stream().map(nearbyStop -> {
+        var viableSegmentInsertions = nearByStops.stream().filter(
+          stop -> accessEgressPreFilters.acceptsAccessEgressWithNearbyStop(candidateTrip, passengerCoordinate, stop, accessOrEgress)
+        ).map(nearbyStop -> {
 
           var pickUpCoord = accessOrEgress.isAccess() ? passengerCoordinate : nearbyStop.stop.getCoordinate();
           var dropOffCoord = accessOrEgress.isAccess() ? nearbyStop.stop.getCoordinate() : passengerCoordinate;

@@ -6,6 +6,8 @@ import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.framework.geometry.DirectionUtils;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -100,6 +102,13 @@ public class DirectionalCompatibilityFilter implements TripFilter, AccessEgressT
 
     return bearingsAreWithinTolerance(tripBearing, startToPassengerBearing) &&
       bearingsAreWithinTolerance(tripBearing, endToPassengerBearing);
+  }
+
+  @Override
+  public boolean acceptsAccessEgressWithNearbyStop(CarpoolTrip trip, WgsCoordinate coordinateOfPassenger, NearbyStop accessOrEgressPoint, AccessEgressType accessEgressType) {
+    var from = accessEgressType == AccessEgressType.ACCESS ? coordinateOfPassenger : accessOrEgressPoint.stop.getCoordinate();
+    var to = accessEgressType == AccessEgressType.ACCESS ? accessOrEgressPoint.stop.getCoordinate() : coordinateOfPassenger;
+    return accepts(trip, from, to);
   }
 
   double getBearingToleranceDegrees() {
