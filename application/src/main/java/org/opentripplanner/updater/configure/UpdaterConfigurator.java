@@ -207,7 +207,12 @@ public class UpdaterConfigurator {
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
       updaters.add(
-        SiriUpdaterModule.createSiriETUpdater(configItem, timetableRepository, snapshotManager)
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          timetableRepository,
+          deduplicator,
+          snapshotManager
+        )
       );
     }
     for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
@@ -215,7 +220,12 @@ public class UpdaterConfigurator {
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
       updaters.add(
-        SiriUpdaterModule.createSiriETUpdater(configItem, timetableRepository, snapshotManager)
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          timetableRepository,
+          deduplicator,
+          snapshotManager
+        )
       );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
@@ -270,7 +280,12 @@ public class UpdaterConfigurator {
     SiriETGooglePubsubUpdaterParameters config
   ) {
     if (config.useNewUpdaterImplementation()) {
-      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager, config.feedId());
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.feedId()
+      );
     } else {
       return provideSiriAdapter();
     }
@@ -278,7 +293,12 @@ public class UpdaterConfigurator {
 
   private SiriTripUpdateAdapter createAzureAdapter(SiriAzureETUpdaterParameters config) {
     if (config.isUseNewUpdaterImplementation()) {
-      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager, config.feedId());
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.feedId()
+      );
     } else {
       return provideSiriAdapter();
     }
@@ -286,7 +306,12 @@ public class UpdaterConfigurator {
 
   private SiriTripUpdateAdapter createMqttAdapter(MqttSiriETUpdaterParameters config) {
     if (config.useNewUpdaterImplementation()) {
-      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager, config.feedId());
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.feedId()
+      );
     } else {
       return provideSiriAdapter();
     }
@@ -296,6 +321,7 @@ public class UpdaterConfigurator {
     if (config.useNewUpdaterImplementation()) {
       return new GtfsNewTripUpdateAdapter(
         timetableRepository,
+        deduplicator,
         snapshotManager,
         config.forwardsDelayPropagationType(),
         config.backwardsDelayPropagationType(),
@@ -316,6 +342,7 @@ public class UpdaterConfigurator {
     if (config.useNewUpdaterImplementation()) {
       return new GtfsNewTripUpdateAdapter(
         timetableRepository,
+        deduplicator,
         snapshotManager,
         config.forwardsDelayPropagationType(),
         config.backwardsDelayPropagationType(),
@@ -323,8 +350,11 @@ public class UpdaterConfigurator {
         config.feedId()
       );
     } else {
-      return new GtfsRealTimeTripUpdateAdapter(timetableRepository, snapshotManager, () ->
-        LocalDate.now(timetableRepository.getTimeZone())
+      return new GtfsRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        () -> LocalDate.now(timetableRepository.getTimeZone())
       );
     }
   }

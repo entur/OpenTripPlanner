@@ -82,8 +82,8 @@ class UpdateExistingTripHandlerTest {
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     var stopResolver = new StopResolver(env.transitService());
-    var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
-      new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
+    var tripPatternCache = new org.opentripplanner.updater.trip.patterncache.TripPatternCache(
+      new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator(),
       env.transitService()::findPattern
     );
     resolver = new ExistingTripResolver(

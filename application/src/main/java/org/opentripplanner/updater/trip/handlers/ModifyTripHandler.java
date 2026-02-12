@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.DataValidationException;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -19,7 +20,7 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +43,16 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
   @Nullable
   private final TimetableSnapshotManager snapshotManager;
 
-  private final SiriTripPatternCache tripPatternCache;
+  private final DeduplicatorService deduplicator;
+  private final TripPatternCache tripPatternCache;
 
   public ModifyTripHandler(
     @Nullable TimetableSnapshotManager snapshotManager,
-    SiriTripPatternCache tripPatternCache
+    DeduplicatorService deduplicator,
+    TripPatternCache tripPatternCache
   ) {
     this.snapshotManager = snapshotManager;
+    this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
 
@@ -116,7 +120,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     var scheduledTripTimes = TripTimesFactory.tripTimes(
       trip,
       stopTimesAndPattern.stopTimes(),
-      transitService.getDeduplicator()
+      deduplicator
     ).withServiceCode(transitService.getServiceCode(trip.getServiceId()));
 
     // Validate scheduled times

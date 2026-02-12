@@ -12,14 +12,15 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
 /**
  * Tests for DefaultTripUpdateApplier.
@@ -56,14 +57,15 @@ class DefaultTripUpdateApplierTest {
 
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
-    var tripPatternCache = new SiriTripPatternCache(
-      new SiriTripPatternIdGenerator(),
+    var tripPatternCache = new TripPatternCache(
+      new TripPatternIdGenerator(),
       env.transitService()::findPattern
     );
     applier = new DefaultTripUpdateApplier(
       env.feedId(),
       TIME_ZONE,
       transitService,
+      new Deduplicator(),
       snapshotManager,
       tripPatternCache,
       null,

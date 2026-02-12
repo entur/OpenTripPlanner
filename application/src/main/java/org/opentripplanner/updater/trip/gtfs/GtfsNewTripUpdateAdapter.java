@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -23,8 +24,8 @@ import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.RouteDirectionTimeMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,14 +45,13 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
    * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
    * updates.
    */
-  private final SiriTripPatternIdGenerator tripPatternIdGenerator =
-    new SiriTripPatternIdGenerator();
+  private final TripPatternIdGenerator tripPatternIdGenerator = new TripPatternIdGenerator();
 
   /**
    * A synchronized cache of trip patterns that are added to the graph due to real-time
    * messages.
    */
-  private final SiriTripPatternCache tripPatternCache;
+  private final TripPatternCache tripPatternCache;
 
   /**
    * A cache of routes created by real-time updates that persists across buffer clears.
@@ -61,25 +61,28 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
   private final Map<FeedScopedId, Route> realtimeRouteCache = new HashMap<>();
 
   private final GtfsRtTripUpdateParser parser;
+  private final DeduplicatorService deduplicator;
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
   private final boolean fuzzyMatchingEnabled;
 
   public GtfsNewTripUpdateAdapter(
     TimetableRepository timetableRepository,
+    DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
     boolean fuzzyMatchingEnabled,
     String feedId
   ) {
+    this.deduplicator = deduplicator;
     this.snapshotManager = snapshotManager;
     this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
     this.transitEditorService = new DefaultTransitService(
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
     );
-    this.tripPatternCache = new SiriTripPatternCache(
+    this.tripPatternCache = new TripPatternCache(
       tripPatternIdGenerator,
       transitEditorService::findPattern
     );
@@ -135,6 +138,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       feedId,
       transitEditorService.getTimeZone(),
       transitEditorService,
+      deduplicator,
       snapshotManager,
       tripPatternCache,
       fuzzyMatcher,

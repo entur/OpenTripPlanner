@@ -5,6 +5,7 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
