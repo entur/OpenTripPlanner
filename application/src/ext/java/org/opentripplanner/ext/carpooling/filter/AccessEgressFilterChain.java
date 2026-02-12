@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 
 public class AccessEgressFilterChain {
 
@@ -41,6 +43,17 @@ public class AccessEgressFilterChain {
     return filters.stream().allMatch(filter -> filter.acceptsAccessEgress(
       trip, coordinateOfPassenger, passengerDepartureTime, searchWindow
     ));
+  }
+
+  public boolean acceptsAccessEgressWithNearbyStop(
+    CarpoolTrip trip,
+    WgsCoordinate coordinateOfPassenger,
+    NearbyStop accessOrEgressPoint,
+    AccessEgressType accessEgressType
+  ){
+    return filters.stream().allMatch(filter ->
+      filter.acceptsAccessEgressWithNearbyStop(trip, coordinateOfPassenger, accessOrEgressPoint, accessEgressType)
+    );
   }
 
 

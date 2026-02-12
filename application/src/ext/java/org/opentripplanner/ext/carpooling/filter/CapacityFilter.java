@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,4 +43,11 @@ public class CapacityFilter implements TripFilter, AccessEgressTripFilter {
   public boolean acceptsAccessEgress(CarpoolTrip trip, WgsCoordinate coordinateOfPassenger, Instant passengerDepartureTime, Duration searchWindow) {
     return accepts(trip);
   }
+
+  @Override
+  public boolean acceptsAccessEgressWithNearbyStop(CarpoolTrip trip, WgsCoordinate coordinateOfPassenger, NearbyStop accessOrEgressPoint, AccessEgressType accessEgressType) {
+    return true;
+  }
+
+
 }

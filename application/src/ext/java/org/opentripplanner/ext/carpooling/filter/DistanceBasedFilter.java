@@ -6,6 +6,8 @@ import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.framework.geometry.WgsCoordinate;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +106,11 @@ public class DistanceBasedFilter implements TripFilter, AccessEgressTripFilter {
     );
 
     return tripLength > lengthFromTripToPassenger;
+  }
+
+  @Override
+  public boolean acceptsAccessEgressWithNearbyStop(CarpoolTrip trip, WgsCoordinate coordinateOfPassenger, NearbyStop accessOrEgressPoint, AccessEgressType accessEgressType) {
+    return true;
   }
 
   double getMaxDistanceMeters() {
