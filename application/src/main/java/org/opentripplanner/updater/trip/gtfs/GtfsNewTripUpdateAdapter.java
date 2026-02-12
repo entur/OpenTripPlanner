@@ -21,11 +21,7 @@ import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.RouteDirectionTimeMatcher;
-import org.opentripplanner.updater.trip.ServiceDateResolver;
-import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripResolver;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
@@ -65,7 +61,6 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
   private final Map<FeedScopedId, Route> realtimeRouteCache = new HashMap<>();
 
   private final GtfsRtTripUpdateParser parser;
-  private final DefaultTripUpdateApplier applier;
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
   private final boolean fuzzyMatchingEnabled;
@@ -96,7 +91,6 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       transitEditorService.getTimeZone(),
       () -> LocalDate.now(transitEditorService.getTimeZone())
     );
-    this.applier = new DefaultTripUpdateApplier(transitEditorService);
   }
 
   /**
@@ -131,31 +125,24 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       snapshotManager.clearBuffer(feedId);
     }
 
-    // Create applier context with the trip ID resolver and stop resolver
-    var tripResolver = new TripResolver(transitEditorService);
-    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
-    var stopResolver = new StopResolver(transitEditorService);
-
     // Create fuzzy matcher if fuzzy matching is enabled
     FuzzyTripMatcher fuzzyMatcher = null;
     if (fuzzyMatchingEnabled) {
       fuzzyMatcher = new RouteDirectionTimeMatcher(transitEditorService);
     }
 
-    var applierContext = new TripUpdateApplierContext(
+    var applier = new DefaultTripUpdateApplier(
       feedId,
       transitEditorService.getTimeZone(),
+      transitEditorService,
       snapshotManager,
-      tripResolver,
-      serviceDateResolver,
-      stopResolver,
       tripPatternCache,
       fuzzyMatcher,
       realtimeRouteCache::get
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
-      results.add(apply(update, applierContext));
+      results.add(apply(update, applier));
     }
 
     LOG.debug("message contains {} trip updates", updates.size());
@@ -165,7 +152,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
   private Result<UpdateSuccess, UpdateError> apply(
     GtfsRealtime.TripUpdate update,
-    TripUpdateApplierContext applierContext
+    DefaultTripUpdateApplier applier
   ) {
     // Parse the GTFS-RT message
     var parseResult = parser.parse(update);
@@ -176,7 +163,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     var parsedUpdate = parseResult.successValue();
 
     // Apply the parsed update
-    var applyResult = applier.apply(parsedUpdate, applierContext);
+    var applyResult = applier.apply(parsedUpdate);
     if (applyResult.isFailure()) {
       return applyResult.toFailureResult();
     }

@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -11,7 +12,6 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,14 +26,19 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
 
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTripRemovalHandler.class);
 
+  @Nullable
+  private final TimetableSnapshotManager snapshotManager;
+
+  protected AbstractTripRemovalHandler(@Nullable TimetableSnapshotManager snapshotManager) {
+    this.snapshotManager = snapshotManager;
+  }
+
   @Override
   public final Result<TripUpdateResult, UpdateError> handle(
     ResolvedTripRemoval resolvedUpdate,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     var serviceDate = resolvedUpdate.serviceDate();
-    var snapshotManager = context.snapshotManager();
     var tripId = resolvedUpdate.tripId();
 
     // First, try to cancel/delete a previously added trip

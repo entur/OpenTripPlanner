@@ -17,11 +17,9 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
-import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripRemovalResolver;
 import org.opentripplanner.updater.trip.TripResolver;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -41,7 +39,6 @@ class CancelTripHandlerTest {
   private TransitTestEnvironment env;
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
-  private TripUpdateApplierContext context;
   private TripRemovalResolver resolver;
   private CancelTripHandler handler;
 
@@ -67,26 +64,12 @@ class CancelTripHandlerTest {
     snapshotManager = env.timetableSnapshotManager();
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
-    var stopResolver = new StopResolver(env.transitService());
-    var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
-      new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
-      env.transitService()::findPattern
-    );
-    context = new TripUpdateApplierContext(
-      env.feedId(),
-      TIME_ZONE,
-      snapshotManager,
-      tripResolver,
-      serviceDateResolver,
-      stopResolver,
-      tripPatternCache
-    );
-    resolver = new TripRemovalResolver(transitService);
-    handler = new CancelTripHandler();
+    resolver = new TripRemovalResolver(transitService, tripResolver, serviceDateResolver);
+    handler = new CancelTripHandler(snapshotManager);
   }
 
   private ResolvedTripRemoval resolve(ParsedTripUpdate parsedUpdate) {
-    var result = resolver.resolve(parsedUpdate, context);
+    var result = resolver.resolve(parsedUpdate);
     if (result.isFailure()) {
       throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
     }
@@ -94,7 +77,7 @@ class CancelTripHandlerTest {
   }
 
   private Result<ResolvedTripRemoval, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
-    return resolver.resolve(parsedUpdate, context);
+    return resolver.resolve(parsedUpdate);
   }
 
   @Test
@@ -110,7 +93,7 @@ class CancelTripHandlerTest {
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate), context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), transitService);
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
@@ -134,7 +117,7 @@ class CancelTripHandlerTest {
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate), context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), transitService);
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
@@ -163,7 +146,7 @@ class CancelTripHandlerTest {
     assertTrue(resolveResult.isSuccess());
 
     // Handler returns error because no scheduled trip and no previously added trip
-    var result = handler.handle(resolveResult.successValue(), context, transitService);
+    var result = handler.handle(resolveResult.successValue(), transitService);
     assertTrue(result.isFailure());
     assertEquals(
       UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
@@ -209,7 +192,7 @@ class CancelTripHandlerTest {
     assertTrue(resolveResult.isSuccess());
 
     // Handler returns error because no scheduled trip and no previously added trip
-    var result = handler.handle(resolveResult.successValue(), context, transitService);
+    var result = handler.handle(resolveResult.successValue(), transitService);
     assertTrue(result.isFailure());
     assertEquals(
       UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
@@ -230,7 +213,7 @@ class CancelTripHandlerTest {
     // Before cancellation, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate), context, transitService);
+    var result = handler.handle(resolve(parsedUpdate), transitService);
 
     assertTrue(result.isSuccess());
 

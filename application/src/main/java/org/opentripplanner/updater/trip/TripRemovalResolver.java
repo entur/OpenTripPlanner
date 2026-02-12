@@ -29,24 +29,31 @@ public class TripRemovalResolver {
   private static final Logger LOG = LoggerFactory.getLogger(TripRemovalResolver.class);
 
   private final TransitEditorService transitService;
+  private final TripResolver tripResolver;
+  private final ServiceDateResolver serviceDateResolver;
 
-  public TripRemovalResolver(TransitEditorService transitService) {
+  public TripRemovalResolver(
+    TransitEditorService transitService,
+    TripResolver tripResolver,
+    ServiceDateResolver serviceDateResolver
+  ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
+    this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
+    this.serviceDateResolver = Objects.requireNonNull(
+      serviceDateResolver,
+      "serviceDateResolver must not be null"
+    );
   }
 
   /**
    * Resolve a ParsedTripUpdate for trip cancellation or deletion.
    *
    * @param parsedUpdate The parsed update to resolve
-   * @param context The applier context containing resolvers and caches
    * @return Result containing the resolved data (always succeeds - handler checks for added trips)
    */
-  public Result<ResolvedTripRemoval, UpdateError> resolve(
-    ParsedTripUpdate parsedUpdate,
-    TripUpdateApplierContext context
-  ) {
+  public Result<ResolvedTripRemoval, UpdateError> resolve(ParsedTripUpdate parsedUpdate) {
     // Resolve service date
-    var serviceDateResult = context.serviceDateResolver().resolveServiceDate(parsedUpdate);
+    var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {
       return Result.failure(serviceDateResult.failureValue());
     }
@@ -56,7 +63,7 @@ public class TripRemovalResolver {
     FeedScopedId tripId = tripReference.tripId();
 
     // Try to resolve as scheduled trip from static transit model
-    var tripResult = context.tripResolver().resolveTrip(tripReference);
+    var tripResult = tripResolver.resolveTrip(tripReference);
     if (tripResult.isFailure()) {
       // Trip not found in scheduled data - return success with null values
       // Handler will check for previously added trips
