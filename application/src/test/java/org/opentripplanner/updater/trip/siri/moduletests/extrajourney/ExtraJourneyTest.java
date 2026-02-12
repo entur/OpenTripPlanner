@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -147,11 +148,9 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     var updates = createValidAddedJourney(siri).buildEstimatedTimetableDeliveries();
 
     int numTrips = env.transitService().listTrips().size();
-    var result1 = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result1.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
     assertEquals(numTrips + 1, env.transitService().listTrips().size());
-    var result2 = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result2.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
     assertEquals(numTrips + 1, env.transitService().listTrips().size());
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
@@ -206,9 +205,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       .withEstimatedCalls(builder -> builder.call(STOP_C).arriveAimedExpected("00:03", "00:04"))
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetable(updates);
-
-    assertEquals(1, result.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
 
     assertEquals(
       "ADDED | A [R] 0:02 0:02 | C 0:04 0:04",
@@ -266,11 +263,9 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       .withPublishedLineName("L1")
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
 
     Route newRoute = env.transitService().getRoute(id(newRouteRef));
-    assertNotNull(newRoute);
     assertEquals(
       "L1",
       newRoute.getShortName(),
@@ -288,8 +283,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       .withLineRef(newRouteRef)
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
 
     Trip trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
     assertNotNull(trip);
@@ -334,8 +328,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       .withVehicleMode(VehicleModesEnumeration.BUS)
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
 
     Route newRoute = env.transitService().getRoute(id(newRouteRef));
     assertNotNull(newRoute);
@@ -359,8 +352,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       .withVehicleMode(VehicleModesEnumeration.RAIL)
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(siri.applyEstimatedTimetable(updates));
 
     Route newRoute = env.transitService().getRoute(id(newRouteRef));
     assertNotNull(newRoute);
