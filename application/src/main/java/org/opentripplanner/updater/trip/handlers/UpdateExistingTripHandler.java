@@ -224,29 +224,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     LocalDate serviceDate
   ) {
     var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
-    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-
-    // Validate FULL_UPDATE strategy constraints
-    if (stopUpdateStrategy == StopUpdateStrategy.FULL_UPDATE) {
-      // FULL_UPDATE must not use stopSequence
-      if (resolvedUpdate.hasStopSequences()) {
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
-        );
-      }
-
-      // FULL_UPDATE must have exact stop count match
-      if (stopTimeUpdates.size() < pattern.numberOfStops()) {
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TOO_FEW_STOPS)
-        );
-      }
-      if (stopTimeUpdates.size() > pattern.numberOfStops()) {
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TOO_MANY_STOPS)
-        );
-      }
-    }
 
     var result = new PatternModificationResult();
     var constraint = resolvedUpdate.options().stopReplacementConstraint();

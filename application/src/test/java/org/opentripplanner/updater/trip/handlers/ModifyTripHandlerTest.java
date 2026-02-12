@@ -358,31 +358,8 @@ class ModifyTripHandlerTest {
       assertEquals(UpdateError.UpdateErrorType.UNKNOWN_STOP, result.failureValue().errorType());
     }
 
-    @Test
-    void replacementTrip_tooFewStops() {
-      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
-      var tripRef = TripReference.ofTripId(tripId);
-
-      // Only 1 stop - need at least 2
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
-            ForwardsDelayPropagationType.NONE,
-            BackwardsDelayPropagationType.NONE
-          )
-        )
-        .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
-        .build();
-
-      var result = handler.handle(resolve(parsedUpdate));
-
-      assertTrue(result.isFailure());
-      assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
-    }
+    // replacementTrip_tooFewStops is now in ModifyTripValidatorTest since
+    // minimum stops validation was extracted to the validator.
 
     private ParsedStopTimeUpdate createStopUpdate(String stopId, int sequence, int timeSeconds) {
       return ParsedStopTimeUpdate.builder(StopReference.ofStopId(new FeedScopedId(FEED_ID, stopId)))
@@ -531,64 +508,8 @@ class ModifyTripHandlerTest {
       assertEquals("A2", result.successValue().pattern().getStop(0).getId().getId());
     }
 
-    @Test
-    void extraCall_wrongNumberOfNonExtraStops() {
-      // Original trip: A -> B (2 stops)
-      // Update has 1 non-extra stop + 1 extra = invalid
-      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
-      var tripRef = TripReference.ofTripId(tripId);
-
-      var stopAUpdate = createSiriStopUpdate("A", 10 * 3600, false);
-      var stopDUpdate = createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true);
-      // Missing stopB!
-
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
-        .withOptions(TripUpdateOptions.siriDefaults())
-        .addStopTimeUpdate(stopAUpdate)
-        .addStopTimeUpdate(stopDUpdate)
-        .build();
-
-      var result = handler.handle(resolve(parsedUpdate));
-
-      assertTrue(result.isFailure());
-      assertEquals(
-        UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE,
-        result.failureValue().errorType()
-      );
-    }
-
-    @Test
-    void extraCall_nonExtraStopDoesNotMatch() {
-      // Original trip: A -> B
-      // Update: A -> D (extra) -> D (not extra but should be B)
-      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
-      var tripRef = TripReference.ofTripId(tripId);
-
-      var stopAUpdate = createSiriStopUpdate("A", 10 * 3600, false);
-      var stopDExtraUpdate = createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true);
-      // D is used as non-extra stop but should be B
-      var stopDNonExtraUpdate = createSiriStopUpdate("D", 10 * 3600 + 30 * 60, false);
-
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
-        .withOptions(TripUpdateOptions.siriDefaults())
-        .addStopTimeUpdate(stopAUpdate)
-        .addStopTimeUpdate(stopDExtraUpdate)
-        .addStopTimeUpdate(stopDNonExtraUpdate)
-        .build();
-
-      var result = handler.handle(resolve(parsedUpdate));
-
-      assertTrue(result.isFailure());
-      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
-    }
+    // extraCall_wrongNumberOfNonExtraStops and extraCall_nonExtraStopDoesNotMatch are now
+    // in ModifyTripValidatorTest since SIRI extra call validation was extracted to the validator.
 
     private ParsedStopTimeUpdate createSiriStopUpdate(
       String stopId,
