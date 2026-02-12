@@ -15,7 +15,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
-import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
@@ -55,10 +54,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> handle(
-    ResolvedExistingTrip resolvedUpdate,
-    TransitEditorService transitService
-  ) {
+  public Result<TripUpdateResult, UpdateError> handle(ResolvedExistingTrip resolvedUpdate) {
     // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern pattern = resolvedUpdate.pattern();

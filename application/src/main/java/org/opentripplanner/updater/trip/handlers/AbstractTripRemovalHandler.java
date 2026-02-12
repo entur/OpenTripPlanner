@@ -9,7 +9,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
-import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
@@ -34,10 +33,7 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
   }
 
   @Override
-  public final Result<TripUpdateResult, UpdateError> handle(
-    ResolvedTripRemoval resolvedUpdate,
-    TransitEditorService transitService
-  ) {
+  public final Result<TripUpdateResult, UpdateError> handle(ResolvedTripRemoval resolvedUpdate) {
     var serviceDate = resolvedUpdate.serviceDate();
     var tripId = resolvedUpdate.tripId();
 

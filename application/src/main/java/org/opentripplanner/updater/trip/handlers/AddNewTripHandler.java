@@ -50,6 +50,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripHandler.class);
 
   private final String feedId;
+  private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
 
@@ -58,21 +59,20 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
   public AddNewTripHandler(
     String feedId,
+    TransitEditorService transitService,
     DeduplicatorService deduplicator,
     TripPatternCache tripPatternCache,
     @Nullable Function<FeedScopedId, Route> routeCache
   ) {
     this.feedId = Objects.requireNonNull(feedId);
+    this.transitService = Objects.requireNonNull(transitService);
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
     this.routeCache = routeCache;
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> handle(
-    ResolvedNewTrip resolvedUpdate,
-    TransitEditorService transitService
-  ) {
+  public Result<TripUpdateResult, UpdateError> handle(ResolvedNewTrip resolvedUpdate) {
     var tripCreationInfo = resolvedUpdate.tripCreationInfo();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
 
