@@ -474,12 +474,12 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
    * To calculate the effective fare, the second fare is subtracted from the first.
    */
   private Collection<FareProduct> generateHopFareProducts(
-    Money AdultLarger,
-    Money AdultSmaller,
-    Money SeniorLarger,
-    Money SeniorSmaller,
-    Money YouthLarger,
-    Money YouthSmaller
+    Money adultLarger,
+    Money adultSmaller,
+    Money seniorLarger,
+    Money seniorSmaller,
+    Money youthLarger,
+    Money youthSmaller
   ) {
     final Collection<FareProduct> hopFareProducts = new HashSet<>();
 
@@ -488,7 +488,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         TRIMET_TO_CTRAN_ADULT_TRANSFER,
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, AdultLarger.minus(AdultSmaller))
+        Money.max(Money.ZERO_USD, adultLarger.minus(adultSmaller))
       )
         .withCategory(CATEGORY_ADULT)
         .withMedium(MEDIUM_HOP_FASTPASS)
@@ -498,7 +498,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         TRIMET_TO_CTRAN_ADULT_TRANSFER,
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, AdultLarger.minus(AdultSmaller))
+        Money.max(Money.ZERO_USD, adultLarger.minus(adultSmaller))
       )
         .withCategory(CATEGORY_ADULT)
         .withMedium(new FareMedium(ctranId("3"), "Open Payment"))
@@ -508,7 +508,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         TRIMET_TO_CTRAN_ADULT_TRANSFER,
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, AdultLarger.minus(AdultSmaller))
+        Money.max(Money.ZERO_USD, adultLarger.minus(adultSmaller))
       )
         .withCategory(CATEGORY_ADULT)
         .withMedium(new FareMedium(ctranId("4"), "Virtual HOP Fastpass"))
@@ -520,7 +520,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         ctranId("TRIMET_CTRAN_HC_TRANSFER"),
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, (SeniorLarger.minus(SeniorSmaller)))
+        Money.max(Money.ZERO_USD, (seniorLarger.minus(seniorSmaller)))
       )
         .withCategory(CATEGORY_HONOURED_CITIZEN)
         .withMedium(MEDIUM_HOP_FASTPASS)
@@ -530,7 +530,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         ctranId("TRIMET_CTRAN_HONORED_CITIZEN_TRANSFER"),
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, SeniorLarger.minus(SeniorSmaller))
+        Money.max(Money.ZERO_USD, seniorLarger.minus(seniorSmaller))
       )
         .withCategory(CATEGORY_HONOURED_CITIZEN)
         .withMedium(new FareMedium(ctranId("3"), "Open Payment"))
@@ -540,7 +540,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         ctranId("TRIMET_CTRAN_HONORED_CITIZEN_TRANSFER"),
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, SeniorLarger.minus(SeniorSmaller))
+        Money.max(Money.ZERO_USD, seniorLarger.minus(seniorSmaller))
       )
         .withCategory(CATEGORY_HONOURED_CITIZEN)
         .withMedium(new FareMedium(ctranId("4"), "Virtual HOP Fastpass"))
@@ -552,7 +552,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         TRIMET_TO_CTRAN_YOUTH_TRANSFER,
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, YouthLarger.minus(YouthSmaller))
+        Money.max(Money.ZERO_USD, youthLarger.minus(youthSmaller))
       )
         .withCategory(CATEGORY_YOUTH)
         .withMedium(MEDIUM_HOP_FASTPASS)
@@ -562,7 +562,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         TRIMET_TO_CTRAN_YOUTH_TRANSFER,
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, YouthLarger.minus(YouthSmaller))
+        Money.max(Money.ZERO_USD, youthLarger.minus(youthSmaller))
       )
         .withCategory(CATEGORY_YOUTH)
         .withMedium(new FareMedium(ctranId("3"), "Open Payment"))
@@ -572,7 +572,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
       FareProduct.of(
         TRIMET_TO_CTRAN_YOUTH_TRANSFER,
         "TriMet to C-TRAN",
-        Money.max(Money.ZERO_USD, YouthLarger.minus(YouthSmaller))
+        Money.max(Money.ZERO_USD, youthLarger.minus(youthSmaller))
       )
         .withCategory(CATEGORY_YOUTH)
         .withMedium(new FareMedium(ctranId("4"), "Virtual HOP Fastpass"))
