@@ -6,12 +6,11 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
 
 /**
- * Information needed to create a new route when adding a trip that cannot be
- * registered under an existing route.
+ * Supplementary metadata needed to create a new route when adding a trip that cannot be
+ * registered under an existing route. The route ID itself comes from
+ * {@link TripCreationInfo#routeId()}.
  */
 public final class RouteCreationInfo {
-
-  private final FeedScopedId routeId;
 
   @Nullable
   private final String routeName;
@@ -32,7 +31,6 @@ public final class RouteCreationInfo {
   private final FeedScopedId agencyId;
 
   /**
-   * @param routeId The ID to use for the new route
    * @param routeName The name of the route
    * @param mode The transit mode of the route
    * @param submode The submode of the route (e.g., "localBus", "expressBus")
@@ -41,7 +39,6 @@ public final class RouteCreationInfo {
    * @param agencyId The agency ID for the route
    */
   public RouteCreationInfo(
-    FeedScopedId routeId,
     @Nullable String routeName,
     @Nullable TransitMode mode,
     @Nullable String submode,
@@ -49,7 +46,6 @@ public final class RouteCreationInfo {
     @Nullable String url,
     @Nullable FeedScopedId agencyId
   ) {
-    this.routeId = Objects.requireNonNull(routeId, "routeId must not be null");
     this.routeName = routeName;
     this.mode = mode;
     this.submode = submode;
@@ -62,17 +58,12 @@ public final class RouteCreationInfo {
    * Convenience constructor without URL and agencyId.
    */
   public RouteCreationInfo(
-    FeedScopedId routeId,
     @Nullable String routeName,
     @Nullable TransitMode mode,
     @Nullable String submode,
     @Nullable FeedScopedId operatorId
   ) {
-    this(routeId, routeName, mode, submode, operatorId, null, null);
-  }
-
-  public FeedScopedId routeId() {
-    return routeId;
+    this(routeName, mode, submode, operatorId, null, null);
   }
 
   @Nullable
@@ -115,7 +106,6 @@ public final class RouteCreationInfo {
     }
     RouteCreationInfo that = (RouteCreationInfo) o;
     return (
-      Objects.equals(routeId, that.routeId) &&
       Objects.equals(routeName, that.routeName) &&
       mode == that.mode &&
       Objects.equals(submode, that.submode) &&
@@ -127,16 +117,14 @@ public final class RouteCreationInfo {
 
   @Override
   public int hashCode() {
-    return Objects.hash(routeId, routeName, mode, submode, operatorId, url, agencyId);
+    return Objects.hash(routeName, mode, submode, operatorId, url, agencyId);
   }
 
   @Override
   public String toString() {
     return (
       "RouteCreationInfo{" +
-      "routeId=" +
-      routeId +
-      ", routeName='" +
+      "routeName='" +
       routeName +
       '\'' +
       ", mode=" +
