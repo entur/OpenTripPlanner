@@ -93,7 +93,7 @@ class CancelTripHandlerTest {
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
@@ -117,7 +117,7 @@ class CancelTripHandlerTest {
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
@@ -146,7 +146,7 @@ class CancelTripHandlerTest {
     assertTrue(resolveResult.isSuccess());
 
     // Handler returns error because no scheduled trip and no previously added trip
-    var result = handler.handle(resolveResult.successValue(), transitService);
+    var result = handler.handle(resolveResult.successValue());
     assertTrue(result.isFailure());
     assertEquals(
       UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
@@ -192,7 +192,7 @@ class CancelTripHandlerTest {
     assertTrue(resolveResult.isSuccess());
 
     // Handler returns error because no scheduled trip and no previously added trip
-    var result = handler.handle(resolveResult.successValue(), transitService);
+    var result = handler.handle(resolveResult.successValue());
     assertTrue(result.isFailure());
     assertEquals(
       UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
@@ -213,7 +213,7 @@ class CancelTripHandlerTest {
     // Before cancellation, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess());
 

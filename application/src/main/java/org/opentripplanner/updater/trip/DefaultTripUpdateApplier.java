@@ -98,9 +98,15 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
     // Create handlers with injected deps
     this.updateExistingHandler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
-    this.modifyTripHandler = new ModifyTripHandler(snapshotManager, deduplicator, tripPatternCache);
+    this.modifyTripHandler = new ModifyTripHandler(
+      snapshotManager,
+      transitService,
+      deduplicator,
+      tripPatternCache
+    );
     this.addNewTripHandler = new AddNewTripHandler(
       feedId,
+      transitService,
       deduplicator,
       tripPatternCache,
       routeCache
@@ -143,35 +149,35 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield updateExistingHandler.handle(resolveResult.successValue(), transitService);
+          yield updateExistingHandler.handle(resolveResult.successValue());
         }
         case MODIFY_TRIP -> {
           var resolveResult = existingTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield modifyTripHandler.handle(resolveResult.successValue(), transitService);
+          yield modifyTripHandler.handle(resolveResult.successValue());
         }
         case ADD_NEW_TRIP -> {
           var resolveResult = newTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield addNewTripHandler.handle(resolveResult.successValue(), transitService);
+          yield addNewTripHandler.handle(resolveResult.successValue());
         }
         case CANCEL_TRIP -> {
           var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield cancelTripHandler.handle(resolveResult.successValue(), transitService);
+          yield cancelTripHandler.handle(resolveResult.successValue());
         }
         case DELETE_TRIP -> {
           var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield deleteTripHandler.handle(resolveResult.successValue(), transitService);
+          yield deleteTripHandler.handle(resolveResult.successValue());
         }
       };
     } catch (Exception e) {

@@ -43,24 +43,24 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
   @Nullable
   private final TimetableSnapshotManager snapshotManager;
 
+  private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
 
   public ModifyTripHandler(
     @Nullable TimetableSnapshotManager snapshotManager,
+    TransitEditorService transitService,
     DeduplicatorService deduplicator,
     TripPatternCache tripPatternCache
   ) {
     this.snapshotManager = snapshotManager;
+    this.transitService = Objects.requireNonNull(transitService);
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> handle(
-    ResolvedExistingTrip resolvedUpdate,
-    TransitEditorService transitService
-  ) {
+  public Result<TripUpdateResult, UpdateError> handle(ResolvedExistingTrip resolvedUpdate) {
     // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
