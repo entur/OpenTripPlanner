@@ -15,11 +15,8 @@ import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.LastStopArrivalTimeMatcher;
-import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripResolver;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +49,6 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
   private final SiriTripPatternCache tripPatternCache;
 
   private final SiriTripUpdateParser parser;
-  private final DefaultTripUpdateApplier applier;
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
 
@@ -71,7 +67,6 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       transitEditorService::findPattern
     );
     this.parser = new SiriTripUpdateParser(feedId, transitEditorService.getTimeZone());
-    this.applier = new DefaultTripUpdateApplier(transitEditorService);
   }
 
   /**
@@ -104,31 +99,25 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       snapshotManager.clearBuffer(feedId);
     }
 
-    // Create applier context with the trip ID resolver and stop resolver
-    var tripResolver = new TripResolver(transitEditorService);
-    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
-    var stopResolver = new StopResolver(transitEditorService);
-
     // TODO RT_VP Create fuzzy matcher if the old SiriFuzzyTripMatcher was configured
     //  for compatibility with the legacy implementation
     FuzzyTripMatcher fuzzyMatcher = null;
     if (fuzzyTripMatcher != null) {
       fuzzyMatcher = new LastStopArrivalTimeMatcher(
         transitEditorService,
-        stopResolver,
+        new StopResolver(transitEditorService),
         transitEditorService.getTimeZone()
       );
     }
 
-    var applierContext = new TripUpdateApplierContext(
+    var applier = new DefaultTripUpdateApplier(
       feedId,
       transitEditorService.getTimeZone(),
+      transitEditorService,
       snapshotManager,
-      tripResolver,
-      serviceDateResolver,
-      stopResolver,
       tripPatternCache,
-      fuzzyMatcher
+      fuzzyMatcher,
+      null
     );
 
     for (var etDelivery : updates) {
@@ -136,7 +125,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
         var journeys = estimatedJourneyVersion.getEstimatedVehicleJourneies();
         LOG.debug("Handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
-          results.add(apply(journey, applierContext));
+          results.add(apply(journey, applier));
         }
       }
     }
@@ -148,7 +137,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
 
   private Result<UpdateSuccess, UpdateError> apply(
     EstimatedVehicleJourney journey,
-    TripUpdateApplierContext applierContext
+    DefaultTripUpdateApplier applier
   ) {
     // Parse the SIRI message
     var parseResult = parser.parse(journey);
@@ -159,7 +148,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     var parsedUpdate = parseResult.successValue();
 
     // Apply the parsed update
-    var applyResult = applier.apply(parsedUpdate, applierContext);
+    var applyResult = applier.apply(parsedUpdate);
     if (applyResult.isFailure()) {
       return applyResult.toFailureResult();
     }

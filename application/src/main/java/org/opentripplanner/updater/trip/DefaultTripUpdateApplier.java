@@ -1,7 +1,12 @@
 package org.opentripplanner.updater.trip;
 
+import java.time.ZoneId;
 import java.util.Objects;
+import java.util.function.Function;
+import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
@@ -12,6 +17,7 @@ import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,18 +54,52 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   private final TripUpdateHandler.ForTripRemoval cancelTripHandler;
   private final TripUpdateHandler.ForTripRemoval deleteTripHandler;
 
-  public DefaultTripUpdateApplier(TransitEditorService transitService) {
-    this(
+  /**
+   * Primary constructor that takes all dependencies needed to construct resolvers and handlers.
+   */
+  public DefaultTripUpdateApplier(
+    String feedId,
+    ZoneId timeZone,
+    TransitEditorService transitService,
+    @Nullable TimetableSnapshotManager snapshotManager,
+    SiriTripPatternCache tripPatternCache,
+    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
+    @Nullable Function<FeedScopedId, Route> routeCache
+  ) {
+    this.transitService = Objects.requireNonNull(transitService);
+
+    // Create shared resolvers
+    var tripResolver = new TripResolver(transitService);
+    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitService);
+    var stopResolver = new StopResolver(transitService);
+
+    // Create resolvers with injected deps
+    this.existingTripResolver = new ExistingTripResolver(
       transitService,
-      new ExistingTripResolver(transitService),
-      new NewTripResolver(transitService),
-      new TripRemovalResolver(transitService),
-      new UpdateExistingTripHandler(),
-      new ModifyTripHandler(),
-      new AddNewTripHandler(),
-      new CancelTripHandler(),
-      new DeleteTripHandler()
+      tripResolver,
+      serviceDateResolver,
+      stopResolver,
+      fuzzyTripMatcher,
+      timeZone
     );
+    this.newTripResolver = new NewTripResolver(
+      transitService,
+      serviceDateResolver,
+      stopResolver,
+      timeZone
+    );
+    this.tripRemovalResolver = new TripRemovalResolver(
+      transitService,
+      tripResolver,
+      serviceDateResolver
+    );
+
+    // Create handlers with injected deps
+    this.updateExistingHandler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
+    this.modifyTripHandler = new ModifyTripHandler(snapshotManager, tripPatternCache);
+    this.addNewTripHandler = new AddNewTripHandler(feedId, tripPatternCache, routeCache);
+    this.cancelTripHandler = new CancelTripHandler(snapshotManager);
+    this.deleteTripHandler = new DeleteTripHandler(snapshotManager);
   }
 
   /**
@@ -88,46 +128,43 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> apply(
-    ParsedTripUpdate parsedUpdate,
-    TripUpdateApplierContext context
-  ) {
+  public Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate) {
     try {
       return switch (parsedUpdate.updateType()) {
         case UPDATE_EXISTING -> {
-          var resolveResult = existingTripResolver.resolve(parsedUpdate, context);
+          var resolveResult = existingTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield updateExistingHandler.handle(resolveResult.successValue(), context, transitService);
+          yield updateExistingHandler.handle(resolveResult.successValue(), transitService);
         }
         case MODIFY_TRIP -> {
-          var resolveResult = existingTripResolver.resolve(parsedUpdate, context);
+          var resolveResult = existingTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield modifyTripHandler.handle(resolveResult.successValue(), context, transitService);
+          yield modifyTripHandler.handle(resolveResult.successValue(), transitService);
         }
         case ADD_NEW_TRIP -> {
-          var resolveResult = newTripResolver.resolve(parsedUpdate, context);
+          var resolveResult = newTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield addNewTripHandler.handle(resolveResult.successValue(), context, transitService);
+          yield addNewTripHandler.handle(resolveResult.successValue(), transitService);
         }
         case CANCEL_TRIP -> {
-          var resolveResult = tripRemovalResolver.resolve(parsedUpdate, context);
+          var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield cancelTripHandler.handle(resolveResult.successValue(), context, transitService);
+          yield cancelTripHandler.handle(resolveResult.successValue(), transitService);
         }
         case DELETE_TRIP -> {
-          var resolveResult = tripRemovalResolver.resolve(parsedUpdate, context);
+          var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield deleteTripHandler.handle(resolveResult.successValue(), context, transitService);
+          yield deleteTripHandler.handle(resolveResult.successValue(), transitService);
         }
       };
     } catch (Exception e) {
