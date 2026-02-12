@@ -6,7 +6,6 @@ import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NOT_IM
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -22,7 +21,6 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
-import org.opentripplanner.updater.trip.gtfs.model.TripDescriptor;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
@@ -82,25 +80,18 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   @Override
   public Result<ParsedTripUpdate, UpdateError> parse(GtfsRealtime.TripUpdate update) {
-    var tripUpdate = new TripUpdate(update);
-    var tripDescriptor = tripUpdate.tripDescriptor();
+    var tripUpdate = new TripUpdate(feedId, update, localDateNow);
 
-    var tripIdOpt = tripDescriptor.tripId().map(this::createId);
-    if (tripIdOpt.isEmpty()) {
-      return Result.failure(UpdateError.noTripId(INVALID_INPUT_STRUCTURE));
+    var validationResult = tripUpdate.validate();
+    if (validationResult.isFailure()) {
+      return validationResult.toFailureResult();
     }
 
-    var tripId = tripIdOpt.get();
-    var scheduleRelationship = tripDescriptor.scheduleRelationship();
+    var tripId = tripUpdate.tripId();
+    var scheduleRelationship = tripUpdate.scheduleRelationship();
+    LocalDate serviceDate = tripUpdate.serviceDate();
 
-    LocalDate serviceDate;
-    try {
-      serviceDate = tripDescriptor.startDate().orElse(localDateNow.get());
-    } catch (ParseException e) {
-      return UpdateError.result(tripId, INVALID_INPUT_STRUCTURE, e.getMessage());
-    }
-
-    var tripReference = buildTripReference(tripId, tripDescriptor, serviceDate);
+    var tripReference = buildTripReference(tripId, tripUpdate, serviceDate);
     var updateType = mapScheduleRelationship(scheduleRelationship);
 
     if (updateType == null) {
@@ -131,7 +122,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     builder.withStopTimeUpdates(stopTimeUpdates);
 
     if (updateType == TripUpdateType.ADD_NEW_TRIP || updateType == TripUpdateType.MODIFY_TRIP) {
-      var creationInfo = buildTripCreationInfo(tripId, tripDescriptor, tripUpdate);
+      var creationInfo = buildTripCreationInfo(tripId, tripUpdate);
       builder.withTripCreationInfo(creationInfo);
     }
 
@@ -156,23 +147,19 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   private TripReference buildTripReference(
     FeedScopedId tripId,
-    TripDescriptor descriptor,
+    TripUpdate tripUpdate,
     LocalDate serviceDate
   ) {
     var builder = TripReference.builder().withTripId(tripId).withStartDate(serviceDate);
 
-    descriptor
-      .routeId()
-      .map(id -> new FeedScopedId(tripId.getFeedId(), id))
-      .ifPresent(builder::withRouteId);
+    tripUpdate.routeId().ifPresent(builder::withRouteId);
 
-    descriptor
-      .startTime()
-      .ifPresent(time ->
-        builder.withStartTime(org.opentripplanner.utils.time.TimeUtils.timeToStrCompact(time))
-      );
+    tripUpdate.startTime().ifPresent(builder::withStartTime);
 
-    descriptor.directionId().ifPresent(dirId -> builder.withDirection(mapDirection(dirId)));
+    tripUpdate
+      .descriptor()
+      .directionId()
+      .ifPresent(dirId -> builder.withDirection(mapDirection(dirId)));
 
     if (fuzzyMatchingEnabled) {
       builder.withFuzzyMatchingHint(TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED);
@@ -317,18 +304,11 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     }
   }
 
-  private TripCreationInfo buildTripCreationInfo(
-    FeedScopedId tripId,
-    TripDescriptor descriptor,
-    TripUpdate tripUpdate
-  ) {
+  private TripCreationInfo buildTripCreationInfo(FeedScopedId tripId, TripUpdate tripUpdate) {
     var builder = TripCreationInfo.builder(tripId);
 
-    // Get route ID from descriptor
-    var routeId = descriptor
-      .routeId()
-      .map(id -> new FeedScopedId(tripId.getFeedId(), id))
-      .orElse(null);
+    // Get route ID from trip update
+    var routeId = tripUpdate.routeId().orElse(null);
 
     if (routeId != null) {
       builder.withRouteId(routeId);
@@ -349,7 +329,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       });
 
     // Extract route creation info from MFDZ extensions
-    var addedRoute = AddedRoute.ofTripDescriptor(descriptor);
+    var addedRoute = AddedRoute.ofTripDescriptor(tripUpdate);
     if (routeId != null && (addedRoute.routeUrl() != null || addedRoute.routeLongName() != null)) {
       var agencyId = addedRoute.agencyId() != null
         ? new FeedScopedId(tripId.getFeedId(), addedRoute.agencyId())

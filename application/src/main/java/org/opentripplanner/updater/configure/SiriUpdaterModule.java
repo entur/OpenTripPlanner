@@ -1,6 +1,7 @@
 package org.opentripplanner.updater.configure;
 
 import java.util.function.Consumer;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.alert.siri.SiriSXUpdater;
 import org.opentripplanner.updater.alert.siri.SiriSXUpdaterParameters;
@@ -31,9 +32,15 @@ public class SiriUpdaterModule {
   public static SiriETUpdater createSiriETUpdater(
     SiriETUpdaterParameters params,
     TimetableRepository timetableRepository,
+    DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager
   ) {
-    SiriTripUpdateAdapter adapter = createAdapter(params, timetableRepository, snapshotManager);
+    SiriTripUpdateAdapter adapter = createAdapter(
+      params,
+      timetableRepository,
+      deduplicator,
+      snapshotManager
+    );
     return new SiriETUpdater(params, adapter, createSource(params), createMetricsConsumer(params));
   }
 
@@ -45,12 +52,18 @@ public class SiriUpdaterModule {
   private static SiriTripUpdateAdapter createAdapter(
     SiriETUpdaterParameters params,
     TimetableRepository timetableRepository,
+    DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager
   ) {
     if (params.useNewUpdaterImplementation()) {
-      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager, params.feedId());
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        params.feedId()
+      );
     } else {
-      return new SiriRealTimeTripUpdateAdapter(timetableRepository, snapshotManager);
+      return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, snapshotManager);
     }
   }
 

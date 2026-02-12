@@ -11,6 +11,7 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.DataValidationException;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -30,7 +31,7 @@ import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,17 +50,20 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripHandler.class);
 
   private final String feedId;
-  private final SiriTripPatternCache tripPatternCache;
+  private final DeduplicatorService deduplicator;
+  private final TripPatternCache tripPatternCache;
 
   @Nullable
   private final Function<FeedScopedId, Route> routeCache;
 
   public AddNewTripHandler(
     String feedId,
-    SiriTripPatternCache tripPatternCache,
+    DeduplicatorService deduplicator,
+    TripPatternCache tripPatternCache,
     @Nullable Function<FeedScopedId, Route> routeCache
   ) {
     this.feedId = Objects.requireNonNull(feedId);
+    this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
     this.routeCache = routeCache;
   }
@@ -132,7 +136,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     var scheduledTripTimes = TripTimesFactory.tripTimes(
       trip,
       stopTimesAndPattern.stopTimes(),
-      transitService.getDeduplicator()
+      deduplicator
     ).withServiceCode(transitService.getServiceCode(serviceId));
 
     // Validate times

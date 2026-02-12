@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.TransitEditorService;
@@ -17,7 +18,7 @@ import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,8 +62,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     String feedId,
     ZoneId timeZone,
     TransitEditorService transitService,
+    DeduplicatorService deduplicator,
     @Nullable TimetableSnapshotManager snapshotManager,
-    SiriTripPatternCache tripPatternCache,
+    TripPatternCache tripPatternCache,
     @Nullable FuzzyTripMatcher fuzzyTripMatcher,
     @Nullable Function<FeedScopedId, Route> routeCache
   ) {
@@ -96,8 +98,13 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
     // Create handlers with injected deps
     this.updateExistingHandler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
-    this.modifyTripHandler = new ModifyTripHandler(snapshotManager, tripPatternCache);
-    this.addNewTripHandler = new AddNewTripHandler(feedId, tripPatternCache, routeCache);
+    this.modifyTripHandler = new ModifyTripHandler(snapshotManager, deduplicator, tripPatternCache);
+    this.addNewTripHandler = new AddNewTripHandler(
+      feedId,
+      deduplicator,
+      tripPatternCache,
+      routeCache
+    );
     this.cancelTripHandler = new CancelTripHandler(snapshotManager);
     this.deleteTripHandler = new DeleteTripHandler(snapshotManager);
   }

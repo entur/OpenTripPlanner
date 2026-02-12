@@ -11,6 +11,7 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -53,6 +54,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     // Create the new adapter
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
+      new Deduplicator(),
       env.timetableSnapshotManager(),
       env.feedId()
     );
@@ -88,6 +90,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
+      new Deduplicator(),
       env.timetableSnapshotManager(),
       env.feedId()
     );
@@ -99,6 +102,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
+      new Deduplicator(),
       env.timetableSnapshotManager(),
       env.feedId()
     );

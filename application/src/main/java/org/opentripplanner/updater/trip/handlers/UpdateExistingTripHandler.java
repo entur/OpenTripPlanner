@@ -26,7 +26,7 @@ import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
-import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +44,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   @Nullable
   private final TimetableSnapshotManager snapshotManager;
 
-  private final SiriTripPatternCache tripPatternCache;
+  private final TripPatternCache tripPatternCache;
 
   public UpdateExistingTripHandler(
     @Nullable TimetableSnapshotManager snapshotManager,
-    SiriTripPatternCache tripPatternCache
+    TripPatternCache tripPatternCache
   ) {
     this.snapshotManager = snapshotManager;
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
@@ -110,7 +110,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       // Check if pattern actually changed (builder deduplicates)
       // Compare against the scheduled pattern to determine if we need a modified pattern
       if (!scheduledPattern.getStopPattern().equals(newStopPattern)) {
-        // SiriTripPatternCache uses 2-parameter signature (gets original pattern via injected function)
+        // TripPatternCache uses 2-parameter signature (gets original pattern via injected function)
         finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
 
         // Conditionally set MODIFIED state based on feed type configuration

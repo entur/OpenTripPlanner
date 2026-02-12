@@ -85,8 +85,8 @@ class ModifyTripHandlerTest {
       var tripResolver = new TripResolver(env.transitService());
       var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
       var stopResolver = new StopResolver(env.transitService());
-      var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
-        new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
+      var tripPatternCache = new org.opentripplanner.updater.trip.patterncache.TripPatternCache(
+        new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator(),
         env.transitService()::findPattern
       );
       resolver = new ExistingTripResolver(
@@ -97,7 +97,11 @@ class ModifyTripHandlerTest {
         null,
         TIME_ZONE
       );
-      handler = new ModifyTripHandler(snapshotManager, tripPatternCache);
+      handler = new ModifyTripHandler(
+        snapshotManager,
+        new org.opentripplanner.transit.model.framework.Deduplicator(),
+        tripPatternCache
+      );
     }
 
     private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
@@ -430,8 +434,8 @@ class ModifyTripHandlerTest {
       var tripResolver = new TripResolver(env.transitService());
       var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
       var stopResolver = new StopResolver(env.transitService());
-      var tripPatternCache = new org.opentripplanner.updater.trip.siri.SiriTripPatternCache(
-        new org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator(),
+      var tripPatternCache = new org.opentripplanner.updater.trip.patterncache.TripPatternCache(
+        new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator(),
         env.transitService()::findPattern
       );
       resolver = new ExistingTripResolver(
@@ -442,7 +446,11 @@ class ModifyTripHandlerTest {
         null,
         TIME_ZONE
       );
-      handler = new ModifyTripHandler(snapshotManager, tripPatternCache);
+      handler = new ModifyTripHandler(
+        snapshotManager,
+        new org.opentripplanner.transit.model.framework.Deduplicator(),
+        tripPatternCache
+      );
     }
 
     private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
