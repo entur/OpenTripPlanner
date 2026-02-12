@@ -11,12 +11,16 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
+import org.opentripplanner.updater.trip.handlers.AddNewTripValidator;
 import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
 import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
+import org.opentripplanner.updater.trip.handlers.ModifyTripValidator;
 import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
+import org.opentripplanner.updater.trip.handlers.TripUpdateValidator;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
+import org.opentripplanner.updater.trip.handlers.UpdateExistingTripValidator;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
@@ -47,6 +51,11 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   private final ExistingTripResolver existingTripResolver;
   private final NewTripResolver newTripResolver;
   private final TripRemovalResolver tripRemovalResolver;
+
+  // Validators for each update type
+  private final TripUpdateValidator.ForExistingTrip updateExistingValidator;
+  private final TripUpdateValidator.ForExistingTrip modifyTripValidator;
+  private final TripUpdateValidator.ForNewTrip addNewTripValidator;
 
   // Handlers for each update type
   private final TripUpdateHandler.ForExistingTrip updateExistingHandler;
@@ -96,6 +105,11 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       serviceDateResolver
     );
 
+    // Create validators
+    this.updateExistingValidator = new UpdateExistingTripValidator();
+    this.modifyTripValidator = new ModifyTripValidator();
+    this.addNewTripValidator = new AddNewTripValidator();
+
     // Create handlers with injected deps
     this.updateExistingHandler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
     this.modifyTripHandler = new ModifyTripHandler(
@@ -123,6 +137,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     ExistingTripResolver existingTripResolver,
     NewTripResolver newTripResolver,
     TripRemovalResolver tripRemovalResolver,
+    TripUpdateValidator.ForExistingTrip updateExistingValidator,
+    TripUpdateValidator.ForExistingTrip modifyTripValidator,
+    TripUpdateValidator.ForNewTrip addNewTripValidator,
     TripUpdateHandler.ForExistingTrip updateExistingHandler,
     TripUpdateHandler.ForExistingTrip modifyTripHandler,
     TripUpdateHandler.ForNewTrip addNewTripHandler,
@@ -133,6 +150,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     this.existingTripResolver = Objects.requireNonNull(existingTripResolver);
     this.newTripResolver = Objects.requireNonNull(newTripResolver);
     this.tripRemovalResolver = Objects.requireNonNull(tripRemovalResolver);
+    this.updateExistingValidator = Objects.requireNonNull(updateExistingValidator);
+    this.modifyTripValidator = Objects.requireNonNull(modifyTripValidator);
+    this.addNewTripValidator = Objects.requireNonNull(addNewTripValidator);
     this.updateExistingHandler = Objects.requireNonNull(updateExistingHandler);
     this.modifyTripHandler = Objects.requireNonNull(modifyTripHandler);
     this.addNewTripHandler = Objects.requireNonNull(addNewTripHandler);
@@ -149,21 +169,36 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield updateExistingHandler.handle(resolveResult.successValue());
+          var resolved = resolveResult.successValue();
+          var validationResult = updateExistingValidator.validate(resolved);
+          if (validationResult.isFailure()) {
+            yield Result.failure(validationResult.failureValue());
+          }
+          yield updateExistingHandler.handle(resolved);
         }
         case MODIFY_TRIP -> {
           var resolveResult = existingTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield modifyTripHandler.handle(resolveResult.successValue());
+          var resolved = resolveResult.successValue();
+          var validationResult = modifyTripValidator.validate(resolved);
+          if (validationResult.isFailure()) {
+            yield Result.failure(validationResult.failureValue());
+          }
+          yield modifyTripHandler.handle(resolved);
         }
         case ADD_NEW_TRIP -> {
           var resolveResult = newTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
             yield Result.failure(resolveResult.failureValue());
           }
-          yield addNewTripHandler.handle(resolveResult.successValue());
+          var resolved = resolveResult.successValue();
+          var validationResult = addNewTripValidator.validate(resolved);
+          if (validationResult.isFailure()) {
+            yield Result.failure(validationResult.failureValue());
+          }
+          yield addNewTripHandler.handle(resolved);
         }
         case CANCEL_TRIP -> {
           var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
