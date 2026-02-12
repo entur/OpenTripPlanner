@@ -60,6 +60,7 @@ public class SiriUpdaterModule {
         timetableRepository,
         deduplicator,
         snapshotManager,
+        params.fuzzyTripMatching(),
         params.feedId()
       );
     } else {

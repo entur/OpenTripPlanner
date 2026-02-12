@@ -284,6 +284,7 @@ public class UpdaterConfigurator {
         timetableRepository,
         deduplicator,
         snapshotManager,
+        config.fuzzyTripMatching(),
         config.feedId()
       );
     } else {
@@ -297,6 +298,7 @@ public class UpdaterConfigurator {
         timetableRepository,
         deduplicator,
         snapshotManager,
+        config.isFuzzyTripMatching(),
         config.feedId()
       );
     } else {
@@ -310,6 +312,7 @@ public class UpdaterConfigurator {
         timetableRepository,
         deduplicator,
         snapshotManager,
+        config.fuzzyTripMatching(),
         config.feedId()
       );
     } else {
