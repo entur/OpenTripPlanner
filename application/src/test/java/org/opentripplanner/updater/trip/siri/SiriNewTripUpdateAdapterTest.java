@@ -56,6 +56,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.timetableRepository(),
       new Deduplicator(),
       env.timetableSnapshotManager(),
+      false,
       env.feedId()
     );
 
@@ -92,6 +93,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.timetableRepository(),
       new Deduplicator(),
       env.timetableSnapshotManager(),
+      false,
       env.feedId()
     );
     assertNotNull(newAdapter);
@@ -104,6 +106,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.timetableRepository(),
       new Deduplicator(),
       env.timetableSnapshotManager(),
+      false,
       env.feedId()
     );
 
