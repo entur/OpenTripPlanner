@@ -313,36 +313,29 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   ) {
     FeedScopedId tripId = tripCreationInfo.tripId();
 
-    // First try to find route by explicit routeId
+    // Try to find existing route by routeId
     if (tripCreationInfo.routeId() != null) {
       Route existingRoute = findRoute(tripCreationInfo.routeId(), transitService);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route {}", existingRoute.getId());
         return Result.success(existingRoute);
       }
-    }
 
-    // Try routeCreationInfo.routeId
-    if (tripCreationInfo.routeCreationInfo() != null) {
-      FeedScopedId routeId = tripCreationInfo.routeCreationInfo().routeId();
-      Route existingRoute = findRoute(routeId, transitService);
-      if (existingRoute != null) {
-        LOG.debug("ADD_TRIP: Using existing route from routeCreationInfo {}", routeId);
-        return Result.success(existingRoute);
+      // Route not found - create using routeCreationInfo metadata if available
+      if (tripCreationInfo.routeCreationInfo() != null) {
+        return createRoute(
+          tripCreationInfo.routeId(),
+          tripCreationInfo.routeCreationInfo(),
+          tripCreationInfo,
+          transitService
+        );
       }
-    }
 
-    // Need to create a new route
-    if (tripCreationInfo.routeCreationInfo() != null) {
-      return createRoute(tripCreationInfo.routeCreationInfo(), tripCreationInfo, transitService);
-    }
-
-    // No routeCreationInfo, but we have a routeId - create a route using that ID
-    if (tripCreationInfo.routeId() != null) {
+      // No routeCreationInfo - create a minimal route using the routeId
       return createRouteFromRouteId(tripCreationInfo.routeId(), tripCreationInfo, transitService);
     }
 
-    // No route info - create minimal route using trip ID
+    // No route info at all - create minimal route using trip ID
     return createFallbackRoute(tripId, transitService);
   }
 
@@ -365,11 +358,11 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    * Create a new route from route creation info.
    */
   private Result<Route, UpdateError> createRoute(
+    FeedScopedId routeId,
     RouteCreationInfo routeCreationInfo,
     TripCreationInfo tripCreationInfo,
     TransitEditorService transitService
   ) {
-    FeedScopedId routeId = routeCreationInfo.routeId();
     var builder = Route.of(routeId);
 
     // Find agency

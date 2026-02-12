@@ -42,7 +42,6 @@ class TripCreationInfoTest {
   void builderWithAllFields() {
     var headsign = new NonLocalizedString("Downtown");
     var routeCreationInfo = new RouteCreationInfo(
-      ROUTE_ID,
       "Route 1",
       TransitMode.BUS,
       "localBus",
@@ -80,7 +79,7 @@ class TripCreationInfoTest {
 
   @Test
   void requiresRouteCreationWhenRouteCreationInfoPresent() {
-    var routeCreationInfo = new RouteCreationInfo(ROUTE_ID, "Route 1", TransitMode.BUS, null, null);
+    var routeCreationInfo = new RouteCreationInfo("Route 1", TransitMode.BUS, null, null);
 
     var info = TripCreationInfo.builder(TRIP_ID).withRouteCreationInfo(routeCreationInfo).build();
 

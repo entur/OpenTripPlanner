@@ -336,7 +336,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         : null;
       var mode = org.opentripplanner.gtfs.mapping.TransitModeMapper.mapMode(addedRoute.routeType());
       var routeCreationInfo = new RouteCreationInfo(
-        routeId,
         addedRoute.routeLongName(),
         mode,
         null,
