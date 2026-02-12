@@ -99,6 +99,7 @@ class ModifyTripHandlerTest {
       );
       handler = new ModifyTripHandler(
         snapshotManager,
+        transitService,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
       );
@@ -142,7 +143,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 3, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -182,7 +183,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -226,7 +227,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopCUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -255,7 +256,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
       assertTrue(result.isSuccess());
 
       // Apply the update to the snapshot manager
@@ -351,7 +352,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure());
       assertEquals(UpdateError.UpdateErrorType.UNKNOWN_STOP, result.failureValue().errorType());
@@ -377,7 +378,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure());
       assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
@@ -448,6 +449,7 @@ class ModifyTripHandlerTest {
       );
       handler = new ModifyTripHandler(
         snapshotManager,
+        transitService,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
       );
@@ -484,7 +486,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -521,7 +523,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -550,7 +552,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopDUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure());
       assertEquals(
@@ -582,7 +584,7 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopDNonExtraUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure());
       assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());

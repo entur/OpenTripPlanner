@@ -136,7 +136,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
     assertNotNull(result.successValue());
@@ -194,7 +194,7 @@ class UpdateExistingTripHandlerTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -235,7 +235,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -315,7 +315,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -356,7 +356,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -398,7 +398,7 @@ class UpdateExistingTripHandlerTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = handler.handle(resolve(parsedUpdate), transitService);
+    var result = handler.handle(resolve(parsedUpdate));
 
     assertTrue(result.isSuccess(), "Expected success but got: " + result);
 
@@ -488,7 +488,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -522,7 +522,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
@@ -556,7 +556,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -587,7 +587,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
@@ -622,7 +622,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -665,7 +665,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopA2Update, stopB1Update))
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
     }
@@ -708,7 +708,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate), stationTransitService);
+      var result = handler.handle(resolveStation(parsedUpdate));
 
       assertTrue(
         result.isFailure(),
@@ -760,7 +760,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopCUpdate, stopAUpdate))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -799,7 +799,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopAUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(
@@ -839,7 +839,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
@@ -888,7 +888,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate, stopDUpdate))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isFailure(), "Expected failure but got success");
       assertEquals(UpdateError.UpdateErrorType.TOO_MANY_STOPS, result.failureValue().errorType());
@@ -930,7 +930,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopAUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -985,7 +985,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -1027,7 +1027,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -1072,7 +1072,7 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
@@ -1127,7 +1127,7 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopAUpdate, stopCUpdate))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate), transitService);
+      var result = handler.handle(resolve(parsedUpdate));
 
       assertTrue(result.isSuccess(), "Expected success but got: " + result);
       var updatedTimes = result.successValue().updatedTripTimes();
