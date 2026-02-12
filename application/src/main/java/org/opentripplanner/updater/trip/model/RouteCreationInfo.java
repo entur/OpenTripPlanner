@@ -30,6 +30,9 @@ public final class RouteCreationInfo {
   @Nullable
   private final FeedScopedId agencyId;
 
+  @Nullable
+  private final Integer gtfsType;
+
   /**
    * @param routeName The name of the route
    * @param mode The transit mode of the route
@@ -37,6 +40,7 @@ public final class RouteCreationInfo {
    * @param operatorId The operator ID for the route
    * @param url The URL for the route
    * @param agencyId The agency ID for the route
+   * @param gtfsType The GTFS route type (e.g., 3 for bus)
    */
   public RouteCreationInfo(
     @Nullable String routeName,
@@ -44,7 +48,8 @@ public final class RouteCreationInfo {
     @Nullable String submode,
     @Nullable FeedScopedId operatorId,
     @Nullable String url,
-    @Nullable FeedScopedId agencyId
+    @Nullable FeedScopedId agencyId,
+    @Nullable Integer gtfsType
   ) {
     this.routeName = routeName;
     this.mode = mode;
@@ -52,10 +57,11 @@ public final class RouteCreationInfo {
     this.operatorId = operatorId;
     this.url = url;
     this.agencyId = agencyId;
+    this.gtfsType = gtfsType;
   }
 
   /**
-   * Convenience constructor without URL and agencyId.
+   * Convenience constructor without URL, agencyId, and gtfsType.
    */
   public RouteCreationInfo(
     @Nullable String routeName,
@@ -63,7 +69,7 @@ public final class RouteCreationInfo {
     @Nullable String submode,
     @Nullable FeedScopedId operatorId
   ) {
-    this(routeName, mode, submode, operatorId, null, null);
+    this(routeName, mode, submode, operatorId, null, null, null);
   }
 
   @Nullable
@@ -96,6 +102,11 @@ public final class RouteCreationInfo {
     return agencyId;
   }
 
+  @Nullable
+  public Integer gtfsType() {
+    return gtfsType;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -111,13 +122,14 @@ public final class RouteCreationInfo {
       Objects.equals(submode, that.submode) &&
       Objects.equals(operatorId, that.operatorId) &&
       Objects.equals(url, that.url) &&
-      Objects.equals(agencyId, that.agencyId)
+      Objects.equals(agencyId, that.agencyId) &&
+      Objects.equals(gtfsType, that.gtfsType)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(routeName, mode, submode, operatorId, url, agencyId);
+    return Objects.hash(routeName, mode, submode, operatorId, url, agencyId, gtfsType);
   }
 
   @Override
@@ -139,6 +151,8 @@ public final class RouteCreationInfo {
       '\'' +
       ", agencyId=" +
       agencyId +
+      ", gtfsType=" +
+      gtfsType +
       '}'
     );
   }

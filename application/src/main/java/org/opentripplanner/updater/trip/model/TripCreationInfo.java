@@ -46,6 +46,9 @@ public final class TripCreationInfo {
 
   private final List<FeedScopedId> replacedTrips;
 
+  @Nullable
+  private final FeedScopedId replacedRouteId;
+
   /**
    * @param tripId The ID to use for the new trip
    * @param routeId The route ID to associate the trip with
@@ -58,6 +61,7 @@ public final class TripCreationInfo {
    * @param operatorId The operator ID
    * @param wheelchairAccessibility Wheelchair accessibility of the vehicle
    * @param replacedTrips IDs of trips that this new trip replaces
+   * @param replacedRouteId The route ID of the route being replaced (from SIRI ExternalLineRef)
    */
   public TripCreationInfo(
     FeedScopedId tripId,
@@ -70,7 +74,8 @@ public final class TripCreationInfo {
     @Nullable String submode,
     @Nullable FeedScopedId operatorId,
     @Nullable Accessibility wheelchairAccessibility,
-    List<FeedScopedId> replacedTrips
+    List<FeedScopedId> replacedTrips,
+    @Nullable FeedScopedId replacedRouteId
   ) {
     this.tripId = Objects.requireNonNull(tripId, "tripId must not be null");
     this.routeId = routeId;
@@ -83,6 +88,7 @@ public final class TripCreationInfo {
     this.operatorId = operatorId;
     this.wheelchairAccessibility = wheelchairAccessibility;
     this.replacedTrips = replacedTrips != null ? List.copyOf(replacedTrips) : List.of();
+    this.replacedRouteId = replacedRouteId;
   }
 
   /**
@@ -145,6 +151,11 @@ public final class TripCreationInfo {
     return replacedTrips;
   }
 
+  @Nullable
+  public FeedScopedId replacedRouteId() {
+    return replacedRouteId;
+  }
+
   /**
    * Returns true if this trip creation requires creating a new route.
    */
@@ -172,7 +183,8 @@ public final class TripCreationInfo {
       Objects.equals(submode, that.submode) &&
       Objects.equals(operatorId, that.operatorId) &&
       wheelchairAccessibility == that.wheelchairAccessibility &&
-      Objects.equals(replacedTrips, that.replacedTrips)
+      Objects.equals(replacedTrips, that.replacedTrips) &&
+      Objects.equals(replacedRouteId, that.replacedRouteId)
     );
   }
 
@@ -189,7 +201,8 @@ public final class TripCreationInfo {
       submode,
       operatorId,
       wheelchairAccessibility,
-      replacedTrips
+      replacedTrips,
+      replacedRouteId
     );
   }
 
@@ -221,6 +234,8 @@ public final class TripCreationInfo {
       wheelchairAccessibility +
       ", replacedTrips=" +
       replacedTrips +
+      ", replacedRouteId=" +
+      replacedRouteId +
       '}'
     );
   }
@@ -241,6 +256,7 @@ public final class TripCreationInfo {
     private FeedScopedId operatorId;
     private Accessibility wheelchairAccessibility;
     private List<FeedScopedId> replacedTrips = new ArrayList<>();
+    private FeedScopedId replacedRouteId;
 
     private Builder(FeedScopedId tripId) {
       this.tripId = Objects.requireNonNull(tripId);
@@ -301,6 +317,11 @@ public final class TripCreationInfo {
       return this;
     }
 
+    public Builder withReplacedRouteId(FeedScopedId replacedRouteId) {
+      this.replacedRouteId = replacedRouteId;
+      return this;
+    }
+
     public TripCreationInfo build() {
       return new TripCreationInfo(
         tripId,
@@ -313,7 +334,8 @@ public final class TripCreationInfo {
         submode,
         operatorId,
         wheelchairAccessibility,
-        replacedTrips
+        replacedTrips,
+        replacedRouteId
       );
     }
   }

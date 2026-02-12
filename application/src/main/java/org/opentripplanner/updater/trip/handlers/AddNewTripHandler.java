@@ -4,18 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
-import javax.annotation.Nullable;
-import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -27,7 +21,6 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
@@ -52,22 +45,20 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
-
-  @Nullable
-  private final Function<FeedScopedId, Route> routeCache;
+  private final RouteCreationStrategy routeCreationStrategy;
 
   public AddNewTripHandler(
     String feedId,
     TransitEditorService transitService,
     DeduplicatorService deduplicator,
     TripPatternCache tripPatternCache,
-    @Nullable Function<FeedScopedId, Route> routeCache
+    RouteCreationStrategy routeCreationStrategy
   ) {
     this.feedId = Objects.requireNonNull(feedId);
     this.transitService = Objects.requireNonNull(transitService);
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
-    this.routeCache = routeCache;
+    this.routeCreationStrategy = Objects.requireNonNull(routeCreationStrategy);
   }
 
   @Override
@@ -107,7 +98,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     }
 
     // Resolve or create route
-    var routeResult = resolveOrCreateRoute(tripCreationInfo, transitService);
+    var routeResult = routeCreationStrategy.resolveOrCreateRoute(tripCreationInfo, transitService);
     if (routeResult.isFailure()) {
       return Result.failure(routeResult.failureValue());
     }
@@ -302,239 +293,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     }
 
     return Result.success(new FilteredStopTimeUpdates(filteredUpdates, warnings));
-  }
-
-  /**
-   * Resolve an existing route or create a new one.
-   */
-  private Result<Route, UpdateError> resolveOrCreateRoute(
-    TripCreationInfo tripCreationInfo,
-    TransitEditorService transitService
-  ) {
-    FeedScopedId tripId = tripCreationInfo.tripId();
-
-    // Try to find existing route by routeId
-    if (tripCreationInfo.routeId() != null) {
-      Route existingRoute = findRoute(tripCreationInfo.routeId(), transitService);
-      if (existingRoute != null) {
-        LOG.debug("ADD_TRIP: Using existing route {}", existingRoute.getId());
-        return Result.success(existingRoute);
-      }
-
-      // Route not found - create using routeCreationInfo metadata if available
-      if (tripCreationInfo.routeCreationInfo() != null) {
-        return createRoute(
-          tripCreationInfo.routeId(),
-          tripCreationInfo.routeCreationInfo(),
-          tripCreationInfo,
-          transitService
-        );
-      }
-
-      // No routeCreationInfo - create a minimal route using the routeId
-      return createRouteFromRouteId(tripCreationInfo.routeId(), tripCreationInfo, transitService);
-    }
-
-    // No route info at all - create minimal route using trip ID
-    return createFallbackRoute(tripId, transitService);
-  }
-
-  /**
-   * Find a route by ID, checking the route cache first, then the transit service.
-   */
-  private Route findRoute(FeedScopedId routeId, TransitEditorService transitService) {
-    // Check route cache first
-    if (routeCache != null) {
-      Route cachedRoute = routeCache.apply(routeId);
-      if (cachedRoute != null) {
-        return cachedRoute;
-      }
-    }
-    // Fall back to transit service
-    return transitService.getRoute(routeId);
-  }
-
-  /**
-   * Create a new route from route creation info.
-   */
-  private Result<Route, UpdateError> createRoute(
-    FeedScopedId routeId,
-    RouteCreationInfo routeCreationInfo,
-    TripCreationInfo tripCreationInfo,
-    TransitEditorService transitService
-  ) {
-    var builder = Route.of(routeId);
-
-    // Find agency
-    Agency agency = findAgencyForRoute(tripCreationInfo, routeCreationInfo, transitService);
-    builder.withAgency(agency);
-
-    // Set mode
-    TransitMode mode = routeCreationInfo.mode();
-    if (mode == null && tripCreationInfo.mode() != null) {
-      mode = tripCreationInfo.mode();
-    }
-    if (mode == null) {
-      mode = TransitMode.BUS;
-    }
-    builder.withMode(mode);
-
-    // Set submode
-    String submode = routeCreationInfo.submode();
-    if (submode == null && tripCreationInfo.submode() != null) {
-      submode = tripCreationInfo.submode();
-    }
-    if (submode != null) {
-      builder.withNetexSubmode(submode);
-    }
-
-    // Set name
-    I18NString name = NonLocalizedString.ofNullable(routeCreationInfo.routeName());
-    if (name == null) {
-      name = NonLocalizedString.ofNullable(routeId.getId());
-    }
-    builder.withLongName(name);
-
-    // Set URL
-    if (routeCreationInfo.url() != null) {
-      builder.withUrl(routeCreationInfo.url());
-    }
-
-    Route route = builder.build();
-    LOG.debug("ADD_TRIP: Created new route {}", routeId);
-    return Result.success(route);
-  }
-
-  /**
-   * Create a new route using the routeId from TripCreationInfo when no routeCreationInfo is
-   * provided. This happens for SIRI extra journeys where lineRef doesn't match an existing route.
-   */
-  private Result<Route, UpdateError> createRouteFromRouteId(
-    FeedScopedId routeId,
-    TripCreationInfo tripCreationInfo,
-    TransitEditorService transitService
-  ) {
-    var builder = Route.of(routeId);
-
-    // Find an agency
-    Agency agency = findFallbackAgencyFromTripInfo(tripCreationInfo, transitService);
-    builder.withAgency(agency);
-
-    // Set mode from trip creation info or default to BUS
-    TransitMode mode = tripCreationInfo.mode() != null ? tripCreationInfo.mode() : TransitMode.BUS;
-    builder.withMode(mode);
-
-    // Set submode if provided
-    if (tripCreationInfo.submode() != null) {
-      builder.withNetexSubmode(tripCreationInfo.submode());
-    }
-
-    // Use route ID as name
-    builder.withLongName(NonLocalizedString.ofNullable(routeId.getId()));
-
-    Route route = builder.build();
-    LOG.debug("ADD_TRIP: Created new route from routeId {}", routeId);
-    return Result.success(route);
-  }
-
-  /**
-   * Create a fallback route when no route info is provided.
-   */
-  private Result<Route, UpdateError> createFallbackRoute(
-    FeedScopedId tripId,
-    TransitEditorService transitService
-  ) {
-    // Use trip ID as route ID for fallback route
-    var builder = Route.of(tripId);
-
-    // Find a fallback agency
-    Agency agency = findFallbackAgency(feedId, transitService);
-    builder.withAgency(agency);
-    builder.withMode(TransitMode.BUS);
-    builder.withLongName(NonLocalizedString.ofNullable(tripId.getId()));
-
-    Route route = builder.build();
-    LOG.debug("ADD_TRIP: Created fallback route {}", tripId);
-    return Result.success(route);
-  }
-
-  /**
-   * Find an agency for a new route.
-   */
-  private Agency findAgencyForRoute(
-    TripCreationInfo tripCreationInfo,
-    RouteCreationInfo routeCreationInfo,
-    TransitEditorService transitService
-  ) {
-    // Try operator from route creation info
-    if (routeCreationInfo.operatorId() != null) {
-      var agency = transitService.findAgency(routeCreationInfo.operatorId());
-      if (agency.isPresent()) {
-        return agency.get();
-      }
-    }
-
-    // Try operator from trip creation info
-    if (tripCreationInfo.operatorId() != null) {
-      var agency = transitService.findAgency(tripCreationInfo.operatorId());
-      if (agency.isPresent()) {
-        return agency.get();
-      }
-    }
-
-    // Try to find agency from replaced trips
-    for (FeedScopedId replacedTripId : tripCreationInfo.replacedTrips()) {
-      Trip replacedTrip = transitService.getScheduledTrip(replacedTripId);
-      if (replacedTrip != null) {
-        return replacedTrip.getRoute().getAgency();
-      }
-    }
-
-    return findFallbackAgency(feedId, transitService);
-  }
-
-  /**
-   * Find an agency for a route when we only have TripCreationInfo (no RouteCreationInfo).
-   */
-  private Agency findFallbackAgencyFromTripInfo(
-    TripCreationInfo tripCreationInfo,
-    TransitEditorService transitService
-  ) {
-    // Try operator from trip creation info
-    if (tripCreationInfo.operatorId() != null) {
-      var agency = transitService.findAgency(tripCreationInfo.operatorId());
-      if (agency.isPresent()) {
-        return agency.get();
-      }
-    }
-
-    // Try to find agency from replaced trips
-    for (FeedScopedId replacedTripId : tripCreationInfo.replacedTrips()) {
-      Trip replacedTrip = transitService.getScheduledTrip(replacedTripId);
-      if (replacedTrip != null) {
-        return replacedTrip.getRoute().getAgency();
-      }
-    }
-
-    return findFallbackAgency(feedId, transitService);
-  }
-
-  /**
-   * Find or create a fallback agency.
-   */
-  private Agency findFallbackAgency(String feedId, TransitEditorService transitService) {
-    // Try to use any existing agency from the feed
-    for (Agency agency : transitService.listAgencies()) {
-      if (agency.getId().getFeedId().equals(feedId)) {
-        return agency;
-      }
-    }
-
-    // Create a dummy agency
-    return Agency.of(new FeedScopedId(feedId, "autogenerated-gtfs-rt-added-route"))
-      .withName("Agency automatically added by real-time update")
-      .withTimezone(transitService.getTimeZone().toString())
-      .build();
   }
 
   /**
