@@ -28,7 +28,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
   @Test
   void testUpdateJourneyWithFuzzyMatching() {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
-    var siri = SiriTestHelper.of(env);
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
 
     var updates = siri
       .etBuilder()
@@ -52,7 +52,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
   @Test
   void testUpdateJourneyWithFuzzyMatchingAndMissingAimedDepartureTime() {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
-    var siri = SiriTestHelper.of(env);
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
 
     var updates = siri
       .etBuilder()

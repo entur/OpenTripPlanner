@@ -19,18 +19,23 @@ public class SiriTestHelper {
   private final TransitTestEnvironment transitTestEnvironment;
   private final SiriTripUpdateAdapter siriAdapter;
 
-  SiriTestHelper(TransitTestEnvironment transitTestEnvironment) {
+  SiriTestHelper(TransitTestEnvironment transitTestEnvironment, boolean fuzzyTripMatching) {
     this.transitTestEnvironment = transitTestEnvironment;
     this.siriAdapter = new SiriNewTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       new Deduplicator(),
       transitTestEnvironment.timetableSnapshotManager(),
+      fuzzyTripMatching,
       transitTestEnvironment.feedId()
     );
   }
 
   public static SiriTestHelper of(TransitTestEnvironment transitTestEnvironment) {
-    return new SiriTestHelper(transitTestEnvironment);
+    return new SiriTestHelper(transitTestEnvironment, false);
+  }
+
+  public static SiriTestHelper ofFuzzyMatching(TransitTestEnvironment transitTestEnvironment) {
+    return new SiriTestHelper(transitTestEnvironment, true);
   }
 
   public SiriEtBuilder etBuilder() {

@@ -51,17 +51,17 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
   private final TripPatternCache tripPatternCache;
 
   private final SiriTripUpdateParser parser;
-  private final DeduplicatorService deduplicator;
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
+  private final DefaultTripUpdateApplier applier;
 
   public SiriNewTripUpdateAdapter(
     TimetableRepository timetableRepository,
     DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager,
+    boolean fuzzyTripMatching,
     String feedId
   ) {
-    this.deduplicator = deduplicator;
     this.snapshotManager = snapshotManager;
     this.transitEditorService = new DefaultTransitService(
       timetableRepository,
@@ -72,6 +72,25 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       transitEditorService::findPattern
     );
     this.parser = new SiriTripUpdateParser(feedId, transitEditorService.getTimeZone());
+
+    FuzzyTripMatcher fuzzyMatcher = fuzzyTripMatching
+      ? new LastStopArrivalTimeMatcher(
+          transitEditorService,
+          new StopResolver(transitEditorService),
+          transitEditorService.getTimeZone()
+        )
+      : null;
+
+    this.applier = new DefaultTripUpdateApplier(
+      feedId,
+      transitEditorService.getTimeZone(),
+      transitEditorService,
+      deduplicator,
+      snapshotManager,
+      tripPatternCache,
+      fuzzyMatcher,
+      null
+    );
   }
 
   /**
@@ -104,34 +123,12 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       snapshotManager.clearBuffer(feedId);
     }
 
-    // TODO RT_VP Create fuzzy matcher if the old SiriFuzzyTripMatcher was configured
-    //  for compatibility with the legacy implementation
-    FuzzyTripMatcher fuzzyMatcher = null;
-    if (fuzzyTripMatcher != null) {
-      fuzzyMatcher = new LastStopArrivalTimeMatcher(
-        transitEditorService,
-        new StopResolver(transitEditorService),
-        transitEditorService.getTimeZone()
-      );
-    }
-
-    var applier = new DefaultTripUpdateApplier(
-      feedId,
-      transitEditorService.getTimeZone(),
-      transitEditorService,
-      deduplicator,
-      snapshotManager,
-      tripPatternCache,
-      fuzzyMatcher,
-      null
-    );
-
     for (var etDelivery : updates) {
       for (var estimatedJourneyVersion : etDelivery.getEstimatedJourneyVersionFrames()) {
         var journeys = estimatedJourneyVersion.getEstimatedVehicleJourneies();
         LOG.debug("Handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
-          results.add(apply(journey, applier));
+          results.add(apply(journey));
         }
       }
     }
@@ -141,10 +138,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     return UpdateResult.ofResults(results);
   }
 
-  private Result<UpdateSuccess, UpdateError> apply(
-    EstimatedVehicleJourney journey,
-    DefaultTripUpdateApplier applier
-  ) {
+  private Result<UpdateSuccess, UpdateError> apply(EstimatedVehicleJourney journey) {
     // Parse the SIRI message
     var parseResult = parser.parse(journey);
     if (parseResult.isFailure()) {
