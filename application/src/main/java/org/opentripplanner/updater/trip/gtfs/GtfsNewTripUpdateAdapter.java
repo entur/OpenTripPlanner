@@ -26,7 +26,6 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.opentripplanner.updater.trip.siri.SiriTripPatternIdGenerator;
@@ -76,7 +75,8 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     TimetableSnapshotManager snapshotManager,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
-    boolean fuzzyMatchingEnabled
+    boolean fuzzyMatchingEnabled,
+    String feedId
   ) {
     this.snapshotManager = snapshotManager;
     this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
@@ -91,7 +91,10 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     this.parser = new GtfsRtTripUpdateParser(
       forwardsDelayPropagationType,
       backwardsDelayPropagationType,
-      fuzzyMatchingEnabled
+      fuzzyMatchingEnabled,
+      feedId,
+      transitEditorService.getTimeZone(),
+      () -> LocalDate.now(transitEditorService.getTimeZone())
     );
     this.applier = new DefaultTripUpdateApplier(transitEditorService);
   }
@@ -128,13 +131,6 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       snapshotManager.clearBuffer(feedId);
     }
 
-    // Create parser context
-    var parserContext = new TripUpdateParserContext(
-      feedId,
-      transitEditorService.getTimeZone(),
-      () -> LocalDate.now(transitEditorService.getTimeZone())
-    );
-
     // Create applier context with the trip ID resolver and stop resolver
     var tripResolver = new TripResolver(transitEditorService);
     var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
@@ -159,7 +155,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
-      results.add(apply(update, parserContext, applierContext));
+      results.add(apply(update, applierContext));
     }
 
     LOG.debug("message contains {} trip updates", updates.size());
@@ -169,11 +165,10 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
   private Result<UpdateSuccess, UpdateError> apply(
     GtfsRealtime.TripUpdate update,
-    TripUpdateParserContext parserContext,
     TripUpdateApplierContext applierContext
   ) {
     // Parse the GTFS-RT message
-    var parseResult = parser.parse(update, parserContext);
+    var parseResult = parser.parse(update);
     if (parseResult.isFailure()) {
       return parseResult.toFailureResult();
     }

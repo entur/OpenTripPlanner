@@ -48,7 +48,7 @@ public class SiriUpdaterModule {
     TimetableSnapshotManager snapshotManager
   ) {
     if (params.useNewUpdaterImplementation()) {
-      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager);
+      return new SiriNewTripUpdateAdapter(timetableRepository, snapshotManager, params.feedId());
     } else {
       return new SiriRealTimeTripUpdateAdapter(timetableRepository, snapshotManager);
     }

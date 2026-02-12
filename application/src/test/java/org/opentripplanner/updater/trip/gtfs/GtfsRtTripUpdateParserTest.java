@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
-import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
@@ -33,15 +32,16 @@ class GtfsRtTripUpdateParserTest {
   // 8:21 AM (30060 seconds since midnight) for scheduled time
   private static final long TIME_0821 = MIDNIGHT_EPOCH + 30060;
   private GtfsRtTripUpdateParser parser;
-  private TripUpdateParserContext context;
 
   @BeforeEach
   void setUp() {
     parser = new GtfsRtTripUpdateParser(
       ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.ALWAYS
+      BackwardsDelayPropagationType.ALWAYS,
+      FEED_ID,
+      TIME_ZONE,
+      () -> TEST_DATE
     );
-    context = new TripUpdateParserContext(FEED_ID, TIME_ZONE, () -> TEST_DATE);
   }
 
   @Test
@@ -62,7 +62,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -91,7 +91,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -111,7 +111,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -144,7 +144,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -186,7 +186,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -212,7 +212,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -244,7 +244,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -277,7 +277,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -308,7 +308,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -335,7 +335,7 @@ class GtfsRtTripUpdateParserTest {
   //     )
   //     .build();
   //
-  //   var result = parser.parse(tripUpdate, context);
+  //   var result = parser.parse(tripUpdate);
   //
   //   assertTrue(result.isSuccess());
   //   var parsed = result.successValue();
@@ -357,7 +357,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isFailure());
   }
@@ -372,7 +372,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isFailure());
   }
@@ -387,7 +387,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isFailure());
   }
@@ -417,7 +417,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -452,7 +452,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -489,7 +489,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var result = parser.parse(tripUpdate, context);
+    var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -506,8 +506,7 @@ class GtfsRtTripUpdateParserTest {
             .setTripId("trip1")
             .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED)
         )
-        .build(),
-      context
+        .build()
     );
 
     assertTrue(result.isSuccess());

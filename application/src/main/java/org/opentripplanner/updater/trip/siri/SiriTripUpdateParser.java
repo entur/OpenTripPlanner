@@ -9,9 +9,11 @@ import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.UNKNOW
 import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -20,7 +22,6 @@ import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
-import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
@@ -48,11 +49,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriTripUpdateParser.class);
 
+  private final String feedId;
+  private final ZoneId timeZone;
+
+  public SiriTripUpdateParser(String feedId, ZoneId timeZone) {
+    this.feedId = Objects.requireNonNull(feedId);
+    this.timeZone = Objects.requireNonNull(timeZone);
+  }
+
   @Override
-  public Result<ParsedTripUpdate, UpdateError> parse(
-    EstimatedVehicleJourney journey,
-    TripUpdateParserContext context
-  ) {
+  public Result<ParsedTripUpdate, UpdateError> parse(EstimatedVehicleJourney journey) {
     List<CallWrapper> calls = CallWrapper.of(journey);
 
     // Validate stop point refs exist
@@ -78,16 +84,13 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       return UpdateError.result(null, UNKNOWN, journey.getDataSource());
     }
 
-    ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(
-      journey,
-      context.feedId()
-    ).parse();
+    ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(journey, feedId).parse();
 
     if (psd.isEmpty()) {
       return UpdateError.result(null, NO_START_DATE, journey.getDataSource());
     }
 
-    var tripReference = buildTripReference(journey, updateType, psd, context);
+    var tripReference = buildTripReference(journey, updateType, psd);
 
     // Build parsed update
     var builder = ParsedTripUpdate.builder(updateType, tripReference, psd.serviceDate())
@@ -105,18 +108,22 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     // Parse stop time updates
-    var stopTimeUpdates = parseStopTimeUpdates(calls, psd.serviceDate(), context);
+    var stopTimeUpdates = parseStopTimeUpdates(calls, psd.serviceDate());
     builder.withStopTimeUpdates(stopTimeUpdates);
 
     // Handle new trip creation info
     if (updateType == TripUpdateType.ADD_NEW_TRIP) {
-      var creationInfo = buildTripCreationInfo(journey, context);
+      var creationInfo = buildTripCreationInfo(journey);
       if (creationInfo != null) {
         builder.withTripCreationInfo(creationInfo);
       }
     }
 
     return Result.success(builder.build());
+  }
+
+  private FeedScopedId createId(String entityId) {
+    return new FeedScopedId(feedId, entityId);
   }
 
   private TripUpdateType determineUpdateType(
@@ -138,12 +145,11 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   private TripReference buildTripReference(
     EstimatedVehicleJourney journey,
     TripUpdateType updateType,
-    ServiceDateParser.ParsedServiceDate psd,
-    TripUpdateParserContext context
+    ServiceDateParser.ParsedServiceDate psd
   ) {
     var builder = TripReference.builder().withStartDate(psd.serviceDate());
 
-    var tripId = resolveTripId(journey, context);
+    var tripId = resolveTripId(journey);
     if (tripId != null) {
       builder.withTripId(tripId);
     }
@@ -159,7 +165,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     if (journey.getLineRef() != null) {
-      builder.withRouteId(context.createId(journey.getLineRef().getValue()));
+      builder.withRouteId(createId(journey.getLineRef().getValue()));
     }
 
     // Get aimed start time from first call
@@ -171,10 +177,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
     if (aimedStartTime != null && psd.serviceDate() != null) {
-      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-        psd.serviceDate(),
-        context.timeZone()
-      );
+      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(psd.serviceDate(), timeZone);
       int seconds = ServiceDateUtils.secondsSinceStartOfService(startOfService, aimedStartTime);
       builder.withStartTime(org.opentripplanner.utils.time.TimeUtils.timeToStrCompact(seconds));
     }
@@ -202,15 +205,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
    * This only returns an ID when it's actually a Trip ID, not a TripOnServiceDate ID.
    */
   @Nullable
-  private FeedScopedId resolveTripId(
-    EstimatedVehicleJourney journey,
-    TripUpdateParserContext context
-  ) {
+  private FeedScopedId resolveTripId(EstimatedVehicleJourney journey) {
     // FramedVehicleJourneyRef.getDatedVehicleJourneyRef contains the actual Trip ID
     if (journey.getFramedVehicleJourneyRef() != null) {
       var ref = journey.getFramedVehicleJourneyRef().getDatedVehicleJourneyRef();
       if (ref != null) {
-        return context.createId(ref);
+        return createId(ref);
       }
     }
 
@@ -219,7 +219,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       var adapter = new EstimatedVehicleJourneyCodeAdapter(
         journey.getEstimatedVehicleJourneyCode()
       );
-      return context.createId(adapter.getServiceJourneyId());
+      return createId(adapter.getServiceJourneyId());
     }
 
     return null;
@@ -227,8 +227,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     List<CallWrapper> calls,
-    LocalDate serviceDate,
-    TripUpdateParserContext context
+    LocalDate serviceDate
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
     int totalStops = calls.size();
@@ -239,12 +238,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         continue;
       }
 
-      var stopId = context.createId(call.getStopPointRef());
+      var stopId = createId(call.getStopPointRef());
       var stopReference = StopReference.ofScheduledStopPointOrStopId(stopId);
       var builder = ParsedStopTimeUpdate.builder(stopReference);
 
       builder.withStatus(determineStopStatus(call));
-      parseStopTimes(call, builder, serviceDate, context, stopIndex, totalStops);
+      parseStopTimes(call, builder, serviceDate, stopIndex, totalStops);
 
       if (call.isExtraCall()) {
         builder.withIsExtraCall(true);
@@ -291,7 +290,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     CallWrapper call,
     ParsedStopTimeUpdate.Builder builder,
     @Nullable LocalDate serviceDate,
-    TripUpdateParserContext context,
     int stopIndex,
     int totalStops
   ) {
@@ -301,10 +299,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     if (serviceDate != null) {
       // Service date is known - create resolved TimeUpdate
-      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(
-        serviceDate,
-        context.timeZone()
-      );
+      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(serviceDate, timeZone);
 
       // Create arrival TimeUpdate
       if (resolvedTimes.arrivalTime() != null) {
@@ -357,26 +352,23 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   }
 
   @Nullable
-  private TripCreationInfo buildTripCreationInfo(
-    EstimatedVehicleJourney journey,
-    TripUpdateParserContext context
-  ) {
+  private TripCreationInfo buildTripCreationInfo(EstimatedVehicleJourney journey) {
     String code = journey.getEstimatedVehicleJourneyCode();
     if (code == null) {
       return null;
     }
 
     var adapter = new EstimatedVehicleJourneyCodeAdapter(code);
-    var tripId = context.createId(adapter.getServiceJourneyId());
+    var tripId = createId(adapter.getServiceJourneyId());
     var builder = TripCreationInfo.builder(tripId);
 
     if (journey.getLineRef() != null) {
-      builder.withRouteId(context.createId(journey.getLineRef().getValue()));
+      builder.withRouteId(createId(journey.getLineRef().getValue()));
     }
 
     String datedServiceJourneyId = adapter.getDatedServiceJourneyId();
     if (datedServiceJourneyId != null) {
-      builder.withServiceId(context.createId(datedServiceJourneyId));
+      builder.withServiceId(createId(datedServiceJourneyId));
     }
 
     if (journey.getPublishedLineNames() != null && !journey.getPublishedLineNames().isEmpty()) {
@@ -400,20 +392,20 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     if (journey.getOperatorRef() != null) {
-      builder.withOperatorId(context.createId(journey.getOperatorRef().getValue()));
+      builder.withOperatorId(createId(journey.getOperatorRef().getValue()));
     }
 
     // Extract replacement trip references
     // VehicleJourneyRef indicates which trip this extra journey replaces
     var vehicleJourneyRef = journey.getVehicleJourneyRef();
     if (vehicleJourneyRef != null && vehicleJourneyRef.getValue() != null) {
-      builder.addReplacedTrip(context.createId(vehicleJourneyRef.getValue()));
+      builder.addReplacedTrip(createId(vehicleJourneyRef.getValue()));
     }
 
     // AdditionalVehicleJourneyReves contains additional trips being replaced
     for (var ref : journey.getAdditionalVehicleJourneyReves()) {
       if (ref != null && ref.getDatedVehicleJourneyRef() != null) {
-        builder.addReplacedTrip(context.createId(ref.getDatedVehicleJourneyRef()));
+        builder.addReplacedTrip(createId(ref.getDatedVehicleJourneyRef()));
       }
     }
 
