@@ -30,7 +30,6 @@ import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
-import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,11 +94,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Filter stop time updates (GTFS-RT: filter unknown stops, SIRI: fail on unknown stops)
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-    var filtered = filterStopTimeUpdates(
-      stopTimeUpdates,
-      resolvedUpdate.options().unknownStopBehavior(),
-      tripId
-    );
+    var filtered = filterStopTimeUpdates(stopTimeUpdates, tripId);
     if (filtered.isFailure()) {
       return Result.failure(filtered.failureValue());
     }
@@ -240,11 +235,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Filter stop time updates
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-    var filtered = filterStopTimeUpdates(
-      stopTimeUpdates,
-      resolvedUpdate.options().unknownStopBehavior(),
-      tripId
-    );
+    var filtered = filterStopTimeUpdates(stopTimeUpdates, tripId);
     if (filtered.isFailure()) {
       return Result.failure(filtered.failureValue());
     }
@@ -287,31 +278,16 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
   /**
    * Filter stop time updates to remove unknown stops.
-   * For GTFS-RT (IGNORE): filter out unknown stops and add warning
-   * For SIRI (FAIL): fail if any stop is unknown
+   * Unknown stops in FAIL mode are caught by the validator before reaching this handler,
+   * so this method only needs to handle IGNORE mode filtering.
    */
   private Result<FilteredStopTimeUpdates, UpdateError> filterStopTimeUpdates(
     List<ResolvedStopTimeUpdate> updates,
-    UnknownStopBehavior unknownStopBehavior,
     FeedScopedId tripId
   ) {
     var warnings = new ArrayList<UpdateSuccess.WarningType>();
 
-    // FAIL mode: strict validation - fail on unknown stops
-    if (unknownStopBehavior == UnknownStopBehavior.FAIL) {
-      for (int i = 0; i < updates.size(); i++) {
-        var stopUpdate = updates.get(i);
-        if (stopUpdate.stop() == null) {
-          LOG.debug("ADD_TRIP: Unknown stop {} in added trip", stopUpdate.stopReference());
-          return Result.failure(
-            new UpdateError(tripId, UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
-          );
-        }
-      }
-      return Result.success(new FilteredStopTimeUpdates(updates, warnings));
-    }
-
-    // IGNORE mode: filter unknown stops
+    // Filter unknown stops (IGNORE mode)
     var filteredUpdates = new ArrayList<ResolvedStopTimeUpdate>();
     for (var stopUpdate : updates) {
       if (stopUpdate.stop() != null) {
