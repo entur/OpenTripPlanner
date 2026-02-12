@@ -179,7 +179,7 @@ public class InsertionPositionFinder {
 
     List<WgsCoordinate> routeAfterInsertion = new ArrayList<>(routePoints);
     routeAfterInsertion.add(pickupPos, passengerPickup);
-    routeAfterInsertion.add(dropoffPos, passengerPickup);
+    routeAfterInsertion.add(dropoffPos, passengerDropoff);
 
     WgsCoordinate coordBeforePickup = routeAfterInsertion.get(pickupPos - 1);
     WgsCoordinate coordAfterPickup = routeAfterInsertion.get(pickupPos + 1);
