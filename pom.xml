@@ -146,7 +146,7 @@
                 <version>3.14.1</version>
                 <configuration>
                     <!-- Target Java version -->
-                    <release>21</release>
+                    <release>25</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -407,7 +407,7 @@
                         </ports>
                     </container>
                     <from>
-                        <image>eclipse-temurin:24-jre</image>
+                        <image>eclipse-temurin:25-jre</image>
                         <platforms>
                             <platform>
                                 <architecture>amd64</architecture>
