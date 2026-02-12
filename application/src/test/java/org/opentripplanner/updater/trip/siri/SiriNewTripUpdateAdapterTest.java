@@ -53,7 +53,8 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     // Create the new adapter
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
-      env.timetableSnapshotManager()
+      env.timetableSnapshotManager(),
+      env.feedId()
     );
 
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_1_ID).realTimeState());
@@ -87,7 +88,8 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
-      env.timetableSnapshotManager()
+      env.timetableSnapshotManager(),
+      env.feedId()
     );
     assertNotNull(newAdapter);
   }
@@ -97,7 +99,8 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
-      env.timetableSnapshotManager()
+      env.timetableSnapshotManager(),
+      env.feedId()
     );
 
     var handler = new EstimatedTimetableHandler(newAdapter, false, env.feedId());

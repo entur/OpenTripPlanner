@@ -24,7 +24,8 @@ public class GtfsRtTestHelper {
       transitTestEnvironment.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-      false
+      false,
+      transitTestEnvironment.feedId()
     );
   }
 
