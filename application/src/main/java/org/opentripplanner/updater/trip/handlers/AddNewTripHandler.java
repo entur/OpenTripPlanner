@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -22,13 +24,13 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,10 +48,25 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripHandler.class);
 
+  private final String feedId;
+  private final SiriTripPatternCache tripPatternCache;
+
+  @Nullable
+  private final Function<FeedScopedId, Route> routeCache;
+
+  public AddNewTripHandler(
+    String feedId,
+    SiriTripPatternCache tripPatternCache,
+    @Nullable Function<FeedScopedId, Route> routeCache
+  ) {
+    this.feedId = Objects.requireNonNull(feedId);
+    this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
+    this.routeCache = routeCache;
+  }
+
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
     ResolvedNewTrip resolvedUpdate,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     var tripCreationInfo = resolvedUpdate.tripCreationInfo();
@@ -57,7 +74,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Check if this is an update to an existing added trip
     if (resolvedUpdate.isUpdateToExistingTrip()) {
-      return updateExistingAddedTrip(resolvedUpdate, context, transitService);
+      return updateExistingAddedTrip(resolvedUpdate, transitService);
     }
 
     // Creating a new trip
@@ -91,7 +108,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     }
 
     // Resolve or create route
-    var routeResult = resolveOrCreateRoute(tripCreationInfo, context, transitService);
+    var routeResult = resolveOrCreateRoute(tripCreationInfo, transitService);
     if (routeResult.isFailure()) {
       return Result.failure(routeResult.failureValue());
     }
@@ -129,7 +146,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Create the new pattern
     // For SIRI (INCLUDE), we add scheduled trip times so queries for aimed times work
     // For GTFS-RT (EXCLUDE), we don't add to scheduled timetable
-    var tripPatternCache = context.tripPatternCache();
     var options = resolvedUpdate.options();
     boolean includeScheduledData =
       options.scheduledDataInclusion() == ScheduledDataInclusion.INCLUDE;
@@ -208,7 +224,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    */
   private Result<TripUpdateResult, UpdateError> updateExistingAddedTrip(
     ResolvedNewTrip resolvedUpdate,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     Trip existingTrip = resolvedUpdate.existingTrip();
@@ -314,14 +329,13 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    */
   private Result<Route, UpdateError> resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     FeedScopedId tripId = tripCreationInfo.tripId();
 
     // First try to find route by explicit routeId
     if (tripCreationInfo.routeId() != null) {
-      Route existingRoute = findRoute(tripCreationInfo.routeId(), context, transitService);
+      Route existingRoute = findRoute(tripCreationInfo.routeId(), transitService);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route {}", existingRoute.getId());
         return Result.success(existingRoute);
@@ -331,7 +345,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Try routeCreationInfo.routeId
     if (tripCreationInfo.routeCreationInfo() != null) {
       FeedScopedId routeId = tripCreationInfo.routeCreationInfo().routeId();
-      Route existingRoute = findRoute(routeId, context, transitService);
+      Route existingRoute = findRoute(routeId, transitService);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route from routeCreationInfo {}", routeId);
         return Result.success(existingRoute);
@@ -340,39 +354,25 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Need to create a new route
     if (tripCreationInfo.routeCreationInfo() != null) {
-      return createRoute(
-        tripCreationInfo.routeCreationInfo(),
-        tripCreationInfo,
-        context,
-        transitService
-      );
+      return createRoute(tripCreationInfo.routeCreationInfo(), tripCreationInfo, transitService);
     }
 
     // No routeCreationInfo, but we have a routeId - create a route using that ID
     if (tripCreationInfo.routeId() != null) {
-      return createRouteFromRouteId(
-        tripCreationInfo.routeId(),
-        tripCreationInfo,
-        context,
-        transitService
-      );
+      return createRouteFromRouteId(tripCreationInfo.routeId(), tripCreationInfo, transitService);
     }
 
     // No route info - create minimal route using trip ID
-    return createFallbackRoute(tripId, context, transitService);
+    return createFallbackRoute(tripId, transitService);
   }
 
   /**
    * Find a route by ID, checking the route cache first, then the transit service.
    */
-  private Route findRoute(
-    FeedScopedId routeId,
-    TripUpdateApplierContext context,
-    TransitEditorService transitService
-  ) {
+  private Route findRoute(FeedScopedId routeId, TransitEditorService transitService) {
     // Check route cache first
-    if (context.routeCache() != null) {
-      Route cachedRoute = context.routeCache().apply(routeId);
+    if (routeCache != null) {
+      Route cachedRoute = routeCache.apply(routeId);
       if (cachedRoute != null) {
         return cachedRoute;
       }
@@ -387,19 +387,13 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private Result<Route, UpdateError> createRoute(
     RouteCreationInfo routeCreationInfo,
     TripCreationInfo tripCreationInfo,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     FeedScopedId routeId = routeCreationInfo.routeId();
     var builder = Route.of(routeId);
 
     // Find agency
-    Agency agency = findAgencyForRoute(
-      tripCreationInfo,
-      routeCreationInfo,
-      context,
-      transitService
-    );
+    Agency agency = findAgencyForRoute(tripCreationInfo, routeCreationInfo, transitService);
     builder.withAgency(agency);
 
     // Set mode
@@ -445,13 +439,12 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private Result<Route, UpdateError> createRouteFromRouteId(
     FeedScopedId routeId,
     TripCreationInfo tripCreationInfo,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     var builder = Route.of(routeId);
 
     // Find an agency
-    Agency agency = findFallbackAgencyFromTripInfo(tripCreationInfo, context, transitService);
+    Agency agency = findFallbackAgencyFromTripInfo(tripCreationInfo, transitService);
     builder.withAgency(agency);
 
     // Set mode from trip creation info or default to BUS
@@ -476,14 +469,13 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    */
   private Result<Route, UpdateError> createFallbackRoute(
     FeedScopedId tripId,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     // Use trip ID as route ID for fallback route
     var builder = Route.of(tripId);
 
     // Find a fallback agency
-    Agency agency = findFallbackAgency(context.feedId(), transitService);
+    Agency agency = findFallbackAgency(feedId, transitService);
     builder.withAgency(agency);
     builder.withMode(TransitMode.BUS);
     builder.withLongName(NonLocalizedString.ofNullable(tripId.getId()));
@@ -499,7 +491,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   private Agency findAgencyForRoute(
     TripCreationInfo tripCreationInfo,
     RouteCreationInfo routeCreationInfo,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     // Try operator from route creation info
@@ -526,7 +517,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       }
     }
 
-    return findFallbackAgency(context.feedId(), transitService);
+    return findFallbackAgency(feedId, transitService);
   }
 
   /**
@@ -534,7 +525,6 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    */
   private Agency findFallbackAgencyFromTripInfo(
     TripCreationInfo tripCreationInfo,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     // Try operator from trip creation info
@@ -553,7 +543,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       }
     }
 
-    return findFallbackAgency(context.feedId(), transitService);
+    return findFallbackAgency(feedId, transitService);
   }
 
   /**

@@ -3,6 +3,8 @@ package org.opentripplanner.updater.trip.handlers;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
@@ -17,7 +19,6 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
@@ -25,6 +26,7 @@ import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,10 +41,22 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
   private static final Logger LOG = LoggerFactory.getLogger(UpdateExistingTripHandler.class);
 
+  @Nullable
+  private final TimetableSnapshotManager snapshotManager;
+
+  private final SiriTripPatternCache tripPatternCache;
+
+  public UpdateExistingTripHandler(
+    @Nullable TimetableSnapshotManager snapshotManager,
+    SiriTripPatternCache tripPatternCache
+  ) {
+    this.snapshotManager = snapshotManager;
+    this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
+  }
+
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
     ResolvedExistingTrip resolvedUpdate,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     // All resolution already done by ExistingTripResolver
@@ -60,7 +74,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     );
 
     // Revert any previous real-time modifications to this trip on this service date
-    var snapshotManager = context.snapshotManager();
     if (snapshotManager != null) {
       snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
     }
@@ -74,14 +87,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       : tripTimes.createRealTimeFromScheduledTimes();
 
     // Apply stop time updates - returns PatternModificationResult
-    var applyResult = applyStopTimeUpdates(
-      resolvedUpdate,
-      builder,
-      pattern,
-      trip,
-      context,
-      serviceDate
-    );
+    var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, pattern, trip, serviceDate);
     if (applyResult.isFailure()) {
       return Result.failure(applyResult.failureValue());
     }
@@ -104,7 +110,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       // Check if pattern actually changed (builder deduplicates)
       // Compare against the scheduled pattern to determine if we need a modified pattern
       if (!scheduledPattern.getStopPattern().equals(newStopPattern)) {
-        var tripPatternCache = context.tripPatternCache();
         // SiriTripPatternCache uses 2-parameter signature (gets original pattern via injected function)
         finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
 
@@ -220,7 +225,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
     Trip trip,
-    TripUpdateApplierContext context,
     LocalDate serviceDate
   ) {
     var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
