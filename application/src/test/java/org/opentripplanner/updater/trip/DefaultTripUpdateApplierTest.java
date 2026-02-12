@@ -16,6 +16,7 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
@@ -69,7 +70,7 @@ class DefaultTripUpdateApplierTest {
       snapshotManager,
       tripPatternCache,
       null,
-      null
+      new GtfsRtRouteCreationStrategy(env.feedId(), null)
     );
   }
 

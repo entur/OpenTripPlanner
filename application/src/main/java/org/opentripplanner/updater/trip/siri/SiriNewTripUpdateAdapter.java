@@ -19,6 +19,7 @@ import org.opentripplanner.updater.trip.LastStopArrivalTimeMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.handlers.SiriRouteCreationStrategy;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 import org.slf4j.Logger;
@@ -89,7 +90,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       snapshotManager,
       tripPatternCache,
       fuzzyMatcher,
-      null
+      new SiriRouteCreationStrategy(feedId)
     );
   }
 
