@@ -364,6 +364,14 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     if (journey.getLineRef() != null) {
       builder.withRouteId(createId(journey.getLineRef().getValue()));
+
+      // Set replacedRouteId from ExternalLineRef (only if it differs from LineRef)
+      if (journey.getExternalLineRef() != null) {
+        var externalLineRef = journey.getExternalLineRef().getValue();
+        if (!externalLineRef.equals(journey.getLineRef().getValue())) {
+          builder.withReplacedRouteId(createId(externalLineRef));
+        }
+      }
     }
 
     String datedServiceJourneyId = adapter.getDatedServiceJourneyId();

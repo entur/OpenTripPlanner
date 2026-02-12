@@ -2,12 +2,9 @@ package org.opentripplanner.updater.trip;
 
 import java.time.ZoneId;
 import java.util.Objects;
-import java.util.function.Function;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
@@ -16,6 +13,7 @@ import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
 import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripValidator;
+import org.opentripplanner.updater.trip.handlers.RouteCreationStrategy;
 import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.TripUpdateValidator;
@@ -75,7 +73,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     @Nullable TimetableSnapshotManager snapshotManager,
     TripPatternCache tripPatternCache,
     @Nullable FuzzyTripMatcher fuzzyTripMatcher,
-    @Nullable Function<FeedScopedId, Route> routeCache
+    RouteCreationStrategy routeCreationStrategy
   ) {
     this.transitService = Objects.requireNonNull(transitService);
 
@@ -123,7 +121,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       transitService,
       deduplicator,
       tripPatternCache,
-      routeCache
+      routeCreationStrategy
     );
     this.cancelTripHandler = new CancelTripHandler(snapshotManager);
     this.deleteTripHandler = new DeleteTripHandler(snapshotManager);

@@ -341,7 +341,8 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         null,
         null,
         addedRoute.routeUrl(),
-        agencyId
+        agencyId,
+        addedRoute.routeType()
       );
       builder.withRouteCreationInfo(routeCreationInfo);
     }

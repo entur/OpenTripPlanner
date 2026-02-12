@@ -24,6 +24,7 @@ import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.RouteDirectionTimeMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 import org.slf4j.Logger;
@@ -142,7 +143,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       snapshotManager,
       tripPatternCache,
       fuzzyMatcher,
-      realtimeRouteCache::get
+      new GtfsRtRouteCreationStrategy(feedId, realtimeRouteCache::get)
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
