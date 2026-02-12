@@ -23,11 +23,7 @@ public interface TripUpdateApplier {
    * Apply a parsed trip update to create or update trip times.
    *
    * @param parsedUpdate The format-independent parsed update
-   * @param context      Application context containing snapshot manager and other resources
    * @return Result containing the TripUpdateResult (with RealTimeTripUpdate and warnings), or an error
    */
-  Result<TripUpdateResult, UpdateError> apply(
-    ParsedTripUpdate parsedUpdate,
-    TripUpdateApplierContext context
-  );
+  Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate);
 }

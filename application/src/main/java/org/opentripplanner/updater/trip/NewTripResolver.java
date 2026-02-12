@@ -1,6 +1,7 @@
 package org.opentripplanner.updater.trip;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Objects;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -32,24 +33,34 @@ public class NewTripResolver {
   private static final Logger LOG = LoggerFactory.getLogger(NewTripResolver.class);
 
   private final TransitEditorService transitService;
+  private final ServiceDateResolver serviceDateResolver;
+  private final StopResolver stopResolver;
+  private final ZoneId timeZone;
 
-  public NewTripResolver(TransitEditorService transitService) {
+  public NewTripResolver(
+    TransitEditorService transitService,
+    ServiceDateResolver serviceDateResolver,
+    StopResolver stopResolver,
+    ZoneId timeZone
+  ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
+    this.serviceDateResolver = Objects.requireNonNull(
+      serviceDateResolver,
+      "serviceDateResolver must not be null"
+    );
+    this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
+    this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
   }
 
   /**
    * Resolve a ParsedTripUpdate for adding a new trip.
    *
    * @param parsedUpdate The parsed update to resolve
-   * @param context The applier context containing resolvers and caches
    * @return Result containing the resolved data, or an error if resolution fails
    */
-  public Result<ResolvedNewTrip, UpdateError> resolve(
-    ParsedTripUpdate parsedUpdate,
-    TripUpdateApplierContext context
-  ) {
+  public Result<ResolvedNewTrip, UpdateError> resolve(ParsedTripUpdate parsedUpdate) {
     // Resolve service date
-    var serviceDateResult = context.serviceDateResolver().resolveServiceDate(parsedUpdate);
+    var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {
       return Result.failure(serviceDateResult.failureValue());
     }
@@ -107,8 +118,8 @@ public class NewTripResolver {
       var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
         parsedUpdate.stopTimeUpdates(),
         serviceDate,
-        context.timeZone(),
-        context.stopResolver()
+        timeZone,
+        stopResolver
       );
 
       return Result.success(
@@ -127,8 +138,8 @@ public class NewTripResolver {
     var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
       parsedUpdate.stopTimeUpdates(),
       serviceDate,
-      context.timeZone(),
-      context.stopResolver()
+      timeZone,
+      stopResolver
     );
 
     // New trip - no existing trip to resolve

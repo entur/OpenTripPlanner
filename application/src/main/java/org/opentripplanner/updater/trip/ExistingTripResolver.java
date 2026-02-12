@@ -1,6 +1,7 @@
 package org.opentripplanner.updater.trip;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.Result;
@@ -38,24 +39,43 @@ public class ExistingTripResolver {
   private static final Logger LOG = LoggerFactory.getLogger(ExistingTripResolver.class);
 
   private final TransitEditorService transitService;
+  private final TripResolver tripResolver;
+  private final ServiceDateResolver serviceDateResolver;
+  private final StopResolver stopResolver;
 
-  public ExistingTripResolver(TransitEditorService transitService) {
+  @Nullable
+  private final FuzzyTripMatcher fuzzyTripMatcher;
+
+  private final ZoneId timeZone;
+
+  public ExistingTripResolver(
+    TransitEditorService transitService,
+    TripResolver tripResolver,
+    ServiceDateResolver serviceDateResolver,
+    StopResolver stopResolver,
+    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
+    ZoneId timeZone
+  ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
+    this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
+    this.serviceDateResolver = Objects.requireNonNull(
+      serviceDateResolver,
+      "serviceDateResolver must not be null"
+    );
+    this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
+    this.fuzzyTripMatcher = fuzzyTripMatcher;
+    this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
   }
 
   /**
    * Resolve a ParsedTripUpdate for an existing trip.
    *
    * @param parsedUpdate The parsed update to resolve
-   * @param context The applier context containing resolvers and caches
    * @return Result containing the resolved data, or an error if resolution fails
    */
-  public Result<ResolvedExistingTrip, UpdateError> resolve(
-    ParsedTripUpdate parsedUpdate,
-    TripUpdateApplierContext context
-  ) {
+  public Result<ResolvedExistingTrip, UpdateError> resolve(ParsedTripUpdate parsedUpdate) {
     // Resolve service date
-    var serviceDateResult = context.serviceDateResolver().resolveServiceDate(parsedUpdate);
+    var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {
       return Result.failure(serviceDateResult.failureValue());
     }
@@ -64,7 +84,7 @@ public class ExistingTripResolver {
     var tripReference = parsedUpdate.tripReference();
 
     // Resolve trip and pattern
-    var tripAndPatternResult = resolveTripWithPattern(parsedUpdate, serviceDate, context);
+    var tripAndPatternResult = resolveTripWithPattern(parsedUpdate, serviceDate);
     if (tripAndPatternResult.isFailure()) {
       LOG.debug("Could not resolve trip for update: {}", tripReference);
       return Result.failure(tripAndPatternResult.failureValue());
@@ -99,14 +119,14 @@ public class ExistingTripResolver {
     }
 
     // Resolve TripOnServiceDate if available
-    TripOnServiceDate tripOnServiceDate = resolveTripOnServiceDate(tripReference, context);
+    TripOnServiceDate tripOnServiceDate = resolveTripOnServiceDate(tripReference);
 
     // Resolve stop time updates now that service date is known
     var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
       parsedUpdate.stopTimeUpdates(),
       serviceDate,
-      context.timeZone(),
-      context.stopResolver()
+      timeZone,
+      stopResolver
     );
 
     return Result.success(
@@ -129,11 +149,8 @@ public class ExistingTripResolver {
    */
   private Result<TripAndPattern, UpdateError> resolveTripWithPattern(
     ParsedTripUpdate parsedUpdate,
-    LocalDate serviceDate,
-    TripUpdateApplierContext context
+    LocalDate serviceDate
   ) {
-    var tripResolver = context.tripResolver();
-    var fuzzyTripMatcher = context.fuzzyTripMatcher();
     TripReference reference = parsedUpdate.tripReference();
 
     // Try exact match first
@@ -196,12 +213,9 @@ public class ExistingTripResolver {
    * Try to resolve TripOnServiceDate from a trip reference.
    */
   @Nullable
-  private TripOnServiceDate resolveTripOnServiceDate(
-    TripReference reference,
-    TripUpdateApplierContext context
-  ) {
+  private TripOnServiceDate resolveTripOnServiceDate(TripReference reference) {
     if (reference.hasTripOnServiceDateId()) {
-      return context.tripResolver().resolveTripOnServiceDateOrNull(reference);
+      return tripResolver.resolveTripOnServiceDateOrNull(reference);
     }
     return null;
   }

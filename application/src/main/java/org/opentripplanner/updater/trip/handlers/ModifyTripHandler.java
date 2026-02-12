@@ -2,6 +2,8 @@ package org.opentripplanner.updater.trip.handlers;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -13,10 +15,11 @@ import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.TripUpdateApplierContext;
+import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
+import org.opentripplanner.updater.trip.siri.SiriTripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,10 +39,22 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
 
   private static final Logger LOG = LoggerFactory.getLogger(ModifyTripHandler.class);
 
+  @Nullable
+  private final TimetableSnapshotManager snapshotManager;
+
+  private final SiriTripPatternCache tripPatternCache;
+
+  public ModifyTripHandler(
+    @Nullable TimetableSnapshotManager snapshotManager,
+    SiriTripPatternCache tripPatternCache
+  ) {
+    this.snapshotManager = snapshotManager;
+    this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
+  }
+
   @Override
   public Result<TripUpdateResult, UpdateError> handle(
     ResolvedExistingTrip resolvedUpdate,
-    TripUpdateApplierContext context,
     TransitEditorService transitService
   ) {
     // All resolution already done by ExistingTripResolver
@@ -93,7 +108,6 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     var stopTimesAndPattern = stopPatternResult.successValue();
 
     // Revert any previous modifications
-    var snapshotManager = context.snapshotManager();
     if (snapshotManager != null) {
       snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
     }
@@ -114,7 +128,6 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     }
 
     // Create the new pattern - don't add scheduled times, only real-time times will be added
-    var tripPatternCache = context.tripPatternCache();
     TripPattern newPattern = TripPattern.of(tripPatternCache.generatePatternId(trip))
       .withRoute(trip.getRoute())
       .withMode(trip.getMode())
