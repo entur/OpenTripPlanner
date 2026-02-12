@@ -2,7 +2,6 @@ package org.opentripplanner.updater.trip.siri;
 
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -21,7 +20,6 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.TripUpdateApplierContext;
-import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +58,8 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
 
   public SiriNewTripUpdateAdapter(
     TimetableRepository timetableRepository,
-    TimetableSnapshotManager snapshotManager
+    TimetableSnapshotManager snapshotManager,
+    String feedId
   ) {
     this.snapshotManager = snapshotManager;
     this.transitEditorService = new DefaultTransitService(
@@ -71,7 +70,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       tripPatternIdGenerator,
       transitEditorService::findPattern
     );
-    this.parser = new SiriTripUpdateParser();
+    this.parser = new SiriTripUpdateParser(feedId, transitEditorService.getTimeZone());
     this.applier = new DefaultTripUpdateApplier(transitEditorService);
   }
 
@@ -105,13 +104,6 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       snapshotManager.clearBuffer(feedId);
     }
 
-    // Create parser context
-    var parserContext = new TripUpdateParserContext(
-      feedId,
-      transitEditorService.getTimeZone(),
-      LocalDate::now
-    );
-
     // Create applier context with the trip ID resolver and stop resolver
     var tripResolver = new TripResolver(transitEditorService);
     var serviceDateResolver = new ServiceDateResolver(tripResolver, transitEditorService);
@@ -144,7 +136,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
         var journeys = estimatedJourneyVersion.getEstimatedVehicleJourneies();
         LOG.debug("Handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
-          results.add(apply(journey, parserContext, applierContext));
+          results.add(apply(journey, applierContext));
         }
       }
     }
@@ -156,11 +148,10 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
 
   private Result<UpdateSuccess, UpdateError> apply(
     EstimatedVehicleJourney journey,
-    TripUpdateParserContext parserContext,
     TripUpdateApplierContext applierContext
   ) {
     // Parse the SIRI message
-    var parseResult = parser.parse(journey, parserContext);
+    var parseResult = parser.parse(journey);
     if (parseResult.isFailure()) {
       return parseResult.toFailureResult();
     }

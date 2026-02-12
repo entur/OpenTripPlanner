@@ -8,8 +8,11 @@ import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
@@ -17,7 +20,6 @@ import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.Direction;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
-import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
 import org.opentripplanner.updater.trip.gtfs.model.TripDescriptor;
@@ -41,33 +43,49 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
   private final boolean fuzzyMatchingEnabled;
+  private final String feedId;
+  private final ZoneId timeZone;
+  private final Supplier<LocalDate> localDateNow;
 
   public GtfsRtTripUpdateParser(
     ForwardsDelayPropagationType forwardsDelayPropagationType,
-    BackwardsDelayPropagationType backwardsDelayPropagationType
+    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    String feedId,
+    ZoneId timeZone,
+    Supplier<LocalDate> localDateNow
   ) {
-    this(forwardsDelayPropagationType, backwardsDelayPropagationType, false);
+    this(
+      forwardsDelayPropagationType,
+      backwardsDelayPropagationType,
+      false,
+      feedId,
+      timeZone,
+      localDateNow
+    );
   }
 
   public GtfsRtTripUpdateParser(
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
-    boolean fuzzyMatchingEnabled
+    boolean fuzzyMatchingEnabled,
+    String feedId,
+    ZoneId timeZone,
+    Supplier<LocalDate> localDateNow
   ) {
     this.forwardsDelayPropagationType = forwardsDelayPropagationType;
     this.backwardsDelayPropagationType = backwardsDelayPropagationType;
     this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
+    this.feedId = Objects.requireNonNull(feedId);
+    this.timeZone = Objects.requireNonNull(timeZone);
+    this.localDateNow = Objects.requireNonNull(localDateNow);
   }
 
   @Override
-  public Result<ParsedTripUpdate, UpdateError> parse(
-    GtfsRealtime.TripUpdate update,
-    TripUpdateParserContext context
-  ) {
+  public Result<ParsedTripUpdate, UpdateError> parse(GtfsRealtime.TripUpdate update) {
     var tripUpdate = new TripUpdate(update);
     var tripDescriptor = tripUpdate.tripDescriptor();
 
-    var tripIdOpt = tripDescriptor.tripId().map(id -> context.createId(id));
+    var tripIdOpt = tripDescriptor.tripId().map(this::createId);
     if (tripIdOpt.isEmpty()) {
       return Result.failure(UpdateError.noTripId(INVALID_INPUT_STRUCTURE));
     }
@@ -77,7 +95,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     LocalDate serviceDate;
     try {
-      serviceDate = tripDescriptor.startDate().orElse(context.localDateNow().get());
+      serviceDate = tripDescriptor.startDate().orElse(localDateNow.get());
     } catch (ParseException e) {
       return UpdateError.result(tripId, INVALID_INPUT_STRUCTURE, e.getMessage());
     }
@@ -107,7 +125,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     var stopTimeUpdates = parseStopTimeUpdates(
       tripUpdate.stopTimeUpdates(),
-      context,
       serviceDate,
       updateType == TripUpdateType.ADD_NEW_TRIP
     );
@@ -119,6 +136,10 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     }
 
     return Result.success(builder.build());
+  }
+
+  private FeedScopedId createId(String entityId) {
+    return new FeedScopedId(feedId, entityId);
   }
 
   @Nullable
@@ -170,15 +191,14 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     List<StopTimeUpdate> updates,
-    TripUpdateParserContext context,
     LocalDate serviceDate,
     boolean isNewTrip
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
 
     for (var update : updates) {
-      var stopId = update.stopId().map(context::createId);
-      var assignedStopId = update.assignedStopId().map(context::createId).orElse(null);
+      var stopId = update.stopId().map(this::createId);
+      var assignedStopId = update.assignedStopId().map(this::createId).orElse(null);
       var stopSequence = update.stopSequence();
 
       // Skip only if BOTH stop_id and stop_sequence are missing
@@ -200,9 +220,9 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       builder.withStatus(status);
 
       if (isNewTrip) {
-        parseNewTripStopTimeUpdate(update, builder, serviceDate, context);
+        parseNewTripStopTimeUpdate(update, builder, serviceDate);
       } else {
-        parseScheduledTripStopTimeUpdate(update, builder, serviceDate, context);
+        parseScheduledTripStopTimeUpdate(update, builder, serviceDate);
       }
 
       update.stopHeadsign().ifPresent(builder::withStopHeadsign);
@@ -229,11 +249,10 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private void parseScheduledTripStopTimeUpdate(
     StopTimeUpdate update,
     ParsedStopTimeUpdate.Builder builder,
-    LocalDate serviceDate,
-    TripUpdateParserContext context
+    LocalDate serviceDate
   ) {
     // Calculate midnight seconds for absolute time conversion
-    var midnight = serviceDate.atStartOfDay(context.timeZone());
+    var midnight = serviceDate.atStartOfDay(timeZone);
     long midnightSecondsSinceEpoch = midnight.toEpochSecond();
 
     // Handle arrival time: prefer absolute time, fall back to delay
@@ -270,11 +289,10 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private void parseNewTripStopTimeUpdate(
     StopTimeUpdate update,
     ParsedStopTimeUpdate.Builder builder,
-    LocalDate serviceDate,
-    TripUpdateParserContext context
+    LocalDate serviceDate
   ) {
     // Calculate midnight seconds for absolute time conversion
-    var midnight = serviceDate.atStartOfDay(context.timeZone());
+    var midnight = serviceDate.atStartOfDay(timeZone);
     long midnightSecondsSinceEpoch = midnight.toEpochSecond();
 
     var arrivalTimeOpt = update.arrivalTime();

@@ -21,8 +21,7 @@ public interface TripUpdateParser<T> {
    * Parse a single format-specific update into the common model.
    *
    * @param update  The format-specific update message
-   * @param context Parsing context containing feed ID, time zone, and other shared resources
    * @return Result containing either the parsed update or an error
    */
-  Result<ParsedTripUpdate, UpdateError> parse(T update, TripUpdateParserContext context);
+  Result<ParsedTripUpdate, UpdateError> parse(T update);
 }

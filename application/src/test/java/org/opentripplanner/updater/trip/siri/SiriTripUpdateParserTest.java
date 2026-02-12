@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.updater.trip.TripUpdateParserContext;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
@@ -30,13 +29,11 @@ class SiriTripUpdateParserTest {
   private static final ZoneId TIME_ZONE = ZoneId.of("Europe/Oslo");
 
   private SiriTripUpdateParser parser;
-  private TripUpdateParserContext context;
   private LocalTimeParser timeParser;
 
   @BeforeEach
   void setUp() {
-    parser = new SiriTripUpdateParser();
-    context = new TripUpdateParserContext(FEED_ID, TIME_ZONE, () -> TEST_DATE);
+    parser = new SiriTripUpdateParser(FEED_ID, TIME_ZONE);
     timeParser = new LocalTimeParser(TIME_ZONE, TEST_DATE);
   }
 
@@ -52,7 +49,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -92,7 +89,7 @@ class SiriTripUpdateParserTest {
       .withCancellation(true)
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -122,7 +119,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -160,7 +157,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -194,7 +191,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -216,7 +213,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -246,7 +243,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -268,7 +265,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -288,7 +285,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isFailure());
   }
@@ -304,7 +301,7 @@ class SiriTripUpdateParserTest {
       .withCancellation(true)
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     assertTrue(result.successValue().isCancellation());
@@ -317,7 +314,7 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("").withAimedDepartureTime("08:00"))
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isFailure());
   }
@@ -335,7 +332,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -361,7 +358,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -389,7 +386,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -410,7 +407,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -443,7 +440,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -472,7 +469,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -499,7 +496,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -538,7 +535,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -584,7 +581,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -612,7 +609,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -654,7 +651,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
@@ -701,7 +698,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey, context);
+    var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
