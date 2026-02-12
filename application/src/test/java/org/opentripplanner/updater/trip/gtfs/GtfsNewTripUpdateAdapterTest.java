@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -40,6 +41,7 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new GtfsNewTripUpdateAdapter(
       env.timetableRepository(),
+      new Deduplicator(),
       env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
@@ -54,6 +56,7 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new GtfsNewTripUpdateAdapter(
       env.timetableRepository(),
+      new Deduplicator(),
       env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
@@ -80,6 +83,7 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
     var newAdapter = new GtfsNewTripUpdateAdapter(
       env.timetableRepository(),
+      new Deduplicator(),
       env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
