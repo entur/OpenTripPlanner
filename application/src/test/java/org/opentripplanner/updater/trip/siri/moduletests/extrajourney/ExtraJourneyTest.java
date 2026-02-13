@@ -26,8 +26,8 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.SiriTestHelper;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
-import uk.org.siri.siri21.VehicleModesEnumeration;
 import uk.org.siri.siri21.OccupancyEnumeration;
+import uk.org.siri.siri21.VehicleModesEnumeration;
 
 class ExtraJourneyTest implements RealtimeTestConstants {
 
