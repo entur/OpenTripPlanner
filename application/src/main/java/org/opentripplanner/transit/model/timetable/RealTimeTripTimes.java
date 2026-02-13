@@ -31,7 +31,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   private final int[] departureTimes;
   private final RealTimeState realTimeState;
   private final StopRealTimeState[] stopRealTimeStates;
-  private final boolean[] extraCalls;
+  private final BitSet extraCalls;
   private final BitSet hasArrived;
   private final BitSet hasDeparted;
 
@@ -208,7 +208,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   }
 
   public boolean isExtraCall(int stopPos) {
-    return extraCalls[stopPos];
+    return extraCalls.get(stopPos);
   }
 
   public boolean isRealTimeUpdated(int stopPos) {

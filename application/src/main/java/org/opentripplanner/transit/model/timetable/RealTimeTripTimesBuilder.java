@@ -22,7 +22,7 @@ public class RealTimeTripTimesBuilder {
 
   private final StopRealTimeState[] stopRealTimeStates;
 
-  private final boolean[] extraCalls;
+  private final BitSet extraCalls;
   private final BitSet hasArrived;
   private final BitSet hasDeparted;
 
@@ -52,7 +52,7 @@ public class RealTimeTripTimesBuilder {
     departureTimes = new Integer[numStops];
     stopRealTimeStates = new StopRealTimeState[numStops];
     Arrays.fill(stopRealTimeStates, StopRealTimeState.DEFAULT);
-    extraCalls = new boolean[numStops];
+    extraCalls = new BitSet(numStops);
     stopHeadsigns = new I18NString[numStops];
     occupancyStatus = new OccupancyStatus[numStops];
     Arrays.fill(occupancyStatus, OccupancyStatus.NO_DATA_AVAILABLE);
@@ -207,16 +207,16 @@ public class RealTimeTripTimesBuilder {
     return stopRealTimeStates.clone();
   }
 
-  public boolean[] extraCalls() {
-    return extraCalls.clone();
+  public BitSet extraCalls() {
+    return (BitSet) extraCalls.clone();
   }
 
   public BitSet hasArrived() {
-    return (BitSet)hasArrived.clone();
+    return (BitSet) hasArrived.clone();
   }
 
   public BitSet hasDeparted() {
-    return (BitSet)hasDeparted.clone();
+    return (BitSet) hasDeparted.clone();
   }
 
   public RealTimeTripTimesBuilder withCanceled(int stop) {
@@ -237,7 +237,7 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withExtraCall(int stop, boolean extraCall) {
-    this.extraCalls[stop] = extraCall;
+    this.extraCalls.set(stop, extraCall);
     return this;
   }
 
