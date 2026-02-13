@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.fuzzymatching;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
@@ -71,6 +72,88 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
     var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
     assertEquals(0, result.successful(), "Should fail gracefully");
     assertFailure(UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH, result);
+  }
+
+  /**
+   * Two trips share the same stops and times but are on different routes.
+   * The lineRef in the SIRI update disambiguates which trip to match.
+   */
+  @Test
+  void testFuzzyMatchWithLineRef() {
+    var envBuilder = TransitTestEnvironment.of();
+    var stopA = envBuilder.stop(STOP_A_ID);
+    var stopB = envBuilder.stop(STOP_B_ID);
+    var routeA = envBuilder.route("RouteA");
+    var routeB = envBuilder.route("RouteB");
+
+    var trip1 = TripInput.of(TRIP_1_ID)
+      .withRoute(routeA)
+      .addStop(stopA, "0:00:10", "0:00:11")
+      .addStop(stopB, "0:00:20", "0:00:21");
+    var trip2 = TripInput.of(TRIP_2_ID)
+      .withRoute(routeB)
+      .addStop(stopA, "0:00:10", "0:00:11")
+      .addStop(stopB, "0:00:20", "0:00:21");
+
+    var env = envBuilder.addTrip(trip1).addTrip(trip2).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withLineRef("RouteA")
+      .withEstimatedCalls(builder ->
+        builder
+          .call(stopA)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(stopB)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    assertSuccess(result);
+    assertEquals(
+      "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
+
+  /**
+   * Trip visits stop B1 at Station-Omega. The SIRI update references sibling stop B2
+   * (also at Station-Omega). The fuzzy matcher resolves B2 to the same station and
+   * matches the trip, producing a quay change in the output.
+   */
+  @Test
+  void testFuzzyMatchOnSiblingStop() {
+    var envBuilder = TransitTestEnvironment.of();
+    var stopA = envBuilder.stop(STOP_A_ID);
+    var stopB1 = envBuilder.stopAtStation("B1", STATION_OMEGA_ID);
+    var stopB2 = envBuilder.stopAtStation("B2", STATION_OMEGA_ID);
+
+    var trip = TripInput.of(TRIP_1_ID)
+      .addStop(stopA, "0:00:10", "0:00:11")
+      .addStop(stopB1, "0:00:20", "0:00:21");
+
+    var env = envBuilder.addTrip(trip).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedCalls(builder ->
+        builder
+          .call(stopA)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(stopB2)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    assertSuccess(result);
+    assertEquals(
+      "MODIFIED | A 0:00:15 0:00:15 | B2 0:00:25 0:00:25",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
   }
 
   private static void assertTripUpdated(TransitTestEnvironment env) {
