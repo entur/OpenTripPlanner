@@ -108,7 +108,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     // Parse stop time updates
-    var stopTimeUpdates = parseStopTimeUpdates(calls, psd.serviceDate());
+    var stopTimeUpdates = parseStopTimeUpdates(
+      calls,
+      psd.serviceDate(),
+      journey.getOccupancy(),
+      journey.isPredictionInaccurate()
+    );
     builder.withStopTimeUpdates(stopTimeUpdates);
 
     // Handle new trip creation info
@@ -227,7 +232,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     List<CallWrapper> calls,
-    LocalDate serviceDate
+    LocalDate serviceDate,
+    @Nullable uk.org.siri.siri21.OccupancyEnumeration journeyOccupancy,
+    @Nullable Boolean journeyPredictionInaccurate
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
     int totalStops = calls.size();
@@ -248,7 +255,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       if (call.isExtraCall()) {
         builder.withIsExtraCall(true);
       }
-      if (TRUE.equals(call.isPredictionInaccurate())) {
+      if (TRUE.equals(call.isPredictionInaccurate()) || TRUE.equals(journeyPredictionInaccurate)) {
         builder.withPredictionInaccurate(true);
       }
       if (call.getActualArrivalTime() != null || call.getActualDepartureTime() != null) {
@@ -265,8 +272,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         }
       }
 
-      if (call.getOccupancy() != null) {
-        builder.withOccupancy(OccupancyMapper.mapOccupancyStatus(call.getOccupancy()));
+      var effectiveOccupancy = call.getOccupancy() != null ? call.getOccupancy() : journeyOccupancy;
+      if (effectiveOccupancy != null) {
+        builder.withOccupancy(OccupancyMapper.mapOccupancyStatus(effectiveOccupancy));
       }
 
       result.add(builder.build());

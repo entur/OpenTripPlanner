@@ -248,6 +248,11 @@ public final class HandlerUtils {
       if (stopUpdate.isExtraCall()) {
         builder.withExtraCall(i, true);
       }
+
+      // Apply occupancy
+      if (stopUpdate.occupancy() != null) {
+        builder.withOccupancyStatus(i, stopUpdate.occupancy());
+      }
     }
   }
 }
