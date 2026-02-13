@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -240,6 +241,45 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     // TODO: this should have a more specific error type
     assertFailure(UpdateError.UpdateErrorType.UNKNOWN, result);
+  }
+
+  /**
+   * First add a trip via extra journey, then send a regular update referencing the added trip.
+   * The added trip should be updated with the new times.
+   */
+  @Test
+  void testUpdateTimesOnAddedJourney() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    // Step 1: Create the added journey
+    var creation = createValidAddedJourney(siri).buildEstimatedTimetableDeliveries();
+    var creationResult = siri.applyEstimatedTimetable(creation);
+    assertSuccess(creationResult);
+    assertEquals(
+      "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+
+    // Step 2: Send a regular update with new times for the added trip
+    var update = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(ADDED_TRIP_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_C)
+          .departAimedExpected("00:01", "00:05")
+          .call(STOP_D)
+          .arriveAimedExpected("00:03", "00:07")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var updateResult = siri.applyEstimatedTimetable(update);
+    assertSuccess(updateResult);
+    assertEquals(
+      "UPDATED | C 0:05 0:05 | D 0:07 0:07",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
   }
 
   private SiriEtBuilder createValidAddedJourney(SiriTestHelper siri) {
