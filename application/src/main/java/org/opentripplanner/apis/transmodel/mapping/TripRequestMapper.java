@@ -125,7 +125,7 @@ public class TripRequestMapper {
     RouteRequestBuilder requestBuilder
   ) {
     if (
-      GqlUtil.hasArgument(environment, "dateTime") && requestBuilder.from().tripLocation != null
+      GqlUtil.hasArgument(environment, "dateTime") && requestBuilder.from().isOnBoard()
     ) {
       throw new IllegalArgumentException(
         "The 'dateTime' parameter cannot be set when 'from' contains a 'tripLocation'. " +

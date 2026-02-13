@@ -227,7 +227,7 @@ public class RoutingWorker {
 
   private RoutingResult routeDirectStreet() {
     // On-board trip locations don't have street vertices, so direct routing is not applicable
-    if (request.from() != null && request.from().tripLocation != null) {
+    if (request.from() != null && request.from().isOnBoard()) {
       return RoutingResult.empty();
     }
     // TODO: Add support for via search to the direct-street search and remove this.
@@ -269,7 +269,7 @@ public class RoutingWorker {
   }
 
   private RoutingResult routeDirectFlex() {
-    if (request.from() != null && request.from().tripLocation != null) {
+    if (request.from() != null && request.from().isOnBoard()) {
       return RoutingResult.empty();
     }
     if (!OTPFeature.FlexRouting.isOn()) {
@@ -288,7 +288,7 @@ public class RoutingWorker {
   }
 
   private RoutingResult routeCarpooling() {
-    if (request.from() != null && request.from().tripLocation != null) {
+    if (request.from() != null && request.from().isOnBoard()) {
       return RoutingResult.empty();
     }
     if (OTPFeature.CarPooling.isOff()) {
