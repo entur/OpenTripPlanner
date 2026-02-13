@@ -111,6 +111,17 @@ public final class ResolvedNewTrip {
   }
 
   /**
+   * Returns true if every stop in the update is cancelled/skipped.
+   * When true, the trip should be treated as implicitly cancelled at the trip level.
+   */
+  public boolean isAllStopsCancelled() {
+    return (
+      !resolvedStopTimeUpdates.isEmpty() &&
+      resolvedStopTimeUpdates.stream().allMatch(ResolvedStopTimeUpdate::isSkipped)
+    );
+  }
+
+  /**
    * The existing trip if this is an update to a previously added trip.
    */
   @Nullable

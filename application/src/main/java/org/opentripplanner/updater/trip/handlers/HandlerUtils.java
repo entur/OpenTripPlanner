@@ -229,14 +229,14 @@ public final class HandlerUtils {
         builder.withStopHeadsign(i, stopUpdate.stopHeadsign());
       }
 
-      // Apply skipped
-      if (stopUpdate.isSkipped()) {
-        builder.withCanceled(i);
-      }
-
       // Apply recorded flag
       if (stopUpdate.recorded()) {
         builder.withRecorded(i);
+      }
+
+      // Apply skipped (after recorded, so cancellation takes priority)
+      if (stopUpdate.isSkipped()) {
+        builder.withCanceled(i);
       }
 
       // Apply prediction inaccurate flag

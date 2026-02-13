@@ -165,7 +165,11 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
     HandlerUtils.applyRealTimeUpdates(tripCreationInfo, builder, filteredUpdates.updates());
-    builder.withRealTimeState(RealTimeState.ADDED);
+    if (resolvedUpdate.isAllStopsCancelled()) {
+      builder.cancelTrip();
+    } else {
+      builder.withRealTimeState(RealTimeState.ADDED);
+    }
 
     // Apply wheelchair accessibility
     if (tripCreationInfo.wheelchairAccessibility() != null) {
@@ -239,7 +243,11 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       builder,
       filteredUpdates.updates()
     );
-    builder.withRealTimeState(RealTimeState.UPDATED);
+    if (resolvedUpdate.isAllStopsCancelled()) {
+      builder.cancelTrip();
+    } else {
+      builder.withRealTimeState(RealTimeState.UPDATED);
+    }
 
     // Build and return result
     // tripCreation=false since this is an update to an existing added trip
