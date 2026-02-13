@@ -19,6 +19,7 @@ import uk.org.siri.siri21.EstimatedVersionFrameStructure;
 import uk.org.siri.siri21.FramedVehicleJourneyRefStructure;
 import uk.org.siri.siri21.LineRef;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
+import uk.org.siri.siri21.OccupancyEnumeration;
 import uk.org.siri.siri21.OperatorRefStructure;
 import uk.org.siri.siri21.QuayRefStructure;
 import uk.org.siri.siri21.RecordedCall;
@@ -94,6 +95,23 @@ public class SiriEtBuilder {
     var ref = new LineRef();
     ref.setValue(lineRef);
     evj.setLineRef(ref);
+    return this;
+  }
+
+  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
+    evj.setOccupancy(occupancy);
+    return this;
+  }
+
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
+  public SiriEtBuilder withDestinationName(String destinationName) {
+    var name = new NaturalLanguageStringStructure();
+    name.setValue(destinationName);
+    evj.getDestinationNames().add(name);
     return this;
   }
 
