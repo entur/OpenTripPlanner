@@ -91,8 +91,6 @@ class FareLookupService implements Serializable {
       .filter(r -> TimeLimitEvaluator.withinTimeLimit(r, legs.getFirst(), legs.getLast()))
       .flatMap(r -> findTransferMatches(r, legs).stream())
       .filter(transferMatch -> appliesToAllLegs(legs, transferMatch))
-      .toList()
-      .stream()
       .flatMap(transferRule -> transferRule.fromLegRule().fareProducts().stream())
       .collect(Collectors.toUnmodifiableSet());
   }
