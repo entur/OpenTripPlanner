@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.update;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
@@ -43,7 +44,7 @@ class QuayChangeTest implements RealtimeTestConstants {
 
     var result = siri.applyEstimatedTimetable(updates);
 
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertEquals(
       "MODIFIED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()

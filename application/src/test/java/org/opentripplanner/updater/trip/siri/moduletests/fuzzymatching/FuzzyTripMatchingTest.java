@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.fuzzymatching;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
@@ -41,7 +42,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
     var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertTripUpdated(env);
   }
 

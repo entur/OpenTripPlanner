@@ -59,7 +59,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     var result = siri.applyEstimatedTimetable(updates);
 
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertEquals(
       "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
@@ -106,7 +106,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     int numRoutes = env.transitService().listRoutes().size();
     var result = siri.applyEstimatedTimetable(updates);
 
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertEquals(
       "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
@@ -198,7 +198,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     var result = siri.applyEstimatedTimetable(updates);
 
-    assertEquals(1, result.successful());
+    assertSuccess(result);
 
     assertEquals(
       "ADDED | A [R] 0:02 0:02 | C 0:04 0:04",
