@@ -82,6 +82,22 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       ? tripTimes.createRealTimeWithoutScheduledTimes()
       : tripTimes.createRealTimeFromScheduledTimes();
 
+    // If all stops are cancelled, treat as implicit trip-level cancellation (avoid MODIFIED state)
+    if (resolvedUpdate.isAllStopsCancelled()) {
+      builder.cancelTrip();
+      var realTimeTripUpdate = new RealTimeTripUpdate(
+        scheduledPattern,
+        builder.build(),
+        serviceDate
+      );
+      LOG.debug(
+        "All stops cancelled - trip {} treated as cancelled on {}",
+        trip.getId(),
+        serviceDate
+      );
+      return Result.success(new TripUpdateResult(realTimeTripUpdate));
+    }
+
     // Apply stop time updates - returns PatternModificationResult
     var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, pattern, trip, serviceDate);
     if (applyResult.isFailure()) {
