@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertNoFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
@@ -112,6 +114,81 @@ class DelayedTest implements RealtimeTestConstants {
     assertEquals(
       "UPDATED | A 0:01 0:01:01 | B 0:02:10 0:02:31 | C 0:02:50 0:02:51",
       tripData.showTimetable()
+    );
+  }
+
+  @Test
+  void delayDoesNotAffectOtherTrip() {
+    var trip1 = TripInput.of(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+    var trip2 = TripInput.of(TRIP_2_ID)
+      .addStop(STOP_A, "0:01:00", "0:01:01")
+      .addStop(STOP_B, "0:01:10", "0:01:11");
+    var env = ENV_BUILDER.addTrip(trip1).addTrip(trip2).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addDelayedStopTime(STOP_SEQUENCE, DELAY)
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+
+    assertEquals(
+      "UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+    assertEquals(
+      "SCHEDULED | A 0:01 0:01:01 | B 0:01:10 0:01:11",
+      env.tripData(TRIP_2_ID).showTimetable()
+    );
+  }
+
+  @Test
+  void forwardPropagationFromFirstStop() {
+    var tripInput = TripInput.of(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21")
+      .addStop(STOP_C, "0:00:30", "0:00:31");
+    var env = ENV_BUILDER.addTrip(tripInput).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt.tripUpdateScheduled(TRIP_1_ID).addDelayedStopTime(0, DELAY).build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+
+    assertEquals(
+      "UPDATED | A 0:00:11 0:00:12 | B 0:00:21 0:00:22 | C 0:00:31 0:00:32",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
+
+  @Test
+  void fullDatasetClearsPreviousDelay() {
+    var tripInput = TripInput.of(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+    var env = ENV_BUILDER.addTrip(tripInput).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addDelayedStopTime(STOP_SEQUENCE, DELAY)
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+
+    assertEquals(
+      "UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+
+    assertNoFailure(rt.applyTripUpdates(List.of()));
+
+    assertEquals(
+      "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      env.tripData(TRIP_1_ID).showTimetable()
     );
   }
 }
