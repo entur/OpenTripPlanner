@@ -109,6 +109,7 @@ public class StopTimesHelper {
           .filter(matcher::match)
       )
       .sorted(request.sortOrder())
+      .distinct()
       .toList();
 
     return limitPerLineAndDestinationDisplay(

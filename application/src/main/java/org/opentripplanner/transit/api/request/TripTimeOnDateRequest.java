@@ -4,12 +4,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.transit.api.model.FilterValues;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.filter.transit.TripTimeOnDateFilterRequest;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.ArrivalDeparture;
 
@@ -24,13 +26,14 @@ public class TripTimeOnDateRequest {
   private final FilterValues<FeedScopedId> excludeRoutes;
   private final FilterValues<TransitMode> includeModes;
   private final FilterValues<TransitMode> excludeModes;
+  private final List<TripTimeOnDateFilterRequest> transitFilters;
   private final Duration timeWindow;
   private final ArrivalDeparture arrivalDeparture;
   private final int numberOfDepartures;
   private final Comparator<TripTimeOnDate> sortOrder;
   private final Integer departuresPerLineAndDestinationDisplay;
 
-  TripTimeOnDateRequest(
+  public TripTimeOnDateRequest(
     Collection<StopLocation> stopLocations,
     Instant time,
     Duration timeWindow,
@@ -44,7 +47,8 @@ public class TripTimeOnDateRequest {
     FilterValues<FeedScopedId> excludeRoutes,
     FilterValues<TransitMode> includeModes,
     FilterValues<TransitMode> excludeModes,
-    Integer departuresPerLineAndDestinationDisplay
+    Integer departuresPerLineAndDestinationDisplay,
+    List<TripTimeOnDateFilterRequest> transitFilters
   ) {
     this.stopLocations = Set.copyOf(stopLocations);
     this.time = Objects.requireNonNull(time);
@@ -60,6 +64,7 @@ public class TripTimeOnDateRequest {
     this.includeModes = includeModes;
     this.excludeModes = excludeModes;
     this.departuresPerLineAndDestinationDisplay = departuresPerLineAndDestinationDisplay;
+    this.transitFilters = List.copyOf(transitFilters);
   }
 
   public static TripTimeOnDateRequestBuilder of(Collection<StopLocation> stopLocations) {
@@ -120,5 +125,9 @@ public class TripTimeOnDateRequest {
 
   public Integer departuresPerLineAndDestinationDisplay() {
     return departuresPerLineAndDestinationDisplay;
+  }
+
+  public List<TripTimeOnDateFilterRequest> transitFilters() {
+    return transitFilters;
   }
 }

@@ -20,6 +20,7 @@ import java.time.ZoneId;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
+import org.opentripplanner.apis.transmodel.mapping.TripTimeOnDateFilterMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.TransmodelTransportSubmode;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
@@ -37,6 +39,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.graphql.GraphQLUtils;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
+import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.site.MultiModalStation;
@@ -337,6 +340,18 @@ public class StopPlaceType {
           )
           .argument(
             GraphQLArgument.newArgument()
+              .name("filters")
+              .description(
+                "A list of filters for which estimated calls should be included. " +
+                  "An estimated call will be included if it matches with at least one filter. " +
+                  "An empty list of filters is disallowed! " +
+                  "If a search include this parameter, \"whiteListed\", & \"whiteListedModes\" filters will be ignored."
+              )
+              .type(GraphQLList.list(new GraphQLNonNull(EstimatedCallFilterInputType.INPUT_TYPE)))
+              .build()
+          )
+          .argument(
+            GraphQLArgument.newArgument()
               .name("includeCancelledTrips")
               .description("Indicates that real-time-cancelled trips should also be included.")
               .type(Scalars.GraphQLBoolean)
@@ -354,40 +369,53 @@ public class StopPlaceType {
             Duration timeRange = Duration.ofSeconds(timeRangeInput);
 
             MonoOrMultiModalStation monoOrMultiModalStation = environment.getSource();
-            JourneyWhiteListed whiteListed = new JourneyWhiteListed(environment, idMapper);
-            Collection<TransitMode> transitModes = environment.getArgument("whiteListedModes");
 
             Instant startTime = environment.containsArgument("startTime")
               ? Instant.ofEpochMilli(environment.getArgument("startTime"))
               : Instant.now();
 
-            Stream<TripTimeOnDate> tripTimeOnDateStream = monoOrMultiModalStation
-              .getChildStops()
-              .stream()
-              .flatMap(singleStop ->
-                getTripTimesForStop(
-                  singleStop,
-                  startTime,
-                  timeRange,
-                  arrivalDeparture,
-                  includeCancelledTrips,
-                  numberOfDepartures,
-                  departuresPerLineAndDestinationDisplay,
-                  whiteListed.authorityIds,
-                  whiteListed.lineIds,
-                  transitModes,
-                  environment
-                )
+            List<Map<String, ?>> filtersInput = environment.getArgument("filters");
+            JourneyWhiteListed whiteListed = new JourneyWhiteListed(environment, idMapper);
+            Collection<TransitMode> transitModes = environment.getArgument("whiteListedModes");
+
+            boolean hasLegacyFilters =
+              !whiteListed.authorityIds.isEmpty() ||
+              !whiteListed.lineIds.isEmpty() ||
+              (transitModes != null && !transitModes.isEmpty());
+
+            if (filtersInput != null && hasLegacyFilters) {
+              throw new IllegalArgumentException(
+                "The 'filters' parameter cannot be combined with 'whiteListed' or 'whiteListedModes'."
               );
+            }
+
+            var requestBuilder = TripTimeOnDateRequest.of(monoOrMultiModalStation.getChildStops())
+              .withTime(startTime)
+              .withTimeWindow(timeRange)
+              .withArrivalDeparture(arrivalDeparture)
+              .withNumberOfDepartures(numberOfDepartures)
+              .withIncludeCancelledTrips(includeCancelledTrips);
+
+            if (filtersInput != null) {
+              var mapper = new TripTimeOnDateFilterMapper(idMapper);
+              requestBuilder.withTransitFilters(mapper.mapFilters(filtersInput));
+            } else {
+              requestBuilder
+                .withIncludeAgencies(
+                  whiteListed.authorityIds.isEmpty() ? null : whiteListed.authorityIds
+                )
+                .withIncludeRoutes(whiteListed.lineIds.isEmpty() ? null : whiteListed.lineIds)
+                .withIncludeModes(transitModes);
+            }
+
+            var tripTimeOnDateStream = GqlUtil.getTransitService(environment)
+              .findTripTimesOnDate(requestBuilder.build())
+              .stream();
 
             return limitPerLineAndDestinationDisplay(
               tripTimeOnDateStream,
               departuresPerLineAndDestinationDisplay
-            )
-              .sorted(TripTimeOnDate.compareByDeparture())
-              .distinct()
-              .limit(numberOfDepartures)
-              .collect(Collectors.toList());
+            ).toList();
           })
           .build()
       )
