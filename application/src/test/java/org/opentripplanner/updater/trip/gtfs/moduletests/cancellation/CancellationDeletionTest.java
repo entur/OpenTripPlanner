@@ -4,13 +4,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import java.util.List;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -54,12 +54,73 @@ class CancellationDeletionTest implements RealtimeTestConstants {
     var update = rt.tripUpdate(TRIP_1_ID, relationship).build();
     assertSuccess(rt.applyTripUpdate(update));
 
-    var forToday = env.tripData(TRIP_1_ID).tripTimes();
-    var schedule = env.tripData(TRIP_1_ID).scheduledTripTimes();
-    assertNotSame(forToday, schedule);
+    assertEquals(
+      "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      env.tripData(TRIP_1_ID).showScheduledTimetable()
+    );
+    assertEquals(
+      state + " | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
 
-    assertEquals(state, forToday.getRealTimeState());
-    assertTrue(forToday.isCanceledOrDeleted());
+  @ParameterizedTest
+  @MethodSource("cases")
+  void delayThenCancel(ScheduleRelationship relationship, RealTimeState state) {
+    var env = envBuilder
+      .addTrip(
+        TripInput.of(TRIP_1_ID)
+          .addStop(STOP_A, "0:00:10", "0:00:11")
+          .addStop(STOP_B, "0:00:20", "0:00:21")
+      )
+      .build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    // First apply a delay
+    var delayUpdate = rt.tripUpdateScheduled(TRIP_1_ID).addDelayedStopTime(1, 1).build();
+    assertSuccess(rt.applyTripUpdate(delayUpdate));
+
+    // Then cancel/delete the trip
+    var cancelUpdate = rt.tripUpdate(TRIP_1_ID, relationship).build();
+    assertSuccess(rt.applyTripUpdate(cancelUpdate));
+
+    assertEquals(
+      "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      env.tripData(TRIP_1_ID).showScheduledTimetable()
+    );
+    assertEquals(
+      state + " | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
+
+  @Test
+  void cancelThenRestore() {
+    var env = envBuilder
+      .addTrip(
+        TripInput.of(TRIP_1_ID)
+          .addStop(STOP_A, "0:00:10", "0:00:11")
+          .addStop(STOP_B, "0:00:20", "0:00:21")
+      )
+      .build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    // First cancel the trip
+    var cancelUpdate = rt.tripUpdate(TRIP_1_ID, ScheduleRelationship.CANCELED).build();
+    assertSuccess(rt.applyTripUpdate(cancelUpdate));
+
+    // Then restore it with a delay
+    var restoreUpdate = rt.tripUpdateScheduled(TRIP_1_ID).addDelayedStopTime(1, 1).build();
+    assertSuccess(rt.applyTripUpdate(restoreUpdate));
+
+    assertEquals(
+      "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      env.tripData(TRIP_1_ID).showScheduledTimetable()
+    );
+    assertEquals(
+      "UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
   }
 
   /**
