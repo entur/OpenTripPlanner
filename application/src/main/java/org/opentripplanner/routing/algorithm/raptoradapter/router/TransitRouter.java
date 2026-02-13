@@ -5,7 +5,9 @@ import static org.opentripplanner.routing.algorithm.raptoradapter.router.street.
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -53,6 +55,7 @@ import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 
 public class TransitRouter {
 
@@ -127,11 +130,14 @@ public class TransitRouter {
       ? serverContext.transitService().getRaptorTransitData()
       : serverContext.transitService().getRealtimeRaptorTransitData();
 
-    var requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
+    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
+
+    var requestTransitDataProvider = createRequestTransitDataProvider(
+      raptorTransitData,
+      onBoardTripLocation
+    );
 
     debugTimingAggregator.finishedPatternFiltering();
-
-    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
 
     Collection<? extends RaptorAccessEgress> accessPaths;
     Collection<? extends RaptorAccessEgress> egressPaths;
@@ -150,8 +156,19 @@ public class TransitRouter {
 
       debugTimingAggregator.finishedAccessEgress(accessPaths.size(), egressPaths.size());
 
-      // Force single-iteration search since the departure time is known exactly
-      effectiveRequest = request.copyOf().withSearchWindow(Duration.ZERO).buildRequest();
+      // Set the EDT to the start of the trip's service date so Raptor's isInIteration check
+      // passes (EDT must be <= the trip's board time). Use a 24-hour search window to cover
+      // the entire service day.
+      var serviceDate = resolveServiceDate(onBoardTripLocation);
+      var serviceDateStart = ServiceDateUtils.asStartOfService(
+        serviceDate,
+        transitSearchTimeZero.getZone()
+      );
+      effectiveRequest = request
+        .copyOf()
+        .withDateTime(serviceDateStart.toInstant())
+        .withSearchWindow(Duration.ofHours(24))
+        .buildRequest();
 
       // Skip extra MC search for on-board access
       extraSearch = null;
@@ -240,7 +257,10 @@ public class TransitRouter {
       effectiveRequest
     );
 
-    List<Itinerary> itineraries = paths.stream().map(itineraryMapper::createItinerary).toList();
+    List<Itinerary> itineraries = paths
+      .stream()
+      .map(itineraryMapper::createItinerary)
+      .toList();
 
     debugTimingAggregator.finishedItineraryCreation();
 
@@ -387,17 +407,45 @@ public class TransitRouter {
   }
 
   private RaptorRoutingRequestTransitData createRequestTransitDataProvider(
-    RaptorTransitData raptorTransitData
+    RaptorTransitData raptorTransitData,
+    @Nullable TripLocation onBoardTripLocation
   ) {
+    int pastDays = additionalSearchDays.additionalSearchDaysInPast();
+
+    if (onBoardTripLocation != null) {
+      LocalDate serviceDate = resolveServiceDate(onBoardTripLocation);
+      LocalDate searchDate = ServiceDateUtils.asServiceDay(transitSearchTimeZero);
+      long daysDiff = ChronoUnit.DAYS.between(serviceDate, searchDate);
+      if (daysDiff > pastDays) {
+        pastDays = (int) daysDiff;
+      }
+    }
+
     return new RaptorRoutingRequestTransitData(
       raptorTransitData,
       transitGroupPriorityService,
       transitSearchTimeZero,
-      additionalSearchDays.additionalSearchDaysInPast(),
+      pastDays,
       additionalSearchDays.additionalSearchDaysInFuture(),
       DefaultTransitDataProviderFilter.ofRequest(request),
       request
     );
+  }
+
+  private LocalDate resolveServiceDate(TripLocation tripLocation) {
+    var reference = tripLocation.tripOnDateReference();
+    if (reference.tripOnDateId() != null) {
+      var tripOnServiceDate = serverContext
+        .transitService()
+        .getTripOnServiceDate(reference.tripOnDateId());
+      if (tripOnServiceDate != null) {
+        return tripOnServiceDate.getServiceDate();
+      }
+    }
+    if (reference.tripIdOnServiceDate() != null) {
+      return reference.tripIdOnServiceDate().serviceDate();
+    }
+    return ServiceDateUtils.asServiceDay(transitSearchTimeZero);
   }
 
   private void verifyEgress(Collection<?> egress) {

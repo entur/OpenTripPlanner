@@ -47,13 +47,7 @@ public class OnBoardAccessResolver {
     var resolved = resolveTrip(tripLocation.tripOnDateReference());
     var trip = resolved.trip();
     var serviceDate = resolved.serviceDate();
-    var tripPattern = transitService.findPattern(trip, serviceDate);
-
-    if (tripPattern == null) {
-      throw new IllegalArgumentException(
-        "No trip pattern found for trip %s on date %s".formatted(trip.getId(), serviceDate)
-      );
-    }
+    var tripPattern = findPatternInRaptorData(trip, serviceDate, patternIndex);
 
     var stop = resolveStop(tripLocation.stopId());
     int stopPosInPattern = findStopPosition(
@@ -76,6 +70,74 @@ public class OnBoardAccessResolver {
       tripScheduleIndex,
       stopPosInPattern,
       raptorStopIndex
+    );
+  }
+
+  /**
+   * Find the trip pattern that exists in the Raptor transit data's pattern index. The realtime-
+   * modified pattern (from {@code findPattern(trip, serviceDate)}) may have a new route index
+   * not present in the Raptor data if the realtime updater hasn't processed that service date.
+   * In that case, fall back to the base/static pattern.
+   */
+  private TripPattern findPatternInRaptorData(
+    Trip trip,
+    LocalDate serviceDate,
+    List<TripPatternForDates> patternIndex
+  ) {
+    // Try the service-date-specific pattern first (may include realtime modifications)
+    var tripPattern = transitService.findPattern(trip, serviceDate);
+    if (tripPattern != null && isInPatternIndex(tripPattern, patternIndex)) {
+      return tripPattern;
+    }
+
+    // Fall back to the base pattern (without service-date-specific realtime modifications)
+    tripPattern = transitService.findPattern(trip);
+    if (tripPattern != null && isInPatternIndex(tripPattern, patternIndex)) {
+      return tripPattern;
+    }
+
+    // Last resort: search the pattern index directly for a pattern containing this trip.
+    // This handles the case where realtime updates create new patterns with route indices
+    // not present in the Raptor data (e.g., the SIRI updater hasn't processed the service date).
+    return searchPatternIndex(trip, serviceDate, patternIndex);
+  }
+
+  private boolean isInPatternIndex(
+    TripPattern pattern,
+    List<TripPatternForDates> patternIndex
+  ) {
+    int routeIndex = pattern.getRoutingTripPattern().patternIndex();
+    return routeIndex < patternIndex.size() && patternIndex.get(routeIndex) != null;
+  }
+
+  private TripPattern searchPatternIndex(
+    Trip trip,
+    LocalDate serviceDate,
+    List<TripPatternForDates> patternIndex
+  ) {
+    for (int i = 0; i < patternIndex.size(); i++) {
+      var tpfd = patternIndex.get(i);
+      if (tpfd == null) {
+        continue;
+      }
+      var dateIterator = tpfd.tripPatternForDatesIndexIterator(true);
+      while (dateIterator.hasNext()) {
+        int dayIndex = dateIterator.next();
+        TripPatternForDate tpForDate = tpfd.tripPatternForDate(dayIndex);
+        if (tpForDate.getServiceDate().equals(serviceDate)) {
+          for (int j = 0; j < tpForDate.numberOfTripSchedules(); j++) {
+            if (tpForDate.getTripTimes(j).getTrip().getId().equals(trip.getId())) {
+              return tpfd.getTripPattern().getPattern();
+            }
+          }
+        }
+      }
+    }
+    throw new IllegalArgumentException(
+      "No pattern containing trip %s on date %s found in active Raptor data".formatted(
+        trip.getId(),
+        serviceDate
+      )
     );
   }
 
