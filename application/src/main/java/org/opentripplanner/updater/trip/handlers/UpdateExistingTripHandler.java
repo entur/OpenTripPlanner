@@ -389,6 +389,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       if (stopUpdate.predictionInaccurate()) {
         builder.withInaccuratePredictions(stopIndex);
       }
+
+      // Apply occupancy
+      if (stopUpdate.occupancy() != null) {
+        builder.withOccupancyStatus(stopIndex, stopUpdate.occupancy());
+      }
     }
 
     // Apply delay propagation according to feed configuration
