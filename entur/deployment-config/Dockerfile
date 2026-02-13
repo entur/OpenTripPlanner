@@ -23,6 +23,7 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.
 COPY --chmod=444 otp-shaded/target/otp-shaded-*.jar /code/otp-shaded.jar
 
 # Copy metrics agent (used only by Graph Builder)
+RUN mkdir -p /opt/jmx
 ADD --chmod=444 https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar /opt/jmx/jmx_prometheus_javaagent.jar
 # JMX Exporter config (used only by Graph Builder)
 COPY --chmod=444 entur/deployment-config/docker/jmx_exporter_config.yml /opt/jmx/config.yaml
