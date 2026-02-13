@@ -1,7 +1,13 @@
 package org.opentripplanner.ext.flex.template;
 
 import gnu.trove.set.TIntSet;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import javax.annotation.Nullable;
+import org.opentripplanner.transit.model.timetable.booking.RoutingBookingInfo;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
  * This class contains information used in a flex router, and depends on the date the search was
@@ -21,9 +27,13 @@ public class FlexServiceDate {
   /** Which services are running on the date. */
   private final TIntSet servicesRunning;
 
+  /**
+   * The requested booking time as seconds since the start of service for this date.
+   * Calculated relative to this specific service date's start-of-service.
+   */
   private final int requestedBookingTime;
 
-  public FlexServiceDate(
+  private FlexServiceDate(
     LocalDate serviceDate,
     int secondsFromStartOfTime,
     int requestedBookingTime,
@@ -35,6 +45,31 @@ public class FlexServiceDate {
     this.servicesRunning = servicesRunning;
   }
 
+  public static FlexServiceDate of(
+    LocalDate serviceDate,
+    int secondsFromStartOfTime,
+    @Nullable Instant requestedBookingTimeInstant,
+    ZoneId timeZone,
+    TIntSet servicesRunning
+  ) {
+    int requestedBookingTime;
+    if (requestedBookingTimeInstant == null) {
+      requestedBookingTime = RoutingBookingInfo.NOT_SET;
+    } else {
+      ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(serviceDate, timeZone);
+      requestedBookingTime = ServiceDateUtils.secondsSinceStartOfTime(
+        startOfService,
+        requestedBookingTimeInstant
+      );
+    }
+    return new FlexServiceDate(
+      serviceDate,
+      secondsFromStartOfTime,
+      requestedBookingTime,
+      servicesRunning
+    );
+  }
+
   LocalDate serviceDate() {
     return serviceDate;
   }
@@ -43,6 +78,9 @@ public class FlexServiceDate {
     return secondsFromStartOfTime;
   }
 
+  /**
+   * Get the requested booking time as seconds since the start of service for this date.
+   */
   int requestedBookingTime() {
     return requestedBookingTime;
   }
