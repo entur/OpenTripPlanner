@@ -243,6 +243,11 @@ public final class HandlerUtils {
       if (stopUpdate.predictionInaccurate()) {
         builder.withInaccuratePredictions(i);
       }
+
+      // Apply extra call flag
+      if (stopUpdate.isExtraCall()) {
+        builder.withExtraCall(i, true);
+      }
     }
   }
 }
