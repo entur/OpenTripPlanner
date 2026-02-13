@@ -387,10 +387,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withServiceId(createId(datedServiceJourneyId));
     }
 
+    if (journey.getDestinationNames() != null && !journey.getDestinationNames().isEmpty()) {
+      String destinationName = getFirstStringFromList(journey.getDestinationNames());
+      if (!destinationName.isEmpty()) {
+        builder.withHeadsign(new NonLocalizedString(destinationName));
+      }
+    }
+
     if (journey.getPublishedLineNames() != null && !journey.getPublishedLineNames().isEmpty()) {
       String name = getFirstStringFromList(journey.getPublishedLineNames());
       if (!name.isEmpty()) {
-        builder.withHeadsign(new NonLocalizedString(name));
         builder.withShortName(name);
       }
     }
