@@ -103,12 +103,21 @@ public class NewTripResolver {
         );
       }
 
-      // Get scheduled trip times (for added trips, this is the original aimed times)
+      // Get trip times - check scheduled timetable first, then real-time timetable
       TripTimes scheduledTripTimes = existingPattern
         .getScheduledTimetable()
         .getTripTimes(existingRealTimeTrip);
+
       if (scheduledTripTimes == null) {
-        LOG.warn("UPDATE_ADDED_TRIP: Could not find scheduled trip times for trip {}", tripId);
+        // For GTFS-RT added trips, the scheduled timetable may be empty.
+        // Fall back to the real-time timetable.
+        scheduledTripTimes = transitService
+          .findTimetable(existingPattern, serviceDate)
+          .getTripTimes(existingRealTimeTrip);
+      }
+
+      if (scheduledTripTimes == null) {
+        LOG.warn("UPDATE_ADDED_TRIP: Could not find trip times for trip {}", tripId);
         return Result.failure(
           new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
         );

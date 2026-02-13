@@ -19,6 +19,7 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
+import org.opentripplanner.updater.trip.model.AddedTripUpdateState;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
@@ -246,7 +247,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     if (resolvedUpdate.isAllStopsCancelled()) {
       builder.cancelTrip();
     } else {
-      builder.withRealTimeState(RealTimeState.UPDATED);
+      var state = resolvedUpdate.options().addedTripUpdateState();
+      builder.withRealTimeState(
+        state == AddedTripUpdateState.SET_UPDATED ? RealTimeState.UPDATED : RealTimeState.ADDED
+      );
     }
 
     // Build and return result
