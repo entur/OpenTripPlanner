@@ -116,6 +116,23 @@ public class SiriEtBuilder {
     return this;
   }
 
+  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
+    evj.setOccupancy(occupancy);
+    return this;
+  }
+
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
+  public SiriEtBuilder withDestinationName(String destinationName) {
+    var name = new NaturalLanguageStringStructure();
+    name.setValue(destinationName);
+    evj.getDestinationNames().add(name);
+    return this;
+  }
+
   public SiriEtBuilder withRecordedCalls(
     Function<RecordedCallsBuilder, RecordedCallsBuilder> producer
   ) {

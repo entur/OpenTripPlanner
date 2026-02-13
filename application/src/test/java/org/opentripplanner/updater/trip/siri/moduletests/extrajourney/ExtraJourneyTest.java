@@ -17,6 +17,7 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
@@ -26,6 +27,7 @@ import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.SiriTestHelper;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
 import uk.org.siri.siri21.VehicleModesEnumeration;
+import uk.org.siri.siri21.OccupancyEnumeration;
 
 class ExtraJourneyTest implements RealtimeTestConstants {
 
@@ -400,6 +402,123 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       SubMode.of("replacementRailService"),
       newRoute.getNetexSubmode(),
       "When an added rail trip is assigned to an existing rail route, the submode should be 'replacementRailService'"
+    );
+  }
+
+  /**
+   * This tests the logic for intermediate stops, since the first and last stop have custom logic.
+   */
+  @Test
+  void testAddJourneyWithThreeStops() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_A).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_B)
+          .arriveAimedExpected("00:03", "00:04")
+          .departAimedExpected("00:05", "00:06")
+          .call(STOP_C)
+          .arriveAimedExpected("00:07", "00:08")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+    assertEquals(
+      "ADDED | A [R] 0:02 0:02 | B 0:04 0:06 | C 0:08 0:08",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+    assertEquals(
+      "SCHEDULED | A 0:01 0:01 | B 0:03 0:05 | C 0:07 0:07",
+      env.tripData(ADDED_TRIP_ID).showScheduledTimetable()
+    );
+  }
+
+  @Test
+  void testAddJourneyWithOccupancy() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withOccupancy(OccupancyEnumeration.SEATS_AVAILABLE)
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var tripTimes = env.tripData(ADDED_TRIP_ID).tripTimes();
+    assertEquals(OccupancyStatus.MANY_SEATS_AVAILABLE, tripTimes.getOccupancyStatus(0));
+    assertEquals(OccupancyStatus.MANY_SEATS_AVAILABLE, tripTimes.getOccupancyStatus(1));
+  }
+
+  @Test
+  void testAddJourneyWithPredictionInaccurate() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withPredictionInaccurate(true)
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+    // PI overwrites the R (recorded) flag since StopRealTimeState is a single enum
+    assertEquals(
+      "ADDED | C [PI] 0:02 0:02 | D [PI] 0:04 0:04",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+  }
+
+  @Test
+  void testAddJourneyWithDestinationName() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withDestinationName("Hogwarts")
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var trip = env.tripData(ADDED_TRIP_ID).trip();
+    assertEquals("Hogwarts", trip.getHeadsign().toString());
+  }
+
+  @Test
+  void testReplacingJourneyHasReplacementLink() {
+    var tripInput = TripInput.of(TRIP_1_ID)
+      .withRoute(ROUTE)
+      .withWithTripOnServiceDate(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+
+    var env = ENV_BUILDER.addTrip(tripInput).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withVehicleJourneyRef(TRIP_1_ID)
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_A).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder -> builder.call(STOP_C).arriveAimedExpected("00:03", "00:04"))
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var addedTripOnDate = env.transitService().getTripOnServiceDate(id(ADDED_TRIP_ID));
+    assertNotNull(addedTripOnDate);
+    assertThat(addedTripOnDate.getReplacementFor()).hasSize(1);
+    assertEquals(
+      TRIP_1_ID,
+      addedTripOnDate.getReplacementFor().getFirst().getTrip().getId().getId()
     );
   }
 

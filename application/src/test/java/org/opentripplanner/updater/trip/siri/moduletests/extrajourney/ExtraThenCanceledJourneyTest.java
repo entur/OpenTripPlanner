@@ -62,6 +62,33 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     );
   }
 
+  @Test
+  void testAddJourneyWithAllStopsCancelledIsImplicitlyCancelled() {
+    var env = envBuilder.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef("operatorId")
+      .withLineRef("routeId")
+      .withRecordedCalls(builder ->
+        builder.call(stopA).departAimedActual("11:00", "11:00").withIsCancellation(true)
+      )
+      .withEstimatedCalls(builder ->
+        builder.call(stopB).arriveAimedExpected("11:10", "11:10").withIsCancellation(true)
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+    // Individual stop [C] flags remain even though the trip is implicitly cancelled
+    assertEquals(
+      "CANCELED | A [C] 11:00 11:00 | B [C] 11:10 11:10",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+  }
+
   private List<EstimatedTimetableDeliveryStructure> addedJourney(SiriTestHelper siri) {
     return siriEtBuilder(siri).withIsExtraJourney(true).buildEstimatedTimetableDeliveries();
   }
