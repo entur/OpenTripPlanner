@@ -128,7 +128,7 @@ public class TripRequestMapper {
       GqlUtil.hasArgument(environment, "dateTime") && requestBuilder.from().isOnBoard()
     ) {
       throw new IllegalArgumentException(
-        "The 'dateTime' parameter cannot be set when 'from' contains a 'tripLocation'. " +
+        "The 'dateTime' parameter cannot be set when 'from' contains a 'onBoardLocation'. " +
           "The departure time is determined by the on-board position."
       );
     }

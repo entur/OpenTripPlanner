@@ -14,7 +14,7 @@ public class LocationInputType {
         "Input format for specifying a location through either a place reference (id), coordinates " +
           "or both. If both place and coordinates are provided the place ref will be used if found, " +
           "coordinates will only be used if place is not known. " +
-          "Alternatively, a tripLocation can be used to start the search on-board a vehicle."
+          "Alternatively, an onBoardLocation can be used to start the search on-board a vehicle."
       )
       .field(
         GraphQLInputObjectField.newInputObjectField()
@@ -48,12 +48,12 @@ public class LocationInputType {
       )
       .field(
         GraphQLInputObjectField.newInputObjectField()
-          .name("tripLocation")
+          .name("onBoardLocation")
           .description(
             "Identifies an on-board position on a specific transit trip. " +
               "When set, the search starts from on-board the specified vehicle."
           )
-          .type(TripLocationInputType.create(dateTimeScalar))
+          .type(OnBoardLocationInputType.create(dateTimeScalar))
           .build()
       )
       .build();

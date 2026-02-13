@@ -410,12 +410,12 @@ public class TripRequestMapperTest implements PlanTestConstants {
   @Test
   void testDateTimeWithTripLocationThrows() {
     var fromWithTripLocation = Map.of(
-      "tripLocation",
+      "onBoardLocation",
       Map.of(
-        "tripReference",
+        "datedServiceJourneyReference",
         Map.of(
-          "tripIdOnServiceDate",
-          Map.of("tripId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
+          "serviceJourneyOnServiceDate",
+          Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
         ),
         "stopId",
         "F:stop1"
@@ -431,7 +431,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
       MAPPER.createRequest(executionContext(arguments))
     );
     assertEquals(
-      "The 'dateTime' parameter cannot be set when 'from' contains a 'tripLocation'. " +
+      "The 'dateTime' parameter cannot be set when 'from' contains a 'onBoardLocation'. " +
         "The departure time is determined by the on-board position.",
       ex.getMessage()
     );
@@ -440,12 +440,12 @@ public class TripRequestMapperTest implements PlanTestConstants {
   @Test
   void testTripLocationWithoutDateTimeSucceeds() {
     var fromWithTripLocation = Map.of(
-      "tripLocation",
+      "onBoardLocation",
       Map.of(
-        "tripReference",
+        "datedServiceJourneyReference",
         Map.of(
-          "tripIdOnServiceDate",
-          Map.of("tripId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
+          "serviceJourneyOnServiceDate",
+          Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
         ),
         "stopId",
         "F:stop1"

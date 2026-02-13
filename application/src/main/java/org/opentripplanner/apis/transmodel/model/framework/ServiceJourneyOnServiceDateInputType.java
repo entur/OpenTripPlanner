@@ -5,14 +5,14 @@ import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLNonNull;
 
-public class TripIdOnServiceDateInputType {
+public class ServiceJourneyOnServiceDateInputType {
 
   public static final GraphQLInputObjectType INPUT_TYPE = GraphQLInputObjectType.newInputObject()
-    .name("TripIdOnServiceDate")
+    .name("ServiceJourneyOnServiceDate")
     .description("Identifies a trip by trip ID and service date.")
     .field(
       GraphQLInputObjectField.newInputObjectField()
-        .name("tripId")
+        .name("serviceJourneyId")
         .description("The trip ID.")
         .type(new GraphQLNonNull(Scalars.GraphQLString))
         .build()
