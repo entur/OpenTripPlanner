@@ -40,9 +40,7 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
     }
 
     // Check if this is a SIRI extra call (has isExtraCall flags)
-    boolean hasSiriExtraCalls = stopTimeUpdates
-      .stream()
-      .anyMatch(ResolvedStopTimeUpdate::isExtraCall);
+    boolean hasSiriExtraCalls = resolvedUpdate.hasSiriExtraCalls();
 
     // Validate SIRI extra call constraints
     if (hasSiriExtraCalls) {

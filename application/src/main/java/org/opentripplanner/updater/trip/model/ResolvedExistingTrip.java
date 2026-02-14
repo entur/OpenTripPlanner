@@ -111,6 +111,10 @@ public final class ResolvedExistingTrip {
     );
   }
 
+  public boolean hasSiriExtraCalls() {
+    return resolvedStopTimeUpdates.stream().anyMatch(ResolvedStopTimeUpdate::isExtraCall);
+  }
+
   @Nullable
   public TripCreationInfo tripCreationInfo() {
     return tripCreationInfo;
