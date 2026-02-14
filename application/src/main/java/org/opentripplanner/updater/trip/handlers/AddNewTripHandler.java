@@ -202,7 +202,8 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
         serviceDate,
         tripOnServiceDate,
         true,
-        true
+        true,
+        resolvedUpdate.dataSource()
       );
 
       LOG.debug("Added trip {} on {} with pattern {}", tripId, serviceDate, pattern.getId());
@@ -260,7 +261,11 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       var realTimeTripUpdate = new RealTimeTripUpdate(
         existingPattern,
         builder.build(),
-        serviceDate
+        serviceDate,
+        null,
+        false,
+        false,
+        resolvedUpdate.dataSource()
       );
 
       LOG.debug("Updated existing added trip {} on {}", tripId, serviceDate);

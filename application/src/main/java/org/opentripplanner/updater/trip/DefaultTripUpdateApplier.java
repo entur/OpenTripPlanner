@@ -161,54 +161,55 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   @Override
   public Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate) {
     try {
+      var producer = parsedUpdate.dataSource();
       return switch (parsedUpdate.updateType()) {
         case UPDATE_EXISTING -> {
           var resolveResult = existingTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
-            yield Result.failure(resolveResult.failureValue());
+            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
           var resolved = resolveResult.successValue();
           var validationResult = updateExistingValidator.validate(resolved);
           if (validationResult.isFailure()) {
-            yield Result.failure(validationResult.failureValue());
+            yield withProducer(Result.failure(validationResult.failureValue()), producer);
           }
           yield updateExistingHandler.handle(resolved);
         }
         case MODIFY_TRIP -> {
           var resolveResult = existingTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
-            yield Result.failure(resolveResult.failureValue());
+            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
           var resolved = resolveResult.successValue();
           var validationResult = modifyTripValidator.validate(resolved);
           if (validationResult.isFailure()) {
-            yield Result.failure(validationResult.failureValue());
+            yield withProducer(Result.failure(validationResult.failureValue()), producer);
           }
           yield modifyTripHandler.handle(resolved);
         }
         case ADD_NEW_TRIP -> {
           var resolveResult = newTripResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
-            yield Result.failure(resolveResult.failureValue());
+            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
           var resolved = resolveResult.successValue();
           var validationResult = addNewTripValidator.validate(resolved);
           if (validationResult.isFailure()) {
-            yield Result.failure(validationResult.failureValue());
+            yield withProducer(Result.failure(validationResult.failureValue()), producer);
           }
           yield addNewTripHandler.handle(resolved);
         }
         case CANCEL_TRIP -> {
           var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
-            yield Result.failure(resolveResult.failureValue());
+            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
           yield cancelTripHandler.handle(resolveResult.successValue());
         }
         case DELETE_TRIP -> {
           var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
           if (resolveResult.isFailure()) {
-            yield Result.failure(resolveResult.failureValue());
+            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
           yield deleteTripHandler.handle(resolveResult.successValue());
         }
@@ -217,5 +218,20 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       LOG.error("Error applying trip update: {}", e.getMessage(), e);
       return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
     }
+  }
+
+  /**
+   * Enrich a failure result with producer information from the parsed update.
+   * On the success path, the producer is already set in the RealTimeTripUpdate by the handlers.
+   */
+  private static Result<TripUpdateResult, UpdateError> withProducer(
+    Result<TripUpdateResult, UpdateError> result,
+    @Nullable String producer
+  ) {
+    if (result.isSuccess() || producer == null) {
+      return result;
+    }
+    var e = result.failureValue();
+    return Result.failure(new UpdateError(e.tripId(), e.errorType(), e.stopIndex(), producer));
   }
 }

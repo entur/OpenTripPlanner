@@ -126,7 +126,15 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
 
     // Build and return the result
     try {
-      var realTimeTripUpdate = new RealTimeTripUpdate(newPattern, builder.build(), serviceDate);
+      var realTimeTripUpdate = new RealTimeTripUpdate(
+        newPattern,
+        builder.build(),
+        serviceDate,
+        null,
+        false,
+        false,
+        resolvedUpdate.dataSource()
+      );
       LOG.debug(
         "Modified trip {} on {} with new pattern {}",
         trip.getId(),

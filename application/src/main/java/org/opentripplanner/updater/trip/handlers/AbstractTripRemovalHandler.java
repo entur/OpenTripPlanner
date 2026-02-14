@@ -39,7 +39,12 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
 
     // First, try to cancel/delete a previously added trip
     if (snapshotManager != null && tripId != null) {
-      var addedTripResult = cancelPreviouslyAddedTrip(tripId, serviceDate, snapshotManager);
+      var addedTripResult = cancelPreviouslyAddedTrip(
+        tripId,
+        serviceDate,
+        snapshotManager,
+        resolvedUpdate.dataSource()
+      );
       if (addedTripResult != null) {
         return addedTripResult;
       }
@@ -66,7 +71,15 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
     var builder = tripTimes.createRealTimeFromScheduledTimes();
     applyRemoval(builder);
 
-    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
+    var realTimeTripUpdate = new RealTimeTripUpdate(
+      pattern,
+      builder.build(),
+      serviceDate,
+      null,
+      false,
+      false,
+      resolvedUpdate.dataSource()
+    );
 
     LOG.debug("{} trip {} on {}", getLogAction(), trip.getId(), serviceDate);
 
@@ -80,7 +93,8 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
   private Result<TripUpdateResult, UpdateError> cancelPreviouslyAddedTrip(
     FeedScopedId tripId,
     java.time.LocalDate serviceDate,
-    TimetableSnapshotManager snapshotManager
+    TimetableSnapshotManager snapshotManager,
+    @Nullable String dataSource
   ) {
     // Check if there's a real-time pattern for this trip
     TripPattern pattern = snapshotManager.getNewTripPatternForModifiedTrip(tripId, serviceDate);
@@ -109,7 +123,15 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
     var builder = tripTimes.createRealTimeFromScheduledTimes();
     applyRemoval(builder);
 
-    var realTimeTripUpdate = new RealTimeTripUpdate(pattern, builder.build(), serviceDate);
+    var realTimeTripUpdate = new RealTimeTripUpdate(
+      pattern,
+      builder.build(),
+      serviceDate,
+      null,
+      false,
+      false,
+      dataSource
+    );
 
     LOG.debug("{} previously added trip {} on {}", getLogAction(), tripId, serviceDate);
 

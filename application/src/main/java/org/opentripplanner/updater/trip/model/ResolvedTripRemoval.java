@@ -31,26 +31,35 @@ public final class ResolvedTripRemoval {
   @Nullable
   private final TripTimes scheduledTripTimes;
 
+  @Nullable
+  private final String dataSource;
+
   private ResolvedTripRemoval(
     LocalDate serviceDate,
     FeedScopedId tripId,
     @Nullable Trip scheduledTrip,
     @Nullable TripPattern scheduledPattern,
-    @Nullable TripTimes scheduledTripTimes
+    @Nullable TripTimes scheduledTripTimes,
+    @Nullable String dataSource
   ) {
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.tripId = tripId;
     this.scheduledTrip = scheduledTrip;
     this.scheduledPattern = scheduledPattern;
     this.scheduledTripTimes = scheduledTripTimes;
+    this.dataSource = dataSource;
   }
 
   /**
    * Create for a trip that was not found in the scheduled data.
    * The handler will check for previously added trips.
    */
-  public static ResolvedTripRemoval notFoundInSchedule(LocalDate serviceDate, FeedScopedId tripId) {
-    return new ResolvedTripRemoval(serviceDate, tripId, null, null, null);
+  public static ResolvedTripRemoval notFoundInSchedule(
+    LocalDate serviceDate,
+    FeedScopedId tripId,
+    @Nullable String dataSource
+  ) {
+    return new ResolvedTripRemoval(serviceDate, tripId, null, null, null, dataSource);
   }
 
   /**
@@ -60,14 +69,16 @@ public final class ResolvedTripRemoval {
     LocalDate serviceDate,
     Trip trip,
     TripPattern pattern,
-    TripTimes tripTimes
+    TripTimes tripTimes,
+    @Nullable String dataSource
   ) {
     return new ResolvedTripRemoval(
       serviceDate,
       trip.getId(),
       Objects.requireNonNull(trip),
       Objects.requireNonNull(pattern),
-      Objects.requireNonNull(tripTimes)
+      Objects.requireNonNull(tripTimes),
+      dataSource
     );
   }
 
@@ -107,6 +118,14 @@ public final class ResolvedTripRemoval {
   @Nullable
   public TripTimes scheduledTripTimes() {
     return scheduledTripTimes;
+  }
+
+  /**
+   * The data source / producer of the real-time update.
+   */
+  @Nullable
+  public String dataSource() {
+    return dataSource;
   }
 
   @Override

@@ -61,13 +61,16 @@ public class TripRemovalResolver {
 
     var tripReference = parsedUpdate.tripReference();
     FeedScopedId tripId = tripReference.tripId();
+    String dataSource = parsedUpdate.dataSource();
 
     // Try to resolve as scheduled trip from static transit model
     var tripResult = tripResolver.resolveTrip(tripReference);
     if (tripResult.isFailure()) {
       // Trip not found in scheduled data - return success with null values
       // Handler will check for previously added trips
-      return Result.success(ResolvedTripRemoval.notFoundInSchedule(serviceDate, tripId));
+      return Result.success(
+        ResolvedTripRemoval.notFoundInSchedule(serviceDate, tripId, dataSource)
+      );
     }
     Trip trip = tripResult.successValue();
 
@@ -75,18 +78,22 @@ public class TripRemovalResolver {
     TripPattern pattern = transitService.findPattern(trip);
     if (pattern == null) {
       // No pattern - return success with null values, handler will check for added trips
-      return Result.success(ResolvedTripRemoval.notFoundInSchedule(serviceDate, trip.getId()));
+      return Result.success(
+        ResolvedTripRemoval.notFoundInSchedule(serviceDate, trip.getId(), dataSource)
+      );
     }
 
     // Get trip times
     TripTimes tripTimes = pattern.getScheduledTimetable().getTripTimes(trip);
     if (tripTimes == null) {
       // No trip times - return success with null values, handler will check for added trips
-      return Result.success(ResolvedTripRemoval.notFoundInSchedule(serviceDate, trip.getId()));
+      return Result.success(
+        ResolvedTripRemoval.notFoundInSchedule(serviceDate, trip.getId(), dataSource)
+      );
     }
 
     return Result.success(
-      ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes)
+      ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes, dataSource)
     );
   }
 }

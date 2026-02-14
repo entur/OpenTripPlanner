@@ -88,7 +88,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       var realTimeTripUpdate = new RealTimeTripUpdate(
         scheduledPattern,
         builder.build(),
-        serviceDate
+        serviceDate,
+        null,
+        false,
+        false,
+        resolvedUpdate.dataSource()
       );
       LOG.debug(
         "All stops cancelled - trip {} treated as cancelled on {}",
@@ -146,7 +150,15 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
     // Create the RealTimeTripUpdate with the correct pattern
     try {
-      var realTimeTripUpdate = new RealTimeTripUpdate(finalPattern, builder.build(), serviceDate);
+      var realTimeTripUpdate = new RealTimeTripUpdate(
+        finalPattern,
+        builder.build(),
+        serviceDate,
+        null,
+        false,
+        false,
+        resolvedUpdate.dataSource()
+      );
       LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
       return Result.success(new TripUpdateResult(realTimeTripUpdate));
     } catch (DataValidationException e) {
