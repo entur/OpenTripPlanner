@@ -119,13 +119,6 @@ public final class ResolvedNewTrip {
   }
 
   /**
-   * Returns true if this is a new trip creation.
-   */
-  public boolean isNewTrip() {
-    return existingTrip == null;
-  }
-
-  /**
    * Returns true if every stop in the update is cancelled/skipped.
    * When true, the trip should be treated as implicitly cancelled at the trip level.
    */

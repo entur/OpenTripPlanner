@@ -6,7 +6,6 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 
 /**
@@ -14,17 +13,10 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  * <p>
  * Used by {@link org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler}
  * and {@link org.opentripplanner.updater.trip.handlers.ModifyTripHandler}.
- * <p>
- * All fields except tripOnServiceDate are guaranteed to be non-null after successful resolution.
  */
 public final class ResolvedExistingTrip {
 
-  private final TripUpdateType updateType;
-  private final TripReference tripReference;
   private final TripUpdateOptions options;
-
-  @Nullable
-  private final StopPatternModification stopPatternModification;
 
   @Nullable
   private final TripCreationInfo tripCreationInfo;
@@ -41,9 +33,6 @@ public final class ResolvedExistingTrip {
   private final TripTimes scheduledTripTimes;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
-  @Nullable
-  private final TripOnServiceDate tripOnServiceDate;
-
   public ResolvedExistingTrip(
     ParsedTripUpdate parsedUpdate,
     LocalDate serviceDate,
@@ -51,13 +40,9 @@ public final class ResolvedExistingTrip {
     TripPattern pattern,
     TripPattern scheduledPattern,
     TripTimes scheduledTripTimes,
-    @Nullable TripOnServiceDate tripOnServiceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
-    this.updateType = parsedUpdate.updateType();
-    this.tripReference = parsedUpdate.tripReference();
     this.options = parsedUpdate.options();
-    this.stopPatternModification = parsedUpdate.stopPatternModification();
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
@@ -72,7 +57,6 @@ public final class ResolvedExistingTrip {
       scheduledTripTimes,
       "scheduledTripTimes must not be null"
     );
-    this.tripOnServiceDate = tripOnServiceDate;
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
       "resolvedStopTimeUpdates must not be null"
@@ -106,19 +90,6 @@ public final class ResolvedExistingTrip {
     return scheduledTripTimes;
   }
 
-  @Nullable
-  public TripOnServiceDate tripOnServiceDate() {
-    return tripOnServiceDate;
-  }
-
-  public TripUpdateType updateType() {
-    return updateType;
-  }
-
-  public TripReference tripReference() {
-    return tripReference;
-  }
-
   public TripUpdateOptions options() {
     return options;
   }
@@ -141,11 +112,6 @@ public final class ResolvedExistingTrip {
   }
 
   @Nullable
-  public StopPatternModification stopPatternModification() {
-    return stopPatternModification;
-  }
-
-  @Nullable
   public TripCreationInfo tripCreationInfo() {
     return tripCreationInfo;
   }
@@ -163,9 +129,7 @@ public final class ResolvedExistingTrip {
   public String toString() {
     return (
       "ResolvedExistingTrip{" +
-      "updateType=" +
-      updateType +
-      ", serviceDate=" +
+      "serviceDate=" +
       serviceDate +
       ", trip=" +
       trip.getId() +
@@ -173,8 +137,6 @@ public final class ResolvedExistingTrip {
       pattern.getId() +
       ", scheduledPattern=" +
       scheduledPattern.getId() +
-      ", tripOnServiceDate=" +
-      (tripOnServiceDate != null ? tripOnServiceDate.getId() : "null") +
       '}'
     );
   }

@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
  *   <li>Pattern (the pattern containing the trip)</li>
  *   <li>Scheduled pattern (original if pattern is modified)</li>
  *   <li>Trip times (from scheduled timetable)</li>
- *   <li>TripOnServiceDate (optional, for dated vehicle journey lookups)</li>
  * </ul>
  */
 public class ExistingTripResolver {
@@ -118,9 +116,6 @@ public class ExistingTripResolver {
       );
     }
 
-    // Resolve TripOnServiceDate if available
-    TripOnServiceDate tripOnServiceDate = resolveTripOnServiceDate(tripReference);
-
     // Resolve stop time updates now that service date is known
     var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
       parsedUpdate.stopTimeUpdates(),
@@ -137,7 +132,6 @@ public class ExistingTripResolver {
         pattern,
         scheduledPattern,
         tripTimes,
-        tripOnServiceDate,
         resolvedStopTimeUpdates
       )
     );
@@ -207,16 +201,5 @@ public class ExistingTripResolver {
       );
     }
     return Result.success(null);
-  }
-
-  /**
-   * Try to resolve TripOnServiceDate from a trip reference.
-   */
-  @Nullable
-  private TripOnServiceDate resolveTripOnServiceDate(TripReference reference) {
-    if (reference.hasTripOnServiceDateId()) {
-      return tripResolver.resolveTripOnServiceDateOrNull(reference);
-    }
-    return null;
   }
 }

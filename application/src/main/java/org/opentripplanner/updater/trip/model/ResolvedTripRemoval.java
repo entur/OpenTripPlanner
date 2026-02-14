@@ -18,8 +18,6 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public final class ResolvedTripRemoval {
 
-  private final TripUpdateType updateType;
-  private final TripReference tripReference;
   private final LocalDate serviceDate;
   private final FeedScopedId tripId;
 
@@ -34,16 +32,12 @@ public final class ResolvedTripRemoval {
   private final TripTimes scheduledTripTimes;
 
   private ResolvedTripRemoval(
-    TripUpdateType updateType,
-    TripReference tripReference,
     LocalDate serviceDate,
     FeedScopedId tripId,
     @Nullable Trip scheduledTrip,
     @Nullable TripPattern scheduledPattern,
     @Nullable TripTimes scheduledTripTimes
   ) {
-    this.updateType = Objects.requireNonNull(updateType, "updateType must not be null");
-    this.tripReference = Objects.requireNonNull(tripReference, "tripReference must not be null");
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.tripId = tripId;
     this.scheduledTrip = scheduledTrip;
@@ -55,35 +49,20 @@ public final class ResolvedTripRemoval {
    * Create for a trip that was not found in the scheduled data.
    * The handler will check for previously added trips.
    */
-  public static ResolvedTripRemoval notFoundInSchedule(
-    ParsedTripUpdate parsedUpdate,
-    LocalDate serviceDate,
-    FeedScopedId tripId
-  ) {
-    return new ResolvedTripRemoval(
-      parsedUpdate.updateType(),
-      parsedUpdate.tripReference(),
-      serviceDate,
-      tripId,
-      null,
-      null,
-      null
-    );
+  public static ResolvedTripRemoval notFoundInSchedule(LocalDate serviceDate, FeedScopedId tripId) {
+    return new ResolvedTripRemoval(serviceDate, tripId, null, null, null);
   }
 
   /**
    * Create for a scheduled trip that was found.
    */
   public static ResolvedTripRemoval forScheduledTrip(
-    ParsedTripUpdate parsedUpdate,
     LocalDate serviceDate,
     Trip trip,
     TripPattern pattern,
     TripTimes tripTimes
   ) {
     return new ResolvedTripRemoval(
-      parsedUpdate.updateType(),
-      parsedUpdate.tripReference(),
       serviceDate,
       trip.getId(),
       Objects.requireNonNull(trip),
@@ -104,13 +83,6 @@ public final class ResolvedTripRemoval {
   @Nullable
   public FeedScopedId tripId() {
     return tripId;
-  }
-
-  /**
-   * Returns true if a scheduled trip was found.
-   */
-  public boolean hasScheduledTrip() {
-    return scheduledTrip != null;
   }
 
   /**
@@ -137,26 +109,16 @@ public final class ResolvedTripRemoval {
     return scheduledTripTimes;
   }
 
-  public TripUpdateType updateType() {
-    return updateType;
-  }
-
-  public TripReference tripReference() {
-    return tripReference;
-  }
-
   @Override
   public String toString() {
     return (
       "ResolvedTripRemoval{" +
-      "updateType=" +
-      updateType +
-      ", serviceDate=" +
+      "serviceDate=" +
       serviceDate +
       ", tripId=" +
       tripId +
-      ", hasScheduledTrip=" +
-      hasScheduledTrip() +
+      ", scheduledTrip=" +
+      (scheduledTrip != null ? scheduledTrip.getId() : "null") +
       '}'
     );
   }
