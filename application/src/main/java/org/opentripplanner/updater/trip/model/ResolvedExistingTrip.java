@@ -19,7 +19,21 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public final class ResolvedExistingTrip {
 
-  private final ParsedTripUpdate parsedUpdate;
+  private final TripUpdateType updateType;
+  private final TripReference tripReference;
+  private final TripUpdateOptions options;
+
+  @Nullable
+  private final StopPatternModification stopPatternModification;
+
+  @Nullable
+  private final TripCreationInfo tripCreationInfo;
+
+  @Nullable
+  private final String dataSource;
+
+  private final boolean hasStopSequences;
+
   private final LocalDate serviceDate;
   private final Trip trip;
   private final TripPattern pattern;
@@ -40,7 +54,13 @@ public final class ResolvedExistingTrip {
     @Nullable TripOnServiceDate tripOnServiceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
-    this.parsedUpdate = Objects.requireNonNull(parsedUpdate, "parsedUpdate must not be null");
+    this.updateType = parsedUpdate.updateType();
+    this.tripReference = parsedUpdate.tripReference();
+    this.options = parsedUpdate.options();
+    this.stopPatternModification = parsedUpdate.stopPatternModification();
+    this.tripCreationInfo = parsedUpdate.tripCreationInfo();
+    this.dataSource = parsedUpdate.dataSource();
+    this.hasStopSequences = parsedUpdate.hasStopSequences();
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.trip = Objects.requireNonNull(trip, "trip must not be null");
     this.pattern = Objects.requireNonNull(pattern, "pattern must not be null");
@@ -91,18 +111,16 @@ public final class ResolvedExistingTrip {
     return tripOnServiceDate;
   }
 
-  // ========== Delegated accessors from parsedUpdate ==========
-
   public TripUpdateType updateType() {
-    return parsedUpdate.updateType();
+    return updateType;
   }
 
   public TripReference tripReference() {
-    return parsedUpdate.tripReference();
+    return tripReference;
   }
 
   public TripUpdateOptions options() {
-    return parsedUpdate.options();
+    return options;
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
@@ -124,21 +142,21 @@ public final class ResolvedExistingTrip {
 
   @Nullable
   public StopPatternModification stopPatternModification() {
-    return parsedUpdate.stopPatternModification();
+    return stopPatternModification;
   }
 
   @Nullable
   public TripCreationInfo tripCreationInfo() {
-    return parsedUpdate.tripCreationInfo();
+    return tripCreationInfo;
   }
 
   @Nullable
   public String dataSource() {
-    return parsedUpdate.dataSource();
+    return dataSource;
   }
 
   public boolean hasStopSequences() {
-    return parsedUpdate.hasStopSequences();
+    return hasStopSequences;
   }
 
   @Override
@@ -146,7 +164,7 @@ public final class ResolvedExistingTrip {
     return (
       "ResolvedExistingTrip{" +
       "updateType=" +
-      updateType() +
+      updateType +
       ", serviceDate=" +
       serviceDate +
       ", trip=" +

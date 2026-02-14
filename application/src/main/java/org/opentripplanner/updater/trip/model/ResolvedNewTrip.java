@@ -18,7 +18,14 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public final class ResolvedNewTrip {
 
-  private final ParsedTripUpdate parsedUpdate;
+  private final TripUpdateOptions options;
+
+  @Nullable
+  private final TripCreationInfo tripCreationInfo;
+
+  @Nullable
+  private final String dataSource;
+
   private final LocalDate serviceDate;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
@@ -33,14 +40,18 @@ public final class ResolvedNewTrip {
   private final TripTimes existingTripTimes;
 
   private ResolvedNewTrip(
-    ParsedTripUpdate parsedUpdate,
+    TripUpdateOptions options,
+    @Nullable TripCreationInfo tripCreationInfo,
+    @Nullable String dataSource,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     @Nullable Trip existingTrip,
     @Nullable TripPattern existingPattern,
     @Nullable TripTimes existingTripTimes
   ) {
-    this.parsedUpdate = Objects.requireNonNull(parsedUpdate, "parsedUpdate must not be null");
+    this.options = Objects.requireNonNull(options, "options must not be null");
+    this.tripCreationInfo = tripCreationInfo;
+    this.dataSource = dataSource;
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
@@ -60,7 +71,9 @@ public final class ResolvedNewTrip {
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
     return new ResolvedNewTrip(
-      parsedUpdate,
+      parsedUpdate.options(),
+      parsedUpdate.tripCreationInfo(),
+      parsedUpdate.dataSource(),
       serviceDate,
       resolvedStopTimeUpdates,
       null,
@@ -81,7 +94,9 @@ public final class ResolvedNewTrip {
     TripTimes existingTripTimes
   ) {
     return new ResolvedNewTrip(
-      parsedUpdate,
+      parsedUpdate.options(),
+      parsedUpdate.tripCreationInfo(),
+      parsedUpdate.dataSource(),
       serviceDate,
       resolvedStopTimeUpdates,
       Objects.requireNonNull(existingTrip),
@@ -145,10 +160,8 @@ public final class ResolvedNewTrip {
     return existingTripTimes;
   }
 
-  // ========== Delegated accessors from parsedUpdate ==========
-
   public TripUpdateOptions options() {
-    return parsedUpdate.options();
+    return options;
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
@@ -157,12 +170,12 @@ public final class ResolvedNewTrip {
 
   @Nullable
   public TripCreationInfo tripCreationInfo() {
-    return parsedUpdate.tripCreationInfo();
+    return tripCreationInfo;
   }
 
   @Nullable
   public String dataSource() {
-    return parsedUpdate.dataSource();
+    return dataSource;
   }
 
   @Override

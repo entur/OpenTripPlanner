@@ -19,7 +19,28 @@ import org.opentripplanner.updater.trip.StopResolver;
  */
 public final class ResolvedStopTimeUpdate {
 
-  private final ParsedStopTimeUpdate parsed;
+  private final StopReference stopReference;
+
+  @Nullable
+  private final Integer stopSequence;
+
+  private final ParsedStopTimeUpdate.StopUpdateStatus status;
+
+  @Nullable
+  private final PickDrop pickup;
+
+  @Nullable
+  private final PickDrop dropoff;
+
+  @Nullable
+  private final I18NString stopHeadsign;
+
+  @Nullable
+  private final OccupancyStatus occupancy;
+
+  private final boolean isExtraCall;
+  private final boolean predictionInaccurate;
+  private final boolean recorded;
 
   @Nullable
   private final TimeUpdate arrivalUpdate;
@@ -31,12 +52,30 @@ public final class ResolvedStopTimeUpdate {
   private final StopLocation stop;
 
   private ResolvedStopTimeUpdate(
-    ParsedStopTimeUpdate parsed,
+    StopReference stopReference,
+    @Nullable Integer stopSequence,
+    ParsedStopTimeUpdate.StopUpdateStatus status,
+    @Nullable PickDrop pickup,
+    @Nullable PickDrop dropoff,
+    @Nullable I18NString stopHeadsign,
+    @Nullable OccupancyStatus occupancy,
+    boolean isExtraCall,
+    boolean predictionInaccurate,
+    boolean recorded,
     @Nullable TimeUpdate arrivalUpdate,
     @Nullable TimeUpdate departureUpdate,
     @Nullable StopLocation stop
   ) {
-    this.parsed = Objects.requireNonNull(parsed, "parsed must not be null");
+    this.stopReference = Objects.requireNonNull(stopReference, "stopReference must not be null");
+    this.stopSequence = stopSequence;
+    this.status = Objects.requireNonNull(status, "status must not be null");
+    this.pickup = pickup;
+    this.dropoff = dropoff;
+    this.stopHeadsign = stopHeadsign;
+    this.occupancy = occupancy;
+    this.isExtraCall = isExtraCall;
+    this.predictionInaccurate = predictionInaccurate;
+    this.recorded = recorded;
     this.arrivalUpdate = arrivalUpdate;
     this.departureUpdate = departureUpdate;
     this.stop = stop;
@@ -59,7 +98,21 @@ public final class ResolvedStopTimeUpdate {
       ? parsed.departureUpdate().resolve(serviceDate, timeZone)
       : null;
     var stop = stopResolver.resolve(parsed.stopReference());
-    return new ResolvedStopTimeUpdate(parsed, arrival, departure, stop);
+    return new ResolvedStopTimeUpdate(
+      parsed.stopReference(),
+      parsed.stopSequence(),
+      parsed.status(),
+      parsed.pickup(),
+      parsed.dropoff(),
+      parsed.stopHeadsign(),
+      parsed.occupancy(),
+      parsed.isExtraCall(),
+      parsed.predictionInaccurate(),
+      parsed.recorded(),
+      arrival,
+      departure,
+      stop
+    );
   }
 
   /**
@@ -75,13 +128,6 @@ public final class ResolvedStopTimeUpdate {
       .stream()
       .map(u -> resolve(u, serviceDate, timeZone, stopResolver))
       .toList();
-  }
-
-  /**
-   * The underlying parsed stop time update.
-   */
-  public ParsedStopTimeUpdate parsed() {
-    return parsed;
   }
 
   @Nullable
@@ -102,51 +148,49 @@ public final class ResolvedStopTimeUpdate {
     return stop;
   }
 
-  // ========== Delegated accessors ==========
-
   public StopReference stopReference() {
-    return parsed.stopReference();
+    return stopReference;
   }
 
   @Nullable
   public Integer stopSequence() {
-    return parsed.stopSequence();
+    return stopSequence;
   }
 
   public ParsedStopTimeUpdate.StopUpdateStatus status() {
-    return parsed.status();
+    return status;
   }
 
   @Nullable
   public PickDrop pickup() {
-    return parsed.pickup();
+    return pickup;
   }
 
   @Nullable
   public PickDrop dropoff() {
-    return parsed.dropoff();
+    return dropoff;
   }
 
   @Nullable
   public I18NString stopHeadsign() {
-    return parsed.stopHeadsign();
+    return stopHeadsign;
   }
 
   @Nullable
   public OccupancyStatus occupancy() {
-    return parsed.occupancy();
+    return occupancy;
   }
 
   public boolean isExtraCall() {
-    return parsed.isExtraCall();
+    return isExtraCall;
   }
 
   public boolean predictionInaccurate() {
-    return parsed.predictionInaccurate();
+    return predictionInaccurate;
   }
 
   public boolean recorded() {
-    return parsed.recorded();
+    return recorded;
   }
 
   public boolean hasArrivalUpdate() {
@@ -158,6 +202,9 @@ public final class ResolvedStopTimeUpdate {
   }
 
   public boolean isSkipped() {
-    return parsed.isSkipped();
+    return (
+      status == ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED ||
+      status == ParsedStopTimeUpdate.StopUpdateStatus.CANCELLED
+    );
   }
 }

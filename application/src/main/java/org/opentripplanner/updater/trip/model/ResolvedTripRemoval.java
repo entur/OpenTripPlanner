@@ -18,7 +18,8 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public final class ResolvedTripRemoval {
 
-  private final ParsedTripUpdate parsedUpdate;
+  private final TripUpdateType updateType;
+  private final TripReference tripReference;
   private final LocalDate serviceDate;
   private final FeedScopedId tripId;
 
@@ -33,14 +34,16 @@ public final class ResolvedTripRemoval {
   private final TripTimes scheduledTripTimes;
 
   private ResolvedTripRemoval(
-    ParsedTripUpdate parsedUpdate,
+    TripUpdateType updateType,
+    TripReference tripReference,
     LocalDate serviceDate,
     FeedScopedId tripId,
     @Nullable Trip scheduledTrip,
     @Nullable TripPattern scheduledPattern,
     @Nullable TripTimes scheduledTripTimes
   ) {
-    this.parsedUpdate = Objects.requireNonNull(parsedUpdate, "parsedUpdate must not be null");
+    this.updateType = Objects.requireNonNull(updateType, "updateType must not be null");
+    this.tripReference = Objects.requireNonNull(tripReference, "tripReference must not be null");
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.tripId = tripId;
     this.scheduledTrip = scheduledTrip;
@@ -57,7 +60,15 @@ public final class ResolvedTripRemoval {
     LocalDate serviceDate,
     FeedScopedId tripId
   ) {
-    return new ResolvedTripRemoval(parsedUpdate, serviceDate, tripId, null, null, null);
+    return new ResolvedTripRemoval(
+      parsedUpdate.updateType(),
+      parsedUpdate.tripReference(),
+      serviceDate,
+      tripId,
+      null,
+      null,
+      null
+    );
   }
 
   /**
@@ -71,7 +82,8 @@ public final class ResolvedTripRemoval {
     TripTimes tripTimes
   ) {
     return new ResolvedTripRemoval(
-      parsedUpdate,
+      parsedUpdate.updateType(),
+      parsedUpdate.tripReference(),
       serviceDate,
       trip.getId(),
       Objects.requireNonNull(trip),
@@ -125,14 +137,12 @@ public final class ResolvedTripRemoval {
     return scheduledTripTimes;
   }
 
-  // ========== Delegated accessors from parsedUpdate ==========
-
   public TripUpdateType updateType() {
-    return parsedUpdate.updateType();
+    return updateType;
   }
 
   public TripReference tripReference() {
-    return parsedUpdate.tripReference();
+    return tripReference;
   }
 
   @Override
@@ -140,7 +150,7 @@ public final class ResolvedTripRemoval {
     return (
       "ResolvedTripRemoval{" +
       "updateType=" +
-      updateType() +
+      updateType +
       ", serviceDate=" +
       serviceDate +
       ", tripId=" +
