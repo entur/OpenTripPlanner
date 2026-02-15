@@ -59,7 +59,7 @@ Split each updater into two sub-components:
                    │  DefaultTripUpdateApplier │
                    │    (pipeline stages)      │
                    │                           │
-                   │  1. Route by update type  │
+                   │  1. Pattern match on type │
                    │  2. Resolve references    │
                    │  3. Validate preconditions│
                    │  4. Handle mutation        │
@@ -159,39 +159,39 @@ ResolvedUpdate ──→ Handler ──→ TripUpdateResult(RealTimeTripUpdate, 
 
 ### Pipeline Orchestration
 
-`DefaultTripUpdateApplier.apply()` orchestrates the pipeline with a switch on `TripUpdateType`:
+`DefaultTripUpdateApplier.apply()` orchestrates the pipeline using pattern matching on the sealed `ParsedTripUpdate` hierarchy. The compiler ensures exhaustiveness — every concrete type must be handled:
 
 ```java
 public Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate) {
-  return switch (parsedUpdate.updateType()) {
-    case UPDATE_EXISTING -> {
-      var resolved = existingTripResolver.resolve(parsedUpdate);     // resolve
-      var validated = updateExistingValidator.validate(resolved);     // validate
-      yield updateExistingHandler.handle(resolved);                  // handle
+  return switch (parsedUpdate) {
+    case ParsedUpdateExisting u -> {
+      var resolved = existingTripResolver.resolve(u);     // resolve (typed)
+      var validated = updateExistingValidator.validate(resolved);  // validate
+      yield updateExistingHandler.handle(resolved);               // handle
     }
-    case MODIFY_TRIP -> {
-      var resolved = existingTripResolver.resolve(parsedUpdate);
+    case ParsedModifyTrip u -> {
+      var resolved = existingTripResolver.resolve(u);
       var validated = modifyTripValidator.validate(resolved);
       yield modifyTripHandler.handle(resolved);
     }
-    case ADD_NEW_TRIP -> {
-      var resolved = newTripResolver.resolve(parsedUpdate);
+    case ParsedAddNewTrip u -> {
+      var resolved = newTripResolver.resolve(u);
       var validated = addNewTripValidator.validate(resolved);
       yield addNewTripHandler.handle(resolved);
     }
-    case CANCEL_TRIP -> {
-      var resolved = tripRemovalResolver.resolve(parsedUpdate);
+    case ParsedCancelTrip u -> {
+      var resolved = tripRemovalResolver.resolve(u);
       yield cancelTripHandler.handle(resolved);
     }
-    case DELETE_TRIP -> {
-      var resolved = tripRemovalResolver.resolve(parsedUpdate);
+    case ParsedDeleteTrip u -> {
+      var resolved = tripRemovalResolver.resolve(u);
       yield deleteTripHandler.handle(resolved);
     }
   };
 }
 ```
 
-Each stage returns `Result<T, UpdateError>` — if any stage fails, the pipeline short-circuits with the error.
+Pattern matching provides the correctly-typed variable directly — each resolver receives its specific type (e.g., `ExistingTripResolver.resolve(ParsedExistingTripUpdate)`) rather than the broad base interface. Each stage returns `Result<T, UpdateError>` — if any stage fails, the pipeline short-circuits with the error.
 
 ## Previous Architecture
 
@@ -230,35 +230,69 @@ PollingTripUpdater
 
 ## Common Model Design
 
-### ParsedTripUpdate (Main Class)
+### ParsedTripUpdate (Sealed Interface Hierarchy)
+
+`ParsedTripUpdate` is a sealed interface hierarchy where the update type is encoded in the type system rather than as an enum field. Each concrete type carries only the fields relevant to that kind of update, making invalid states unrepresentable.
+
+```
+ParsedTripUpdate (sealed interface)
+├── ParsedExistingTripUpdate (sealed interface) ── used by ExistingTripResolver
+│   ├── ParsedUpdateExisting (final class)
+│   └── ParsedModifyTrip (final class)
+├── ParsedAddNewTrip (final class) ── used by NewTripResolver
+└── ParsedTripRemoval (sealed interface) ── used by TripRemovalResolver
+    ├── ParsedCancelTrip (final class)
+    └── ParsedDeleteTrip (final class)
+```
+
+**Base interface** (shared by all 5 types):
 
 ```java
-public final class ParsedTripUpdate {
-  private final TripUpdateType updateType;
-  private final TripReference tripReference;
-  @Nullable private final LocalDate serviceDate;
-  @Nullable private final ZonedDateTime aimedDepartureTime;
-  private final List<ParsedStopTimeUpdate> stopTimeUpdates;
-  @Nullable private final TripCreationInfo tripCreationInfo;
-  @Nullable private final StopPatternModification stopPatternModification;
-  private final TripUpdateOptions options;
-  @Nullable private final String dataSource;
+public sealed interface ParsedTripUpdate
+    permits ParsedExistingTripUpdate, ParsedAddNewTrip, ParsedTripRemoval {
+  TripReference tripReference();
+  @Nullable LocalDate serviceDate();
+  @Nullable ZonedDateTime aimedDepartureTime();
+  @Nullable String dataSource();
+  default boolean needsDeferredServiceDateResolution() { ... }
 }
 ```
 
+**Existing trip updates** (shared by UPDATE_EXISTING and MODIFY_TRIP):
+
+```java
+public sealed interface ParsedExistingTripUpdate extends ParsedTripUpdate
+    permits ParsedUpdateExisting, ParsedModifyTrip {
+  List<ParsedStopTimeUpdate> stopTimeUpdates();
+  TripUpdateOptions options();
+  default boolean hasStopSequences() { ... }
+  @Nullable default TripCreationInfo tripCreationInfo() { return null; }
+}
+```
+
+**Concrete leaf types:**
+
+| Type | Fields | Builder / Constructor |
+|------|--------|---------------------|
+| `ParsedUpdateExisting` | tripReference, serviceDate, aimedDepartureTime, stopTimeUpdates, options, dataSource | `ParsedUpdateExisting.builder(tripRef, serviceDate)` |
+| `ParsedModifyTrip` | same + optional tripCreationInfo, optional stopPatternModification | `ParsedModifyTrip.builder(tripRef, serviceDate)` |
+| `ParsedAddNewTrip` | tripReference, serviceDate, aimedDepartureTime, stopTimeUpdates, **tripCreationInfo** (non-null), options, dataSource | `ParsedAddNewTrip.builder(tripRef, serviceDate, tripCreationInfo)` |
+| `ParsedCancelTrip` | tripReference, serviceDate, aimedDepartureTime, dataSource | `new ParsedCancelTrip(tripRef, serviceDate, aimedDepartureTime, dataSource)` |
+| `ParsedDeleteTrip` | tripReference, serviceDate, aimedDepartureTime, dataSource | `new ParsedDeleteTrip(tripRef, serviceDate, aimedDepartureTime, dataSource)` |
+
 The `serviceDate` can be null when deferred resolution is used — the `ServiceDateResolver` calculates it from the `aimedDepartureTime` and the Trip's scheduled departure offset (handling overnight trips).
 
-### TripUpdateType (Enum)
+### TripUpdateType (Internal Parser Enum)
 
-Maps update semantics from both formats:
+`TripUpdateType` is a simple enum used internally by both parsers (`SiriTripUpdateParser.determineUpdateType()` and `GtfsRtTripUpdateParser.mapScheduleRelationship()`) as an intermediate classification step before constructing the type-specific parsed objects. It is not exposed in the parsed model — the sealed type hierarchy itself encodes update semantics.
 
-| Type | Description | SIRI-ET | GTFS-RT | Creates Trip | Removes Trip | Modifies Pattern |
-|------|-------------|---------|---------|:---:|:---:|:---:|
-| `UPDATE_EXISTING` | Update times on existing trip | TRIP_UPDATE | SCHEDULED | | | |
-| `CANCEL_TRIP` | Cancel entire trip | Cancellation=true | CANCELED | | ✅ | |
-| `DELETE_TRIP` | Delete trip (remove from routing) | — | DELETED | | ✅ | |
-| `ADD_NEW_TRIP` | Add trip not in schedule | ExtraJourney=true | NEW, ADDED | ✅ | | ✅ |
-| `MODIFY_TRIP` | Modify stop pattern | EXTRA_CALL | REPLACEMENT | ✅ | | ✅ |
+| Type | SIRI-ET | GTFS-RT |
+|------|---------|---------|
+| `UPDATE_EXISTING` | TRIP_UPDATE | SCHEDULED |
+| `CANCEL_TRIP` | Cancellation=true | CANCELED |
+| `DELETE_TRIP` | — | DELETED |
+| `ADD_NEW_TRIP` | ExtraJourney=true | NEW, ADDED |
+| `MODIFY_TRIP` | EXTRA_CALL | REPLACEMENT |
 
 ### Feature Comparison: UPDATE_EXISTING / TRIP_UPDATE
 
@@ -500,11 +534,13 @@ public final class TripUpdateHandler {
 public interface FuzzyTripMatcher {
   Result<TripAndPattern, UpdateError> match(
     TripReference tripReference,
-    ParsedTripUpdate parsedUpdate,
+    ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   );
 }
 ```
+
+The matcher accepts `ParsedExistingTripUpdate` (not the base `ParsedTripUpdate`) because fuzzy matching only applies to existing trip updates — new trips and trip removals don't need it.
 
 ## Package Structure
 
@@ -512,8 +548,15 @@ public interface FuzzyTripMatcher {
 
 | File | Purpose |
 |------|---------|
-| `ParsedTripUpdate.java` | Main format-independent update representation |
-| `TripUpdateType.java` | Update type enum (UPDATE_EXISTING, CANCEL, DELETE, ADD, MODIFY) |
+| `ParsedTripUpdate.java` | Sealed interface — base of the parsed update type hierarchy |
+| `ParsedExistingTripUpdate.java` | Sealed interface for UPDATE_EXISTING and MODIFY_TRIP |
+| `ParsedUpdateExisting.java` | Concrete class for updating times on existing trip |
+| `ParsedModifyTrip.java` | Concrete class for modifying stop pattern of existing trip |
+| `ParsedAddNewTrip.java` | Concrete class for adding a new trip (tripCreationInfo non-null) |
+| `ParsedTripRemoval.java` | Sealed interface for CANCEL_TRIP and DELETE_TRIP |
+| `ParsedCancelTrip.java` | Concrete class for cancelling a trip |
+| `ParsedDeleteTrip.java` | Concrete class for deleting a trip |
+| `TripUpdateType.java` | Internal parser enum for intermediate classification |
 | `TripReference.java` | Trip identification with fuzzy matching hint |
 | `ParsedStopTimeUpdate.java` | Stop-level update (parsed, unresolved) |
 | `ParsedTimeUpdate.java` | Time update before resolution (delay or absolute) |
