@@ -103,7 +103,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     }
 
     // Apply stop time updates - returns PatternModificationResult
-    var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, pattern, trip, serviceDate);
+    var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, pattern, trip);
     if (applyResult.isFailure()) {
       return Result.failure(applyResult.failureValue());
     }
@@ -248,8 +248,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     ResolvedExistingTrip resolvedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern pattern,
-    Trip trip,
-    LocalDate serviceDate
+    Trip trip
   ) {
     var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
 
