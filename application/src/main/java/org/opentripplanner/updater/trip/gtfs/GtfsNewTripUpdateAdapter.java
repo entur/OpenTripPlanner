@@ -90,7 +90,6 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     this.parser = new GtfsRtTripUpdateParser(
       forwardsDelayPropagationType,
       backwardsDelayPropagationType,
-      fuzzyMatchingEnabled,
       feedId,
       transitEditorService.getTimeZone(),
       () -> LocalDate.now(transitEditorService.getTimeZone())

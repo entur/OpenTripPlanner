@@ -4,8 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.updater.trip.model.TripReference.FuzzyMatchingHint.EXACT_MATCH_REQUIRED;
-import static org.opentripplanner.updater.trip.model.TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED;
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -29,16 +27,7 @@ class TripReferenceTest {
     assertNull(ref.startTime());
     assertNull(ref.startDate());
     assertNull(ref.direction());
-    assertEquals(EXACT_MATCH_REQUIRED, ref.fuzzyMatchingHint());
     assertTrue(ref.hasTripId());
-  }
-
-  @Test
-  void ofTripIdWithFuzzyMatchingAllowed() {
-    var ref = TripReference.ofTripId(TRIP_ID, FUZZY_MATCH_ALLOWED);
-
-    assertEquals(TRIP_ID, ref.tripId());
-    assertEquals(FUZZY_MATCH_ALLOWED, ref.fuzzyMatchingHint());
   }
 
   @Test
@@ -49,7 +38,6 @@ class TripReferenceTest {
       .withStartTime(START_TIME)
       .withStartDate(START_DATE)
       .withDirection(Direction.INBOUND)
-      .withFuzzyMatchingHint(FUZZY_MATCH_ALLOWED)
       .build();
 
     assertEquals(TRIP_ID, ref.tripId());
@@ -57,14 +45,6 @@ class TripReferenceTest {
     assertEquals(START_TIME, ref.startTime());
     assertEquals(START_DATE, ref.startDate());
     assertEquals(Direction.INBOUND, ref.direction());
-    assertEquals(FUZZY_MATCH_ALLOWED, ref.fuzzyMatchingHint());
-  }
-
-  @Test
-  void builderDefaultsToExactMatchRequired() {
-    var ref = TripReference.builder().withTripId(TRIP_ID).build();
-
-    assertEquals(EXACT_MATCH_REQUIRED, ref.fuzzyMatchingHint());
   }
 
   @Test
@@ -86,18 +66,5 @@ class TripReferenceTest {
     var ref = TripReference.builder().withTripId(TRIP_ID).withStartTime(START_TIME).build();
 
     assertTrue(ref.hasStartTime());
-  }
-
-  @Test
-  void fuzzyMatchingHintEnumValues() {
-    assertEquals(2, TripReference.FuzzyMatchingHint.values().length);
-    assertEquals(
-      EXACT_MATCH_REQUIRED,
-      TripReference.FuzzyMatchingHint.valueOf("EXACT_MATCH_REQUIRED")
-    );
-    assertEquals(
-      FUZZY_MATCH_ALLOWED,
-      TripReference.FuzzyMatchingHint.valueOf("FUZZY_MATCH_ALLOWED")
-    );
   }
 }

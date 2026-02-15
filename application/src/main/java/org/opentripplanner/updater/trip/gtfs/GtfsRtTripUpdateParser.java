@@ -45,7 +45,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
-  private final boolean fuzzyMatchingEnabled;
   private final String feedId;
   private final ZoneId timeZone;
   private final Supplier<LocalDate> localDateNow;
@@ -57,27 +56,8 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     ZoneId timeZone,
     Supplier<LocalDate> localDateNow
   ) {
-    this(
-      forwardsDelayPropagationType,
-      backwardsDelayPropagationType,
-      false,
-      feedId,
-      timeZone,
-      localDateNow
-    );
-  }
-
-  public GtfsRtTripUpdateParser(
-    ForwardsDelayPropagationType forwardsDelayPropagationType,
-    BackwardsDelayPropagationType backwardsDelayPropagationType,
-    boolean fuzzyMatchingEnabled,
-    String feedId,
-    ZoneId timeZone,
-    Supplier<LocalDate> localDateNow
-  ) {
     this.forwardsDelayPropagationType = forwardsDelayPropagationType;
     this.backwardsDelayPropagationType = backwardsDelayPropagationType;
-    this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
     this.feedId = Objects.requireNonNull(feedId);
     this.timeZone = Objects.requireNonNull(timeZone);
     this.localDateNow = Objects.requireNonNull(localDateNow);
@@ -190,10 +170,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       .descriptor()
       .directionId()
       .ifPresent(dirId -> builder.withDirection(mapDirection(dirId)));
-
-    if (fuzzyMatchingEnabled) {
-      builder.withFuzzyMatchingHint(TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED);
-    }
 
     return builder.build();
   }

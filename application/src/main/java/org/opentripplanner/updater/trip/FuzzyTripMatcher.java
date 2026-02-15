@@ -15,12 +15,9 @@ import org.opentripplanner.updater.trip.model.TripReference;
  *   <li>{@link RouteDirectionTimeMatcher} - GTFS-RT-style matching by route/direction/start time</li>
  * </ul>
  * <p>
- * The matcher is called by {@link TripResolver} when:
- * <ol>
- *   <li>Exact trip ID lookup fails</li>
- *   <li>The {@link TripReference#fuzzyMatchingHint()} is
- *       {@link TripReference.FuzzyMatchingHint#FUZZY_MATCH_ALLOWED}</li>
- * </ol>
+ * The matcher is called by {@link ExistingTripResolver} when exact trip ID lookup fails
+ * and a {@code FuzzyTripMatcher} is configured (controlled by the {@code fuzzyTripMatching}
+ * config parameter).
  */
 public interface FuzzyTripMatcher {
   /**

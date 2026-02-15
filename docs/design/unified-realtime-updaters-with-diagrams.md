@@ -217,7 +217,7 @@ Each resolver composes lower-level resolvers:
 - **`ServiceDateResolver`** — resolves the service date from an explicit date, a `TripOnServiceDate` lookup, or deferred calculation from `aimedDepartureTime` (handling overnight trips)
 - **`TripResolver`** — resolves a `Trip` from a `TripReference` by trying direct trip ID lookup, then `TripOnServiceDate` ID lookup
 - **`StopResolver`** — resolves a `StopLocation` from a `StopReference` by trying assigned stop ID, scheduled stop point mapping, or direct lookup
-- **`FuzzyTripMatcher`** — optional fallback when exact trip lookup fails and `FuzzyMatchingHint.FUZZY_MATCH_ALLOWED` is set
+- **`FuzzyTripMatcher`** — optional fallback when exact trip lookup fails (controlled by the `fuzzyTripMatching` config parameter)
 
 ### Resolver Composition Diagram
 
@@ -692,7 +692,6 @@ classDiagram
         +String startTime
         +LocalDate startDate
         +Direction direction
-        +FuzzyMatchingHint hint
     }
 
     class StopReference {
@@ -957,7 +956,7 @@ sequenceDiagram
 | `ParsedCancelTrip.java` | Concrete class for cancelling a trip |
 | `ParsedDeleteTrip.java` | Concrete class for deleting a trip |
 | `TripUpdateType.java` | Internal parser enum for intermediate classification |
-| `TripReference.java` | Trip identification with fuzzy matching hint |
+| `TripReference.java` | Trip identification |
 | `ParsedStopTimeUpdate.java` | Stop-level update (parsed, unresolved) |
 | `ParsedTimeUpdate.java` | Time update before resolution (delay or absolute) |
 | `TimeUpdate.java` | Resolved time update (seconds since midnight) |
@@ -1069,7 +1068,7 @@ sequenceDiagram
 **Mitigation:**
 - Common `FuzzyTripMatcher` interface
 - Two implementations: `LastStopArrivalTimeMatcher` (SIRI), `RouteDirectionTimeMatcher` (GTFS-RT)
-- `ExistingTripResolver` uses fuzzy matching only when `FuzzyMatchingHint.FUZZY_MATCH_ALLOWED`
+- `ExistingTripResolver` uses fuzzy matching when a `FuzzyTripMatcher` is configured
 
 ### 4. Entity Resolution
 

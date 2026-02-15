@@ -165,24 +165,14 @@ public class ExistingTripResolver {
       );
     }
 
-    // Exact match failed - try fuzzy matching if allowed
-    if (shouldTryFuzzyMatching(reference, fuzzyTripMatcher)) {
+    // Exact match failed - try fuzzy matching if configured
+    if (fuzzyTripMatcher != null) {
       LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
       return fuzzyTripMatcher.match(reference, parsedUpdate, serviceDate);
     }
 
     // Return the original exact match error
     return Result.failure(exactResult.failureValue());
-  }
-
-  private boolean shouldTryFuzzyMatching(
-    TripReference reference,
-    @Nullable FuzzyTripMatcher fuzzyTripMatcher
-  ) {
-    if (fuzzyTripMatcher == null) {
-      return false;
-    }
-    return reference.fuzzyMatchingHint() == TripReference.FuzzyMatchingHint.FUZZY_MATCH_ALLOWED;
   }
 
   /**

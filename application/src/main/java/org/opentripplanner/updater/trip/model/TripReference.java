@@ -30,8 +30,6 @@ public final class TripReference {
   @Nullable
   private final Direction direction;
 
-  private final FuzzyMatchingHint fuzzyMatchingHint;
-
   /**
    * @param tripId The trip ID (may be null if fuzzy matching by route/time is used)
    * @param tripOnServiceDateId The TripOnServiceDate ID (dated service journey ID)
@@ -39,7 +37,6 @@ public final class TripReference {
    * @param startTime The scheduled start time of the trip (e.g., "08:30:00")
    * @param startDate The service date for the trip
    * @param direction The direction of travel (inbound/outbound)
-   * @param fuzzyMatchingHint Hint for whether fuzzy matching should be attempted
    */
   public TripReference(
     @Nullable FeedScopedId tripId,
@@ -47,8 +44,7 @@ public final class TripReference {
     @Nullable FeedScopedId routeId,
     @Nullable String startTime,
     @Nullable LocalDate startDate,
-    @Nullable Direction direction,
-    FuzzyMatchingHint fuzzyMatchingHint
+    @Nullable Direction direction
   ) {
     this.tripId = tripId;
     this.tripOnServiceDateId = tripOnServiceDateId;
@@ -56,48 +52,13 @@ public final class TripReference {
     this.startTime = startTime;
     this.startDate = startDate;
     this.direction = direction;
-    this.fuzzyMatchingHint = Objects.requireNonNull(
-      fuzzyMatchingHint,
-      "fuzzyMatchingHint must not be null"
-    );
   }
 
   /**
-   * Hint for whether fuzzy trip matching should be attempted.
-   */
-  public enum FuzzyMatchingHint {
-    /**
-     * Exact trip ID match is required. Do not attempt fuzzy matching.
-     */
-    EXACT_MATCH_REQUIRED,
-
-    /**
-     * Fuzzy matching is allowed if exact match fails.
-     * The trip may be matched by route, start time, direction, etc.
-     */
-    FUZZY_MATCH_ALLOWED,
-  }
-
-  /**
-   * Create a trip reference with just a trip ID (exact match required).
+   * Create a trip reference with just a trip ID.
    */
   public static TripReference ofTripId(FeedScopedId tripId) {
-    return new TripReference(
-      tripId,
-      null,
-      null,
-      null,
-      null,
-      null,
-      FuzzyMatchingHint.EXACT_MATCH_REQUIRED
-    );
-  }
-
-  /**
-   * Create a trip reference with a trip ID and specified fuzzy matching hint.
-   */
-  public static TripReference ofTripId(FeedScopedId tripId, FuzzyMatchingHint fuzzyMatchingHint) {
-    return new TripReference(tripId, null, null, null, null, null, fuzzyMatchingHint);
+    return new TripReference(tripId, null, null, null, null, null);
   }
 
   /**
@@ -135,10 +96,6 @@ public final class TripReference {
   @Nullable
   public Direction direction() {
     return direction;
-  }
-
-  public FuzzyMatchingHint fuzzyMatchingHint() {
-    return fuzzyMatchingHint;
   }
 
   /**
@@ -191,22 +148,13 @@ public final class TripReference {
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(startTime, that.startTime) &&
       Objects.equals(startDate, that.startDate) &&
-      direction == that.direction &&
-      fuzzyMatchingHint == that.fuzzyMatchingHint
+      direction == that.direction
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(
-      tripId,
-      tripOnServiceDateId,
-      routeId,
-      startTime,
-      startDate,
-      direction,
-      fuzzyMatchingHint
-    );
+    return Objects.hash(tripId, tripOnServiceDateId, routeId, startTime, startDate, direction);
   }
 
   @Override
@@ -226,8 +174,6 @@ public final class TripReference {
       startDate +
       ", direction=" +
       direction +
-      ", fuzzyMatchingHint=" +
-      fuzzyMatchingHint +
       '}'
     );
   }
@@ -243,7 +189,6 @@ public final class TripReference {
     private String startTime;
     private LocalDate startDate;
     private Direction direction;
-    private FuzzyMatchingHint fuzzyMatchingHint = FuzzyMatchingHint.EXACT_MATCH_REQUIRED;
 
     public Builder withTripId(FeedScopedId tripId) {
       this.tripId = tripId;
@@ -275,11 +220,6 @@ public final class TripReference {
       return this;
     }
 
-    public Builder withFuzzyMatchingHint(FuzzyMatchingHint fuzzyMatchingHint) {
-      this.fuzzyMatchingHint = fuzzyMatchingHint;
-      return this;
-    }
-
     public TripReference build() {
       return new TripReference(
         tripId,
@@ -287,8 +227,7 @@ public final class TripReference {
         routeId,
         startTime,
         startDate,
-        direction,
-        fuzzyMatchingHint
+        direction
       );
     }
   }
