@@ -92,19 +92,6 @@ public final class StopReference {
     return assignedStopId != null;
   }
 
-  /**
-   * Returns the primary stop ID to use for routing.
-   * If an assigned stop ID is present, it takes precedence.
-   * Otherwise, returns the original stop ID.
-   */
-  @Nullable
-  public FeedScopedId primaryId() {
-    if (assignedStopId != null) {
-      return assignedStopId;
-    }
-    return stopId;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

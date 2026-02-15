@@ -19,8 +19,6 @@ public class StopReplacementValidator {
   public enum Result {
     /** Validation passed - the stop replacement is allowed. */
     VALID,
-    /** The actual stop could not be resolved. */
-    UNKNOWN_STOP,
     /** The replacement violates the configured constraint. */
     STOP_MISMATCH,
   }

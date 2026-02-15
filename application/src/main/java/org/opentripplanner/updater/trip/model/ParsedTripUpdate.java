@@ -29,18 +29,6 @@ public sealed interface ParsedTripUpdate
   String dataSource();
 
   /**
-   * Returns true if the service date needs to be calculated using the Trip's
-   * scheduled departure time offset (for overnight trip handling).
-   */
-  default boolean needsDeferredServiceDateResolution() {
-    return (
-      serviceDate() == null &&
-      !tripReference().hasTripOnServiceDateId() &&
-      aimedDepartureTime() != null
-    );
-  }
-
-  /**
    * Validate that a service date can be resolved from the available fields.
    * Call from constructors to fail fast when no resolution strategy is available.
    */

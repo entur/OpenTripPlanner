@@ -27,9 +27,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
   @Nullable
   private final TripCreationInfo tripCreationInfo;
 
-  @Nullable
-  private final StopPatternModification stopPatternModification;
-
   private final TripUpdateOptions options;
 
   @Nullable
@@ -41,7 +38,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     @Nullable ZonedDateTime aimedDepartureTime,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     @Nullable TripCreationInfo tripCreationInfo,
-    @Nullable StopPatternModification stopPatternModification,
     TripUpdateOptions options,
     @Nullable String dataSource
   ) {
@@ -51,7 +47,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     this.aimedDepartureTime = aimedDepartureTime;
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
     this.tripCreationInfo = tripCreationInfo;
-    this.stopPatternModification = stopPatternModification;
     this.options = Objects.requireNonNull(options);
     this.dataSource = dataSource;
   }
@@ -88,15 +83,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     return tripCreationInfo;
   }
 
-  @Nullable
-  public StopPatternModification stopPatternModification() {
-    return stopPatternModification;
-  }
-
-  public boolean hasStopPatternModification() {
-    return stopPatternModification != null && stopPatternModification.hasModifications();
-  }
-
   @Override
   public TripUpdateOptions options() {
     return options;
@@ -130,9 +116,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     @Nullable
     private TripCreationInfo tripCreationInfo;
 
-    @Nullable
-    private StopPatternModification stopPatternModification;
-
     private TripUpdateOptions options = TripUpdateOptions.siriDefaults();
 
     @Nullable
@@ -163,11 +146,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
       return this;
     }
 
-    public Builder withStopPatternModification(StopPatternModification stopPatternModification) {
-      this.stopPatternModification = stopPatternModification;
-      return this;
-    }
-
     public Builder withOptions(TripUpdateOptions options) {
       this.options = options;
       return this;
@@ -185,7 +163,6 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
         aimedDepartureTime,
         stopTimeUpdates,
         tripCreationInfo,
-        stopPatternModification,
         options,
         dataSource
       );

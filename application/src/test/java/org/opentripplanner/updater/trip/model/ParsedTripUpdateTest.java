@@ -76,19 +76,6 @@ class ParsedTripUpdateTest {
   }
 
   @Test
-  void modifyTripWithStopPatternModification() {
-    var modification = StopPatternModification.builder().addSkippedStopIndex(1).build();
-
-    var update = ParsedModifyTrip.builder(TRIP_REF, SERVICE_DATE)
-      .withStopPatternModification(modification)
-      .build();
-
-    assertInstanceOf(ParsedModifyTrip.class, update);
-    assertEquals(modification, update.stopPatternModification());
-    assertTrue(update.hasStopPatternModification());
-  }
-
-  @Test
   void updateExistingWithOptions() {
     var options = TripUpdateOptions.gtfsRtDefaults(
       org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType.DEFAULT,
@@ -127,15 +114,6 @@ class ParsedTripUpdateTest {
     assertInstanceOf(ParsedTripUpdate.class, deleteUpdate);
     assertEquals(TRIP_REF, deleteUpdate.tripReference());
     assertEquals(SERVICE_DATE, deleteUpdate.serviceDate());
-  }
-
-  @Test
-  void modifyTripWithEmptyStopPatternModification() {
-    var update = ParsedModifyTrip.builder(TRIP_REF, SERVICE_DATE)
-      .withStopPatternModification(StopPatternModification.empty())
-      .build();
-
-    assertFalse(update.hasStopPatternModification());
   }
 
   @Test

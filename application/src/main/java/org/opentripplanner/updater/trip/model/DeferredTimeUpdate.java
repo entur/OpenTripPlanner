@@ -41,25 +41,6 @@ public final class DeferredTimeUpdate implements ParsedTimeUpdate {
     return new DeferredTimeUpdate(actualTime, scheduledTime);
   }
 
-  /**
-   * Create a deferred time update with only the actual time.
-   *
-   * @param actualTime the actual/expected time from the real-time feed
-   * @return a new DeferredTimeUpdate
-   */
-  public static DeferredTimeUpdate of(ZonedDateTime actualTime) {
-    return new DeferredTimeUpdate(actualTime, null);
-  }
-
-  public ZonedDateTime actualTime() {
-    return actualTime;
-  }
-
-  @Nullable
-  public ZonedDateTime scheduledTime() {
-    return scheduledTime;
-  }
-
   @Override
   public TimeUpdate resolve(LocalDate serviceDate, ZoneId timeZone) {
     ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(serviceDate, timeZone);

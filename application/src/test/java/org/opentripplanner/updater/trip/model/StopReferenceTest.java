@@ -56,27 +56,6 @@ class StopReferenceTest {
   }
 
   @Test
-  void primaryIdReturnsAssignedStopIdIfPresent() {
-    var ref = StopReference.ofStopId(STOP_FEED_SCOPED_ID, ASSIGNED_STOP_ID);
-
-    assertEquals(ASSIGNED_STOP_ID, ref.primaryId());
-  }
-
-  @Test
-  void primaryIdReturnsStopIdIfNoAssignedId() {
-    var ref = StopReference.ofStopId(STOP_FEED_SCOPED_ID);
-
-    assertEquals(STOP_FEED_SCOPED_ID, ref.primaryId());
-  }
-
-  @Test
-  void primaryIdReturnsStopIdForScheduledStopPointFirst() {
-    var ref = StopReference.ofScheduledStopPointOrStopId(STOP_FEED_SCOPED_ID);
-
-    assertEquals(STOP_FEED_SCOPED_ID, ref.primaryId());
-  }
-
-  @Test
   void equalityIncludesResolutionStrategy() {
     var directRef = StopReference.ofStopId(STOP_FEED_SCOPED_ID);
     var scheduledRef = StopReference.ofScheduledStopPointOrStopId(STOP_FEED_SCOPED_ID);
