@@ -220,7 +220,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     if (journey.getDirectionRef() != null) {
       try {
         int directionInt = Integer.parseInt(journey.getDirectionRef().getValue());
-        builder.withDirection(mapDirection(directionInt));
+        builder.withDirection(
+          org.opentripplanner.transit.model.timetable.Direction.ofGtfsCode(directionInt)
+        );
       } catch (NumberFormatException ignored) {}
     }
 
@@ -465,13 +467,5 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       return RailSubmodeEnumeration.LOCAL.value();
     }
     return null;
-  }
-
-  private org.opentripplanner.transit.model.timetable.Direction mapDirection(int directionInt) {
-    return switch (directionInt) {
-      case 0 -> org.opentripplanner.transit.model.timetable.Direction.OUTBOUND;
-      case 1 -> org.opentripplanner.transit.model.timetable.Direction.INBOUND;
-      default -> org.opentripplanner.transit.model.timetable.Direction.UNKNOWN;
-    };
   }
 }

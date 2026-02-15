@@ -8,6 +8,8 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.timetable.TripBuilder;
 
 /**
  * Information needed to create a new trip that does not exist in the scheduled data.
@@ -161,6 +163,23 @@ public final class TripCreationInfo {
    */
   public boolean requiresRouteCreation() {
     return routeCreationInfo != null;
+  }
+
+  /**
+   * Apply mode, submode, headsign, and short name to a trip builder.
+   * Falls back to the route's mode when no explicit mode is set.
+   */
+  public void applyTo(TripBuilder builder, Route route) {
+    builder.withMode(mode != null ? mode : route.getMode());
+    if (submode != null) {
+      builder.withNetexSubmode(submode);
+    }
+    if (headsign != null) {
+      builder.withHeadsign(headsign);
+    }
+    if (shortName != null) {
+      builder.withShortName(shortName);
+    }
   }
 
   @Override

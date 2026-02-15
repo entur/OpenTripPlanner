@@ -19,7 +19,6 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.model.AddedTripUpdateState;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
@@ -248,10 +247,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     if (resolvedUpdate.isAllStopsCancelled()) {
       builder.cancelTrip();
     } else {
-      var state = resolvedUpdate.options().addedTripUpdateState();
-      builder.withRealTimeState(
-        state == AddedTripUpdateState.SET_UPDATED ? RealTimeState.UPDATED : RealTimeState.ADDED
-      );
+      builder.withRealTimeState(resolvedUpdate.options().addedTripUpdateState().toRealTimeState());
     }
 
     // Build and return result
@@ -324,29 +320,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     var builder = Trip.of(tripId);
     builder.withRoute(route);
     builder.withServiceId(serviceId);
-
-    // Set mode
-    if (tripCreationInfo.mode() != null) {
-      builder.withMode(tripCreationInfo.mode());
-    } else {
-      builder.withMode(route.getMode());
-    }
-
-    // Set submode
-    if (tripCreationInfo.submode() != null) {
-      builder.withNetexSubmode(tripCreationInfo.submode());
-    }
-
-    // Set headsign
-    if (tripCreationInfo.headsign() != null) {
-      builder.withHeadsign(tripCreationInfo.headsign());
-    }
-
-    // Set short name
-    if (tripCreationInfo.shortName() != null) {
-      builder.withShortName(tripCreationInfo.shortName());
-    }
-
+    tripCreationInfo.applyTo(builder, route);
     return builder.build();
   }
 }

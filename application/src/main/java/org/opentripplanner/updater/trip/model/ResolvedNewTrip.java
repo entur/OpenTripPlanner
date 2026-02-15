@@ -123,10 +123,7 @@ public final class ResolvedNewTrip {
    * When true, the trip should be treated as implicitly cancelled at the trip level.
    */
   public boolean isAllStopsCancelled() {
-    return (
-      !resolvedStopTimeUpdates.isEmpty() &&
-      resolvedStopTimeUpdates.stream().allMatch(ResolvedStopTimeUpdate::isSkipped)
-    );
+    return ResolvedStopTimeUpdate.allSkipped(resolvedStopTimeUpdates);
   }
 
   /**

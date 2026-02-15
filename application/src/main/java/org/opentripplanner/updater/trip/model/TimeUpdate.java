@@ -92,6 +92,18 @@ public final class TimeUpdate implements ParsedTimeUpdate {
   }
 
   /**
+   * Return the scheduled time if available and positive, otherwise resolve against
+   * a zero-time baseline. Used when building stop patterns for added trips where
+   * the scheduled time is preferred but may not always be present.
+   */
+  public int resolveScheduledOrFallback() {
+    if (scheduledTimeSecondsSinceMidnight != null && scheduledTimeSecondsSinceMidnight > 0) {
+      return scheduledTimeSecondsSinceMidnight;
+    }
+    return resolveTime(0);
+  }
+
+  /**
    * Resolve the actual time in seconds since midnight.
    *
    * @param scheduledTime The scheduled time to use if delay-based

@@ -9,6 +9,7 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.trip.StopResolver;
 
 /**
@@ -206,5 +207,50 @@ public final class ResolvedStopTimeUpdate {
       status == ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED ||
       status == ParsedStopTimeUpdate.StopUpdateStatus.CANCELLED
     );
+  }
+
+  /**
+   * Returns true if all updates in the list are skipped and the list is non-empty.
+   */
+  public static boolean allSkipped(List<ResolvedStopTimeUpdate> updates) {
+    return !updates.isEmpty() && updates.stream().allMatch(ResolvedStopTimeUpdate::isSkipped);
+  }
+
+  /**
+   * Apply this stop time update's real-time data to a trip times builder at the given stop index.
+   * This sets arrival/departure times, headsign, recorded flag, cancellation, prediction
+   * accuracy, extra call flag, and occupancy status.
+   */
+  public void applyTo(RealTimeTripTimesBuilder builder, int stopIndex) {
+    if (hasArrivalUpdate()) {
+      builder.withArrivalTime(
+        stopIndex,
+        arrivalUpdate.resolveTime(builder.getScheduledArrivalTime(stopIndex))
+      );
+    }
+    if (hasDepartureUpdate()) {
+      builder.withDepartureTime(
+        stopIndex,
+        departureUpdate.resolveTime(builder.getScheduledDepartureTime(stopIndex))
+      );
+    }
+    if (stopHeadsign != null) {
+      builder.withStopHeadsign(stopIndex, stopHeadsign);
+    }
+    if (recorded) {
+      builder.withRecorded(stopIndex);
+    }
+    if (isSkipped()) {
+      builder.withCanceled(stopIndex);
+    }
+    if (predictionInaccurate) {
+      builder.withInaccuratePredictions(stopIndex);
+    }
+    if (isExtraCall) {
+      builder.withExtraCall(stopIndex, true);
+    }
+    if (occupancy != null) {
+      builder.withOccupancyStatus(stopIndex, occupancy);
+    }
   }
 }

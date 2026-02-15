@@ -21,7 +21,6 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
-import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -197,29 +196,11 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
   }
 
   private Integer getAimedDepartureSeconds(ParsedStopTimeUpdate stopUpdate, LocalDate serviceDate) {
-    if (!stopUpdate.hasDepartureUpdate()) {
-      return null;
-    }
-    var update = stopUpdate.departureUpdate();
-    if (update instanceof TimeUpdate timeUpdate) {
-      return timeUpdate.scheduledTimeSecondsSinceMidnight();
-    }
-    // For deferred updates, resolve using service date
-    TimeUpdate resolved = update.resolve(serviceDate, timeZone);
-    return resolved.scheduledTimeSecondsSinceMidnight();
+    return stopUpdate.resolveScheduledDepartureSeconds(serviceDate, timeZone);
   }
 
   private Integer getAimedArrivalSeconds(ParsedStopTimeUpdate stopUpdate, LocalDate serviceDate) {
-    if (!stopUpdate.hasArrivalUpdate()) {
-      return null;
-    }
-    var update = stopUpdate.arrivalUpdate();
-    if (update instanceof TimeUpdate timeUpdate) {
-      return timeUpdate.scheduledTimeSecondsSinceMidnight();
-    }
-    // For deferred updates, resolve using service date
-    TimeUpdate resolved = update.resolve(serviceDate, timeZone);
-    return resolved.scheduledTimeSecondsSinceMidnight();
+    return stopUpdate.resolveScheduledArrivalSeconds(serviceDate, timeZone);
   }
 
   private StopLocation resolveStop(StopReference stopReference) {

@@ -116,21 +116,13 @@ public final class HandlerUtils {
       // Get departure time first (needed for arrival fallback)
       Integer departureTime = null;
       if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate();
-        Integer scheduledTime = departureUpdate.scheduledTimeSecondsSinceMidnight();
-        departureTime = scheduledTime != null && scheduledTime > 0
-          ? scheduledTime
-          : departureUpdate.resolveTime(0);
+        departureTime = stopUpdate.departureUpdate().resolveScheduledOrFallback();
       }
 
       // Get arrival time - use scheduled time if available, otherwise fallback to departure
       // This matches StopTimesMapper: aimedArrivalTime ?? aimedDepartureTime
       if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate();
-        Integer scheduledTime = arrivalUpdate.scheduledTimeSecondsSinceMidnight();
-        stopTime.setArrivalTime(
-          scheduledTime != null && scheduledTime > 0 ? scheduledTime : arrivalUpdate.resolveTime(0)
-        );
+        stopTime.setArrivalTime(stopUpdate.arrivalUpdate().resolveScheduledOrFallback());
       } else if (departureTime != null) {
         // Fallback: use departure time as arrival (matches old StopTimesMapper logic)
         stopTime.setArrivalTime(departureTime);
@@ -208,51 +200,7 @@ public final class HandlerUtils {
     }
 
     for (int i = 0; i < stopTimeUpdates.size(); i++) {
-      var stopUpdate = stopTimeUpdates.get(i);
-
-      // Apply arrival update - if no update, scheduled time is used (already in builder)
-      if (stopUpdate.hasArrivalUpdate()) {
-        var arrivalUpdate = stopUpdate.arrivalUpdate();
-        int scheduledArrival = builder.getScheduledArrivalTime(i);
-        builder.withArrivalTime(i, arrivalUpdate.resolveTime(scheduledArrival));
-      }
-
-      // Apply departure update - if no update, scheduled time is used (already in builder)
-      if (stopUpdate.hasDepartureUpdate()) {
-        var departureUpdate = stopUpdate.departureUpdate();
-        int scheduledDeparture = builder.getScheduledDepartureTime(i);
-        builder.withDepartureTime(i, departureUpdate.resolveTime(scheduledDeparture));
-      }
-
-      // Apply headsign
-      if (stopUpdate.stopHeadsign() != null) {
-        builder.withStopHeadsign(i, stopUpdate.stopHeadsign());
-      }
-
-      // Apply recorded flag
-      if (stopUpdate.recorded()) {
-        builder.withRecorded(i);
-      }
-
-      // Apply skipped (after recorded, so cancellation takes priority)
-      if (stopUpdate.isSkipped()) {
-        builder.withCanceled(i);
-      }
-
-      // Apply prediction inaccurate flag
-      if (stopUpdate.predictionInaccurate()) {
-        builder.withInaccuratePredictions(i);
-      }
-
-      // Apply extra call flag
-      if (stopUpdate.isExtraCall()) {
-        builder.withExtraCall(i, true);
-      }
-
-      // Apply occupancy
-      if (stopUpdate.occupancy() != null) {
-        builder.withOccupancyStatus(i, stopUpdate.occupancy());
-      }
+      stopTimeUpdates.get(i).applyTo(builder, i);
     }
   }
 }

@@ -105,9 +105,8 @@ public final class ResolvedExistingTrip {
    */
   public boolean isAllStopsCancelled() {
     return (
-      !resolvedStopTimeUpdates.isEmpty() &&
-      resolvedStopTimeUpdates.size() == pattern.numberOfStops() &&
-      resolvedStopTimeUpdates.stream().allMatch(ResolvedStopTimeUpdate::isSkipped)
+      ResolvedStopTimeUpdate.allSkipped(resolvedStopTimeUpdates) &&
+      resolvedStopTimeUpdates.size() == pattern.numberOfStops()
     );
   }
 

@@ -169,17 +169,9 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     tripUpdate
       .descriptor()
       .directionId()
-      .ifPresent(dirId -> builder.withDirection(mapDirection(dirId)));
+      .ifPresent(dirId -> builder.withDirection(Direction.ofGtfsCode(dirId)));
 
     return builder.build();
-  }
-
-  private Direction mapDirection(int gtfsDirectionId) {
-    return switch (gtfsDirectionId) {
-      case 0 -> Direction.OUTBOUND;
-      case 1 -> Direction.INBOUND;
-      default -> Direction.UNKNOWN;
-    };
   }
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(

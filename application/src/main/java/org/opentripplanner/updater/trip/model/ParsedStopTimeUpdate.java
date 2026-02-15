@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.model;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -195,6 +197,30 @@ public final class ParsedStopTimeUpdate {
    */
   public boolean isSkipped() {
     return status == StopUpdateStatus.SKIPPED || status == StopUpdateStatus.CANCELLED;
+  }
+
+  /**
+   * Resolve the scheduled arrival time in seconds since midnight, or null if no arrival update.
+   */
+  @Nullable
+  public Integer resolveScheduledArrivalSeconds(LocalDate serviceDate, ZoneId timeZone) {
+    if (!hasArrivalUpdate()) {
+      return null;
+    }
+    TimeUpdate resolved = arrivalUpdate.resolve(serviceDate, timeZone);
+    return resolved.scheduledTimeSecondsSinceMidnight();
+  }
+
+  /**
+   * Resolve the scheduled departure time in seconds since midnight, or null if no departure update.
+   */
+  @Nullable
+  public Integer resolveScheduledDepartureSeconds(LocalDate serviceDate, ZoneId timeZone) {
+    if (!hasDepartureUpdate()) {
+      return null;
+    }
+    TimeUpdate resolved = departureUpdate.resolve(serviceDate, timeZone);
+    return resolved.scheduledTimeSecondsSinceMidnight();
   }
 
   @Override
