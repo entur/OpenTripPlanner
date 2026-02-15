@@ -22,8 +22,13 @@ import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
+import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
@@ -106,12 +111,16 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       };
     }
 
-    var builder = ParsedTripUpdate.builder(updateType, tripReference, serviceDate).withOptions(
-      TripUpdateOptions.gtfsRtDefaults(forwardsDelayPropagationType, backwardsDelayPropagationType)
+    var gtfsOptions = TripUpdateOptions.gtfsRtDefaults(
+      forwardsDelayPropagationType,
+      backwardsDelayPropagationType
     );
 
-    if (updateType == TripUpdateType.CANCEL_TRIP || updateType == TripUpdateType.DELETE_TRIP) {
-      return Result.success(builder.build());
+    if (updateType == TripUpdateType.CANCEL_TRIP) {
+      return Result.success(new ParsedCancelTrip(tripReference, serviceDate, null, null));
+    }
+    if (updateType == TripUpdateType.DELETE_TRIP) {
+      return Result.success(new ParsedDeleteTrip(tripReference, serviceDate, null, null));
     }
 
     var stopTimeUpdates = parseStopTimeUpdates(
@@ -119,14 +128,35 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       serviceDate,
       updateType == TripUpdateType.ADD_NEW_TRIP
     );
-    builder.withStopTimeUpdates(stopTimeUpdates);
 
-    if (updateType == TripUpdateType.ADD_NEW_TRIP || updateType == TripUpdateType.MODIFY_TRIP) {
-      var creationInfo = buildTripCreationInfo(tripId, tripUpdate);
-      builder.withTripCreationInfo(creationInfo);
-    }
-
-    return Result.success(builder.build());
+    return switch (updateType) {
+      case UPDATE_EXISTING -> Result.success(
+        ParsedUpdateExisting.builder(tripReference, serviceDate)
+          .withOptions(gtfsOptions)
+          .withStopTimeUpdates(stopTimeUpdates)
+          .build()
+      );
+      case MODIFY_TRIP -> Result.success(
+        ParsedModifyTrip.builder(tripReference, serviceDate)
+          .withOptions(gtfsOptions)
+          .withStopTimeUpdates(stopTimeUpdates)
+          .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
+          .build()
+      );
+      case ADD_NEW_TRIP -> Result.success(
+        ParsedAddNewTrip.builder(
+          tripReference,
+          serviceDate,
+          buildTripCreationInfo(tripId, tripUpdate)
+        )
+          .withOptions(gtfsOptions)
+          .withStopTimeUpdates(stopTimeUpdates)
+          .build()
+      );
+      case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(
+        "Unexpected update type: " + updateType
+      );
+    };
   }
 
   private FeedScopedId createId(String entityId) {

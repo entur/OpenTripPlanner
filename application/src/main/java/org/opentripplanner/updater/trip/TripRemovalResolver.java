@@ -9,16 +9,17 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedTripRemoval;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves a {@link ParsedTripUpdate} into a {@link ResolvedTripRemoval} for cancelling
+ * Resolves a {@link ParsedTripRemoval} into a {@link ResolvedTripRemoval} for cancelling
  * or deleting trips.
  * <p>
- * Used for CANCEL_TRIP and DELETE_TRIP update types.
+ * Used for CANCEL_TRIP ({@link org.opentripplanner.updater.trip.model.ParsedCancelTrip})
+ * and DELETE_TRIP ({@link org.opentripplanner.updater.trip.model.ParsedDeleteTrip}).
  * <p>
  * This resolver only looks up scheduled trips. If the trip is not found in the scheduled
  * data, it returns a success with null trip data - the handler will then check for
@@ -51,7 +52,7 @@ public class TripRemovalResolver {
    * @param parsedUpdate The parsed update to resolve
    * @return Result containing the resolved data (always succeeds - handler checks for added trips)
    */
-  public Result<ResolvedTripRemoval, UpdateError> resolve(ParsedTripUpdate parsedUpdate) {
+  public Result<ResolvedTripRemoval, UpdateError> resolve(ParsedTripRemoval parsedUpdate) {
     // Resolve service date
     var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {

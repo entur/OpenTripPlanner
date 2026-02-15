@@ -25,14 +25,13 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
  * Tests for {@link ModifyTripHandler}.
@@ -105,7 +104,7 @@ class ModifyTripHandlerTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
+    private ResolvedExistingTrip resolve(ParsedModifyTrip parsedUpdate) {
       var result = resolver.resolve(parsedUpdate);
       if (result.isFailure()) {
         throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -114,7 +113,7 @@ class ModifyTripHandlerTest {
     }
 
     private Result<ResolvedExistingTrip, UpdateError> resolveForTest(
-      ParsedTripUpdate parsedUpdate
+      ParsedModifyTrip parsedUpdate
     ) {
       return resolver.resolve(parsedUpdate);
     }
@@ -126,11 +125,7 @@ class ModifyTripHandlerTest {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -168,11 +163,7 @@ class ModifyTripHandlerTest {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -212,11 +203,7 @@ class ModifyTripHandlerTest {
 
       var stopCUpdate = createStopUpdate("C", 1, 11 * 3600);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -240,11 +227,7 @@ class ModifyTripHandlerTest {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -279,11 +262,7 @@ class ModifyTripHandlerTest {
       var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
       var tripRef = TripReference.ofTripId(unknownTripId);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -311,7 +290,7 @@ class ModifyTripHandlerTest {
       // Use a date far in the future where the trip doesn't operate
       var invalidDate = LocalDate.of(2099, 1, 1);
 
-      var parsedUpdate = ParsedTripUpdate.builder(TripUpdateType.MODIFY_TRIP, tripRef, invalidDate)
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, invalidDate)
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -336,11 +315,7 @@ class ModifyTripHandlerTest {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -432,7 +407,7 @@ class ModifyTripHandlerTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
+    private ResolvedExistingTrip resolve(ParsedModifyTrip parsedUpdate) {
       var result = resolver.resolve(parsedUpdate);
       if (result.isFailure()) {
         throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -452,11 +427,7 @@ class ModifyTripHandlerTest {
       var stopDUpdate = createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true);
       var stopBUpdate = createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(stopAUpdate)
         .addStopTimeUpdate(stopDUpdate)
@@ -489,11 +460,7 @@ class ModifyTripHandlerTest {
       var stopDUpdate = createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true);
       var stopBUpdate = createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false);
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(stopA2Update)
         .addStopTimeUpdate(stopDUpdate)

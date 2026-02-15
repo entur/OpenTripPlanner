@@ -27,7 +27,7 @@ import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
@@ -35,7 +35,6 @@ import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
  * Tests for {@link UpdateExistingTripHandler}.
@@ -97,7 +96,7 @@ class UpdateExistingTripHandlerTest {
     handler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
   }
 
-  private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
+  private ResolvedExistingTrip resolve(ParsedUpdateExisting parsedUpdate) {
     var result = resolver.resolve(parsedUpdate);
     if (result.isFailure()) {
       throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -105,7 +104,9 @@ class UpdateExistingTripHandlerTest {
     return result.successValue();
   }
 
-  private Result<ResolvedExistingTrip, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+  private Result<ResolvedExistingTrip, UpdateError> resolveForTest(
+    ParsedUpdateExisting parsedUpdate
+  ) {
     return resolver.resolve(parsedUpdate);
   }
 
@@ -122,11 +123,7 @@ class UpdateExistingTripHandlerTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(300))
       .build();
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    )
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withOptions(
         TripUpdateOptions.gtfsRtDefaults(
           ForwardsDelayPropagationType.NONE,
@@ -180,11 +177,7 @@ class UpdateExistingTripHandlerTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(300))
       .build();
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    )
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withOptions(
         TripUpdateOptions.gtfsRtDefaults(
           ForwardsDelayPropagationType.NONE,
@@ -221,11 +214,7 @@ class UpdateExistingTripHandlerTest {
       .withDepartureUpdate(TimeUpdate.ofAbsolute(absoluteTime, STOP_B_ARRIVAL))
       .build();
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    )
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withOptions(
         TripUpdateOptions.gtfsRtDefaults(
           ForwardsDelayPropagationType.NONE,
@@ -252,11 +241,7 @@ class UpdateExistingTripHandlerTest {
     var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
     var tripRef = TripReference.ofTripId(unknownTripId);
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate()).build();
 
     // Resolution should fail because trip not found
     var resolveResult = resolveForTest(parsedUpdate);
@@ -274,11 +259,7 @@ class UpdateExistingTripHandlerTest {
 
     // Use a date that has no service
     var differentDate = LocalDate.of(2099, 1, 1);
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      differentDate
-    ).build();
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, differentDate).build();
 
     // Resolution should fail because trip not running on this date
     var resolveResult = resolveForTest(parsedUpdate);
@@ -301,11 +282,7 @@ class UpdateExistingTripHandlerTest {
       .withStatus(ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED)
       .build();
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    )
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withOptions(
         TripUpdateOptions.gtfsRtDefaults(
           ForwardsDelayPropagationType.NONE,
@@ -342,11 +319,7 @@ class UpdateExistingTripHandlerTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(60))
       .build();
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    )
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withOptions(
         TripUpdateOptions.gtfsRtDefaults(
           ForwardsDelayPropagationType.NONE,
@@ -384,11 +357,7 @@ class UpdateExistingTripHandlerTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(300))
       .build();
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
-      tripRef,
-      env.defaultServiceDate()
-    )
+    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withOptions(
         TripUpdateOptions.gtfsRtDefaults(
           ForwardsDelayPropagationType.NONE,
@@ -450,7 +419,7 @@ class UpdateExistingTripHandlerTest {
       );
     }
 
-    private ResolvedExistingTrip resolveStation(ParsedTripUpdate parsedUpdate) {
+    private ResolvedExistingTrip resolveStation(ParsedUpdateExisting parsedUpdate) {
       var result = stationResolver.resolve(parsedUpdate);
       if (result.isFailure()) {
         throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -479,11 +448,7 @@ class UpdateExistingTripHandlerTest {
         .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
@@ -513,11 +478,7 @@ class UpdateExistingTripHandlerTest {
         .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
@@ -547,11 +508,7 @@ class UpdateExistingTripHandlerTest {
         .withStopReplacementConstraint(StopReplacementConstraint.ANY_STOP)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
@@ -578,11 +535,7 @@ class UpdateExistingTripHandlerTest {
         .withStopReplacementConstraint(StopReplacementConstraint.NOT_ALLOWED)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
@@ -613,11 +566,7 @@ class UpdateExistingTripHandlerTest {
         .withStopReplacementConstraint(StopReplacementConstraint.NOT_ALLOWED)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
@@ -656,11 +605,7 @@ class UpdateExistingTripHandlerTest {
         .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .withStopTimeUpdates(List.of(stopA2Update, stopB1Update))
         .build();
@@ -699,11 +644,7 @@ class UpdateExistingTripHandlerTest {
         .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
         .build();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        stationEnv.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
         .withOptions(options)
         .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
@@ -751,11 +692,7 @@ class UpdateExistingTripHandlerTest {
         BackwardsDelayPropagationType.NONE
       );
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
         .withOptions(options)
         .withStopTimeUpdates(List.of(stopCUpdate, stopAUpdate))
         .build();
@@ -803,11 +740,7 @@ class UpdateExistingTripHandlerTest {
         BackwardsDelayPropagationType.NONE
       );
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopAUpdate)
         .build();
@@ -858,11 +791,7 @@ class UpdateExistingTripHandlerTest {
       // SIRI defaults: no propagation, FULL_UPDATE strategy
       var options = TripUpdateOptions.siriDefaults();
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
         .withOptions(options)
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
         .build();
@@ -900,11 +829,7 @@ class UpdateExistingTripHandlerTest {
         BackwardsDelayPropagationType.REQUIRED
       );
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopBUpdate)
         .build();
@@ -945,11 +870,7 @@ class UpdateExistingTripHandlerTest {
         BackwardsDelayPropagationType.REQUIRED_NO_DATA
       );
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
         .withOptions(options)
         .addStopTimeUpdate(stopBUpdate)
         .build();
@@ -1000,11 +921,7 @@ class UpdateExistingTripHandlerTest {
         BackwardsDelayPropagationType.NONE
       );
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
         .withOptions(options)
         .withStopTimeUpdates(List.of(stopAUpdate, stopCUpdate))
         .build();

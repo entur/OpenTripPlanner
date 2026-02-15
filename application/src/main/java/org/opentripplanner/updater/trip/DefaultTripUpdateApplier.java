@@ -19,7 +19,12 @@ import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.TripUpdateValidator;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripValidator;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
+import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +37,14 @@ import org.slf4j.LoggerFactory;
  * - SIRI: ModifiedTripBuilder, AddedTripBuilder, ExtraCallTripBuilder
  * - GTFS-RT: GtfsRealTimeTripUpdateAdapter, TripTimesUpdater
  * <p>
- * The applier uses dedicated resolvers for each update type category:
+ * The applier uses pattern matching on the sealed {@link ParsedTripUpdate} hierarchy
+ * to dispatch to the correct resolver/validator/handler:
  * <ul>
- *   <li>{@link ExistingTripResolver} for UPDATE_EXISTING and MODIFY_TRIP</li>
- *   <li>{@link NewTripResolver} for ADD_NEW_TRIP</li>
- *   <li>{@link TripRemovalResolver} for CANCEL_TRIP and DELETE_TRIP</li>
+ *   <li>{@link ParsedUpdateExisting} → {@link ExistingTripResolver}</li>
+ *   <li>{@link ParsedModifyTrip} → {@link ExistingTripResolver}</li>
+ *   <li>{@link ParsedAddNewTrip} → {@link NewTripResolver}</li>
+ *   <li>{@link ParsedCancelTrip} → {@link TripRemovalResolver}</li>
+ *   <li>{@link ParsedDeleteTrip} → {@link TripRemovalResolver}</li>
  * </ul>
  */
 public class DefaultTripUpdateApplier implements TripUpdateApplier {
@@ -162,9 +170,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   public Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate) {
     try {
       var producer = parsedUpdate.dataSource();
-      return switch (parsedUpdate.updateType()) {
-        case UPDATE_EXISTING -> {
-          var resolveResult = existingTripResolver.resolve(parsedUpdate);
+      return switch (parsedUpdate) {
+        case ParsedUpdateExisting u -> {
+          var resolveResult = existingTripResolver.resolve(u);
           if (resolveResult.isFailure()) {
             yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
@@ -175,8 +183,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           }
           yield updateExistingHandler.handle(resolved);
         }
-        case MODIFY_TRIP -> {
-          var resolveResult = existingTripResolver.resolve(parsedUpdate);
+        case ParsedModifyTrip u -> {
+          var resolveResult = existingTripResolver.resolve(u);
           if (resolveResult.isFailure()) {
             yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
@@ -187,8 +195,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           }
           yield modifyTripHandler.handle(resolved);
         }
-        case ADD_NEW_TRIP -> {
-          var resolveResult = newTripResolver.resolve(parsedUpdate);
+        case ParsedAddNewTrip u -> {
+          var resolveResult = newTripResolver.resolve(u);
           if (resolveResult.isFailure()) {
             yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
@@ -199,15 +207,15 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
           }
           yield addNewTripHandler.handle(resolved);
         }
-        case CANCEL_TRIP -> {
-          var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
+        case ParsedCancelTrip u -> {
+          var resolveResult = tripRemovalResolver.resolve(u);
           if (resolveResult.isFailure()) {
             yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }
           yield cancelTripHandler.handle(resolveResult.successValue());
         }
-        case DELETE_TRIP -> {
-          var resolveResult = tripRemovalResolver.resolve(parsedUpdate);
+        case ParsedDeleteTrip u -> {
+          var resolveResult = tripRemovalResolver.resolve(u);
           if (resolveResult.isFailure()) {
             yield withProducer(Result.failure(resolveResult.failureValue()), producer);
           }

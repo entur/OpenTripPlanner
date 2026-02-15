@@ -34,7 +34,7 @@ public final class ResolvedExistingTrip {
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
   public ResolvedExistingTrip(
-    ParsedTripUpdate parsedUpdate,
+    ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate,
     Trip trip,
     TripPattern pattern,

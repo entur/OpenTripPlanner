@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -10,8 +11,8 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 class TripUpdateParserTest {
 
@@ -24,15 +25,13 @@ class TripUpdateParserTest {
     var serviceDate = LocalDate.of(2024, 1, 15);
 
     var parser = new MockTripUpdateParser(
-      Result.success(
-        ParsedTripUpdate.builder(TripUpdateType.UPDATE_EXISTING, tripRef, serviceDate).build()
-      )
+      Result.success(ParsedUpdateExisting.builder(tripRef, serviceDate).build())
     );
 
     var result = parser.parse("test-input");
 
     assertTrue(result.isSuccess());
-    assertEquals(TripUpdateType.UPDATE_EXISTING, result.successValue().updateType());
+    assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
     assertEquals(tripRef, result.successValue().tripReference());
   }
 

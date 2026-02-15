@@ -20,10 +20,9 @@ import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripRemovalResolver;
 import org.opentripplanner.updater.trip.TripResolver;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
  * Tests for {@link CancelTripHandler}.
@@ -68,7 +67,7 @@ class CancelTripHandlerTest {
     handler = new CancelTripHandler(snapshotManager);
   }
 
-  private ResolvedTripRemoval resolve(ParsedTripUpdate parsedUpdate) {
+  private ResolvedTripRemoval resolve(ParsedCancelTrip parsedUpdate) {
     var result = resolver.resolve(parsedUpdate);
     if (result.isFailure()) {
       throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -76,7 +75,7 @@ class CancelTripHandlerTest {
     return result.successValue();
   }
 
-  private Result<ResolvedTripRemoval, UpdateError> resolveForTest(ParsedTripUpdate parsedUpdate) {
+  private Result<ResolvedTripRemoval, UpdateError> resolveForTest(ParsedCancelTrip parsedUpdate) {
     return resolver.resolve(parsedUpdate);
   }
 
@@ -84,11 +83,7 @@ class CancelTripHandlerTest {
   void cancelTripByTripId() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
@@ -108,11 +103,7 @@ class CancelTripHandlerTest {
   void cancelTripByTripOnServiceDateId() {
     var tripOnServiceDateId = new FeedScopedId(FEED_ID, TRIP_ON_SERVICE_DATE_ID);
     var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
@@ -134,11 +125,7 @@ class CancelTripHandlerTest {
   void tripNotFound_returnsFailure() {
     var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
     var tripRef = TripReference.ofTripId(unknownTripId);
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // For CANCEL_TRIP, resolver returns success with null values when trip not found
     // The handler then checks and returns NO_TRIP_FOR_CANCELLATION_FOUND
@@ -164,11 +151,7 @@ class CancelTripHandlerTest {
     // Use a different service date than the one used to build the environment
     // The trip exists but has no pattern for this date
     var differentDate = LocalDate.of(2099, 1, 1);
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      differentDate
-    ).build();
+    var parsedUpdate = new ParsedCancelTrip(tripRef, differentDate, null, null);
 
     // Resolution succeeds for CANCEL_TRIP because we find the scheduled pattern regardless of date.
     // The trip can be cancelled on any date, the pattern is found from the scheduled timetable.
@@ -180,11 +163,7 @@ class CancelTripHandlerTest {
   void noTripReference_returnsFailure() {
     // Empty trip reference with neither tripId nor tripOnServiceDateId
     var tripRef = TripReference.builder().build();
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // For CANCEL_TRIP, resolver returns success with null values when no trip reference
     // The handler then checks and returns NO_TRIP_FOR_CANCELLATION_FOUND
@@ -204,11 +183,7 @@ class CancelTripHandlerTest {
   void cancelledTripAppliedToSnapshot() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // Before cancellation, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());

@@ -19,14 +19,13 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
  * Tests for {@link ModifyTripValidator}.
@@ -76,7 +75,7 @@ class ModifyTripValidatorTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
+    private ResolvedExistingTrip resolve(ParsedModifyTrip parsedUpdate) {
       var result = resolver.resolve(parsedUpdate);
       if (result.isFailure()) {
         throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -89,11 +88,7 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       // Only 1 stop — need at least 2
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -112,11 +107,7 @@ class ModifyTripValidatorTest {
     void acceptsTwoOrMoreStops() {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(
           TripUpdateOptions.gtfsRtDefaults(
             ForwardsDelayPropagationType.NONE,
@@ -177,7 +168,7 @@ class ModifyTripValidatorTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(ParsedTripUpdate parsedUpdate) {
+    private ResolvedExistingTrip resolve(ParsedModifyTrip parsedUpdate) {
       var result = resolver.resolve(parsedUpdate);
       if (result.isFailure()) {
         throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -190,11 +181,7 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       // Original: A -> B; update: A -> D(extra) -> B
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
@@ -210,11 +197,7 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       // Original: A -> B (2 stops); update: A (non-extra) + D (extra) = 1 non-extra
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
@@ -233,11 +216,7 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       // Original: A -> B; update: A -> D(extra) -> D(non-extra, should be B)
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
@@ -254,11 +233,7 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       // Original: A -> B; update: A2(same station as A, non-extra) -> D(extra) -> B
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(createSiriStopUpdate("A2", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
@@ -274,11 +249,7 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       // No extra calls — SIRI extra call validation is skipped
-      var parsedUpdate = ParsedTripUpdate.builder(
-        TripUpdateType.MODIFY_TRIP,
-        tripRef,
-        env.defaultServiceDate()
-      )
+      var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withOptions(TripUpdateOptions.siriDefaults())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))

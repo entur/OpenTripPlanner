@@ -10,7 +10,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -18,10 +18,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves a {@link ParsedTripUpdate} into a {@link ResolvedExistingTrip} for updates
+ * Resolves a {@link ParsedExistingTripUpdate} into a {@link ResolvedExistingTrip} for updates
  * to existing scheduled trips.
  * <p>
- * Used for UPDATE_EXISTING and MODIFY_TRIP update types.
+ * Used for UPDATE_EXISTING ({@link org.opentripplanner.updater.trip.model.ParsedUpdateExisting})
+ * and MODIFY_TRIP ({@link org.opentripplanner.updater.trip.model.ParsedModifyTrip}).
  * <p>
  * Resolution includes:
  * <ul>
@@ -71,7 +72,7 @@ public class ExistingTripResolver {
    * @param parsedUpdate The parsed update to resolve
    * @return Result containing the resolved data, or an error if resolution fails
    */
-  public Result<ResolvedExistingTrip, UpdateError> resolve(ParsedTripUpdate parsedUpdate) {
+  public Result<ResolvedExistingTrip, UpdateError> resolve(ParsedExistingTripUpdate parsedUpdate) {
     // Resolve service date
     var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {
@@ -142,7 +143,7 @@ public class ExistingTripResolver {
    * Supports both exact matching and fuzzy matching (if configured).
    */
   private Result<TripAndPattern, UpdateError> resolveTripWithPattern(
-    ParsedTripUpdate parsedUpdate,
+    ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
     TripReference reference = parsedUpdate.tripReference();

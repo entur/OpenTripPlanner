@@ -9,15 +9,14 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves a {@link ParsedTripUpdate} into a {@link ResolvedNewTrip} for adding new trips
+ * Resolves a {@link ParsedAddNewTrip} into a {@link ResolvedNewTrip} for adding new trips
  * or updating previously added trips.
  * <p>
  * Used for ADD_NEW_TRIP update type.
@@ -58,7 +57,7 @@ public class NewTripResolver {
    * @param parsedUpdate The parsed update to resolve
    * @return Result containing the resolved data, or an error if resolution fails
    */
-  public Result<ResolvedNewTrip, UpdateError> resolve(ParsedTripUpdate parsedUpdate) {
+  public Result<ResolvedNewTrip, UpdateError> resolve(ParsedAddNewTrip parsedUpdate) {
     // Resolve service date
     var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
     if (serviceDateResult.isFailure()) {
@@ -66,14 +65,7 @@ public class NewTripResolver {
     }
     LocalDate serviceDate = serviceDateResult.successValue();
 
-    // Validate trip creation info is present
-    TripCreationInfo tripCreationInfo = parsedUpdate.tripCreationInfo();
-    if (tripCreationInfo == null) {
-      LOG.debug("ADD_NEW_TRIP: No trip creation info provided");
-      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
-    }
-
-    var tripId = tripCreationInfo.tripId();
+    var tripId = parsedUpdate.tripCreationInfo().tripId();
 
     // Check if trip already exists in scheduled data (error case)
     if (transitService.getScheduledTrip(tripId) != null) {

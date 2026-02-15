@@ -23,8 +23,12 @@ import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
@@ -92,19 +96,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     var tripReference = buildTripReference(journey, updateType, psd);
 
-    // Build parsed update
-    var builder = ParsedTripUpdate.builder(updateType, tripReference, psd.serviceDate())
-      .withOptions(TripUpdateOptions.siriDefaults())
-      .withDataSource(journey.getDataSource());
-
-    // Pass aimed departure time for deferred service date resolution
-    if (psd.aimedDepartureTime() != null) {
-      builder.withAimedDepartureTime(psd.aimedDepartureTime());
-    }
-
     // Handle cancellation (no stop times needed)
     if (TRUE.equals(journey.isCancellation())) {
-      return Result.success(builder.build());
+      return Result.success(
+        new ParsedCancelTrip(
+          tripReference,
+          psd.serviceDate(),
+          psd.aimedDepartureTime(),
+          journey.getDataSource()
+        )
+      );
     }
 
     // Parse stop time updates
@@ -114,17 +115,46 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       journey.getOccupancy(),
       journey.isPredictionInaccurate()
     );
-    builder.withStopTimeUpdates(stopTimeUpdates);
 
-    // Handle new trip creation info
-    if (updateType == TripUpdateType.ADD_NEW_TRIP) {
-      var creationInfo = buildTripCreationInfo(journey);
-      if (creationInfo != null) {
-        builder.withTripCreationInfo(creationInfo);
+    return switch (updateType) {
+      case UPDATE_EXISTING -> {
+        var builder = ParsedUpdateExisting.builder(tripReference, psd.serviceDate())
+          .withOptions(TripUpdateOptions.siriDefaults())
+          .withDataSource(journey.getDataSource())
+          .withStopTimeUpdates(stopTimeUpdates);
+        if (psd.aimedDepartureTime() != null) {
+          builder.withAimedDepartureTime(psd.aimedDepartureTime());
+        }
+        yield Result.success(builder.build());
       }
-    }
-
-    return Result.success(builder.build());
+      case MODIFY_TRIP -> {
+        var builder = ParsedModifyTrip.builder(tripReference, psd.serviceDate())
+          .withOptions(TripUpdateOptions.siriDefaults())
+          .withDataSource(journey.getDataSource())
+          .withStopTimeUpdates(stopTimeUpdates);
+        if (psd.aimedDepartureTime() != null) {
+          builder.withAimedDepartureTime(psd.aimedDepartureTime());
+        }
+        yield Result.success(builder.build());
+      }
+      case ADD_NEW_TRIP -> {
+        var creationInfo = buildTripCreationInfo(journey);
+        if (creationInfo == null) {
+          yield UpdateError.result(null, UNKNOWN, journey.getDataSource());
+        }
+        var builder = ParsedAddNewTrip.builder(tripReference, psd.serviceDate(), creationInfo)
+          .withOptions(TripUpdateOptions.siriDefaults())
+          .withDataSource(journey.getDataSource())
+          .withStopTimeUpdates(stopTimeUpdates);
+        if (psd.aimedDepartureTime() != null) {
+          builder.withAimedDepartureTime(psd.aimedDepartureTime());
+        }
+        yield Result.success(builder.build());
+      }
+      case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(
+        "Unexpected update type: " + updateType
+      );
+    };
   }
 
   private FeedScopedId createId(String entityId) {

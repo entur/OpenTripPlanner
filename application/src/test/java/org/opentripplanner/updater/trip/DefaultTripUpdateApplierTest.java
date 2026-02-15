@@ -17,9 +17,10 @@ import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
+import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
@@ -76,9 +77,7 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testUpdateExisting_tripNotFound() {
-    // When no trip ID is provided, the resolver returns TRIP_NOT_FOUND
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
+    var update = ParsedUpdateExisting.builder(
       TripReference.builder().build(),
       LocalDate.now()
     ).build();
@@ -91,12 +90,7 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testCancelTrip_tripNotFound() {
-    // Empty trip reference should result in TRIP_NOT_FOUND
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      TripReference.builder().build(),
-      LocalDate.now()
-    ).build();
+    var update = new ParsedCancelTrip(TripReference.builder().build(), LocalDate.now(), null, null);
 
     var result = applier.apply(update);
 
@@ -109,11 +103,7 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testDeleteTrip_tripNotFound() {
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.DELETE_TRIP,
-      TripReference.builder().build(),
-      LocalDate.now()
-    ).build();
+    var update = new ParsedDeleteTrip(TripReference.builder().build(), LocalDate.now(), null, null);
 
     var result = applier.apply(update);
 
@@ -125,30 +115,11 @@ class DefaultTripUpdateApplierTest {
   }
 
   @Test
-  void testAddNewTrip_notImplemented() {
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.ADD_NEW_TRIP,
-      TripReference.builder().build(),
-      LocalDate.now()
-    ).build();
-
-    var result = applier.apply(update);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.UNKNOWN, result.failureValue().errorType());
-  }
-
-  @Test
   void testDeleteTrip_byTripId_success() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.DELETE_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var update = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Verify trip is scheduled before deletion
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
     var result = applier.apply(update);
@@ -166,20 +137,14 @@ class DefaultTripUpdateApplierTest {
   void testDeleteTrip_byTripOnServiceDateId_success() {
     var tripOnServiceDateId = new FeedScopedId(FEED_ID, TRIP_ON_SERVICE_DATE_ID);
     var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.DELETE_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var update = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Verify trip is scheduled before deletion
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
     var result = applier.apply(update);
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
-    // The underlying trip should be deleted
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
     assertEquals(expectedTripId, result.successValue().updatedTripTimes().getTrip().getId());
     assertEquals(
@@ -192,27 +157,19 @@ class DefaultTripUpdateApplierTest {
   void testDeleteTrip_appliedToSnapshot() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.DELETE_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var update = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Before deletion, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
     var result = applier.apply(update);
 
     assertTrue(result.isSuccess());
 
-    // Apply the update to the snapshot manager
     var updateResult = result.successValue();
     snapshotManager.updateBuffer(updateResult.realTimeTripUpdate());
 
-    // Commit the snapshot to make the update visible
     snapshotManager.purgeAndCommit();
 
-    // After applying to snapshot, verify the trip is deleted in the timetable
     var tripData = env.tripData(TRIP_ID);
     assertEquals(RealTimeState.DELETED, tripData.realTimeState());
   }
@@ -221,13 +178,8 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_byTripId_success() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var update = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
     var result = applier.apply(update);
@@ -245,20 +197,14 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_byTripOnServiceDateId_success() {
     var tripOnServiceDateId = new FeedScopedId(FEED_ID, TRIP_ON_SERVICE_DATE_ID);
     var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var update = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
     var result = applier.apply(update);
 
     assertTrue(result.isSuccess());
     assertNotNull(result.successValue());
-    // The underlying trip should be cancelled
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
     assertEquals(expectedTripId, result.successValue().updatedTripTimes().getTrip().getId());
     assertEquals(
@@ -271,27 +217,19 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_appliedToSnapshot() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = ParsedTripUpdate.builder(
-      TripUpdateType.CANCEL_TRIP,
-      tripRef,
-      env.defaultServiceDate()
-    ).build();
+    var update = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Before cancellation, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
     var result = applier.apply(update);
 
     assertTrue(result.isSuccess());
 
-    // Apply the update to the snapshot manager
     var updateResult = result.successValue();
     snapshotManager.updateBuffer(updateResult.realTimeTripUpdate());
 
-    // Commit the snapshot to make the update visible
     snapshotManager.purgeAndCommit();
 
-    // After applying to snapshot, verify the trip is cancelled in the timetable
     var tripData = env.tripData(TRIP_ID);
     assertEquals(RealTimeState.CANCELED, tripData.realTimeState());
   }

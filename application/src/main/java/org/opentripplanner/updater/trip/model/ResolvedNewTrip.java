@@ -66,7 +66,7 @@ public final class ResolvedNewTrip {
    * Create for a brand new trip (no existing trip).
    */
   public static ResolvedNewTrip forNewTrip(
-    ParsedTripUpdate parsedUpdate,
+    ParsedAddNewTrip parsedUpdate,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
@@ -86,7 +86,7 @@ public final class ResolvedNewTrip {
    * Create for updating an existing added trip.
    */
   public static ResolvedNewTrip forExistingAddedTrip(
-    ParsedTripUpdate parsedUpdate,
+    ParsedAddNewTrip parsedUpdate,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     Trip existingTrip,

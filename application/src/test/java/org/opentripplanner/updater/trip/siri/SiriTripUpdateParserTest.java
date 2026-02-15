@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,11 +14,14 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
  * Tests for SiriTripUpdateParser.
@@ -39,8 +43,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseUpdateExistingTripWithDatedVehicleJourneyRef() {
-    // getDatedVehicleJourneyRef contains a TripOnServiceDate ID, not a Trip ID
-    // When using DatedVehicleJourneyRef without DataFrameRef, service date is deferred
     var journey = new SiriEtBuilder(timeParser)
       .withDatedVehicleJourneyRef("dated-trip1")
       .withLineRef("route1")
@@ -52,16 +54,13 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
-    assertEquals(TripUpdateType.UPDATE_EXISTING, parsed.updateType());
-    // DatedVehicleJourneyRef should set tripOnServiceDateId, NOT tripId
     assertNull(parsed.tripReference().tripId());
     assertEquals(
       new FeedScopedId(FEED_ID, "dated-trip1"),
       parsed.tripReference().tripOnServiceDateId()
     );
-    // Service date is deferred when only tripOnServiceDateId is provided
     assertNull(parsed.serviceDate());
     assertEquals(1, parsed.stopTimeUpdates().size());
 
@@ -71,7 +70,6 @@ class SiriTripUpdateParserTest {
       StopResolutionStrategy.SCHEDULED_STOP_POINT_FIRST,
       stopUpdate.stopReference().resolutionStrategy()
     );
-    // Time updates are deferred when service date is null
     assertNotNull(stopUpdate.departureUpdate());
     assertTrue(
       stopUpdate.departureUpdate() instanceof
@@ -92,16 +90,11 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
-
-    assertEquals(TripUpdateType.CANCEL_TRIP, parsed.updateType());
-    assertTrue(parsed.isCancellation());
-    assertTrue(parsed.stopTimeUpdates().isEmpty());
+    assertInstanceOf(ParsedCancelTrip.class, result.successValue());
   }
 
   @Test
   void parseExtraJourneyAsNewTrip() {
-    // Parser no longer checks if trip exists - just parses the extra journey
     var journey = new SiriEtBuilder(timeParser)
       .withIsExtraJourney(true)
       .withEstimatedVehicleJourneyCode("NSB:ServiceJourney:newtrip1-2024-01-15")
@@ -122,10 +115,8 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
 
-    assertEquals(TripUpdateType.ADD_NEW_TRIP, parsed.updateType());
-    assertTrue(parsed.isNewTrip());
     assertNotNull(parsed.tripCreationInfo());
     assertEquals(
       new FeedScopedId(FEED_ID, "NSB:ServiceJourney:newtrip1-2024-01-15"),
@@ -160,9 +151,8 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedModifyTrip.class, result.successValue());
 
-    assertEquals(TripUpdateType.MODIFY_TRIP, parsed.updateType());
     assertEquals(3, parsed.stopTimeUpdates().size());
 
     var extraCallUpdate = parsed.stopTimeUpdates().get(1);
@@ -194,7 +184,7 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(3, parsed.stopTimeUpdates().size());
     var cancelledStop = parsed.stopTimeUpdates().get(1);
@@ -216,16 +206,14 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
-    // First stop should be marked as recorded (actual time available)
     var recordedStop = parsed.stopTimeUpdates().get(0);
     assertTrue(recordedStop.recorded());
     assertNotNull(recordedStop.departureUpdate());
 
-    // Second stop should not be marked as recorded
     var estimatedStop = parsed.stopTimeUpdates().get(1);
     assertFalse(estimatedStop.recorded());
   }
@@ -246,7 +234,7 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertTrue(stopUpdate.predictionInaccurate());
@@ -268,7 +256,7 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
@@ -292,7 +280,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseNotMonitoredButCancelled() {
-    // Cancelled journeys can be not monitored
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -304,7 +291,7 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isCancellation());
+    assertInstanceOf(ParsedCancelTrip.class, result.successValue());
   }
 
   @Test
@@ -335,7 +322,7 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.occupancy());
@@ -343,7 +330,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseAbsoluteTimes() {
-    // Use FramedVehicleJourneyRef with DataFrameRef to provide service date
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -361,11 +347,10 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
 
-    // SIRI provides absolute times, not delays
     assertNotNull(stopUpdate.arrivalUpdate());
     assertNotNull(asTimeUpdate(stopUpdate.arrivalUpdate()).absoluteTimeSecondsSinceMidnight());
     assertNotNull(asTimeUpdate(stopUpdate.arrivalUpdate()).scheduledTimeSecondsSinceMidnight());
@@ -389,15 +374,13 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
-    // SIRI doesn't need delay propagation since it provides explicit times
     assertEquals(ForwardsDelayPropagationType.NONE, parsed.options().forwardsPropagation());
   }
 
   @Test
   void parseWithFramedVehicleJourneyRef() {
-    // FramedVehicleJourneyRef.getDatedVehicleJourneyRef contains the actual Trip ID
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef("2024-01-15")
@@ -412,7 +395,6 @@ class SiriTripUpdateParserTest {
     assertTrue(result.isSuccess());
     var parsed = result.successValue();
 
-    // FramedVehicleJourneyRef should set tripId, NOT tripOnServiceDateId
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
     assertNull(parsed.tripReference().tripOnServiceDateId());
     assertEquals(TEST_DATE, parsed.serviceDate());
@@ -443,7 +425,7 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(3, parsed.stopTimeUpdates().size());
     assertEquals(
@@ -479,7 +461,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseFirstStopMissingArrival_UsesTimeResolver() {
-    // First stop with missing arrival should fallback to departure via SiriTimeResolver
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -499,16 +480,14 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
     var firstStop = parsed.stopTimeUpdates().get(0);
-    // First stop should have both arrival and departure times (arrival fallback to departure)
     assertNotNull(firstStop.arrivalUpdate(), "First stop should have arrival update via fallback");
     assertNotNull(firstStop.departureUpdate());
 
-    // Both should be the same time since arrival falls back to departure
     assertEquals(
       asTimeUpdate(firstStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
       asTimeUpdate(firstStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
@@ -518,7 +497,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseLastStopMissingDeparture_UsesTimeResolver() {
-    // Last stop with missing departure should fallback to arrival via SiriTimeResolver
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -538,19 +516,17 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
     var lastStop = parsed.stopTimeUpdates().get(1);
-    // Last stop should have both arrival and departure times (departure fallback to arrival)
     assertNotNull(lastStop.arrivalUpdate());
     assertNotNull(
       lastStop.departureUpdate(),
       "Last stop should have departure update via fallback"
     );
 
-    // Both should be the same time since departure falls back to arrival
     assertEquals(
       asTimeUpdate(lastStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
       asTimeUpdate(lastStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
@@ -560,7 +536,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseMiddleStopMissingTimes_NoFallback() {
-    // Middle stop with missing times should NOT fallback (no cross-field fallback)
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -584,11 +559,10 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(3, parsed.stopTimeUpdates().size());
 
-    // Middle stop has only arrival time, should NOT have departure
     var middleStop = parsed.stopTimeUpdates().get(1);
     assertNotNull(middleStop.arrivalUpdate());
     assertNull(
@@ -599,7 +573,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseSingleStopTrip_BothFallbacksApply() {
-    // Single stop trip should apply both first and last stop fallbacks
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -612,16 +585,14 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(1, parsed.stopTimeUpdates().size());
 
     var singleStop = parsed.stopTimeUpdates().get(0);
-    // Single stop should have both arrival and departure (arrival falls back to departure)
     assertNotNull(singleStop.arrivalUpdate(), "Single stop should have arrival via fallback");
     assertNotNull(singleStop.departureUpdate());
 
-    // Both should be the same time
     assertEquals(
       asTimeUpdate(singleStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
       asTimeUpdate(singleStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
@@ -631,41 +602,29 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseActualTimePrecedence_UsesTimeResolver() {
-    // Verify that actual times (from RecordedCalls) are properly handled
-    // RecordedCalls have actual times for past stops, EstimatedCalls have expected times for future
     var journey = new SiriEtBuilder(timeParser)
       .withDatedVehicleJourneyRef("trip1")
       .withRecordedCalls(calls ->
-        calls
-          .call("stop1")
-          .withAimedDepartureTime("08:00")
-          // Actual time available for past stop
-          .withActualDepartureTime("08:01")
+        calls.call("stop1").withAimedDepartureTime("08:00").withActualDepartureTime("08:01")
       )
       .withEstimatedCalls(calls ->
-        calls
-          .call("stop2")
-          .withAimedArrivalTime("08:30")
-          // Expected time for future stop
-          .withExpectedArrivalTime("08:35")
+        calls.call("stop2").withAimedArrivalTime("08:30").withExpectedArrivalTime("08:35")
       )
       .buildEstimatedVehicleJourney();
 
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
     var firstStop = parsed.stopTimeUpdates().get(0);
     var lastStop = parsed.stopTimeUpdates().get(1);
 
-    // Verify that first stop (recorded) is marked with actual time
     assertTrue(firstStop.recorded(), "First stop should be marked as recorded (has actual time)");
     assertNotNull(firstStop.departureUpdate());
 
-    // Verify that second stop (estimated) is not marked as recorded
     assertFalse(
       lastStop.recorded(),
       "Last stop should not be marked as recorded (only has expected time)"
@@ -679,7 +638,6 @@ class SiriTripUpdateParserTest {
 
   @Test
   void parseExtraJourneyWithReplacementTrip() {
-    // Extra journey with VehicleJourneyRef indicates this trip replaces another
     var journey = new SiriEtBuilder(timeParser)
       .withIsExtraJourney(true)
       .withEstimatedVehicleJourneyCode("NSB:ServiceJourney:newtrip1-2024-01-15")
@@ -701,12 +659,10 @@ class SiriTripUpdateParserTest {
     var result = parser.parse(journey);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
 
-    assertEquals(TripUpdateType.ADD_NEW_TRIP, parsed.updateType());
     assertNotNull(parsed.tripCreationInfo());
 
-    // VehicleJourneyRef should be captured as replaced trip
     var replacedTrips = parsed.tripCreationInfo().replacedTrips();
     assertEquals(1, replacedTrips.size(), "Should have one replaced trip from VehicleJourneyRef");
     assertEquals(new FeedScopedId(FEED_ID, "replaced-trip-id"), replacedTrips.get(0));

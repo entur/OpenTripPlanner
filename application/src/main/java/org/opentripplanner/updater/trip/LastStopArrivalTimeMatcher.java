@@ -18,8 +18,8 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -69,7 +69,7 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
   @Override
   public Result<TripAndPattern, UpdateError> match(
     TripReference tripReference,
-    ParsedTripUpdate parsedUpdate,
+    ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
     ensureCacheInitialized();

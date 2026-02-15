@@ -6,10 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 class NoOpFuzzyTripMatcherTest {
 
@@ -17,13 +15,10 @@ class NoOpFuzzyTripMatcherTest {
   void match_alwaysReturnsFailure() {
     var matcher = NoOpFuzzyTripMatcher.INSTANCE;
     var tripReference = TripReference.builder().build();
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.UPDATE_EXISTING,
+    var parsedUpdate = ParsedUpdateExisting.builder(
       tripReference,
       LocalDate.of(2024, 1, 15)
-    )
-      .withOptions(TripUpdateOptions.siriDefaults())
-      .build();
+    ).build();
 
     var result = matcher.match(tripReference, parsedUpdate, LocalDate.of(2024, 1, 15));
 

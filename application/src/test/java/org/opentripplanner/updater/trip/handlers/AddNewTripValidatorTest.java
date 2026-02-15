@@ -15,15 +15,14 @@ import org.opentripplanner.updater.trip.NewTripResolver;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripResolver;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
 
 /**
@@ -51,7 +50,7 @@ class AddNewTripValidatorTest {
     validator = new AddNewTripValidator();
   }
 
-  private ResolvedNewTrip resolve(ParsedTripUpdate parsedUpdate) {
+  private ResolvedNewTrip resolve(ParsedAddNewTrip parsedUpdate) {
     var result = resolver.resolve(parsedUpdate);
     if (result.isFailure()) {
       throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
@@ -64,15 +63,14 @@ class AddNewTripValidatorTest {
     var tripId = new FeedScopedId(FEED_ID, "new-trip");
     var tripRef = TripReference.ofTripId(tripId);
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.ADD_NEW_TRIP,
+    var parsedUpdate = ParsedAddNewTrip.builder(
       tripRef,
-      env.defaultServiceDate()
+      env.defaultServiceDate(),
+      TripCreationInfo.builder(tripId).build()
     )
       .withOptions(
         TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.FAIL).build()
       )
-      .withTripCreationInfo(TripCreationInfo.builder(tripId).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("B", 1, 10 * 3600 + 30 * 60))
       .build();
@@ -86,15 +84,14 @@ class AddNewTripValidatorTest {
     var tripId = new FeedScopedId(FEED_ID, "new-trip");
     var tripRef = TripReference.ofTripId(tripId);
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.ADD_NEW_TRIP,
+    var parsedUpdate = ParsedAddNewTrip.builder(
       tripRef,
-      env.defaultServiceDate()
+      env.defaultServiceDate(),
+      TripCreationInfo.builder(tripId).build()
     )
       .withOptions(
         TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.FAIL).build()
       )
-      .withTripCreationInfo(TripCreationInfo.builder(tripId).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
       .build();
@@ -110,15 +107,14 @@ class AddNewTripValidatorTest {
     var tripId = new FeedScopedId(FEED_ID, "new-trip");
     var tripRef = TripReference.ofTripId(tripId);
 
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.ADD_NEW_TRIP,
+    var parsedUpdate = ParsedAddNewTrip.builder(
       tripRef,
-      env.defaultServiceDate()
+      env.defaultServiceDate(),
+      TripCreationInfo.builder(tripId).build()
     )
       .withOptions(
         TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.IGNORE).build()
       )
-      .withTripCreationInfo(TripCreationInfo.builder(tripId).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
       .addStopTimeUpdate(createStopUpdate("B", 2, 11 * 3600))
@@ -134,15 +130,14 @@ class AddNewTripValidatorTest {
     var tripRef = TripReference.ofTripId(tripId);
 
     // Only 1 stop
-    var parsedUpdate = ParsedTripUpdate.builder(
-      TripUpdateType.ADD_NEW_TRIP,
+    var parsedUpdate = ParsedAddNewTrip.builder(
       tripRef,
-      env.defaultServiceDate()
+      env.defaultServiceDate(),
+      TripCreationInfo.builder(tripId).build()
     )
       .withOptions(
         TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.FAIL).build()
       )
-      .withTripCreationInfo(TripCreationInfo.builder(tripId).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .build();
 

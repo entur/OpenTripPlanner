@@ -15,10 +15,8 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 /**
  * Tests for {@link ServiceDateResolver}.
@@ -62,11 +60,7 @@ class ServiceDateResolverTest {
     void resolveServiceDate_whenExplicitServiceDate_returnsIt() {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
-      var update = ParsedTripUpdate.builder(
-        TripUpdateType.UPDATE_EXISTING,
-        tripRef,
-        SERVICE_DATE
-      ).build();
+      var update = ParsedUpdateExisting.builder(tripRef, SERVICE_DATE).build();
 
       var result = resolver.resolveServiceDate(update);
 
@@ -78,7 +72,7 @@ class ServiceDateResolverTest {
     void resolveServiceDate_whenNoServiceDateAndNoAimedDeparture_returnsError() {
       var tripOnServiceDateId = new FeedScopedId(FEED_ID, "unknown-dsj");
       var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-      var update = ParsedTripUpdate.builder(TripUpdateType.UPDATE_EXISTING, tripRef, null).build();
+      var update = ParsedUpdateExisting.builder(tripRef, null).build();
 
       var result = resolver.resolveServiceDate(update);
 
@@ -127,9 +121,8 @@ class ServiceDateResolverTest {
 
       var tripId = new FeedScopedId(FEED_ID, OVERNIGHT_TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
-      var update = ParsedTripUpdate.builder(TripUpdateType.UPDATE_EXISTING, tripRef, null)
+      var update = ParsedUpdateExisting.builder(tripRef, null)
         .withAimedDepartureTime(aimedDepartureTime)
-        .withOptions(TripUpdateOptions.siriDefaults())
         .build();
 
       var result = resolver.resolveServiceDate(update);
@@ -164,9 +157,8 @@ class ServiceDateResolverTest {
 
       var tripId = new FeedScopedId(FEED_ID, "day-trip");
       var tripRef = TripReference.ofTripId(tripId);
-      var update = ParsedTripUpdate.builder(TripUpdateType.UPDATE_EXISTING, tripRef, null)
+      var update = ParsedUpdateExisting.builder(tripRef, null)
         .withAimedDepartureTime(aimedDepartureTime)
-        .withOptions(TripUpdateOptions.siriDefaults())
         .build();
 
       var result = dayResolver.resolveServiceDate(update);
@@ -184,9 +176,8 @@ class ServiceDateResolverTest {
       var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
       var tripRef = TripReference.ofTripId(unknownTripId);
 
-      var update = ParsedTripUpdate.builder(TripUpdateType.UPDATE_EXISTING, tripRef, null)
+      var update = ParsedUpdateExisting.builder(tripRef, null)
         .withAimedDepartureTime(aimedDepartureTime)
-        .withOptions(TripUpdateOptions.siriDefaults())
         .build();
 
       var result = resolver.resolveServiceDate(update);

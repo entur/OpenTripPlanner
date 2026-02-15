@@ -1,6 +1,7 @@
 package org.opentripplanner.updater.trip.gtfs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -11,25 +12,25 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Accessibility;
+import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
+import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
+import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
+import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
+import org.opentripplanner.updater.trip.model.ParsedTripRemoval;
+import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
-import org.opentripplanner.updater.trip.model.TripUpdateType;
 
 class GtfsRtTripUpdateParserTest {
 
   private static final String FEED_ID = "TEST";
   private static final LocalDate TEST_DATE = LocalDate.of(2024, 1, 15);
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
-  // Midnight on TEST_DATE in TIME_ZONE as Unix epoch seconds
   private static final long MIDNIGHT_EPOCH = TEST_DATE.atStartOfDay(TIME_ZONE).toEpochSecond();
-  // 8:30 AM (30600 seconds since midnight) as Unix epoch
   private static final long TIME_0830 = MIDNIGHT_EPOCH + 30600;
-  // 8:31 AM (30660 seconds since midnight) as Unix epoch
   private static final long TIME_0831 = MIDNIGHT_EPOCH + 30660;
-  // 8:20 AM (30000 seconds since midnight) for scheduled time
   private static final long TIME_0820 = MIDNIGHT_EPOCH + 30000;
-  // 8:21 AM (30060 seconds since midnight) for scheduled time
   private static final long TIME_0821 = MIDNIGHT_EPOCH + 30060;
   private GtfsRtTripUpdateParser parser;
 
@@ -65,9 +66,8 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
-    assertEquals(TripUpdateType.UPDATE_EXISTING, parsed.updateType());
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
     assertEquals(TEST_DATE, parsed.serviceDate());
     assertEquals(1, parsed.stopTimeUpdates().size());
@@ -94,11 +94,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
-
-    assertEquals(TripUpdateType.CANCEL_TRIP, parsed.updateType());
-    assertTrue(parsed.isCancellation());
-    assertTrue(parsed.stopTimeUpdates().isEmpty());
+    assertInstanceOf(ParsedCancelTrip.class, result.successValue());
   }
 
   @Test
@@ -114,10 +110,8 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
-
-    assertEquals(TripUpdateType.DELETE_TRIP, parsed.updateType());
-    assertTrue(parsed.isCancellation());
+    assertInstanceOf(ParsedDeleteTrip.class, result.successValue());
+    assertInstanceOf(ParsedTripRemoval.class, result.successValue());
   }
 
   @Test
@@ -147,10 +141,8 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
 
-    assertEquals(TripUpdateType.ADD_NEW_TRIP, parsed.updateType());
-    assertTrue(parsed.isNewTrip());
     assertNotNull(parsed.tripCreationInfo());
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripCreationInfo().tripId());
     assertEquals(new FeedScopedId(FEED_ID, "route1"), parsed.tripCreationInfo().routeId());
@@ -189,9 +181,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
-
-    assertEquals(TripUpdateType.MODIFY_TRIP, parsed.updateType());
+    assertInstanceOf(ParsedModifyTrip.class, result.successValue());
   }
 
   @Test
@@ -215,7 +205,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(1, parsed.stopTimeUpdates().size());
     var stopUpdate = parsed.stopTimeUpdates().get(0);
@@ -247,7 +237,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
@@ -280,7 +270,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
 
     assertNotNull(parsed.tripCreationInfo());
     assertEquals("Downtown", parsed.tripCreationInfo().headsign().toString());
@@ -311,7 +301,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
@@ -320,32 +310,7 @@ class GtfsRtTripUpdateParserTest {
 
   // Direction parsing not implemented yet - requires DirectionMapper integration
   // @Test
-  // void parseWithDirection() {
-  //   var tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
-  //     .setTrip(
-  //       GtfsRealtime.TripDescriptor.newBuilder()
-  //         .setTripId("trip1")
-  //         .setDirectionId(1)
-  //         .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED)
-  //     )
-  //     .addStopTimeUpdate(
-  //       GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
-  //         .setStopId("stop1")
-  //         .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
-  //     )
-  //     .build();
-  //
-  //   var result = parser.parse(tripUpdate);
-  //
-  //   assertTrue(result.isSuccess());
-  //   var parsed = result.successValue();
-  //
-  //   assertNotNull(parsed.tripReference().direction());
-  //   assertEquals(
-  //     org.opentripplanner.transit.model.timetable.Direction.INBOUND,
-  //     parsed.tripReference().direction()
-  //   );
-  // }
+  // void parseWithDirection() { ... }
 
   @Test
   void parseMissingTripId() {
@@ -420,7 +385,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.pickup());
@@ -455,7 +420,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.arrivalUpdate());
@@ -492,7 +457,7 @@ class GtfsRtTripUpdateParserTest {
     var result = parser.parse(tripUpdate);
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertTrue(parsed.stopTimeUpdates().isEmpty());
   }
@@ -510,7 +475,7 @@ class GtfsRtTripUpdateParserTest {
     );
 
     assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
 
     assertEquals(ForwardsDelayPropagationType.DEFAULT, parsed.options().forwardsPropagation());
     assertEquals(BackwardsDelayPropagationType.ALWAYS, parsed.options().backwardsPropagation());

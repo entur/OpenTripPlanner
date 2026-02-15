@@ -9,7 +9,7 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class RouteDirectionTimeMatcher implements FuzzyTripMatcher {
   @Override
   public Result<TripAndPattern, UpdateError> match(
     TripReference tripReference,
-    ParsedTripUpdate parsedUpdate,
+    ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
     // Validate required fields
