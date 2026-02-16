@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip;
 
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -51,6 +52,14 @@ public final class TimetableSnapshotManager {
   private final Supplier<LocalDate> localDateNow;
 
   private LocalDate lastPurgeDate = null;
+
+  /**
+   * Optional listener that receives each {@link RealTimeTripUpdate} before it is applied to the
+   * buffer. Used by the shadow comparison mode to capture records produced by the primary adapter.
+   * Set/cleared on the graph writer thread — no synchronization needed.
+   */
+  @Nullable
+  private Consumer<RealTimeTripUpdate> updateBufferListener;
 
   /**
    *
@@ -163,6 +172,14 @@ public final class TimetableSnapshotManager {
   }
 
   /**
+   * Set a listener that will receive each {@link RealTimeTripUpdate} before it is applied to the
+   * buffer. Pass {@code null} to remove the listener.
+   */
+  public void setUpdateBufferListener(@Nullable Consumer<RealTimeTripUpdate> listener) {
+    this.updateBufferListener = listener;
+  }
+
+  /**
    * Update the TripTimes of one Trip in a Timetable of a TripPattern. If the Trip of the TripTimes
    * does not exist yet in the Timetable, add it. This method will make a protective copy of the
    * Timetable if such a copy has not already been made while building up this snapshot, handling
@@ -171,6 +188,10 @@ public final class TimetableSnapshotManager {
    * @return whether the update was actually applied
    */
   public Result<UpdateSuccess, UpdateError> updateBuffer(RealTimeTripUpdate realTimeTripUpdate) {
+    if (updateBufferListener != null) {
+      updateBufferListener.accept(realTimeTripUpdate);
+    }
+
     var trip = realTimeTripUpdate.updatedTripTimes().getTrip();
     var serviceDate = realTimeTripUpdate.serviceDate();
 
