@@ -36,7 +36,6 @@ import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateOptions;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
-import org.opentripplanner.updater.trip.siri.mapping.PickDropMapper;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.rutebanken.netex.model.BusSubmodeEnumeration;
@@ -378,9 +377,32 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
   }
 
+  // Map boarding activities directly without planned-value optimization.
+  // The parser doesn't have access to the scheduled pattern's pickup/dropoff values,
+  // so it always captures the boarding activity intent. The handler in
+  // UpdateExistingTripHandler.applyStopTimeUpdates() compares against the actual
+  // scheduled values from the pattern.
   private void parsePickDropTypes(CallWrapper call, ParsedStopTimeUpdate.Builder builder) {
-    PickDropMapper.mapDropOffType(call, PickDrop.SCHEDULED).ifPresent(builder::withDropoff);
-    PickDropMapper.mapPickUpType(call, PickDrop.SCHEDULED).ifPresent(builder::withPickup);
+    var arrivalActivity = call.getArrivalBoardingActivity();
+    if (arrivalActivity != null) {
+      builder.withDropoff(
+        switch (arrivalActivity) {
+          case ALIGHTING -> PickDrop.SCHEDULED;
+          case NO_ALIGHTING -> PickDrop.NONE;
+          case PASS_THRU -> PickDrop.CANCELLED;
+        }
+      );
+    }
+    var departureActivity = call.getDepartureBoardingActivity();
+    if (departureActivity != null) {
+      builder.withPickup(
+        switch (departureActivity) {
+          case BOARDING -> PickDrop.SCHEDULED;
+          case NO_BOARDING -> PickDrop.NONE;
+          case PASS_THRU -> PickDrop.CANCELLED;
+        }
+      );
+    }
   }
 
   @Nullable
