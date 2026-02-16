@@ -108,7 +108,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     this.tripRemovalResolver = new TripRemovalResolver(
       transitService,
       tripResolver,
-      serviceDateResolver
+      serviceDateResolver,
+      snapshotManager
     );
 
     // Create validators
@@ -116,14 +117,9 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     this.modifyTripValidator = new ModifyTripValidator();
     this.addNewTripValidator = new AddNewTripValidator();
 
-    // Create handlers with injected deps
-    this.updateExistingHandler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
-    this.modifyTripHandler = new ModifyTripHandler(
-      snapshotManager,
-      transitService,
-      deduplicator,
-      tripPatternCache
-    );
+    // Create handlers - handlers are pure transformers, no snapshot manager dependency
+    this.updateExistingHandler = new UpdateExistingTripHandler(tripPatternCache);
+    this.modifyTripHandler = new ModifyTripHandler(transitService, deduplicator, tripPatternCache);
     this.addNewTripHandler = new AddNewTripHandler(
       feedId,
       transitService,
@@ -131,8 +127,8 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
       tripPatternCache,
       routeCreationStrategy
     );
-    this.cancelTripHandler = new CancelTripHandler(snapshotManager);
-    this.deleteTripHandler = new DeleteTripHandler(snapshotManager);
+    this.cancelTripHandler = new CancelTripHandler();
+    this.deleteTripHandler = new DeleteTripHandler();
   }
 
   /**

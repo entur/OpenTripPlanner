@@ -93,7 +93,7 @@ class UpdateExistingTripHandlerTest {
       null,
       TIME_ZONE
     );
-    handler = new UpdateExistingTripHandler(snapshotManager, tripPatternCache);
+    handler = new UpdateExistingTripHandler(tripPatternCache);
   }
 
   private ResolvedExistingTrip resolve(ParsedUpdateExisting parsedUpdate) {

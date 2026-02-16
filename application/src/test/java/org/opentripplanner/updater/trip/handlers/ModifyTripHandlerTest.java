@@ -97,7 +97,6 @@ class ModifyTripHandlerTest {
         TIME_ZONE
       );
       handler = new ModifyTripHandler(
-        snapshotManager,
         transitService,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
@@ -400,7 +399,6 @@ class ModifyTripHandlerTest {
         TIME_ZONE
       );
       handler = new ModifyTripHandler(
-        snapshotManager,
         transitService,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache

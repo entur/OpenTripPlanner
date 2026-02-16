@@ -63,8 +63,13 @@ class DeleteTripHandlerTest {
     snapshotManager = env.timetableSnapshotManager();
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
-    resolver = new TripRemovalResolver(transitService, tripResolver, serviceDateResolver);
-    handler = new DeleteTripHandler(snapshotManager);
+    resolver = new TripRemovalResolver(
+      transitService,
+      tripResolver,
+      serviceDateResolver,
+      snapshotManager
+    );
+    handler = new DeleteTripHandler();
   }
 
   private ResolvedTripRemoval resolve(ParsedDeleteTrip parsedUpdate) {
@@ -127,17 +132,12 @@ class DeleteTripHandlerTest {
     var tripRef = TripReference.ofTripId(unknownTripId);
     var parsedUpdate = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // For DELETE_TRIP, resolver returns success with null values when trip not found
-    // The handler then checks and returns NO_TRIP_FOR_CANCELLATION_FOUND
+    // Resolver returns failure when trip is not found anywhere
     var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isSuccess());
-
-    // Handler returns error because no scheduled trip and no previously added trip
-    var result = handler.handle(resolveResult.successValue());
-    assertTrue(result.isFailure());
+    assertTrue(resolveResult.isFailure());
     assertEquals(
       UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
-      result.failureValue().errorType()
+      resolveResult.failureValue().errorType()
     );
   }
 
@@ -165,17 +165,12 @@ class DeleteTripHandlerTest {
     var tripRef = TripReference.builder().build();
     var parsedUpdate = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // For DELETE_TRIP, resolver returns success with null values when no trip reference
-    // The handler then checks and returns NO_TRIP_FOR_CANCELLATION_FOUND
+    // Resolver returns failure when no trip reference is provided
     var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isSuccess());
-
-    // Handler returns error because no scheduled trip and no previously added trip
-    var result = handler.handle(resolveResult.successValue());
-    assertTrue(result.isFailure());
+    assertTrue(resolveResult.isFailure());
     assertEquals(
       UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
-      result.failureValue().errorType()
+      resolveResult.failureValue().errorType()
     );
   }
 

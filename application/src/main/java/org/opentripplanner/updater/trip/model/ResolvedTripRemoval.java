@@ -13,8 +13,6 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  * <p>
  * Used by {@link org.opentripplanner.updater.trip.handlers.CancelTripHandler}
  * and {@link org.opentripplanner.updater.trip.handlers.DeleteTripHandler}.
- * <p>
- * If trip is null, the handler should check for previously added trips in the snapshot manager.
  */
 public final class ResolvedTripRemoval {
 
@@ -31,6 +29,13 @@ public final class ResolvedTripRemoval {
   @Nullable
   private final TripTimes scheduledTripTimes;
 
+  // From real-time data (previously added trip, may be null)
+  @Nullable
+  private final TripPattern addedTripPattern;
+
+  @Nullable
+  private final TripTimes addedTripTimes;
+
   @Nullable
   private final String dataSource;
 
@@ -40,6 +45,8 @@ public final class ResolvedTripRemoval {
     @Nullable Trip scheduledTrip,
     @Nullable TripPattern scheduledPattern,
     @Nullable TripTimes scheduledTripTimes,
+    @Nullable TripPattern addedTripPattern,
+    @Nullable TripTimes addedTripTimes,
     @Nullable String dataSource
   ) {
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
@@ -47,19 +54,9 @@ public final class ResolvedTripRemoval {
     this.scheduledTrip = scheduledTrip;
     this.scheduledPattern = scheduledPattern;
     this.scheduledTripTimes = scheduledTripTimes;
+    this.addedTripPattern = addedTripPattern;
+    this.addedTripTimes = addedTripTimes;
     this.dataSource = dataSource;
-  }
-
-  /**
-   * Create for a trip that was not found in the scheduled data.
-   * The handler will check for previously added trips.
-   */
-  public static ResolvedTripRemoval notFoundInSchedule(
-    LocalDate serviceDate,
-    FeedScopedId tripId,
-    @Nullable String dataSource
-  ) {
-    return new ResolvedTripRemoval(serviceDate, tripId, null, null, null, dataSource);
   }
 
   /**
@@ -78,6 +75,30 @@ public final class ResolvedTripRemoval {
       Objects.requireNonNull(trip),
       Objects.requireNonNull(pattern),
       Objects.requireNonNull(tripTimes),
+      null,
+      null,
+      dataSource
+    );
+  }
+
+  /**
+   * Create for a previously added (real-time) trip.
+   */
+  public static ResolvedTripRemoval forPreviouslyAddedTrip(
+    LocalDate serviceDate,
+    FeedScopedId tripId,
+    TripPattern addedTripPattern,
+    TripTimes addedTripTimes,
+    @Nullable String dataSource
+  ) {
+    return new ResolvedTripRemoval(
+      serviceDate,
+      tripId,
+      null,
+      null,
+      null,
+      Objects.requireNonNull(addedTripPattern),
+      Objects.requireNonNull(addedTripTimes),
       dataSource
     );
   }
@@ -118,6 +139,22 @@ public final class ResolvedTripRemoval {
   @Nullable
   public TripTimes scheduledTripTimes() {
     return scheduledTripTimes;
+  }
+
+  /**
+   * The pattern for a previously added (real-time) trip, or null if not found.
+   */
+  @Nullable
+  public TripPattern addedTripPattern() {
+    return addedTripPattern;
+  }
+
+  /**
+   * The trip times for a previously added (real-time) trip, or null if not found.
+   */
+  @Nullable
+  public TripTimes addedTripTimes() {
+    return addedTripTimes;
   }
 
   /**

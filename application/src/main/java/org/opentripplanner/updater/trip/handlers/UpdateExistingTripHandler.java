@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
@@ -17,7 +16,6 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
@@ -40,16 +38,9 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
   private static final Logger LOG = LoggerFactory.getLogger(UpdateExistingTripHandler.class);
 
-  @Nullable
-  private final TimetableSnapshotManager snapshotManager;
-
   private final TripPatternCache tripPatternCache;
 
-  public UpdateExistingTripHandler(
-    @Nullable TimetableSnapshotManager snapshotManager,
-    TripPatternCache tripPatternCache
-  ) {
-    this.snapshotManager = snapshotManager;
+  public UpdateExistingTripHandler(TripPatternCache tripPatternCache) {
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
 
@@ -69,11 +60,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       serviceDate
     );
 
-    // Revert any previous real-time modifications to this trip on this service date
-    if (snapshotManager != null) {
-      snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
-    }
-
     // Create the builder from scheduled times
     // If delay propagation is enabled, start with empty times so interpolators can fill them in
     // Otherwise, pre-fill with scheduled times (SIRI-style: all stops have explicit times)
@@ -92,7 +78,9 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         null,
         false,
         false,
-        resolvedUpdate.dataSource()
+        resolvedUpdate.dataSource(),
+        true,
+        null
       );
       LOG.debug(
         "All stops cancelled - trip {} treated as cancelled on {}",
@@ -112,6 +100,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     // Determine the pattern to use
     // After reverting, start with the scheduled pattern unless new modifications are needed
     TripPattern finalPattern = scheduledPattern;
+    TripPattern patternToDeleteFrom = null;
     RealTimeState realTimeState = RealTimeState.UPDATED;
 
     // If stop pattern was modified, create or get cached modified pattern
@@ -137,9 +126,8 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
           realTimeState = RealTimeState.MODIFIED;
         }
 
-        // Cancel the trip in the scheduled pattern since it's moving to a modified pattern
-        // This prevents the trip from appearing in both patterns in the routing data
-        markScheduledTripAsDeleted(trip, scheduledPattern, serviceDate, snapshotManager);
+        // Signal that the trip should be deleted from the scheduled pattern
+        patternToDeleteFrom = scheduledPattern;
       }
     }
 
@@ -148,7 +136,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       builder.withRealTimeState(realTimeState);
     }
 
-    // Create the RealTimeTripUpdate with the correct pattern
+    // Create the RealTimeTripUpdate with revert and deletion signals
     try {
       var realTimeTripUpdate = new RealTimeTripUpdate(
         finalPattern,
@@ -157,7 +145,9 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         null,
         false,
         false,
-        resolvedUpdate.dataSource()
+        resolvedUpdate.dataSource(),
+        true,
+        patternToDeleteFrom
       );
       LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
       return Result.success(new TripUpdateResult(realTimeTripUpdate));
@@ -486,23 +476,5 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     }
 
     return builder.build();
-  }
-
-  /**
-   * Mark the scheduled trip in the buffer as deleted when moving to a modified pattern.
-   * This prevents the trip from appearing in both the scheduled and modified patterns.
-   *
-   * @param trip The trip to delete from the scheduled pattern
-   * @param scheduledPattern The scheduled pattern containing the trip
-   * @param serviceDate The service date
-   * @param snapshotManager The snapshot manager to update
-   */
-  private static void markScheduledTripAsDeleted(
-    Trip trip,
-    TripPattern scheduledPattern,
-    java.time.LocalDate serviceDate,
-    TimetableSnapshotManager snapshotManager
-  ) {
-    HandlerUtils.markScheduledTripAsDeleted(trip, scheduledPattern, serviceDate, snapshotManager);
   }
 }
