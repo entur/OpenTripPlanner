@@ -4,7 +4,7 @@
   "staticParkAndRide": false,
   "includeInclinedEdgeLevelInfo": true,
   "subwayAccessTime": 0,
-  "maxAreaNodes": 50,
+  "maxAreaNodes": 1000,
   "maxTransferDuration": "26m",
   "multiThreadElevationCalculations": true,
   "transitServiceStart": "2026-01-01",
