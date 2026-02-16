@@ -369,8 +369,9 @@ public class VertexLinker {
         .getAsDouble();
 
       // Because this is a set, each instance of DistanceTo<StreetEdge> will only be added once
+      // Note: add only closest edges of each mode
       closesEdges.addAll(
-        candidateEdges
+        candidateEdgesForMode
           .stream()
           .filter(ce -> ce.distanceDegreesLat <= closestDistance + DUPLICATE_WAY_EPSILON_DEGREES)
           .collect(Collectors.toSet())
