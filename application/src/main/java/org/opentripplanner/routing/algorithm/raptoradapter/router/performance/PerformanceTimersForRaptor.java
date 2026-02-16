@@ -11,8 +11,8 @@ public class PerformanceTimersForRaptor implements RaptorTimers {
 
   // Variables to track time spent
   private final Timer timerRoute;
-  private final Timer findTransitPerRound;
-  private final Timer findTransfersPerRound;
+  private final Timer routeTransitTimer;
+  private final Timer applyTransfersTimer;
   private final MeterRegistry registry;
   private final Collection<RoutingTag> routingTags;
 
@@ -25,10 +25,10 @@ public class PerformanceTimersForRaptor implements RaptorTimers {
     this.routingTags = routingTags;
     var tags = MicrometerUtils.mapTimingTags(routingTags);
     timerRoute = Timer.builder("raptor." + namePrefix + ".route").tags(tags).register(registry);
-    findTransitPerRound = Timer.builder("raptor." + namePrefix + ".minute.transit")
+    routeTransitTimer = Timer.builder("raptor." + namePrefix + ".minute.transit")
       .tags(tags)
       .register(registry);
-    findTransfersPerRound = Timer.builder("raptor." + namePrefix + ".minute.transfers")
+    applyTransfersTimer = Timer.builder("raptor." + namePrefix + ".minute.transfers")
       .tags(tags)
       .register(registry);
   }
@@ -40,12 +40,12 @@ public class PerformanceTimersForRaptor implements RaptorTimers {
 
   @Override
   public void routeTransit(Runnable body) {
-    findTransitPerRound.record(body);
+    routeTransitTimer.record(body);
   }
 
   @Override
   public void applyTransfers(Runnable body) {
-    findTransfersPerRound.record(body);
+    applyTransfersTimer.record(body);
   }
 
   @Override
