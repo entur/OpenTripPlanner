@@ -345,7 +345,13 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         result.pickupChanges.put(stopIndex, PickDrop.CANCELLED);
         result.dropoffChanges.put(stopIndex, PickDrop.CANCELLED);
 
-        continue;
+        // For GTFS-RT SKIPPED stops, don't apply time updates - the forward delay
+        // interpolator will interpolate times from surrounding stops.
+        // For SIRI CANCELLED stops, fall through to apply explicit time updates
+        // to avoid NEGATIVE_HOP_TIME errors on delayed trips.
+        if (stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED) {
+          continue;
+        }
       }
 
       // Handle NO_DATA stops
