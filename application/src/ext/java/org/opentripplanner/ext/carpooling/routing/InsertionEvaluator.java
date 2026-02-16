@@ -5,11 +5,16 @@ import static org.opentripplanner.ext.carpooling.util.GraphPathUtils.calculateCu
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
-import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.ext.carpooling.service.DefaultCarpoolingService;
+import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.Edge;
@@ -35,25 +40,27 @@ public class InsertionEvaluator {
 
   private static final Duration INITIAL_ADDITIONAL_DURATION = Duration.ofDays(1);
 
-  private final RoutingFunction routingFunction;
   private final PassengerDelayConstraints delayConstraints;
   private final LinkingContext linkingContext;
+  private final StreetVertexUtils streetVertexUtils;
+  private final CarpoolRouter carpoolRouter;
 
   /**
    * Creates an evaluator with the specified routing function, delay constraints, and linking context.
    *
-   * @param routingFunction Function that performs A* routing between coordinates
    * @param delayConstraints Constraints for acceptable passenger delays
    * @param linkingContext Linking context with pre-linked vertices for routing
    */
   public InsertionEvaluator(
-    RoutingFunction routingFunction,
     PassengerDelayConstraints delayConstraints,
-    LinkingContext linkingContext
+    LinkingContext linkingContext,
+    StreetVertexUtils streetVertexUtils,
+    CarpoolRouter carpoolRouter
   ) {
-    this.routingFunction = routingFunction;
     this.delayConstraints = delayConstraints;
     this.linkingContext = linkingContext;
+    this.streetVertexUtils = streetVertexUtils;
+    this.carpoolRouter = carpoolRouter;
   }
 
   /**
@@ -62,19 +69,14 @@ public class InsertionEvaluator {
    * @return Array of routed segments, or null if any segment fails to route
    */
   @SuppressWarnings("unchecked")
-  private GraphPath<State, Edge, Vertex>[] routeBaselineSegments(List<WgsCoordinate> routePoints) {
-    GraphPath<State, Edge, Vertex>[] segments = new GraphPath[routePoints.size() - 1];
+  private GraphPath<State, Edge, Vertex>[] routeBaselineSegments(List<Vertex> vertices) {
+    GraphPath<State, Edge, Vertex>[] segments = new GraphPath[vertices.size() - 1];
 
-    for (int i = 0; i < routePoints.size() - 1; i++) {
-      var fromCoord = routePoints.get(i);
-      var toCoord = routePoints.get(i + 1);
-      GenericLocation from = GenericLocation.fromCoordinate(
-        fromCoord.latitude(),
-        fromCoord.longitude()
-      );
-      GenericLocation to = GenericLocation.fromCoordinate(toCoord.latitude(), toCoord.longitude());
+    for (int i = 0; i < vertices.size() - 1; i++) {
+      var from = vertices.get(i);
+      var to = vertices.get(i + 1);
 
-      GraphPath<State, Edge, Vertex> segment = routingFunction.route(from, to, linkingContext);
+      GraphPath<State, Edge, Vertex> segment = carpoolRouter.route(from, to);
       if (segment == null) {
         LOG.debug("Baseline routing failed for segment {} → {}", i, i + 1);
         return null;
@@ -84,6 +86,39 @@ public class InsertionEvaluator {
     }
 
     return segments;
+  }
+
+  public List<InsertionCandidate> findBestInsertions(
+    DefaultCarpoolingService.TripWithViableAccessEgress tripWithViableAccessEgress
+  ) {
+    GraphPath<State, Edge, Vertex>[] baselineSegments = routeBaselineSegments(
+      tripWithViableAccessEgress.trip().getVertices()
+    );
+
+    Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
+
+    var viableCandidateTrips = tripWithViableAccessEgress.viableAccessEgress().stream()
+      .map(viableAccessEgress -> {
+        var pickUpVertix = viableAccessEgress.accessEgress() == AccessEgressType.ACCESS
+          ? viableAccessEgress.passengerVertex()
+          : viableAccessEgress.transitVertex();
+        var dropOffVertix = viableAccessEgress.accessEgress() == AccessEgressType.ACCESS
+          ? viableAccessEgress.transitVertex()
+          : viableAccessEgress.passengerVertex();
+
+        return findBestInsertion(
+          tripWithViableAccessEgress.trip(),
+          viableAccessEgress.insertionPositions(),
+          pickUpVertix,
+          dropOffVertix,
+          baselineSegments,
+          cumulativeDurations,
+          viableAccessEgress.transitStop()
+        );
+    }).filter(Objects::nonNull).toList();
+
+
+    return viableCandidateTrips;
   }
 
   /**
@@ -107,13 +142,29 @@ public class InsertionEvaluator {
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff
   ) {
-    GraphPath<State, Edge, Vertex>[] baselineSegments = routeBaselineSegments(trip.routePoints());
+    GraphPath<State, Edge, Vertex>[] baselineSegments = routeBaselineSegments(trip.getVertices());
     if (baselineSegments == null) {
       LOG.warn("Could not route baseline for trip {}", trip.getId());
       return null;
     }
 
+    var passengerPickupVertex = streetVertexUtils.getOrCreateVertex(passengerPickup, linkingContext);
+    var passengerDropoffVertex = streetVertexUtils.getOrCreateVertex(passengerDropoff, linkingContext);
+
     Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
+    return findBestInsertion(trip, viablePositions, passengerPickupVertex, passengerDropoffVertex, baselineSegments, cumulativeDurations, null);
+  }
+
+  @Nullable
+  public InsertionCandidate findBestInsertion(
+    CarpoolTrip trip,
+    List<InsertionPosition> viablePositions,
+    Vertex passengerPickup,
+    Vertex passengerDropoff,
+    GraphPath<State, Edge, Vertex>[] baselineSegments,
+    Duration[] cumulativeDurations,
+    NearbyStop transitStop
+  ){
 
     InsertionCandidate bestCandidate = null;
     Duration minAdditionalDuration = INITIAL_ADDITIONAL_DURATION;
@@ -128,7 +179,8 @@ public class InsertionEvaluator {
         passengerDropoff,
         baselineSegments,
         cumulativeDurations,
-        baselineDuration
+        baselineDuration,
+        transitStop
       );
 
       if (candidate == null) {
@@ -140,7 +192,7 @@ public class InsertionEvaluator {
       // Check if this is the best so far and within deviation budget
       if (
         additionalDuration.compareTo(minAdditionalDuration) < 0 &&
-        additionalDuration.compareTo(trip.deviationBudget()) <= 0
+          additionalDuration.compareTo(trip.deviationBudget()) <= 0
       ) {
         minAdditionalDuration = additionalDuration;
         bestCandidate = candidate;
@@ -164,15 +216,15 @@ public class InsertionEvaluator {
     CarpoolTrip trip,
     int pickupPos,
     int dropoffPos,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff,
+    Vertex passengerPickup,
+    Vertex passengerDropoff,
     GraphPath<State, Edge, Vertex>[] baselineSegments,
     Duration[] originalCumulativeDurations,
-    Duration baselineDuration
+    Duration baselineDuration,
+    NearbyStop transitStop
   ) {
-    // Build modified route segments by reusing cached baseline segments
     List<GraphPath<State, Edge, Vertex>> modifiedSegments = buildModifiedSegments(
-      trip.routePoints(),
+      trip.getVertices(),
       baselineSegments,
       pickupPos,
       dropoffPos,
@@ -181,7 +233,6 @@ public class InsertionEvaluator {
     );
 
     if (modifiedSegments == null) {
-      // Routing failed for new segments
       return null;
     }
 
@@ -218,37 +269,23 @@ public class InsertionEvaluator {
       dropoffPos,
       modifiedSegments,
       baselineDuration,
-      totalDuration
+      totalDuration,
+      transitStop
     );
   }
 
-  /**
-   * Builds modified route segments by reusing cached baseline segments where possible
-   * and only routing new segments that involve the passenger.
-   *
-   * <p>This is the key optimization: instead of routing ALL segments again,
-   * we only route segments that changed due to passenger insertion.
-   *
-   * @param originalPoints Route points before passenger insertion
-   * @param baselineSegments Pre-routed segments for baseline route
-   * @param pickupPos Passenger pickup position (1-indexed)
-   * @param dropoffPos Passenger dropoff position (1-indexed)
-   * @param passengerPickup Passenger's pickup coordinate
-   * @param passengerDropoff Passenger's dropoff coordinate
-   * @return List of segments for modified route, or null if routing fails
-   */
   private List<GraphPath<State, Edge, Vertex>> buildModifiedSegments(
-    List<WgsCoordinate> originalPoints,
+    List<Vertex> originalPoints,
     GraphPath<State, Edge, Vertex>[] baselineSegments,
     int pickupPos,
     int dropoffPos,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
+    Vertex passengerPickup,
+    Vertex passengerDropoff
   ) {
     List<GraphPath<State, Edge, Vertex>> segments = new ArrayList<>();
 
     // Build modified point list
-    List<WgsCoordinate> modifiedPoints = new ArrayList<>(originalPoints);
+    List<Vertex> modifiedPoints = new ArrayList<>(originalPoints);
     modifiedPoints.add(pickupPos, passengerPickup);
     modifiedPoints.add(dropoffPos, passengerDropoff);
 
@@ -259,6 +296,7 @@ public class InsertionEvaluator {
       GraphPath<State, Edge, Vertex> segment;
 
       // Check if this segment can be reused from baseline
+      // CHECK IF THIS ACTUALLY DOES SOMETHING!!!
       int baselineIndex = getBaselineSegmentIndex(i, originalPoints, modifiedPoints);
       if (baselineIndex >= 0 && baselineIndex < baselineSegments.length) {
         // This segment is unchanged - reuse it!
@@ -266,18 +304,10 @@ public class InsertionEvaluator {
         LOG.trace("Reusing baseline segment {} for modified position {}", baselineIndex, i);
       } else {
         // This segment involves passenger - route it
-        var fromCoord = modifiedPoints.get(i);
-        var toCoord = modifiedPoints.get(i + 1);
-        GenericLocation from = GenericLocation.fromCoordinate(
-          fromCoord.latitude(),
-          fromCoord.longitude()
-        );
-        GenericLocation to = GenericLocation.fromCoordinate(
-          toCoord.latitude(),
-          toCoord.longitude()
-        );
+        var fromVertex = modifiedPoints.get(i);
+        var toVertex = modifiedPoints.get(i + 1);
 
-        segment = routingFunction.route(from, to, linkingContext);
+        segment = this.carpoolRouter.route(fromVertex, toVertex);
         if (segment == null) {
           LOG.trace("Routing failed for new segment {} → {}", i, i + 1);
           return null;
@@ -306,17 +336,17 @@ public class InsertionEvaluator {
    */
   private int getBaselineSegmentIndex(
     int modifiedIndex,
-    List<WgsCoordinate> originalPoints,
-    List<WgsCoordinate> modifiedPoints
+    List<Vertex> originalPoints,
+    List<Vertex> modifiedPoints
   ) {
     // Get the start and end coordinates of this modified segment
-    WgsCoordinate modifiedStart = modifiedPoints.get(modifiedIndex);
-    WgsCoordinate modifiedEnd = modifiedPoints.get(modifiedIndex + 1);
+    Vertex modifiedStart = modifiedPoints.get(modifiedIndex);
+    Vertex modifiedEnd = modifiedPoints.get(modifiedIndex + 1);
 
     // Search through baseline segments to find one with matching endpoints
     for (int baselineIndex = 0; baselineIndex < originalPoints.size() - 1; baselineIndex++) {
-      WgsCoordinate baselineStart = originalPoints.get(baselineIndex);
-      WgsCoordinate baselineEnd = originalPoints.get(baselineIndex + 1);
+      Vertex baselineStart = originalPoints.get(baselineIndex);
+      Vertex baselineEnd = originalPoints.get(baselineIndex + 1);
 
       // Check if both endpoints match (using WgsCoordinate's built-in equality)
       if (modifiedStart.equals(baselineStart) && modifiedEnd.equals(baselineEnd)) {

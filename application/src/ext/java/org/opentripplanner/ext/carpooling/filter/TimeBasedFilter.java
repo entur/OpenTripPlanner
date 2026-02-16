@@ -4,6 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * requested departure time. This prevents matching passengers with trips
  * that have already departed or won't depart for hours.
  */
-public class TimeBasedFilter implements TripFilter {
+public class TimeBasedFilter implements TripFilter, AccessEgressTripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(TimeBasedFilter.class);
 
@@ -54,4 +56,21 @@ public class TimeBasedFilter implements TripFilter {
 
     return withinWindow;
   }
+
+  @Override
+  public boolean acceptsAccessEgress(
+    CarpoolTrip trip,
+    WgsCoordinate coordinateOfPassenger,
+    Instant passengerDepartureTime,
+    Duration searchWindow
+  ) {
+    var earliestDepartureTime = trip.startTime().minus(searchWindow);
+    var latestDepartureTime = trip.endTime().plus(searchWindow);
+
+    return (
+      passengerDepartureTime.isAfter(earliestDepartureTime.toInstant()) &&
+      passengerDepartureTime.isBefore(latestDepartureTime.toInstant())
+    );
+  }
+
 }
