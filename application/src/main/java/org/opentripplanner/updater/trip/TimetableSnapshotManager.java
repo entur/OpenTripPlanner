@@ -200,7 +200,6 @@ public final class TimetableSnapshotManager {
 
     // Apply the main update
     buffer.update(realTimeTripUpdate);
-    // The time tables are finished during the commit
     return Result.success(UpdateSuccess.noWarnings(realTimeTripUpdate.producer()));
   }
 
