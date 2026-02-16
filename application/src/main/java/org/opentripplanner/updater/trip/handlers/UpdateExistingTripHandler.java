@@ -91,7 +91,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     }
 
     // Apply stop time updates - returns PatternModificationResult
-    var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, pattern, trip);
+    var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, scheduledPattern, trip);
     if (applyResult.isFailure()) {
       return Result.failure(applyResult.failureValue());
     }
@@ -237,7 +237,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   private Result<PatternModificationResult, UpdateError> applyStopTimeUpdates(
     ResolvedExistingTrip resolvedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
-    TripPattern pattern,
+    TripPattern scheduledPattern,
     Trip trip
   ) {
     var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
@@ -268,11 +268,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         if (stopSequence != null) {
           // GTFS-RT with explicit stop sequence
           stopIndex = stopSequence;
-          if (stopIndex < 0 || stopIndex >= pattern.numberOfStops()) {
+          if (stopIndex < 0 || stopIndex >= scheduledPattern.numberOfStops()) {
             LOG.warn(
               "Stop index {} out of bounds for pattern with {} stops",
               stopIndex,
-              pattern.numberOfStops()
+              scheduledPattern.numberOfStops()
             );
             continue;
           }
@@ -289,7 +289,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
               new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
             );
           }
-          int matchIndex = matchStopInPattern(resolvedStop, pattern);
+          int matchIndex = matchStopInPattern(resolvedStop, scheduledPattern);
           if (matchIndex < 0) {
             return Result.failure(
               new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
@@ -302,7 +302,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       listIndex++;
 
       // Get the scheduled stop from the pattern
-      StopLocation scheduledStop = pattern.getStop(stopIndex);
+      StopLocation scheduledStop = scheduledPattern.getStop(stopIndex);
 
       // Check if we failed to resolve an assigned stop
       if (resolvedStop == null && stopUpdate.stopReference().hasAssignedStopId()) {
@@ -363,14 +363,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
       // Track pickup/dropoff changes
       if (stopUpdate.pickup() != null) {
-        PickDrop scheduledPickup = pattern.getBoardType(stopIndex);
+        PickDrop scheduledPickup = scheduledPattern.getBoardType(stopIndex);
         if (!stopUpdate.pickup().equals(scheduledPickup)) {
           result.pickupChanges.put(stopIndex, stopUpdate.pickup());
         }
       }
 
       if (stopUpdate.dropoff() != null) {
-        PickDrop scheduledDropoff = pattern.getAlightType(stopIndex);
+        PickDrop scheduledDropoff = scheduledPattern.getAlightType(stopIndex);
         if (!stopUpdate.dropoff().equals(scheduledDropoff)) {
           result.dropoffChanges.put(stopIndex, stopUpdate.dropoff());
         }
