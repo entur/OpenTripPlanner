@@ -2,8 +2,10 @@ package org.opentripplanner.ext.siri.updater.azure;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 public abstract class SiriAzureUpdaterParameters {
 
@@ -26,6 +28,10 @@ public abstract class SiriAzureUpdaterParameters {
   private Duration autoDeleteOnIdle;
   private int prefetchCount;
   private boolean useNewUpdaterImplementation;
+  private boolean shadowComparison;
+
+  @Nullable
+  private Path shadowComparisonReportDirectory;
 
   public SiriAzureUpdaterParameters(String type) {
     this.type = type;
@@ -147,6 +153,23 @@ public abstract class SiriAzureUpdaterParameters {
 
   public void setUseNewUpdaterImplementation(boolean useNewUpdaterImplementation) {
     this.useNewUpdaterImplementation = useNewUpdaterImplementation;
+  }
+
+  public boolean isShadowComparison() {
+    return shadowComparison;
+  }
+
+  public void setShadowComparison(boolean shadowComparison) {
+    this.shadowComparison = shadowComparison;
+  }
+
+  @Nullable
+  public Path getShadowComparisonReportDirectory() {
+    return shadowComparisonReportDirectory;
+  }
+
+  public void setShadowComparisonReportDirectory(@Nullable Path shadowComparisonReportDirectory) {
+    this.shadowComparisonReportDirectory = shadowComparisonReportDirectory;
   }
 
   /**
