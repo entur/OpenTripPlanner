@@ -1,6 +1,8 @@
 package org.opentripplanner.ext.siri.updater.mqtt;
 
+import java.nio.file.Path;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import org.opentripplanner.updater.trip.UrlUpdaterParameters;
 
 public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
@@ -18,6 +20,10 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
   private final Duration maxPrimingIdleTime;
   private final Duration connectionStartupTimeout;
   private final boolean useNewUpdaterImplementation;
+  private final boolean shadowComparison;
+
+  @Nullable
+  private final Path shadowComparisonReportDirectory;
 
   public MqttSiriETUpdaterParameters(
     String configRef,
@@ -32,7 +38,9 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
     int numberOfPrimingWorkers,
     Duration maxPrimingIdleTime,
     Duration connectionStartupTimeout,
-    boolean useNewUpdaterImplementation
+    boolean useNewUpdaterImplementation,
+    boolean shadowComparison,
+    @Nullable Path shadowComparisonReportDirectory
   ) {
     this.configRef = configRef;
     this.feedId = feedId;
@@ -47,6 +55,8 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
     this.maxPrimingIdleTime = maxPrimingIdleTime;
     this.connectionStartupTimeout = connectionStartupTimeout;
     this.useNewUpdaterImplementation = useNewUpdaterImplementation;
+    this.shadowComparison = shadowComparison;
+    this.shadowComparisonReportDirectory = shadowComparisonReportDirectory;
   }
 
   @Override
@@ -106,5 +116,14 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
 
   public boolean useNewUpdaterImplementation() {
     return useNewUpdaterImplementation;
+  }
+
+  public boolean shadowComparison() {
+    return shadowComparison;
+  }
+
+  @Nullable
+  public Path shadowComparisonReportDirectory() {
+    return shadowComparisonReportDirectory;
   }
 }
