@@ -1,5 +1,6 @@
 package org.opentripplanner.apis.gtfs.mapping.routerequest;
 
+import static com.google.common.truth.Truth.assertThat;
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -7,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.params.provider.Arguments.of;
 import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.SAFE_STREETS;
 import static org.opentripplanner.routing.core.VehicleRoutingOptimizeType.TRIANGLE;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import graphql.schema.DataFetchingEnvironment;
 import graphql.schema.DataFetchingEnvironmentImpl;
@@ -27,6 +29,7 @@ import org.opentripplanner.apis.gtfs.SchemaFactory;
 import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -50,7 +53,9 @@ import org.opentripplanner.transit.service.TimetableRepository;
 
 class LegacyRouteRequestMapperTest implements PlanTestConstants {
 
-  static final GraphQLRequestContext CONTEXT;
+  private static final GraphQLRequestContext CONTEXT;
+  private static final FeedScopedId TRIP_ID_1 = id("t1");
+  private static final FeedScopedId TRIP_ID_2 = id("t2");
 
   static {
     Graph graph = new Graph();
@@ -185,8 +190,27 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
     assertEquals(expectedFilters, routeRequest.journey().transit().filters().toString());
   }
 
-  private static Map<String, Object> mode(String mode) {
-    return Map.of("mode", mode);
+  static Stream<Arguments> bannedTripsCases() {
+    return Stream.of(
+      Arguments.of("F:t1", List.of(TRIP_ID_1)),
+      Arguments.of("F:t1,F:t2", List.of(TRIP_ID_1, TRIP_ID_2)),
+      Arguments.of("F:t1, F:t2", List.of(TRIP_ID_1, TRIP_ID_2)),
+      Arguments.of(",F:t1, F:t2,", List.of(TRIP_ID_1, TRIP_ID_2))
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("bannedTripsCases")
+  void bannedTrips(String value, List<FeedScopedId> expected) {
+    Map<String, Object> arguments = decorateWithRequiredParams(
+      Map.of("banned", Map.of("trips", value))
+    );
+
+    var routeRequest = LegacyRouteRequestMapper.toRouteRequest(
+      executionContext(arguments),
+      CONTEXT
+    );
+    assertThat(routeRequest.journey().transit().bannedTrips()).containsExactlyElementsIn(expected);
   }
 
   @Test
@@ -315,6 +339,10 @@ class LegacyRouteRequestMapperTest implements PlanTestConstants {
       CONTEXT
     );
     assertEquals(List.of(), noParamsReq.listViaLocations());
+  }
+
+  private static Map<String, Object> mode(String mode) {
+    return Map.of("mode", mode);
   }
 
   private DataFetchingEnvironment executionContext(Map<String, Object> arguments) {
