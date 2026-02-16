@@ -3,6 +3,7 @@ package org.opentripplanner.standalone.config.routerconfig.updaters;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.updater.trip.siri.updater.lite.SiriETLiteUpdaterParameters;
@@ -43,7 +44,23 @@ public class SiriETLiteUpdaterConfig {
             "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
             "When false (default), uses the legacy SiriRealTimeTripUpdateAdapter."
         )
-        .asBoolean(false)
+        .asBoolean(false),
+      c
+        .of("shadowComparison")
+        .since(V2_9)
+        .summary("Run the legacy and unified adapters in parallel, comparing their outputs.")
+        .asBoolean(false),
+      optionalPath(
+        c
+          .of("shadowComparisonReportDirectory")
+          .since(V2_9)
+          .summary("Directory to write detailed shadow comparison mismatch reports to.")
+          .asString(null)
+      )
     );
+  }
+
+  private static Path optionalPath(String value) {
+    return value != null ? Path.of(value) : null;
   }
 }
