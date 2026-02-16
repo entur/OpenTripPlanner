@@ -405,7 +405,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       }
 
       // Apply stop real-time state flags
-      if (stopUpdate.recorded()) {
+      if (stopUpdate.recorded() && !stopUpdate.isSkipped()) {
         builder.withRecorded(stopIndex);
       }
 
