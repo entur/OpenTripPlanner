@@ -13,6 +13,7 @@ import org.opentripplanner.updater.support.siri.SiriHttpLoader;
 import org.opentripplanner.updater.support.siri.SiriLoader;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
+import org.opentripplanner.updater.trip.siri.ShadowSiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
@@ -46,6 +47,7 @@ public class SiriUpdaterModule {
 
   /**
    * Creates the appropriate adapter based on the configuration.
+   * When {@code shadowComparison} is true, wraps the legacy adapter with a shadow adapter.
    * When {@code useNewUpdaterImplementation} is true, uses the new {@link SiriNewTripUpdateAdapter}.
    * Otherwise, uses the legacy {@link SiriRealTimeTripUpdateAdapter}.
    */
@@ -55,7 +57,22 @@ public class SiriUpdaterModule {
     DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager
   ) {
-    if (params.useNewUpdaterImplementation()) {
+    if (params.shadowComparison()) {
+      var primary = new SiriRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager
+      );
+      return new ShadowSiriTripUpdateAdapter(
+        primary,
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        params.fuzzyTripMatching(),
+        params.feedId(),
+        params.shadowComparisonReportDirectory()
+      );
+    } else if (params.useNewUpdaterImplementation()) {
       return new SiriNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,
