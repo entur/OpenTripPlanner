@@ -1,0 +1,12 @@
+{{- if .Values.journeyPlanner.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otp2-logback-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+data:
+  logback.xml: |-{{ range .Files.Lines .Values.configMap.logbackConfig}}
+    {{ . }}{{ end }}
+  {{- end }}
