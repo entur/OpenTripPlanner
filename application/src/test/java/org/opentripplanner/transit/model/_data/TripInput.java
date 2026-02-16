@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
@@ -114,6 +115,26 @@ public class TripInput {
     return addStopWithHeadsign(stop, arrivalTime, departureTime, null);
   }
 
+  public TripInput addStop(
+    RegularStop stop,
+    String arrivalTime,
+    String departureTime,
+    PickDrop pickup,
+    PickDrop dropoff
+  ) {
+    stops.add(
+      new RegularStopCallInput(
+        stop,
+        TimeUtils.time(arrivalTime),
+        TimeUtils.time(departureTime),
+        null,
+        pickup,
+        dropoff
+      )
+    );
+    return this;
+  }
+
   public TripInput addStop(RegularStop stopId, String arrivalAndDeparture) {
     return addStop(stopId, arrivalAndDeparture, arrivalAndDeparture);
   }
@@ -181,8 +202,19 @@ public class TripInput {
     RegularStop stop,
     int arrivalTime,
     int departureTime,
-    @Nullable String headsign
+    @Nullable String headsign,
+    @Nullable PickDrop pickupType,
+    @Nullable PickDrop dropoffType
   ) implements StopCallInput {
+    RegularStopCallInput(
+      RegularStop stop,
+      int arrivalTime,
+      int departureTime,
+      @Nullable String headsign
+    ) {
+      this(stop, arrivalTime, departureTime, headsign, null, null);
+    }
+
     public StopTime toStopTime(Trip trip, int stopSequence) {
       var st = new StopTime();
       st.setTrip(trip);
@@ -192,6 +224,12 @@ public class TripInput {
       st.setDepartureTime(departureTime);
       if (headsign != null) {
         st.setStopHeadsign(new NonLocalizedString(headsign));
+      }
+      if (pickupType != null) {
+        st.setPickupType(pickupType);
+      }
+      if (dropoffType != null) {
+        st.setDropOffType(dropoffType);
       }
       return st;
     }

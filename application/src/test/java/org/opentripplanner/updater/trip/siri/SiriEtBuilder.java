@@ -8,8 +8,10 @@ import javax.annotation.Nullable;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
+import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.DataFrameRefStructure;
 import uk.org.siri.siri21.DatedVehicleJourneyRef;
+import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
@@ -430,6 +432,20 @@ public class SiriEtBuilder {
     public EstimatedCallsBuilder withPredictionInaccurate(boolean inaccurate) {
       var call = calls.getLast();
       call.setPredictionInaccurate(inaccurate);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withArrivalBoardingActivity(
+      ArrivalBoardingActivityEnumeration activity
+    ) {
+      calls.getLast().setArrivalBoardingActivity(activity);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withDepartureBoardingActivity(
+      DepartureBoardingActivityEnumeration activity
+    ) {
+      calls.getLast().setDepartureBoardingActivity(activity);
       return this;
     }
 
