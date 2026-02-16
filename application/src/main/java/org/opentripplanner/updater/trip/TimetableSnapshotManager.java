@@ -179,8 +179,27 @@ public final class TimetableSnapshotManager {
    * @return whether the update was actually applied
    */
   public Result<UpdateSuccess, UpdateError> updateBuffer(RealTimeTripUpdate realTimeTripUpdate) {
+    var trip = realTimeTripUpdate.updatedTripTimes().getTrip();
+    var serviceDate = realTimeTripUpdate.serviceDate();
+
+    // Phase 1: Revert previous real-time modifications if requested
+    if (realTimeTripUpdate.revertPreviousRealTimeUpdates()) {
+      buffer.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
+    }
+
+    // Phase 2: Mark trip as deleted in scheduled pattern if moving to a modified pattern
+    var scheduledPattern = realTimeTripUpdate.scheduledPatternToDeleteFrom();
+    if (scheduledPattern != null) {
+      var scheduledTripTimes = scheduledPattern.getScheduledTimetable().getTripTimes(trip);
+      if (scheduledTripTimes != null) {
+        var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+        builder.deleteTrip();
+        buffer.update(new RealTimeTripUpdate(scheduledPattern, builder.build(), serviceDate));
+      }
+    }
+
+    // Phase 3: Apply the main update
     buffer.update(realTimeTripUpdate);
-    // The time tables are finished during the commit
     return Result.success(UpdateSuccess.noWarnings(realTimeTripUpdate.producer()));
   }
 
