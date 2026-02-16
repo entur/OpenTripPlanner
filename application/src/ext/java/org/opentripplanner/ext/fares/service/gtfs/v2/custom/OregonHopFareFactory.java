@@ -55,7 +55,12 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
     .build();
 
   // fare media
-  static final FareMedium MEDIUM_HOP_FASTPASS = new FareMedium(ctranId("2"), "HOP Fastpass");
+  static final FareMedium HOP_FASTPASS = new FareMedium(ctranId("2"), "HOP Fastpass");
+  static final FareMedium VIRTUAL_HOP_FASTPASS = new FareMedium(
+    ctranId("4"),
+    "Virtual HOP Fastpass"
+  );
+  static final FareMedium OPEN_PAYMENT = new FareMedium(ctranId("3"), "Open Payment");
 
   public FareService makeFareService() {
     DefaultFareService fareService = new DefaultFareService();
@@ -491,7 +496,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, adultLarger.minus(adultSmaller))
       )
         .withCategory(CATEGORY_ADULT)
-        .withMedium(MEDIUM_HOP_FASTPASS)
+        .withMedium(HOP_FASTPASS)
         .build()
     );
     hopFareProducts.add(
@@ -501,7 +506,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, adultLarger.minus(adultSmaller))
       )
         .withCategory(CATEGORY_ADULT)
-        .withMedium(new FareMedium(ctranId("3"), "Open Payment"))
+        .withMedium(OPEN_PAYMENT)
         .build()
     );
     hopFareProducts.add(
@@ -511,7 +516,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, adultLarger.minus(adultSmaller))
       )
         .withCategory(CATEGORY_ADULT)
-        .withMedium(new FareMedium(ctranId("4"), "Virtual HOP Fastpass"))
+        .withMedium(VIRTUAL_HOP_FASTPASS)
         .build()
     );
 
@@ -523,7 +528,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, (seniorLarger.minus(seniorSmaller)))
       )
         .withCategory(CATEGORY_HONOURED_CITIZEN)
-        .withMedium(MEDIUM_HOP_FASTPASS)
+        .withMedium(HOP_FASTPASS)
         .build()
     );
     hopFareProducts.add(
@@ -533,7 +538,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, seniorLarger.minus(seniorSmaller))
       )
         .withCategory(CATEGORY_HONOURED_CITIZEN)
-        .withMedium(new FareMedium(ctranId("3"), "Open Payment"))
+        .withMedium(OPEN_PAYMENT)
         .build()
     );
     hopFareProducts.add(
@@ -543,7 +548,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, seniorLarger.minus(seniorSmaller))
       )
         .withCategory(CATEGORY_HONOURED_CITIZEN)
-        .withMedium(new FareMedium(ctranId("4"), "Virtual HOP Fastpass"))
+        .withMedium(VIRTUAL_HOP_FASTPASS)
         .build()
     );
 
@@ -555,7 +560,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, youthLarger.minus(youthSmaller))
       )
         .withCategory(CATEGORY_YOUTH)
-        .withMedium(MEDIUM_HOP_FASTPASS)
+        .withMedium(HOP_FASTPASS)
         .build()
     );
     hopFareProducts.add(
@@ -565,7 +570,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, youthLarger.minus(youthSmaller))
       )
         .withCategory(CATEGORY_YOUTH)
-        .withMedium(new FareMedium(ctranId("3"), "Open Payment"))
+        .withMedium(OPEN_PAYMENT)
         .build()
     );
     hopFareProducts.add(
@@ -575,7 +580,7 @@ public class OregonHopFareFactory extends DefaultFareServiceFactory {
         Money.max(Money.ZERO_USD, youthLarger.minus(youthSmaller))
       )
         .withCategory(CATEGORY_YOUTH)
-        .withMedium(new FareMedium(ctranId("4"), "Virtual HOP Fastpass"))
+        .withMedium(VIRTUAL_HOP_FASTPASS)
         .build()
     );
 
