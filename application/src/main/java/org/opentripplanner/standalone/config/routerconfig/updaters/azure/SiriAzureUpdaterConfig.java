@@ -5,6 +5,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
@@ -114,6 +115,21 @@ public abstract class SiriAzureUpdaterConfig {
         )
         .asBoolean(false)
     );
+    parameters.setShadowComparison(
+      c
+        .of("shadowComparison")
+        .since(V2_9)
+        .summary("Run the legacy and unified adapters in parallel, comparing their outputs.")
+        .asBoolean(false)
+    );
+    String reportDir = c
+      .of("shadowComparisonReportDirectory")
+      .since(V2_9)
+      .summary("Directory to write detailed shadow comparison mismatch reports to.")
+      .asString(null);
+    if (reportDir != null) {
+      parameters.setShadowComparisonReportDirectory(Path.of(reportDir));
+    }
   }
 
   /**

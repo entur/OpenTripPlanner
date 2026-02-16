@@ -32,10 +32,12 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.GtfsNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.ShadowGtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdaterParameters;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdaterParameters;
+import org.opentripplanner.updater.trip.siri.ShadowSiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
@@ -279,7 +281,18 @@ public class UpdaterConfigurator {
   private SiriTripUpdateAdapter createGooglePubsubAdapter(
     SiriETGooglePubsubUpdaterParameters config
   ) {
-    if (config.useNewUpdaterImplementation()) {
+    if (config.shadowComparison()) {
+      var primary = provideSiriAdapter();
+      return new ShadowSiriTripUpdateAdapter(
+        primary,
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.fuzzyTripMatching(),
+        config.feedId(),
+        config.shadowComparisonReportDirectory()
+      );
+    } else if (config.useNewUpdaterImplementation()) {
       return new SiriNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,
@@ -293,7 +306,18 @@ public class UpdaterConfigurator {
   }
 
   private SiriTripUpdateAdapter createAzureAdapter(SiriAzureETUpdaterParameters config) {
-    if (config.isUseNewUpdaterImplementation()) {
+    if (config.isShadowComparison()) {
+      var primary = provideSiriAdapter();
+      return new ShadowSiriTripUpdateAdapter(
+        primary,
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.isFuzzyTripMatching(),
+        config.feedId(),
+        config.getShadowComparisonReportDirectory()
+      );
+    } else if (config.isUseNewUpdaterImplementation()) {
       return new SiriNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,
@@ -307,7 +331,18 @@ public class UpdaterConfigurator {
   }
 
   private SiriTripUpdateAdapter createMqttAdapter(MqttSiriETUpdaterParameters config) {
-    if (config.useNewUpdaterImplementation()) {
+    if (config.shadowComparison()) {
+      var primary = provideSiriAdapter();
+      return new ShadowSiriTripUpdateAdapter(
+        primary,
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.fuzzyTripMatching(),
+        config.feedId(),
+        config.shadowComparisonReportDirectory()
+      );
+    } else if (config.useNewUpdaterImplementation()) {
       return new SiriNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,
@@ -321,7 +356,25 @@ public class UpdaterConfigurator {
   }
 
   private GtfsTripUpdateAdapter createGtfsAdapter(PollingTripUpdaterParameters config) {
-    if (config.useNewUpdaterImplementation()) {
+    if (config.shadowComparison()) {
+      var primary = new GtfsRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        () -> LocalDate.now(timetableRepository.getTimeZone())
+      );
+      return new ShadowGtfsTripUpdateAdapter(
+        primary,
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.forwardsDelayPropagationType(),
+        config.backwardsDelayPropagationType(),
+        config.fuzzyTripMatching(),
+        config.feedId(),
+        config.shadowComparisonReportDirectory()
+      );
+    } else if (config.useNewUpdaterImplementation()) {
       return new GtfsNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,
@@ -342,7 +395,25 @@ public class UpdaterConfigurator {
   }
 
   private GtfsTripUpdateAdapter createMqttGtfsAdapter(MqttGtfsRealtimeUpdaterParameters config) {
-    if (config.useNewUpdaterImplementation()) {
+    if (config.shadowComparison()) {
+      var primary = new GtfsRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        () -> LocalDate.now(timetableRepository.getTimeZone())
+      );
+      return new ShadowGtfsTripUpdateAdapter(
+        primary,
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.forwardsDelayPropagationType(),
+        config.backwardsDelayPropagationType(),
+        config.fuzzyTripMatching(),
+        config.feedId(),
+        config.shadowComparisonReportDirectory()
+      );
+    } else if (config.useNewUpdaterImplementation()) {
       return new GtfsNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,

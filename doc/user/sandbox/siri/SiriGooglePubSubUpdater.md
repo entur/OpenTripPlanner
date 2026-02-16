@@ -37,6 +37,8 @@ of the `router-config.json`.
 | [initialGetDataTimeout](#u__12__initialGetDataTimeout)             | `duration` | Timeout for retrieving the recent history of SIRI-ET messages.                   | *Optional* | `"PT30S"`     |  2.1  |
 | producerMetrics                                                    |  `boolean` | If failure, success, and warning metrics should be collected per producer.       | *Optional* | `false`       |  2.7  |
 | [reconnectPeriod](#u__12__reconnectPeriod)                         | `duration` | Wait this amount of time before trying to reconnect to the PubSub subscription.  | *Optional* | `"PT30S"`     |  2.1  |
+| shadowComparison                                                   |  `boolean` | Run the legacy and unified adapters in parallel, comparing their outputs.        | *Optional* | `false`       |  2.9  |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.               | *Optional* |               |  2.9  |
 | [subscriptionProjectName](#u__12__subscriptionProjectName)         |  `string`  | The Google Cloud project that hosts the PubSub subscription.                     | *Required* |               |  2.1  |
 | topicName                                                          |  `string`  | The name of the PubSub topic that publishes the updates.                         | *Required* |               |  2.1  |
 | topicProjectName                                                   |  `string`  | The Google Cloud project that hosts the PubSub topic that publishes the updates. | *Required* |               |  2.1  |
