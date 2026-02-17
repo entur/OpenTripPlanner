@@ -127,6 +127,11 @@ public class SiriEtBuilder {
     return this;
   }
 
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
   public SiriEtBuilder withRecordedCalls(
     Function<RecordedCallsBuilder, RecordedCallsBuilder> producer
   ) {
