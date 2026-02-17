@@ -32,9 +32,9 @@ fundedBy:
     uri: https://hbt.de
 usedBy:
   - Norway (nationwide), Entur
-  - Finland, Helsinki, Helsinki Region Transport (HSL)
   - Finland (nationwide), Fintraffic
-  - Finland (various cities), Waltti Solutions
+  - Finland, Helsinki Region Transport (HSL)
+  - Finland, Waltti cities
   - Sweden, Skåne, Skånetrafiken
   - Italy, Piemonte Region and the City of Torino, 5T
   - Italy, Trento Province
@@ -50,10 +50,6 @@ usedBy:
   - See https://docs.opentripplanner.org/en/latest/Deployments/ which includes non-European listings
 
 roadmap: "https://github.com/orgs/opentripplanner/projects/3"
-
-organisation:
-  uri: https://sfconservancy.org
-  name: Software Freedom Conservancy
 
 description:
   en:
