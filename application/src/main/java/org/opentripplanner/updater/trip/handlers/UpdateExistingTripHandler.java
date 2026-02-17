@@ -409,7 +409,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         builder.withRecorded(stopIndex);
       }
 
-      if (stopUpdate.predictionInaccurate()) {
+      if (stopUpdate.predictionInaccurate() && !stopUpdate.isSkipped()) {
         builder.withInaccuratePredictions(stopIndex);
       }
 

@@ -243,7 +243,7 @@ public final class ResolvedStopTimeUpdate {
     if (isSkipped()) {
       builder.withCanceled(stopIndex);
     }
-    if (predictionInaccurate) {
+    if (predictionInaccurate && !isSkipped()) {
       builder.withInaccuratePredictions(stopIndex);
     }
     if (isExtraCall) {
