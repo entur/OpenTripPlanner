@@ -31,8 +31,8 @@ class StreetElevationExtensionBuilderTest {
 
   private static final LineString GEOMETRY = GeometryUtils.getGeometryFactory().createLineString(
     new Coordinate[] {
-        StreetModelFactory.V1.getCoordinate(),
-        StreetModelFactory.V2.getCoordinate(),
+      StreetModelFactory.V1.getCoordinate(),
+      StreetModelFactory.V2.getCoordinate(),
     }
   );
   private StreetEdgeBuilder<?> streetEdgeBuilder;

@@ -199,10 +199,7 @@ public class TestStateBuilder {
       Accessibility.POSSIBLE
     );
 
-    var alightEdge = ElevatorAlightEdge.createElevatorAlightEdge(
-      onboard2,
-      offboard2
-    );
+    var alightEdge = ElevatorAlightEdge.createElevatorAlightEdge(onboard2, offboard2);
 
     currentState = EdgeTraverser.traverseEdges(
       currentState,

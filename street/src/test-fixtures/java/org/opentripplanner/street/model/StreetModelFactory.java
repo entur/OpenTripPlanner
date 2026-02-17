@@ -122,7 +122,8 @@ public class StreetModelFactory {
   ) {
     return streetEdge(from, to, 1, permissions);
   }
-public static VehicleRentalPlaceVertex rentalVertex(
+
+  public static VehicleRentalPlaceVertex rentalVertex(
     RentalFormFactor formFactor,
     Instant availableUntil
   ) {
@@ -135,12 +136,11 @@ public static VehicleRentalPlaceVertex rentalVertex(
   public static VehicleParking.VehicleParkingBuilder vehicleParking() {
     return VehicleParking.builder().id(id("vehicle-parking-1")).coordinate(WgsCoordinate.GREENWICH);
   }
+
   public static VehicleRentalPlaceVertex rentalVertex(RentalFormFactor formFactor) {
     var rentalVehicleBuilder = getTestRentalVehicleBuilder(formFactor);
     return new VehicleRentalPlaceVertex(rentalVehicleBuilder.build());
   }
-
-
 
   private static TestFreeFloatingRentalVehicleBuilder getTestRentalVehicleBuilder(
     RentalFormFactor formFactor
@@ -172,7 +172,6 @@ public static VehicleRentalPlaceVertex rentalVertex(
     Coordinate nearestPoint,
     boolean endVertex
   ) {
-
     TemporaryStreetLocation location = new TemporaryStreetLocation(nearestPoint, name);
 
     for (StreetEdge street : edges) {
