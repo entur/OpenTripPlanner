@@ -324,11 +324,11 @@ public class StopPlaceType {
           .argument(
             GraphQLArgument.newArgument()
               .name("whiteListed")
-              .description("Whitelisted")
               .description(
                 "Parameters for indicating the only authorities and/or lines or quays to list estimatedCalls for"
               )
               .type(JourneyWhiteListed.INPUT_TYPE)
+              .deprecate("Use 'filters' instead.")
               .build()
           )
           .argument(
@@ -336,6 +336,7 @@ public class StopPlaceType {
               .name("whiteListedModes")
               .description("Only show estimated calls for selected modes.")
               .type(GraphQLList.list(EnumTypes.TRANSPORT_MODE))
+              .deprecate("Use 'filters' instead.")
               .build()
           )
           .argument(

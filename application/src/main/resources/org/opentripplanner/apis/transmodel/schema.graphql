@@ -629,9 +629,9 @@ type Quay implements PlaceInterface {
     "Duration in seconds from start time to search forward for estimated calls. Must be a positive value. Default value is 24 hours"
     timeRange: Int = 86400,
     "Parameters for indicating the only authorities and/or lines or quays to list estimatedCalls for"
-    whiteListed: InputWhiteListed,
+    whiteListed: InputWhiteListed @deprecated(reason : "Use 'filters' instead."),
     "Only show estimated calls for selected modes."
-    whiteListedModes: [TransportMode]
+    whiteListedModes: [TransportMode] @deprecated(reason : "Use 'filters' instead.")
   ): [EstimatedCall!]! @timingData
   "Geometry for flexible area."
   flexibleArea: Coordinates
@@ -1320,9 +1320,9 @@ type StopPlace implements PlaceInterface {
     "Duration in seconds from start time to search forward for estimated calls. Must be a positive value. Default value is 24 hours"
     timeRange: Int = 86400,
     "Parameters for indicating the only authorities and/or lines or quays to list estimatedCalls for"
-    whiteListed: InputWhiteListed,
+    whiteListed: InputWhiteListed @deprecated(reason : "Use 'filters' instead."),
     "Only show estimated calls for selected modes."
-    whiteListedModes: [TransportMode]
+    whiteListedModes: [TransportMode] @deprecated(reason : "Use 'filters' instead.")
   ): [EstimatedCall!]! @timingData
   id: ID!
   latitude: Float
