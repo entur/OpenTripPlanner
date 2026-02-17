@@ -183,7 +183,8 @@ public class TimetableRepositoryTestBuilder {
       .withHeadsign(tripInput.headsign())
       .withServiceId(serviceId)
       .withMode(tripInput.mode())
-      .withNetexSubmode(tripInput.netexSubmode());
+      .withNetexSubmode(tripInput.netexSubmode())
+      .withNetexInternalPlanningCode(tripInput.netexInternalPlanningCode());
     if (customizer != null) {
       customizer.accept(tripBuilder);
     }

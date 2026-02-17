@@ -48,6 +48,9 @@ public class TripInput {
   @Nullable
   private String netexSubmode;
 
+  @Nullable
+  private String netexInternalPlanningCode;
+
   private final boolean isFlex;
 
   private TripInput(String id, boolean isFlex) {
@@ -105,6 +108,11 @@ public class TripInput {
   @Nullable
   public String netexSubmode() {
     return netexSubmode;
+  }
+
+  @Nullable
+  public String netexInternalPlanningCode() {
+    return netexInternalPlanningCode;
   }
 
   public boolean isFlex() {
@@ -190,6 +198,11 @@ public class TripInput {
 
   public TripInput withNetexSubmode(String netexSubmode) {
     this.netexSubmode = netexSubmode;
+    return this;
+  }
+
+  public TripInput withNetexInternalPlanningCode(String netexInternalPlanningCode) {
+    this.netexInternalPlanningCode = netexInternalPlanningCode;
     return this;
   }
 
