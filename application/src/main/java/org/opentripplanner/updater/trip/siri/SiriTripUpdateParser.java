@@ -216,6 +216,17 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withStartTime(org.opentripplanner.utils.time.TimeUtils.timeToStrCompact(seconds));
     }
 
+    // For RAIL trips, extract VehicleRef as internal planning code for fuzzy matching.
+    // BNR producer sends numeric DatedVehicleJourneyRef values that don't match trip IDs,
+    // but the VehicleRef corresponds to Trip.netexInternalPlanningCode.
+    if (
+      journey.getVehicleRef() != null &&
+      !journey.getVehicleModes().isEmpty() &&
+      journey.getVehicleModes().contains(uk.org.siri.siri21.VehicleModesEnumeration.RAIL)
+    ) {
+      builder.withInternalPlanningCode(journey.getVehicleRef().getValue());
+    }
+
     if (journey.getDirectionRef() != null) {
       try {
         int directionInt = Integer.parseInt(journey.getDirectionRef().getValue());

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.opentripplanner.model.calendar.CalendarService;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -53,6 +54,8 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
 
   // Cache: (stopId:arrivalTime) -> Set<Trip>
   private final Map<String, Set<Trip>> lastStopArrivalCache = new HashMap<>();
+  // Cache: internalPlanningCode -> Set<Trip> (for RAIL trips)
+  private final Map<String, Set<Trip>> internalPlanningCodeCache = new HashMap<>();
   private boolean cacheInitialized = false;
 
   public LastStopArrivalTimeMatcher(
@@ -115,6 +118,35 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
       return Result.failure(
         new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_VALID_STOPS)
       );
+    }
+
+    // Try matching by internal planning code first (for RAIL trips with VehicleRef)
+    if (tripReference.hasInternalPlanningCode()) {
+      Set<Trip> codeCandidates = internalPlanningCodeCache.get(
+        tripReference.internalPlanningCode()
+      );
+      if (codeCandidates != null && !codeCandidates.isEmpty()) {
+        codeCandidates = new HashSet<>(codeCandidates);
+        if (tripReference.hasRouteId()) {
+          Route route = transitService.getRoute(tripReference.routeId());
+          if (route != null) {
+            codeCandidates = filterByRoute(codeCandidates, route);
+          }
+        }
+        if (!codeCandidates.isEmpty()) {
+          var result = findExactMatch(
+            codeCandidates,
+            firstStop,
+            lastStop,
+            aimedDepartureSeconds,
+            serviceDate,
+            tripReference
+          );
+          if (result.isSuccess()) {
+            return result;
+          }
+        }
+      }
     }
 
     // Look up candidate trips by last stop arrival time
@@ -183,8 +215,19 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
         String key = createCacheKey(lastStopId, arrivalTime);
         lastStopArrivalCache.computeIfAbsent(key, k -> new HashSet<>()).add(trip);
       }
+
+      if (tripPattern.getRoute().getMode().equals(TransitMode.RAIL)) {
+        String planningCode = trip.getNetexInternalPlanningCode();
+        if (planningCode != null) {
+          internalPlanningCodeCache.computeIfAbsent(planningCode, k -> new HashSet<>()).add(trip);
+        }
+      }
     }
-    LOG.info("Built last-stop-arrival cache with {} entries", lastStopArrivalCache.size());
+    LOG.info(
+      "Built last-stop-arrival cache with {} entries, planning code cache with {} entries",
+      lastStopArrivalCache.size(),
+      internalPlanningCodeCache.size()
+    );
   }
 
   private static String createCacheKey(String stopId, int arrivalTimeSeconds) {

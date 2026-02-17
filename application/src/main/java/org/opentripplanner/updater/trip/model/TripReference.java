@@ -30,6 +30,9 @@ public final class TripReference {
   @Nullable
   private final Direction direction;
 
+  @Nullable
+  private final String internalPlanningCode;
+
   /**
    * @param tripId The trip ID (may be null if fuzzy matching by route/time is used)
    * @param tripOnServiceDateId The TripOnServiceDate ID (dated service journey ID)
@@ -37,6 +40,7 @@ public final class TripReference {
    * @param startTime The scheduled start time of the trip (e.g., "08:30:00")
    * @param startDate The service date for the trip
    * @param direction The direction of travel (inbound/outbound)
+   * @param internalPlanningCode The NeTEx internal planning code (from VehicleRef for RAIL trips)
    */
   public TripReference(
     @Nullable FeedScopedId tripId,
@@ -44,7 +48,8 @@ public final class TripReference {
     @Nullable FeedScopedId routeId,
     @Nullable String startTime,
     @Nullable LocalDate startDate,
-    @Nullable Direction direction
+    @Nullable Direction direction,
+    @Nullable String internalPlanningCode
   ) {
     this.tripId = tripId;
     this.tripOnServiceDateId = tripOnServiceDateId;
@@ -52,13 +57,14 @@ public final class TripReference {
     this.startTime = startTime;
     this.startDate = startDate;
     this.direction = direction;
+    this.internalPlanningCode = internalPlanningCode;
   }
 
   /**
    * Create a trip reference with just a trip ID.
    */
   public static TripReference ofTripId(FeedScopedId tripId) {
-    return new TripReference(tripId, null, null, null, null, null);
+    return new TripReference(tripId, null, null, null, null, null, null);
   }
 
   /**
@@ -133,6 +139,18 @@ public final class TripReference {
     return startDate != null;
   }
 
+  @Nullable
+  public String internalPlanningCode() {
+    return internalPlanningCode;
+  }
+
+  /**
+   * Returns true if this reference has an internal planning code (from VehicleRef for RAIL trips).
+   */
+  public boolean hasInternalPlanningCode() {
+    return internalPlanningCode != null;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -148,13 +166,22 @@ public final class TripReference {
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(startTime, that.startTime) &&
       Objects.equals(startDate, that.startDate) &&
-      direction == that.direction
+      direction == that.direction &&
+      Objects.equals(internalPlanningCode, that.internalPlanningCode)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(tripId, tripOnServiceDateId, routeId, startTime, startDate, direction);
+    return Objects.hash(
+      tripId,
+      tripOnServiceDateId,
+      routeId,
+      startTime,
+      startDate,
+      direction,
+      internalPlanningCode
+    );
   }
 
   @Override
@@ -174,6 +201,9 @@ public final class TripReference {
       startDate +
       ", direction=" +
       direction +
+      ", internalPlanningCode='" +
+      internalPlanningCode +
+      '\'' +
       '}'
     );
   }
@@ -189,6 +219,7 @@ public final class TripReference {
     private String startTime;
     private LocalDate startDate;
     private Direction direction;
+    private String internalPlanningCode;
 
     public Builder withTripId(FeedScopedId tripId) {
       this.tripId = tripId;
@@ -220,6 +251,11 @@ public final class TripReference {
       return this;
     }
 
+    public Builder withInternalPlanningCode(String internalPlanningCode) {
+      this.internalPlanningCode = internalPlanningCode;
+      return this;
+    }
+
     public TripReference build() {
       return new TripReference(
         tripId,
@@ -227,7 +263,8 @@ public final class TripReference {
         routeId,
         startTime,
         startDate,
-        direction
+        direction,
+        internalPlanningCode
       );
     }
   }
