@@ -5,6 +5,7 @@ import static org.opentripplanner.street.model.edge.LinkingDirection.BIDIRECTION
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,12 @@ class VertexLinkerTest {
   public static final FeedScopedId AREA_STOP_1 = id("area-stop-1");
   public static final FeedScopedId AREA_STOP_2 = id("area-stop-2");
   public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.######");
+  public static final DecimalFormatSymbols SYMBOLS = DECIMAL_FORMAT.getDecimalFormatSymbols();
+
+  {
+    SYMBOLS.setDecimalSeparator('.');
+    DECIMAL_FORMAT.setDecimalFormatSymbols(SYMBOLS);
+  }
 
   @Test
   void flex() {
