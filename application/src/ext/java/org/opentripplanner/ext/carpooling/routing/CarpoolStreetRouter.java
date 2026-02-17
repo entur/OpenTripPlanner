@@ -26,6 +26,7 @@ import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,13 +185,14 @@ public class CarpoolStreetRouter {
   ) {
     var preferences = request.preferences().street();
 
+    var streetReq = StreetSearchRequestMapper.mapInternal(request).build();
     var streetSearch = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
       .withSkipEdgeStrategy(
         new DurationSkipEdgeStrategy(preferences.maxDirectDuration().valueOf(streetRequest.mode()))
       )
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
-      .withRequest(request)
+      .withRequest(streetReq)
       .withStreetRequest(streetRequest)
       .withFrom(fromVertices)
       .withTo(toVertices);

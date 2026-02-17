@@ -29,6 +29,7 @@ import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
 import org.opentripplanner.test.support.ResourceLoader;
@@ -431,9 +432,9 @@ public class TurnRestrictionModuleTest {
     assertEquals(11, graph.countEdges());
 
     var streetRequest = new StreetRequest(StreetMode.CAR);
-    var request = RouteRequest.of()
-      .withJourney(j -> j.withDirect(streetRequest))
-      .buildDefault();
+    var request = StreetSearchRequest.of()
+      .withMode(StreetMode.CAR)
+      .build();
 
     assertNull(
       StreetSearchBuilder.of()

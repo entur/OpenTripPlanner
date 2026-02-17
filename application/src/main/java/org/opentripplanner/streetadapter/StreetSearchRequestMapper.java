@@ -20,6 +20,7 @@ import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
+import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 import org.opentripplanner.street.search.request.AccessibilityRequest;
 import org.opentripplanner.street.search.request.BikeRequest;
 import org.opentripplanner.street.search.request.CarRequest;
@@ -57,7 +58,14 @@ public class StreetSearchRequestMapper {
       .withBike(b -> mapBike(b, preferences.bike()))
       .withCar(b -> mapCar(b, preferences.car()))
       .withScooter(b -> mapScooter(b, preferences.scooter()))
-      .withElevator(b -> mapElevator(b, preferences.street().elevator()));
+      .withElevator(b -> mapElevator(b, preferences.street().elevator()))
+      .withIntersectionTraversalCalculator(
+        IntersectionTraversalCalculator.create(
+          preferences.street().intersectionTraversalModel(),
+          preferences.street().drivingDirection()
+        )
+      )
+      .withTimeout(request.preferences().street().routingTimeout());
 
     var rentalDuration = request.journey().direct().rentalDuration();
     if (rentalDuration != null) {

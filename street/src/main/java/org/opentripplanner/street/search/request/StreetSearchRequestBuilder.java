@@ -2,13 +2,17 @@ package org.opentripplanner.street.search.request;
 
 import static org.opentripplanner.street.search.request.StreetSearchRequest.MAX_CLOSENESS_METERS;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.edge.ExtensionRequestContext;
+import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 
 public class StreetSearchRequestBuilder {
 
@@ -29,6 +33,9 @@ public class StreetSearchRequestBuilder {
 
   @Nullable
   RentalPeriod rentalPeriod;
+  IntersectionTraversalCalculator intersectionTraversalCalculator;
+  List<ExtensionRequestContext> extensionRequestContexts;
+  Duration timeout;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
     this.startTime = original.startTime();
@@ -46,6 +53,9 @@ public class StreetSearchRequestBuilder {
     this.wheelchair = original.wheelchair();
     this.elevator = original.elevator();
     this.rentalPeriod = original.rentalPeriod();
+    this.intersectionTraversalCalculator = original.intersectionTraversalCalculator();
+    this.extensionRequestContexts = original.listExtensionRequestContexts();
+    this.timeout = original.timeout();
   }
 
   public StreetSearchRequestBuilder withStartTime(Instant startTime) {
@@ -128,6 +138,16 @@ public class StreetSearchRequestBuilder {
   public StreetSearchRequestBuilder withRentalPeriod(RentalPeriod rentalPeriod) {
     this.rentalPeriod = rentalPeriod;
     return this;
+  }
+
+  public StreetSearchRequestBuilder withIntersectionTraversalCalculator(IntersectionTraversalCalculator ic) {
+    this.intersectionTraversalCalculator = ic;
+    return this;
+  }
+
+  public StreetSearchRequestBuilder withTimeout(Duration duration) {
+    this.timeout = duration;
+    return null;
   }
 
   Instant startTimeOrNow() {

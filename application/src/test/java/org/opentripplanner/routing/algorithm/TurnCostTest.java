@@ -109,7 +109,7 @@ public class TurnCostTest {
           .withBike(bike -> bike.withSpeed(1.0).withReluctance(1.0))
           .withScooter(scooter -> scooter.withSpeed(1.0).withReluctance(1.0))
           .withWalk(walk -> walk.withSpeed(1.0).withStairsReluctance(1.0).withReluctance(1.0))
-          .withStreet(it -> it.withTurnReluctance(1.0))
+          .withStreet(it -> it.withTurnReluctance(1.0).withIntersectionTraversalModel(calculator))
       )
       .buildDefault();
 
@@ -227,7 +227,6 @@ public class TurnCostTest {
       .withStreetRequest(new StreetRequest(streetMode))
       .withFrom(from)
       .withTo(to)
-      .withIntersectionTraversalCalculator(calculator)
       .getShortestPathTree();
     GraphPath<State, Edge, Vertex> path = tree.getPath(bottomLeft);
     assertNotNull(path);

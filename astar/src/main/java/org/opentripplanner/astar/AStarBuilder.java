@@ -144,7 +144,6 @@ public abstract class AStarBuilder<
       }
     }
 
-    prepareInitialStates(initialStates);
     initializeHeuristic(heuristic, origin, destination, arriveBy);
 
     return new AStar<>(
@@ -163,8 +162,6 @@ public abstract class AStarBuilder<
   }
 
   protected abstract Collection<State> createInitialStates(Set<Vertex> originVertices);
-
-  protected abstract void prepareInitialStates(Collection<State> initialStates);
 
   protected abstract void initializeHeuristic(
     RemainingWeightHeuristic<State> heuristic,

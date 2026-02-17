@@ -150,7 +150,7 @@ public class TriangleInequalityTest {
   }
 
   private GraphPath<State, Edge, Vertex> getPath(
-    RouteRequest options,
+    RouteRequest req,
     Edge startBackEdge,
     Vertex u,
     Vertex v
@@ -158,10 +158,9 @@ public class TriangleInequalityTest {
     return StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withOriginBackEdge(startBackEdge)
-      .withRequest(options)
+      .withRequest(req)
       .withFrom(u)
       .withTo(v)
-      .withIntersectionTraversalCalculator(calculator)
       .getShortestPathTree()
       .getPath(v);
   }
@@ -200,7 +199,6 @@ public class TriangleInequalityTest {
       .withRequest(request)
       .withFrom(start)
       .withTo(end)
-      .withIntersectionTraversalCalculator(calculator)
       .getShortestPathTree();
 
     GraphPath<State, Edge, Vertex> path = tree.getPath(end);

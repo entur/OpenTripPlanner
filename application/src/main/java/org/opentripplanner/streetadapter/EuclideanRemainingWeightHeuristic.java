@@ -2,13 +2,13 @@ package org.opentripplanner.streetadapter;
 
 import java.util.Set;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.FreeEdge;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.VehicleRentalState;
 
@@ -40,11 +40,11 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
     StreetMode streetMode,
     Set<Vertex> toVertices,
     boolean arriveBy,
-    RoutingPreferences preferences
+    StreetSearchRequest req
   ) {
     Vertex target = toVertices.iterator().next();
-    maxStreetSpeed = getStreetSpeedUpperBound(preferences, streetMode);
-    walkingSpeed = preferences.walk().speed();
+    maxStreetSpeed = getStreetSpeedUpperBound(req, streetMode);
+    walkingSpeed = req.walk().speed();
     this.arriveBy = arriveBy;
 
     if (target.getDegreeIn() == 1) {
@@ -59,18 +59,18 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
   }
 
   /** @return The highest speed for all possible road-modes. */
-  private double getStreetSpeedUpperBound(RoutingPreferences preferences, StreetMode streetMode) {
+  private double getStreetSpeedUpperBound(StreetSearchRequest req, StreetMode streetMode) {
     // Assume carSpeed > bikeSpeed > walkSpeed
     if (streetMode.includesDriving()) {
       return maxCarSpeed;
     }
     if (streetMode.includesBiking()) {
-      return preferences.bike().speed();
+      return req.bike().speed();
     }
     if (streetMode.includesScooter()) {
-      return preferences.scooter().speed();
+      return req.scooter().speed();
     }
-    return preferences.walk().speed();
+    return req.walk().speed();
   }
 
   /**
