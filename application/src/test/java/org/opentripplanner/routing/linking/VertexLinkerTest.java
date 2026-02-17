@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model._data.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
@@ -106,6 +107,62 @@ class VertexLinkerTest {
     assertThat(model.graph().getEdgesOfType(StreetEdge.class)).hasSize(2);
     temp.disposeEdges();
     assertThat(model.graph().getEdgesOfType(StreetEdge.class)).hasSize(1);
+  }
+
+  @Test
+  void multiModeLinking() {
+    // test model has 3 parallel horizontal edges, of which uppermost allows car driving
+    IntersectionVertex[] vertices = {
+      StreetModelForTest.intersectionVertex(0.0, 0.0),
+      StreetModelForTest.intersectionVertex(0.01, 0.0),
+      StreetModelForTest.intersectionVertex(0.0, 0.0001),
+      StreetModelForTest.intersectionVertex(0.01, 0.0001),
+      StreetModelForTest.intersectionVertex(0.0, 0.0002),
+      StreetModelForTest.intersectionVertex(0.01, 0.0002),
+    };
+
+    var walkEdge1 = StreetModelForTest.streetEdge(
+      vertices[0],
+      vertices[1],
+      0.01,
+      StreetTraversalPermission.PEDESTRIAN
+    );
+    var walkEdge2 = StreetModelForTest.streetEdge(
+      vertices[2],
+      vertices[3],
+      0.01,
+      StreetTraversalPermission.PEDESTRIAN
+    );
+    var carEdge = StreetModelForTest.streetEdge(
+      vertices[4],
+      vertices[5],
+      0.01,
+      StreetTraversalPermission.CAR
+    );
+
+    // link point below all egdes, in the middle
+    var split = StreetModelForTest.intersectionVertex(0.005, -0.0001);
+
+    var g = new Graph();
+    for (int i = 0; i < vertices.length; i++) {
+      g.addVertex(vertices[i]);
+    }
+    g.index();
+    g.insert(walkEdge1, Scope.PERMANENT);
+    g.insert(walkEdge2, Scope.PERMANENT);
+    g.insert(carEdge, Scope.PERMANENT);
+    assertThat(g.getEdgesOfType(StreetEdge.class)).hasSize(3);
+    var linker = VertexLinkerTestFactory.of(g);
+    var temp = linker.linkVertexForRequest(
+      split,
+      TraverseModeSet.allModes(),
+      BIDIRECTIONAL,
+      (v1, v2) -> List.of()
+    );
+    // vertex is linked to closest walk edge and to the car edge, not to all 3 edges
+    assertThat(g.getEdgesOfType(StreetEdge.class)).hasSize(5);
+    temp.disposeEdges();
+    assertThat(g.getEdgesOfType(StreetEdge.class)).hasSize(3);
   }
 
   private static TestModel buildModel() {
