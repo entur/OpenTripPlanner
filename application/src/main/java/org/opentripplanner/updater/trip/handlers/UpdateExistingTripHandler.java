@@ -19,6 +19,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.PickDropChangeStrategy;
 import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -362,17 +363,28 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       }
 
       // Track pickup/dropoff changes
+      var pickDropStrategy = resolvedUpdate.options().pickDropChangeStrategy();
       if (stopUpdate.pickup() != null) {
         PickDrop scheduledPickup = scheduledPattern.getBoardType(stopIndex);
-        if (!stopUpdate.pickup().equals(scheduledPickup)) {
-          result.pickupChanges.put(stopIndex, stopUpdate.pickup());
+        var effectivePickup = resolveEffectivePickDrop(
+          stopUpdate.pickup(),
+          scheduledPickup,
+          pickDropStrategy
+        );
+        if (effectivePickup != null && !effectivePickup.equals(scheduledPickup)) {
+          result.pickupChanges.put(stopIndex, effectivePickup);
         }
       }
 
       if (stopUpdate.dropoff() != null) {
         PickDrop scheduledDropoff = scheduledPattern.getAlightType(stopIndex);
-        if (!stopUpdate.dropoff().equals(scheduledDropoff)) {
-          result.dropoffChanges.put(stopIndex, stopUpdate.dropoff());
+        var effectiveDropoff = resolveEffectivePickDrop(
+          stopUpdate.dropoff(),
+          scheduledDropoff,
+          pickDropStrategy
+        );
+        if (effectiveDropoff != null && !effectiveDropoff.equals(scheduledDropoff)) {
+          result.dropoffChanges.put(stopIndex, effectiveDropoff);
         }
       }
 
@@ -482,5 +494,34 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     }
 
     return builder.build();
+  }
+
+  /**
+   * Resolve the effective PickDrop value based on the change strategy.
+   * <p>
+   * For EXACT_MATCH, the parsed value is always used.
+   * For ROUTABILITY_CHANGE_ONLY, only routability changes matter:
+   * - routable → routable: no change (returns null)
+   * - non-routable → routable: returns SCHEDULED
+   * - routable/non-routable → non-routable: returns the parsed value
+   *
+   * @return the effective PickDrop value to apply, or null if no change is needed
+   */
+  private static PickDrop resolveEffectivePickDrop(
+    PickDrop parsedValue,
+    PickDrop scheduledValue,
+    PickDropChangeStrategy strategy
+  ) {
+    if (strategy == PickDropChangeStrategy.EXACT_MATCH) {
+      return parsedValue;
+    }
+    // ROUTABILITY_CHANGE_ONLY: only routability transitions matter
+    if (parsedValue.isRoutable()) {
+      // Routable → routable: preserve scheduled value, no pattern change
+      // Non-routable → routable: re-enable the stop
+      return scheduledValue.isNotRoutable() ? PickDrop.SCHEDULED : null;
+    }
+    // Parsed is non-routable (e.g. CANCELLED, NONE): always apply
+    return parsedValue;
   }
 }
