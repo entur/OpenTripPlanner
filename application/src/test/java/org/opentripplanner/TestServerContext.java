@@ -57,7 +57,7 @@ public class TestServerContext {
 
   private TestServerContext() {}
 
-  /** Create a context for unit testing using default RoutingRequest.*/
+  /** Create a context for unit testing using default RoutingRequest. */
   public static OtpServerRequestContext createServerContext(
     Graph graph,
     TimetableRepository timetableRepository,
@@ -141,6 +141,7 @@ public class TestServerContext {
       vertexLinker,
       createViaTransferResolver(graph, transitService),
       createWorldEnvelopeService(),
+      null,
       null,
       createEmissionsItineraryDecorator(),
       createStreetDetailsService(),
