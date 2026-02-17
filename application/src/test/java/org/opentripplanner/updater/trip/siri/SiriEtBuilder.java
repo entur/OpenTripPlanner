@@ -27,6 +27,7 @@ import uk.org.siri.siri21.StopAssignmentStructure;
 import uk.org.siri.siri21.StopPointRefStructure;
 import uk.org.siri.siri21.VehicleJourneyRef;
 import uk.org.siri.siri21.VehicleModesEnumeration;
+import uk.org.siri.siri21.VehicleRef;
 
 /**
  * This is a helper class for constucting Siri ET messages to use in tests.
@@ -110,6 +111,13 @@ public class SiriEtBuilder {
     var name = new NaturalLanguageStringStructure();
     name.setValue(lineName);
     evj.getPublishedLineNames().add(name);
+    return this;
+  }
+
+  public SiriEtBuilder withVehicleRef(String vehicleRef) {
+    var ref = new VehicleRef();
+    ref.setValue(vehicleRef);
+    evj.setVehicleRef(ref);
     return this;
   }
 
