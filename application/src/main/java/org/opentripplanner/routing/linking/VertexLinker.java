@@ -348,7 +348,7 @@ public class VertexLinker {
     // other half lost. It seems like this was based on some incorrect premises about floating point calculations
     // being non-deterministic.
 
-    Set<DistanceTo<StreetEdge>> closesEdges = new HashSet<>();
+    Set<DistanceTo<StreetEdge>> closestEdges = new HashSet<>();
     for (TraverseMode mode : traverseModeSet.getModes()) {
       TraverseModeSet modeSet = new TraverseModeSet(mode);
       // There is at least one appropriate edge within range.
@@ -370,14 +370,14 @@ public class VertexLinker {
 
       // Because this is a set, each instance of DistanceTo<StreetEdge> will only be added once
       // Note: add only closest edges of each mode
-      closesEdges.addAll(
+      closestEdges.addAll(
         candidateEdgesForMode
           .stream()
           .filter(ce -> ce.distanceDegreesLat <= closestDistance + DUPLICATE_WAY_EPSILON_DEGREES)
           .collect(Collectors.toSet())
       );
     }
-    return closesEdges;
+    return closestEdges;
   }
 
   /* Snap a vertex to and edge if necessary, create required linking and return the applied entry vertex */
