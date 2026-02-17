@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.opentripplanner.street.model.edge.LinkingDirection.BIDIRECTIONAL;
 import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
+import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -13,15 +14,18 @@ import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
+import org.opentripplanner.street.model.edge.TemporaryPartialStreetEdge;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.SplitterVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
+import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseModeSet;
 
 class VertexLinkerTest {
 
   public static final FeedScopedId AREA_STOP_1 = id("area-stop-1");
   public static final FeedScopedId AREA_STOP_2 = id("area-stop-2");
+  public static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat("0.######");
 
   @Test
   void flex() {
@@ -140,12 +144,12 @@ class VertexLinkerTest {
       StreetTraversalPermission.CAR
     );
 
-    // link point below all egdes, in the middle
+    // link point below all edges, in the middle
     var split = StreetModelForTest.intersectionVertex(0.005, -0.0001);
 
     var g = new Graph();
-    for (int i = 0; i < vertices.length; i++) {
-      g.addVertex(vertices[i]);
+    for (IntersectionVertex vertex : vertices) {
+      g.addVertex(vertex);
     }
     g.index();
     g.insert(walkEdge1, Scope.PERMANENT);
@@ -160,9 +164,42 @@ class VertexLinkerTest {
       (v1, v2) -> List.of()
     );
     // vertex is linked to closest walk edge and to the car edge, not to all 3 edges
-    assertThat(g.getEdgesOfType(StreetEdge.class)).hasSize(5);
+    assertThat(summarizeLinks(g)).containsExactly(
+      "(0,0) → (0.005,0) PEDESTRIAN ♿✅",
+      "(0,0.0002) → (0.005,0.0002) CAR ♿✅"
+    );
     temp.disposeEdges();
-    assertThat(g.getEdgesOfType(StreetEdge.class)).hasSize(3);
+    assertThat(summarizeLinks(g)).isEmpty();
+  }
+
+  private static List<String> summarizeLinks(Graph graph) {
+    return graph
+      .getEdgesOfType(TemporaryPartialStreetEdge.class)
+      .stream()
+      .map(e ->
+        String.format(
+          "%s → %s %s ♿%s",
+          summarizeVertex(e.getFromVertex()),
+          summarizeVertex(e.getToVertex()),
+          e.getPermission(),
+          summarizeBoolean(e.isWheelchairAccessible())
+        )
+      )
+      .toList();
+  }
+
+  private static String summarizeBoolean(boolean b) {
+    if (b) {
+      return "✅";
+    } else {
+      return "❌";
+    }
+  }
+
+  private static String summarizeVertex(Vertex e) {
+    return String.format(
+      "(%s,%s)".formatted(DECIMAL_FORMAT.format(e.getLat()), DECIMAL_FORMAT.format(e.getLon()))
+    );
   }
 
   private static TestModel buildModel() {
