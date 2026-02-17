@@ -99,9 +99,13 @@ public class ExistingTripResolver {
       return Result.failure(validationResult.failureValue());
     }
 
-    // Get the scheduled pattern (original if this is a modified pattern)
+    // Get the scheduled pattern. When the pattern is modified (e.g. a cancelled stop created a
+    // new RT pattern), look up the trip's own scheduled pattern from the index rather than
+    // trusting getOriginalTripPattern(). The TripPatternCache can share RT patterns across
+    // trips from different routes when the modified StopPattern happens to match, causing
+    // getOriginalTripPattern() to return the wrong pattern.
     TripPattern scheduledPattern = pattern.isModified()
-      ? pattern.getOriginalTripPattern()
+      ? transitService.findPattern(trip)
       : pattern;
 
     // Get trip times from scheduled timetable
