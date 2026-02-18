@@ -2,8 +2,10 @@ package org.opentripplanner.updater.trip.siri.moduletests.fuzzymatching;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
@@ -12,6 +14,7 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.SiriTestHelper;
+import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.VehicleModesEnumeration;
 
 class FuzzyTripMatchingTest implements RealtimeTestConstants {
@@ -161,6 +164,72 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
     assertEquals(
       "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
       env.tripData("RailTrip3").showTimetable()
+    );
+  }
+
+  /**
+   * Re-processing a fuzzy-matched trip with a routability change should produce UPDATED
+   * (not MODIFIED) on the second update, because the trip is already on the correct modified
+   * pattern from the first update.
+   *
+   * Scenario: RAIL trip with first-stop dropoff=NONE (board-only).
+   * SIRI sends ArrivalBoardingActivity=ALIGHTING at the first stop, changing dropoff to SCHEDULED.
+   * First update → MODIFIED (pattern change). Second identical update → should be UPDATED.
+   * TODO RT_VP This is the current behavior in the legacy updater, but this breaks
+   *             idempotency: the update outcome depends on the existence of a previous
+   *             update on the same trip.
+   */
+  @Test
+  void reprocessedFuzzyMatchedTripWithRoutabilityChangeShouldBeUpdated() {
+    var railRoute = ENV_BUILDER.route("RailRoute", r -> r.withMode(TransitMode.RAIL));
+
+    var railTrip = TripInput.of("RailTrip")
+      .withRoute(railRoute)
+      .addStop(STOP_A, "0:00:10", "0:00:11", PickDrop.SCHEDULED, PickDrop.NONE)
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+
+    var env = ENV_BUILDER.addTrip(railTrip, tb -> tb.withNetexInternalPlanningCode("100")).build();
+
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    // Verify scheduled pattern has NONE dropoff at first stop
+    var scheduledPattern = env.tripData("RailTrip").scheduledTripPattern();
+    assertEquals(PickDrop.NONE, scheduledPattern.getAlightType(0));
+
+    // Build a SIRI update with ArrivalBoardingActivity=ALIGHTING at first stop
+    // (re-enables dropoff: NONE → SCHEDULED, a routability change)
+    var updates = siri
+      .etBuilder()
+      .withFramedVehicleJourneyRef(builder ->
+        builder.withServiceDate(env.defaultServiceDate()).withVehicleJourneyRef("NONEXISTENT")
+      )
+      .withVehicleRef("100")
+      .withVehicleMode(VehicleModesEnumeration.RAIL)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .arriveAimedExpected("00:00:10", "00:00:10")
+          .withArrivalBoardingActivity(ArrivalBoardingActivityEnumeration.ALIGHTING)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    // First update: should produce MODIFIED (pattern changed due to routability change)
+    var result1 = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    assertSuccess(result1);
+    assertEquals(
+      "MODIFIED | A 0:00:10 0:00:15 | B 0:00:25 0:00:25",
+      env.tripData("RailTrip").showTimetable()
+    );
+
+    // Second update (re-processing): should produce UPDATED (trip already on correct pattern)
+    var result2 = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    assertSuccess(result2);
+    assertEquals(
+      "UPDATED | A 0:00:10 0:00:15 | B 0:00:25 0:00:25",
+      env.tripData("RailTrip").showTimetable()
     );
   }
 
