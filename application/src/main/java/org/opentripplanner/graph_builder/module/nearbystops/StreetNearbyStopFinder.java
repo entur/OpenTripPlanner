@@ -114,7 +114,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       Sets.difference(originVertices, ignoreVertices),
       reverseDirection,
       request,
-      streetRequest
+      streetRequest.mode()
     );
 
     // Return only the origin vertices if there are no valid street modes
@@ -132,6 +132,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(
         StreetSearchRequestMapper.mapInternal(request)
+          .withMode(streetRequest.mode())
           .withExtensionRequestContexts(extensionRequestContexts)
           .build()
       )

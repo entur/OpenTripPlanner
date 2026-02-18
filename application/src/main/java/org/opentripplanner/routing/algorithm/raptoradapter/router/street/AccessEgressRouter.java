@@ -93,7 +93,7 @@ public class AccessEgressRouter {
       transitStopVertices,
       accessOrEgress.isEgress(),
       routeRequest,
-      streetRequest
+      streetRequest.mode()
     );
   }
 }
