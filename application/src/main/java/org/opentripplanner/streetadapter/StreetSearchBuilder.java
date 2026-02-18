@@ -55,7 +55,7 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
     if (heuristic.equals(RemainingWeightHeuristic.TRIVIAL)) {
       // No initialization needed
     } else if (heuristic instanceof EuclideanRemainingWeightHeuristic euclideanHeuristic) {
-      euclideanHeuristic.initialize(request.mode(), destination, arriveBy, request);
+      euclideanHeuristic.initialize(destination, arriveBy, request);
     } else {
       throw new IllegalArgumentException("Unknown heuristic type: " + heuristic);
     }

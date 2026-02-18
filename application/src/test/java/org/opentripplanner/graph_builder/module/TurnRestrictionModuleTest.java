@@ -13,8 +13,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetMode;
@@ -32,7 +30,6 @@ import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
-import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.test.support.ResourceLoader;
 
 public class TurnRestrictionModuleTest {
@@ -353,16 +350,10 @@ public class TurnRestrictionModuleTest {
     assertEquals(7, graph.countVertices());
     assertEquals(16, graph.countEdges());
 
-    var streetRequest = new StreetRequest(StreetMode.CAR);
-
-    var request = RouteRequest.of()
-      .withJourney(j -> j.withDirect(streetRequest))
-      .buildDefault();
+    var request = StreetSearchRequest.of().withMode(StreetMode.CAR).build();
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
-      .withRequest(
-        StreetSearchRequestMapper.mapInternal(request).withMode(streetRequest.mode()).build()
-      )
+      .withRequest(request)
       .withFrom(A)
       .withTo(F)
       .getShortestPathTree();

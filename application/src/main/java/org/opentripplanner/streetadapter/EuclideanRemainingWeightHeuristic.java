@@ -37,13 +37,12 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
   // TODO This currently only uses the first toVertex. If there are multiple toVertices, it will
   //      not work correctly.
   public void initialize(
-    StreetMode streetMode,
     Set<Vertex> toVertices,
     boolean arriveBy,
     StreetSearchRequest req
   ) {
     Vertex target = toVertices.iterator().next();
-    maxStreetSpeed = getStreetSpeedUpperBound(req, streetMode);
+    maxStreetSpeed = getStreetSpeedUpperBound(req);
     walkingSpeed = req.walk().speed();
     this.arriveBy = arriveBy;
 
@@ -59,8 +58,9 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
   }
 
   /** @return The highest speed for all possible road-modes. */
-  private double getStreetSpeedUpperBound(StreetSearchRequest req, StreetMode streetMode) {
+  private double getStreetSpeedUpperBound(StreetSearchRequest req) {
     // Assume carSpeed > bikeSpeed > walkSpeed
+    var streetMode = req.mode();
     if (streetMode.includesDriving()) {
       return maxCarSpeed;
     }

@@ -12,7 +12,6 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.graph_builder.module.TurnRestrictionModule;
-import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -29,10 +28,10 @@ import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
-import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 
 public class TurnRestrictionTest {
 
@@ -100,13 +99,13 @@ public class TurnRestrictionTest {
 
   @Test
   public void testForwardDefault() {
-    var request = RouteRequest.of()
-      .withPreferences(preferences -> preferences.withWalk(w -> w.withSpeed(1.0)))
-      .buildDefault();
+    var request = StreetSearchRequest.of()
+      .withWalk(w -> w.withSpeed(1.0))
+      .build();
 
     ShortestPathTree<State, Edge, Vertex> tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(StreetSearchRequestMapper.mapInternal(request).build())
+      .withRequest(request)
       .withFrom(topRight)
       .withTo(bottomLeft)
       .getShortestPathTree();
@@ -130,13 +129,13 @@ public class TurnRestrictionTest {
 
   @Test
   public void testForwardAsPedestrian() {
-    var request = RouteRequest.of()
-      .withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)))
-      .buildDefault();
+    var request = StreetSearchRequest.of()
+      .withWalk(w -> w.withSpeed(1.0))
+      .build();
 
     ShortestPathTree<State, Edge, Vertex> tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(StreetSearchRequestMapper.mapInternal(request).build())
+      .withRequest(request)
       .withFrom(topRight)
       .withTo(bottomLeft)
       .getShortestPathTree();
@@ -169,11 +168,11 @@ public class TurnRestrictionTest {
 
   @Test
   public void testForwardAsCar() {
-    var request = RouteRequest.defaultValue();
+    var request = StreetSearchRequest.of().withMode(StreetMode.CAR).build();
 
     ShortestPathTree<State, Edge, Vertex> tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(StreetSearchRequestMapper.mapInternal(request).withMode(StreetMode.CAR).build())
+      .withRequest(request)
       .withFrom(topRight)
       .withTo(bottomLeft)
       .getShortestPathTree();

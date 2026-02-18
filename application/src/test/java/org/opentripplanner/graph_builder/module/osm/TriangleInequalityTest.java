@@ -6,37 +6,33 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.street.model.StreetMode.BIKE;
 import static org.opentripplanner.street.model.StreetMode.CAR;
+import static org.opentripplanner.street.model.StreetMode.WALK;
 
-import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
-import org.opentripplanner.model.modes.ExcludeAllTransitFilter;
 import org.opentripplanner.osm.DefaultOsmProvider;
-import org.opentripplanner.routing.api.request.RequestModes;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
-import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.model.vertex.VertexLabel;
 import org.opentripplanner.street.search.intersection_model.ConstantIntersectionTraversalCalculator;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
-import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.test.support.ResourceLoader;
 
 public class TriangleInequalityTest {
 
   private static Graph graph;
 
-  private final IntersectionTraversalCalculator calculator =
+  private static final IntersectionTraversalCalculator CALCULATOR =
     new ConstantIntersectionTraversalCalculator(10.0);
 
   private Vertex start;
@@ -65,93 +61,71 @@ public class TriangleInequalityTest {
 
   @Test
   public void testTriangleInequalityDefaultModes() {
-    checkTriangleInequality();
+    checkTriangleInequality(StreetMode.WALK);
   }
 
   @Test
   public void testTriangleInequalityWalkingOnly() {
-    RequestModes modes = RequestModes.of().build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(StreetMode.WALK);
   }
 
   @Test
   public void testTriangleInequalityDrivingOnly() {
-    RequestModes modes = RequestModes.of().withDirectMode(CAR).build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(CAR);
   }
 
   @Test
   public void testTriangleInequalityWalkTransit() {
-    RequestModes modes = RequestModes.defaultRequestModes();
-    checkTriangleInequality(modes, List.of(AllowAllTransitFilter.of()));
+    checkTriangleInequality(WALK);
   }
 
   @Test
   public void testTriangleInequalityWalkBike() {
-    RequestModes modes = RequestModes.of().withDirectMode(BIKE).build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
-  }
-
-  @Test
-  public void testTriangleInequalityDefaultModesBasicSPT() {
-    checkTriangleInequality(null, List.of());
+    checkTriangleInequality(BIKE);
   }
 
   @Test
   public void testTriangleInequalityWalkingOnlyBasicSPT() {
-    RequestModes modes = RequestModes.of().build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(WALK);
   }
 
   @Test
   public void testTriangleInequalityDrivingOnlyBasicSPT() {
-    RequestModes modes = RequestModes.of().withDirectMode(CAR).build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(CAR);
   }
 
   @Test
   public void testTriangleInequalityWalkTransitBasicSPT() {
-    RequestModes modes = RequestModes.defaultRequestModes();
-    checkTriangleInequality(modes, List.of(AllowAllTransitFilter.of()));
+    checkTriangleInequality(WALK);
   }
 
   @Test
   public void testTriangleInequalityWalkBikeBasicSPT() {
-    RequestModes modes = RequestModes.of().withDirectMode(BIKE).build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
-  }
-
-  @Test
-  public void testTriangleInequalityDefaultModesMultiSPT() {
-    checkTriangleInequality(null, List.of());
+    checkTriangleInequality(BIKE);
   }
 
   @Test
   public void testTriangleInequalityWalkingOnlyMultiSPT() {
-    RequestModes modes = RequestModes.of().build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(WALK);
   }
 
   @Test
   public void testTriangleInequalityDrivingOnlyMultiSPT() {
-    RequestModes modes = RequestModes.of().withDirectMode(CAR).build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(CAR);
   }
 
   @Test
   public void testTriangleInequalityWalkTransitMultiSPT() {
-    RequestModes modes = RequestModes.defaultRequestModes();
-    checkTriangleInequality(modes, List.of(AllowAllTransitFilter.of()));
+    checkTriangleInequality(WALK);
   }
 
   @Test
   public void testTriangleInequalityWalkBikeMultiSPT() {
-    RequestModes modes = RequestModes.of().withDirectMode(BIKE).build();
-    checkTriangleInequality(modes, List.of(ExcludeAllTransitFilter.of()));
+    checkTriangleInequality(BIKE);
   }
 
   private GraphPath<State, Edge, Vertex> getPath(
-    RouteRequest req,
+    StreetSearchRequest req,
     Edge startBackEdge,
     Vertex u,
     Vertex v
@@ -159,45 +133,32 @@ public class TriangleInequalityTest {
     return StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withOriginBackEdge(startBackEdge)
-      .withRequest(StreetSearchRequestMapper.mapInternal(req).build())
+      .withRequest(req)
       .withFrom(u)
       .withTo(v)
       .getShortestPathTree()
       .getPath(v);
   }
 
-  private void checkTriangleInequality() {
-    checkTriangleInequality(null, List.of());
-  }
-
-  private void checkTriangleInequality(RequestModes modes, List<TransitFilter> filters) {
+  private void checkTriangleInequality(StreetMode mode) {
     assertNotNull(start);
     assertNotNull(end);
 
-    var request = RouteRequest.of()
-      // All reluctance terms are 1.0 so that duration is monotonically increasing in weight.
-      .withPreferences(preferences ->
-        preferences
-          .withWalk(walk -> walk.withStairsReluctance(1.0).withSpeed(1.0).withReluctance(1.0))
-          .withStreet(street -> street.withTurnReluctance(1.0))
-          .withCar(car -> car.withReluctance(1.0))
-          .withBike(bike -> bike.withSpeed(1.0).withReluctance(1.0))
-          .withScooter(scooter -> scooter.withSpeed(1.0).withReluctance(1.0))
-      )
-      .withJourney(jb -> {
-        if (modes != null) {
-          jb.withModes(modes);
-        }
-        if (!filters.isEmpty()) {
-          jb.withTransit(b -> b.withFilters(filters));
-        }
-      })
-      .buildDefault();
+    // All reluctance terms are 1.0 so that duration is monotonically increasing in weight.
+    var request = StreetSearchRequest.of()
+      .withMode(mode)
+      .withWalk(walk -> walk.withStairsReluctance(1.0).withSpeed(1.0).withReluctance(1.0))
+      .withTurnReluctance(1.0)
+      .withCar(car -> car.withReluctance(1.0))
+      .withBike(bike -> bike.withSpeed(1.0).withReluctance(1.0))
+      .withScooter(scooter -> scooter.withSpeed(1.0).withReluctance(1.0))
+      .withIntersectionTraversalCalculator(CALCULATOR)
+      .build();
 
     ShortestPathTree<State, Edge, Vertex> tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withDominanceFunction(new DominanceFunctions.EarliestArrival())
-      .withRequest(StreetSearchRequestMapper.mapInternal(request).build())
+      .withRequest(request)
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();

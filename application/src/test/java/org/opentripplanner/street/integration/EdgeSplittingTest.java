@@ -189,15 +189,11 @@ public class EdgeSplittingTest {
 
     assertEquals(3, edges.size());
 
-    var request = RouteRequest.defaultValue();
+    var request = StreetSearchRequest.of().build();
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(
-        StreetSearchRequestMapper.mapInternal(request)
-          .withMode(request.journey().direct().mode())
-          .build()
-      )
+      .withRequest(request)
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();
@@ -236,15 +232,11 @@ public class EdgeSplittingTest {
     Collection<Edge> edges = end.getIncoming();
     assertEquals(1, edges.size());
 
-    var request = RouteRequest.defaultValue();
+    var request = StreetSearchRequest.of().build();
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(
-        StreetSearchRequestMapper.mapInternal(request)
-          .withMode(request.journey().direct().mode())
-          .build()
-      )
+      .withRequest(request)
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();
