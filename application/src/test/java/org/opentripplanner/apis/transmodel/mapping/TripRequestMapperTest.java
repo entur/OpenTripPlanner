@@ -418,7 +418,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
           Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
         ),
         "pointInJourneyPatternReference",
-        Map.of("stopId", "F:stop1")
+        Map.of("stopLocationId", "F:stop1")
       )
     );
 
@@ -448,7 +448,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
           Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
         ),
         "pointInJourneyPatternReference",
-        Map.of("stopId", "F:stop1")
+        Map.of("stopLocationId", "F:stop1")
       )
     );
 

@@ -54,7 +54,7 @@ public class OnBoardAccessResolver {
     );
     int stopPosInPattern = findStopPosition(
       tripPattern,
-      tripLocation.stopId(),
+      tripLocation.stopLocationId(),
       trip,
       serviceDate,
       targetSeconds
@@ -124,7 +124,7 @@ public class OnBoardAccessResolver {
     );
     int stopPosInPattern = findStopPosition(
       tripPattern,
-      tripLocation.stopId(),
+      tripLocation.stopLocationId(),
       trip,
       serviceDate,
       targetSeconds
@@ -205,16 +205,21 @@ public class OnBoardAccessResolver {
     );
   }
 
-  private Set<FeedScopedId> resolveStopIds(FeedScopedId stopId) {
-    var regularStop = transitService.getRegularStop(stopId);
+  /**
+   * Resolve a stop location ID to the set of stop IDs that should be matched in a pattern.
+   * If the ID refers to a regular stop (quay), returns that stop's ID. If it refers to a
+   * station (stop place), returns the IDs of all child stops, so any child quay can match.
+   */
+  private Set<FeedScopedId> resolveStopIds(FeedScopedId stopLocationId) {
+    var regularStop = transitService.getRegularStop(stopLocationId);
     if (regularStop != null) {
       return Set.of(regularStop.getId());
     }
-    Station station = transitService.getStation(stopId);
+    Station station = transitService.getStation(stopLocationId);
     if (station != null) {
       return station.getChildStops().stream().map(StopLocation::getId).collect(Collectors.toSet());
     }
-    throw new IllegalArgumentException("Stop not found: " + stopId);
+    throw new IllegalArgumentException("Stop location not found: " + stopLocationId);
   }
 
   /**
@@ -231,19 +236,20 @@ public class OnBoardAccessResolver {
   }
 
   /**
-   * Find the stop position in the pattern. If the stop appears more than once and no
-   * {@code scheduledDepartureTime} is provided, an error is thrown. When a
+   * Find the stop position in the pattern. The {@code stopLocationId} can refer to either a
+   * regular stop (quay) or a station (stop place). If the resolved stops appear more than once
+   * and no {@code scheduledDepartureTime} is provided, an error is thrown. When a
    * {@code scheduledDepartureTime} is provided, it is used to disambiguate among multiple
-   * occurrences of the same stop.
+   * occurrences.
    */
   private int findStopPosition(
     TripPattern tripPattern,
-    FeedScopedId stopId,
+    FeedScopedId stopLocationId,
     Trip trip,
     LocalDate serviceDate,
     Integer scheduledDepartureTime
   ) {
-    var matchingIds = resolveStopIds(stopId);
+    var matchingIds = resolveStopIds(stopLocationId);
     int firstMatch = -1;
     int matchCount = 0;
 
@@ -258,7 +264,7 @@ public class OnBoardAccessResolver {
 
     if (firstMatch < 0) {
       throw new IllegalArgumentException(
-        "Stop %s not found in pattern for trip %s".formatted(stopId, trip.getId())
+        "Stop location %s not found in pattern for trip %s".formatted(stopLocationId, trip.getId())
       );
     }
 
@@ -269,9 +275,9 @@ public class OnBoardAccessResolver {
     // Multiple occurrences — need scheduledDepartureTime to disambiguate
     if (scheduledDepartureTime == null) {
       throw new IllegalArgumentException(
-        ("Stop %s appears %d times in pattern for trip %s. " +
-          "Use stopIdAndScheduledDepartureTime to disambiguate.").formatted(
-          stopId,
+        ("Stop location %s appears %d times in pattern for trip %s. " +
+          "Use stopLocationIdAndScheduledDepartureTime to disambiguate.").formatted(
+          stopLocationId,
           matchCount,
           trip.getId()
         )
@@ -289,7 +295,7 @@ public class OnBoardAccessResolver {
 
   /**
    * Find the stop position by matching the scheduled departure time (in seconds since midnight,
-   * including day offset) among all occurrences of the given stop in the pattern.
+   * including day offset) among all occurrences of the matching stops in the pattern.
    */
   private int findStopPositionByDepartureTime(
     TripPattern tripPattern,
