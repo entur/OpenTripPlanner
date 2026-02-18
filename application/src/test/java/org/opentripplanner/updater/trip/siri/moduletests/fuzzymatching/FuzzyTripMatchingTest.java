@@ -124,6 +124,46 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
     );
   }
 
+  /**
+   * BNR sends DatedVehicleJourneyRef at journey level (not inside FramedVehicleJourneyRef)
+   * with numeric IDs that don't match any NeTEx DatedServiceJourney.
+   * The fuzzy matcher should still resolve the trip via VehicleRef → internalPlanningCode.
+   */
+  @Test
+  void testFuzzyMatchByVehicleRefWithDatedVehicleJourneyRefOnly() {
+    var railRoute = ENV_BUILDER.route("RailRoute2", r -> r.withMode(TransitMode.RAIL));
+
+    var railTrip = TripInput.of("RailTrip3")
+      .withRoute(railRoute)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+
+    var env = ENV_BUILDER.addTrip(railTrip, tb -> tb.withNetexInternalPlanningCode("406")).build();
+
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    var updates = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef("406:2026-02-17")
+      .withVehicleRef("406")
+      .withVehicleMode(VehicleModesEnumeration.RAIL)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    assertEquals(1, result.successful());
+    assertEquals(
+      "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      env.tripData("RailTrip3").showTimetable()
+    );
+  }
+
   private static void assertTripUpdated(TransitTestEnvironment env) {
     assertEquals(
       "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",

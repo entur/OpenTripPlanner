@@ -76,8 +76,10 @@ class ServiceDateResolverTest {
 
       var result = resolver.resolveServiceDate(update);
 
+      // When tripOnServiceDateId doesn't resolve and there's no aimedDepartureTime,
+      // the resolver falls through all strategies and reports NO_START_DATE
       assertTrue(result.isFailure());
-      assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+      assertEquals(UpdateError.UpdateErrorType.NO_START_DATE, result.failureValue().errorType());
     }
   }
 
