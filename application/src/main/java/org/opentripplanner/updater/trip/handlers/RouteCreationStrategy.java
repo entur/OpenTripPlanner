@@ -12,7 +12,14 @@ import org.opentripplanner.updater.trip.model.TripCreationInfo;
  * and submode derivation.
  */
 public interface RouteCreationStrategy {
-  Result<Route, UpdateError> resolveOrCreateRoute(
+  /**
+   * The result of resolving or creating a route.
+   * @param route the resolved or newly created route
+   * @param isNewRoute true if the route was newly created, false if it already existed
+   */
+  record RouteResolution(Route route, boolean isNewRoute) {}
+
+  Result<RouteResolution, UpdateError> resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,
     TransitEditorService transitService
   );

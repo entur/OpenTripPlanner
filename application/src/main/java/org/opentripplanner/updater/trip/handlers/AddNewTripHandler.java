@@ -102,7 +102,9 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     if (routeResult.isFailure()) {
       return Result.failure(routeResult.failureValue());
     }
-    Route route = routeResult.successValue();
+    var routeResolution = routeResult.successValue();
+    Route route = routeResolution.route();
+    boolean routeCreation = routeResolution.isNewRoute();
 
     // Create the trip
     Trip trip = createTrip(tripId, tripCreationInfo, route, serviceId);
@@ -194,14 +196,13 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Build and return result
     try {
       // tripCreation=true since we're creating a new trip
-      // routeCreation=true since we may have created a new route
       var realTimeTripUpdate = new RealTimeTripUpdate(
         pattern,
         builder.build(),
         serviceDate,
         tripOnServiceDate,
         true,
-        true,
+        routeCreation,
         resolvedUpdate.dataSource()
       );
 

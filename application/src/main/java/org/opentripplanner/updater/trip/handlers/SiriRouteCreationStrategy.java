@@ -32,7 +32,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
   }
 
   @Override
-  public Result<Route, UpdateError> resolveOrCreateRoute(
+  public Result<RouteResolution, UpdateError> resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,
     TransitEditorService transitService
   ) {
@@ -43,7 +43,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
       Route existingRoute = transitService.getRoute(routeId);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route {}", routeId);
-        return Result.success(existingRoute);
+        return Result.success(new RouteResolution(existingRoute, false));
       }
     }
 
@@ -93,7 +93,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
 
     Route route = builder.build();
     LOG.debug("ADD_TRIP: Created new SIRI route {}", effectiveRouteId);
-    return Result.success(route);
+    return Result.success(new RouteResolution(route, true));
   }
 
   @Nullable

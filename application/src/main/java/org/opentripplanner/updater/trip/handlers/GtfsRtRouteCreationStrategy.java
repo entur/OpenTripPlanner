@@ -39,7 +39,7 @@ public class GtfsRtRouteCreationStrategy implements RouteCreationStrategy {
   }
 
   @Override
-  public Result<Route, UpdateError> resolveOrCreateRoute(
+  public Result<RouteResolution, UpdateError> resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,
     TransitEditorService transitService
   ) {
@@ -51,22 +51,35 @@ public class GtfsRtRouteCreationStrategy implements RouteCreationStrategy {
       Route existingRoute = findRoute(routeId, transitService);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route {}", routeId);
-        return Result.success(existingRoute);
+        // Always mark isNewRoute=true for GTFS-RT. In FULL_DATASET mode the snapshot
+        // buffer is cleared each batch, so routes always need re-registration even if
+        // they were found in the cache or transit service.
+        return Result.success(new RouteResolution(existingRoute, true));
       }
 
       // Route not found - create using routeCreationInfo if available
       if (tripCreationInfo.routeCreationInfo() != null) {
         return Result.success(
-          createRouteWithInfo(routeId, tripId, tripCreationInfo.routeCreationInfo(), transitService)
+          new RouteResolution(
+            createRouteWithInfo(
+              routeId,
+              tripId,
+              tripCreationInfo.routeCreationInfo(),
+              transitService
+            ),
+            true
+          )
         );
       }
 
       // No routeCreationInfo - create fallback route with routeId
-      return Result.success(createFallbackRoute(routeId, transitService));
+      return Result.success(
+        new RouteResolution(createFallbackRoute(routeId, transitService), true)
+      );
     }
 
     // No route ID at all - create fallback route using trip ID
-    return Result.success(createFallbackRoute(tripId, transitService));
+    return Result.success(new RouteResolution(createFallbackRoute(tripId, transitService), true));
   }
 
   @Nullable
