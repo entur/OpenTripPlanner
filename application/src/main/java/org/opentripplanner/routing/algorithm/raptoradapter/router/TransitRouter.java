@@ -5,7 +5,9 @@ import static org.opentripplanner.routing.algorithm.raptoradapter.router.street.
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,6 +21,7 @@ import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.RaptorService;
+import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
 import org.opentripplanner.raptor.spi.ExtraMcRouterSearch;
@@ -38,6 +41,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.Defau
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.algorithm.transferoptimization.configure.TransferOptimizationServiceConfigurator;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.TripLocation;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
@@ -51,6 +55,7 @@ import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 
 public class TransitRouter {
 
@@ -125,25 +130,67 @@ public class TransitRouter {
       ? serverContext.transitService().getRaptorTransitData()
       : serverContext.transitService().getRealtimeRaptorTransitData();
 
-    var requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
+    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
+
+    var requestTransitDataProvider = createRequestTransitDataProvider(
+      raptorTransitData,
+      onBoardTripLocation
+    );
 
     debugTimingAggregator.finishedPatternFiltering();
 
-    var accessEgresses = fetchAccessEgresses();
+    Collection<? extends RaptorAccessEgress> accessPaths;
+    Collection<? extends RaptorAccessEgress> egressPaths;
+    ExtraMcRouterSearch<TripSchedule> extraSearch;
+    RouteRequest effectiveRequest;
 
-    debugTimingAggregator.finishedAccessEgress(
-      accessEgresses.getAccesses().size(),
-      accessEgresses.getEgresses().size()
-    );
+    if (onBoardTripLocation != null) {
+      // On-board access: resolve the trip location and use a single-iteration search
+      var onBoardAccess = resolveOnBoardAccess(onBoardTripLocation, requestTransitDataProvider);
+      accessPaths = List.of(onBoardAccess);
+
+      // Still need egress paths for the destination
+      egressPaths = fetchEgress();
+
+      verifyEgress(egressPaths);
+
+      debugTimingAggregator.finishedAccessEgress(accessPaths.size(), egressPaths.size());
+
+      // Set the EDT to the start of the trip's service date so Raptor's isInIteration check
+      // passes (EDT must be <= the trip's board time). Use a 24-hour search window to cover
+      // the entire service day.
+      var serviceDate = resolveServiceDate(onBoardTripLocation);
+      var serviceDateStart = ServiceDateUtils.asStartOfService(
+        serviceDate,
+        transitSearchTimeZero.getZone()
+      );
+      effectiveRequest = request
+        .copyOf()
+        .withDateTime(serviceDateStart.toInstant())
+        .withSearchWindow(Duration.ofHours(24))
+        .buildRequest();
+
+      // Skip extra MC search for on-board access
+      extraSearch = null;
+    } else {
+      var accessEgresses = fetchAccessEgresses();
+      accessPaths = accessEgresses.getAccesses();
+      egressPaths = accessEgresses.getEgresses();
+
+      debugTimingAggregator.finishedAccessEgress(accessPaths.size(), egressPaths.size());
+
+      effectiveRequest = request;
+      extraSearch = createExtraMcRouterSearch(accessEgresses, raptorTransitData);
+    }
 
     // Prepare transit search
 
     var mapper = RaptorRequestMapper.<TripSchedule>of(
-      request,
+      effectiveRequest,
       transitSearchTimeZero,
       serverContext.raptorConfig().isMultiThreaded(),
-      accessEgresses.getAccesses(),
-      accessEgresses.getEgresses(),
+      accessPaths,
+      egressPaths,
       serverContext.meterRegistry(),
       viaTransferResolver,
       this::listStopIndexes,
@@ -152,10 +199,7 @@ public class TransitRouter {
     var raptorRequest = mapper.mapRaptorRequest();
 
     // Transit routing using Raptor
-    var raptorService = new RaptorService<>(
-      serverContext.raptorConfig(),
-      createExtraMcRouterSearch(accessEgresses, raptorTransitData)
-    );
+    var raptorService = new RaptorService<>(serverContext.raptorConfig(), extraSearch);
     var transitResponse = raptorService.route(raptorRequest, requestTransitDataProvider);
 
     checkIfTransitConnectionExists(transitResponse);
@@ -166,7 +210,7 @@ public class TransitRouter {
 
     // Route Direct transit
     var directRequest = DirectTransitRequestMapper.map(
-      request,
+      effectiveRequest,
       transitResponse.requestUsed().searchParams()
     );
     if (directRequest.isPresent()) {
@@ -188,7 +232,7 @@ public class TransitRouter {
       !transitResponse.containsUnknownPaths() &&
       // TODO VIA - This is temporary, we want pass via info in paths so transfer optimizer can
       //            skip legs containing via points.
-      request.allowTransferOptimization()
+      effectiveRequest.allowTransferOptimization()
     ) {
       var service = TransferOptimizationServiceConfigurator.createOptimizeTransferService(
         raptorTransitData::getStopByIndex,
@@ -196,7 +240,7 @@ public class TransitRouter {
         serverContext.transitService().getConstrainedTransferService(),
         requestTransitDataProvider,
         raptorTransitData.getStopBoardAlightTransferCosts(),
-        request.preferences().transfer().optimization(),
+        effectiveRequest.preferences().transfer().optimization(),
         raptorRequest.searchParams().viaLocations()
       );
       paths = service.optimize(paths);
@@ -210,7 +254,7 @@ public class TransitRouter {
       serverContext.streetDetailsService(),
       raptorTransitData,
       transitSearchTimeZero,
-      request
+      effectiveRequest
     );
 
     List<Itinerary> itineraries = paths.stream().map(itineraryMapper::createItinerary).toList();
@@ -218,6 +262,14 @@ public class TransitRouter {
     debugTimingAggregator.finishedItineraryCreation();
 
     return new TransitRouterResult(itineraries, transitResponse.requestUsed().searchParams());
+  }
+
+  private RaptorAccessEgress resolveOnBoardAccess(
+    TripLocation tripLocation,
+    RaptorRoutingRequestTransitData requestTransitDataProvider
+  ) {
+    var resolver = new OnBoardAccessResolver(serverContext.transitService());
+    return resolver.resolve(tripLocation, requestTransitDataProvider.getPatternIndex());
   }
 
   private AccessEgresses fetchAccessEgresses() {
@@ -352,16 +404,53 @@ public class TransitRouter {
   }
 
   private RaptorRoutingRequestTransitData createRequestTransitDataProvider(
-    RaptorTransitData raptorTransitData
+    RaptorTransitData raptorTransitData,
+    @Nullable TripLocation onBoardTripLocation
   ) {
+    int pastDays = additionalSearchDays.additionalSearchDaysInPast();
+
+    if (onBoardTripLocation != null) {
+      LocalDate serviceDate = resolveServiceDate(onBoardTripLocation);
+      LocalDate searchDate = ServiceDateUtils.asServiceDay(transitSearchTimeZero);
+      long daysDiff = ChronoUnit.DAYS.between(serviceDate, searchDate);
+      if (daysDiff > pastDays) {
+        pastDays = (int) daysDiff;
+      }
+    }
+
     return new RaptorRoutingRequestTransitData(
       raptorTransitData,
       transitGroupPriorityService,
       transitSearchTimeZero,
-      additionalSearchDays.additionalSearchDaysInPast(),
+      pastDays,
       additionalSearchDays.additionalSearchDaysInFuture(),
       DefaultTransitDataProviderFilter.ofRequest(request),
       request
+    );
+  }
+
+  private LocalDate resolveServiceDate(TripLocation tripLocation) {
+    var reference = tripLocation.tripOnDateReference();
+    if (reference.tripOnServiceDateId() != null) {
+      var tripOnServiceDate = serverContext
+        .transitService()
+        .getTripOnServiceDate(reference.tripOnServiceDateId());
+      if (tripOnServiceDate != null) {
+        return tripOnServiceDate.getServiceDate();
+      }
+    }
+    if (reference.tripIdOnServiceDate() != null) {
+      return reference.tripIdOnServiceDate().serviceDate();
+    }
+    return ServiceDateUtils.asServiceDay(transitSearchTimeZero);
+  }
+
+  private void verifyEgress(Collection<?> egress) {
+    if (!egress.isEmpty()) {
+      return;
+    }
+    throw new RoutingValidationException(
+      List.of(new RoutingError(RoutingErrorCode.NO_STOPS_IN_RANGE, InputField.TO_PLACE))
     );
   }
 
