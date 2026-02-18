@@ -63,10 +63,11 @@ public class ServiceDateResolver {
     // Try to resolve from tripOnServiceDateId
     if (tripReference.hasTripOnServiceDateId()) {
       var result = tripResolver.resolveTripOnServiceDate(tripReference);
-      if (result.isFailure()) {
-        return Result.failure(result.failureValue());
+      if (result.isSuccess()) {
+        return Result.success(result.successValue().getServiceDate());
       }
-      return Result.success(result.successValue().getServiceDate());
+      // Fall through — tripOnServiceDateId didn't resolve (e.g. BNR numeric IDs
+      // that aren't valid NeTEx DatedServiceJourney IDs), try other strategies
     }
 
     // Try deferred resolution using aimedDepartureTime

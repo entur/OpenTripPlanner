@@ -50,19 +50,18 @@ public class ServiceDateParser {
       }
     }
 
-    // if a DSJ id is present, this can be used to infer the service date in the applier stage.
-    if (tripOnServiceDateId != null) {
-      return new ParsedServiceDate(null, tripOnServiceDateId, null);
-    }
-
-    // Store the aimed departure time for deferred resolution in the applier.
-    // The applier can calculate the correct service date using the Trip's scheduled
-    // departure time to handle overnight trips correctly.
+    // Always extract aimedDepartureTime as a fallback for service date resolution.
+    // This is needed even when tripOnServiceDateId is present, because the ID may not
+    // resolve to a valid NeTEx DatedServiceJourney (e.g. BNR numeric IDs).
     var aimedDepartureTime = CallWrapper.of(journey)
       .stream()
       .findFirst()
       .map(CallWrapper::getAimedDepartureTime)
       .orElse(null);
+
+    if (tripOnServiceDateId != null) {
+      return new ParsedServiceDate(null, tripOnServiceDateId, aimedDepartureTime);
+    }
 
     return new ParsedServiceDate(null, null, aimedDepartureTime);
   }
