@@ -116,34 +116,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       // Check if pattern actually changed (builder deduplicates)
       // Compare against the scheduled pattern to determine if we need a modified pattern
       if (!scheduledPattern.getStopPattern().equals(newStopPattern)) {
-        // Check if the trip is already on the correct modified pattern from a previous
-        // routability-only update (no stop replacements). This happens on re-processing
-        // (e.g. fuzzy-matched trips receiving repeated updates with pickup/dropoff changes):
-        // the current pattern is already modified, so no state change is needed.
-        // TODO RT_VP This is the current behavior in the legacy updater, but this breaks
-        //            idempotency: the update outcome depends on the existence of a previous
-        //            update on the same trip.
-        TripPattern currentPattern = resolvedUpdate.pattern();
-        if (
-          modResult.stopReplacements().isEmpty() &&
-          currentPattern.getStopPattern().equals(newStopPattern)
-        ) {
-          finalPattern = currentPattern;
-        } else {
-          // TripPatternCache uses 2-parameter signature (gets original pattern via injected function)
-          finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
-
-          // Conditionally set MODIFIED state based on feed type configuration
-          // GTFS-RT (ALWAYS_UPDATED): Keep UPDATED (legacy behavior from TripTimesUpdater:222)
-          // SIRI-ET (MODIFIED_ON_PATTERN_CHANGE): Set MODIFIED (legacy behavior from ModifiedTripBuilder:150)
-          var stateStrategy = resolvedUpdate.options().realTimeStateStrategy();
-          if (stateStrategy == RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE) {
-            realTimeState = RealTimeState.MODIFIED;
-          }
-
-          // Signal that the trip should be deleted from the scheduled pattern
-          patternToDeleteFrom = scheduledPattern;
+        finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
+        var stateStrategy = resolvedUpdate.options().realTimeStateStrategy();
+        if (stateStrategy == RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE) {
+          realTimeState = RealTimeState.MODIFIED;
         }
+        patternToDeleteFrom = scheduledPattern;
       }
     }
 
