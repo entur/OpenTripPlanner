@@ -408,6 +408,59 @@ public class TripRequestMapperTest implements PlanTestConstants {
   }
 
   @Test
+  void testDateTimeWithOnBoardLocationThrows() {
+    var fromWithOnBoardLocation = Map.of(
+      "onBoardLocation",
+      Map.of(
+        "datedServiceJourneyReference",
+        Map.of(
+          "serviceJourneyOnServiceDate",
+          Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
+        ),
+        "pointInJourneyPatternReference",
+        Map.of("stopId", "F:stop1")
+      )
+    );
+
+    var arguments = new HashMap<String, Object>();
+    arguments.put("from", fromWithOnBoardLocation);
+    arguments.put("to", Map.of("place", "F:Quay:2"));
+    arguments.put("dateTime", System.currentTimeMillis());
+
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      MAPPER.createRequest(executionContext(arguments))
+    );
+    assertEquals(
+      "The 'dateTime' parameter cannot be set when 'from' contains a 'onBoardLocation'. " +
+        "The departure time is determined by the on-board position.",
+      ex.getMessage()
+    );
+  }
+
+  @Test
+  void testOnBoardLocationWithoutDateTimeSucceeds() {
+    var fromWithOnBoardLocation = Map.of(
+      "onBoardLocation",
+      Map.of(
+        "datedServiceJourneyReference",
+        Map.of(
+          "serviceJourneyOnServiceDate",
+          Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
+        ),
+        "pointInJourneyPatternReference",
+        Map.of("stopId", "F:stop1")
+      )
+    );
+
+    var arguments = new HashMap<String, Object>();
+    arguments.put("from", fromWithOnBoardLocation);
+    arguments.put("to", Map.of("place", "F:Quay:2"));
+
+    var request = MAPPER.createRequest(executionContext(arguments));
+    assertNotNull(request.from().tripLocation);
+  }
+
+  @Test
   public void testExplicitModesBikeAccess() {
     Map<String, Object> arguments = arguments("modes", Map.of("accessMode", StreetMode.BIKE));
     var req = MAPPER.createRequest(executionContext(arguments));
