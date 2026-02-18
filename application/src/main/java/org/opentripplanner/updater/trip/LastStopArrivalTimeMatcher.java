@@ -321,14 +321,14 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
         continue;
       }
 
-      TripPattern pattern = transitService.findPattern(trip);
-      if (pattern == null) {
+      TripPattern scheduledPattern = transitService.findPattern(trip);
+      if (scheduledPattern == null) {
         continue;
       }
 
       // Check first/last stop match (including sibling stops)
-      StopLocation patternFirstStop = pattern.firstStop();
-      StopLocation patternLastStop = pattern.lastStop();
+      StopLocation patternFirstStop = scheduledPattern.firstStop();
+      StopLocation patternLastStop = scheduledPattern.lastStop();
 
       boolean firstStopMatches = stopsMatch(patternFirstStop, journeyFirstStop);
       boolean lastStopMatches = stopsMatch(patternLastStop, journeyLastStop);
@@ -337,10 +337,11 @@ public class LastStopArrivalTimeMatcher implements FuzzyTripMatcher {
         continue;
       }
 
-      // Check departure time at first stop
-      TripTimes times = pattern.getScheduledTimetable().getTripTimes(trip);
+      // Check departure time at first stop (always use scheduled timetable for matching)
+      TripTimes times = scheduledPattern.getScheduledTimetable().getTripTimes(trip);
       if (times != null && times.getScheduledDepartureTime(0) == aimedDepartureSeconds) {
-        matches.add(new TripAndPattern(trip, pattern));
+        // Return the RT modified pattern if one exists, otherwise the scheduled pattern
+        matches.add(new TripAndPattern(trip, transitService.findPattern(trip, serviceDate)));
       }
     }
 
