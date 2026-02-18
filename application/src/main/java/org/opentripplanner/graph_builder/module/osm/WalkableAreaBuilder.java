@@ -30,7 +30,6 @@ import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.TraverseDirection;
 import org.opentripplanner.osm.wayproperty.WayProperties;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.model.Platform;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -389,7 +388,6 @@ class WalkableAreaBuilder {
         .withSkipEdgeStrategy(new ListedEdgesOnly(edges))
         .withDominanceFunction(new DominanceFunctions.EarliestArrival())
         .withRequest(request)
-        .withStreetRequest(new StreetRequest(mode))
         .withFrom(vertex)
         .getShortestPathTree();
 

@@ -32,6 +32,7 @@ import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.test.support.ResourceLoader;
 
 public class TurnRestrictionModuleTest {
@@ -359,8 +360,9 @@ public class TurnRestrictionModuleTest {
       .buildDefault();
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
-      .withRequest(request)
-      .withStreetRequest(streetRequest)
+      .withRequest(
+        StreetSearchRequestMapper.mapInternal(request).withMode(streetRequest.mode()).build()
+      )
       .withFrom(A)
       .withTo(F)
       .getShortestPathTree();
@@ -431,13 +433,11 @@ public class TurnRestrictionModuleTest {
     assertEquals(6, graph.countVertices());
     assertEquals(11, graph.countEdges());
 
-    var streetRequest = new StreetRequest(StreetMode.CAR);
     var request = StreetSearchRequest.of().withMode(StreetMode.CAR).build();
 
     assertNull(
       StreetSearchBuilder.of()
         .withRequest(request)
-        .withStreetRequest(streetRequest)
         .withFrom(A)
         .withTo(B)
         .getShortestPathTree()
@@ -446,7 +446,6 @@ public class TurnRestrictionModuleTest {
     assertNull(
       StreetSearchBuilder.of()
         .withRequest(request)
-        .withStreetRequest(streetRequest)
         .withFrom(A)
         .withTo(C)
         .getShortestPathTree()
@@ -454,7 +453,6 @@ public class TurnRestrictionModuleTest {
     );
     GraphPath<State, Edge, Vertex> path = StreetSearchBuilder.of()
       .withRequest(request)
-      .withStreetRequest(streetRequest)
       .withFrom(A)
       .withTo(E)
       .getShortestPathTree()

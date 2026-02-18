@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -19,6 +18,7 @@ import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 
 /**
  * Test switching between biking / walking over multiple edges.
@@ -393,8 +393,7 @@ public class BikeWalkingTest extends GraphRoutingTest {
 
     var tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(request)
-      .withStreetRequest(new StreetRequest(streetMode))
+      .withRequest(StreetSearchRequestMapper.mapInternal(request).withMode(streetMode).build())
       .withFrom(fromVertex)
       .withTo(toVertex)
       .getShortestPathTree();

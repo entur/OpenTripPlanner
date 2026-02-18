@@ -45,6 +45,7 @@ import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -192,8 +193,11 @@ public class EdgeSplittingTest {
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(request)
-      .withStreetRequest(request.journey().direct())
+      .withRequest(
+        StreetSearchRequestMapper.mapInternal(request)
+          .withMode(request.journey().direct().mode())
+          .build()
+      )
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();
@@ -236,8 +240,11 @@ public class EdgeSplittingTest {
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(request)
-      .withStreetRequest(request.journey().direct())
+      .withRequest(
+        StreetSearchRequestMapper.mapInternal(request)
+          .withMode(request.journey().direct().mode())
+          .build()
+      )
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();
@@ -348,7 +355,7 @@ public class EdgeSplittingTest {
       assertFalse(toVertices.isEmpty());
       ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
         .withHeuristic(new EuclideanRemainingWeightHeuristic())
-        .withRequest(walking)
+        .withRequest(StreetSearchRequestMapper.mapInternal(walking).build())
         .withFrom(fromVertices)
         .withTo(toVertices)
         .getShortestPathTree();

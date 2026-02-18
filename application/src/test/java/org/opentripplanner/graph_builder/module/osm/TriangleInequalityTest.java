@@ -29,6 +29,7 @@ import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.test.support.ResourceLoader;
 
 public class TriangleInequalityTest {
@@ -158,7 +159,7 @@ public class TriangleInequalityTest {
     return StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withOriginBackEdge(startBackEdge)
-      .withRequest(req)
+      .withRequest(StreetSearchRequestMapper.mapInternal(req).build())
       .withFrom(u)
       .withTo(v)
       .getShortestPathTree()
@@ -196,7 +197,7 @@ public class TriangleInequalityTest {
     ShortestPathTree<State, Edge, Vertex> tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withDominanceFunction(new DominanceFunctions.EarliestArrival())
-      .withRequest(request)
+      .withRequest(StreetSearchRequestMapper.mapInternal(request).build())
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();

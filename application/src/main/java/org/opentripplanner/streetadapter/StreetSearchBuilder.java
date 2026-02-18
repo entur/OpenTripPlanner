@@ -3,11 +3,9 @@ package org.opentripplanner.streetadapter;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Set;
-import org.apache.commons.lang3.NotImplementedException;
 import org.opentripplanner.astar.AStarBuilder;
 import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
@@ -31,10 +29,6 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
     this.request = request;
     withArriveBy(request.arriveBy());
     return this;
-  }
-
-  public StreetSearchBuilder withStreetRequest(StreetRequest streetRequest) {
-    throw new NotImplementedException();
   }
 
   @Override

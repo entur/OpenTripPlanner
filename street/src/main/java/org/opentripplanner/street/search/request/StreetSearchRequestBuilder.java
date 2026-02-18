@@ -147,7 +147,7 @@ public class StreetSearchRequestBuilder {
 
   public StreetSearchRequestBuilder withTimeout(Duration duration) {
     this.timeout = duration;
-    return null;
+    return this;
   }
 
   public StreetSearchRequestBuilder withExtensionRequestContexts(Collection<ExtensionRequestContext> contexts) {

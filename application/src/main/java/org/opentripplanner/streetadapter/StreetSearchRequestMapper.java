@@ -13,6 +13,7 @@ import org.opentripplanner.routing.api.request.preference.ElevatorPreferences;
 import org.opentripplanner.routing.api.request.preference.EscalatorPreferences;
 import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.routing.api.request.preference.ScooterPreferences;
+import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleParkingPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleRentalPreferences;
 import org.opentripplanner.routing.api.request.preference.VehicleWalkingPreferences;
@@ -44,7 +45,8 @@ public class StreetSearchRequestMapper {
 
   public static StreetSearchRequestBuilder mapInternal(RouteRequest request) {
     var time = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
-    final RoutingPreferences preferences = request.preferences();
+    var preferences = request.preferences();
+    var street = preferences.street();
     var streetSearchRequestBuilder = StreetSearchRequest.of()
       .withStartTime(time)
       .withArriveBy(request.arriveBy())
@@ -52,17 +54,17 @@ public class StreetSearchRequestMapper {
       .withTo(mapGenericLocation(request.to()))
       .withWheelchairEnabled(request.journey().wheelchair())
       .withGeoidElevation(preferences.system().geoidElevation())
-      .withTurnReluctance(preferences.street().turnReluctance())
+      .withTurnReluctance(street.turnReluctance())
       .withWheelchair(b -> mapWheelchair(b, request.preferences().wheelchair()))
       .withWalk(b -> mapWalk(b, preferences.walk()))
       .withBike(b -> mapBike(b, preferences.bike()))
       .withCar(b -> mapCar(b, preferences.car()))
       .withScooter(b -> mapScooter(b, preferences.scooter()))
-      .withElevator(b -> mapElevator(b, preferences.street().elevator()))
+      .withElevator(b -> mapElevator(b, street.elevator()))
       .withIntersectionTraversalCalculator(
         IntersectionTraversalCalculator.create(
-          preferences.street().intersectionTraversalModel(),
-          preferences.street().drivingDirection()
+          street.intersectionTraversalModel(),
+          street.drivingDirection()
         )
       )
       .withTimeout(request.preferences().street().routingTimeout());
@@ -72,7 +74,7 @@ public class StreetSearchRequestMapper {
       var rentalPeriod = request.arriveBy()
         ? RentalPeriod.createFromLatestArrivalTime(time, rentalDuration)
         : RentalPeriod.createFromEarliestDepartureTime(time, rentalDuration);
-      return streetSearchRequestBuilder.withRentalPeriod(rentalPeriod);
+      streetSearchRequestBuilder.withRentalPeriod(rentalPeriod);
     }
 
     return streetSearchRequestBuilder;

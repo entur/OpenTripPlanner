@@ -13,7 +13,6 @@ import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.graph_builder.module.TurnRestrictionModule;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -32,9 +31,11 @@ import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.street.search.intersection_model.ConstantIntersectionTraversalCalculator;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
+import org.opentripplanner.street.search.intersection_model.IntersectionTraversalModel;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 
 public class TurnCostTest {
 
@@ -109,7 +110,11 @@ public class TurnCostTest {
           .withBike(bike -> bike.withSpeed(1.0).withReluctance(1.0))
           .withScooter(scooter -> scooter.withSpeed(1.0).withReluctance(1.0))
           .withWalk(walk -> walk.withSpeed(1.0).withStairsReluctance(1.0).withReluctance(1.0))
-          .withStreet(it -> it.withTurnReluctance(1.0).withIntersectionTraversalModel(calculator))
+          .withStreet(it ->
+            it
+              .withTurnReluctance(1.0)
+              .withIntersectionTraversalModel(IntersectionTraversalModel.CONSTANT)
+          )
       )
       .buildDefault();
 
@@ -223,8 +228,7 @@ public class TurnCostTest {
   ) {
     ShortestPathTree<State, Edge, Vertex> tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(request)
-      .withStreetRequest(new StreetRequest(streetMode))
+      .withRequest(StreetSearchRequestMapper.mapInternal(request).withMode(streetMode).build())
       .withFrom(from)
       .withTo(to)
       .getShortestPathTree();

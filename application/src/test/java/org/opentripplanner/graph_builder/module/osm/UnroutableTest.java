@@ -17,6 +17,7 @@ import org.opentripplanner.street.model.vertex.VertexLabel;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.test.support.ResourceLoader;
 
 /**
@@ -60,8 +61,11 @@ class UnroutableTest {
     Vertex to = graph.getVertex(VertexLabel.osm(40446276));
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(request)
-      .withStreetRequest(request.journey().direct())
+      .withRequest(
+        StreetSearchRequestMapper.mapInternal(request)
+          .withMode(request.journey().direct().mode())
+          .build()
+      )
       .withFrom(from)
       .withTo(to)
       .getShortestPathTree();

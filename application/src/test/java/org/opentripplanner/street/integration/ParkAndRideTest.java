@@ -10,13 +10,13 @@ import java.util.stream.Collectors;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 
 public abstract class ParkAndRideTest extends GraphRoutingTest {
 
@@ -164,8 +164,7 @@ public abstract class ParkAndRideTest extends GraphRoutingTest {
 
     var tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(request)
-      .withStreetRequest(new StreetRequest(streetMode))
+      .withRequest(StreetSearchRequestMapper.mapInternal(request).withMode(streetMode).build())
       .withFrom(fromVertex)
       .withTo(toVertex)
       .getShortestPathTree();

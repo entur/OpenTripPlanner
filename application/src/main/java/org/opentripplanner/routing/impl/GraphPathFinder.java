@@ -98,9 +98,9 @@ public class GraphPathFinder {
       .withRequest(
         StreetSearchRequestMapper.mapInternal(request)
           .withExtensionRequestContexts(extensionRequestContexts)
+          .withMode(request.journey().direct().mode())
           .build()
       )
-      .withStreetRequest(request.journey().direct())
       .withFrom(from)
       .withTo(to);
 
