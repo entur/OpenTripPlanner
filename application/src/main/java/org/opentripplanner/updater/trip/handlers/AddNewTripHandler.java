@@ -261,7 +261,9 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
         null,
         false,
         false,
-        resolvedUpdate.dataSource()
+        resolvedUpdate.dataSource(),
+        true,
+        null
       );
 
       LOG.debug("Updated existing added trip {} on {}", tripId, serviceDate);
