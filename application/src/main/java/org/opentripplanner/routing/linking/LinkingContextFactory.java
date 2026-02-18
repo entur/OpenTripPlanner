@@ -386,7 +386,8 @@ public class LinkingContextFactory {
     List<RoutingError> routingErrors = new ArrayList<>();
 
     // check that vertices where found if from-location was specified
-    if (isDisconnected(fromVertices, LocationType.FROM)) {
+    // Skip check for on-board trip locations - they don't need street vertices
+    if ((from == null || !from.isOnBoard()) && isDisconnected(fromVertices, LocationType.FROM)) {
       routingErrors.add(
         new RoutingError(getRoutingErrorCodeForDisconnected(from), InputField.FROM_PLACE)
       );
