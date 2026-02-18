@@ -17,6 +17,7 @@ import org.opentripplanner.astar.spi.SearchTerminationStrategy;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AStarBuilder<
   State extends AStarState<State, Edge, Vertex>,
@@ -25,7 +26,7 @@ public abstract class AStarBuilder<
   Builder extends AStarBuilder<State, Edge, Vertex, Builder>
 > {
 
-  Logger LOG = org.slf4j.LoggerFactory.getLogger(AStarBuilder.class);
+  Logger LOG = LoggerFactory.getLogger(AStarBuilder.class);
 
   private Builder builder;
   private Runnable preStartHook = () ->
@@ -39,7 +40,6 @@ public abstract class AStarBuilder<
   private SearchTerminationStrategy<State> terminationStrategy;
   private DominanceFunction<State> dominanceFunction;
   private Edge originBackEdge;
-  private Collection<State> initialStates;
 
   protected AStarBuilder() {}
 
@@ -132,15 +132,11 @@ public abstract class AStarBuilder<
 
     Collection<State> initialStates;
 
-    if (this.initialStates != null) {
-      initialStates = this.initialStates;
-    } else {
-      initialStates = createInitialStates(origin);
+    initialStates = createInitialStates(origin);
 
-      if (originBackEdge != null) {
-        for (var state : initialStates) {
-          state.initBackEdge(originBackEdge);
-        }
+    if (originBackEdge != null) {
+      for (var state : initialStates) {
+        state.initBackEdge(originBackEdge);
       }
     }
 
