@@ -168,19 +168,16 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
   }
 
   /**
-   * Re-processing a fuzzy-matched trip with a routability change should produce UPDATED
-   * (not MODIFIED) on the second update, because the trip is already on the correct modified
-   * pattern from the first update.
+   * Re-processing a fuzzy-matched trip with a routability change should produce MODIFIED
+   * on both the first and second update, because the pattern differs from the scheduled
+   * pattern regardless of how many times the update is applied.
    *
    * Scenario: RAIL trip with first-stop dropoff=NONE (board-only).
    * SIRI sends ArrivalBoardingActivity=ALIGHTING at the first stop, changing dropoff to SCHEDULED.
-   * First update → MODIFIED (pattern change). Second identical update → should be UPDATED.
-   * TODO RT_VP This is the current behavior in the legacy updater, but this breaks
-   *             idempotency: the update outcome depends on the existence of a previous
-   *             update on the same trip.
+   * Both updates → MODIFIED (pattern changed relative to scheduled pattern).
    */
   @Test
-  void reprocessedFuzzyMatchedTripWithRoutabilityChangeShouldBeUpdated() {
+  void reprocessedFuzzyMatchedTripWithRoutabilityChangeShouldRemainModified() {
     var railRoute = ENV_BUILDER.route("RailRoute", r -> r.withMode(TransitMode.RAIL));
 
     var railTrip = TripInput.of("RailTrip")
@@ -224,11 +221,11 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       env.tripData("RailTrip").showTimetable()
     );
 
-    // Second update (re-processing): should produce UPDATED (trip already on correct pattern)
+    // Second update (re-processing): should still be MODIFIED (pattern differs from scheduled)
     var result2 = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
     assertSuccess(result2);
     assertEquals(
-      "UPDATED | A 0:00:10 0:00:15 | B 0:00:25 0:00:25",
+      "MODIFIED | A 0:00:10 0:00:15 | B 0:00:25 0:00:25",
       env.tripData("RailTrip").showTimetable()
     );
   }
