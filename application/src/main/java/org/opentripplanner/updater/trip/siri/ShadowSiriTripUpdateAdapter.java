@@ -213,12 +213,18 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
       );
 
       // 3. COMPARE
+      String primaryFailureReason = null;
+      if (
+        primaryRecord[0] == null && primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()
+      ) {
+        primaryFailureReason = primaryResult.errors().getFirst().toString();
+      }
       comparator.compare(
         primaryRecord[0],
         shadowRecord,
         tripId,
         () -> serializeSiriJourney(journey),
-        null,
+        primaryFailureReason,
         shadowFailureReason
       );
 

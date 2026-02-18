@@ -226,12 +226,18 @@ public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
       );
 
       // 3. COMPARE
+      String primaryFailureReason = null;
+      if (
+        primaryRecord[0] == null && primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()
+      ) {
+        primaryFailureReason = primaryResult.errors().getFirst().toString();
+      }
       comparator.compare(
         primaryRecord[0],
         shadowRecord,
         tripId,
         update::toString,
-        null,
+        primaryFailureReason,
         shadowFailureReason
       );
 
