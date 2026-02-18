@@ -47,7 +47,7 @@ public class OnBoardAccessResolver {
     var serviceDate = resolved.serviceDate();
     var tripPattern = findPatternInRaptorData(trip, serviceDate, patternIndex);
 
-    var stop = resolveStop(tripLocation.stopId());
+    var stop = resolveStop(tripLocation.stopLocationId());
     Integer targetSeconds = toSecondsSinceMidnight(
       tripLocation.scheduledDepartureTime(),
       serviceDate

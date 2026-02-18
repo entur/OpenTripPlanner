@@ -65,20 +65,22 @@ class GenericLocationMapper {
     var fieldName = OneOfInputValidator.validateOneOf(
       m,
       "PointInJourneyPatternReference",
-      PointInJourneyPatternReferenceInputType.FIELD_STOP_ID,
-      PointInJourneyPatternReferenceInputType.FIELD_STOP_ID_AND_SCHEDULED_DEPARTURE_TIME
+      PointInJourneyPatternReferenceInputType.FIELD_STOP_LOCATION_ID,
+      PointInJourneyPatternReferenceInputType.FIELD_STOP_LOCATION_ID_AND_SCHEDULED_DEPARTURE_TIME
     );
 
     return switch (fieldName) {
-      case PointInJourneyPatternReferenceInputType.FIELD_STOP_ID -> {
-        FeedScopedId stopId = idMapper.parse((String) m.get(fieldName));
-        yield TripLocation.of(tripOnDateReference, stopId);
+      case PointInJourneyPatternReferenceInputType.FIELD_STOP_LOCATION_ID -> {
+        FeedScopedId stopLocationId = idMapper.parse((String) m.get(fieldName));
+        yield TripLocation.of(tripOnDateReference, stopLocationId);
       }
-      case PointInJourneyPatternReferenceInputType.FIELD_STOP_ID_AND_SCHEDULED_DEPARTURE_TIME -> {
+      case PointInJourneyPatternReferenceInputType.FIELD_STOP_LOCATION_ID_AND_SCHEDULED_DEPARTURE_TIME -> {
         var nested = (Map<String, Object>) m.get(fieldName);
-        FeedScopedId stopId = idMapper.parse((String) nested.get("stopId"));
+        FeedScopedId stopLocationId = idMapper.parse(
+          (String) nested.get("stopLocationId")
+        );
         long scheduledDepartureTime = (Long) nested.get("scheduledDepartureTime");
-        yield TripLocation.of(tripOnDateReference, stopId, scheduledDepartureTime);
+        yield TripLocation.of(tripOnDateReference, stopLocationId, scheduledDepartureTime);
       }
       default -> throw new IllegalArgumentException("Unknown field: " + fieldName);
     };

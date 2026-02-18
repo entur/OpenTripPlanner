@@ -6,20 +6,24 @@ import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLScalarType;
 
-public class StopIdAndScheduledDepartureTimeInputType {
+public class StopLocationIdAndScheduledDepartureTimeInputType {
 
   public static GraphQLInputObjectType create(GraphQLScalarType dateTimeScalar) {
     return GraphQLInputObjectType.newInputObject()
-      .name("StopIdAndScheduledDepartureTime")
+      .name("StopLocationIdAndScheduledDepartureTime")
       .description(
-        "Identifies a point in a journey pattern by stop ID and scheduled departure time. " +
-          "The scheduled departure time is used for disambiguation when the stop is visited " +
-          "more than once in the journey pattern (e.g. ring lines)."
+        "Identifies a point in a journey pattern by stop location ID and scheduled departure " +
+          "time. A stop location can be a quay, a stop place, a multimodal stop place or a " +
+          "group of stop places. The scheduled departure time is used for disambiguation when " +
+          "the stop is visited more than once in the journey pattern (e.g. ring lines)."
       )
       .field(
         GraphQLInputObjectField.newInputObjectField()
-          .name("stopId")
-          .description("The stop ID.")
+          .name("stopLocationId")
+          .description(
+            "The stop location ID. A stop location can be a quay, a stop place, " +
+              "a multimodal stop place or a group of stop places."
+          )
           .type(new GraphQLNonNull(Scalars.GraphQLString))
           .build()
       )

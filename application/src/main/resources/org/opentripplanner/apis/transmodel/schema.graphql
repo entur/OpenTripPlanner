@@ -2362,10 +2362,10 @@ input PenaltyForStreetMode {
 
 "Identifies a point in a journey pattern. Exactly one of the fields must be set."
 input PointInJourneyPatternReference @oneOf {
-  "Identifies the point by stop ID. This does not work if the stop is visited more than once in the journey pattern (e.g. ring lines); use stopIdAndScheduledDepartureTime instead."
-  stopId: String
-  "Identifies the point by stop ID and scheduled departure time. The scheduled departure time disambiguates when the stop is visited more than once in the journey pattern (e.g. ring lines)."
-  stopIdAndScheduledDepartureTime: StopIdAndScheduledDepartureTime
+  "Identifies the point by stop location ID. A stop location can be a quay, a stop place, a multimodal stop place or a group of stop places. This does not work if the stop location is visited more than once in the journey pattern (e.g. ring lines); use stopLocationIdAndScheduledDepartureTime instead."
+  stopLocationId: String
+  "Identifies the point by stop location ID and scheduled departure time. A stop location can be a quay, a stop place, a multimodal stop place or a group of stop places. The scheduled departure time disambiguates when the stop location is visited more than once in the journey pattern (e.g. ring lines)."
+  stopLocationIdAndScheduledDepartureTime: StopLocationIdAndScheduledDepartureTime
 }
 
 """
@@ -2404,12 +2404,12 @@ input ServiceJourneyOnServiceDate {
   serviceJourneyId: String!
 }
 
-"Identifies a point in a journey pattern by stop ID and scheduled departure time. The scheduled departure time is used for disambiguation when the stop is visited more than once in the journey pattern (e.g. ring lines)."
-input StopIdAndScheduledDepartureTime {
+"Identifies a point in a journey pattern by stop location ID and scheduled departure time. A stop location can be a quay, a stop place, a multimodal stop place or a group of stop places. The scheduled departure time is used for disambiguation when the stop is visited more than once in the journey pattern (e.g. ring lines)."
+input StopLocationIdAndScheduledDepartureTime {
   "The scheduled departure time at this stop as a DateTime, corresponding to the aimedDepartureTime on EstimatedCall."
   scheduledDepartureTime: DateTime!
-  "The stop ID."
-  stopId: String!
+  "The stop location ID. A stop location can be a quay, a stop place, a multimodal stop place or a group of stop places."
+  stopLocationId: String!
 }
 
 "A combination of street mode and corresponding duration"

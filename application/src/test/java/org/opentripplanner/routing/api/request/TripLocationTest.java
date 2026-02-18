@@ -22,7 +22,7 @@ class TripLocationTest {
   void createWithStopId() {
     var tripLocation = TripLocation.of(TRIP_REF, STOP_ID);
     assertEquals(TRIP_REF, tripLocation.tripOnDateReference());
-    assertEquals(STOP_ID, tripLocation.stopId());
+    assertEquals(STOP_ID, tripLocation.stopLocationId());
     assertNull(tripLocation.scheduledDepartureTime());
   }
 
@@ -31,7 +31,7 @@ class TripLocationTest {
     long epochMillis = 1_730_000_000_000L;
     var tripLocation = TripLocation.of(TRIP_REF, STOP_ID, epochMillis);
     assertEquals(TRIP_REF, tripLocation.tripOnDateReference());
-    assertEquals(STOP_ID, tripLocation.stopId());
+    assertEquals(STOP_ID, tripLocation.stopLocationId());
     assertEquals(epochMillis, tripLocation.scheduledDepartureTime());
   }
 
