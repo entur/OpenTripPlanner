@@ -100,7 +100,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.elevator = requireNonNull(builder.elevator);
     this.rentalPeriod = builder.rentalPeriod;
     this.intersectionTraversalCalculator = requireNonNull(builder.intersectionTraversalCalculator);
-    this.extensionRequestContexts = requireNonNull(builder.extensionRequestContexts);
+    this.extensionRequestContexts = List.copyOf(requireNonNull(builder.extensionRequestContexts));
     this.timeout = requireNonNull(builder.timeout);
   }
 

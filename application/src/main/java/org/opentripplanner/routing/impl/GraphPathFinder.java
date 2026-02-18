@@ -23,6 +23,7 @@ import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,7 +95,11 @@ public class GraphPathFinder {
       )
       // FORCING the dominance function to weight only
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
-      .withRequest(request)
+      .withRequest(
+        StreetSearchRequestMapper.mapInternal(request)
+          .withExtensionRequestContexts(extensionRequestContexts)
+          .build()
+      )
       .withStreetRequest(request.journey().direct())
       .withFrom(from)
       .withTo(to);

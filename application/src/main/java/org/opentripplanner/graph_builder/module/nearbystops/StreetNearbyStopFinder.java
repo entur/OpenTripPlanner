@@ -130,9 +130,12 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(durationLimit))
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
-      .withRequest(StreetSearchRequestMapper.mapInternal(request).build())
+      .withRequest(
+        StreetSearchRequestMapper.mapInternal(request)
+          .withExtensionRequestContexts(extensionRequestContexts)
+          .build()
+      )
       .withArriveBy(reverseDirection)
-      .withStreetRequest(streetRequest)
       .withFrom(reverseDirection ? null : originVertices)
       .withTo(reverseDirection ? originVertices : null);
 

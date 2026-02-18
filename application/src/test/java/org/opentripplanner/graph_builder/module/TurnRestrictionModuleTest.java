@@ -432,9 +432,7 @@ public class TurnRestrictionModuleTest {
     assertEquals(11, graph.countEdges());
 
     var streetRequest = new StreetRequest(StreetMode.CAR);
-    var request = StreetSearchRequest.of()
-      .withMode(StreetMode.CAR)
-      .build();
+    var request = StreetSearchRequest.of().withMode(StreetMode.CAR).build();
 
     assertNull(
       StreetSearchBuilder.of()

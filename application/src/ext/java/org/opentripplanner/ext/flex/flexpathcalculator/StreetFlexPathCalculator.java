@@ -7,7 +7,6 @@ import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
@@ -80,14 +79,16 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
 
   private ShortestPathTree<State, Edge, Vertex> routeToMany(Vertex vertex) {
     // TODO: This is incorrect, the configured defaults are not used.
-    var routingRequest = StreetSearchRequest.of().withArriveBy(reverseDirection).build();
+    var routingRequest = StreetSearchRequest.of()
+      .withMode(StreetMode.CAR)
+      .withArriveBy(reverseDirection)
+      .build();
 
     return StreetSearchBuilder.of()
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(maxFlexTripDuration))
       .withDominanceFunction(new DominanceFunctions.EarliestArrival())
       .withRequest(routingRequest)
-      .withStreetRequest(new StreetRequest(StreetMode.CAR))
       .withFrom(reverseDirection ? null : vertex)
       .withTo(reverseDirection ? vertex : null)
       .getShortestPathTree();

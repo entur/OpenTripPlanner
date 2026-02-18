@@ -3,6 +3,7 @@ package org.opentripplanner.streetadapter;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Set;
+import org.apache.commons.lang3.NotImplementedException;
 import org.opentripplanner.astar.AStarBuilder;
 import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
@@ -16,7 +17,6 @@ import org.opentripplanner.street.search.strategy.DominanceFunctions;
 public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, StreetSearchBuilder> {
 
   private StreetSearchRequest request;
-  private StreetRequest streetRequest = StreetRequest.DEFAULT;
 
   public static StreetSearchBuilder of() {
     return new StreetSearchBuilder();
@@ -34,8 +34,7 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
   }
 
   public StreetSearchBuilder withStreetRequest(StreetRequest streetRequest) {
-    this.streetRequest = streetRequest;
-    return this;
+    throw new NotImplementedException();
   }
 
   @Override
@@ -46,7 +45,6 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
   @Override
   protected Collection<State> createInitialStates(Set<Vertex> originVertices) {
     StreetSearchRequest streetSearchRequest = StreetSearchRequest.copyOf(request)
-      .withMode(streetRequest.mode())
       .withArriveBy(arriveBy())
       .build();
 
@@ -63,7 +61,7 @@ public class StreetSearchBuilder extends AStarBuilder<State, Edge, Vertex, Stree
     if (heuristic.equals(RemainingWeightHeuristic.TRIVIAL)) {
       // No initialization needed
     } else if (heuristic instanceof EuclideanRemainingWeightHeuristic euclideanHeuristic) {
-      euclideanHeuristic.initialize(streetRequest.mode(), destination, arriveBy, request);
+      euclideanHeuristic.initialize(request.mode(), destination, arriveBy, request);
     } else {
       throw new IllegalArgumentException("Unknown heuristic type: " + heuristic);
     }

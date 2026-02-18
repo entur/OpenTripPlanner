@@ -193,7 +193,6 @@ public class CarpoolStreetRouter {
       )
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(streetReq)
-      .withStreetRequest(streetRequest)
       .withFrom(fromVertices)
       .withTo(toVertices);
 

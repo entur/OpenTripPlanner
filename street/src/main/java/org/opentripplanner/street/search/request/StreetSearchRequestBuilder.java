@@ -4,7 +4,7 @@ import static org.opentripplanner.street.search.request.StreetSearchRequest.MAX_
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
+import java.util.Collection;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
@@ -34,7 +34,7 @@ public class StreetSearchRequestBuilder {
   @Nullable
   RentalPeriod rentalPeriod;
   IntersectionTraversalCalculator intersectionTraversalCalculator;
-  List<ExtensionRequestContext> extensionRequestContexts;
+  Collection<ExtensionRequestContext> extensionRequestContexts;
   Duration timeout;
 
   StreetSearchRequestBuilder(StreetSearchRequest original) {
@@ -148,6 +148,11 @@ public class StreetSearchRequestBuilder {
   public StreetSearchRequestBuilder withTimeout(Duration duration) {
     this.timeout = duration;
     return null;
+  }
+
+  public StreetSearchRequestBuilder withExtensionRequestContexts(Collection<ExtensionRequestContext> contexts) {
+    this.extensionRequestContexts = contexts;
+    return this;
   }
 
   Instant startTimeOrNow() {
