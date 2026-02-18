@@ -136,6 +136,17 @@ public class RouteRequestBuilder implements Serializable {
     return this;
   }
 
+  /**
+   * Set the request's dateTime to the resolved boarding time and the search window to one minute
+   * (single Raptor iteration). One minute equals the Raptor iteration step, so this produces
+   * exactly one iteration at the EDT while keeping a valid search window for the filter chain.
+   */
+  public RouteRequestBuilder withOnBoardAccessAt(Instant boardingDateTime) {
+    this.dateTime = boardingDateTime.truncatedTo(ChronoUnit.SECONDS);
+    this.searchWindow = Duration.ofMinutes(1);
+    return this;
+  }
+
   public RouteRequestBuilder withSearchWindow(@Nullable Duration searchWindow) {
     this.searchWindow = searchWindow;
     return this;

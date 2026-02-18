@@ -38,6 +38,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.Defau
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.algorithm.transferoptimization.configure.TransferOptimizationServiceConfigurator;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.TripLocation;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
@@ -125,15 +126,29 @@ public class TransitRouter {
       ? serverContext.transitService().getRaptorTransitData()
       : serverContext.transitService().getRealtimeRaptorTransitData();
 
+    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
+
     var requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
 
     debugTimingAggregator.finishedPatternFiltering();
 
-    var accessEgresses = fetchAccessEgresses();
+    AccessEgresses accessEgresses;
 
-    debugTimingAggregator.finishedAccessEgress(
-      accessEgresses.getAccesses().size(),
-      accessEgresses.getEgresses().size()
+    if (onBoardTripLocation != null) {
+      var resolved = resolveOnBoardAccess(onBoardTripLocation, requestTransitDataProvider);
+      var egressPaths = fetchEgress();
+      verifyEgress(egressPaths);
+      accessEgresses = new AccessEgresses(List.of(resolved.access()), egressPaths);
+
+      debugTimingAggregator.finishedAccessEgress(1, egressPaths.size());
+    } else {
+      accessEgresses = fetchAccessEgresses();
+    }
+
+    // Unified from here — no on-board branching
+    var extraSearchForSorlandsbanen = createExtraMcRouterSearchForSorlandsbanen(
+      accessEgresses,
+      raptorTransitData
     );
 
     // Prepare transit search
@@ -154,7 +169,7 @@ public class TransitRouter {
     // Transit routing using Raptor
     var raptorService = new RaptorService<>(
       serverContext.raptorConfig(),
-      createExtraMcRouterSearchForSorlandsbanen(accessEgresses, raptorTransitData)
+      extraSearchForSorlandsbanen
     );
     var transitResponse = raptorService.route(raptorRequest, requestTransitDataProvider);
 
@@ -218,6 +233,14 @@ public class TransitRouter {
     debugTimingAggregator.finishedItineraryCreation();
 
     return new TransitRouterResult(itineraries, transitResponse.requestUsed().searchParams());
+  }
+
+  private OnBoardAccessResolver.ResolvedOnBoardAccess resolveOnBoardAccess(
+    TripLocation tripLocation,
+    RaptorRoutingRequestTransitData requestTransitDataProvider
+  ) {
+    var resolver = new OnBoardAccessResolver(serverContext.transitService());
+    return resolver.resolve(tripLocation, requestTransitDataProvider.onBoardTripPatternSearch());
   }
 
   private AccessEgresses fetchAccessEgresses() {
@@ -362,6 +385,15 @@ public class TransitRouter {
       additionalSearchDays.additionalSearchDaysInFuture(),
       DefaultTransitDataProviderFilter.ofRequest(request),
       request
+    );
+  }
+
+  private void verifyEgress(Collection<?> egress) {
+    if (!egress.isEmpty()) {
+      return;
+    }
+    throw new RoutingValidationException(
+      List.of(new RoutingError(RoutingErrorCode.NO_STOPS_IN_RANGE, InputField.TO_PLACE))
     );
   }
 
