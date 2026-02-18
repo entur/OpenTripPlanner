@@ -4,7 +4,6 @@ import java.util.Set;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.StreetConstants;
-import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.FreeEdge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -36,11 +35,7 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
 
   // TODO This currently only uses the first toVertex. If there are multiple toVertices, it will
   //      not work correctly.
-  public void initialize(
-    Set<Vertex> toVertices,
-    boolean arriveBy,
-    StreetSearchRequest req
-  ) {
+  public void initialize(Set<Vertex> toVertices, boolean arriveBy, StreetSearchRequest req) {
     Vertex target = toVertices.iterator().next();
     maxStreetSpeed = getStreetSpeedUpperBound(req);
     walkingSpeed = req.walk().speed();
