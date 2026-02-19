@@ -21,7 +21,7 @@ public interface AllowTransitModeFilter extends Serializable {
 
   /**
    * Returns true if this filter needs to perform trip-level (TripTimes) filtering
-   * when a TripPattern contains multiple modes. When a pattern has trips with
+   * on TripPatterns that contain multiple modes. When a pattern has trips with
    * different modes or submodes, pattern-level filtering alone is insufficient
    * and we must check each trip individually.
    */
