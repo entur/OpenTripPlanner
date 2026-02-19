@@ -220,6 +220,11 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder withOrder(int order) {
+      calls.getLast().setOrder(BigInteger.valueOf(order));
+      return this;
+    }
+
     public RecordedCallsBuilder arriveAimedActual(String aimedTime, String actualTime) {
       var call = calls.getLast();
       call.setAimedArrivalTime(localTimeParser.zonedDateTime(aimedTime));
@@ -283,6 +288,11 @@ public class SiriEtBuilder {
       call.setStopPointRef(ref);
 
       calls.add(call);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withOrder(int order) {
+      calls.getLast().setOrder(BigInteger.valueOf(order));
       return this;
     }
 
