@@ -52,7 +52,7 @@ public class DefaultTransitDataProviderFilter implements TransitDataProviderFilt
     hasTripLevelModeFilters = builder
       .filters()
       .stream()
-      .anyMatch(TransitFilter::matchesOnTripLevel);
+      .anyMatch(TransitFilter::isModeSelective);
   }
 
   public static DefaultTransitDataProviderFilterBuilder of() {
