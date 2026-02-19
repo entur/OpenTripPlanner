@@ -99,7 +99,7 @@ public class StopTimesHelper {
           request.timeWindow(),
           request.numberOfDepartures(),
           request.arrivalDeparture(),
-          true,
+          request.includeCancelledTrips(),
           request.sortOrder()
         )
           .stream()

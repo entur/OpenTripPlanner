@@ -17,6 +17,7 @@ public class TripTimeOnDateRequest {
 
   private final Set<StopLocation> stopLocations;
   private final Instant time;
+  private final boolean includeCancelledTrips;
   private final FilterValues<FeedScopedId> includeAgencies;
   private final FilterValues<FeedScopedId> includeRoutes;
   private final FilterValues<FeedScopedId> excludeAgencies;
@@ -35,6 +36,7 @@ public class TripTimeOnDateRequest {
     ArrivalDeparture arrivalDeparture,
     int numberOfDepartures,
     Comparator<TripTimeOnDate> sortOrder,
+    boolean includeCancelledTrips,
     FilterValues<FeedScopedId> includeAgencies,
     FilterValues<FeedScopedId> includeRoutes,
     FilterValues<FeedScopedId> excludeAgencies,
@@ -48,6 +50,7 @@ public class TripTimeOnDateRequest {
     this.arrivalDeparture = arrivalDeparture;
     this.numberOfDepartures = numberOfDepartures;
     this.sortOrder = Objects.requireNonNull(sortOrder);
+    this.includeCancelledTrips = includeCancelledTrips;
     this.includeAgencies = includeAgencies;
     this.includeRoutes = includeRoutes;
     this.excludeAgencies = excludeAgencies;
@@ -66,6 +69,10 @@ public class TripTimeOnDateRequest {
 
   public Instant time() {
     return time;
+  }
+
+  public boolean includeCancelledTrips() {
+    return includeCancelledTrips;
   }
 
   public FilterValues<FeedScopedId> includeAgencies() {

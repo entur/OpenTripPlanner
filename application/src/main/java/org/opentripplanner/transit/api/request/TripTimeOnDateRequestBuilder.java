@@ -22,6 +22,7 @@ public class TripTimeOnDateRequestBuilder {
   private static final String EXCLUDE_ROUTES = "excludeRoutes";
   private static final String EXCLUDE_MODES = "excludeModes";
   private final Collection<StopLocation> stopLocations;
+  private boolean includeCancelledTrips = false;
   private FilterValues<FeedScopedId> includeAgencies = FilterValues.ofNullIsEverything(
     INCLUDE_AGENCIES,
     null
@@ -54,6 +55,11 @@ public class TripTimeOnDateRequestBuilder {
 
   TripTimeOnDateRequestBuilder(Collection<StopLocation> timesAtStops) {
     this.stopLocations = timesAtStops;
+  }
+
+  public TripTimeOnDateRequestBuilder withIncludeCancelledTrips(boolean includeCancelledTrips) {
+    this.includeCancelledTrips = includeCancelledTrips;
+    return this;
   }
 
   public TripTimeOnDateRequestBuilder withTime(Instant time) {
@@ -121,6 +127,7 @@ public class TripTimeOnDateRequestBuilder {
       arrivalDeparture,
       numberOfDepartures,
       sortOrder,
+      includeCancelledTrips,
       includeAgencies,
       includeRoutes,
       excludeAgencies,
