@@ -49,10 +49,7 @@ public class DefaultTransitDataProviderFilter implements TransitDataProviderFilt
     includeRealtimeCancellations = builder.includeRealtimeCancellations();
     bannedTrips = Set.copyOf(builder.bannedTrips());
     filters = builder.filters().toArray(TransitFilter[]::new);
-    hasTripLevelModeFilters = builder
-      .filters()
-      .stream()
-      .anyMatch(TransitFilter::isModeSelective);
+    hasTripLevelModeFilters = builder.filters().stream().anyMatch(TransitFilter::isModeSelective);
   }
 
   public static DefaultTransitDataProviderFilterBuilder of() {
