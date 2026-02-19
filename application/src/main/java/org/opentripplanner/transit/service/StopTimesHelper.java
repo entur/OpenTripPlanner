@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Collectors;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
@@ -24,6 +25,7 @@ import org.opentripplanner.transit.model.filter.transit.TripTimeOnDateMatcherFac
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Timetable;
+import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -89,7 +91,7 @@ public class StopTimesHelper {
 
   List<TripTimeOnDate> findTripTimesOnDate(TripTimeOnDateRequest request) {
     Matcher<TripTimeOnDate> matcher = TripTimeOnDateMatcherFactory.of(request);
-    return request
+    var sorted = request
       .stopLocations()
       .stream()
       .flatMap(stopLocation ->
@@ -108,6 +110,11 @@ public class StopTimesHelper {
       )
       .sorted(request.sortOrder())
       .toList();
+
+    return limitPerLineAndDestinationDisplay(
+      sorted,
+      request.departuresPerLineAndDestinationDisplay()
+    );
   }
 
   /**
@@ -348,5 +355,36 @@ public class StopTimesHelper {
     boolean dropOffCancelled = pattern.getAlightType(stopPos).is(PickDrop.CANCELLED);
 
     return (pickupCancelled || dropOffCancelled) && !includeCancelled;
+  }
+
+  private static List<TripTimeOnDate> limitPerLineAndDestinationDisplay(
+    List<TripTimeOnDate> tripTimes,
+    Integer departuresPerLineAndDestinationDisplay
+  ) {
+    if (
+      departuresPerLineAndDestinationDisplay == null || departuresPerLineAndDestinationDisplay <= 0
+    ) {
+      return tripTimes;
+    }
+
+    return tripTimes
+      .stream()
+      .collect(Collectors.groupingBy(StopTimesHelper::destinationDisplayPerLine))
+      .values()
+      .stream()
+      .flatMap(group ->
+        group
+          .stream()
+          .sorted(TripTimeOnDate.compareByDeparture())
+          .distinct()
+          .limit(departuresPerLineAndDestinationDisplay)
+      )
+      .toList();
+  }
+
+  private static String destinationDisplayPerLine(TripTimeOnDate t) {
+    Trip trip = t.getTrip();
+    String headsign = t.getHeadsign() != null ? t.getHeadsign().toString() : null;
+    return trip == null ? headsign : trip.getRoute().getId() + "|" + headsign;
   }
 }

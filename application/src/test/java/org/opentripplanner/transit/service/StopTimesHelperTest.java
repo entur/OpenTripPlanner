@@ -16,6 +16,7 @@ import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
+import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.network.TripPattern;
 
 class StopTimesHelperTest {
@@ -343,6 +344,44 @@ class StopTimesHelperTest {
     assertEquals((8 * 60 + 10) * 60, stopTime.getScheduledArrival());
     assertEquals((8 * 60 + 10) * 60, stopTime.getScheduledDeparture());
     assertEquals(SERVICE_DATE, stopTime.getServiceDay());
+  }
+
+  /**
+   * All 5 departures at stop J span 3 routes (5, 6, 7) with the same destination display.
+   * Limiting to 1 departure per line+destination should return 3 results.
+   */
+  @Test
+  void findTripTimesOnDate_limitPerLineAndDestinationDisplay() {
+    var stop = transitService.getRegularStop(stopId);
+    var request = TripTimeOnDateRequest.of(List.of(stop))
+      .withTime(SERVICE_DATE.atStartOfDay(transitService.getTimeZone()).toInstant())
+      .withTimeWindow(Duration.ofHours(24))
+      .withNumberOfDepartures(10)
+      .withIncludeCancelledTrips(true)
+      .withDeparturesPerLineAndDestinationDisplay(1)
+      .build();
+
+    var result = stopTimesHelper.findTripTimesOnDate(request);
+
+    assertEquals(3, result.size());
+  }
+
+  /**
+   * Without the per-line limit, all 5 departures should be returned.
+   */
+  @Test
+  void findTripTimesOnDate_noLimitPerLineAndDestinationDisplay() {
+    var stop = transitService.getRegularStop(stopId);
+    var request = TripTimeOnDateRequest.of(List.of(stop))
+      .withTime(SERVICE_DATE.atStartOfDay(transitService.getTimeZone()).toInstant())
+      .withTimeWindow(Duration.ofHours(24))
+      .withNumberOfDepartures(10)
+      .withIncludeCancelledTrips(true)
+      .build();
+
+    var result = stopTimesHelper.findTripTimesOnDate(request);
+
+    assertEquals(5, result.size());
   }
 
   boolean hasCancelledTrips(List<StopTimesInPattern> stopTimes) {

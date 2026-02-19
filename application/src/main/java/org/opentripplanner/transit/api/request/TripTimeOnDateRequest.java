@@ -28,6 +28,7 @@ public class TripTimeOnDateRequest {
   private final ArrivalDeparture arrivalDeparture;
   private final int numberOfDepartures;
   private final Comparator<TripTimeOnDate> sortOrder;
+  private final Integer departuresPerLineAndDestinationDisplay;
 
   TripTimeOnDateRequest(
     Collection<StopLocation> stopLocations,
@@ -42,7 +43,8 @@ public class TripTimeOnDateRequest {
     FilterValues<FeedScopedId> excludeAgencies,
     FilterValues<FeedScopedId> excludeRoutes,
     FilterValues<TransitMode> includeModes,
-    FilterValues<TransitMode> excludeModes
+    FilterValues<TransitMode> excludeModes,
+    Integer departuresPerLineAndDestinationDisplay
   ) {
     this.stopLocations = Set.copyOf(stopLocations);
     this.time = Objects.requireNonNull(time);
@@ -57,6 +59,7 @@ public class TripTimeOnDateRequest {
     this.excludeRoutes = excludeRoutes;
     this.includeModes = includeModes;
     this.excludeModes = excludeModes;
+    this.departuresPerLineAndDestinationDisplay = departuresPerLineAndDestinationDisplay;
   }
 
   public static TripTimeOnDateRequestBuilder of(Collection<StopLocation> stopLocations) {
@@ -113,5 +116,9 @@ public class TripTimeOnDateRequest {
 
   public Comparator<TripTimeOnDate> sortOrder() {
     return sortOrder;
+  }
+
+  public Integer departuresPerLineAndDestinationDisplay() {
+    return departuresPerLineAndDestinationDisplay;
   }
 }
