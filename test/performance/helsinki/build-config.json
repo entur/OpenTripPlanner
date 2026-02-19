@@ -8,7 +8,7 @@
   "maxTransferDuration": "26m",
   "multiThreadElevationCalculations": true,
   "transitServiceStart": "2026-02-01",
-  "transitServiceEnd": "2026-02-31",
+  "transitServiceEnd": "2026-02-28",
   "transitModelTimeZone": "Europe/Helsinki",
   "fares": "hsl",
   "transferRequests": [
