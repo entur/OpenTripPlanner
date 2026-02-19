@@ -68,6 +68,11 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
+  public int getOrder() {
+    return 0;
+  }
+
+  @Override
   public String getStopPointRef() {
     return stopPointRef;
   }
