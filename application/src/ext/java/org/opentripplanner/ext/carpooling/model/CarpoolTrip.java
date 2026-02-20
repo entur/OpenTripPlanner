@@ -74,14 +74,14 @@ public class CarpoolTrip
   private List<Vertex> vertices;
 
   public List<Vertex> getVertices() {
-    if(this.vertices == null){
+    if (this.vertices == null) {
       throw new NullPointerException("Vertices are not initialized");
     }
     return this.vertices;
   }
 
   public void setVertices(List<Vertex> vertices) {
-    if(vertices.size() != stops.size()){
+    if (vertices.size() != stops.size()) {
       throw new IllegalArgumentException("Number of vertices do not match number of stops");
     }
     this.vertices = vertices;

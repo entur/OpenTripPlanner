@@ -21,7 +21,6 @@ public class StreetVertexUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(StreetVertexUtils.class);
 
-
   private final VertexLinker vertexLinker;
   private final TemporaryVerticesContainer temporaryVerticesContainer;
 
@@ -32,11 +31,10 @@ public class StreetVertexUtils {
   public StreetVertexUtils(
     VertexLinker vertexLinker,
     TemporaryVerticesContainer temporaryVerticesContainer
-  ){
+  ) {
     this.vertexLinker = vertexLinker;
     this.temporaryVerticesContainer = temporaryVerticesContainer;
   }
-
 
   /**
    * Gets vertices for a location, either from the LinkingContext or by creating
@@ -95,5 +93,4 @@ public class StreetVertexUtils {
       linkingContext
     );
   }
-
 }

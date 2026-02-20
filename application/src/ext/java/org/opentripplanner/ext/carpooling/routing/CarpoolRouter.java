@@ -10,8 +10,5 @@ import org.opentripplanner.street.search.state.State;
  */
 @FunctionalInterface
 public interface CarpoolRouter {
-  GraphPath<State, Edge, Vertex> route(
-    Vertex from,
-    Vertex to
-  );
+  GraphPath<State, Edge, Vertex> route(Vertex from, Vertex to);
 }

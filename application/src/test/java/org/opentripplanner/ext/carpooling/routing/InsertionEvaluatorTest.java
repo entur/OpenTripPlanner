@@ -27,6 +27,7 @@ import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -72,7 +73,7 @@ class InsertionEvaluatorTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     // Routing function returns null (simulating routing failure)
     // This causes evaluator to skip all positions
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> null;
+    CarpoolRouter carpoolRouter = (from, to) -> null;
 
     var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, carpoolRouter);
 
@@ -85,7 +86,7 @@ class InsertionEvaluatorTest {
 
     var mockPath = createGraphPath();
 
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> mockPath;
+    CarpoolRouter carpoolRouter = (from, to) -> mockPath;
 
     var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, carpoolRouter);
 
@@ -107,7 +108,7 @@ class InsertionEvaluatorTest {
     // 2. First insertion attempt fails (null for first segment)
     // 3. Second insertion attempt succeeds (mockPath for all segments)
     final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> {
+    CarpoolRouter carpoolRouter = (from, to) -> {
       int call = callCount[0]++;
       if (call < 2) {
         return mockPath;
@@ -135,7 +136,7 @@ class InsertionEvaluatorTest {
     // Additional = 50 min, exceeds 5 min budget
     var mockPath = createGraphPath(Duration.ofMinutes(20));
 
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> mockPath;
+    CarpoolRouter carpoolRouter = (from, to) -> mockPath;
 
     var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, carpoolRouter);
 
@@ -151,7 +152,7 @@ class InsertionEvaluatorTest {
 
     var mockPath = createGraphPath();
 
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> mockPath;
+    CarpoolRouter carpoolRouter = (from, to) -> mockPath;
 
     assertDoesNotThrow(() ->
       findOptimalInsertion(trip, OSLO_MIDPOINT_NORTH, OSLO_NORTHEAST, carpoolRouter)
@@ -162,7 +163,7 @@ class InsertionEvaluatorTest {
   void findOptimalInsertion_baselineDurationCalculationFails_returnsNull() {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> null;
+    CarpoolRouter carpoolRouter = (from, to) -> null;
 
     var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, carpoolRouter);
 
@@ -199,7 +200,7 @@ class InsertionEvaluatorTest {
       mockPath7,
     };
     final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> {
+    CarpoolRouter carpoolRouter = (from, to) -> {
       int call = callCount[0]++;
       if (call == 0) {
         return mockPath10;
@@ -225,7 +226,7 @@ class InsertionEvaluatorTest {
 
     var mockPath = createGraphPath();
 
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> mockPath;
+    CarpoolRouter carpoolRouter = (from, to) -> mockPath;
 
     var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, carpoolRouter);
 
@@ -274,7 +275,7 @@ class InsertionEvaluatorTest {
       segmentCD,
     };
     final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> {
+    CarpoolRouter carpoolRouter = (from, to) -> {
       int call = callCount[0]++;
       return call < paths.length ? paths[call] : segmentAC;
     };
@@ -329,7 +330,7 @@ class InsertionEvaluatorTest {
     var mockPath = createGraphPath(Duration.ofMinutes(5));
 
     final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> {
+    CarpoolRouter carpoolRouter = (from, to) -> {
       callCount[0]++;
       return mockPath;
     };
@@ -369,7 +370,7 @@ class InsertionEvaluatorTest {
     var mockPath = createGraphPath(Duration.ofMinutes(5));
 
     final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> {
+    CarpoolRouter carpoolRouter = (from, to) -> {
       callCount[0]++;
       return mockPath;
     };
@@ -397,7 +398,7 @@ class InsertionEvaluatorTest {
     var mockPath = createGraphPath(Duration.ofMinutes(5));
 
     final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to, linkingContext) -> {
+    CarpoolRouter carpoolRouter = (from, to) -> {
       callCount[0]++;
       return mockPath;
     };

@@ -4,8 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 
 public class AccessEgressFilterChain {
@@ -33,9 +31,17 @@ public class AccessEgressFilterChain {
     );
   }
 
+  /** Runs filters to check whether the carpooling trip is potentially valid.
+   *
+   * @param trip Carpool trip
+   * @param coordinateOfPassenger Coordinate of origin if access, and destination if egress
+   * @param passengerDepartureTime Requested departure time of the passenger
+   * @param searchWindow The time window around the requested departure time in which the trip will be considered
+   * @return true if all the filters returns true, false if one of them returns true
+   */
   public boolean accepts(
     CarpoolTrip trip,
-    WgsCoordinate coordinateOfPassenger, // Origin for access, destination for egress
+    WgsCoordinate coordinateOfPassenger,
     Instant passengerDepartureTime,
     Duration searchWindow
   ) {

@@ -12,9 +12,9 @@ import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.streetadapter.StreetSearchBuilder;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
+import org.opentripplanner.streetadapter.StreetSearchBuilder;
 import org.opentripplanner.utils.collection.Pair;
 
 public class CarpoolTreeStreetRouter implements CarpoolRouter {
@@ -24,21 +24,36 @@ public class CarpoolTreeStreetRouter implements CarpoolRouter {
   private final HashMap<Pair<Vertex>, GraphPath<State, Edge, Vertex>> pathCache = new HashMap<>();
 
   public enum Direction {
-    FROM, // We want to calculate paths from the vertex
-    TO, // We want to calculate paths to the vertex
-    BOTH // We want to calculate paths both from and to the vertex
+    /**
+     * We want to calculate paths from the vertex
+     */
+    FROM,
+    /**
+     * We want to calculate paths to the vertex
+     */
+    TO,
+    /**
+     *  We want to calculate paths both from and to the vertex
+     */
+    BOTH,
   }
 
-  private ShortestPathTree<State, Edge, Vertex> createTree(Vertex vertex, Boolean reverse, Duration searchLimit) {
+  private ShortestPathTree<State, Edge, Vertex> createTree(
+    Vertex vertex,
+    Boolean reverse,
+    Duration searchLimit
+  ) {
     var streetRequest = new StreetRequest(StreetMode.CARPOOL);
-    var routeRequest = reverse ? RouteRequest.of().withArriveBy(true).buildDefault() : RouteRequest.of().buildDefault();
+    var routeRequest = reverse
+      ? RouteRequest.of().withArriveBy(true).buildDefault()
+      : RouteRequest.of().buildDefault();
     var builder = StreetSearchBuilder.of()
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(searchLimit))
       .withDominanceFunction(new DominanceFunctions.EarliestArrival())
       .withRequest(routeRequest)
       .withStreetRequest(streetRequest);
 
-    if(reverse){
+    if (reverse) {
       return builder.withTo(vertex).getShortestPathTree();
     }
 
@@ -46,18 +61,23 @@ public class CarpoolTreeStreetRouter implements CarpoolRouter {
   }
 
   public void addVertex(Vertex vertex, Direction direction, Duration searchLimit) {
-    if(!this.trees.containsKey(vertex) && (direction == Direction.FROM || direction == Direction.BOTH)) {
+    if (
+      !this.trees.containsKey(vertex) &&
+      (direction == Direction.FROM || direction == Direction.BOTH)
+    ) {
       this.trees.put(vertex, createTree(vertex, false, searchLimit));
     }
 
-    if(!this.reverseTrees.containsKey(vertex) && (direction == Direction.TO || direction == Direction.BOTH)) {
+    if (
+      !this.reverseTrees.containsKey(vertex) &&
+      (direction == Direction.TO || direction == Direction.BOTH)
+    ) {
       this.reverseTrees.put(vertex, createTree(vertex, true, searchLimit));
     }
   }
 
   @Override
   public GraphPath<State, Edge, Vertex> route(Vertex from, Vertex to) {
-
     if (pathCache.containsKey(new Pair<>(from, to))) {
       return pathCache.get(new Pair<>(from, to));
     }
@@ -69,7 +89,9 @@ public class CarpoolTreeStreetRouter implements CarpoolRouter {
       isReverse = true;
     }
     if (tree == null) {
-      Log.error(String.format("tree is null for vertices from %s to %s", from.toString(), to.toString()));
+      Log.error(
+        String.format("tree is null for vertices from %s to %s", from.toString(), to.toString())
+      );
       return null;
     }
 

@@ -19,7 +19,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   private final int durationInSeconds;
   private final int cost;
   private final Duration extraTimeForStop;
-  private static final int COST_PER_SECOND_OF_WAITING_FOR_PASSENGERS = 2; // NOT SURE WHAT THIS SHOULD BE, TEMPORARY VALUE
+  // NOT SURE WHAT THIS SHOULD BE, TEMPORARY VALUE
+  private static final int COST_PER_SECOND_OF_WAITING_FOR_PASSENGERS = 2;
   private final List<GraphPath<State, Edge, Vertex>> segments;
   private final TimeAndCost penalty;
   private final double totalWeight;

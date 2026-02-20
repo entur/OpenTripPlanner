@@ -110,7 +110,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     This is needed for managing computational complexity unless we find a smarter way of searching
     for nearby stops.
    */
-  public static final Duration MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS = Duration.ofMinutes(60);
+  public static final Duration MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS =
+    Duration.ofMinutes(60);
   private final CarpoolingRepository repository;
   private final StreetLimitationParametersService streetLimitationParametersService;
   private final FilterChain preFilters;
@@ -200,10 +201,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var itineraries = List.<Itinerary>of();
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var router = new CarpoolStreetRouter(
-        streetLimitationParametersService,
-        request
-      );
+      var router = new CarpoolStreetRouter(streetLimitationParametersService, request);
 
       var streetVertexUtils = new StreetVertexUtils(this.vertexLinker, temporaryVerticesContainer);
 
@@ -235,9 +233,11 @@ public class DefaultCarpoolingService implements CarpoolingService {
             trip.getId()
           );
 
-          var tripVertices = trip.routePoints().stream().map(
-            coord -> streetVertexUtils.getOrCreateVertex(coord, linkingContext)
-          ).toList();
+          var tripVertices = trip
+            .routePoints()
+            .stream()
+            .map(coord -> streetVertexUtils.getOrCreateVertex(coord, linkingContext))
+            .toList();
 
           trip.setVertices(tripVertices);
 
@@ -348,8 +348,13 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var allTrips = repository.getCarpoolTrips();
       LOG.debug("Repository contains {} carpool trips", allTrips.size());
 
-      GenericLocation passengerAccessEgressLocation = accessOrEgress.isAccess() ? request.from() : request.to();
-      WgsCoordinate passengerAccessEgressCoordinates = new WgsCoordinate(passengerAccessEgressLocation.lat, passengerAccessEgressLocation.lng);
+      GenericLocation passengerAccessEgressLocation = accessOrEgress.isAccess()
+        ? request.from()
+        : request.to();
+      WgsCoordinate passengerAccessEgressCoordinates = new WgsCoordinate(
+        passengerAccessEgressLocation.lat,
+        passengerAccessEgressLocation.lng
+      );
 
       var passengerDepartureTime = request.dateTime();
 
@@ -373,7 +378,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var streetVertexUtils = new StreetVertexUtils(this.vertexLinker, temporaryVerticesContainer);
 
       var carPoolTreeVertexRouter = new CarpoolTreeStreetRouter();
-      Vertex passengerAccessEgressVertex = streetVertexUtils.getOrCreateVertex(passengerAccessEgressCoordinates, linkingContext);
+      Vertex passengerAccessEgressVertex = streetVertexUtils.getOrCreateVertex(
+        passengerAccessEgressCoordinates,
+        linkingContext
+      );
 
       var streetNearbyStopFinder = StreetNearbyStopFinder.of(
         stopResolver,
@@ -383,7 +391,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var nearByStops = streetNearbyStopFinder
         .build()
-        .findNearbyStops(Set.of(passengerAccessEgressVertex), request, streetRequest, accessOrEgress.isEgress())
+        .findNearbyStops(
+          Set.of(passengerAccessEgressVertex),
+          request,
+          streetRequest,
+          accessOrEgress.isEgress()
+        )
         .stream()
         .filter(stop -> !(stop.stop instanceof AreaStop))
         .toList();
@@ -397,22 +410,37 @@ public class DefaultCarpoolingService implements CarpoolingService {
           )
         );
 
-
       candidateTrips.forEach(carpoolTrip -> {
         var vertices = getVerticesForTrip(carpoolTrip, streetVertexUtils, linkingContext);
         carpoolTrip.setVertices(vertices);
       });
 
       // vertices have to be added to the carPoolTreeVertexRouter AFTER all vertices have been created
-      carPoolTreeVertexRouter.addVertex(passengerAccessEgressVertex, CarpoolTreeStreetRouter.Direction.BOTH, MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS);
+      carPoolTreeVertexRouter.addVertex(
+        passengerAccessEgressVertex,
+        CarpoolTreeStreetRouter.Direction.BOTH,
+        MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS
+      );
       candidateTrips.forEach(carpoolTrip -> {
         var vertices = carpoolTrip.getVertices();
-        carPoolTreeVertexRouter.addVertex(vertices.getFirst(), CarpoolTreeStreetRouter.Direction.FROM, MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS);
-        carPoolTreeVertexRouter.addVertex(vertices.getLast(), CarpoolTreeStreetRouter.Direction.TO, MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS);
+        carPoolTreeVertexRouter.addVertex(
+          vertices.getFirst(),
+          CarpoolTreeStreetRouter.Direction.FROM,
+          MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS
+        );
+        carPoolTreeVertexRouter.addVertex(
+          vertices.getLast(),
+          CarpoolTreeStreetRouter.Direction.TO,
+          MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS
+        );
 
         var middleVertices = vertices.subList(1, vertices.size() - 1);
         middleVertices.forEach(vertex -> {
-          carPoolTreeVertexRouter.addVertex(vertex, CarpoolTreeStreetRouter.Direction.BOTH, MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS);
+          carPoolTreeVertexRouter.addVertex(
+            vertex,
+            CarpoolTreeStreetRouter.Direction.BOTH,
+            MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS
+          );
         });
       });
 
@@ -457,11 +485,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var insertionCandidates = candidateTripsWithViableStopsAndPositions
         .stream()
-        .flatMap(it -> insertionEvaluator
-          .findBestInsertions(
-            it
-          ).stream()
-        ).toList();
+        .flatMap(it -> insertionEvaluator.findBestInsertions(it).stream())
+        .toList();
 
       var accessEgresses = insertionCandidates
         .stream()
@@ -475,11 +500,17 @@ public class DefaultCarpoolingService implements CarpoolingService {
     }
   }
 
-  private List<Vertex> getVerticesForTrip(CarpoolTrip trip, StreetVertexUtils streetVertexUtils, LinkingContext linkingContext){
+  private List<Vertex> getVerticesForTrip(
+    CarpoolTrip trip,
+    StreetVertexUtils streetVertexUtils,
+    LinkingContext linkingContext
+  ) {
     var stops = trip.stops();
-    return stops.stream().map(CarpoolStop::getCoordinate).map(
-      coordinate -> streetVertexUtils.getOrCreateVertex(coordinate, linkingContext)
-    ).toList();
+    return stops
+      .stream()
+      .map(CarpoolStop::getCoordinate)
+      .map(coordinate -> streetVertexUtils.getOrCreateVertex(coordinate, linkingContext))
+      .toList();
   }
 
   public record ViableAccessEgress(

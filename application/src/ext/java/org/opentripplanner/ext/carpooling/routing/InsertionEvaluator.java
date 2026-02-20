@@ -5,7 +5,6 @@ import static org.opentripplanner.ext.carpooling.util.GraphPathUtils.calculateCu
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
@@ -97,7 +96,9 @@ public class InsertionEvaluator {
 
     Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
 
-    var viableCandidateTrips = tripWithViableAccessEgress.viableAccessEgress().stream()
+    var viableCandidateTrips = tripWithViableAccessEgress
+      .viableAccessEgress()
+      .stream()
       .map(viableAccessEgress -> {
         var pickUpVertix = viableAccessEgress.accessEgress() == AccessEgressType.ACCESS
           ? viableAccessEgress.passengerVertex()
@@ -115,8 +116,9 @@ public class InsertionEvaluator {
           cumulativeDurations,
           viableAccessEgress.transitStop()
         );
-    }).filter(Objects::nonNull).toList();
-
+      })
+      .filter(Objects::nonNull)
+      .toList();
 
     return viableCandidateTrips;
   }
@@ -148,11 +150,25 @@ public class InsertionEvaluator {
       return null;
     }
 
-    var passengerPickupVertex = streetVertexUtils.getOrCreateVertex(passengerPickup, linkingContext);
-    var passengerDropoffVertex = streetVertexUtils.getOrCreateVertex(passengerDropoff, linkingContext);
+    var passengerPickupVertex = streetVertexUtils.getOrCreateVertex(
+      passengerPickup,
+      linkingContext
+    );
+    var passengerDropoffVertex = streetVertexUtils.getOrCreateVertex(
+      passengerDropoff,
+      linkingContext
+    );
 
     Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
-    return findBestInsertion(trip, viablePositions, passengerPickupVertex, passengerDropoffVertex, baselineSegments, cumulativeDurations, null);
+    return findBestInsertion(
+      trip,
+      viablePositions,
+      passengerPickupVertex,
+      passengerDropoffVertex,
+      baselineSegments,
+      cumulativeDurations,
+      null
+    );
   }
 
   @Nullable
@@ -164,8 +180,7 @@ public class InsertionEvaluator {
     GraphPath<State, Edge, Vertex>[] baselineSegments,
     Duration[] cumulativeDurations,
     NearbyStop transitStop
-  ){
-
+  ) {
     InsertionCandidate bestCandidate = null;
     Duration minAdditionalDuration = INITIAL_ADDITIONAL_DURATION;
     Duration baselineDuration = cumulativeDurations[cumulativeDurations.length - 1];
@@ -192,7 +207,7 @@ public class InsertionEvaluator {
       // Check if this is the best so far and within deviation budget
       if (
         additionalDuration.compareTo(minAdditionalDuration) < 0 &&
-          additionalDuration.compareTo(trip.deviationBudget()) <= 0
+        additionalDuration.compareTo(trip.deviationBudget()) <= 0
       ) {
         minAdditionalDuration = additionalDuration;
         bestCandidate = candidate;

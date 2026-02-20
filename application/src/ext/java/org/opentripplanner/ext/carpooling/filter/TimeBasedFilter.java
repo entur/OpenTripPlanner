@@ -4,8 +4,6 @@ import java.time.Duration;
 import java.time.Instant;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,5 +70,4 @@ public class TimeBasedFilter implements TripFilter, AccessEgressTripFilter {
       passengerDepartureTime.isBefore(latestDepartureTime.toInstant())
     );
   }
-
 }

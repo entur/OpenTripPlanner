@@ -5,8 +5,8 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.basic.Cost;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
@@ -99,7 +99,8 @@ public class CarpoolItineraryMapper {
     var fromVertex = segments.getFirst().states.getFirst().getVertex();
     var toVertex = segments.getLast().states.getLast().getVertex();
     LineString geometry = GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry);
-    var cost = accessEgress.getTotalWeight(); // NOT SURE IF THIS IS THE WAY YOU SHOULD DO IT
+    // NOT SURE IF THIS IS THE WAY YOU SHOULD DO IT
+    var cost = accessEgress.getTotalWeight();
 
     var carpoolLeg = CarpoolLeg.of()
       .withStartTime(startTime)
@@ -187,6 +188,7 @@ public class CarpoolItineraryMapper {
       .flatMap(seg -> seg.edges.stream())
       .toList();
 
+    // THE COST SEEMS WRONG, CAN YOU JUST TAKE THE COST OF THE LAST SEGMENT
     CarpoolLeg carpoolLeg = CarpoolLeg.of()
       .withStartTime(startTime)
       .withEndTime(endTime)
@@ -194,7 +196,7 @@ public class CarpoolItineraryMapper {
       .withTo(Place.normal(toVertex, new NonLocalizedString("Carpool alighting")))
       .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
-      .withGeneralizedCost((int) lastSegment.getWeight()) // THIS SEEMS WRONG, CAN YOU JUST TAKE THE COST OF THE LAST SEGMENT
+      .withGeneralizedCost((int) lastSegment.getWeight())
       .build();
 
     return Itinerary.ofDirect(List.of(carpoolLeg))
