@@ -175,7 +175,7 @@ public class TimetableSnapshot {
     );
   }
 
-  private TimetableSnapshot(
+  TimetableSnapshot(
     Map<FeedScopedId, SortedSet<Timetable>> timetables,
     Map<TripIdAndServiceDate, TripPattern> realTimeNewTripPatternsForModifiedTrips,
     Map<FeedScopedId, Route> realtimeAddedRoutes,
@@ -637,7 +637,7 @@ public class TimetableSnapshot {
     realTimeAddedPatternForTrip.keySet().removeIf(trip -> feedId.equals(trip.getId().getFeedId()));
     realTimeAddedTripOnServiceDateForTripAndDay
       .keySet()
-      .removeIf(tripOnServiceDate -> feedId.equals(tripOnServiceDate.tripId().getFeedId()));
+      .removeIf(tripIdAndServiceDate -> feedId.equals(tripIdAndServiceDate.tripId().getFeedId()));
     realTimeAddedTripOnServiceDateById.keySet().removeIf(id -> feedId.equals(id.getFeedId()));
     realTimeAddedPatternsForRoute
       .keySet()
