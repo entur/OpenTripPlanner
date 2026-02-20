@@ -1,7 +1,9 @@
 package org.opentripplanner.street.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.core.model.basic.Cost.costOfSeconds;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -10,9 +12,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.routing.algorithm.GraphRoutingTest;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
@@ -29,7 +28,7 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
+import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
 
 /**
  * This is adapted from {@link CarPickupTest}. All tests use the same graph structure, but a part of
@@ -107,7 +106,7 @@ public class BikeRentalTest extends GraphRoutingTest {
       B,
       C,
       false,
-      RouteRequest.defaultValue(),
+      StreetSearchRequest.of().build(),
       StreetMode.BIKE
     );
 
@@ -121,7 +120,7 @@ public class BikeRentalTest extends GraphRoutingTest {
       B,
       C,
       false,
-      RouteRequest.defaultValue(),
+      StreetSearchRequest.of().build(),
       StreetMode.BIKE
     );
 
@@ -472,16 +471,13 @@ public class BikeRentalTest extends GraphRoutingTest {
     Set<String> bannedNetworks,
     Set<String> allowedNetworks
   ) {
-    Consumer<RouteRequestBuilder> setter = options -> {
-      options.withPreferences(preferences ->
-        preferences.withBike(bike ->
-          bike.withRental(rental -> {
-            rental.withAllowedNetworks(allowedNetworks);
-            rental.withBannedNetworks(bannedNetworks);
-          })
-        )
+    Consumer<StreetSearchRequestBuilder> setter = options ->
+      options.withBike(bike ->
+        bike.withRental(rental -> {
+          rental.withAllowedNetworks(allowedNetworks);
+          rental.withBannedNetworks(bannedNetworks);
+        })
       );
-    };
 
     assertEquals(
       List.of("WALK - BEFORE_RENTING - BC street (1,503.76, 752)"),
@@ -502,16 +498,13 @@ public class BikeRentalTest extends GraphRoutingTest {
     Set<String> bannedNetworks,
     Set<String> allowedNetworks
   ) {
-    Consumer<RouteRequestBuilder> setter = options -> {
-      options.withPreferences(preferences ->
-        preferences.withBike(bike ->
-          bike.withRental(rental -> {
-            rental.withAllowedNetworks(allowedNetworks);
-            rental.withBannedNetworks(bannedNetworks);
-          })
-        )
+    Consumer<StreetSearchRequestBuilder> setter = options ->
+      options.withBike(bike ->
+        bike.withRental(rental -> {
+          rental.withAllowedNetworks(allowedNetworks);
+          rental.withBannedNetworks(bannedNetworks);
+        })
       );
-    };
 
     assertEquals(
       List.of(
@@ -628,14 +621,12 @@ public class BikeRentalTest extends GraphRoutingTest {
     int keepRentedBicycleCost
   ) {
     return runStreetSearchAndCreateDescriptor(fromVertex, toVertex, arriveBy, options -> {
-      options.withPreferences(preferences ->
-        preferences.withBike(bike ->
-          bike.withRental(rental -> {
-            rental.withUseAvailabilityInformation(useAvailabilityInformation);
-            rental.withArrivingInRentalVehicleAtDestinationCost(keepRentedBicycleCost);
-            rental.withAllowArrivingInRentedVehicleAtDestination(keepRentedBicycleCost > 0);
-          })
-        )
+      options.withBike(b ->
+        b.withRental(rental -> {
+          rental.withUseAvailabilityInformation(useAvailabilityInformation);
+          rental.withArrivingInRentalVehicleAtDestinationCost(costOfSeconds(keepRentedBicycleCost));
+          rental.withAllowArrivingInRentedVehicleAtDestination(keepRentedBicycleCost > 0);
+        })
       );
     });
   }
@@ -644,17 +635,19 @@ public class BikeRentalTest extends GraphRoutingTest {
     Vertex fromVertex,
     Vertex toVertex,
     boolean arriveBy,
-    Consumer<RouteRequestBuilder> optionsSetter
+    Consumer<StreetSearchRequestBuilder> optionsSetter
   ) {
-    var builder = RouteRequest.of().withArriveBy(arriveBy);
+    var builder = StreetSearchRequest.of().withArriveBy(arriveBy);
 
     optionsSetter.accept(builder);
 
-    builder.withPreferences(preferences ->
-      preferences.withBike(bike ->
-        bike.withRental(rental ->
-          rental.withPickupTime(42).withPickupCost(62).withDropOffCost(33).withDropOffTime(15)
-        )
+    builder.withBike(bike ->
+      bike.withRental(rental ->
+        rental
+          .withPickupTime(Duration.ofSeconds(42))
+          .withPickupCost(costOfSeconds(62))
+          .withDropOffCost(costOfSeconds(33))
+          .withDropOffTime(Duration.ofSeconds(15))
       )
     );
 
@@ -662,7 +655,7 @@ public class BikeRentalTest extends GraphRoutingTest {
       fromVertex,
       toVertex,
       arriveBy,
-      builder.buildDefault(),
+      builder.build(),
       StreetMode.BIKE_RENTAL
     );
   }
@@ -671,16 +664,12 @@ public class BikeRentalTest extends GraphRoutingTest {
     Vertex fromVertex,
     Vertex toVertex,
     boolean arriveBy,
-    RouteRequest options,
+    StreetSearchRequest req,
     StreetMode streetMode
   ) {
     var tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
-      .withRequest(
-        StreetSearchRequest.copyOf(StreetSearchRequestMapper.mapInternal(options).build())
-          .withMode(streetMode)
-          .build()
-      )
+      .withRequest(StreetSearchRequest.copyOf(req).withMode(streetMode).build())
       .withFrom(fromVertex)
       .withTo(toVertex)
       .getShortestPathTree();

@@ -33,6 +33,7 @@ public class StreetSearchRequestBuilder {
 
   @Nullable
   RentalPeriod rentalPeriod;
+
   IntersectionTraversalCalculator intersectionTraversalCalculator;
   Collection<ExtensionRequestContext> extensionRequestContexts;
   Duration timeout;
@@ -140,7 +141,9 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
-  public StreetSearchRequestBuilder withIntersectionTraversalCalculator(IntersectionTraversalCalculator ic) {
+  public StreetSearchRequestBuilder withIntersectionTraversalCalculator(
+    IntersectionTraversalCalculator ic
+  ) {
     this.intersectionTraversalCalculator = ic;
     return this;
   }
@@ -150,7 +153,9 @@ public class StreetSearchRequestBuilder {
     return this;
   }
 
-  public StreetSearchRequestBuilder withExtensionRequestContexts(Collection<ExtensionRequestContext> contexts) {
+  public StreetSearchRequestBuilder withExtensionRequestContexts(
+    Collection<ExtensionRequestContext> contexts
+  ) {
     this.extensionRequestContexts = contexts;
     return this;
   }

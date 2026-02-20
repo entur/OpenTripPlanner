@@ -66,7 +66,7 @@ public class BicycleParkAndRideTest extends ParkAndRideTest {
         }
       }
     );
-    graph = otpModel.graph();
+    graph = otpModel;
   }
 
   // Verify that it is not possible to park at a car-only park

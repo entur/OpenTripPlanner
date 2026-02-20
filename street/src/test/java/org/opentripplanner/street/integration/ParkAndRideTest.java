@@ -9,7 +9,6 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.basic.Cost;
-import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.StreetVertex;
