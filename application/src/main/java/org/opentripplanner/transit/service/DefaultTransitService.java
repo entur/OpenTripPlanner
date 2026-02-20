@@ -46,7 +46,6 @@ import org.opentripplanner.transit.model.filter.transit.StopLocationMatcherFacto
 import org.opentripplanner.transit.model.filter.transit.TripMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateMatcherFactory;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -719,11 +718,6 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public List<TransitMode> findTransitModes(StopLocation stop) {
     return sortByOccurrenceAndReduce(getPatternModesOfStop(stop)).toList();
-  }
-
-  @Override
-  public Deduplicator getDeduplicator() {
-    return timetableRepository.getDeduplicator();
   }
 
   @Override

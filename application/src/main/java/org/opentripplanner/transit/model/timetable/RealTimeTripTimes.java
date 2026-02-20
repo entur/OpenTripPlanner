@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
 import org.opentripplanner.utils.lang.IntUtils;
@@ -30,6 +30,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   private final int[] departureTimes;
   private final RealTimeState realTimeState;
   private final StopRealTimeState[] stopRealTimeStates;
+  private final boolean[] extraCalls;
 
   @Nullable
   private final I18NString tripHeadsign;
@@ -44,6 +45,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     departureTimes = builder.departureTimes();
     realTimeState = builder.realTimeState();
     stopRealTimeStates = builder.stopRealTimeStates();
+    extraCalls = builder.extraCalls();
     tripHeadsign = builder.tripHeadsign();
     stopHeadsigns = builder.stopHeadsigns();
     occupancyStatus = builder.occupancyStatus();
@@ -60,6 +62,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.departureTimes = original.departureTimes;
     this.realTimeState = original.realTimeState;
     this.stopRealTimeStates = original.stopRealTimeStates;
+    this.extraCalls = original.extraCalls;
     this.tripHeadsign = original.tripHeadsign;
     this.stopHeadsigns = original.stopHeadsigns;
     this.occupancyStatus = original.occupancyStatus;
@@ -78,6 +81,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.departureTimes = IntUtils.shiftArray(timeShift, original.departureTimes);
     this.realTimeState = original.realTimeState;
     this.stopRealTimeStates = original.stopRealTimeStates;
+    this.extraCalls = original.extraCalls;
     this.tripHeadsign = original.tripHeadsign;
     this.stopHeadsigns = original.stopHeadsigns;
     this.occupancyStatus = original.occupancyStatus;
@@ -186,6 +190,10 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
 
   public boolean isPredictionInaccurate(int stopPos) {
     return isStopRealTimeStates(stopPos, StopRealTimeState.INACCURATE_PREDICTIONS);
+  }
+
+  public boolean isExtraCall(int stopPos) {
+    return extraCalls[stopPos];
   }
 
   public boolean isRealTimeUpdated(int stopPos) {

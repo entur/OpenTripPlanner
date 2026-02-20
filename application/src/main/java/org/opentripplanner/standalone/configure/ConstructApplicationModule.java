@@ -11,6 +11,7 @@ import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
+import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.interactivelauncher.api.LauncherRequestDecorator;
@@ -61,6 +62,7 @@ public class ConstructApplicationModule {
     List<RideHailingService> rideHailingServices,
     ViaCoordinateTransferFactory viaTransferResolver,
     @Nullable CarpoolingService carpoolingService,
+    @Nullable DataOverlayParameterBindings dataOverlayParameterBindings,
     @Nullable StopConsolidationService stopConsolidationService,
     StreetLimitationParametersService streetLimitationParametersService,
     @Nullable TraverseVisitor<?, ?> traverseVisitor,
@@ -78,6 +80,7 @@ public class ConstructApplicationModule {
 
     var transitRoutingConfig = routerConfig.transitTuningConfig();
     var triasApiParameters = routerConfig.triasApiParameters();
+    var ojpApiParameters = routerConfig.ojpApiParameters();
     var gtfsApiConfig = routerConfig.gtfsApiParameters();
     var vectorTileConfig = routerConfig.vectorTileConfig();
     var flexParameters = routerConfig.flexParameters();
@@ -90,6 +93,7 @@ public class ConstructApplicationModule {
       graph,
       linkingContextFactory,
       Metrics.globalRegistry,
+      ojpApiParameters,
       raptorConfig,
       realtimeVehicleService,
       rideHailingServices,
@@ -108,6 +112,7 @@ public class ConstructApplicationModule {
       worldEnvelopeService,
       // Optional Sandbox services
       carpoolingService,
+      dataOverlayParameterBindings,
       emissionItineraryDecorator,
       streetDetailsService,
       empiricalDelayService,

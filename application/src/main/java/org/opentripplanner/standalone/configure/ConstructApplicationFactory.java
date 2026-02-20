@@ -9,9 +9,11 @@ import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.gtfs.configure.SchemaModule;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchemaModule;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.configure.CarpoolingModule;
+import org.opentripplanner.ext.dataoverlay.configure.DataOverlayParameterBindingsModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
@@ -54,6 +56,7 @@ import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeServiceM
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.configure.ConfigModule;
+import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
 import org.opentripplanner.standalone.server.MetricsLogging;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.service.StreetLimitationParametersServiceModule;
@@ -75,8 +78,10 @@ import org.opentripplanner.visualizer.GraphVisualizer;
     CarpoolingModule.class,
     ConfigModule.class,
     ConstructApplicationModule.class,
+    DataOverlayParameterBindingsModule.class,
     EmissionServiceModule.class,
     EmpiricalDelayServiceModule.class,
+    DeduplicatorServiceModule.class,
     GeocoderModule.class,
     InteractiveLauncherModule.class,
     StreetDetailsServiceModule.class,
@@ -135,6 +140,7 @@ public interface ConstructApplicationFactory {
   GraphVisualizer graphVisualizer();
 
   TransitService transitService();
+
   OtpServerRequestContext createServerContext();
 
   MetricsLogging metricsLogging();
@@ -161,6 +167,8 @@ public interface ConstructApplicationFactory {
   LuceneIndex luceneIndex();
 
   FareServiceFactory fareServiceFactory();
+
+  DeduplicatorService deduplicatorService();
 
   @Component.Builder
   interface Builder {

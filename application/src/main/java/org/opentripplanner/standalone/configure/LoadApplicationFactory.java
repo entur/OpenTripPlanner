@@ -55,6 +55,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
     TransferRepositoryModule.class,
     VehicleParkingRepositoryModule.class,
     FareModule.class,
+    DeduplicatorServiceModule.class,
   }
 )
 public interface LoadApplicationFactory {

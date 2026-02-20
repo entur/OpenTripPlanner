@@ -58,23 +58,23 @@
 
 
     <properties>
-        <otp.serialization.version.id>235</otp.serialization.version.id>
+        <otp.serialization.version.id>242</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.2</geotools.version>
-        <google.dagger.version>2.57.2</google.dagger.version>
+        <google.dagger.version>2.59.1</google.dagger.version>
         <jackson.version>2.21.0</jackson.version>
         <jaxb-runtime.version>4.0.6</jaxb-runtime.version>
         <jersey.version>3.1.11</jersey.version>
-        <junit.version>6.0.2</junit.version>
+        <junit.version>6.0.3</junit.version>
         <micrometer.version>1.14.1</micrometer.version>
         <netcdf4.version>5.6.0</netcdf4.version>
-        <logback.version>1.5.23</logback.version>
+        <logback.version>1.5.27</logback.version>
         <lucene.version>10.3.2</lucene.version>
-        <micrometer.version>1.16.2</micrometer.version>
-        <netex-java-model.version>2.0.15.1</netex-java-model.version>
+        <micrometer.version>1.16.3</micrometer.version>
+        <netex-java-model.version>2.0.15.2</netex-java-model.version>
         <netcdf4.version>5.6.0</netcdf4.version>
-        <protobuf.version>4.33.4</protobuf.version>
+        <protobuf.version>4.33.5</protobuf.version>
         <siri-java-model.version>2.0.1</siri-java-model.version>
         <slf4j.version>2.0.17</slf4j.version>
         <!-- Other properties -->
@@ -96,13 +96,14 @@
 
     <modules>
         <module>utils</module>
+        <module>domain-core</module>
         <module>raptor</module>
         <module>astar</module>
         <module>gtfs-realtime-protobuf</module>
         <module>application</module>
         <module>otp-shaded</module>
         <module>test/integration</module>
-        <module>domain-core</module>
+        <module>street</module>
     </modules>
 
 
@@ -466,7 +467,7 @@
                 <!-- This makes sure all google libraries are using compatible versions. -->
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.72.0</version>
+                <version>26.75.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

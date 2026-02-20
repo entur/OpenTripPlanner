@@ -15,14 +15,13 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
-import org.opentripplanner.framework.geometry.CompactElevationProfile;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.model.calendar.openinghours.OpeningHoursCalendarService;
 import org.opentripplanner.routing.linking.Scope;
 import org.opentripplanner.routing.services.notes.StreetNotesService;
+import org.opentripplanner.street.geometry.CompactElevationProfile;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
+import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
 import org.opentripplanner.street.model.vertex.StationCentroidVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -107,12 +106,6 @@ public class Graph implements Serializable {
    * top of it.
    */
   public long nextSplitNumber = 0;
-
-  /**
-   * DataOverlay Sandbox module parameter bindings configured in the build-config, and needed when
-   * creating the data overlay context when routing.
-   */
-  public DataOverlayParameterBindings dataOverlayParameterBindings;
 
   @Inject
   public Graph(@Nullable OpeningHoursCalendarService openingHoursCalendarService) {

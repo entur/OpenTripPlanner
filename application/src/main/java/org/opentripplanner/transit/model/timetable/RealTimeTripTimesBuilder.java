@@ -6,8 +6,8 @@ import static org.opentripplanner.transit.model.timetable.TimetableValidationErr
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 
 public class RealTimeTripTimesBuilder {
@@ -20,6 +20,8 @@ public class RealTimeTripTimesBuilder {
   private RealTimeState realTimeState;
 
   private final StopRealTimeState[] stopRealTimeStates;
+
+  private final boolean[] extraCalls;
 
   @Nullable
   private I18NString tripHeadsign;
@@ -47,6 +49,7 @@ public class RealTimeTripTimesBuilder {
     departureTimes = new Integer[numStops];
     stopRealTimeStates = new StopRealTimeState[numStops];
     Arrays.fill(stopRealTimeStates, StopRealTimeState.DEFAULT);
+    extraCalls = new boolean[numStops];
     stopHeadsigns = new I18NString[numStops];
     occupancyStatus = new OccupancyStatus[numStops];
     Arrays.fill(occupancyStatus, OccupancyStatus.NO_DATA_AVAILABLE);
@@ -199,6 +202,10 @@ public class RealTimeTripTimesBuilder {
     return stopRealTimeStates.clone();
   }
 
+  public boolean[] extraCalls() {
+    return extraCalls.clone();
+  }
+
   public RealTimeTripTimesBuilder withRecorded(int stop) {
     return withStopRealTimeState(stop, StopRealTimeState.RECORDED);
   }
@@ -217,6 +224,11 @@ public class RealTimeTripTimesBuilder {
 
   public RealTimeTripTimesBuilder withStopRealTimeState(int stop, StopRealTimeState state) {
     this.stopRealTimeStates[stop] = state;
+    return this;
+  }
+
+  public RealTimeTripTimesBuilder withExtraCall(int stop, boolean extraCall) {
+    this.extraCalls[stop] = extraCall;
     return this;
   }
 

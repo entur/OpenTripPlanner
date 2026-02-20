@@ -6,8 +6,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.OptionalInt;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
 
 /**
@@ -138,6 +138,8 @@ public interface TripTimes<T extends TripTimes> extends Serializable, Comparable
   boolean isNoDataStop(int stopPos);
 
   boolean isPredictionInaccurate(int stopPos);
+
+  boolean isExtraCall(int stopPos);
 
   /**
    * Return if trip has been updated and stop position has not been given a NO_DATA update.
