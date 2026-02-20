@@ -1,4 +1,4 @@
-package org.opentripplanner.streetadapter;
+package org.opentripplanner.street.search;
 
 import java.time.Duration;
 import java.util.Collection;

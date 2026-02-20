@@ -1,4 +1,4 @@
-package org.opentripplanner.streetadapter;
+package org.opentripplanner.street.search;
 
 import java.util.Set;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
