@@ -19,6 +19,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.prep.PreparedPolygon;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
@@ -156,7 +157,7 @@ class WalkableAreaBuilder {
       AreaGroup areaGroup = new AreaGroup(ring.jtsPolygon);
       HashSet<NodeEdge> alreadyAddedEdges = new HashSet<>();
       for (OsmArea area : group.areas) {
-        if (!ring.jtsPolygon.contains(area.jtsMultiPolygon)) {
+        if (!ring.jtsPolygon.contains(area.jtsMultiPolygon.getGeometry())) {
           continue;
         }
 
@@ -283,7 +284,7 @@ class WalkableAreaBuilder {
       for (OsmArea area : group.areas) {
         OsmEntity areaEntity = area.parent;
 
-        if (!group.isSimpleAreaGroup() && !polygon.contains(area.jtsMultiPolygon)) {
+        if (!group.isSimpleAreaGroup() && !polygon.contains(area.jtsMultiPolygon.getGeometry())) {
           continue;
         }
 
@@ -650,11 +651,11 @@ class WalkableAreaBuilder {
 
     // combine properties of intersected areas
     for (OsmArea area : areas) {
-      MultiPolygon polygon = area.jtsMultiPolygon;
+      var polygon = area.jtsMultiPolygon;
       // intersects() is a cheap spatial predicate; only compute the full intersection when needed
       boolean crosses =
         !testIntersection ||
-        (polygon.intersects(line) && polygon.intersection(line).getLength() > 0.000001);
+        (polygon.intersects(line);
       if (crosses) {
         parent = area.parent;
         wayData = findAreaProperties(parent);
@@ -718,7 +719,7 @@ class WalkableAreaBuilder {
   private void createAreas(AreaGroup areaGroup, Ring ring, Collection<OsmArea> areas) {
     Polygon containingArea = ring.jtsPolygon;
     for (OsmArea area : areas) {
-      Geometry intersection = containingArea.intersection(area.jtsMultiPolygon);
+      Geometry intersection = containingArea.intersection(area.jtsMultiPolygon.getGeometry());
       if (intersection.getArea() == 0) {
         continue;
       }
