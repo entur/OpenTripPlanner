@@ -1,8 +1,13 @@
 package org.opentripplanner.updater.trip.siri;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
+import org.opentripplanner.utils.lang.StringUtils;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
@@ -43,7 +48,53 @@ public interface CallWrapper {
     return List.copyOf(result);
   }
 
+  /**
+   * Validate that all calls have a non-empty stop point ref and either order or visit number (but
+   * not both). Also checks cross-call consistency: all calls must use the same strategy (all Order
+   * or all VisitNumber). A mix of Order and VisitNumber-only calls is rejected.
+   */
+  static Optional<UpdateErrorType> validateAll(List<CallWrapper> calls) {
+    var perCallError = calls
+      .stream()
+      .map(CallWrapper::validate)
+      .flatMap(Optional::stream)
+      .findFirst();
+    if (perCallError.isPresent()) {
+      return perCallError;
+    }
+    boolean anyHasOrder = calls.stream().anyMatch(c -> c.getOrder() != null);
+    boolean anyMissingOrder = calls.stream().anyMatch(c -> c.getOrder() == null);
+    if (anyHasOrder && anyMissingOrder) {
+      return Optional.of(UpdateErrorType.MIXED_CALL_ORDER_AND_VISIT_NUMBER);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Validate that the call has a non-empty stop point ref and either order or visit number (but not
+   * both).
+   */
+  default Optional<UpdateErrorType> validate() {
+    if (StringUtils.hasNoValueOrNullAsString(getStopPointRef())) {
+      return Optional.of(UpdateErrorType.EMPTY_STOP_POINT_REF);
+    }
+    if (getOrder() == null && getVisitNumber() == null) {
+      return Optional.of(UpdateErrorType.MISSING_CALL_ORDER);
+    }
+    if (getOrder() != null && getVisitNumber() != null) {
+      return Optional.of(UpdateErrorType.MIXED_CALL_ORDER_AND_VISIT_NUMBER);
+    }
+    return Optional.empty();
+  }
+
   String getStopPointRef();
+
+  @Nullable
+  BigInteger getOrder();
+
+  @Nullable
+  BigInteger getVisitNumber();
+
   Boolean isCancellation();
   Boolean isPredictionInaccurate();
   boolean isExtraCall();
@@ -74,6 +125,16 @@ public interface CallWrapper {
     @Override
     public String getStopPointRef() {
       return call.getStopPointRef() != null ? call.getStopPointRef().getValue() : null;
+    }
+
+    @Override
+    public BigInteger getOrder() {
+      return call.getOrder();
+    }
+
+    @Override
+    public BigInteger getVisitNumber() {
+      return call.getVisitNumber();
     }
 
     @Override
@@ -181,6 +242,16 @@ public interface CallWrapper {
     @Override
     public String getStopPointRef() {
       return call.getStopPointRef() != null ? call.getStopPointRef().getValue() : null;
+    }
+
+    @Override
+    public BigInteger getOrder() {
+      return call.getOrder();
+    }
+
+    @Override
+    public BigInteger getVisitNumber() {
+      return call.getVisitNumber();
     }
 
     @Override
