@@ -246,6 +246,12 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
+      return this;
+    }
+
     public RecordedCallsBuilder addDestinationDisplay(String destinationDisplay) {
       var dd = new NaturalLanguageStringStructure();
       dd.setValue(destinationDisplay);
@@ -344,6 +350,12 @@ public class SiriEtBuilder {
 
       var call = calls.getLast();
       call.getArrivalStopAssignments().add(stopAssignmentStructure);
+      return this;
+    }
+
+    public EstimatedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
       return this;
     }
 

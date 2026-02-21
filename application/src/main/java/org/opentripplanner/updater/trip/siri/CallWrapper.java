@@ -1,8 +1,13 @@
 package org.opentripplanner.updater.trip.siri;
 
+import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
+import org.opentripplanner.utils.lang.StringUtils;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
@@ -43,7 +48,31 @@ public interface CallWrapper {
     return List.copyOf(result);
   }
 
+  /**
+   * Validate that all calls have a non-empty stop point ref and a non-null order.
+   */
+  static Optional<UpdateErrorType> validateAll(List<CallWrapper> calls) {
+    return calls.stream().map(CallWrapper::validate).flatMap(Optional::stream).findFirst();
+  }
+
+  /**
+   * Validate that the call has a non-empty stop point ref and a non-null order.
+   */
+  default Optional<UpdateErrorType> validate() {
+    if (StringUtils.hasNoValueOrNullAsString(getStopPointRef())) {
+      return Optional.of(UpdateErrorType.EMPTY_STOP_POINT_REF);
+    }
+    if (getOrder() == null) {
+      return Optional.of(UpdateErrorType.MISSING_CALL_ORDER);
+    }
+    return Optional.empty();
+  }
+
   String getStopPointRef();
+
+  @Nullable
+  BigInteger getOrder();
+
   Boolean isCancellation();
   Boolean isPredictionInaccurate();
   boolean isExtraCall();
@@ -71,6 +100,11 @@ public interface CallWrapper {
     @Override
     public String getStopPointRef() {
       return call.getStopPointRef() != null ? call.getStopPointRef().getValue() : null;
+    }
+
+    @Override
+    public BigInteger getOrder() {
+      return call.getOrder();
     }
 
     @Override
@@ -173,6 +207,11 @@ public interface CallWrapper {
     @Override
     public String getStopPointRef() {
       return call.getStopPointRef() != null ? call.getStopPointRef().getValue() : null;
+    }
+
+    @Override
+    public BigInteger getOrder() {
+      return call.getOrder();
     }
 
     @Override
