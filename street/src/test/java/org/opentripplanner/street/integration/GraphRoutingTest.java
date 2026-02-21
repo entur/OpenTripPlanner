@@ -21,7 +21,6 @@ import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
@@ -36,6 +35,7 @@ import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
 import org.opentripplanner.street.model.vertex.ElevatorHopVertex;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
+import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TemporaryVertex;
@@ -45,13 +45,13 @@ import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.streetadapter.VehicleParkingHelper;
 
-public abstract class GraphRoutingTest {
+abstract class GraphRoutingTest {
 
   public static final String TEST_VEHICLE_RENTAL_NETWORK = "test network";
 
   protected Graph modelOf(Builder builder) {
     builder.build();
-    return builder.graph();
+    return builder.graph;
   }
 
   public abstract static class Builder {
@@ -66,74 +66,9 @@ public abstract class GraphRoutingTest {
 
     public abstract void build();
 
-    public Graph graph() {
-      return graph;
-    }
-
     // -- Street network
     public IntersectionVertex intersection(String label, double latitude, double longitude) {
-      return StreetModelFactory.intersectionVertex(label, longitude, latitude);
-    }
-
-    public TransitStopVertex stop(String id, double latitude, double longitude) {
-      return TransitStopVertex.of()
-        .withId(id(id))
-        .withPoint(
-          GeometryUtils.getGeometryFactory().createPoint(new Coordinate(longitude, latitude))
-        )
-        .build();
-    }
-
-    public IntersectionVertex intersection(String label, WgsCoordinate coordinate) {
-      return intersection(label, coordinate.latitude(), coordinate.longitude());
-    }
-
-    public StreetEdgeBuilder<?> streetBuilder(
-      StreetVertex from,
-      StreetVertex to,
-      int length,
-      StreetTraversalPermission permissions
-    ) {
-      return new StreetEdgeBuilder<>()
-        .withFromVertex(from)
-        .withToVertex(to)
-        .withGeometry(
-          GeometryUtils.makeLineString(from.getLat(), from.getLon(), to.getLat(), to.getLon())
-        )
-        .withName(String.format("%s%s street", from.getLabel(), to.getLabel()))
-        .withMeterLength(length)
-        .withPermission(permissions)
-        .withBack(false);
-    }
-
-    public List<ElevatorEdge> elevator(StreetTraversalPermission permission, Vertex... vertices) {
-      List<ElevatorEdge> edges = new ArrayList<>();
-      List<ElevatorHopVertex> onboardVertices = new ArrayList<>();
-
-      for (int i = 0; i < vertices.length; i++) {
-        Vertex v = vertices[i];
-
-        var onboard = new ElevatorHopVertex(v, v.getLabelString() + "_" + i);
-
-        edges.add(ElevatorBoardEdge.createElevatorBoardEdge(v, onboard));
-        edges.add(ElevatorAlightEdge.createElevatorAlightEdge(onboard, v));
-
-        onboardVertices.add(onboard);
-      }
-
-      for (int i = 1; i < onboardVertices.size(); i++) {
-        var from = onboardVertices.get(i - 1);
-        var to = onboardVertices.get(i);
-
-        edges.add(
-          ElevatorHopEdge.createElevatorHopEdge(from, to, permission, Accessibility.POSSIBLE)
-        );
-        edges.add(
-          ElevatorHopEdge.createElevatorHopEdge(to, from, permission, Accessibility.POSSIBLE)
-        );
-      }
-
-      return edges;
+      return new LabelledIntersectionVertex(label, longitude, latitude, false, false);
     }
 
     public StreetEdge street(
@@ -188,6 +123,44 @@ public abstract class GraphRoutingTest {
       );
     }
 
+    public List<ElevatorEdge> elevator(StreetTraversalPermission permission, Vertex... vertices) {
+      List<ElevatorEdge> edges = new ArrayList<>();
+      List<ElevatorHopVertex> onboardVertices = new ArrayList<>();
+
+      for (int i = 0; i < vertices.length; i++) {
+        Vertex v = vertices[i];
+
+        var onboard = new ElevatorHopVertex(v, v.getLabelString() + "_" + i);
+
+        edges.add(ElevatorBoardEdge.createElevatorBoardEdge(v, onboard));
+        edges.add(ElevatorAlightEdge.createElevatorAlightEdge(onboard, v));
+
+        onboardVertices.add(onboard);
+      }
+
+      for (int i = 1; i < onboardVertices.size(); i++) {
+        var from = onboardVertices.get(i - 1);
+        var to = onboardVertices.get(i);
+
+        edges.add(
+          ElevatorHopEdge.createElevatorHopEdge(from, to, permission, Accessibility.POSSIBLE)
+        );
+        edges.add(
+          ElevatorHopEdge.createElevatorHopEdge(to, from, permission, Accessibility.POSSIBLE)
+        );
+      }
+
+      return edges;
+    }
+
+    // -- Transit network (pathways, linking)
+    public TransitStopVertex stop(String id, double lat, double lon) {
+      var x = TransitStopVertex.of()
+        .withId(id(id))
+        .withPoint(GeometryUtils.getGeometryFactory().createPoint(new Coordinate(lon, lat)));
+      return x.build();
+    }
+
     public TransitEntranceVertex entrance(String id, double latitude, double longitude) {
       return new TransitEntranceVertex(
         id(id),
@@ -197,28 +170,18 @@ public abstract class GraphRoutingTest {
       );
     }
 
-    public StreetTransitEntranceLink link(StreetVertex from, TransitEntranceVertex to) {
-      return StreetTransitEntranceLink.createStreetTransitEntranceLink(from, to);
-    }
-
-    public StreetTransitEntranceLink link(TransitEntranceVertex from, StreetVertex to) {
-      return StreetTransitEntranceLink.createStreetTransitEntranceLink(from, to);
-    }
-
     public List<StreetTransitEntranceLink> biLink(StreetVertex from, TransitEntranceVertex to) {
-      return List.of(link(from, to), link(to, from));
-    }
-
-    public StreetTransitStopLink link(StreetVertex from, TransitStopVertex to) {
-      return StreetTransitStopLink.createStreetTransitStopLink(from, to);
-    }
-
-    public StreetTransitStopLink link(TransitStopVertex from, StreetVertex to) {
-      return StreetTransitStopLink.createStreetTransitStopLink(from, to);
+      return List.of(
+        StreetTransitEntranceLink.createStreetTransitEntranceLink(from, to),
+        StreetTransitEntranceLink.createStreetTransitEntranceLink(to, from)
+      );
     }
 
     public List<StreetTransitStopLink> biLink(StreetVertex from, TransitStopVertex to) {
-      return List.of(link(from, to), link(to, from));
+      return List.of(
+        StreetTransitStopLink.createStreetTransitStopLink(from, to),
+        StreetTransitStopLink.createStreetTransitStopLink(to, from)
+      );
     }
 
     public PathwayEdge pathway(Vertex from, Vertex to, int time, int length) {
@@ -237,6 +200,7 @@ public abstract class GraphRoutingTest {
     }
 
     // -- Street linking
+
     public TemporaryStreetLocation streetLocation(String name, double latitude, double longitude) {
       var nearestPoint = new Coordinate(longitude, latitude);
       return new TemporaryStreetLocation(nearestPoint, new NonLocalizedString(name));
@@ -251,76 +215,27 @@ public abstract class GraphRoutingTest {
     }
 
     // -- Vehicle rental
-    public VehicleRentalPlace vehicleRentalStationEntity(
-      String id,
-      double latitude,
-      double longitude,
-      String network
-    ) {
-      final RentalVehicleType vehicleType = RentalVehicleType.getDefaultType(network);
-      return VehicleRentalStation.of()
-        .withId(new FeedScopedId(network, id))
-        .withName(new NonLocalizedString(id))
-        .withLongitude(longitude)
-        .withLatitude(latitude)
-        .withVehiclesAvailable(2)
-        .withSpacesAvailable(2)
-        .withVehicleTypesAvailable(Map.of(vehicleType, 2))
-        .withVehicleSpacesAvailable(Map.of(vehicleType, 2))
-        .withIsArrivingInRentalVehicleAtDestinationAllowed(false)
-        .build();
-    }
-
-    public VehicleRentalPlaceVertex vehicleRentalStation(
-      String id,
-      double latitude,
-      double longitude,
-      String network
-    ) {
-      var vertex = new VehicleRentalPlaceVertex(
-        vehicleRentalStationEntity(id, latitude, longitude, network)
-      );
-      VehicleRentalEdge.createVehicleRentalEdge(
-        vertex,
-        RentalVehicleType.getDefaultType(network).formFactor()
-      );
-      return vertex;
-    }
 
     public VehicleRentalPlaceVertex vehicleRentalStation(
       String id,
       double latitude,
       double longitude
     ) {
-      return vehicleRentalStation(id, latitude, longitude, TEST_VEHICLE_RENTAL_NETWORK);
-    }
-
-    public StreetVehicleRentalLink link(StreetVertex from, VehicleRentalPlaceVertex to) {
-      return StreetVehicleRentalLink.createStreetVehicleRentalLink(from, to);
-    }
-
-    public StreetVehicleRentalLink link(VehicleRentalPlaceVertex from, StreetVertex to) {
-      return StreetVehicleRentalLink.createStreetVehicleRentalLink(from, to);
+      var vertex = new VehicleRentalPlaceVertex(
+        vehicleRentalStationEntity(id, latitude, longitude, TEST_VEHICLE_RENTAL_NETWORK)
+      );
+      VehicleRentalEdge.createVehicleRentalEdge(
+        vertex,
+        RentalVehicleType.getDefaultType(TEST_VEHICLE_RENTAL_NETWORK).formFactor()
+      );
+      return vertex;
     }
 
     public List<StreetVehicleRentalLink> biLink(StreetVertex from, VehicleRentalPlaceVertex to) {
-      return List.of(link(from, to), link(to, from));
-    }
-
-    public VehicleParking.VehicleParkingEntranceCreator vehicleParkingEntrance(
-      StreetVertex streetVertex,
-      String id,
-      boolean carAccessible,
-      boolean walkAccessible
-    ) {
-      return builder ->
-        builder
-          .entranceId(id(id))
-          .name(new NonLocalizedString(id))
-          .coordinate(new WgsCoordinate(streetVertex.getCoordinate()))
-          .vertex(streetVertex)
-          .carAccessible(carAccessible)
-          .walkAccessible(walkAccessible);
+      return List.of(
+        StreetVehicleRentalLink.createStreetVehicleRentalLink(from, to),
+        StreetVehicleRentalLink.createStreetVehicleRentalLink(to, from)
+      );
     }
 
     public VehicleParking vehicleParking(
@@ -361,19 +276,68 @@ public abstract class GraphRoutingTest {
       return vehicleParking;
     }
 
-    public StreetVehicleParkingLink link(StreetVertex from, VehicleParkingEntranceVertex to) {
-      return StreetVehicleParkingLink.createStreetVehicleParkingLink(from, to);
+    public VehicleParkingEntranceCreator vehicleParkingEntrance(
+      StreetVertex streetVertex,
+      String id,
+      boolean carAccessible,
+      boolean walkAccessible
+    ) {
+      return builder ->
+        builder
+          .entranceId(id(id))
+          .name(new NonLocalizedString(id))
+          .coordinate(new WgsCoordinate(streetVertex.getCoordinate()))
+          .vertex(streetVertex)
+          .carAccessible(carAccessible)
+          .walkAccessible(walkAccessible);
     }
 
-    public StreetVehicleParkingLink link(VehicleParkingEntranceVertex from, StreetVertex to) {
-      return StreetVehicleParkingLink.createStreetVehicleParkingLink(from, to);
+    private VehicleRentalPlace vehicleRentalStationEntity(
+      String id,
+      double latitude,
+      double longitude,
+      String network
+    ) {
+      final RentalVehicleType vehicleType = RentalVehicleType.getDefaultType(network);
+      return VehicleRentalStation.of()
+        .withId(new FeedScopedId(network, id))
+        .withName(new NonLocalizedString(id))
+        .withLongitude(longitude)
+        .withLatitude(latitude)
+        .withVehiclesAvailable(2)
+        .withSpacesAvailable(2)
+        .withVehicleTypesAvailable(Map.of(vehicleType, 2))
+        .withVehicleSpacesAvailable(Map.of(vehicleType, 2))
+        .withIsArrivingInRentalVehicleAtDestinationAllowed(false)
+        .build();
     }
 
-    public List<StreetVehicleParkingLink> biLink(
+    private StreetEdgeBuilder<?> streetBuilder(
+      StreetVertex from,
+      StreetVertex to,
+      int length,
+      StreetTraversalPermission permissions
+    ) {
+      return new StreetEdgeBuilder<>()
+        .withFromVertex(from)
+        .withToVertex(to)
+        .withGeometry(
+          GeometryUtils.makeLineString(from.getLat(), from.getLon(), to.getLat(), to.getLon())
+        )
+        .withName(String.format("%s%s street", from.getLabel(), to.getLabel()))
+        .withMeterLength(length)
+        .withPermission(permissions)
+        .withBack(false);
+    }
+
+    private List<StreetVehicleParkingLink> biLink(
       StreetVertex from,
       VehicleParkingEntranceVertex to
     ) {
-      return List.of(link(from, to), link(to, from));
+      return List.of(
+        StreetVehicleParkingLink.createStreetVehicleParkingLink(from, to),
+        StreetVehicleParkingLink.createStreetVehicleParkingLink(to, from)
+      );
     }
   }
 }
