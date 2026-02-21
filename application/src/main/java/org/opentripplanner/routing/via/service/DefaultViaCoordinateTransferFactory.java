@@ -95,8 +95,8 @@ public class DefaultViaCoordinateTransferFactory implements ViaCoordinateTransfe
     RouteRequest request,
     boolean reverseDirection
   ) {
-    var transferRequest = request.journey().transfer();
-    var r = finder.findNearbyStops(viaVertex, request, transferRequest, reverseDirection);
+    var transferMode = request.journey().transfer().mode();
+    var r = finder.findNearbyStops(viaVertex, request, transferMode, reverseDirection);
     return r
       .stream()
       .filter(it -> !it.stop.transfersNotAllowed())

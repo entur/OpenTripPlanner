@@ -389,7 +389,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
       var nearbyStops = transferConfiguration
         .defaultNearbyStopFinderForMode()
         .get(mode)
-        .findNearbyStops(ts0, transferProfile, transferProfile.journey().transfer(), false);
+        .findNearbyStops(ts0, transferProfile, transferProfile.journey().transfer().mode(), false);
       for (NearbyStop sd : nearbyStops) {
         // Skip the origin stop, loop transfers are not needed.
         if (sd.stop == stop) {
@@ -415,7 +415,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
       var nearbyStops = transferConfiguration
         .defaultNearbyStopFinderForMode()
         .get(mode)
-        .findNearbyStops(ts0, transferProfile, transferProfile.journey().transfer(), true);
+        .findNearbyStops(ts0, transferProfile, transferProfile.journey().transfer().mode(), true);
       // This code is for finding transfers from AreaStops to Stops, transfers
       // from Stops to AreaStops and between Stops are already covered above.
       for (NearbyStop sd : nearbyStops) {
@@ -491,7 +491,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
     StreetMode mode = transferProfile.journey().transfer().mode();
     var nearbyStops = nearbyStopFinder
       .get(mode)
-      .findNearbyStops(ts0, transferProfile, transferProfile.journey().transfer(), false);
+      .findNearbyStops(ts0, transferProfile, transferProfile.journey().transfer().mode(), false);
     for (NearbyStop sd : nearbyStops) {
       // Skip the origin stop, loop transfers are not needed.
       if (sd.stop == stop) {

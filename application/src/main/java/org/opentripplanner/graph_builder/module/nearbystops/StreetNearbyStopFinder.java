@@ -20,7 +20,6 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.graphfinder.NearbyStopFactory;
 import org.opentripplanner.street.model.StreetMode;
@@ -88,10 +87,10 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
   public Collection<NearbyStop> findNearbyStops(
     Vertex vertex,
     RouteRequest routingRequest,
-    StreetRequest streetRequest,
+    StreetMode streetMode,
     boolean reverseDirection
   ) {
-    return findNearbyStops(Set.of(vertex), routingRequest, streetRequest, reverseDirection);
+    return findNearbyStops(Set.of(vertex), routingRequest, streetMode, reverseDirection);
   }
 
   /**
@@ -105,7 +104,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
   public Collection<NearbyStop> findNearbyStops(
     Set<Vertex> originVertices,
     RouteRequest request,
-    StreetRequest streetRequest,
+    StreetMode streetMode,
     boolean reverseDirection
   ) {
     OTPRequestTimeoutException.checkForTimeout();
@@ -114,13 +113,12 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       Sets.difference(originVertices, ignoreVertices),
       reverseDirection,
       request,
-      streetRequest.mode()
+      streetMode
     );
 
     // Return only the origin vertices if there are no valid street modes
     if (
-      streetRequest.mode() == StreetMode.NOT_SET ||
-      (maxStopCount > 0 && stopsFound.size() >= maxStopCount)
+      streetMode == StreetMode.NOT_SET || (maxStopCount > 0 && stopsFound.size() >= maxStopCount)
     ) {
       return stopsFound;
     }
@@ -132,7 +130,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(
         StreetSearchRequestMapper.mapInternal(request)
-          .withMode(streetRequest.mode())
+          .withMode(streetMode)
           .withExtensionRequestContexts(extensionRequestContexts)
           .build()
       )
