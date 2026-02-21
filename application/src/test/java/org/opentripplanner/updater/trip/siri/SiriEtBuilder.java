@@ -234,6 +234,12 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
+      return this;
+    }
+
     public RecordedCallsBuilder withIsExtraCall(boolean extra) {
       var call = calls.getLast();
       call.setExtraCall(extra);
@@ -311,6 +317,12 @@ public class SiriEtBuilder {
       if (expectedTime != null) {
         call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
       }
+      return this;
+    }
+
+    public EstimatedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
       return this;
     }
 
