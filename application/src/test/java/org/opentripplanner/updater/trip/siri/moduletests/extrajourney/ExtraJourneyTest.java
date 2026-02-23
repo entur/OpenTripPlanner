@@ -316,9 +316,8 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       .buildEstimatedTimetableDeliveries();
 
     assertSuccess(siri.applyEstimatedTimetable(updates));
-    // PI overwrites the R (recorded) flag since StopRealTimeState is a single enum
     assertEquals(
-      "ADDED | C [PI] 0:02 0:02 | D [PI] 0:04 0:04",
+      "ADDED | C [R,PI] 0:02 0:02 | D [PI] 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }

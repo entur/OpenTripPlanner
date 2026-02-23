@@ -88,7 +88,7 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(updates));
     // Individual stop [C] flags remain even though the trip is implicitly cancelled
     assertEquals(
-      "CANCELED | A [C] 11:00 11:00 | B [C] 11:10 11:10",
+      "CANCELED | A [C,R] 11:00 11:00 | B [C] 11:10 11:10",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }
