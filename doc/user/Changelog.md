@@ -90,6 +90,9 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Fix mapping of `banned.trip` in GTFS API [#7288](https://github.com/opentripplanner/OpenTripPlanner/pull/7288)
 - Add trip's `carsAllowed` property to GTFS GraphQL API [#7282](https://github.com/opentripplanner/OpenTripPlanner/pull/7282)
 - Use only the closest vertices for each mode when linking with multiple street modes to improve performance [#7309](https://github.com/opentripplanner/OpenTripPlanner/pull/7309)
+- Accept integer values in Transmodel Cost scalar [#7315](https://github.com/opentripplanner/OpenTripPlanner/pull/7315)
+- Fix transport mode filter not applied on multi-mode patterns [#7275](https://github.com/opentripplanner/OpenTripPlanner/pull/7275)
+- Support for Siri ArrivalStatus.ARRIVED on EstimatedCalls [#7299](https://github.com/opentripplanner/OpenTripPlanner/pull/7299)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)

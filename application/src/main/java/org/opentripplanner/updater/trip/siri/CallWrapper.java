@@ -64,6 +64,9 @@ public interface CallWrapper {
   CallStatusEnumeration getDepartureStatus();
   DepartureBoardingActivityEnumeration getDepartureBoardingActivity();
 
+  /// Whether the call is a RecordedCall or not
+  boolean isRecorded();
+
   final class EstimatedCallWrapper implements CallWrapper {
 
     private final EstimatedCall call;
@@ -155,6 +158,11 @@ public interface CallWrapper {
     @Override
     public DepartureBoardingActivityEnumeration getDepartureBoardingActivity() {
       return call.getDepartureBoardingActivity();
+    }
+
+    @Override
+    public boolean isRecorded() {
+      return false;
     }
 
     @Override
@@ -262,6 +270,11 @@ public interface CallWrapper {
     @Override
     public DepartureBoardingActivityEnumeration getDepartureBoardingActivity() {
       return null;
+    }
+
+    @Override
+    public boolean isRecorded() {
+      return true;
     }
 
     @Override
