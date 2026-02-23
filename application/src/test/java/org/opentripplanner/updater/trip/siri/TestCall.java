@@ -77,12 +77,17 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public BigInteger getOrder() {
-    return null;
+  public boolean hasOrder() {
+    return false;
   }
 
   @Override
-  public BigInteger getVisitNumber() {
+  public boolean hasVisitNumber() {
+    return false;
+  }
+
+  @Override
+  public BigInteger getSortOrder() {
     return null;
   }
 

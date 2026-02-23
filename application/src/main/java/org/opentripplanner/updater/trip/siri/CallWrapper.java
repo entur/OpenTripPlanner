@@ -5,7 +5,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
 import org.opentripplanner.updater.spi.UpdateError.UpdateErrorType;
 import org.opentripplanner.utils.lang.StringUtils;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
@@ -62,8 +61,8 @@ public interface CallWrapper {
     if (perCallError.isPresent()) {
       return perCallError;
     }
-    boolean anyHasOrder = calls.stream().anyMatch(c -> c.getOrder() != null);
-    boolean anyMissingOrder = calls.stream().anyMatch(c -> c.getOrder() == null);
+    boolean anyHasOrder = calls.stream().anyMatch(CallWrapper::hasOrder);
+    boolean anyMissingOrder = calls.stream().anyMatch(c -> !c.hasOrder());
     if (anyHasOrder && anyMissingOrder) {
       return Optional.of(UpdateErrorType.MIXED_CALL_ORDER_AND_VISIT_NUMBER);
     }
@@ -78,10 +77,10 @@ public interface CallWrapper {
     if (StringUtils.hasNoValueOrNullAsString(getStopPointRef())) {
       return Optional.of(UpdateErrorType.EMPTY_STOP_POINT_REF);
     }
-    if (getOrder() == null && getVisitNumber() == null) {
+    if (!hasOrder() && !hasVisitNumber()) {
       return Optional.of(UpdateErrorType.MISSING_CALL_ORDER);
     }
-    if (getOrder() != null && getVisitNumber() != null) {
+    if (hasOrder() && hasVisitNumber()) {
       return Optional.of(UpdateErrorType.MIXED_CALL_ORDER_AND_VISIT_NUMBER);
     }
     return Optional.empty();
@@ -89,11 +88,14 @@ public interface CallWrapper {
 
   String getStopPointRef();
 
-  @Nullable
-  BigInteger getOrder();
+  boolean hasOrder();
 
-  @Nullable
-  BigInteger getVisitNumber();
+  boolean hasVisitNumber();
+
+  /**
+   * Return the sort order of this call. Prefers Order if present, falls back to VisitNumber.
+   */
+  BigInteger getSortOrder();
 
   Boolean isCancellation();
   Boolean isPredictionInaccurate();
@@ -128,13 +130,18 @@ public interface CallWrapper {
     }
 
     @Override
-    public BigInteger getOrder() {
-      return call.getOrder();
+    public boolean hasOrder() {
+      return call.getOrder() != null;
     }
 
     @Override
-    public BigInteger getVisitNumber() {
-      return call.getVisitNumber();
+    public boolean hasVisitNumber() {
+      return call.getVisitNumber() != null;
+    }
+
+    @Override
+    public BigInteger getSortOrder() {
+      return call.getOrder() != null ? call.getOrder() : call.getVisitNumber();
     }
 
     @Override
@@ -245,13 +252,18 @@ public interface CallWrapper {
     }
 
     @Override
-    public BigInteger getOrder() {
-      return call.getOrder();
+    public boolean hasOrder() {
+      return call.getOrder() != null;
     }
 
     @Override
-    public BigInteger getVisitNumber() {
-      return call.getVisitNumber();
+    public boolean hasVisitNumber() {
+      return call.getVisitNumber() != null;
+    }
+
+    @Override
+    public BigInteger getSortOrder() {
+      return call.getOrder() != null ? call.getOrder() : call.getVisitNumber();
     }
 
     @Override
