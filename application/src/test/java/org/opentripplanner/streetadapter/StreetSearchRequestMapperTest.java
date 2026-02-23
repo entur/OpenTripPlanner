@@ -22,6 +22,9 @@ import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
+import org.opentripplanner.street.search.intersection_model.DrivingDirection;
+import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
+import org.opentripplanner.street.search.intersection_model.IntersectionTraversalModel;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 
 class StreetSearchRequestMapperTest {
@@ -343,6 +346,37 @@ class StreetSearchRequestMapperTest {
     assertEquals(dateTime, subject.startTime());
     assertEquals(dateTime.minus(rentalDuration), subject.rentalPeriod().start());
     assertEquals(dateTime, subject.rentalPeriod().end());
+  }
+
+  @Test
+  void mapTimeout() {
+    var timeout = Duration.ofSeconds(3);
+
+    var request = builder()
+      .withPreferences(p -> p.withStreet(s -> s.withRoutingTimeout(timeout)))
+      .buildRequest();
+
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    assertEquals(timeout, subject.timeout());
+  }
+
+  @Test
+  void mapIntersectionTraversalCalculator() {
+    var model = IntersectionTraversalModel.SIMPLE;
+    var direction = DrivingDirection.RIGHT;
+
+    var request = builder()
+      .withPreferences(p ->
+        p.withStreet(s -> s.withIntersectionTraversalModel(model).withDrivingDirection(direction))
+      )
+      .buildRequest();
+
+    var subject = StreetSearchRequestMapper.mapInternal(request).build();
+
+    var expected = IntersectionTraversalCalculator.create(model, direction);
+
+    assertEquals(expected, subject.intersectionTraversalCalculator());
   }
 
   @Test
