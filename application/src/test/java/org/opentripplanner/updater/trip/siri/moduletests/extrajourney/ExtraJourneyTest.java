@@ -371,6 +371,45 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
   }
 
+  /**
+   * First add a trip via extra journey, then send a regular update referencing the added trip.
+   * The added trip should be updated with the new times.
+   */
+  @Test
+  void testUpdateTimesOnAddedJourney() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    // Step 1: Create the added journey
+    var creation = createValidAddedJourney(siri).buildEstimatedTimetableDeliveries();
+    var creationResult = siri.applyEstimatedTimetable(creation);
+    assertSuccess(creationResult);
+    assertEquals(
+      "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+
+    // Step 2: Send a regular update with new times for the added trip
+    var update = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(ADDED_TRIP_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_C)
+          .departAimedExpected("00:01", "00:05")
+          .call(STOP_D)
+          .arriveAimedExpected("00:03", "00:07")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var updateResult = siri.applyEstimatedTimetable(update);
+    assertSuccess(updateResult);
+    assertEquals(
+      "UPDATED | C 0:05 0:05 | D 0:07 0:07",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+  }
+
   @Test
   void testAddJourneyWithNewRouteAndShortName() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();

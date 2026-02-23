@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
+import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DataFrameRefStructure;
 import uk.org.siri.siri21.DatedVehicleJourneyRef;
 import uk.org.siri.siri21.EstimatedCall;
@@ -170,6 +171,16 @@ public class SiriEtBuilder {
     return this;
   }
 
+  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
+    evj.setOccupancy(occupancy);
+    return this;
+  }
+
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
   public SiriEtBuilder withVehicleJourneyRef(String id) {
     var ref = new VehicleJourneyRef();
     ref.setValue(id);
@@ -252,6 +263,12 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
+      return this;
+    }
+
     public RecordedCallsBuilder withIsExtraCall(boolean extra) {
       var call = calls.getLast();
       call.setExtraCall(extra);
@@ -261,6 +278,12 @@ public class SiriEtBuilder {
     public RecordedCallsBuilder withIsCancellation(boolean cancel) {
       var call = calls.getLast();
       call.setCancellation(cancel);
+      return this;
+    }
+
+    public RecordedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
       return this;
     }
 
@@ -332,6 +355,12 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public EstimatedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
+      return this;
+    }
+
     public EstimatedCallsBuilder withIsExtraCall(boolean extra) {
       var call = calls.getLast();
       call.setExtraCall(extra);
@@ -365,10 +394,21 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public EstimatedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
+      return this;
+    }
+
     public EstimatedCallsBuilder addDestinationDisplay(String destinationDisplay) {
       var dd = new NaturalLanguageStringStructure();
       dd.setValue(destinationDisplay);
       calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withArrivalStatus(CallStatusEnumeration callStatus) {
+      calls.getLast().setArrivalStatus(callStatus);
       return this;
     }
 
