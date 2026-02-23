@@ -245,6 +245,12 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
+      return this;
+    }
+
     public RecordedCallsBuilder withIsExtraCall(boolean extra) {
       var call = calls.getLast();
       call.setExtraCall(extra);
@@ -254,6 +260,12 @@ public class SiriEtBuilder {
     public RecordedCallsBuilder withIsCancellation(boolean cancel) {
       var call = calls.getLast();
       call.setCancellation(cancel);
+      return this;
+    }
+
+    public RecordedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
       return this;
     }
 
@@ -325,6 +337,12 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public EstimatedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
+      return this;
+    }
+
     public EstimatedCallsBuilder withIsExtraCall(boolean extra) {
       var call = calls.getLast();
       call.setExtraCall(extra);
@@ -355,6 +373,12 @@ public class SiriEtBuilder {
 
       var call = calls.getLast();
       call.getArrivalStopAssignments().add(stopAssignmentStructure);
+      return this;
+    }
+
+    public EstimatedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
       return this;
     }
 

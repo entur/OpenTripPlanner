@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.fuzzymatching;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
@@ -42,7 +43,10 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       .buildEstimatedTimetableDeliveries();
     var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
     assertEquals(1, result.successful());
-    assertTripUpdated(env);
+    assertEquals(
+      "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
   }
 
   /**
@@ -73,9 +77,32 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
     assertFailure(UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH, result);
   }
 
-  private static void assertTripUpdated(TransitTestEnvironment env) {
+  @Test
+  void visitNumber() {
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withRecordedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .clearOrder()
+          .withVisitNumber(1)
+          .departAimedActual("00:00:11", "00:00:15")
+      )
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_B)
+          .clearOrder()
+          .withVisitNumber(2)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    assertSuccess(result);
     assertEquals(
-      "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      "UPDATED | A [R] 0:00:15 0:00:15 | B 0:00:25 0:00:25",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
