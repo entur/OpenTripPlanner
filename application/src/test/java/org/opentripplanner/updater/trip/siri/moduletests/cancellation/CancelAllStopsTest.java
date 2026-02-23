@@ -15,6 +15,8 @@ import org.opentripplanner.updater.trip.SiriTestHelper;
 /**
  * Cancelling all individual stops (as opposed to journey-level cancellation) should result in an
  * implicit trip cancellation when all stops are non-routable.
+ * TODO RT_VP: This is a non-regression test that captures the existing behavior.
+ *             We should verify that this behavior is acceptable/correct.
  */
 class CancelAllStopsTest implements RealtimeTestConstants {
 
