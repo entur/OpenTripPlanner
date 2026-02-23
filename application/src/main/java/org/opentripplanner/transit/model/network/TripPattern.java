@@ -423,6 +423,7 @@ public final class TripPattern
    *             {@link org.opentripplanner.updater.trip.patterncache.TripPatternCache}
    *             See comment in TripPatternCache.
    */
+  @Deprecated
   @Nullable
   public TripPattern getOriginalTripPattern() {
     return originalTripPattern;
