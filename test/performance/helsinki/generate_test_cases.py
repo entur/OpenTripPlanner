@@ -68,10 +68,36 @@ locations = [
     }
 ]
 
-complicated_area_location = {
-    "coordinates": "60.16968,24.93486",
-    "name": "Narinkkatori"
-}
+complicated_area_locations = [
+    # Helsinki
+    {
+        "coordinates": "60.17188,24.93951",
+        "name": "Elielinaukio"
+    },
+    {
+        "coordinates": "60.16758,24.95410",
+        "name": "Kauppatori"
+    },
+    {
+        "coordinates": "60.16968,24.93486",
+        "name": "Narinkkatori"
+    },
+    # Espoo
+    {
+        "coordinates": "60.17685,24.80548",
+        "name": "Tapionraitti"
+    },
+    # Kauniainen
+    {
+        "coordinates": "60.21073,24.72707",
+        "name": "Thurmaninaukio"
+    },
+    # Kirkkonummi
+    {
+        "coordinates": "60.11974,24.43999",
+        "name": "Asema-aukio"
+    }
+]
 
 arrival = "13:00"
 departure = "13:00"
@@ -134,46 +160,34 @@ for start in locations:
             })
 
 # complicated-area
-for location in locations:
-    location_coords = parse_coords(location["coordinates"])
-    area_coords = parse_coords(complicated_area_location["coordinates"])
+for start in complicated_area_locations:
+    for end in complicated_area_locations:
+        if end["coordinates"] is not start["coordinates"]:
 
-    counter = counter + 1
-    rows.append({
-        "testCaseId": counter,
-        "description": f'{location["name"]} to {complicated_area_location["name"]} (transit)',
-        "departure": departure,
-        "fromLat": location_coords["lat"],
-        "fromLon": location_coords["lon"],
-        "toLat": area_coords["lat"],
-        "toLon": area_coords["lon"],
-        "origin": location["name"],
-        "destination": complicated_area_location["name"],
-        "modes": "TRANSIT|WALK",
-        "category": "complicated-area"
-    })
+            start_coords = parse_coords(start["coordinates"])
+            end_coords = parse_coords(end["coordinates"])
 
-    counter = counter + 1
-    rows.append({
-        "testCaseId": counter,
-        "description": f'{complicated_area_location["name"]} to {location["name"]} (transit)',
-        "departure": departure,
-        "fromLat": area_coords["lat"],
-        "fromLon": area_coords["lon"],
-        "toLat": location_coords["lat"],
-        "toLon": location_coords["lon"],
-        "origin": complicated_area_location["name"],
-        "destination": location["name"],
-        "modes": "TRANSIT|WALK",
-        "category": "complicated-area"
-    })
+            counter = counter + 1
+            rows.append({
+                "testCaseId": counter,
+                "description": f'{start["name"]} to {end["name"]} (transit)',
+                "departure": departure,
+                "fromLat": start_coords["lat"],
+                "fromLon": start_coords["lon"],
+                "toLat": end_coords["lat"],
+                "toLon": end_coords["lon"],
+                "origin": start["name"],
+                "destination": end["name"],
+                "modes": "TRANSIT|WALK",
+                "category": "complicated-area"
+            })
 
 # viapoint
-via_start = locations[0]
-via_end = locations[1]
+via_start = complicated_area_locations[0]
+via_end = complicated_area_locations[1]
 via_start_coords = parse_coords(via_start["coordinates"])
 via_end_coords = parse_coords(via_end["coordinates"])
-via_locations = locations[2:]
+via_locations = locations
 for via_location in via_locations:
     via_coords = parse_coords(via_location["coordinates"])
 
