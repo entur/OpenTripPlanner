@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -23,7 +24,8 @@ public record InsertionCandidate(
   int dropoffPosition,
   List<GraphPath<State, Edge, Vertex>> routeSegments,
   Duration baselineDuration,
-  Duration totalDuration
+  Duration totalDuration,
+  NearbyStop transitStop
 ) {
   /**
    * Calculates the additional duration caused by inserting this passenger.

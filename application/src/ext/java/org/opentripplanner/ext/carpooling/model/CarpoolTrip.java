@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.transit.model.framework.LogInfo;
 import org.opentripplanner.transit.model.framework.TransitBuilder;
@@ -68,6 +69,23 @@ public class CarpoolTrip
 
   // Ordered list of stops along the carpool route where passengers can be picked up or dropped off
   private final List<CarpoolStop> stops;
+
+  // Vertices for stops, for street routing. These are in the same order as the stops
+  private List<Vertex> vertices;
+
+  public List<Vertex> getVertices() {
+    if (this.vertices == null) {
+      throw new NullPointerException("Vertices are not initialized");
+    }
+    return this.vertices;
+  }
+
+  public void setVertices(List<Vertex> vertices) {
+    if (vertices.size() != stops.size()) {
+      throw new IllegalArgumentException("Number of vertices do not match number of stops");
+    }
+    this.vertices = vertices;
+  }
 
   public CarpoolTrip(CarpoolTripBuilder builder) {
     super(builder.getId());
