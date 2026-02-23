@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
+import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DataFrameRefStructure;
 import uk.org.siri.siri21.DatedVehicleJourneyRef;
 import uk.org.siri.siri21.EstimatedCall;
@@ -386,6 +387,11 @@ public class SiriEtBuilder {
       var dd = new NaturalLanguageStringStructure();
       dd.setValue(destinationDisplay);
       calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withArrivalStatus(CallStatusEnumeration callStatus) {
+      calls.getLast().setArrivalStatus(callStatus);
       return this;
     }
 
