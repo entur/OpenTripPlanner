@@ -6,6 +6,11 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.modes.AllowTransitModeFilter;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
+import org.opentripplanner.transit.model.filter.expr.AndMatcher;
+import org.opentripplanner.transit.model.filter.expr.EqualityMatcher;
+import org.opentripplanner.transit.model.filter.expr.GenericUnaryMatcher;
+import org.opentripplanner.transit.model.filter.expr.Matcher;
+import org.opentripplanner.transit.model.filter.expr.OrMatcher;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -15,16 +20,53 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  */
 public class TripTimeOnDateSelectRequest {
 
-  private final List<FeedScopedId> agencies;
-  private final List<FeedScopedId> routes;
-  private final AllowTransitModeFilter transportModeFilter;
+  private final Matcher<TripTimeOnDate> matcher;
 
   private TripTimeOnDateSelectRequest(Builder builder) {
-    this.agencies = List.copyOf(builder.agencies);
-    this.routes = List.copyOf(builder.routes);
-    this.transportModeFilter = builder.transportModes.isEmpty()
+    var transportModeFilter = builder.transportModes.isEmpty()
       ? null
       : AllowTransitModeFilter.of(builder.transportModes);
+
+    this.matcher = AndMatcher.of(
+      List.of(
+        !builder.agencies.isEmpty()
+          ? OrMatcher.of(
+              builder.agencies
+                .stream()
+                .map(agency ->
+                  (Matcher<TripTimeOnDate>) new EqualityMatcher<>(
+                    "agency",
+                    agency,
+                    (TripTimeOnDate tripTime) -> tripTime.getTrip().getRoute().getAgency().getId()
+                  )
+                )
+                .toList()
+            )
+          : Matcher.everything(),
+        !builder.routes.isEmpty()
+          ? OrMatcher.of(
+              builder.routes
+                .stream()
+                .map(route ->
+                  (Matcher<TripTimeOnDate>) new EqualityMatcher<>(
+                    "route",
+                    route,
+                    (TripTimeOnDate tripTime) -> tripTime.getTrip().getRoute().getId()
+                  )
+                )
+                .toList()
+            )
+          : Matcher.everything(),
+        transportModeFilter != null
+          ? new GenericUnaryMatcher<>("transportMode", (TripTimeOnDate tripTime) ->
+              transportModeFilter.match(
+                tripTime.getTrip().getMode(),
+                tripTime.getTrip().getNetexSubMode()
+              )
+            )
+          : Matcher.everything()
+      )
+    );
   }
 
   public static Builder of() {
@@ -36,31 +78,12 @@ public class TripTimeOnDateSelectRequest {
    * Empty/unset criteria are ignored (treated as "match all").
    */
   public boolean matches(TripTimeOnDate tripTime) {
-    var trip = tripTime.getTrip();
-    var route = trip.getRoute();
-
-    if (!agencies.isEmpty() && !agencies.contains(route.getAgency().getId())) {
-      return false;
-    }
-    if (!routes.isEmpty() && !routes.contains(route.getId())) {
-      return false;
-    }
-    if (
-      transportModeFilter != null &&
-      !transportModeFilter.match(trip.getMode(), trip.getNetexSubMode())
-    ) {
-      return false;
-    }
-    return true;
+    return matcher.match(tripTime);
   }
 
   @Override
   public String toString() {
-    return ToStringBuilder.ofEmbeddedType()
-      .addObj("transportModes", transportModeFilter, null)
-      .addCol("agencies", agencies, List.of())
-      .addObj("routes", routes, List.of())
-      .toString();
+    return ToStringBuilder.ofEmbeddedType().addObj("matcher", matcher).toString();
   }
 
   public static class Builder {
