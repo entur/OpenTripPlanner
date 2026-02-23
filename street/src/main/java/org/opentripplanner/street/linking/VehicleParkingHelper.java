@@ -1,4 +1,4 @@
-package org.opentripplanner.streetadapter;
+package org.opentripplanner.street.linking;
 
 import java.util.List;
 import java.util.Objects;

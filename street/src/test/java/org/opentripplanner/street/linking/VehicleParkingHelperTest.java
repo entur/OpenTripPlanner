@@ -1,4 +1,4 @@
-package org.opentripplanner.service.vehicleparking;
+package org.opentripplanner.street.linking;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,10 +12,9 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking.VehicleParkingEntranceCreator;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.street.model.StreetModelForTest;
+import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
-import org.opentripplanner.streetadapter.VehicleParkingHelper;
 
 class VehicleParkingHelperTest {
 
@@ -44,7 +43,7 @@ class VehicleParkingHelperTest {
   @Test
   void linkSkippingEdgesTest() {
     Graph graph = new Graph();
-    var vehicleParking = StreetModelForTest.vehicleParking()
+    var vehicleParking = StreetModelFactory.vehicleParking()
       .entrances(
         IntStream.rangeClosed(1, 3)
           .<VehicleParkingEntranceCreator>mapToObj(
@@ -69,7 +68,7 @@ class VehicleParkingHelperTest {
   }
 
   private VehicleParking createParingWithEntrances(int entranceNumber) {
-    return StreetModelForTest.vehicleParking()
+    return StreetModelFactory.vehicleParking()
       .bicyclePlaces(true)
       .entrances(
         IntStream.rangeClosed(1, entranceNumber)

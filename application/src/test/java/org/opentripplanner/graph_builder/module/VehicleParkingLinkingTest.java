@@ -11,13 +11,13 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingTestGraphData;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.VehicleParkingHelper;
 import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
-import org.opentripplanner.streetadapter.VehicleParkingHelper;
 import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.transit.service.TimetableRepository;
 
