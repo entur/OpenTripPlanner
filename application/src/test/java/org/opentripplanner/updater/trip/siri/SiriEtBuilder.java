@@ -174,11 +174,6 @@ public class SiriEtBuilder {
     return this;
   }
 
-  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
-    evj.setPredictionInaccurate(predictionInaccurate);
-    return this;
-  }
-
   public SiriEtBuilder withVehicleJourneyRef(String id) {
     var ref = new VehicleJourneyRef();
     ref.setValue(id);
