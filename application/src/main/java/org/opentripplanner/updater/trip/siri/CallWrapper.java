@@ -1,6 +1,5 @@
 package org.opentripplanner.updater.trip.siri;
 
-import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +94,7 @@ public interface CallWrapper {
   /**
    * Return the sort order of this call. Prefers Order if present, falls back to VisitNumber.
    */
-  BigInteger getSortOrder();
+  int getSortOrder();
 
   Boolean isCancellation();
   Boolean isPredictionInaccurate();
@@ -140,8 +139,10 @@ public interface CallWrapper {
     }
 
     @Override
-    public BigInteger getSortOrder() {
-      return call.getOrder() != null ? call.getOrder() : call.getVisitNumber();
+    public int getSortOrder() {
+      return call.getOrder() != null
+        ? call.getOrder().intValueExact()
+        : call.getVisitNumber().intValueExact();
     }
 
     @Override
@@ -262,8 +263,10 @@ public interface CallWrapper {
     }
 
     @Override
-    public BigInteger getSortOrder() {
-      return call.getOrder() != null ? call.getOrder() : call.getVisitNumber();
+    public int getSortOrder() {
+      return call.getOrder() != null
+        ? call.getOrder().intValueExact()
+        : call.getVisitNumber().intValueExact();
     }
 
     @Override

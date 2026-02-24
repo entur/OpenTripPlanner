@@ -1,6 +1,5 @@
 package org.opentripplanner.updater.trip.siri;
 
-import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.List;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
@@ -87,8 +86,8 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public BigInteger getSortOrder() {
-    return null;
+  public int getSortOrder() {
+    return 0;
   }
 
   @Override
