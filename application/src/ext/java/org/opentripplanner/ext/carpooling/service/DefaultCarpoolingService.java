@@ -428,7 +428,13 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var accessEgresses = insertionCandidates
         .stream()
-        .map(it -> createCarpoolAccessEgress(it, transitSearchTimeZero))
+        .map(it ->
+          createCarpoolAccessEgress(
+            it,
+            transitSearchTimeZero,
+            request.preferences().car().reluctance()
+          )
+        )
         .toList();
       return accessEgresses;
     } catch (Exception e) {
@@ -491,7 +497,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
   public CarpoolAccessEgress createCarpoolAccessEgress(
     InsertionCandidate insertionCandidate,
-    ZonedDateTime transitSearchTimeZero
+    ZonedDateTime transitSearchTimeZero,
+    Double carReluctance
   ) {
     var pickUpIndex = insertionCandidate.pickupPosition();
     var dropOffIndex = insertionCandidate.dropoffPosition() - 1;
@@ -528,7 +535,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
       relativeStartTime,
       relativeEndTime,
       segmentsWithPassenger,
-      TimeAndCost.ZERO
+      TimeAndCost.ZERO,
+      carReluctance
     );
 
     return accessEgress;

@@ -99,7 +99,6 @@ public class CarpoolItineraryMapper {
     var fromVertex = segments.getFirst().states.getFirst().getVertex();
     var toVertex = segments.getLast().states.getLast().getVertex();
     LineString geometry = GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry);
-    // NOT SURE IF THIS IS THE WAY YOU SHOULD DO IT
     var cost = accessEgress.getTotalWeight();
 
     var carpoolLeg = CarpoolLeg.of()
@@ -188,7 +187,6 @@ public class CarpoolItineraryMapper {
       .flatMap(seg -> seg.edges.stream())
       .toList();
 
-    // THE COST SEEMS WRONG, CAN YOU JUST TAKE THE COST OF THE LAST SEGMENT
     CarpoolLeg carpoolLeg = CarpoolLeg.of()
       .withStartTime(startTime)
       .withEndTime(endTime)

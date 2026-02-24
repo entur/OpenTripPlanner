@@ -19,12 +19,17 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   private final int durationInSeconds;
   private final int cost;
   private final Duration extraTimeForStop;
-  // NOT SURE WHAT THIS SHOULD BE, TEMPORARY VALUE
-  private static final int COST_PER_SECOND_OF_WAITING_FOR_PASSENGERS = 2;
   private final List<GraphPath<State, Edge, Vertex>> segments;
   private final TimeAndCost penalty;
   private final double totalWeight;
+  private final double carReluctance;
 
+  /*
+     Setting the cost and weight to the duration of the trip times carReluctance. Not sure
+     if this is the way it should be, but it works for now. This is done differently for
+     carpooling in direct mode, and the cost should be set ( presumably ?) be set the
+     same way for both access/egress and direct.
+   */
   public CarpoolAccessEgress(
     int stop,
     Duration duration,
@@ -32,21 +37,16 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     int startOfTrip,
     int endOfTrip,
     List<GraphPath<State, Edge, Vertex>> segments,
-    TimeAndCost penalty
+    TimeAndCost penalty,
+    Double carReluctance
   ) {
     this.startOfTrip = startOfTrip;
     this.endOfTrip = endOfTrip;
     this.stop = stop;
     this.durationInSeconds = (int) duration.getSeconds();
-    var combinedWeight = segments
-      .stream()
-      .map(segment -> segment.states.getLast().getWeight())
-      .reduce(0.0, Double::sum);
-    var costForExtraTimeForStops =
-      extraTimeForStop.getSeconds() * COST_PER_SECOND_OF_WAITING_FOR_PASSENGERS;
-    var totalWeight = combinedWeight + costForExtraTimeForStops;
-    this.cost = RaptorCostConverter.toRaptorCost(totalWeight);
-    this.totalWeight = totalWeight;
+    this.carReluctance = carReluctance;
+    this.totalWeight = this.durationInSeconds * carReluctance;
+    this.cost = RaptorCostConverter.toRaptorCost(this.totalWeight);
     this.segments = segments;
     this.penalty = penalty;
     this.extraTimeForStop = extraTimeForStop;
@@ -105,7 +105,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
       this.startOfTrip,
       this.endOfTrip,
       this.segments,
-      penalty
+      penalty,
+      this.carReluctance
     );
   }
 
