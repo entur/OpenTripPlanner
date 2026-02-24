@@ -44,7 +44,7 @@ class QuayChangeTest implements RealtimeTestConstants {
 
     var result = siri.applyEstimatedTimetable(updates);
 
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertEquals(
       "MODIFIED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()

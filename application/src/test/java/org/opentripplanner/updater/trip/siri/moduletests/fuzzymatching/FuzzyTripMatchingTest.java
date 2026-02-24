@@ -42,7 +42,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
     var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertEquals(
       "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
       env.tripData(TRIP_1_ID).showTimetable()

@@ -100,6 +100,23 @@ public class SiriEtBuilder {
     return this;
   }
 
+  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
+    evj.setOccupancy(occupancy);
+    return this;
+  }
+
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
+  public SiriEtBuilder withDestinationName(String destinationName) {
+    var name = new NaturalLanguageStringStructure();
+    name.setValue(destinationName);
+    evj.getDestinationNames().add(name);
+    return this;
+  }
+
   public SiriEtBuilder withExternalLineRef(String externalLineRef) {
     var ref = new LineRef();
     ref.setValue(externalLineRef);
@@ -151,16 +168,6 @@ public class SiriEtBuilder {
     var calls = new EstimatedVehicleJourney.EstimatedCalls();
     builder.build().forEach(call -> calls.getEstimatedCalls().add(call));
     evj.setEstimatedCalls(calls);
-    return this;
-  }
-
-  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
-    evj.setOccupancy(occupancy);
-    return this;
-  }
-
-  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
-    evj.setPredictionInaccurate(predictionInaccurate);
     return this;
   }
 
