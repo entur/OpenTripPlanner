@@ -51,6 +51,7 @@ import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.site.StopLocationsGroup;
+import org.opentripplanner.transit.model.site.StopType;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -116,6 +117,8 @@ public class LuceneIndex implements Serializable {
       ) {
         transitService
           .listStopLocations()
+          .stream()
+          .filter(stopLocation -> stopLocation.getStopType() == StopType.REGULAR)
           .forEach(stopLocation ->
             addToIndex(
               directoryWriter,
@@ -144,11 +147,13 @@ public class LuceneIndex implements Serializable {
             )
           );
 
+        var regularStops = transitService
+          .listStopLocations()
+          .stream()
+          .filter(stopLocation -> stopLocation.getStopType() == StopType.REGULAR)
+          .toList();
         stopClusterMapper
-          .generateStopClusters(
-            transitService.listStopLocations(),
-            transitService.listStopLocationGroups()
-          )
+          .generateStopClusters(regularStops, transitService.listStopLocationGroups())
           .forEach(stopCluster ->
             addToIndex(
               directoryWriter,
