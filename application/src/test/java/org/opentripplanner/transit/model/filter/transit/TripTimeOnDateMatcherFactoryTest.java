@@ -326,6 +326,138 @@ class TripTimeOnDateMatcherFactoryTest {
     }
 
     @Test
+    void notWithAgencyAndMode() {
+      // {not: {agencies: [a1], modes: [RAIL]}} — only excluded when BOTH match
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addNot(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId()))
+            .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
+            .build()
+        )
+        .build();
+
+      var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
+
+      // ROUTE_1 is RAIL by a1 → both match → excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2 is BUS by a2 → neither matches → included
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_2)));
+      // ROUTE_3 is FERRY by a3 → neither matches → included
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_3)));
+    }
+
+    @Test
+    void multipleNotsInFilter() {
+      // {not: {agencies: [a1]}, not: {modes: [BUS]}} → S - a1 - BUS
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addNot(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId()))
+            .build()
+        )
+        .addNot(
+          TripTimeOnDateSelectRequest.of()
+            .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
+            .build()
+        )
+        .build();
+
+      var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
+
+      // ROUTE_1 is RAIL by a1 → first not matches → excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2 is BUS by a2 → second not matches → excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+      // ROUTE_3 is FERRY by a3 → no not matches → included
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_3)));
+    }
+
+    @Test
+    void selectWithMultipleAgencies() {
+      // {select: {agencies: [a1, a2]}} — OR between values in a single selector
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId(), ROUTE_2.getAgency().getId()))
+            .build()
+        )
+        .build();
+
+      var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
+
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_1)));
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_2)));
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_3)));
+    }
+
+    @Test
+    void multipleFiltersSelectAndNot() {
+      // [{select: {agencies: [a1]}}, {not: {agencies: [a2]}}] → a1 ∪ (S - a2)
+      var filter1 = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId()))
+            .build()
+        )
+        .build();
+      var filter2 = TripTimeOnDateFilterRequest.of()
+        .addNot(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_2.getAgency().getId()))
+            .build()
+        )
+        .build();
+
+      var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(
+        List.of(filter1, filter2)
+      );
+
+      // ROUTE_1 (a1) → filter1 matches → included
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2 (a2) → filter1 no, filter2 excludes a2 → excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+      // ROUTE_3 (a3) → filter1 no, filter2 matches (not a2) → included
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_3)));
+    }
+
+    @Test
+    void multipleFiltersWithSelectNotAndSelect() {
+      // [{select: {modes: [RAIL]}, not: {agencies: [a1]}}, {select: {modes: [FERRY]}}]
+      // → (RAIL - a1) ∪ FERRY
+      var filter1 = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
+            .build()
+        )
+        .addNot(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId()))
+            .build()
+        )
+        .build();
+      var filter2 = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withTransportModes(List.of(new MainAndSubMode(TransitMode.FERRY)))
+            .build()
+        )
+        .build();
+
+      var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(
+        List.of(filter1, filter2)
+      );
+
+      // ROUTE_1 is RAIL by a1, selected in filter1 but excluded by not -> no match in filter1, not FERRY -> no match in filter2
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2 is BUS, not selected in filter1, not FERRY -> no match in filter2
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+      // ROUTE_3 is FERRY -> matches filter2
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_3)));
+    }
+
+    @Test
     void emptyFilterMatchesEverything() {
       // Empty filter (no select, no not) → matches everything
       var filter = TripTimeOnDateFilterRequest.of().build();
