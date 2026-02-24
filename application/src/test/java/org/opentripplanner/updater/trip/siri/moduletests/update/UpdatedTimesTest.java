@@ -40,7 +40,7 @@ class UpdatedTimesTest implements RealtimeTestConstants {
       .withDatedVehicleJourneyRef(TRIP_1_ID)
       .buildEstimatedTimetableDeliveries();
     var result = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertTripUpdated(env);
     assertEquals(
       "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
@@ -62,7 +62,7 @@ class UpdatedTimesTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
     var result = siri.applyEstimatedTimetable(updates);
-    assertEquals(1, result.successful());
+    assertSuccess(result);
     assertTripUpdated(env);
   }
 
