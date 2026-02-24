@@ -63,7 +63,7 @@ class TimetableHelper {
     if (call.isRecorded() || call.getArrivalStatus() == CallStatusEnumeration.ARRIVED) {
       tripTimesBuilder.withHasArrived(index, true);
     }
-    if (call.isRecorded()) {
+    if (call.isRecorded() && call.getActualDepartureTime() != null) {
       tripTimesBuilder.withHasDeparted(index, true);
     }
 

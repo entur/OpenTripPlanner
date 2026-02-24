@@ -210,6 +210,27 @@ public class TimetableHelperTest {
   }
 
   @Test
+  public void testApplyUpdates_RecordedCallArrivedButNotDeparted() {
+    ZonedDateTime actualArrival = START_OF_SERVICE.plus(Duration.ofHours(1));
+    ZonedDateTime expectedDeparture = actualArrival.plus(Duration.ofMinutes(5));
+    CallWrapper recordedCall = TestCall.of()
+      .withStopPointRef(STOP_ID)
+      .withPredictionInaccurate(false)
+      .withCancellation(false)
+      .withActualArrivalTime(actualArrival)
+      .withExpectedDepartureTime(expectedDeparture)
+      .withIsRecorded(true)
+      .build();
+
+    TimetableHelper.applyUpdates(START_OF_SERVICE, builder, 0, false, false, recordedCall, null);
+
+    assertEquals(
+      "Occupancy:NO_DATA_AVAILABLE Cancelled:false Extra:false Arrived:true Departed:false Inaccurate:false",
+      showStatuses(0)
+    );
+  }
+
+  @Test
   public void testApplyUpdates_ExtraCall_EstimatedCall() {
     CallWrapper estimatedCall = TestCall.of().withExtraCall(true).build();
 
