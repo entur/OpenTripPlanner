@@ -23,8 +23,12 @@ public class JsonSupport {
     LENIENT_MAPPER.configure(JsonParser.Feature.ALLOW_COMMENTS, true);
     LENIENT_MAPPER.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
     LENIENT_MAPPER.configure(JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+    // -Dline.seperator cannot be reliably overridden
+    // 2 spaces + LF
+    var lfOnlyIndenter = new DefaultIndenter("  ", "\n");
     var pp = new DefaultPrettyPrinter();
-    pp.indentArraysWith(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
+    pp = pp.withObjectIndenter(lfOnlyIndenter);
+    pp = pp.withArrayIndenter(lfOnlyIndenter);
     PRETTY_PRINTER = LENIENT_MAPPER.writer(pp);
   }
 
