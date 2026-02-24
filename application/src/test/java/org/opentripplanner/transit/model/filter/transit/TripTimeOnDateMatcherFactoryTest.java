@@ -493,6 +493,31 @@ class TripTimeOnDateMatcherFactoryTest {
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
       assertTrue(matcher.match(tripTimeOnDate(ROUTE_2)));
     }
+
+    @Test
+    void transitFiltersAndFlatFiltersAppliedTogether() {
+      // Selector selects agency a1 (ROUTE_1 and potentially others)
+      // Flat filter excludes mode RAIL
+      // Combined: agency a1 AND NOT mode RAIL → nothing matches (ROUTE_1 is both a1 and RAIL)
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId()))
+            .build()
+        )
+        .build();
+
+      var matcherRequest = request()
+        .withTransitFilters(List.of(filter))
+        .withExcludeModes(List.of(ROUTE_1.getMode()))
+        .build();
+      var matcher = TripTimeOnDateMatcherFactory.of(matcherRequest);
+
+      // ROUTE_1: selected by filter (a1), but excluded by flat filter (RAIL) → excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2: not selected by filter (not a1) → excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+    }
   }
 
   private static TripTimeOnDateRequestBuilder request() {

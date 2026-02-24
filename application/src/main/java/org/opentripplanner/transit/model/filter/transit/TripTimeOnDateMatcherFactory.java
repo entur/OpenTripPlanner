@@ -25,22 +25,14 @@ public class TripTimeOnDateMatcherFactory {
   /**
    * Creates a matcher for TripTimeOnDate.
    * <p>
-   * When the request contains transit filters, the filter-based matching is used which supports
-   * the select/not pattern from {@link TripTimeOnDateFilterRequest}. Otherwise, the flat
-   * include/exclude filter values are used.
+   * Applies selector-based transit filters (when present) AND flat include/exclude filters.
    */
   public static Matcher<TripTimeOnDate> of(TripTimeOnDateRequest request) {
-    if (!request.transitFilters().isEmpty()) {
-      return ofSelectorBasedTransitFilters(request.transitFilters());
-    }
-    return ofFlatFilters(request);
-  }
-
-  /**
-   * Creates a matcher from the flat include/exclude filter values on the request.
-   */
-  private static Matcher<TripTimeOnDate> ofFlatFilters(TripTimeOnDateRequest request) {
     ExpressionBuilder<TripTimeOnDate> expr = ExpressionBuilder.of();
+
+    if (!request.transitFilters().isEmpty()) {
+      expr.matches(ofSelectorBasedTransitFilters(request.transitFilters()));
+    }
 
     expr.atLeastOneMatch(request.includeAgencies(), TripTimeOnDateMatcherFactory::agencyId);
     expr.atLeastOneMatch(request.includeRoutes(), TripTimeOnDateMatcherFactory::routeId);
@@ -48,6 +40,7 @@ public class TripTimeOnDateMatcherFactory {
     expr.matchesNone(request.excludeAgencies(), TripTimeOnDateMatcherFactory::agencyId);
     expr.matchesNone(request.excludeRoutes(), TripTimeOnDateMatcherFactory::routeId);
     expr.matchesNone(request.excludeModes(), TripTimeOnDateMatcherFactory::mode);
+
     return expr.build();
   }
 
