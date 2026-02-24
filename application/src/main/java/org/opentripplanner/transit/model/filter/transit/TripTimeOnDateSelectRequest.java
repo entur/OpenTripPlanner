@@ -3,69 +3,28 @@ package org.opentripplanner.transit.model.filter.transit;
 import java.util.ArrayList;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.model.TripTimeOnDate;
-import org.opentripplanner.model.modes.AllowTransitModeFilter;
+import org.opentripplanner.transit.api.model.FilterValues;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
-import org.opentripplanner.transit.model.filter.expr.AndMatcher;
-import org.opentripplanner.transit.model.filter.expr.EqualityMatcher;
-import org.opentripplanner.transit.model.filter.expr.GenericUnaryMatcher;
-import org.opentripplanner.transit.model.filter.expr.Matcher;
-import org.opentripplanner.transit.model.filter.expr.OrMatcher;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * Represents a single selection criterion for filtering {@link TripTimeOnDate} objects.
+ * Represents a single selection criterion for filtering
+ * {@link org.opentripplanner.model.TripTimeOnDate} objects.
  * Criteria within a single request are combined with AND logic: all specified criteria must
  * match for the request to match. Empty/unset criteria are ignored (match everything).
  */
 public class TripTimeOnDateSelectRequest {
 
-  private final Matcher<TripTimeOnDate> matcher;
+  private final FilterValues<FeedScopedId> agencies;
+  private final FilterValues<FeedScopedId> routes;
+  private final FilterValues<MainAndSubMode> transportModes;
 
   private TripTimeOnDateSelectRequest(Builder builder) {
-    var transportModeFilter = builder.transportModes.isEmpty()
-      ? null
-      : AllowTransitModeFilter.of(builder.transportModes);
-
-    this.matcher = AndMatcher.of(
-      List.of(
-        !builder.agencies.isEmpty()
-          ? OrMatcher.of(
-              builder.agencies
-                .stream()
-                .map(agency ->
-                  (Matcher<TripTimeOnDate>) new EqualityMatcher<>(
-                    "agency",
-                    agency,
-                    (TripTimeOnDate tripTime) -> tripTime.getTrip().getRoute().getAgency().getId()
-                  )
-                )
-                .toList()
-            )
-          : Matcher.everything(),
-        !builder.routes.isEmpty()
-          ? OrMatcher.of(
-              builder.routes
-                .stream()
-                .map(route ->
-                  (Matcher<TripTimeOnDate>) new EqualityMatcher<>(
-                    "route",
-                    route,
-                    (TripTimeOnDate tripTime) -> tripTime.getTrip().getRoute().getId()
-                  )
-                )
-                .toList()
-            )
-          : Matcher.everything(),
-        transportModeFilter != null
-          ? new GenericUnaryMatcher<>("transportMode", (TripTimeOnDate tripTime) ->
-              transportModeFilter.match(
-                tripTime.getTrip().getMode(),
-                tripTime.getTrip().getNetexSubMode()
-              )
-            )
-          : Matcher.everything()
-      )
+    this.agencies = FilterValues.ofEmptyIsEverything("agencies", builder.agencies);
+    this.routes = FilterValues.ofEmptyIsEverything("routes", builder.routes);
+    this.transportModes = FilterValues.ofEmptyIsEverything(
+      "transportModes",
+      builder.transportModes
     );
   }
 
@@ -73,17 +32,31 @@ public class TripTimeOnDateSelectRequest {
     return new Builder();
   }
 
-  /**
-   * Returns true if the given TripTimeOnDate matches all criteria specified in this request.
-   * Empty/unset criteria are ignored (treated as "match all").
-   */
-  public boolean matches(TripTimeOnDate tripTime) {
-    return matcher.match(tripTime);
+  public FilterValues<FeedScopedId> agencies() {
+    return agencies;
+  }
+
+  public FilterValues<FeedScopedId> routes() {
+    return routes;
+  }
+
+  public FilterValues<MainAndSubMode> transportModes() {
+    return transportModes;
   }
 
   @Override
   public String toString() {
-    return ToStringBuilder.ofEmbeddedType().addObj("matcher", matcher).toString();
+    var builder = ToStringBuilder.ofEmbeddedType();
+    if (!agencies.includeEverything()) {
+      builder.addCol("agencies", agencies.get());
+    }
+    if (!routes.includeEverything()) {
+      builder.addCol("routes", routes.get());
+    }
+    if (!transportModes.includeEverything()) {
+      builder.addCol("transportModes", transportModes.get());
+    }
+    return builder.toString();
   }
 
   public static class Builder {

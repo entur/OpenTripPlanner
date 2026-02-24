@@ -2,11 +2,10 @@ package org.opentripplanner.transit.model.filter.transit;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * A filter for {@link TripTimeOnDate} objects using select/not semantics.
+ * A filter for {@link org.opentripplanner.model.TripTimeOnDate} objects using select/not semantics.
  * <p>
  * Select: a TripTimeOnDate must match at least one select criterion (OR between selects).
  * Not: a TripTimeOnDate is excluded if it matches any not criterion.
@@ -32,20 +31,6 @@ public class TripTimeOnDateFilterRequest {
 
   public List<TripTimeOnDateSelectRequest> not() {
     return not;
-  }
-
-  /**
-   * Returns true if the given TripTimeOnDate matches this filter.
-   * <p>
-   * A TripTimeOnDate matches if:
-   * - It matches at least one select criterion (or select is empty), AND
-   * - It does not match any not criterion.
-   */
-  public boolean matches(TripTimeOnDate tripTime) {
-    return (
-      (select.isEmpty() || select.stream().anyMatch(s -> s.matches(tripTime))) &&
-      not.stream().noneMatch(s -> s.matches(tripTime))
-    );
   }
 
   @Override

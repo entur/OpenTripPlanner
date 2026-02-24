@@ -40,10 +40,7 @@ class TripTimeOnDateFilterMapperTest {
     var result = MAPPER.mapFilters(
       list(map("select", list(map(entry("transportModes", list(map("transportMode", BUS)))))))
     );
-    assertEquals(
-      "[(select: [(transportModes: AllowMainModeFilter{mainMode: BUS})])]",
-      result.toString()
-    );
+    assertEquals("[(select: [(transportModes: [BUS])])]", result.toString());
   }
 
   @Test
