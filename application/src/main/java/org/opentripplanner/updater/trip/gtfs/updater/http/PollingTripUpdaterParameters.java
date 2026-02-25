@@ -13,8 +13,8 @@ public record PollingTripUpdaterParameters(
   boolean fuzzyTripMatching,
   ForwardsDelayPropagationType forwardsDelayPropagationType,
   BackwardsDelayPropagationType backwardsDelayPropagationType,
-
   String feedId,
   String url,
-  HttpHeaders headers
+  HttpHeaders headers,
+  boolean useNewUpdaterImplementation
 ) implements PollingGraphUpdaterParameters, UrlUpdaterParameters {}

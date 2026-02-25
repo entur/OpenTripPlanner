@@ -93,6 +93,7 @@ public interface CallWrapper {
     return order != null ? order.intValueExact() : visitNumber.intValueExact();
   }
 
+  int getOrder();
   String getStopPointRef();
 
   /**
@@ -137,6 +138,11 @@ public interface CallWrapper {
     private EstimatedCallWrapper(EstimatedCall estimatedCall, int sortOrder) {
       this.call = estimatedCall;
       this.sortOrder = sortOrder;
+    }
+
+    @Override
+    public int getOrder() {
+      return call.getOrder() != null ? call.getOrder().intValue() : 0;
     }
 
     @Override
@@ -251,6 +257,11 @@ public interface CallWrapper {
     private RecordedCallWrapper(RecordedCall recordedCall, int sortOrder) {
       this.call = recordedCall;
       this.sortOrder = sortOrder;
+    }
+
+    @Override
+    public int getOrder() {
+      return call.getOrder() != null ? call.getOrder().intValue() : 0;
     }
 
     @Override
