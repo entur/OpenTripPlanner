@@ -1,8 +1,6 @@
 package org.opentripplanner.updater.trip.siri;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -199,23 +197,34 @@ public class SiriEtBuilder {
 
   public static class FramedVehicleRefBuilder {
 
-    private LocalDate serviceDate;
+    private String dataFrameRef;
     private String vehicleJourneyRef;
 
-    public SiriEtBuilder.FramedVehicleRefBuilder withServiceDate(LocalDate serviceDate) {
-      this.serviceDate = serviceDate;
+    public SiriEtBuilder.FramedVehicleRefBuilder withDataFrameRef(String dataFrameRef) {
+      this.dataFrameRef = dataFrameRef;
+      return this;
+    }
+
+    public SiriEtBuilder.FramedVehicleRefBuilder withDatedVehicleJourneyRef(
+      String vehicleJourneyRef
+    ) {
+      this.vehicleJourneyRef = vehicleJourneyRef;
       return this;
     }
 
     public SiriEtBuilder.FramedVehicleRefBuilder withVehicleJourneyRef(String vehicleJourneyRef) {
-      this.vehicleJourneyRef = vehicleJourneyRef;
+      return withDatedVehicleJourneyRef(vehicleJourneyRef);
+    }
+
+    public SiriEtBuilder.FramedVehicleRefBuilder withServiceDate(java.time.LocalDate serviceDate) {
+      this.dataFrameRef = java.time.format.DateTimeFormatter.ISO_LOCAL_DATE.format(serviceDate);
       return this;
     }
 
     public FramedVehicleJourneyRefStructure build() {
       DataFrameRefStructure dataFrameRefStructure = new DataFrameRefStructure();
-      if (serviceDate != null) {
-        dataFrameRefStructure.setValue(DateTimeFormatter.ISO_LOCAL_DATE.format(serviceDate));
+      if (dataFrameRef != null) {
+        dataFrameRefStructure.setValue(dataFrameRef);
       }
       FramedVehicleJourneyRefStructure framedVehicleJourneyRefStructure =
         new FramedVehicleJourneyRefStructure();
@@ -238,11 +247,15 @@ public class SiriEtBuilder {
     }
 
     public RecordedCallsBuilder call(StopLocation stop) {
+      return call(stop.getId().getId());
+    }
+
+    public RecordedCallsBuilder call(String stopPointRef) {
       var call = new RecordedCall();
       call.setOrder(BigInteger.valueOf(orderOffset + calls.size()));
 
       var ref = new StopPointRefStructure();
-      ref.setValue(stop.getId().getId());
+      ref.setValue(stopPointRef);
       call.setStopPointRef(ref);
 
       calls.add(call);

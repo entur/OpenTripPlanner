@@ -10,7 +10,7 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
@@ -20,17 +20,14 @@ public class SiriAzureETUpdater implements SiriAzureMessageHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriAzureSXUpdater.class);
 
-  private final SiriRealTimeTripUpdateAdapter adapter;
+  private final SiriTripUpdateAdapter adapter;
   private final Consumer<UpdateResult> recordMetrics;
   private final boolean fuzzyTripMatching;
   private final String feedId;
 
   private WriteToGraphCallback writeToGraphCallback;
 
-  public SiriAzureETUpdater(
-    SiriAzureETUpdaterParameters config,
-    SiriRealTimeTripUpdateAdapter adapter
-  ) {
+  public SiriAzureETUpdater(SiriAzureETUpdaterParameters config, SiriTripUpdateAdapter adapter) {
     this.adapter = adapter;
     this.recordMetrics = TripUpdateMetrics.streaming(config);
     this.fuzzyTripMatching = config.isFuzzyTripMatching();
