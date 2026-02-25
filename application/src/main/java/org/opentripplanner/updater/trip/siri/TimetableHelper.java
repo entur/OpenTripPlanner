@@ -8,6 +8,7 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import org.opentripplanner.utils.time.ServiceDateUtils;
+import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.OccupancyEnumeration;
 
@@ -59,9 +60,11 @@ class TimetableHelper {
     CallWrapper call,
     OccupancyEnumeration journeyOccupancy
   ) {
-    if (call.getActualDepartureTime() != null || call.getActualArrivalTime() != null) {
-      //Flag as recorded
-      tripTimesBuilder.withRecorded(index);
+    if (call.isRecorded() || call.getArrivalStatus() == CallStatusEnumeration.ARRIVED) {
+      tripTimesBuilder.withHasArrived(index, true);
+    }
+    if (call.isRecorded()) {
+      tripTimesBuilder.withHasDeparted(index, true);
     }
 
     // Set flag for inaccurate prediction if either call OR journey has inaccurate-flag set.
@@ -72,6 +75,10 @@ class TimetableHelper {
 
     if (TRUE.equals(call.isCancellation())) {
       tripTimesBuilder.withCanceled(index);
+    }
+
+    if (call.isExtraCall()) {
+      tripTimesBuilder.withExtraCall(index, true);
     }
 
     int scheduledArrivalTime = tripTimesBuilder.getArrivalTime(index);

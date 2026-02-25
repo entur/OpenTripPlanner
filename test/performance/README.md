@@ -22,6 +22,60 @@ The results will be displayed in the console.
 The test is run after every merge to dev-2.x. Its GitHub Actions workflow is defined
 in [performance-test.yml](/.github/workflows/performance-test.yml).
 
+### Running the test manually
+
+Sometimes it is desirable to run the test configuration in the CI environment manually, for
+example, when making changes to the tests. To do this, perform these steps:
+1. Create a local branch in git that contains the desired performance test configuration.
+2. In [performance-test.yml](/.github/workflows/performance-test.yml) add your test branch name to
+the configuration and change all `profile`s to `core`:
+```diff
+name: Performance test
+
+on:
+  push:
+    branches:
+      - dev-2.x
++     - test-branch-name
+
+jobs:
+  perf-test:
+    if: github.repository_owner == 'opentripplanner' && !startsWith(github.event.head_commit.message ,'Bump serialization version id for') && !startsWith(github.event.head_commit.message ,'Upgrade debug client to version')
+    runs-on: performance-test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          ...
+          - location: baden-wuerttemberg # German state of Baden-Württemberg: https://en.wikipedia.org/wiki/Baden-W%C3%BCrttemberg
+            iterations: 1
+            jfr-delay: "50s"
+-           profile: extended
++           profile: core
+
+          - location: switzerland
+            iterations: 1
+            jfr-delay: "50s"
+-           profile: extended
++           profile: core
+
+          - location: washington-state
+            iterations: 1
+            jfr-delay: "20s"
+-           profile: extended
++           profile: core
+
+          - location: helsinki
+            iterations: 1
+            jfr-delay: "50s"
+-           profile: extended
++           profile: core
+...
+```
+3. Commit the changes to [performance-test.yml](/.github/workflows/performance-test.yml).
+4. Push the changes to a branch in the **upstream** [OpenTripPlanner](https://github.com/opentripplanner/OpenTripPlanner/) repository with the same name you added to [performance-test.yml](/.github/workflows/performance-test.yml).
+5. The tests will run after the push.
+
 ## Instrumentation
 
 Each run on CI is instrumented with Java Flight Recorder. The results are then saved as an artifact

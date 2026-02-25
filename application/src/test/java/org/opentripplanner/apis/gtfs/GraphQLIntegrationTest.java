@@ -3,7 +3,7 @@ package org.opentripplanner.apis.gtfs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.opentripplanner._support.time.ZoneIds.BERLIN;
-import static org.opentripplanner.model.plan.PlanTestConstants.D10m;
+import static org.opentripplanner.model.plan.PlanTestConstants.D10_m;
 import static org.opentripplanner.model.plan.PlanTestConstants.T11_00;
 import static org.opentripplanner.model.plan.PlanTestConstants.T11_01;
 import static org.opentripplanner.model.plan.PlanTestConstants.T11_15;
@@ -41,12 +41,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner._support.text.I18NStrings;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.ItineraryFaresDecorator;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.FeedInfoTestFactory;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.fare.FareMedium;
@@ -94,13 +94,13 @@ import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationB
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.standalone.config.framework.json.JsonSupport;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.test.support.FilePatternSource;
-import org.opentripplanner.transfer.TransferServiceTestFactory;
+import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.basic.Money;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractBuilder;
@@ -182,12 +182,12 @@ class GraphQLIntegrationTest {
   private static GraphQLRequestContext context;
 
   private static final Deduplicator DEDUPLICATOR = new Deduplicator();
-  private static final VehicleParkingRepository parkingRepository =
+  private static final VehicleParkingRepository PARKING_REPOSITORY =
     new DefaultVehicleParkingRepository();
 
   @BeforeAll
   static void setup() {
-    parkingRepository.updateVehicleParking(
+    PARKING_REPOSITORY.updateVehicleParking(
       List.of(
         VehicleParking.builder()
           .id(id("parking-1"))
@@ -202,7 +202,7 @@ class GraphQLIntegrationTest {
     STOP_LOCATIONS.forEach(siteRepositoryBuilder::withRegularStop);
     siteRepositoryBuilder.withStation(OMEGA);
     var siteRepository = siteRepositoryBuilder.build();
-    var timetableRepository = new TimetableRepository(siteRepository, DEDUPLICATOR);
+    var timetableRepository = new TimetableRepository(siteRepository);
 
     var cal_id = TimetableRepositoryForTest.id("CAL_1");
     var trip = TimetableRepositoryForTest.trip("123")
@@ -218,6 +218,10 @@ class GraphQLIntegrationTest {
     var stopTimes2 = TEST_MODEL.stopTimesEvery5Minutes(3, trip2, "11:30");
     var tripTimes2 = TripTimesFactory.tripTimes(trip2, stopTimes2, DEDUPLICATOR);
 
+    // realtime-trip.graphql will return isReplacementTrip: false even though it is logically
+    // wrong, because currently there is no way to represent a BUS replacing a BUS in GTFS
+    // data so that the replacement link exists, or is even implied by some attribute. We
+    // still include the test in the hope that one day it becomes possible.
     var tripToBeReplaced = TimetableRepositoryForTest.trip(REPLACEMENT_TRIP_ID)
       .withServiceId(cal_id)
       .build();
@@ -271,17 +275,25 @@ class GraphQLIntegrationTest {
       )
     );
 
-    var routes = Arrays.stream(TransitMode.values())
-      .sorted(Comparator.comparing(Enum::name))
-      .map(m ->
-        TimetableRepositoryForTest.route(m.name())
-          .withMode(m)
-          .withLongName(I18NString.of("Long name for %s".formatted(m)))
-          .withGtfsSortOrder(sortOrder(m))
-          .withBikesAllowed(bikesAllowed(m))
+    var routes = Stream.concat(
+      Arrays.stream(TransitMode.values())
+        .sorted(Comparator.comparing(Enum::name))
+        .map(m ->
+          TimetableRepositoryForTest.route(m.name())
+            .withMode(m)
+            .withLongName(I18NString.of("Long name for %s".formatted(m)))
+            .withGtfsSortOrder(sortOrder(m))
+            .withBikesAllowed(bikesAllowed(m))
+            .build()
+        ),
+      Stream.of(
+        TimetableRepositoryForTest.route("replacement")
+          .withMode(BUS)
+          .withLongName(I18NString.of("Long name for replacement bus"))
+          .withGtfsType(714)
           .build()
       )
-      .toList();
+    ).toList();
 
     var busRoute = routes
       .stream()
@@ -434,7 +446,7 @@ class GraphQLIntegrationTest {
       .walk(20, B, List.of(step1, step2, step3, step4, step5))
       .bus(busRoute, 122, T11_01, T11_15, C)
       .rail(439, T11_30, T11_50, D)
-      .carHail(D10m, E)
+      .carHail(D10_m, E)
       .build();
 
     i1 = add10MinuteDelay(i1);
@@ -502,10 +514,10 @@ class GraphQLIntegrationTest {
       TransferServiceTestFactory.defaultTransferService(),
       new DefaultFareService(),
       defaultVehicleRentalService,
-      new DefaultVehicleParkingService(parkingRepository),
+      new DefaultVehicleParkingService(PARKING_REPOSITORY),
       realtimeVehicleService,
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
-      finder,
+      FINDER,
       routeRequest
     );
   }
@@ -636,7 +648,7 @@ class GraphQLIntegrationTest {
     return null;
   }
 
-  private static final GraphFinder finder = new GraphFinder() {
+  private static final GraphFinder FINDER = new GraphFinder() {
     @Override
     public List<NearbyStop> findClosestStops(Coordinate coordinate, double radiusMeters) {
       return null;

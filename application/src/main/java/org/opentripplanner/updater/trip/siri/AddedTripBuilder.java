@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTime;
@@ -68,13 +69,16 @@ class AddedTripBuilder {
   private final String headsign;
   private final List<TripOnServiceDate> replacedTrips;
   private final StopTimesMapper stopTimesMapper;
+  private final DeduplicatorService deduplicator;
 
   AddedTripBuilder(
     EstimatedVehicleJourney estimatedVehicleJourney,
     TransitEditorService transitService,
+    DeduplicatorService deduplicator,
     EntityResolver entityResolver,
     Function<Trip, FeedScopedId> getTripPatternId
   ) {
+    this.deduplicator = deduplicator;
     // Verifying values required in SIRI Profile
     // Added ServiceJourneyId
     String estimatedVehicleJourneyCode = estimatedVehicleJourney.getEstimatedVehicleJourneyCode();
@@ -126,6 +130,7 @@ class AddedTripBuilder {
 
   AddedTripBuilder(
     TransitEditorService transitService,
+    DeduplicatorService deduplicator,
     EntityResolver entityResolver,
     Function<Trip, FeedScopedId> getTripPatternId,
     FeedScopedId tripId,
@@ -146,6 +151,7 @@ class AddedTripBuilder {
     String dataSource
   ) {
     this.transitService = transitService;
+    this.deduplicator = deduplicator;
     this.entityResolver = entityResolver;
     this.timeZone = transitService.getTimeZone();
     this.getTripPatternId = getTripPatternId;
@@ -225,11 +231,9 @@ class AddedTripBuilder {
     // they are in general superseded by real-time trip times
     // but in case of trip cancellation, OTP will fall back to scheduled trip times
     // therefore they must be valid
-    var tripTimes = TripTimesFactory.tripTimes(
-      trip,
-      aimedStopTimes,
-      transitService.getDeduplicator()
-    ).withServiceCode(transitService.getServiceCode(trip.getServiceId()));
+    var tripTimes = TripTimesFactory.tripTimes(trip, aimedStopTimes, deduplicator).withServiceCode(
+      transitService.getServiceCode(trip.getServiceId())
+    );
     tripTimes.validateNonIncreasingTimes();
 
     TripPattern pattern = TripPattern.of(getTripPatternId.apply(trip))

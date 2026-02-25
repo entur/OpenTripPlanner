@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.DataValidationException;
@@ -43,16 +44,19 @@ class ExtraCallTripBuilder {
   private final OccupancyEnumeration occupancy;
   private final boolean cancellation;
   private final StopTimesMapper stopTimesMapper;
+  private final DeduplicatorService deduplicator;
 
   ExtraCallTripBuilder(
     EstimatedVehicleJourney estimatedVehicleJourney,
     TransitEditorService transitService,
+    DeduplicatorService deduplicator,
     EntityResolver entityResolver,
     Function<Trip, FeedScopedId> generateTripPatternId,
     Trip trip
   ) {
     this.trip = Objects.requireNonNull(trip);
 
+    this.deduplicator = deduplicator;
     // DataSource of added trip
     dataSource = estimatedVehicleJourney.getDataSource();
 
@@ -135,11 +139,9 @@ class ExtraCallTripBuilder {
     // TODO: We always create a new TripPattern to be able to modify its scheduled timetable
     StopPattern stopPattern = new StopPattern(aimedStopTimes);
 
-    var tripTimes = TripTimesFactory.tripTimes(
-      trip,
-      aimedStopTimes,
-      transitService.getDeduplicator()
-    ).withServiceCode(transitService.getServiceCode(trip.getServiceId()));
+    var tripTimes = TripTimesFactory.tripTimes(trip, aimedStopTimes, deduplicator).withServiceCode(
+      transitService.getServiceCode(trip.getServiceId())
+    );
     // validate the scheduled trip times
     // they are in general superseded by real-time trip times
     // but in case of trip cancellation, OTP will fall back to scheduled trip times

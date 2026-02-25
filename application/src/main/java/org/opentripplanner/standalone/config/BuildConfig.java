@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.time.LocalDateInterval;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
 import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayConfig;
 import org.opentripplanner.ext.datastore.gs.config.GsConfig;
@@ -32,7 +33,6 @@ import org.opentripplanner.ext.empiricaldelay.parameters.EmpiricalDelayParameter
 import org.opentripplanner.ext.fares.FaresConfiguration;
 import org.opentripplanner.ext.gbfsgeofencing.config.GbfsGeofencingConfig;
 import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingParameters;
-import org.opentripplanner.framework.geometry.CompactElevationProfile;
 import org.opentripplanner.graph_builder.module.TransferParameters;
 import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParameters;
 import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParametersList;
@@ -40,10 +40,8 @@ import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParamet
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParametersList;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.gtfs.config.GtfsDefaultParameters;
-import org.opentripplanner.model.calendar.LocalDateInterval;
 import org.opentripplanner.netex.config.NetexFeedParameters;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.standalone.config.buildconfig.DemConfig;
 import org.opentripplanner.standalone.config.buildconfig.GtfsConfig;
 import org.opentripplanner.standalone.config.buildconfig.IslandPruningConfig;
@@ -56,7 +54,9 @@ import org.opentripplanner.standalone.config.buildconfig.TransitFeedConfig;
 import org.opentripplanner.standalone.config.buildconfig.TransitFeeds;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.standalone.config.sandbox.DataOverlayConfigMapper;
+import org.opentripplanner.street.geometry.CompactElevationProfile;
 import org.opentripplanner.street.model.StreetConstants;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -417,7 +417,7 @@ public class BuildConfig implements OtpDataStoreConfig {
           will not be part of the graph. Use an absolute date or a period relative to the date the graph is
           build(BUILD_DAY).
 
-          Use an empty string to make unbounded.
+          To get an effectively unbounded value, use a very large period like `"-P100Y"`.
           """
         )
         .asDateOrRelativePeriod("-P1Y", confZone);
@@ -433,7 +433,7 @@ public class BuildConfig implements OtpDataStoreConfig {
           will not be part of the graph. Use an absolute date or a period relative to the date the graph is
           build(BUILD_DAY).
 
-          Use an empty string to make it unbounded.
+          To get an effectively unbounded value, use a very large period like `"P100Y"`.
           """
         )
         .asDateOrRelativePeriod("P3Y", confZone);
