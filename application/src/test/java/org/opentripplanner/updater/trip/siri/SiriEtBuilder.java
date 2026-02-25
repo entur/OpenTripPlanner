@@ -253,6 +253,13 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder departAimedExpected(String aimedTime, String expectedTime) {
+      var call = calls.getLast();
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
     public RecordedCallsBuilder withVisitNumber(int visitNumber) {
       var call = calls.getLast();
       call.setVisitNumber(BigInteger.valueOf(visitNumber));

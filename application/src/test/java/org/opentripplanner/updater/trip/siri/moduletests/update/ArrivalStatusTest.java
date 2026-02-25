@@ -36,7 +36,12 @@ class ArrivalStatusTest implements RealtimeTestConstants {
     var update = siri
       .etBuilder()
       .withDatedVehicleJourneyRef(TRIP_1_ID)
-      .withRecordedCalls(builder -> builder.call(STOP_A).arriveAimedActual("00:10", "00:10"))
+      .withRecordedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .arriveAimedActual("00:10", "00:10")
+          .departAimedExpected("00:10", "00:11")
+      )
       .withEstimatedCalls(builder ->
         builder
           .call(STOP_B)
