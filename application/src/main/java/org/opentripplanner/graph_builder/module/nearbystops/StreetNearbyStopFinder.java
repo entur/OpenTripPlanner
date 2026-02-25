@@ -129,7 +129,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(durationLimit))
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(
-        StreetSearchRequestMapper.mapInternal(request)
+        StreetSearchRequestMapper.map(request)
           .withMode(streetMode)
           .withExtensionRequestContexts(extensionRequestContexts)
           .build()

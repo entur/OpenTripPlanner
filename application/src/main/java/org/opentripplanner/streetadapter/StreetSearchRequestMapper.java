@@ -41,7 +41,9 @@ import org.opentripplanner.street.search.request.filter.ParkingSelect.TagsSelect
 
 public class StreetSearchRequestMapper {
 
-  public static StreetSearchRequestBuilder mapInternal(RouteRequest request) {
+  /// Maps a [RouteRequest] to a [StreetSearchRequestBuilder] transferring all parameters
+  /// relevant for street routing.
+  public static StreetSearchRequestBuilder map(RouteRequest request) {
     var time = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
     var preferences = request.preferences();
     var street = preferences.street();
@@ -78,8 +80,14 @@ public class StreetSearchRequestMapper {
     return streetSearchRequestBuilder;
   }
 
+  /// Maps a [RouteRequest] to a [StreetSearchRequestBuilder] for transfer requests, where some
+  /// special rules apply:
+  ///
+  ///  - they are always depart-at
+  ///  - their start time is always the epoch (0)
+  ///
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
-    return mapInternal(request)
+    return map(request)
       .withFrom(null)
       .withTo(null)
       // transfer requests are always depart-at

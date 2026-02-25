@@ -96,7 +96,7 @@ public class GraphPathFinder {
       // FORCING the dominance function to weight only
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(
-        StreetSearchRequestMapper.mapInternal(request)
+        StreetSearchRequestMapper.map(request)
           .withExtensionRequestContexts(extensionRequestContexts)
           .withMode(request.journey().direct().mode())
           .build()

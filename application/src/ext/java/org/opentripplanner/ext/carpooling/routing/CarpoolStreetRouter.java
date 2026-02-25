@@ -185,7 +185,7 @@ public class CarpoolStreetRouter {
   ) {
     var preferences = request.preferences().street();
 
-    var streetReq = StreetSearchRequestMapper.mapInternal(request).build();
+    var streetReq = StreetSearchRequestMapper.map(request).build();
     var streetSearch = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
       .withSkipEdgeStrategy(
