@@ -95,6 +95,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Support for Siri ArrivalStatus.ARRIVED on EstimatedCalls [#7299](https://github.com/opentripplanner/OpenTripPlanner/pull/7299)
 - Fix memory leak in `TimetableSnapshot` related to `patternsForStop` and `realTimeAddedReplacedByTripOnServiceDateById` [#7253](https://github.com/opentripplanner/OpenTripPlanner/pull/7253)
 - Move `StreetSearchBuilder` to street module [#7328](https://github.com/opentripplanner/OpenTripPlanner/pull/7328)
+- Mark RecordedCall without ActualDepartureTime as not departed [#7336](https://github.com/opentripplanner/OpenTripPlanner/pull/7336)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
