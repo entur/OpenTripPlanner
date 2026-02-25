@@ -5,6 +5,7 @@ import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelations
 import java.text.ParseException;
 import java.time.LocalDate;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -41,6 +42,12 @@ public class TripDescriptor {
     return tripDescriptor.hasTripId()
       ? Optional.of(tripDescriptor.getTripId()).filter(StringUtils::hasValue)
       : Optional.empty();
+  }
+
+  public OptionalInt directionId() {
+    return tripDescriptor.hasDirectionId()
+      ? OptionalInt.of(tripDescriptor.getDirectionId())
+      : OptionalInt.empty();
   }
 
   GtfsRealtime.TripDescriptor original() {

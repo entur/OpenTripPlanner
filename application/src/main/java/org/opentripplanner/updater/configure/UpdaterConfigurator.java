@@ -7,7 +7,9 @@ import java.util.concurrent.TimeUnit;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
+import org.opentripplanner.ext.siri.updater.azure.SiriAzureETUpdaterParameters;
 import org.opentripplanner.ext.siri.updater.azure.SiriAzureUpdater;
+import org.opentripplanner.ext.siri.updater.mqtt.MqttSiriETUpdaterParameters;
 import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.api.VehicleRentalServiceDirectoryFetcherParameters;
@@ -27,11 +29,18 @@ import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.TimetableSnapshotFlush;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.gtfs.GtfsNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
+import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdaterParameters;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
+import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdaterParameters;
+import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdater;
+import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdaterParameters;
 import org.opentripplanner.updater.vehicle_parking.AvailabilityDataSourceFactory;
 import org.opentripplanner.updater.vehicle_parking.VehicleParkingAvailabilityUpdater;
 import org.opentripplanner.updater.vehicle_parking.VehicleParkingDataSourceFactory;
@@ -191,22 +200,38 @@ public class UpdaterConfigurator {
       updaters.add(new GtfsRealtimeAlertsUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getPollingStoptimeUpdaterParameters()) {
-      updaters.add(new PollingTripUpdater(configItem, provideGtfsAdapter()));
+      updaters.add(new PollingTripUpdater(configItem, createGtfsAdapter(configItem)));
     }
     for (var configItem : updatersParameters.getVehiclePositionsUpdaterParameters()) {
       updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          timetableRepository,
+          deduplicator,
+          snapshotManager
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
       updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          timetableRepository,
+          deduplicator,
+          snapshotManager
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
-      updaters.add(new SiriETGooglePubsubUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETGooglePubsubUpdater(configItem, createGooglePubsubAdapter(configItem))
+      );
     }
     for (var configItem : updatersParameters.getSiriSXUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
@@ -215,7 +240,7 @@ public class UpdaterConfigurator {
       updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getMqttGtfsRealtimeUpdaterParameters()) {
-      updaters.add(new MqttGtfsRealtimeUpdater(configItem, provideGtfsAdapter()));
+      updaters.add(new MqttGtfsRealtimeUpdater(configItem, createMqttGtfsAdapter(configItem)));
     }
     for (var configItem : updatersParameters.getVehicleParkingUpdaterParameters()) {
       switch (configItem.updateType()) {
@@ -235,13 +260,13 @@ public class UpdaterConfigurator {
       }
     }
     for (var configItem : updatersParameters.getSiriAzureETUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(SiriAzureUpdater.createETUpdater(configItem, createAzureAdapter(configItem)));
     }
     for (var configItem : updatersParameters.getSiriAzureSXUpdaterParameters()) {
       updaters.add(SiriAzureUpdater.createSXUpdater(configItem, timetableRepository));
     }
     for (var configItem : updatersParameters.getMqttSiriETUpdaterParameters()) {
-      updaters.add(new SiriETMqttUpdater(configItem, provideSiriAdapter()));
+      updaters.add(new SiriETMqttUpdater(configItem, createMqttAdapter(configItem)));
     }
 
     return updaters;
@@ -251,13 +276,90 @@ public class UpdaterConfigurator {
     return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, snapshotManager);
   }
 
-  private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
-    return new GtfsRealTimeTripUpdateAdapter(
-      timetableRepository,
-      deduplicator,
-      snapshotManager,
-      () -> LocalDate.now(timetableRepository.getTimeZone())
-    );
+  private SiriTripUpdateAdapter createGooglePubsubAdapter(
+    SiriETGooglePubsubUpdaterParameters config
+  ) {
+    if (config.useNewUpdaterImplementation()) {
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.fuzzyTripMatching(),
+        config.feedId()
+      );
+    } else {
+      return provideSiriAdapter();
+    }
+  }
+
+  private SiriTripUpdateAdapter createAzureAdapter(SiriAzureETUpdaterParameters config) {
+    if (config.isUseNewUpdaterImplementation()) {
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.isFuzzyTripMatching(),
+        config.feedId()
+      );
+    } else {
+      return provideSiriAdapter();
+    }
+  }
+
+  private SiriTripUpdateAdapter createMqttAdapter(MqttSiriETUpdaterParameters config) {
+    if (config.useNewUpdaterImplementation()) {
+      return new SiriNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.fuzzyTripMatching(),
+        config.feedId()
+      );
+    } else {
+      return provideSiriAdapter();
+    }
+  }
+
+  private GtfsTripUpdateAdapter createGtfsAdapter(PollingTripUpdaterParameters config) {
+    if (config.useNewUpdaterImplementation()) {
+      return new GtfsNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.forwardsDelayPropagationType(),
+        config.backwardsDelayPropagationType(),
+        config.fuzzyTripMatching(),
+        config.feedId()
+      );
+    } else {
+      return new GtfsRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        () -> LocalDate.now(timetableRepository.getTimeZone())
+      );
+    }
+  }
+
+  private GtfsTripUpdateAdapter createMqttGtfsAdapter(MqttGtfsRealtimeUpdaterParameters config) {
+    if (config.useNewUpdaterImplementation()) {
+      return new GtfsNewTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        config.forwardsDelayPropagationType(),
+        config.backwardsDelayPropagationType(),
+        config.fuzzyTripMatching(),
+        config.feedId()
+      );
+    } else {
+      return new GtfsRealTimeTripUpdateAdapter(
+        timetableRepository,
+        deduplicator,
+        snapshotManager,
+        () -> LocalDate.now(timetableRepository.getTimeZone())
+      );
+    }
   }
 
   /**

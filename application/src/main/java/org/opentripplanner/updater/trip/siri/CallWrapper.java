@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
@@ -40,9 +41,11 @@ public interface CallWrapper {
       }
     }
 
+    result.sort(Comparator.comparingInt(CallWrapper::getOrder));
     return List.copyOf(result);
   }
 
+  int getOrder();
   String getStopPointRef();
   Boolean isCancellation();
   Boolean isPredictionInaccurate();
@@ -79,6 +82,11 @@ public interface CallWrapper {
 
     private EstimatedCallWrapper(EstimatedCall estimatedCall) {
       this.call = estimatedCall;
+    }
+
+    @Override
+    public int getOrder() {
+      return call.getOrder() != null ? call.getOrder().intValue() : 0;
     }
 
     @Override
@@ -186,6 +194,11 @@ public interface CallWrapper {
 
     private RecordedCallWrapper(RecordedCall estimatedCall) {
       this.call = estimatedCall;
+    }
+
+    @Override
+    public int getOrder() {
+      return call.getOrder() != null ? call.getOrder().intValue() : 0;
     }
 
     @Override

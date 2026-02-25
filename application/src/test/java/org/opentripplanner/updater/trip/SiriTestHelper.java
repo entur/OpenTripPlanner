@@ -9,26 +9,33 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 public class SiriTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final SiriRealTimeTripUpdateAdapter siriAdapter;
+  private final SiriTripUpdateAdapter siriAdapter;
 
-  SiriTestHelper(TransitTestEnvironment transitTestEnvironment) {
+  SiriTestHelper(TransitTestEnvironment transitTestEnvironment, boolean fuzzyTripMatching) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.siriAdapter = new SiriRealTimeTripUpdateAdapter(
+    this.siriAdapter = new SiriNewTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
-      transitTestEnvironment.timetableSnapshotManager()
+      transitTestEnvironment.timetableSnapshotManager(),
+      fuzzyTripMatching,
+      transitTestEnvironment.feedId()
     );
   }
 
   public static SiriTestHelper of(TransitTestEnvironment transitTestEnvironment) {
-    return new SiriTestHelper(transitTestEnvironment);
+    return new SiriTestHelper(transitTestEnvironment, false);
+  }
+
+  public static SiriTestHelper ofFuzzyMatching(TransitTestEnvironment transitTestEnvironment) {
+    return new SiriTestHelper(transitTestEnvironment, true);
   }
 
   public SiriEtBuilder etBuilder() {
