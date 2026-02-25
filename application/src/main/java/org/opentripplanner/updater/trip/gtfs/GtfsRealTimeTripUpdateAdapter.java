@@ -296,12 +296,12 @@ public class GtfsRealTimeTripUpdateAdapter {
 
       cancelScheduledTrip(tripUpdate.tripId(), tripUpdate.serviceDate(), CancelationType.DELETE);
       return snapshotManager.updateBuffer(
-        new RealTimeTripUpdate(newPattern, updatedTripTimes, tripUpdate.serviceDate())
+        RealTimeTripUpdate.of(newPattern, updatedTripTimes, tripUpdate.serviceDate()).build()
       );
     } else {
       // Set the updated trip times in the buffer
       return snapshotManager.updateBuffer(
-        new RealTimeTripUpdate(pattern, updatedTripTimes, tripUpdate.serviceDate())
+        RealTimeTripUpdate.of(pattern, updatedTripTimes, tripUpdate.serviceDate()).build()
       );
     }
   }
@@ -435,18 +435,16 @@ public class GtfsRealTimeTripUpdateAdapter {
     final TripPattern pattern = tripPatternCache.getOrCreateTripPattern(stopPattern, trip);
 
     // Add new trip times to the buffer
-    return snapshotManager.updateBuffer(
-      new RealTimeTripUpdate(
-        pattern,
-        tripTimes,
-        serviceDate,
-        realTimeState == RealTimeState.ADDED
-          ? TripOnServiceDate.of(trip.getId()).withTrip(trip).withServiceDate(serviceDate).build()
-          : null,
-        realTimeState == RealTimeState.ADDED,
-        hasANewRouteBeenCreated
-      )
-    );
+    var builder = RealTimeTripUpdate.of(pattern, tripTimes, serviceDate)
+      .withRouteCreation(hasANewRouteBeenCreated);
+    if (realTimeState == RealTimeState.ADDED) {
+      builder
+        .withAddedTripOnServiceDate(
+          TripOnServiceDate.of(trip.getId()).withTrip(trip).withServiceDate(serviceDate).build()
+        )
+        .withTripCreation(true);
+    }
+    return snapshotManager.updateBuffer(builder.build());
   }
 
   /**
@@ -515,7 +513,9 @@ public class GtfsRealTimeTripUpdateAdapter {
       case CANCEL -> builder.cancelTrip();
       case DELETE -> builder.deleteTrip();
     }
-    snapshotManager.updateBuffer(new RealTimeTripUpdate(pattern, builder.build(), serviceDate));
+    snapshotManager.updateBuffer(
+      RealTimeTripUpdate.of(pattern, builder.build(), serviceDate).build()
+    );
   }
 
   /**

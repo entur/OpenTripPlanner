@@ -88,7 +88,9 @@ class TimetableSnapshotManagerTest {
       clock::get
     );
 
-    var res1 = snapshotManager.updateBuffer(new RealTimeTripUpdate(PATTERN, TRIP_TIMES, YESTERDAY));
+    var res1 = snapshotManager.updateBuffer(
+      RealTimeTripUpdate.of(PATTERN, TRIP_TIMES, YESTERDAY).build()
+    );
     assertTrue(res1.isSuccess());
 
     snapshotManager.commitTimetableSnapshot(true);
@@ -97,7 +99,9 @@ class TimetableSnapshotManagerTest {
     // Turn the clock to tomorrow
     clock.set(TOMORROW);
 
-    var res2 = snapshotManager.updateBuffer(new RealTimeTripUpdate(PATTERN, TRIP_TIMES, TODAY));
+    var res2 = snapshotManager.updateBuffer(
+      RealTimeTripUpdate.of(PATTERN, TRIP_TIMES, TODAY).build()
+    );
     assertTrue(res2.isSuccess());
 
     snapshotManager.purgeAndCommit();

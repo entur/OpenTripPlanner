@@ -378,15 +378,16 @@ public class SiriRealTimeTripUpdateAdapter {
     }
 
     // Add new trip times to buffer, making protective copies as needed. Bubble success/error up.
-    RealTimeTripUpdate realTimeTripUpdate = new RealTimeTripUpdate(
+    RealTimeTripUpdate realTimeTripUpdate = RealTimeTripUpdate.of(
       pattern,
       tripUpdate.tripTimes(),
-      serviceDate,
-      tripUpdate.addedTripOnServiceDate(),
-      tripUpdate.tripCreation(),
-      tripUpdate.routeCreation(),
-      tripUpdate.dataSource()
-    );
+      serviceDate
+    )
+      .withAddedTripOnServiceDate(tripUpdate.addedTripOnServiceDate())
+      .withTripCreation(tripUpdate.tripCreation())
+      .withRouteCreation(tripUpdate.routeCreation())
+      .withProducer(tripUpdate.dataSource())
+      .build();
     var result = snapshotManager.updateBuffer(realTimeTripUpdate);
     LOG.debug("Applied real-time data for trip {} on {}", trip, serviceDate);
     return result;
@@ -412,7 +413,9 @@ public class SiriRealTimeTripUpdateAdapter {
       } else {
         final RealTimeTripTimesBuilder builder = tripTimes.createRealTimeFromScheduledTimes();
         builder.deleteTrip();
-        snapshotManager.updateBuffer(new RealTimeTripUpdate(pattern, builder.build(), serviceDate));
+        snapshotManager.updateBuffer(
+          RealTimeTripUpdate.of(pattern, builder.build(), serviceDate).build()
+        );
         success = true;
       }
     }
