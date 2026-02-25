@@ -38,7 +38,7 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 /**
  * Adapts from SIRI-ET EstimatedTimetables to OTP's internal real-time data model.
  */
-public class SiriRealTimeTripUpdateAdapter {
+public class SiriRealTimeTripUpdateAdapter implements SiriTripUpdateAdapter {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriRealTimeTripUpdateAdapter.class);
 
@@ -88,6 +88,7 @@ public class SiriRealTimeTripUpdateAdapter {
    *                        disregarded
    * @param updates    SIRI EstimatedTimetable deliveries that should be applied atomically.
    */
+  @Override
   public UpdateResult applyEstimatedTimetable(
     @Nullable SiriFuzzyTripMatcher fuzzyTripMatcher,
     EntityResolver entityResolver,

@@ -17,6 +17,7 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
   private final int numberOfPrimingWorkers;
   private final Duration maxPrimingIdleTime;
   private final Duration connectionStartupTimeout;
+  private final boolean useNewUpdaterImplementation;
 
   public MqttSiriETUpdaterParameters(
     String configRef,
@@ -30,7 +31,8 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
     boolean fuzzyTripMatching,
     int numberOfPrimingWorkers,
     Duration maxPrimingIdleTime,
-    Duration connectionStartupTimeout
+    Duration connectionStartupTimeout,
+    boolean useNewUpdaterImplementation
   ) {
     this.configRef = configRef;
     this.feedId = feedId;
@@ -44,6 +46,7 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
     this.numberOfPrimingWorkers = numberOfPrimingWorkers;
     this.maxPrimingIdleTime = maxPrimingIdleTime;
     this.connectionStartupTimeout = connectionStartupTimeout;
+    this.useNewUpdaterImplementation = useNewUpdaterImplementation;
   }
 
   @Override
@@ -99,5 +102,9 @@ public class MqttSiriETUpdaterParameters implements UrlUpdaterParameters {
 
   public Duration connectionStartupTimeout() {
     return connectionStartupTimeout;
+  }
+
+  public boolean useNewUpdaterImplementation() {
+    return useNewUpdaterImplementation;
   }
 }

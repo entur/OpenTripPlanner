@@ -101,6 +101,19 @@ public class SiriETMqttUpdaterConfig {
       )
       .asDuration(Duration.ofSeconds(30));
 
+    boolean useNewUpdaterImplementation = siriMqttRoot
+      .of("useNewUpdaterImplementation")
+      .since(OtpVersion.V2_9)
+      .summary("Use the new trip updater implementation.")
+      .description(
+        """
+        When enabled, uses the new modular trip updater implementation based on
+        `DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+        The default value is `false`, which uses the legacy implementation.
+        """
+      )
+      .asBoolean(false);
+
     return new MqttSiriETUpdaterParameters(
       configRef,
       feedId,
@@ -113,7 +126,8 @@ public class SiriETMqttUpdaterConfig {
       fuzzyTripMatching,
       numberOfPrimingWorkers,
       maxPrimingIdleTime,
-      connectionStartupTimeout
+      connectionStartupTimeout,
+      useNewUpdaterImplementation
     );
   }
 }
