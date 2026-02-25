@@ -23,6 +23,11 @@ public final class RealTimeTripUpdate {
   @Nullable
   private final String producer;
 
+  private final boolean revertPreviousRealTimeUpdates;
+
+  @Nullable
+  private final TripPattern scheduledPatternToDeleteFrom;
+
   private RealTimeTripUpdate(Builder builder) {
     this.pattern = Objects.requireNonNull(builder.pattern);
     this.updatedTripTimes = Objects.requireNonNull(builder.updatedTripTimes);
@@ -31,6 +36,8 @@ public final class RealTimeTripUpdate {
     this.tripCreation = builder.tripCreation;
     this.routeCreation = builder.routeCreation;
     this.producer = builder.producer;
+    this.revertPreviousRealTimeUpdates = builder.revertPreviousRealTimeUpdates;
+    this.scheduledPatternToDeleteFrom = builder.scheduledPatternToDeleteFrom;
 
     if (pattern.numberOfStops() != updatedTripTimes.getNumStops()) {
       throw new IllegalArgumentException(
@@ -88,6 +95,15 @@ public final class RealTimeTripUpdate {
     return producer;
   }
 
+  public boolean revertPreviousRealTimeUpdates() {
+    return revertPreviousRealTimeUpdates;
+  }
+
+  @Nullable
+  public TripPattern scheduledPatternToDeleteFrom() {
+    return scheduledPatternToDeleteFrom;
+  }
+
   public static class Builder {
 
     private final TripPattern pattern;
@@ -97,6 +113,8 @@ public final class RealTimeTripUpdate {
     private boolean tripCreation;
     private boolean routeCreation;
     private String producer;
+    private boolean revertPreviousRealTimeUpdates;
+    private TripPattern scheduledPatternToDeleteFrom;
 
     private Builder(TripPattern pattern, TripTimes updatedTripTimes, LocalDate serviceDate) {
       this.pattern = pattern;
@@ -134,6 +152,24 @@ public final class RealTimeTripUpdate {
      */
     public Builder withProducer(String producer) {
       this.producer = producer;
+      return this;
+    }
+
+    /**
+     * Signals the snapshot manager to revert any previous pattern modifications for this trip
+     * before applying the update.
+     */
+    public Builder withRevertPreviousRealTimeUpdates(boolean revertPreviousRealTimeUpdates) {
+      this.revertPreviousRealTimeUpdates = revertPreviousRealTimeUpdates;
+      return this;
+    }
+
+    /**
+     * When non-null, signals the snapshot manager to mark the trip as deleted in this pattern
+     * (prevents duplication when moving to a modified pattern).
+     */
+    public Builder withScheduledPatternToDeleteFrom(TripPattern scheduledPatternToDeleteFrom) {
+      this.scheduledPatternToDeleteFrom = scheduledPatternToDeleteFrom;
       return this;
     }
 
