@@ -15,19 +15,20 @@ and responds only with the newest data.
 <!-- siri-et-updater BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter               |       Type      | Summary                                                                                                |  Req./Opt. | Default Value | Since |
-|--------------------------------|:---------------:|--------------------------------------------------------------------------------------------------------|:----------:|---------------|:-----:|
-| type = "siri-et-updater"       |      `enum`     | The type of the updater.                                                                               | *Required* |               |  1.5  |
-| blockReadinessUntilInitialized |    `boolean`    | Whether catching up with the updates should block the readiness check from returning a 'ready' result. | *Optional* | `false`       |  2.0  |
-| feedId                         |     `string`    | The ID of the feed to apply the updates to.                                                            | *Required* |               |  2.0  |
-| frequency                      |    `duration`   | How often the updates should be retrieved.                                                             | *Optional* | `"PT1M"`      |  2.0  |
-| fuzzyTripMatching              |    `boolean`    | If the fuzzy trip matcher should be used to match trips.                                               | *Optional* | `false`       |  2.0  |
-| previewInterval                |    `duration`   | TODO                                                                                                   | *Optional* |               |  2.0  |
-| producerMetrics                |    `boolean`    | If failure, success, and warning metrics should be collected per producer.                             | *Optional* | `false`       |  2.7  |
-| requestorRef                   |     `string`    | The requester reference.                                                                               | *Optional* |               |  2.0  |
-| timeout                        |    `duration`   | The HTTP timeout to download the updates.                                                              | *Optional* | `"PT15S"`     |  2.0  |
-| [url](#u__8__url)              |     `string`    | The URL to send the HTTP requests to.                                                                  | *Required* |               |  2.0  |
-| [headers](#u__8__headers)      | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                             | *Optional* |               |  2.3  |
+| Config Parameter               |       Type      | Summary                                                                                                                                                                                     |  Req./Opt. | Default Value | Since |
+|--------------------------------|:---------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------:|---------------|:-----:|
+| type = "siri-et-updater"       |      `enum`     | The type of the updater.                                                                                                                                                                    | *Required* |               |  1.5  |
+| blockReadinessUntilInitialized |    `boolean`    | Whether catching up with the updates should block the readiness check from returning a 'ready' result.                                                                                      | *Optional* | `false`       |  2.0  |
+| feedId                         |     `string`    | The ID of the feed to apply the updates to.                                                                                                                                                 | *Required* |               |  2.0  |
+| frequency                      |    `duration`   | How often the updates should be retrieved.                                                                                                                                                  | *Optional* | `"PT1M"`      |  2.0  |
+| fuzzyTripMatching              |    `boolean`    | If the fuzzy trip matcher should be used to match trips.                                                                                                                                    | *Optional* | `false`       |  2.0  |
+| previewInterval                |    `duration`   | TODO                                                                                                                                                                                        | *Optional* |               |  2.0  |
+| producerMetrics                |    `boolean`    | If failure, success, and warning metrics should be collected per producer.                                                                                                                  | *Optional* | `false`       |  2.7  |
+| requestorRef                   |     `string`    | The requester reference.                                                                                                                                                                    | *Optional* |               |  2.0  |
+| timeout                        |    `duration`   | The HTTP timeout to download the updates.                                                                                                                                                   | *Optional* | `"PT15S"`     |  2.0  |
+| [url](#u__8__url)              |     `string`    | The URL to send the HTTP requests to.                                                                                                                                                       | *Required* |               |  2.0  |
+| useNewUpdaterImplementation    |    `boolean`    | Use the new unified trip update implementation. When true, uses the new DefaultTripUpdateApplier with common handlers. When false (default), uses the legacy SiriRealTimeTripUpdateAdapter. | *Optional* | `false`       |  2.9  |
+| [headers](#u__8__headers)      | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                                                                                                                  | *Optional* |               |  2.3  |
 
 
 ##### Parameter details
@@ -171,15 +172,16 @@ This means that the XML feed must contain all updates for all trips, just like i
 <!-- siri-et-lite BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter           |       Type      | Summary                                                                    |  Req./Opt. | Default Value | Since |
-|----------------------------|:---------------:|----------------------------------------------------------------------------|:----------:|---------------|:-----:|
-| type = "siri-et-lite"      |      `enum`     | The type of the updater.                                                   | *Required* |               |  1.5  |
-| feedId                     |     `string`    | The ID of the feed to apply the updates to.                                | *Required* |               |  2.7  |
-| frequency                  |    `duration`   | How often the updates should be retrieved.                                 | *Optional* | `"PT1M"`      |  2.7  |
-| fuzzyTripMatching          |    `boolean`    | If the fuzzy trip matcher should be used to match trips.                   | *Optional* | `false`       |  2.7  |
-| timeout                    |    `duration`   | The HTTP timeout to download the updates.                                  | *Optional* | `"PT15S"`     |  2.7  |
-| [url](#u__15__url)         |      `uri`      | The URL to send the HTTP requests to.                                      | *Required* |               |  2.7  |
-| [headers](#u__15__headers) | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted. | *Optional* |               |  2.7  |
+| Config Parameter            |       Type      | Summary                                                                                                                                                                                     |  Req./Opt. | Default Value | Since |
+|-----------------------------|:---------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------:|---------------|:-----:|
+| type = "siri-et-lite"       |      `enum`     | The type of the updater.                                                                                                                                                                    | *Required* |               |  1.5  |
+| feedId                      |     `string`    | The ID of the feed to apply the updates to.                                                                                                                                                 | *Required* |               |  2.7  |
+| frequency                   |    `duration`   | How often the updates should be retrieved.                                                                                                                                                  | *Optional* | `"PT1M"`      |  2.7  |
+| fuzzyTripMatching           |    `boolean`    | If the fuzzy trip matcher should be used to match trips.                                                                                                                                    | *Optional* | `false`       |  2.7  |
+| timeout                     |    `duration`   | The HTTP timeout to download the updates.                                                                                                                                                   | *Optional* | `"PT15S"`     |  2.7  |
+| [url](#u__15__url)          |      `uri`      | The URL to send the HTTP requests to.                                                                                                                                                       | *Required* |               |  2.7  |
+| useNewUpdaterImplementation |    `boolean`    | Use the new unified trip update implementation. When true, uses the new DefaultTripUpdateApplier with common handlers. When false (default), uses the legacy SiriRealTimeTripUpdateAdapter. | *Optional* | `false`       |  2.9  |
+| [headers](#u__15__headers)  | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                                                                                                                  | *Optional* |               |  2.7  |
 
 
 ##### Parameter details

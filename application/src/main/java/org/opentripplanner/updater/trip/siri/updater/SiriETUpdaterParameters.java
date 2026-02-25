@@ -10,4 +10,11 @@ public interface SiriETUpdaterParameters
   boolean blockReadinessUntilInitialized();
 
   boolean fuzzyTripMatching();
+
+  /**
+   * Whether to use the new updater implementation based on common trip update handlers.
+   * When true, uses the new DefaultTripUpdateApplier with SiriTripUpdateParser.
+   * When false (default), uses the legacy SiriRealTimeTripUpdateAdapter.
+   */
+  boolean useNewUpdaterImplementation();
 }
