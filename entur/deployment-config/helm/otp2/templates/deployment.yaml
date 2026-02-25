@@ -90,6 +90,7 @@ spec:
         - -Xmx{{ .Values.resources.xmx }}
         - -XX:+UseTransparentHugePages
         - -XX:+AlwaysPreTouch
+        - -XX:+UseCompactObjectHeaders
         - -XX:ActiveProcessorCount={{ .Values.resources.cpuRequest }}
         - --add-opens=java.base/java.lang=ALL-UNNAMED
         - --add-opens=java.base/java.nio=ALL-UNNAMED

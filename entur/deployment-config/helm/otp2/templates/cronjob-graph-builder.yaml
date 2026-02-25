@@ -33,6 +33,8 @@ spec:
               - "-Xmx{{ .Values.cronjobRedeployGraphBuilder.resources.xmx }}"
               - "-XX:MaxGCPauseMillis=5000"
               - "-XX:+UseTransparentHugePages"
+              - "-XX:+AlwaysPreTouch"
+              - "-XX:+UseCompactObjectHeaders"
               - "--add-opens=java.base/java.lang=ALL-UNNAMED"
               - "--add-opens=java.base/java.nio=ALL-UNNAMED"
               - "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED"
