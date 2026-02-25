@@ -96,6 +96,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Fix memory leak in `TimetableSnapshot` related to `patternsForStop` and `realTimeAddedReplacedByTripOnServiceDateById` [#7253](https://github.com/opentripplanner/OpenTripPlanner/pull/7253)
 - Move `StreetSearchBuilder` to street module [#7328](https://github.com/opentripplanner/OpenTripPlanner/pull/7328)
 - Mark RecordedCall without ActualDepartureTime as not departed [#7336](https://github.com/opentripplanner/OpenTripPlanner/pull/7336)
+- Update to Java 25 [#7246](https://github.com/opentripplanner/OpenTripPlanner/pull/7246)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
