@@ -4,7 +4,7 @@ import java.util.List;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 /**
@@ -12,14 +12,20 @@ import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
  */
 public class EstimatedTimetableHandler {
 
-  private final SiriRealTimeTripUpdateAdapter adapter;
+  private final SiriTripUpdateAdapter adapter;
+  private final boolean fuzzyTripMatching;
   /**
    * The ID for the static feed to which these real time updates are applied
    */
   private final String feedId;
 
-  public EstimatedTimetableHandler(SiriRealTimeTripUpdateAdapter adapter, String feedId) {
+  public EstimatedTimetableHandler(
+    SiriTripUpdateAdapter adapter,
+    boolean fuzzyTripMatching,
+    String feedId
+  ) {
     this.adapter = adapter;
+    this.fuzzyTripMatching = fuzzyTripMatching;
     this.feedId = feedId;
   }
 
@@ -31,13 +37,12 @@ public class EstimatedTimetableHandler {
     UpdateIncrementality updateMode,
     RealTimeUpdateContext context
   ) {
-    return adapter
-      .forUpdate(context.mutableSnapshot())
-      .applyEstimatedTimetable(
-        context.entityResolver(feedId),
-        feedId,
-        updateMode,
-        estimatedTimetableDeliveries
-      );
+    return adapter.applyEstimatedTimetable(
+      fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
+      context.entityResolver(feedId),
+      feedId,
+      updateMode,
+      estimatedTimetableDeliveries
+    );
   }
 }

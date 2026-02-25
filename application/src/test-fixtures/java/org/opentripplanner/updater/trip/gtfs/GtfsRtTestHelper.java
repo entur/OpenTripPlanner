@@ -5,7 +5,6 @@ import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET
 import com.google.transit.realtime.GtfsRealtime;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.updater.spi.UpdateResult;
@@ -16,14 +15,18 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 public class GtfsRtTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final GtfsRealTimeTripUpdateAdapter gtfsAdapter;
+  private final GtfsTripUpdateAdapter gtfsAdapter;
 
   GtfsRtTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.gtfsAdapter = new GtfsRealTimeTripUpdateAdapter(
+    this.gtfsAdapter = new GtfsNewTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
-      transitTestEnvironment::defaultServiceDate
+      transitTestEnvironment.timetableSnapshotManager(),
+      ForwardsDelayPropagationType.DEFAULT,
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false,
+      transitTestEnvironment.feedId()
     );
   }
 
@@ -82,29 +85,19 @@ public class GtfsRtTestHelper {
     List<GtfsRealtime.TripUpdate> updates,
     UpdateIncrementality incrementality
   ) {
-    var resultRef = new AtomicReference<UpdateResult>();
-    try {
-      transitTestEnvironment
-        .updateManager()
-        .submit(ctx -> {
-          var buffer = ctx.repository(transitTestEnvironment.timetableHandle());
-          resultRef.set(
-            gtfsAdapter
-              .forUpdate(buffer)
-              .applyTripUpdates(
-                null,
-                ForwardsDelayPropagationType.DEFAULT,
-                BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-                incrementality,
-                updates,
-                transitTestEnvironment.feedId()
-              )
-          );
-        })
-        .get();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-    return resultRef.get();
+    UpdateResult updateResult = gtfsAdapter.applyTripUpdates(
+      null,
+      ForwardsDelayPropagationType.DEFAULT,
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      incrementality,
+      updates,
+      transitTestEnvironment.feedId()
+    );
+    commitTimetableSnapshot();
+    return updateResult;
+  }
+
+  private void commitTimetableSnapshot() {
+    transitTestEnvironment.timetableSnapshotManager().purgeAndCommit();
   }
 }

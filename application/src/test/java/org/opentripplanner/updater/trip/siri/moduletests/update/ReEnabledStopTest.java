@@ -69,4 +69,57 @@ class ReEnabledStopTest implements RealtimeTestConstants {
     var realtimePattern = env.tripData(TRIP_1_ID).tripPattern();
     assertEquals(PickDrop.SCHEDULED, realtimePattern.getBoardType(1));
   }
+
+  /**
+   * When a trip with a routability change (PickDrop.NONE → SCHEDULED) is re-processed
+   * with the same SIRI update, it should remain MODIFIED on the second update.
+   * The pattern change (pickup re-enabled) is a real modification relative to the
+   * scheduled pattern, regardless of how many times the update is applied.
+   *
+   * Regression test for E6: the E5 fix incorrectly skipped MODIFIED classification
+   * on second update when the current RT pattern matched the new stop pattern.
+   */
+  @Test
+  void reprocessedTripWithRoutabilityChangeShouldRemainModified() {
+    var tripInput = TripInput.of(TRIP_1_ID)
+      .withWithTripOnServiceDate(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21", PickDrop.NONE, PickDrop.SCHEDULED)
+      .addStop(STOP_C, "0:00:30", "0:00:31");
+
+    var env = ENV_BUILDER.addTrip(tripInput).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:11")
+          .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:20")
+          .departAimedExpected("00:00:21", "00:00:21")
+          .withDepartureBoardingActivity(DepartureBoardingActivityEnumeration.BOARDING)
+          .call(STOP_C)
+          .arriveAimedExpected("00:00:30", "00:00:30")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    // First update: MODIFIED (pattern changed due to routability change)
+    var result1 = siri.applyEstimatedTimetable(updates);
+    assertSuccess(result1);
+    assertEquals(
+      "MODIFIED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+
+    // Second update (re-processing): should still be MODIFIED
+    var result2 = siri.applyEstimatedTimetable(updates);
+    assertSuccess(result2);
+    assertEquals(
+      "MODIFIED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
 }
