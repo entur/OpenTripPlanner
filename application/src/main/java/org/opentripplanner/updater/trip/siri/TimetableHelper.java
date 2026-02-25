@@ -8,7 +8,6 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import org.opentripplanner.utils.time.ServiceDateUtils;
-import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.OccupancyEnumeration;
 
@@ -60,12 +59,8 @@ class TimetableHelper {
     CallWrapper call,
     OccupancyEnumeration journeyOccupancy
   ) {
-    if (call.isRecorded() || call.getArrivalStatus() == CallStatusEnumeration.ARRIVED) {
-      tripTimesBuilder.withHasArrived(index, true);
-    }
-    if (call.isRecorded()) {
-      tripTimesBuilder.withHasDeparted(index, true);
-    }
+    tripTimesBuilder.withHasArrived(index, call.hasArrived());
+    tripTimesBuilder.withHasDeparted(index, call.hasDeparted());
 
     // Set flag for inaccurate prediction if either call OR journey has inaccurate-flag set.
     boolean isCallPredictionInaccurate = TRUE.equals(call.isPredictionInaccurate());
