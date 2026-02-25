@@ -63,6 +63,16 @@ public interface CallWrapper {
   /// Whether the call is a RecordedCall or not
   boolean isRecorded();
 
+  /// Whether the vehicle has arrived at the stop.
+  default boolean hasArrived() {
+    return isRecorded() || getArrivalStatus() == CallStatusEnumeration.ARRIVED;
+  }
+
+  /// Whether the vehicle has departed from the stop.
+  default boolean hasDeparted() {
+    return isRecorded() && getActualDepartureTime() != null;
+  }
+
   final class EstimatedCallWrapper implements CallWrapper {
 
     private final EstimatedCall call;
