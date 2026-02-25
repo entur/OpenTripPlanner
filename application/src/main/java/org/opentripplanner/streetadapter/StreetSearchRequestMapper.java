@@ -53,7 +53,7 @@ public class StreetSearchRequestMapper {
       .withWheelchairEnabled(request.journey().wheelchair())
       .withGeoidElevation(preferences.system().geoidElevation())
       .withTurnReluctance(street.turnReluctance())
-      .withWheelchair(b -> mapWheelchair(b, request.preferences().wheelchair()))
+      .withWheelchair(b -> mapWheelchair(b, preferences.wheelchair()))
       .withWalk(b -> mapWalk(b, preferences.walk()))
       .withBike(b -> mapBike(b, preferences.bike()))
       .withCar(b -> mapCar(b, preferences.car()))
@@ -65,7 +65,7 @@ public class StreetSearchRequestMapper {
           street.drivingDirection()
         )
       )
-      .withTimeout(request.preferences().street().routingTimeout());
+      .withTimeout(street.routingTimeout());
 
     var rentalDuration = request.journey().direct().rentalDuration();
     if (rentalDuration != null) {

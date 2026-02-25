@@ -79,7 +79,7 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
 
   private ShortestPathTree<State, Edge, Vertex> routeToMany(Vertex vertex) {
     // TODO: This is incorrect, the configured defaults are not used.
-    var routingRequest = StreetSearchRequest.of()
+    var streetRequest = StreetSearchRequest.of()
       .withMode(StreetMode.CAR)
       .withArriveBy(reverseDirection)
       .build();
