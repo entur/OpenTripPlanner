@@ -26,7 +26,7 @@ import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.TripUpdateGraphWriterRunnable;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -61,7 +61,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
   private final String configRef;
-  private final GtfsRealTimeTripUpdateAdapter adapter;
+  private final GtfsTripUpdateAdapter adapter;
   private final Consumer<UpdateResult> recordMetrics;
   private WriteToGraphCallback saveResultOnGraph;
 
@@ -71,7 +71,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
 
   public MqttGtfsRealtimeUpdater(
     MqttGtfsRealtimeUpdaterParameters parameters,
-    GtfsRealTimeTripUpdateAdapter adapter
+    GtfsTripUpdateAdapter adapter
   ) {
     this.configRef = parameters.configRef();
     this.url = parameters.url();

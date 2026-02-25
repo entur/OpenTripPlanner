@@ -25,6 +25,7 @@ public abstract class SiriAzureUpdaterParameters {
   private boolean fuzzyTripMatching;
   private Duration autoDeleteOnIdle;
   private int prefetchCount;
+  private boolean useNewUpdaterImplementation;
 
   public SiriAzureUpdaterParameters(String type) {
     this.type = type;
@@ -138,6 +139,14 @@ public abstract class SiriAzureUpdaterParameters {
 
   public void setPrefetchCount(int prefetchCount) {
     this.prefetchCount = prefetchCount;
+  }
+
+  public boolean isUseNewUpdaterImplementation() {
+    return useNewUpdaterImplementation;
+  }
+
+  public void setUseNewUpdaterImplementation(boolean useNewUpdaterImplementation) {
+    this.useNewUpdaterImplementation = useNewUpdaterImplementation;
   }
 
   /**

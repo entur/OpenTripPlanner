@@ -10,20 +10,24 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsNewTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
 
 public class GtfsRtTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final GtfsRealTimeTripUpdateAdapter gtfsAdapter;
+  private final GtfsTripUpdateAdapter gtfsAdapter;
 
   GtfsRtTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.gtfsAdapter = new GtfsRealTimeTripUpdateAdapter(
+    this.gtfsAdapter = new GtfsNewTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager(),
-      transitTestEnvironment::defaultServiceDate
+      ForwardsDelayPropagationType.DEFAULT,
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false,
+      transitTestEnvironment.feedId()
     );
   }
 

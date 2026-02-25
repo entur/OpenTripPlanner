@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
+import java.math.BigInteger;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
@@ -22,6 +23,7 @@ class UpdatedTimesTest implements RealtimeTestConstants {
   private final RegularStop STOP_A = ENV_BUILDER.stop(STOP_A_ID);
   private final RegularStop STOP_B = ENV_BUILDER.stop(STOP_B_ID);
   private final RegularStop STOP_C = ENV_BUILDER.stop(STOP_C_ID);
+  private final RegularStop STOP_D = ENV_BUILDER.stop(STOP_D_ID);
 
   private final TripInput TRIP_INPUT = TripInput.of(TRIP_1_ID)
     .withWithTripOnServiceDate(TRIP_1_ID)
@@ -223,6 +225,63 @@ class UpdatedTimesTest implements RealtimeTestConstants {
     assertSuccess(result);
     assertEquals(
       "UPDATED | A [PI] 0:00:15 0:00:15 | B [PI] 0:00:25 0:00:25",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+  }
+
+  /**
+   * Update a 4-stop trip where the SIRI message has out-of-order calls: RecordedCalls contain
+   * stops A, B, D (Orders 1, 2, 4) and EstimatedCalls contain stop C (Order 3). This simulates
+   * the Nordic SIRI Profile's "missed recording" exception where a vehicle has passed a stop
+   * without recording it, placing the current stop in EstimatedCalls even though it has a lower
+   * Order than the last RecordedCall.
+   */
+  @Test
+  void testUpdateJourneyWithOutOfOrderCalls() {
+    var fourStopTrip = TripInput.of(TRIP_1_ID)
+      .withWithTripOnServiceDate(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21")
+      .addStop(STOP_C, "0:00:30", "0:00:31")
+      .addStop(STOP_D, "0:00:40", "0:00:41");
+
+    var env = ENV_BUILDER.addTrip(fourStopTrip).build();
+    var siri = SiriTestHelper.of(env);
+
+    // Build EVJ with RecordedCalls [A, B, D] and EstimatedCalls [C]
+    var builder = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withRecordedCalls(b ->
+        b
+          .call(STOP_A)
+          .departAimedActual("00:00:11", "00:00:15")
+          .call(STOP_B)
+          .departAimedActual("00:00:21", "00:00:25")
+          .call(STOP_D)
+          .arriveAimedActual("00:00:40", "00:00:48")
+      )
+      .withEstimatedCalls(b ->
+        b
+          .call(STOP_C)
+          .arriveAimedExpected("00:00:30", "00:00:35")
+          .departAimedExpected("00:00:31", "00:00:36")
+      );
+
+    // Override auto-assigned Order numbers to create out-of-order interleaving:
+    // RecordedCalls [A=1, B=2, D=4], EstimatedCalls [C=3]
+    var evj = builder.buildEstimatedVehicleJourney();
+    evj.getRecordedCalls().getRecordedCalls().get(0).setOrder(BigInteger.valueOf(1));
+    evj.getRecordedCalls().getRecordedCalls().get(1).setOrder(BigInteger.valueOf(2));
+    evj.getRecordedCalls().getRecordedCalls().get(2).setOrder(BigInteger.valueOf(4));
+    evj.getEstimatedCalls().getEstimatedCalls().get(0).setOrder(BigInteger.valueOf(3));
+
+    var updates = builder.buildEstimatedTimetableDeliveries();
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertSuccess(result);
+    assertEquals(
+      "UPDATED | A [R] 0:00:15 0:00:15 | B [R] 0:00:20 0:00:25 | C 0:00:35 0:00:36 | D [R] 0:00:48 0:00:48",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
