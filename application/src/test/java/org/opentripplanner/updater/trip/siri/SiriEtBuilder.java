@@ -10,9 +10,11 @@ import javax.annotation.Nullable;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
+import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DataFrameRefStructure;
 import uk.org.siri.siri21.DatedVehicleJourneyRef;
+import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
@@ -28,6 +30,7 @@ import uk.org.siri.siri21.StopAssignmentStructure;
 import uk.org.siri.siri21.StopPointRefStructure;
 import uk.org.siri.siri21.VehicleJourneyRef;
 import uk.org.siri.siri21.VehicleModesEnumeration;
+import uk.org.siri.siri21.VehicleRef;
 
 /**
  * This is a helper class for constucting Siri ET messages to use in tests.
@@ -100,6 +103,23 @@ public class SiriEtBuilder {
     return this;
   }
 
+  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
+    evj.setOccupancy(occupancy);
+    return this;
+  }
+
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
+  public SiriEtBuilder withDestinationName(String destinationName) {
+    var name = new NaturalLanguageStringStructure();
+    name.setValue(destinationName);
+    evj.getDestinationNames().add(name);
+    return this;
+  }
+
   public SiriEtBuilder withExternalLineRef(String externalLineRef) {
     var ref = new LineRef();
     ref.setValue(externalLineRef);
@@ -111,6 +131,13 @@ public class SiriEtBuilder {
     var name = new NaturalLanguageStringStructure();
     name.setValue(lineName);
     evj.getPublishedLineNames().add(name);
+    return this;
+  }
+
+  public SiriEtBuilder withVehicleRef(String vehicleRef) {
+    var ref = new VehicleRef();
+    ref.setValue(vehicleRef);
+    evj.setVehicleRef(ref);
     return this;
   }
 
@@ -151,16 +178,6 @@ public class SiriEtBuilder {
     var calls = new EstimatedVehicleJourney.EstimatedCalls();
     builder.build().forEach(call -> calls.getEstimatedCalls().add(call));
     evj.setEstimatedCalls(calls);
-    return this;
-  }
-
-  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
-    evj.setOccupancy(occupancy);
-    return this;
-  }
-
-  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
-    evj.setPredictionInaccurate(predictionInaccurate);
     return this;
   }
 
@@ -402,6 +419,73 @@ public class SiriEtBuilder {
 
     public EstimatedCallsBuilder withArrivalStatus(CallStatusEnumeration callStatus) {
       calls.getLast().setArrivalStatus(callStatus);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withAimedArrivalTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedArrivalTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withExpectedArrivalTime(String expectedTime) {
+      var call = calls.getLast();
+      call.setExpectedArrivalTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withAimedDepartureTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withExpectedDepartureTime(String expectedTime) {
+      var call = calls.getLast();
+      call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withCancellation(boolean cancel) {
+      var call = calls.getLast();
+      call.setCancellation(cancel);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withPredictionInaccurate(boolean inaccurate) {
+      var call = calls.getLast();
+      call.setPredictionInaccurate(inaccurate);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withArrivalBoardingActivity(
+      ArrivalBoardingActivityEnumeration activity
+    ) {
+      calls.getLast().setArrivalBoardingActivity(activity);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withDepartureBoardingActivity(
+      DepartureBoardingActivityEnumeration activity
+    ) {
+      calls.getLast().setDepartureBoardingActivity(activity);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withOccupancy(uk.org.siri.siri21.OccupancyEnumeration occupancy) {
+      var call = calls.getLast();
+      call.setOccupancy(occupancy);
+      return this;
+    }
+
+    public EstimatedCallsBuilder next() {
       return this;
     }
 
