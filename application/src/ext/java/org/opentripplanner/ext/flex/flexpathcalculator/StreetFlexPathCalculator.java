@@ -88,7 +88,7 @@ public class StreetFlexPathCalculator implements FlexPathCalculator {
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(maxFlexTripDuration))
       .withDominanceFunction(new DominanceFunctions.EarliestArrival())
-      .withRequest(routingRequest)
+      .withRequest(streetRequest)
       .withFrom(reverseDirection ? null : vertex)
       .withTo(reverseDirection ? vertex : null)
       .getShortestPathTree();
