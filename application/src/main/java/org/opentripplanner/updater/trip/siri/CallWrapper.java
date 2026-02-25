@@ -138,6 +138,12 @@ public interface CallWrapper {
       return call.getVisitNumber() != null;
     }
 
+    /**
+     * Return the call order, either from the Order field or the VisitNumber field.
+     * Validation ensures that one of them is set.
+     * See {@link #validate()}
+     * @return
+     */
     @Override
     public int getSortOrder() {
       return call.getOrder() != null
