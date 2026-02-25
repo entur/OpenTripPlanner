@@ -1,15 +1,13 @@
 package org.opentripplanner.street.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.core.model.basic.Cost.costOfSeconds;
 
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.routing.algorithm.GraphRoutingTest;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -17,8 +15,9 @@ import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.search.StreetSearchBuilder;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 /**
  * Test switching between biking / walking over multiple edges.
@@ -373,28 +372,25 @@ public class BikeWalkingTest extends GraphRoutingTest {
     StreetMode streetMode,
     boolean arriveBy
   ) {
-    var request = RouteRequest.of()
-      .withPreferences(preferences ->
-        preferences
-          .withWalk(w -> w.withSpeed(10))
-          .withBike(it ->
-            it
-              .withSpeed(20d)
-              .withWalking(w ->
-                w
-                  .withSpeed(5d)
-                  .withMountDismountTime(Duration.ofSeconds(100))
-                  .withMountDismountCost(1000)
-              )
+    var request = StreetSearchRequest.of()
+      .withMode(streetMode)
+      .withArriveBy(arriveBy)
+      .withWalk(w -> w.withSpeed(10))
+      .withBike(b ->
+        b
+          .withSpeed(20d)
+          .withWalking(w ->
+            w
+              .withSpeed(5d)
+              .withMountDismountTime(Duration.ofSeconds(100))
+              .withMountDismountCost(costOfSeconds(1000))
           )
       )
-      .withArriveBy(arriveBy)
-      .buildDefault();
+      .build();
 
     var tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withRequest(request)
-      .withStreetRequest(new StreetRequest(streetMode))
       .withFrom(fromVertex)
       .withTo(toVertex)
       .getShortestPathTree();

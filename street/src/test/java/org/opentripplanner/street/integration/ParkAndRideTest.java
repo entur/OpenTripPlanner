@@ -3,20 +3,21 @@ package org.opentripplanner.street.integration;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.opentripplanner.model.GenericLocation;
-import org.opentripplanner.routing.algorithm.GraphRoutingTest;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.search.StreetSearchBuilder;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
+import org.opentripplanner.street.search.request.filter.ParkingFilter;
+import org.opentripplanner.street.search.request.filter.ParkingSelect;
 
 public abstract class ParkAndRideTest extends GraphRoutingTest {
 
@@ -136,36 +137,35 @@ public abstract class ParkAndRideTest extends GraphRoutingTest {
     Set<String> requiredTags,
     boolean arriveBy
   ) {
-    var request = RouteRequest.of()
-      .withFrom(GenericLocation.fromCoordinate(fromVertex.getLat(), fromVertex.getLon()))
-      .withTo(GenericLocation.fromCoordinate(toVertex.getLat(), toVertex.getLon()))
-      .withPreferences(preferences ->
-        preferences
-          .withBike(b ->
-            b.withParking(parking -> {
-              parking.withRequiredVehicleParkingTags(requiredTags);
-              parking.withBannedVehicleParkingTags(bannedTags);
-              parking.withCost(120);
-              parking.withTime(60);
-            })
-          )
-          .withCar(c ->
-            c.withParking(parking -> {
-              parking.withRequiredVehicleParkingTags(requiredTags);
-              parking.withBannedVehicleParkingTags(bannedTags);
-              parking.withCost(240);
-              parking.withTime(180);
-            })
-          )
-      )
-      .withJourney(j -> j.withWheelchair(requireWheelChairAccessible))
+    var parkingFilter = new ParkingFilter(
+      List.of(new ParkingSelect.TagsSelect(bannedTags)),
+      List.of(new ParkingSelect.TagsSelect(requiredTags))
+    );
+    var request = StreetSearchRequest.of()
+      .withMode(streetMode)
+      .withWheelchairEnabled(requireWheelChairAccessible)
       .withArriveBy(arriveBy)
-      .buildRequest();
+      .withBike(b ->
+        b.withParking(parking ->
+          parking
+            .withFilter(parkingFilter)
+            .withCost(Cost.costOfSeconds(120))
+            .withTime(Duration.ofSeconds(60))
+        )
+      )
+      .withCar(c ->
+        c.withParking(parking ->
+          parking
+            .withFilter(parkingFilter)
+            .withCost(Cost.costOfSeconds(240))
+            .withTime(Duration.ofSeconds(180))
+        )
+      )
+      .build();
 
     var tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withRequest(request)
-      .withStreetRequest(new StreetRequest(streetMode))
       .withFrom(fromVertex)
       .withTo(toVertex)
       .getShortestPathTree();

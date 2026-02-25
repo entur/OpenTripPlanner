@@ -1,20 +1,21 @@
-package org.opentripplanner.streetadapter;
+package org.opentripplanner.street.linking;
 
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
+import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
+import org.opentripplanner.street.model.vertex.Vertex;
 
 public class VehicleParkingHelper {
 
-  private final VertexFactory vertexFactory;
+  private final Graph graph;
 
   public VehicleParkingHelper(Graph graph) {
-    Objects.requireNonNull(graph);
-    this.vertexFactory = new VertexFactory(graph);
+    this.graph = Objects.requireNonNull(graph);
   }
 
   public void linkVehicleParkingToGraph(VehicleParking vehicleParking) {
@@ -25,11 +26,7 @@ public class VehicleParkingHelper {
   public List<VehicleParkingEntranceVertex> createVehicleParkingVertices(
     VehicleParking vehicleParking
   ) {
-    return vehicleParking
-      .getEntrances()
-      .stream()
-      .map(vertexFactory::vehicleParkingEntrance)
-      .toList();
+    return vehicleParking.getEntrances().stream().map(this::vehicleParkingEntrance).toList();
   }
 
   public static void linkVehicleParkingEntrances(
@@ -62,6 +59,10 @@ public class VehicleParkingHelper {
     vehicleParkingEntrance.getParkingEntrance().clearVertex();
   }
 
+  public VehicleParkingEntranceVertex vehicleParkingEntrance(VehicleParkingEntrance entrance) {
+    return addToGraph(new VehicleParkingEntranceVertex(entrance));
+  }
+
   private static boolean isUsableForParking(
     VehicleParkingEntranceVertex from,
     VehicleParkingEntranceVertex to
@@ -77,5 +78,10 @@ public class VehicleParkingHelper {
         (from.isWalkAccessible() && to.isCarAccessible()));
 
     return usableForBikeParking || usableForCarParking;
+  }
+
+  private <T extends Vertex> T addToGraph(T vertex) {
+    graph.addVertex(vertex);
+    return vertex;
   }
 }

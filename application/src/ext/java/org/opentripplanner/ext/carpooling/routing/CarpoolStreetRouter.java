@@ -19,13 +19,14 @@ import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TemporaryVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
-import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,14 +185,14 @@ public class CarpoolStreetRouter {
   ) {
     var preferences = request.preferences().street();
 
+    var streetReq = StreetSearchRequestMapper.map(request).build();
     var streetSearch = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
       .withSkipEdgeStrategy(
         new DurationSkipEdgeStrategy(preferences.maxDirectDuration().valueOf(streetRequest.mode()))
       )
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
-      .withRequest(request)
-      .withStreetRequest(streetRequest)
+      .withRequest(streetReq)
       .withFrom(fromVertices)
       .withTo(toVertices);
 

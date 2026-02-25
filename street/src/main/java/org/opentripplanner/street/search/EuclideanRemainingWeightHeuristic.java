@@ -1,14 +1,13 @@
-package org.opentripplanner.streetadapter;
+package org.opentripplanner.street.search;
 
 import java.util.Set;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
-import org.opentripplanner.routing.api.request.preference.RoutingPreferences;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.StreetConstants;
-import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.FreeEdge;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.VehicleRentalState;
 
@@ -36,15 +35,10 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
 
   // TODO This currently only uses the first toVertex. If there are multiple toVertices, it will
   //      not work correctly.
-  public void initialize(
-    StreetMode streetMode,
-    Set<Vertex> toVertices,
-    boolean arriveBy,
-    RoutingPreferences preferences
-  ) {
+  public void initialize(Set<Vertex> toVertices, boolean arriveBy, StreetSearchRequest req) {
     Vertex target = toVertices.iterator().next();
-    maxStreetSpeed = getStreetSpeedUpperBound(preferences, streetMode);
-    walkingSpeed = preferences.walk().speed();
+    maxStreetSpeed = getStreetSpeedUpperBound(req);
+    walkingSpeed = req.walk().speed();
     this.arriveBy = arriveBy;
 
     if (target.getDegreeIn() == 1) {
@@ -59,18 +53,19 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
   }
 
   /** @return The highest speed for all possible road-modes. */
-  private double getStreetSpeedUpperBound(RoutingPreferences preferences, StreetMode streetMode) {
+  private double getStreetSpeedUpperBound(StreetSearchRequest req) {
     // Assume carSpeed > bikeSpeed > walkSpeed
+    var streetMode = req.mode();
     if (streetMode.includesDriving()) {
       return maxCarSpeed;
     }
     if (streetMode.includesBiking()) {
-      return preferences.bike().speed();
+      return req.bike().speed();
     }
     if (streetMode.includesScooter()) {
-      return preferences.scooter().speed();
+      return req.scooter().speed();
     }
-    return preferences.walk().speed();
+    return req.walk().speed();
   }
 
   /**

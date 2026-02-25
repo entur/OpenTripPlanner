@@ -28,6 +28,7 @@ import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.VehicleParkingHelper;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.ElevatorAlightEdge;
 import org.opentripplanner.street.model.edge.ElevatorBoardEdge;
@@ -51,8 +52,6 @@ import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.street.model.vertex.VertexLabel;
-import org.opentripplanner.streetadapter.VehicleParkingHelper;
 import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -104,14 +103,6 @@ public abstract class GraphRoutingTest {
 
     public TimetableRepository timetableRepository() {
       return timetableRepository;
-    }
-
-    public <T extends Vertex> T v(VertexLabel label) {
-      return vertex(label);
-    }
-
-    public <T extends Vertex> T vertex(VertexLabel label) {
-      return (T) graph.getVertex(label);
     }
 
     // -- Street network

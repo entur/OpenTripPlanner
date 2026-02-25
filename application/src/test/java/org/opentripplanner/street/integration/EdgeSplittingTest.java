@@ -40,11 +40,12 @@ import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
 import org.opentripplanner.street.search.state.State;
-import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -188,12 +189,11 @@ public class EdgeSplittingTest {
 
     assertEquals(3, edges.size());
 
-    var request = RouteRequest.defaultValue();
+    var request = StreetSearchRequest.of().build();
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withRequest(request)
-      .withStreetRequest(request.journey().direct())
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();
@@ -232,12 +232,11 @@ public class EdgeSplittingTest {
     Collection<Edge> edges = end.getIncoming();
     assertEquals(1, edges.size());
 
-    var request = RouteRequest.defaultValue();
+    var request = StreetSearchRequest.of().build();
 
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withRequest(request)
-      .withStreetRequest(request.journey().direct())
       .withFrom(start)
       .withTo(end)
       .getShortestPathTree();
@@ -348,7 +347,7 @@ public class EdgeSplittingTest {
       assertFalse(toVertices.isEmpty());
       ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
         .withHeuristic(new EuclideanRemainingWeightHeuristic())
-        .withRequest(walking)
+        .withRequest(StreetSearchRequestMapper.map(walking).build())
         .withFrom(fromVertices)
         .withTo(toVertices)
         .getShortestPathTree();

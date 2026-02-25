@@ -5,17 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.routing.algorithm.GraphRoutingTest;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitEntranceVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.streetadapter.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.streetadapter.StreetSearchBuilder;
+import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
+import org.opentripplanner.street.search.StreetSearchBuilder;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 /**
  * Test CarPickup: - it may start with (WALK - WALK_TO_PICKUP, CAR - IN_CAR) - it may end with (WALK
@@ -176,16 +174,14 @@ public class CarPickupTest extends GraphRoutingTest {
     Vertex toVertex,
     boolean arriveBy
   ) {
-    var request = RouteRequest.of()
-      //.setFrom(GenericLocation.fromCoordinate(fromVertex.getLat(), fromVertex.getLon()))
-      //.setTo(GenericLocation.fromCoordinate(toVertex.getLat(), toVertex.getLon()))
+    var request = StreetSearchRequest.of()
+      .withMode(StreetMode.CAR_PICKUP)
       .withArriveBy(arriveBy)
-      .buildDefault();
+      .build();
 
     var tree = StreetSearchBuilder.of()
       .withHeuristic(new EuclideanRemainingWeightHeuristic())
       .withRequest(request)
-      .withStreetRequest(new StreetRequest(StreetMode.CAR_PICKUP))
       .withFrom(fromVertex)
       .withTo(toVertex)
       .getShortestPathTree();
