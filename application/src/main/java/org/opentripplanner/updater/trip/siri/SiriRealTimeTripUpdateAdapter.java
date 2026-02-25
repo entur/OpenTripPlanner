@@ -17,7 +17,6 @@ import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -195,7 +194,7 @@ public class SiriRealTimeTripUpdateAdapter {
    * Snapshot timetable is used as source if initialised, trip patterns scheduled timetable if not.
    */
   private Timetable getCurrentTimetable(TripPattern tripPattern, LocalDate serviceDate) {
-    return snapshotManager.getTimetableSnapshotBuffer().resolve(tripPattern, serviceDate);
+    return snapshotManager.resolve(tripPattern, serviceDate);
   }
 
   private Result<TripUpdate, UpdateError> handleModifiedTrip(
@@ -268,16 +267,14 @@ public class SiriRealTimeTripUpdateAdapter {
       return updateResult.toFailureResult();
     }
 
-    if (!updateResult.successValue().stopPattern().equals(pattern.getStopPattern())) {
-      // Replace scheduled trip pattern, if pattern has changed
-      markScheduledTripAsDeleted(trip, serviceDate);
-    }
+    TripPattern deleteFrom = !updateResult
+        .successValue()
+        .stopPattern()
+        .equals(pattern.getStopPattern())
+      ? pattern
+      : null;
 
-    // Also check whether trip id has been used for previously ADDED/MODIFIED trip message and
-    // remove the previously created trip
-    this.snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
-
-    return updateResult;
+    return updateResult.mapSuccess(tu -> tu.withScheduledPatternToDeleteFrom(deleteFrom));
   }
 
   private Result<TripUpdate, UpdateError> handleExtraCall(
@@ -350,16 +347,14 @@ public class SiriRealTimeTripUpdateAdapter {
       return updateResult.toFailureResult();
     }
 
-    if (!updateResult.successValue().stopPattern().equals(pattern.getStopPattern())) {
-      // Replace scheduled trip pattern, if pattern has changed
-      markScheduledTripAsDeleted(trip, serviceDate);
-    }
+    TripPattern deleteFrom = !updateResult
+        .successValue()
+        .stopPattern()
+        .equals(pattern.getStopPattern())
+      ? pattern
+      : null;
 
-    // Also check whether trip id has been used for previously ADDED/MODIFIED trip message and
-    // remove the previously created trip
-    this.snapshotManager.revertTripToScheduledTripPattern(trip.getId(), serviceDate);
-
-    return updateResult;
+    return updateResult.mapSuccess(tu -> tu.withScheduledPatternToDeleteFrom(deleteFrom));
   }
 
   /**
@@ -377,6 +372,9 @@ public class SiriRealTimeTripUpdateAdapter {
       pattern = tripPatternCache.getOrCreateTripPattern(tripUpdate.stopPattern(), trip);
     }
 
+    // Revert for TRIP_UPDATE and EXTRA_CALL, but NOT for REPLACEMENT_DEPARTURE (new trips)
+    boolean revertPreviousRealTimeUpdates = !tripUpdate.tripCreation();
+
     // Add new trip times to buffer, making protective copies as needed. Bubble success/error up.
     RealTimeTripUpdate realTimeTripUpdate = RealTimeTripUpdate.of(
       pattern,
@@ -387,40 +385,12 @@ public class SiriRealTimeTripUpdateAdapter {
       .withTripCreation(tripUpdate.tripCreation())
       .withRouteCreation(tripUpdate.routeCreation())
       .withProducer(tripUpdate.dataSource())
+      .withRevertPreviousRealTimeUpdates(revertPreviousRealTimeUpdates)
+      .withScheduledPatternToDeleteFrom(tripUpdate.scheduledPatternToDeleteFrom())
       .build();
     var result = snapshotManager.updateBuffer(realTimeTripUpdate);
     LOG.debug("Applied real-time data for trip {} on {}", trip, serviceDate);
     return result;
-  }
-
-  /**
-   * Mark the scheduled trip in the buffer as deleted, given trip on service date
-   *
-   * @return true if scheduled trip was marked as deleted
-   */
-  private boolean markScheduledTripAsDeleted(Trip trip, final LocalDate serviceDate) {
-    boolean success = false;
-
-    final TripPattern pattern = transitEditorService.findPattern(trip);
-
-    if (pattern != null) {
-      // Mark scheduled trip times for this trip in this pattern as deleted
-      final Timetable timetable = pattern.getScheduledTimetable();
-      final TripTimes tripTimes = timetable.getTripTimes(trip);
-
-      if (tripTimes == null) {
-        LOG.warn("Could not mark scheduled trip as deleted {}", trip.getId());
-      } else {
-        final RealTimeTripTimesBuilder builder = tripTimes.createRealTimeFromScheduledTimes();
-        builder.deleteTrip();
-        snapshotManager.updateBuffer(
-          RealTimeTripUpdate.of(pattern, builder.build(), serviceDate).build()
-        );
-        success = true;
-      }
-    }
-
-    return success;
   }
 
   /**
