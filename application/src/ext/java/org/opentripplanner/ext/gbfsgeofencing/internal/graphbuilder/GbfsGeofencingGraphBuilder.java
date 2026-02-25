@@ -8,8 +8,8 @@ import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingFeedParam
 import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingParameters;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.street.graph.Graph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -14,9 +14,9 @@ import org.mobilitydata.gbfs.v3_0.geofencing_zones.GBFSName;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.TranslatedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.UnsupportedGeometryException;
-import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
