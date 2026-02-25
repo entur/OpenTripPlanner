@@ -1,6 +1,7 @@
 package org.opentripplanner.standalone.config.routerconfig.updaters;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import java.time.Duration;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -33,7 +34,16 @@ public class SiriETLiteUpdaterConfig {
         .since(V2_7)
         .summary("If the fuzzy trip matcher should be used to match trips.")
         .asBoolean(false),
-      HttpHeadersConfig.headers(c, V2_7)
+      HttpHeadersConfig.headers(c, V2_7),
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary(
+          "Use the new unified trip update implementation. " +
+            "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
+            "When false (default), uses the legacy SiriRealTimeTripUpdateAdapter."
+        )
+        .asBoolean(false)
     );
   }
 }

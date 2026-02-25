@@ -142,6 +142,11 @@ public final class TripUpdate {
     return tripDescriptor.routeId().map(id -> new FeedScopedId(feedId, id));
   }
 
+  public Optional<String> startTime() {
+    var raw = tripUpdate.getTrip();
+    return raw.hasStartTime() ? Optional.of(raw.getStartTime()) : Optional.empty();
+  }
+
   private Optional<GtfsRealtime.TripUpdate.TripProperties> tripProperties() {
     return tripUpdate.hasTripProperties()
       ? Optional.of(tripUpdate.getTripProperties())

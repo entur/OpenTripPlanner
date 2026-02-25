@@ -16,4 +16,15 @@ public enum Direction {
   Direction(int gtfsCode) {
     this.gtfsCode = gtfsCode;
   }
+
+  /**
+   * Map a GTFS direction_id integer to a Direction enum value.
+   */
+  public static Direction ofGtfsCode(int code) {
+    return switch (code) {
+      case 0 -> OUTBOUND;
+      case 1 -> INBOUND;
+      default -> UNKNOWN;
+    };
+  }
 }

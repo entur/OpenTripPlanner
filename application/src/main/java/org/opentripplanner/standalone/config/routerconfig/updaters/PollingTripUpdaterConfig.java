@@ -5,6 +5,7 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V1
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_3;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_8;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import java.time.Duration;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -52,7 +53,16 @@ public class PollingTripUpdaterConfig {
         .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA),
       c.of("feedId").since(V1_5).summary("Which feed the updates apply to.").asString(),
       url,
-      headers
+      headers,
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary(
+          "Use the new unified trip update implementation. " +
+            "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
+            "When false (default), uses the legacy GtfsRealTimeTripUpdateAdapter."
+        )
+        .asBoolean(false)
     );
   }
 }

@@ -3,6 +3,7 @@ package org.opentripplanner.standalone.config.routerconfig.updaters.azure;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.NA;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
 import java.time.Duration;
 import java.time.LocalDate;
@@ -88,6 +89,21 @@ public abstract class SiriAzureUpdaterConfig {
         history.of("timeout").since(NA).summary("Timeout in milliseconds").asInt(300000)
       );
     }
+
+    parameters.setUseNewUpdaterImplementation(
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary("Use the new trip updater implementation.")
+        .description(
+          """
+          When enabled, uses the new modular trip updater implementation based on
+          `DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+          The default value is `false`, which uses the legacy implementation.
+          """
+        )
+        .asBoolean(false)
+    );
   }
 
   /**
