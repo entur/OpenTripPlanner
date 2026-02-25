@@ -39,7 +39,6 @@ public abstract class AStarBuilder<
   private Set<Vertex> toVertices;
   private SearchTerminationStrategy<State> terminationStrategy;
   private DominanceFunction<State> dominanceFunction;
-  private Edge originBackEdge;
 
   protected AStarBuilder() {}
 
@@ -113,11 +112,6 @@ public abstract class AStarBuilder<
 
   protected abstract Duration streetRoutingTimeout();
 
-  public Builder withOriginBackEdge(Edge originBackEdge) {
-    this.originBackEdge = originBackEdge;
-    return builder;
-  }
-
   public ShortestPathTree<State, Edge, Vertex> getShortestPathTree() {
     return build().getShortestPathTree();
   }
@@ -130,15 +124,7 @@ public abstract class AStarBuilder<
     final Set<Vertex> origin = arriveBy ? toVertices : fromVertices;
     final Set<Vertex> destination = arriveBy ? fromVertices : toVertices;
 
-    Collection<State> initialStates;
-
-    initialStates = createInitialStates(origin);
-
-    if (originBackEdge != null) {
-      for (var state : initialStates) {
-        state.initBackEdge(originBackEdge);
-      }
-    }
+    Collection<State> initialStates = createInitialStates(origin);
 
     initializeHeuristic(heuristic, origin, destination, arriveBy);
 
