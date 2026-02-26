@@ -76,6 +76,21 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
+  public boolean hasOrder() {
+    return false;
+  }
+
+  @Override
+  public boolean hasVisitNumber() {
+    return false;
+  }
+
+  @Override
+  public int getSortOrder() {
+    return 0;
+  }
+
+  @Override
   public Boolean isCancellation() {
     return cancellation;
   }
