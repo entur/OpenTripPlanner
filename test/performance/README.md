@@ -28,7 +28,8 @@ Sometimes it is desirable to run the test configuration in the CI environment ma
 example, when making changes to the tests. To do this, perform these steps:
 1. Create a local branch in git that contains the desired performance test configuration.
 2. In [performance-test.yml](/.github/workflows/performance-test.yml) add your test branch name to
-the configuration and change all `profile`s to `core`:
+the configuration and change all those locations that you want to run on the branch to `core`:
+
 ```diff
 name: Performance test
 
