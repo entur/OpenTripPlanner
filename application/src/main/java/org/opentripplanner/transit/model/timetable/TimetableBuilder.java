@@ -111,6 +111,10 @@ public class TimetableBuilder {
     return tripTimes.values().stream().sorted().toList();
   }
 
+  Map<FeedScopedId, TripTimes> createImmutableTripTimesIndex() {
+    return Map.copyOf(tripTimes);
+  }
+
   TripPattern getPattern() {
     return pattern;
   }
