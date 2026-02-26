@@ -77,6 +77,9 @@ jobs:
 4. Push the changes to a branch in the **upstream** [OpenTripPlanner](https://github.com/opentripplanner/OpenTripPlanner/) repository with the same name you added to [performance-test.yml](/.github/workflows/performance-test.yml).
 5. The tests will run after the push.
 
+**Note** In order to visualise before and after, it is helpful to push a commit that is the same as the current `dev-2.x` and run the speed
+test on that.
+
 ## Instrumentation
 
 Each run on CI is instrumented with Java Flight Recorder. The results are then saved as an artifact
