@@ -48,24 +48,6 @@ jobs:
       matrix:
         include:
           ...
-          - location: baden-wuerttemberg # German state of Baden-Württemberg: https://en.wikipedia.org/wiki/Baden-W%C3%BCrttemberg
-            iterations: 1
-            jfr-delay: "50s"
--           profile: extended
-+           profile: core
-
-          - location: switzerland
-            iterations: 1
-            jfr-delay: "50s"
--           profile: extended
-+           profile: core
-
-          - location: washington-state
-            iterations: 1
-            jfr-delay: "20s"
--           profile: extended
-+           profile: core
-
           - location: helsinki
             iterations: 1
             jfr-delay: "50s"
