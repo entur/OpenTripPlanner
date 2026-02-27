@@ -246,11 +246,11 @@ class TripTimeOnDateMatcherFactoryTest {
 
       var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
 
-      // ROUTE_1 is RAIL by agency a1 → matches select but also matches not → excluded
+      // ROUTE_1 is RAIL by agency a1 -> matches select but also matches not -> excluded
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
-      // ROUTE_2 is BUS by agency a2 → matches select, doesn't match not → included
+      // ROUTE_2 is BUS by agency a2 -> matches select, doesn't match not -> included
       assertTrue(matcher.match(tripTimeOnDate(ROUTE_2)));
-      // ROUTE_3 is FERRY by agency a3 → doesn't match select → excluded
+      // ROUTE_3 is FERRY by agency a3 -> doesn't match select -> excluded
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_3)));
     }
 
@@ -291,9 +291,9 @@ class TripTimeOnDateMatcherFactoryTest {
 
       var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
 
-      // ROUTE_1 is RAIL by agency a1 → matches both → included
+      // ROUTE_1 is RAIL by agency a1 -> matches both -> included
       assertTrue(matcher.match(tripTimeOnDate(ROUTE_1)));
-      // ROUTE_2 is BUS by agency a2 → doesn't match → excluded
+      // ROUTE_2 is BUS by agency a2 -> doesn't match -> excluded
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
     }
 
@@ -452,7 +452,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void emptyFilterMatchesEverything() {
-      // Empty filter (no select, no not) → matches everything
+      // Empty filter (no select, no not) -> matches everything
       var filter = TripTimeOnDateFilterRequest.of().build();
 
       var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
@@ -484,8 +484,22 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void emptyNotSelectorMatchesNothing() {
-      // An empty selector matches everything, so an empty not-selector will match nothing
+      // An empty not-selector matches everything, so everything is excluded
       var filter = TripTimeOnDateFilterRequest.of()
+        .addNot(TripTimeOnDateSelectRequest.of().build())
+        .build();
+
+      var matcher = TripTimeOnDateMatcherFactory.ofSelectorBasedTransitFilters(List.of(filter));
+
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+    }
+
+    @Test
+    void emptySelectAndEmptyNotMatchesNothing() {
+      // Empty select matches everything, empty not excludes everything -> nothing
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addSelect(TripTimeOnDateSelectRequest.of().build())
         .addNot(TripTimeOnDateSelectRequest.of().build())
         .build();
 
@@ -514,7 +528,7 @@ class TripTimeOnDateMatcherFactoryTest {
     }
 
     @Test
-    void transitFiltersAndFlatFiltersAppliedTogether() {
+    void selectorSelectAndFlatExcludeMode() {
       var filter = TripTimeOnDateFilterRequest.of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
@@ -529,10 +543,82 @@ class TripTimeOnDateMatcherFactoryTest {
         .build();
       var matcher = TripTimeOnDateMatcherFactory.of(matcherRequest);
 
-      // ROUTE_1: selected by filter but excluded by flat filter
+      // ROUTE_1: selected by filter but excluded by flat excludeMode
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
       // ROUTE_2: not selected by filter
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+    }
+
+    @Test
+    void selectorSelectAndFlatIncludeAgency() {
+      // Selector selects RAIL, flat filter includes only agency a2
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
+            .build()
+        )
+        .build();
+
+      var matcherRequest = request()
+        .withTransitFilters(List.of(filter))
+        .withIncludeAgencies(List.of(ROUTE_2.getAgency().getId()))
+        .build();
+      var matcher = TripTimeOnDateMatcherFactory.of(matcherRequest);
+
+      // ROUTE_1: RAIL -> selected by filter, but agency a1 not in flat include -> excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2: BUS -> not selected by filter -> excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+    }
+
+    @Test
+    void selectorNotAndFlatIncludeRoute() {
+      // Selector excludes agency a1, flat filter includes only ROUTE_1
+      // Both must pass (AND), so ROUTE_1 is excluded despite being in flat include
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addNot(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId()))
+            .build()
+        )
+        .build();
+
+      var matcherRequest = request()
+        .withTransitFilters(List.of(filter))
+        .withIncludeRoutes(List.of(ROUTE_1.getId()))
+        .build();
+      var matcher = TripTimeOnDateMatcherFactory.of(matcherRequest);
+
+      // ROUTE_1: passes flat includeRoute, but excluded by selector-not -> excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2: passes selector-not, but not in flat includeRoute -> excluded
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_2)));
+    }
+
+    @Test
+    void selectorSelectAndFlatExcludeAgency() {
+      // Selector selects agencies a1 and a2, flat filter excludes agency a1
+      var filter = TripTimeOnDateFilterRequest.of()
+        .addSelect(
+          TripTimeOnDateSelectRequest.of()
+            .withAgencies(List.of(ROUTE_1.getAgency().getId(), ROUTE_2.getAgency().getId()))
+            .build()
+        )
+        .build();
+
+      var matcherRequest = request()
+        .withTransitFilters(List.of(filter))
+        .withExcludeAgencies(List.of(ROUTE_1.getAgency().getId()))
+        .build();
+      var matcher = TripTimeOnDateMatcherFactory.of(matcherRequest);
+
+      // ROUTE_1: selected by filter, but excluded by flat excludeAgency
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
+      // ROUTE_2: selected by filter, not excluded by flat
+      assertTrue(matcher.match(tripTimeOnDate(ROUTE_2)));
+      // ROUTE_3: not selected by filter
+      assertFalse(matcher.match(tripTimeOnDate(ROUTE_3)));
     }
   }
 
