@@ -345,7 +345,7 @@ public class StopPlaceType {
               .description(
                 "A list of filters for which estimated calls should be included. " +
                   "An estimated call will be included if it matches with at least one filter. " +
-                  "An empty list of filters is disallowed! " +
+                  "An empty list of filters means that all estimated calls should be included. " +
                   "If a search include this parameter, \"whiteListed\", & \"whiteListedModes\" filters will be ignored."
               )
               .type(GraphQLList.list(new GraphQLNonNull(EstimatedCallFilterInputType.INPUT_TYPE)))

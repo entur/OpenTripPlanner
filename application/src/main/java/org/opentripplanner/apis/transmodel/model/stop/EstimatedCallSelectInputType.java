@@ -13,8 +13,8 @@ public class EstimatedCallSelectInputType {
     .name("EstimatedCallSelectInput")
     .description(
       "A list of selectors for filter allow-list / exclude-list. " +
-        "An empty list is disallowed. " +
-        "An estimated call will match with selectors if it matches with all provided lists. " +
+        "An empty list means that everything is allowed. " +
+        "An estimated call will match with selectors if it matches with all non-empty lists. " +
         "The `select` is always applied first, then `not`. If only `not` is present, the exclude " +
         "is applied to the existing set of estimated calls. "
     )

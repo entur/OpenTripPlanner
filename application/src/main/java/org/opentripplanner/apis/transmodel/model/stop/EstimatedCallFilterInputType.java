@@ -16,7 +16,7 @@ public class EstimatedCallFilterInputType {
         .description(
           "A list of selectors for what estimated calls should be included. " +
             "In order to be accepted a call has to match with at least one selector. " +
-            "An empty list is disallowed."
+            "An empty list means that everything should be allowed. "
         )
         .type(new GraphQLList(new GraphQLNonNull(EstimatedCallSelectInputType.INPUT_TYPE)))
         .build()
