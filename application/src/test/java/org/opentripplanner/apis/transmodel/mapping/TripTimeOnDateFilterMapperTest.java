@@ -2,6 +2,7 @@ package org.opentripplanner.apis.transmodel.mapping;
 
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.opentripplanner.apis.transmodel._support.RequestHelper.list;
 import static org.opentripplanner.apis.transmodel._support.RequestHelper.map;
 import static org.opentripplanner.transit.model.basic.TransitMode.BUS;
@@ -22,32 +23,32 @@ class TripTimeOnDateFilterMapperTest {
 
   static Stream<Arguments> mapFiltersCases() {
     return Stream.of(
-      Arguments.of(
+      argumentSet(
         "selectByLine",
         list(map("select", list(map("lines", list("F:Line:1"))))),
         "[(select: [(routes: [F:Line:1])])]"
       ),
-      Arguments.of(
+      argumentSet(
         "selectByAuthority",
         list(map("select", list(map("authorities", list("F:Auth:1"))))),
         "[(select: [(agencies: [F:Auth:1])])]"
       ),
-      Arguments.of(
+      argumentSet(
         "selectByMode",
         list(map("select", list(map(entry("transportModes", list(map("transportMode", BUS))))))),
         "[(select: [(transportModes: [BUS])])]"
       ),
-      Arguments.of(
+      argumentSet(
         "notByLine",
         list(map("not", list(map("lines", list("F:Line:1"))))),
         "[(not: [(routes: [F:Line:1])])]"
       ),
-      Arguments.of(
+      argumentSet(
         "notByAuthority",
         list(map("not", list(map("authorities", list("F:Auth:1"))))),
         "[(not: [(agencies: [F:Auth:1])])]"
       ),
-      Arguments.of(
+      argumentSet(
         "selectAndNot",
         list(
           map(
@@ -57,7 +58,7 @@ class TripTimeOnDateFilterMapperTest {
         ),
         "[(select: [(routes: [F:Line:1])], not: [(agencies: [F:Auth:1])])]"
       ),
-      Arguments.of(
+      argumentSet(
         "multipleFilters",
         list(
           map("select", list(map("lines", list("F:Line:1")))),
@@ -66,17 +67,17 @@ class TripTimeOnDateFilterMapperTest {
         "[(select: [(routes: [F:Line:1])]), (not: [(agencies: [F:Auth:2])])]"
       ),
       // Empty list cases
-      Arguments.of("emptyFilterList", List.<Map<String, ?>>of(), "[]"),
-      Arguments.of("emptySelectArray", list(map("select", list())), "[ALL]"),
-      Arguments.of("emptyNotArray", list(map("not", list())), "[ALL]"),
-      Arguments.of("emptySelectorInSelect", list(map("select", list(map()))), "[(select: [()])]"),
-      Arguments.of("emptySelectorInNot", list(map("not", list(map()))), "[(not: [()])]")
+      argumentSet("emptyFilterList", List.<Map<String, ?>>of(), "[]"),
+      argumentSet("emptySelectArray", list(map("select", list())), "[ALL]"),
+      argumentSet("emptyNotArray", list(map("not", list())), "[ALL]"),
+      argumentSet("emptySelectorInSelect", list(map("select", list(map()))), "[(select: [()])]"),
+      argumentSet("emptySelectorInNot", list(map("not", list(map()))), "[(not: [()])]")
     );
   }
 
-  @ParameterizedTest(name = "{0}")
+  @ParameterizedTest
   @MethodSource("mapFiltersCases")
-  void mapFilters(String description, List<Map<String, ?>> input, String expected) {
+  void mapFilters(List<Map<String, ?>> input, String expected) {
     var result = MAPPER.mapFilters(input);
     assertEquals(expected, result.toString());
   }
