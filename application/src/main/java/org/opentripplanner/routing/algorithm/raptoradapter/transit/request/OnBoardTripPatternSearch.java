@@ -28,40 +28,6 @@ public class OnBoardTripPatternSearch {
   }
 
   /**
-   * Search all patterns in the index for one containing the given trip on the given service date.
-   * This is an O(n*m) linear search used as a last-resort fallback when the transit service's
-   * pattern lookup returns a pattern not present in the Raptor data.
-   *
-   * @throws IllegalArgumentException if no matching pattern is found
-   */
-  public TripPattern searchPatternIndex(Trip trip, LocalDate serviceDate) {
-    for (TripPatternForDates tripPatternForDates : patternIndex) {
-      if (tripPatternForDates == null) {
-        continue;
-      }
-      var dateIterator = tripPatternForDates.tripPatternForDatesIndexIterator(true);
-      while (dateIterator.hasNext()) {
-        int dayIndex = dateIterator.next();
-        TripPatternForDate tripPatternForDate = tripPatternForDates.tripPatternForDate(dayIndex);
-        if (tripPatternForDate.getServiceDate().equals(serviceDate)) {
-          for (int j = 0; j < tripPatternForDate.numberOfTripSchedules(); j++) {
-            if (tripPatternForDate.getTripTimes(j).getTrip().getId().equals(trip.getId())) {
-              // TODO getPattern is deprecated
-              return tripPatternForDates.getTripPattern().getPattern();
-            }
-          }
-        }
-      }
-    }
-    throw new IllegalArgumentException(
-      "No pattern containing trip %s on date %s found in active Raptor data".formatted(
-        trip.getId(),
-        serviceDate
-      )
-    );
-  }
-
-  /**
    * Get the {@link TripPatternForDates} for a given route index.
    *
    * @throws IllegalArgumentException if the route index is out of bounds or not active

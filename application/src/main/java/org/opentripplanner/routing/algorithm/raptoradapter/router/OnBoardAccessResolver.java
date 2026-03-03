@@ -56,6 +56,7 @@ public class OnBoardAccessResolver {
       tripPattern,
       tripLocation.stopId(),
       trip,
+      serviceDate,
       targetSeconds
     );
 
@@ -70,10 +71,20 @@ public class OnBoardAccessResolver {
       serviceDate
     );
 
-    int boardingTime = tripPattern
-      .getScheduledTimetable()
-      .getTripTimes(trip)
-      .getScheduledDepartureTime(stopPosInPattern);
+    var tripTimes = transitService
+      .findTimetable(tripPattern, serviceDate)
+      .getTripTimesWithScheduleFallback(trip);
+    if (tripTimes == null) {
+      throw new IllegalArgumentException(
+        "Trip %s not found in timetable for pattern %s on date %s".formatted(
+          trip.getId(),
+          tripPattern.getId(),
+          serviceDate
+        )
+      );
+    }
+
+    int boardingTime = tripTimes.getScheduledDepartureTime(stopPosInPattern);
 
     var access = new RoutingOnBoardAccess(
       routeIndex,
@@ -115,13 +126,24 @@ public class OnBoardAccessResolver {
       tripPattern,
       tripLocation.stopId(),
       trip,
+      serviceDate,
       targetSeconds
     );
 
-    int boardingTime = tripPattern
-      .getScheduledTimetable()
-      .getTripTimes(trip)
-      .getScheduledDepartureTime(stopPosInPattern);
+    var tripTimes = transitService
+      .findTimetable(tripPattern, serviceDate)
+      .getTripTimesWithScheduleFallback(trip);
+    if (tripTimes == null) {
+      throw new IllegalArgumentException(
+        "Trip %s not found in timetable for pattern %s on date %s".formatted(
+          trip.getId(),
+          tripPattern.getId(),
+          serviceDate
+        )
+      );
+    }
+
+    int boardingTime = tripTimes.getScheduledDepartureTime(stopPosInPattern);
 
     var serviceDateStart = ServiceDateUtils.asStartOfService(serviceDate, timeZone);
     return serviceDateStart.plusSeconds(boardingTime).toInstant();
@@ -152,10 +174,12 @@ public class OnBoardAccessResolver {
       return tripPattern;
     }
 
-    // Last resort: search the pattern index directly for a pattern containing this trip.
-    // This handles the case where realtime updates create new patterns with route indices
-    // not present in the Raptor data (e.g., the SIRI updater hasn't processed the service date).
-    return patternSearch.searchPatternIndex(trip, serviceDate);
+    throw new IllegalArgumentException(
+      "No pattern for trip %s on date %s found in active Raptor data".formatted(
+        trip.getId(),
+        serviceDate
+      )
+    );
   }
 
   private ResolvedTrip resolveTrip(TripOnDateReference reference) {
@@ -216,6 +240,7 @@ public class OnBoardAccessResolver {
     TripPattern tripPattern,
     FeedScopedId stopId,
     Trip trip,
+    LocalDate serviceDate,
     Integer scheduledDepartureTime
   ) {
     var matchingIds = resolveStopIds(stopId);
@@ -253,7 +278,13 @@ public class OnBoardAccessResolver {
       );
     }
 
-    return findStopPositionByDepartureTime(tripPattern, matchingIds, trip, scheduledDepartureTime);
+    return findStopPositionByDepartureTime(
+      tripPattern,
+      matchingIds,
+      trip,
+      serviceDate,
+      scheduledDepartureTime
+    );
   }
 
   /**
@@ -264,14 +295,18 @@ public class OnBoardAccessResolver {
     TripPattern tripPattern,
     Set<FeedScopedId> matchingIds,
     Trip trip,
+    LocalDate serviceDate,
     int targetSeconds
   ) {
-    var tripTimes = tripPattern.getScheduledTimetable().getTripTimes(trip);
+    var tripTimes = transitService
+      .findTimetable(tripPattern, serviceDate)
+      .getTripTimesWithScheduleFallback(trip);
     if (tripTimes == null) {
       throw new IllegalArgumentException(
-        "Trip %s not found in scheduled timetable for pattern %s".formatted(
+        "Trip %s not found in timetable for pattern %s on date %s".formatted(
           trip.getId(),
-          tripPattern.getId()
+          tripPattern.getId(),
+          serviceDate
         )
       );
     }

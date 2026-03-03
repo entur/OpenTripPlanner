@@ -13,7 +13,9 @@ import org.opentripplanner.routing.api.request.TripOnDateReference;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 
 class OnBoardAccessResolverTest {
 
@@ -315,5 +317,104 @@ class OnBoardAccessResolverTest {
     var resolved2 = resolver.resolve(secondOccurrence, patternSearch);
     assertEquals(2, resolved2.access().stopPositionInPattern());
     assertEquals(10 * 3600 + 15 * 60, resolved2.access().boardingTime());
+  }
+
+  /**
+   * When a realtime-modified pattern is not in the Raptor pattern index,
+   * findPatternInRaptorData falls back to the base/static pattern.
+   */
+  @Test
+  void resolveFallsBackToBasePatternWhenRealtimePatternNotInIndex() {
+    var env = ENV_BUILDER
+      .addTrip(
+        TripInput.of("T1")
+          .addStop(STOP_A, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(STOP_C, "10:10")
+      )
+      .build();
+
+    var tripData = env.tripData("T1");
+    var scheduledPattern = tripData.scheduledTripPattern();
+    var tripTimes = tripData.scheduledTripTimes();
+
+    // Build pattern search BEFORE applying the realtime update — so it only has scheduled patterns
+    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+
+    // Realtime-modified pattern (different route index, not in Raptor data)
+    var realtimePattern = TripPattern.of(id("P1-rt"))
+      .withRoute(scheduledPattern.getRoute())
+      .withStopPattern(scheduledPattern.getStopPattern())
+      .withRealTimeStopPatternModified()
+      .build();
+
+    // Apply realtime update that maps the trip to the new pattern
+    env
+      .timetableSnapshotManager()
+      .updateBuffer(new RealTimeTripUpdate(realtimePattern, tripTimes, SERVICE_DATE));
+    env.timetableSnapshotManager().purgeAndCommit();
+
+    // Transit service sees the realtime pattern, but patternSearch has only scheduled
+    var resolver = new OnBoardAccessResolver(env.transitService());
+    var tripLocation = TripLocation.of(
+      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
+      STOP_B.getId()
+    );
+
+    // findPattern(trip, SERVICE_DATE) returns realtimePattern (not in index),
+    // falls back to findPattern(trip) which returns scheduledPattern (in index)
+    var resolved = resolver.resolve(tripLocation, patternSearch);
+
+    assertEquals(
+      scheduledPattern.getRoutingTripPattern().patternIndex(),
+      resolved.access().routeIndex()
+    );
+    assertEquals(1, resolved.access().stopPositionInPattern());
+    assertEquals(10 * 3600 + 5 * 60, resolved.access().boardingTime());
+  }
+
+  /**
+   * Verify that resolveBoardingDateTime works when a realtime updater has modified the trip's
+   * stop pattern, moving it to a new TripPattern whose scheduled timetable is empty.
+   */
+  @Test
+  void resolveBoardingDateTimeWithRealtimeModifiedPattern() {
+    var env = ENV_BUILDER
+      .addTrip(
+        TripInput.of("T1")
+          .addStop(STOP_A, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(STOP_C, "10:10")
+      )
+      .build();
+
+    var tripData = env.tripData("T1");
+    var scheduledPattern = tripData.scheduledTripPattern();
+    var tripTimes = tripData.scheduledTripTimes();
+
+    // Realtime-modified pattern (empty scheduled timetable)
+    var realtimePattern = TripPattern.of(id("P1-rt"))
+      .withRoute(scheduledPattern.getRoute())
+      .withStopPattern(scheduledPattern.getStopPattern())
+      .withRealTimeStopPatternModified()
+      .build();
+
+    // Apply realtime update
+    env
+      .timetableSnapshotManager()
+      .updateBuffer(new RealTimeTripUpdate(realtimePattern, tripTimes, SERVICE_DATE));
+    env.timetableSnapshotManager().purgeAndCommit();
+
+    var resolver = new OnBoardAccessResolver(env.transitService());
+    var tripLocation = TripLocation.of(
+      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
+      STOP_B.getId()
+    );
+
+    var result = resolver.resolveBoardingDateTime(tripLocation, TIME_ZONE);
+
+    long expectedEpochSecond =
+      SERVICE_DATE.atStartOfDay(TIME_ZONE).toEpochSecond() + 10 * 3600 + 5 * 60;
+    assertEquals(expectedEpochSecond, result.getEpochSecond());
   }
 }
