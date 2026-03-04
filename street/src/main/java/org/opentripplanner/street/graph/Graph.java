@@ -76,7 +76,7 @@ public class Graph implements Serializable {
    * zone state for boundary-only geofencing. Each updater stores its own network's index
    * so that updates from one network don't overwrite another's zones.
    */
-  private transient final Map<String, GeofencingZoneIndex> geofencingZoneIndexes = new HashMap<>();
+  private final transient Map<String, GeofencingZoneIndex> geofencingZoneIndexes = new HashMap<>();
 
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;

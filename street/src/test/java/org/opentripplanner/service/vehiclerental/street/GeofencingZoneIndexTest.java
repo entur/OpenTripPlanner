@@ -8,8 +8,8 @@ import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.street.geometry.Polygons;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.street.geometry.Polygons;
 
 class GeofencingZoneIndexTest {
 

@@ -3,10 +3,10 @@ package org.opentripplanner.street.search.request;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
-import java.util.Map;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
@@ -176,5 +176,4 @@ public class StreetSearchRequestBuilder {
   public StreetSearchRequest build() {
     return new StreetSearchRequest(this);
   }
-
 }
