@@ -26,7 +26,7 @@ public class UpdateExistingTripValidator implements TripUpdateValidator.ForExist
     }
 
     var tripId = resolvedUpdate.trip().getId();
-    var pattern = resolvedUpdate.pattern();
+    var scheduledPattern = resolvedUpdate.scheduledPattern();
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
     // FULL_UPDATE must not use stopSequence
@@ -36,11 +36,14 @@ public class UpdateExistingTripValidator implements TripUpdateValidator.ForExist
       );
     }
 
-    // FULL_UPDATE must have exact stop count match
-    if (stopTimeUpdates.size() < pattern.numberOfStops()) {
+    // FULL_UPDATE must have exact stop count match against the scheduled pattern.
+    // We compare against the scheduled pattern (not the current real-time pattern) because
+    // a revert update may send fewer stops than a previously modified pattern (e.g. after
+    // removing an extra call).
+    if (stopTimeUpdates.size() < scheduledPattern.numberOfStops()) {
       return Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TOO_FEW_STOPS));
     }
-    if (stopTimeUpdates.size() > pattern.numberOfStops()) {
+    if (stopTimeUpdates.size() > scheduledPattern.numberOfStops()) {
       return Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TOO_MANY_STOPS));
     }
 

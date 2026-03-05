@@ -54,8 +54,8 @@ class RealTimeTripUpdateComparatorTest {
       .withStopPattern(stopPattern)
       .build();
 
-    var update1 = new RealTimeTripUpdate(pattern1, tripTimes, SERVICE_DATE);
-    var update2 = new RealTimeTripUpdate(pattern2, tripTimes, SERVICE_DATE);
+    var update1 = RealTimeTripUpdate.of(pattern1, tripTimes, SERVICE_DATE).build();
+    var update2 = RealTimeTripUpdate.of(pattern2, tripTimes, SERVICE_DATE).build();
 
     assertEquals(
       RealTimeTripUpdateComparator.encode(update1),
@@ -79,8 +79,8 @@ class RealTimeTripUpdateComparatorTest {
       .withStopPattern(stopPattern)
       .build();
 
-    var updateA = new RealTimeTripUpdate(patternA, tripTimes, SERVICE_DATE);
-    var updateB = new RealTimeTripUpdate(patternB, tripTimes, SERVICE_DATE);
+    var updateA = RealTimeTripUpdate.of(patternA, tripTimes, SERVICE_DATE).build();
+    var updateB = RealTimeTripUpdate.of(patternB, tripTimes, SERVICE_DATE).build();
 
     assertNotEquals(
       RealTimeTripUpdateComparator.encode(updateA),

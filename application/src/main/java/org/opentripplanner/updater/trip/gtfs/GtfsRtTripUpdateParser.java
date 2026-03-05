@@ -103,11 +103,18 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       return Result.success(new ParsedDeleteTrip(tripReference, serviceDate, null, null));
     }
 
-    var stopTimeUpdates = parseStopTimeUpdates(
+    var stopTimeUpdateResult = parseStopTimeUpdates(
+      tripId,
       tripUpdate.stopTimeUpdates(),
       serviceDate,
       updateType == TripUpdateType.ADD_NEW_TRIP
     );
+
+    if (stopTimeUpdateResult.isFailure()) {
+      return stopTimeUpdateResult.toFailureResult();
+    }
+
+    var stopTimeUpdates = stopTimeUpdateResult.successValue();
 
     return switch (updateType) {
       case UPDATE_EXISTING -> Result.success(
@@ -174,7 +181,8 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return builder.build();
   }
 
-  private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
+  private Result<List<ParsedStopTimeUpdate>, UpdateError> parseStopTimeUpdates(
+    FeedScopedId tripId,
     List<StopTimeUpdate> updates,
     LocalDate serviceDate,
     boolean isNewTrip
@@ -186,10 +194,11 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       var assignedStopId = update.assignedStopId().map(this::createId).orElse(null);
       var stopSequence = update.stopSequence();
 
-      // Skip only if BOTH stop_id and stop_sequence are missing
-      // GTFS-RT allows using either for matching
+      // Both stop_id and stop_sequence are missing — invalid stop time update
       if (stopId.isEmpty() && stopSequence.isEmpty()) {
-        continue;
+        return Result.failure(
+          new UpdateError(tripId, UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
+        );
       }
 
       // Create StopReference - may have null stopId if only stopSequence is provided
@@ -218,7 +227,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       result.add(builder.build());
     }
 
-    return result;
+    return Result.success(result);
   }
 
   private ParsedStopTimeUpdate.StopUpdateStatus mapStopTimeStatus(StopTimeUpdate update) {

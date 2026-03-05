@@ -111,17 +111,11 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
 
     // Build and return the result with revert and deletion signals
     try {
-      var realTimeTripUpdate = new RealTimeTripUpdate(
-        newPattern,
-        builder.build(),
-        serviceDate,
-        null,
-        false,
-        false,
-        resolvedUpdate.dataSource(),
-        true,
-        scheduledPattern
-      );
+      var realTimeTripUpdate = RealTimeTripUpdate.of(newPattern, builder.build(), serviceDate)
+        .withProducer(resolvedUpdate.dataSource())
+        .withRevertPreviousRealTimeUpdates(true)
+        .withHideTripInScheduledPattern(scheduledPattern)
+        .build();
       LOG.debug(
         "Modified trip {} on {} with new pattern {}",
         trip.getId(),

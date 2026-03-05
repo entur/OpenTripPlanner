@@ -190,7 +190,7 @@ public class RealTimeTripUpdateComparator {
     sb.append(" pattern=").append(normalizePatternId(update.pattern().getId()));
     sb.append(" revert=").append(update.revertPreviousRealTimeUpdates());
 
-    var deleteFrom = update.scheduledPatternToDeleteFrom();
+    var deleteFrom = update.hideTripInScheduledPattern();
     sb.append(" deleteFrom=").append(deleteFrom != null ? deleteFrom.getId() : "null");
 
     sb.append(" tripCreation=").append(update.tripCreation());
@@ -240,7 +240,7 @@ public class RealTimeTripUpdateComparator {
       .append('\n');
     sb.append("  revert       : ").append(update.revertPreviousRealTimeUpdates()).append('\n');
 
-    var deleteFrom = update.scheduledPatternToDeleteFrom();
+    var deleteFrom = update.hideTripInScheduledPattern();
     sb
       .append("  deleteFrom   : ")
       .append(deleteFrom != null ? deleteFrom.getId() : "null")
