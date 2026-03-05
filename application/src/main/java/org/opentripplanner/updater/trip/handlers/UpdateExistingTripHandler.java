@@ -72,17 +72,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     // If all stops are cancelled, treat as implicit trip-level cancellation (avoid MODIFIED state)
     if (resolvedUpdate.isAllStopsCancelled()) {
       builder.cancelTrip();
-      var realTimeTripUpdate = new RealTimeTripUpdate(
-        scheduledPattern,
-        builder.build(),
-        serviceDate,
-        null,
-        false,
-        false,
-        resolvedUpdate.dataSource(),
-        true,
-        null
-      );
+      var realTimeTripUpdate = RealTimeTripUpdate.of(scheduledPattern, builder.build(), serviceDate)
+        .withProducer(resolvedUpdate.dataSource())
+        .withRevertPreviousRealTimeUpdates(true)
+        .build();
       LOG.debug(
         "All stops cancelled - trip {} treated as cancelled on {}",
         trip.getId(),
@@ -132,17 +125,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
     // Create the RealTimeTripUpdate with revert and deletion signals
     try {
-      var realTimeTripUpdate = new RealTimeTripUpdate(
-        finalPattern,
-        builder.build(),
-        serviceDate,
-        null,
-        false,
-        false,
-        resolvedUpdate.dataSource(),
-        true,
-        patternToDeleteFrom
-      );
+      var realTimeTripUpdate = RealTimeTripUpdate.of(finalPattern, builder.build(), serviceDate)
+        .withProducer(resolvedUpdate.dataSource())
+        .withRevertPreviousRealTimeUpdates(true)
+        .withHideTripInScheduledPattern(patternToDeleteFrom)
+        .build();
       LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
       return Result.success(new TripUpdateResult(realTimeTripUpdate));
     } catch (DataValidationException e) {
@@ -156,16 +143,17 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   }
 
   /**
-   * Match a pre-resolved stop in the pattern by ID lookup.
+   * Match a pre-resolved stop in the pattern by ID lookup, starting from a given index.
    * Used for GTFS-RT updates that omit stopSequence but provide stopId.
+   * The startFrom parameter supports circular routes where the same stop appears multiple times.
    *
    * @param stop The pre-resolved stop location
    * @param pattern The trip pattern to search
+   * @param startFrom The index to start searching from (inclusive)
    * @return The matched stop index, or -1 if no match found
    */
-  private int matchStopInPattern(StopLocation stop, TripPattern pattern) {
-    // Search through pattern stops to find a match by ID
-    for (int i = 0; i < pattern.numberOfStops(); i++) {
+  private int matchStopInPattern(StopLocation stop, TripPattern pattern, int startFrom) {
+    for (int i = startFrom; i < pattern.numberOfStops(); i++) {
       StopLocation patternStop = pattern.getStop(i);
 
       // Direct match by ID
@@ -241,6 +229,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     var stopReplacementValidator = new StopReplacementValidator();
 
     int listIndex = 0;
+    int nextStopSearchIndex = 0;
     for (ResolvedStopTimeUpdate stopUpdate : resolvedUpdate.stopTimeUpdates()) {
       Integer stopSequence = stopUpdate.stopSequence();
       int stopIndex;
@@ -268,7 +257,13 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
               stopIndex,
               scheduledPattern.numberOfStops()
             );
-            continue;
+            return Result.failure(
+              new UpdateError(
+                trip.getId(),
+                UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE,
+                stopIndex
+              )
+            );
           }
 
           // Use pre-resolved stop if assignedStopId is provided (stop replacement)
@@ -280,16 +275,21 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
           resolvedStop = stopUpdate.stop();
           if (resolvedStop == null) {
             return Result.failure(
-              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP)
+              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
             );
           }
-          int matchIndex = matchStopInPattern(resolvedStop, scheduledPattern);
+          int matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, nextStopSearchIndex);
+          // If not found from current position, try from beginning (supports out-of-order updates)
+          if (matchIndex < 0 && nextStopSearchIndex > 0) {
+            matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, 0);
+          }
           if (matchIndex < 0) {
             return Result.failure(
-              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH)
+              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
             );
           }
           stopIndex = matchIndex;
+          nextStopSearchIndex = matchIndex + 1;
         }
       }
 

@@ -196,15 +196,12 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Build and return result
     try {
       // tripCreation=true since we're creating a new trip
-      var realTimeTripUpdate = new RealTimeTripUpdate(
-        pattern,
-        builder.build(),
-        serviceDate,
-        tripOnServiceDate,
-        true,
-        routeCreation,
-        resolvedUpdate.dataSource()
-      );
+      var realTimeTripUpdate = RealTimeTripUpdate.of(pattern, builder.build(), serviceDate)
+        .withAddedTripOnServiceDate(tripOnServiceDate)
+        .withTripCreation(true)
+        .withRouteCreation(routeCreation)
+        .withProducer(resolvedUpdate.dataSource())
+        .build();
 
       LOG.debug("Added trip {} on {} with pattern {}", tripId, serviceDate, pattern.getId());
       return Result.success(new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings()));
@@ -255,17 +252,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // tripCreation=false since this is an update to an existing added trip
     // routeCreation=false since the route already exists
     try {
-      var realTimeTripUpdate = new RealTimeTripUpdate(
-        existingPattern,
-        builder.build(),
-        serviceDate,
-        null,
-        false,
-        false,
-        resolvedUpdate.dataSource(),
-        true,
-        null
-      );
+      var realTimeTripUpdate = RealTimeTripUpdate.of(existingPattern, builder.build(), serviceDate)
+        .withProducer(resolvedUpdate.dataSource())
+        .withRevertPreviousRealTimeUpdates(true)
+        .build();
 
       LOG.debug("Updated existing added trip {} on {}", tripId, serviceDate);
       return Result.success(new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings()));

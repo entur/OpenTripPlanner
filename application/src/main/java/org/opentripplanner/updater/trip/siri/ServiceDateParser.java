@@ -53,11 +53,15 @@ public class ServiceDateParser {
     // Always extract aimedDepartureTime as a fallback for service date resolution.
     // This is needed even when tripOnServiceDateId is present, because the ID may not
     // resolve to a valid NeTEx DatedServiceJourney (e.g. BNR numeric IDs).
-    var aimedDepartureTime = CallWrapper.of(journey)
-      .stream()
-      .findFirst()
-      .map(CallWrapper::getAimedDepartureTime)
-      .orElse(null);
+    var callsResult = CallWrapper.of(journey);
+    var aimedDepartureTime = callsResult.isSuccess()
+      ? callsResult
+          .successValue()
+          .stream()
+          .findFirst()
+          .map(CallWrapper::getAimedDepartureTime)
+          .orElse(null)
+      : null;
 
     if (tripOnServiceDateId != null) {
       return new ParsedServiceDate(null, tripOnServiceDateId, aimedDepartureTime);

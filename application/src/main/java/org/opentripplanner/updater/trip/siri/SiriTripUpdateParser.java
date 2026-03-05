@@ -2,7 +2,6 @@ package org.opentripplanner.updater.trip.siri;
 
 import static java.lang.Boolean.TRUE;
 import static org.opentripplanner.updater.alert.siri.mapping.SiriTransportModeMapper.mapTransitMainMode;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.EMPTY_STOP_POINT_REF;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NOT_MONITORED;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NO_START_DATE;
 import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.UNKNOWN;
@@ -42,7 +41,6 @@ import org.rutebanken.netex.model.BusSubmodeEnumeration;
 import org.rutebanken.netex.model.RailSubmodeEnumeration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 /**
@@ -63,14 +61,11 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
   @Override
   public Result<ParsedTripUpdate, UpdateError> parse(EstimatedVehicleJourney journey) {
-    List<CallWrapper> calls = CallWrapper.of(journey);
-
-    // Validate stop point refs exist
-    for (var call : calls) {
-      if (StringUtils.hasNoValueOrNullAsString(call.getStopPointRef())) {
-        return UpdateError.result(null, EMPTY_STOP_POINT_REF, journey.getDataSource());
-      }
+    var callsResult = CallWrapper.of(journey);
+    if (callsResult.isFailure()) {
+      return UpdateError.result(null, callsResult.failureValue(), journey.getDataSource());
     }
+    List<CallWrapper> calls = callsResult.successValue();
 
     // Check if journey is monitored (unless cancelled)
     if (!TRUE.equals(journey.isMonitored()) && !TRUE.equals(journey.isCancellation())) {
@@ -205,10 +200,13 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     // Get aimed start time from first call
     ZonedDateTime aimedStartTime = null;
-    for (var call : CallWrapper.of(journey)) {
-      aimedStartTime = call.getAimedDepartureTime();
-      if (aimedStartTime != null) {
-        break;
+    var callsForStartTime = CallWrapper.of(journey);
+    if (callsForStartTime.isSuccess()) {
+      for (var call : callsForStartTime.successValue()) {
+        aimedStartTime = call.getAimedDepartureTime();
+        if (aimedStartTime != null) {
+          break;
+        }
       }
     }
     if (aimedStartTime != null && psd.serviceDate() != null) {
@@ -293,13 +291,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       if (TRUE.equals(call.isPredictionInaccurate()) || TRUE.equals(journeyPredictionInaccurate)) {
         builder.withPredictionInaccurate(true);
       }
-      if (call.isRecorded() || call.getArrivalStatus() == CallStatusEnumeration.ARRIVED) {
+      boolean isLastStop = stopIndex == totalStops - 1;
+      if (call.hasArrived()) {
         builder.withHasArrived(true);
       }
-      if (
-        call.isRecorded() &&
-        (call.getActualDepartureTime() != null || call.getExpectedDepartureTime() == null)
-      ) {
+      // TODO VP_RT the edge case for the last stop is unnecessarily complicated
+      if (call.hasDeparted() || (isLastStop && call.isRecorded())) {
         builder.withHasDeparted(true);
       }
 

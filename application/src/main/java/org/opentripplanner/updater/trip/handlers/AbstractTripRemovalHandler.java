@@ -32,15 +32,9 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
       var builder = addedTripTimes.createRealTimeFromScheduledTimes();
       applyRemoval(builder);
 
-      var realTimeTripUpdate = new RealTimeTripUpdate(
-        addedTripPattern,
-        builder.build(),
-        serviceDate,
-        null,
-        false,
-        false,
-        resolvedUpdate.dataSource()
-      );
+      var realTimeTripUpdate = RealTimeTripUpdate.of(addedTripPattern, builder.build(), serviceDate)
+        .withProducer(resolvedUpdate.dataSource())
+        .build();
 
       LOG.debug("{} previously added trip {} on {}", getLogAction(), tripId, serviceDate);
       return Result.success(new TripUpdateResult(realTimeTripUpdate));
@@ -55,17 +49,10 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
     var builder = tripTimes.createRealTimeFromScheduledTimes();
     applyRemoval(builder);
 
-    var realTimeTripUpdate = new RealTimeTripUpdate(
-      pattern,
-      builder.build(),
-      serviceDate,
-      null,
-      false,
-      false,
-      resolvedUpdate.dataSource(),
-      true,
-      null
-    );
+    var realTimeTripUpdate = RealTimeTripUpdate.of(pattern, builder.build(), serviceDate)
+      .withProducer(resolvedUpdate.dataSource())
+      .withRevertPreviousRealTimeUpdates(true)
+      .build();
 
     LOG.debug("{} trip {} on {}", getLogAction(), trip.getId(), serviceDate);
 
