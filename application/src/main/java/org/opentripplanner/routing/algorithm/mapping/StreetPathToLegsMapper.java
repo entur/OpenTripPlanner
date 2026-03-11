@@ -24,6 +24,7 @@ import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.leg.StreetLegBuilder;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.routing.api.request.via.ViaLocation;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
@@ -117,6 +118,14 @@ public class StreetPathToLegsMapper {
    *                  shifting happens.
    */
   public List<Leg> map(StreetPath path, RouteRequest request, @Nullable ZonedDateTime startTime) {
+    return map(path, request.listViaLocations(), startTime);
+  }
+
+  public List<Leg> map(
+    StreetPath path,
+    List<ViaLocation> viaLocations,
+    @Nullable ZonedDateTime startTime
+  ) {
     List<Leg> legs = new ArrayList<>();
     WalkStep previousStep = null;
     var subPaths = slicePath(path);
@@ -134,7 +143,7 @@ public class StreetPathToLegsMapper {
         previousStep = null;
         continue;
       }
-      StreetLeg leg = generateLeg(subPath, previousStep, request, delay);
+      StreetLeg leg = generateLeg(subPath, previousStep, viaLocations, delay);
       legs.add(leg);
 
       List<WalkStep> walkSteps = leg.listWalkSteps();
@@ -276,7 +285,7 @@ public class StreetPathToLegsMapper {
    * @param state The {@link State}.
    * @return The resulting {@link Place} object.
    */
-  private Place makePlace(State state, RouteRequest request) {
+  private Place makePlace(State state, List<ViaLocation> viaLocations) {
     Vertex vertex = state.getVertex();
     I18NString name = vertex.getName();
 
@@ -289,7 +298,7 @@ public class StreetPathToLegsMapper {
 
     if (vertex instanceof TransitStopVertex tsv) {
       var stop = Objects.requireNonNull(siteResolver.getStop(tsv.getId()));
-      return Place.forStop(stop, ViaLocationTypeMapper.map(request, stop));
+      return Place.forStop(stop, ViaLocationTypeMapper.map(viaLocations, stop));
     } else if (vertex instanceof VehicleRentalPlaceVertex) {
       return Place.forVehicleRentalPlace((VehicleRentalPlaceVertex) vertex);
     } else if (vertex instanceof VehicleParkingEntranceVertex) {
@@ -298,7 +307,7 @@ public class StreetPathToLegsMapper {
       return Place.normal(
         vertex,
         name,
-        ViaLocationTypeMapper.map(request, temporaryStreetLocation)
+        ViaLocationTypeMapper.map(viaLocations, temporaryStreetLocation)
       );
     } else {
       return Place.normal(vertex, name);
@@ -336,7 +345,7 @@ public class StreetPathToLegsMapper {
   private StreetLeg generateLeg(
     StreetPath subPath,
     WalkStep previousStep,
-    RouteRequest request,
+    List<ViaLocation> viaLocations,
     @Nullable Duration delay
   ) {
     var states = subPath.states();
@@ -369,8 +378,8 @@ public class StreetPathToLegsMapper {
       .withMode(resolveMode(states))
       .withStartTime(getTimeWithDelay(startTimeState, delay))
       .withEndTime(getTimeWithDelay(lastState, delay))
-      .withFrom(makePlace(firstState, request))
-      .withTo(makePlace(lastState, request))
+      .withFrom(makePlace(firstState, viaLocations))
+      .withTo(makePlace(lastState, viaLocations))
       .withDistanceMeters(subPath.distanceMeters())
       .withGeneralizedCost(IntUtils.round(subPath.weight() + extraWeight))
       .withGeometry(subPath.geometry())

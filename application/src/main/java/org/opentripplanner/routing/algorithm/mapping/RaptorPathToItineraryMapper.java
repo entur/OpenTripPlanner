@@ -256,13 +256,13 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
         .withGeneralizedCost(toOtpDomainCost(pathLeg.c1() + lastLegCost))
         .withFromViaLocationType(
           ViaLocationTypeMapper.map(
-            request,
+            request.listViaLocations(),
             tripSchedule.getOriginalTripPattern().getStop(boardStopIndexInPattern)
           )
         )
         .withToViaLocationType(
           ViaLocationTypeMapper.map(
-            request,
+            request.listViaLocations(),
             tripSchedule.getOriginalTripPattern().getStop(alightStopIndexInPattern)
           )
         )
@@ -289,13 +289,13 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       .withGeneralizedCost(toOtpDomainCost(pathLeg.c1() + lastLegCost))
       .withFromViaLocationType(
         ViaLocationTypeMapper.map(
-          request,
+          request.listViaLocations(),
           tripSchedule.getOriginalTripPattern().getStop(boardStopIndexInPattern)
         )
       )
       .withToViaLocationType(
         ViaLocationTypeMapper.map(
-          request,
+          request.listViaLocations(),
           tripSchedule.getOriginalTripPattern().getStop(alightStopIndexInPattern)
         )
       )
