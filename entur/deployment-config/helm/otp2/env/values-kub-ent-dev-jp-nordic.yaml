@@ -60,9 +60,6 @@ configuration:
     dataInitializationUrl: http://anshar.dev.entur.internal/anshar/rest/et-monitored-cache
   vehicleRentalServiceDirectory:
     url: "http://lamassu.dev.entur.internal/gbfs-internal"
-    sourcesName: "systems"
-    updaterUrlName: "url"
-    updaterNetworkName: "id"
   emission: false
   empiricalDelay: false
   flexRouting: true

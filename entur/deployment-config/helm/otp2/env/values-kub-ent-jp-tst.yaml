@@ -72,7 +72,4 @@ configuration:
   transferConstraints: true
   vehicleRentalServiceDirectory:
     url: "http://mobility-cache.tst.entur.internal/gbfs-internal/v3/manifest.json"
-    sourcesName: "systems"
-    updaterUrlName: "url"
-    updaterNetworkName: "id"
     enableGeofencingZones: false

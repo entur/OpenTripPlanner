@@ -179,9 +179,6 @@ data:
         },
         "vehicleRentalServiceDirectory": {
           "url": "{{ .Values.configuration.vehicleRentalServiceDirectory.url }}",
-          "sourcesName": "{{ .Values.configuration.vehicleRentalServiceDirectory.sourcesName }}",
-          "updaterUrlName": "{{ .Values.configuration.vehicleRentalServiceDirectory.updaterUrlName }}",
-          "updaterNetworkName": "{{ .Values.configuration.vehicleRentalServiceDirectory.updaterNetworkName }}",
           "headers": {
             "ET-Client-Name": "entur-otp2"
           },
