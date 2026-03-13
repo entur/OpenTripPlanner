@@ -12,7 +12,8 @@ import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
- * Builder utility for creating test CarpoolTrip instances without requiring full Graph infrastructure.
+ * Builder utility for creating test CarpoolTrip instances without requiring full Graph
+ * infrastructure.
  */
 public class CarpoolTripTestData {
 
@@ -43,6 +44,28 @@ public class CarpoolTripTestData {
       createDestinationStopWithTime(alighting, 1, startTime.plusHours(1), startTime.plusHours(1))
     );
     return buildTrip(DEFAULT_TOTAL_CAPACITY, DEFAULT_DEVIATION_BUDGET, startTime, stops);
+  }
+
+  /**
+   * Creates a simple trip with specific start and end times.
+   */
+  public static CarpoolTrip createSimpleTripWithTimes(
+    WgsCoordinate boarding,
+    WgsCoordinate alighting,
+    ZonedDateTime startTime,
+    ZonedDateTime endTime
+  ) {
+    var origin = createOriginStopWithTime(boarding, startTime, startTime);
+    var destination = createDestinationStopWithTime(alighting, 1, endTime, endTime);
+    return new CarpoolTripBuilder(
+      FeedScopedId.ofNullable("TEST", "trip-" + ID_COUNTER.incrementAndGet())
+    )
+      .withStops(List.of(origin, destination))
+      .withTotalCapacity(DEFAULT_TOTAL_CAPACITY)
+      .withStartTime(origin.getAimedDepartureTime())
+      .withEndTime(destination.getAimedArrivalTime())
+      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
+      .build();
   }
 
   /**
@@ -92,6 +115,17 @@ public class CarpoolTripTestData {
   ) {
     var stops = List.of(createOriginStop(boarding), createDestinationStop(alighting, 1));
     return buildTrip(DEFAULT_TOTAL_CAPACITY, deviationBudget, null, stops);
+  }
+
+  /**
+   * Creates a trip with specified deviation budget, capacity, and stops.
+   */
+  public static CarpoolTrip createTripWithDeviationBudget(
+    Duration deviationBudget,
+    int capacity,
+    List<CarpoolStop> stops
+  ) {
+    return buildTrip(capacity, deviationBudget, null, stops);
   }
 
   /**

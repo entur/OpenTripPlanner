@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.carpooling.filter;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.street.geometry.DirectionUtils;
@@ -38,11 +37,9 @@ public class DirectionalCompatibilityFilter implements TripFilter {
   }
 
   @Override
-  public boolean accepts(
-    CarpoolTrip trip,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
-  ) {
+  public boolean accepts(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow) {
+    WgsCoordinate passengerPickup = request.getPassengerPickup();
+    WgsCoordinate passengerDropoff = request.getPassengerDropoff();
     List<WgsCoordinate> routePoints = trip.routePoints();
 
     if (routePoints.size() < 2) {
@@ -90,13 +87,14 @@ public class DirectionalCompatibilityFilter implements TripFilter {
   @Override
   public boolean acceptsAccessEgress(
     CarpoolTrip trip,
-    WgsCoordinate coordinateOfPassenger,
-    Instant passengerDepartureTime,
+    CarpoolingRequest request,
     Duration searchWindow
   ) {
     var tripStartCoordinate = trip.routePoints().getFirst().asJtsCoordinate();
     var tripEndCoordinate = trip.routePoints().getLast().asJtsCoordinate();
-    var passengerCoordJts = coordinateOfPassenger.asJtsCoordinate();
+    var passengerCoordJts = request.getAccessOrEgress().isAccess()
+      ? request.getPassengerPickup().asJtsCoordinate()
+      : request.getPassengerDropoff().asJtsCoordinate();
 
     var tripBearing = DirectionUtils.getAzimuth(tripStartCoordinate, tripEndCoordinate);
     var startToPassengerBearing = DirectionUtils.getAzimuth(tripStartCoordinate, passengerCoordJts);

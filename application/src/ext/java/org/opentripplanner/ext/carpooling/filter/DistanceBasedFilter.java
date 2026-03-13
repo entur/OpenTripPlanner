@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.carpooling.filter;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -12,11 +11,10 @@ import org.slf4j.LoggerFactory;
 /**
  * Filters trips based on geographic proximity to the passenger journey.
  * <p>
- * Checks if the passenger's pickup and dropoff locations are both within
- * a reasonable distance from the driver's route. The filter considers all
- * segments of the driver's route (including intermediate stops), allowing
- * passengers to join trips where they share a segment of the driver's journey,
- * while rejecting passengers whose journey is far off any part of the driver's path.
+ * Checks if the passenger's pickup and dropoff locations are both within a reasonable distance from
+ * the driver's route. The filter considers all segments of the driver's route (including
+ * intermediate stops), allowing passengers to join trips where they share a segment of the driver's
+ * journey, while rejecting passengers whose journey is far off any part of the driver's path.
  */
 public class DistanceBasedFilter implements TripFilter {
 
@@ -35,11 +33,9 @@ public class DistanceBasedFilter implements TripFilter {
   }
 
   @Override
-  public boolean accepts(
-    CarpoolTrip trip,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
-  ) {
+  public boolean accepts(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow) {
+    var passengerPickup = request.getPassengerPickup();
+    var passengerDropoff = request.getPassengerDropoff();
     List<WgsCoordinate> routePoints = trip.routePoints();
 
     if (routePoints.size() < 2) {
@@ -69,8 +65,7 @@ public class DistanceBasedFilter implements TripFilter {
         dropoffDistanceToSegment <= maxDistanceMeters
       ) {
         LOG.debug(
-          "Trip {} accepted by distance filter: passenger journey close to segment {} ({} to {}). " +
-            "Pickup distance: {:.0f}m, Dropoff distance: {:.0f}m (max: {:.0f}m)",
+          "Trip {} accepted by distance filter: passenger journey close to segment {} ({} to {}). Pickup distance: {:.0f}m, Dropoff distance: {:.0f}m (max: {:.0f}m)",
           trip.getId(),
           i,
           segmentStart,
@@ -95,16 +90,18 @@ public class DistanceBasedFilter implements TripFilter {
   @Override
   public boolean acceptsAccessEgress(
     CarpoolTrip trip,
-    WgsCoordinate coordinateOfPassenger,
-    Instant passengerDepartureTime,
+    CarpoolingRequest request,
     Duration searchWindow
   ) {
     var tripStart = trip.routePoints().getFirst().asJtsCoordinate();
     var tripEnd = trip.routePoints().getLast().asJtsCoordinate();
+    var passengerCoordJts = request.getAccessOrEgress().isAccess()
+      ? request.getPassengerPickup().asJtsCoordinate()
+      : request.getPassengerDropoff().asJtsCoordinate();
 
     var tripLength = SphericalDistanceLibrary.distance(tripStart, tripEnd);
     var lengthFromTripToPassenger = SphericalDistanceLibrary.fastDistance(
-      coordinateOfPassenger.asJtsCoordinate(),
+      passengerCoordJts,
       tripStart,
       tripEnd
     );
