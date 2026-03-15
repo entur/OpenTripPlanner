@@ -39,6 +39,14 @@ data:
         "distanceBetweenElevationSamples": 25,
         "multiThreadElevationCalculations": true,
         "boardingLocationTags": [ "ref:NSR" ],
+        "stopsWithRegularTransfers": [
+          "RB:NSR:Quay:111059", 
+          "RB:NSR:Quay:111060",
+          "RB:NSR:Quay:9103",
+          "RB:NSR:Quay:110511",
+          "RB:NSR:Quay:110517",
+          "RB:NSR:Quay:99415"
+        ],
         "transferParametersForMode": {
           "CAR": {
             "disableDefaultTransfers": true,
