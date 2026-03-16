@@ -1,44 +1,54 @@
 #!/bin/bash
 
-: ${GRAPH_FILE_TARGET_PATH="/code/otpdata/norway/graph.obj"}
-: ${FILE_TMP_PATH="/tmp/graph_obj_from_gcs"}
-: ${FILE_TMP_GRAPH_FILE_LIST="/tmp/list_graph_files.txt"}
-# Notice ending slash here, it is correct
+set -euo pipefail
+
 : ${MARDUK_GCP_BASE="gs://marduk/"}
 : ${GRAPH_POINTER_FILE="current-otp2"}
 
-echo "GRAPH_FILE_TARGET_PATH: $GRAPH_FILE_TARGET_PATH"
-serializationVersionId=$(java -jar otp-shaded.jar --serializationVersionId)
-echo serializationVersionId: $serializationVersionId
-gcloud storage cat ${MARDUK_GCP_BASE}netex-otp2/${serializationVersionId}/${GRAPH_POINTER_FILE} 2> ${FILE_TMP_GRAPH_FILE_LIST} 1>${FILE_TMP_GRAPH_FILE_LIST}
-   if grep -q 'ERROR' ${FILE_TMP_GRAPH_FILE_LIST}; then
-      echo "RC Graph with serialId not found " $serializationVersionId
-      echo "Use main graph file"
-      FILENAME=$(gcloud storage cat ${MARDUK_GCP_BASE}${GRAPH_POINTER_FILE})
-   else
-      echo "Found RC graph use this one"
-      FILENAME=$(gcloud storage cat ${MARDUK_GCP_BASE}netex-otp2/${serializationVersionId}/${GRAPH_POINTER_FILE})
+# Extract bucket name from gs:// URI
+# e.g. "gs://ror-otp-graphs-gcp2-production/" -> "ror-otp-graphs-gcp2-production"
+BUCKET="${MARDUK_GCP_BASE#gs://}"
+BUCKET="${BUCKET%/}"
+echo "Bucket: $BUCKET"
 
-   fi
-   echo "FILENAME: " $FILENAME
-rm ${FILE_TMP_GRAPH_FILE_LIST}
+# Get OTP serialization version ID
+SER_ID=$(java -jar otp-shaded.jar --serializationVersionId)
+echo "Serialization version ID: $SER_ID"
 
-DOWNLOAD="${MARDUK_GCP_BASE}${FILENAME}"
-echo "Downloading $DOWNLOAD"
-gcloud storage --no-user-output-enabled cp $DOWNLOAD $FILE_TMP_PATH
+# Get GKE Workload Identity OAuth2 token from metadata server
+TOKEN=$(curl -sf -H "Metadata-Flavor: Google" \
+  "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token" \
+  | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
 
-# Testing exists and has a size greater than zero
-if [ -s $FILE_TMP_PATH ] ;
-then
-  echo "Overwriting $GRAPH_FILE_TARGET_PATH"
-  mv $FILE_TMP_PATH $GRAPH_FILE_TARGET_PATH
+if [ -z "$TOKEN" ]; then
+  echo "ERROR: Failed to get OAuth2 token from metadata server"
+  exit 1
+fi
+
+# Read a GCS object's content via the JSON API
+gcs_read() {
+  local object="$1"
+  local encoded
+  encoded=$(printf '%s' "$object" | sed 's|/|%2F|g')
+  curl -sf -H "Authorization: Bearer $TOKEN" \
+    "https://storage.googleapis.com/storage/v1/b/${BUCKET}/o/${encoded}?alt=media"
+}
+
+# Read graph pointer file for this serialization version.
+# If not found, the graph may still be building — sleep 5m to avoid
+# CrashLoopBackOff and give the graph builder time to finish.
+POINTER="netex-otp2/${SER_ID}/${GRAPH_POINTER_FILE}"
+if FILENAME=$(gcs_read "$POINTER"); then
+  echo "Found graph pointer: $FILENAME"
 else
-  echo "** WARNING: Downloaded file ($FILE_TMP_PATH) is empty or not present**"
-  echo "** Not overwriting $GRAPH_FILE_TARGET_PATH**"
-  wget -q --header 'Content-Type: application/json' --post-data='{"source":"otp", "message":":no_entry: Downloaded file is empty or not present. This makes OTP fail! Please check logs"}' http://hubot/hubot/say/
-  echo "Now sleeping 5m in the hope that this will be manually resolved in the mean time, and then restarting."
+  echo "** WARNING: No graph pointer file found for serialization ID $SER_ID **"
+  echo "** The graph may still be building. Sleeping 5m before retrying. **"
   sleep 5m
   exit 1
 fi
+
+# Export GRAPH_URI so OTP substitutes ${GRAPH_URI} in build-config.json
+export GRAPH_URI="gs://${BUCKET}/${FILENAME}"
+echo "Graph URI: $GRAPH_URI"
 
 exec "$@"

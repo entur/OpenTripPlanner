@@ -9,16 +9,9 @@ RUN mkdir -p /code/otpdata/norway
 WORKDIR /code
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y \
-    apt-transport-https \
     ca-certificates \
-    gnupg \
-    curl
-
-# From https://cloud.google.com/sdk/docs/install
-RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list \
-    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg \
-    && apt-get update -y \
-    && apt-get install -y google-cloud-cli
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=444 otp-shaded/target/otp-shaded-*.jar /code/otp-shaded.jar
 

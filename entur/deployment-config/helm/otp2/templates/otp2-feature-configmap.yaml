@@ -18,7 +18,8 @@ data:
         "Sorlandsbanen" : {{ .Values.configuration.sorlandsbanen }},
         "TransferConstraints": {{ .Values.configuration.transferConstraints }},
         "CarPooling": {{ .Values.configuration.carpooling }},
-        "HttpResponseTimeMetrics": true
+        "HttpResponseTimeMetrics": true,
+        "GoogleCloudStorage": true
       }
    }
 kind: ConfigMap

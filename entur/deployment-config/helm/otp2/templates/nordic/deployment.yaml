@@ -143,6 +143,9 @@ spec:
         - mountPath: /etc/otp2/logback.xml
           name: logback-config-volume
           subPath: logback.xml
+        - name: build-config-volume
+          mountPath: /code/otpdata/norway/build-config.json
+          subPath: build-config.json
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
@@ -171,4 +174,8 @@ spec:
           defaultMode: 420
           name: otp2nordic-logback-config
         name: logback-config-volume
+      - configMap:
+          defaultMode: 420
+          name: otp2nordic-build-config
+        name: build-config-volume
 {{- end }}
