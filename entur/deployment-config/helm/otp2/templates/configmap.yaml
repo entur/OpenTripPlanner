@@ -197,7 +197,8 @@ data:
           "maxNumberOfResultFields": 600000
         },
         "timetableUpdates": {
-          "purgeExpiredData": false
+          "purgeExpiredData": false,
+          "maxSnapshotFrequency": "2s"
         },
         "updaters": [
             // SIRI SX service alerts
