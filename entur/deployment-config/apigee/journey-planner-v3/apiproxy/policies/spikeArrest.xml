@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SpikeArrest async="false" continueOnError="false" enabled="true" name="spikeArrest">
+    <DisplayName>spikeArrest</DisplayName>
+    <Properties>
+        <Property name="features.isHTTPStatusTooManyRequestEnabled">true</Property>
+    </Properties>
+    <UseEffectiveCount>true</UseEffectiveCount>
+    <Rate ref="spikeArrest.client.allowed"/>
+    <Identifier ref="spikeArrest.client.identifier"/>
+</SpikeArrest>
