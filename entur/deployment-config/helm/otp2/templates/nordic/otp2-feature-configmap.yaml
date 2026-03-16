@@ -10,7 +10,8 @@ data:
         "OptimizeTransfers": {{ .Values.configuration.optimizeTransfers }},
         "TransferConstraints": {{ .Values.configuration.transferConstraints }},
         "ParallelRouting": {{ .Values.configuration.parallelRouting }},
-        "ReportApi" : true
+        "ReportApi" : true,
+        "GoogleCloudStorage": true
       }
    }
 kind: ConfigMap
