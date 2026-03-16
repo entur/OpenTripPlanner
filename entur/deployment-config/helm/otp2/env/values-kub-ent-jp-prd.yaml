@@ -12,11 +12,11 @@ rollingUpdate:
 
 resources:
   cpuLimit: "8"
-  memLimit: 22000Mi
+  memLimit: 24000Mi
   cpuRequest: "4"
-  memRequest: 20000Mi
-  xmx: 18g
-  xms: 18g
+  memRequest: 24000Mi
+  xmx: 20g
+  xms: 20g
 
 maxConcurrentRoutingRequests: 5
 
