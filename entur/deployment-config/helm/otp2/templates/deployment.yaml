@@ -137,7 +137,7 @@ spec:
             port: {{ .Values.service.internalPort }}
             scheme: HTTP
           periodSeconds: 30
-          successThreshold: 2
+          successThreshold: 1
           timeoutSeconds: 10
         livenessProbe:
           failureThreshold: 10
@@ -154,7 +154,7 @@ spec:
             path: /otp/actuators/health
             port: {{ .Values.service.internalPort }}
             scheme: HTTP
-          initialDelaySeconds: 180
+          initialDelaySeconds: 30
           periodSeconds: 10
           successThreshold: 1
           timeoutSeconds: 10
