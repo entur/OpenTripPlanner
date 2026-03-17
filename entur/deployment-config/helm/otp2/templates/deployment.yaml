@@ -149,13 +149,13 @@ spec:
           successThreshold: 1
           timeoutSeconds: 15
         startupProbe:
-          failureThreshold: 42
+          failureThreshold: 420
           httpGet:
             path: /otp/actuators/health
             port: {{ .Values.service.internalPort }}
             scheme: HTTP
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 60
+          periodSeconds: 1
           successThreshold: 1
           timeoutSeconds: 10
         resources:
