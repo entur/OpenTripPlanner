@@ -1,4 +1,5 @@
 otpFeatures:
+  costlyAssertions: true
   emission: true
   empiricalDelay: true
   gbfsGeofencingBuildTime: false

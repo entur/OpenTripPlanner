@@ -1,4 +1,5 @@
 otpFeatures:
+  costlyAssertions: false
   emission: true
   empiricalDelay: true
 journeyPlanner:

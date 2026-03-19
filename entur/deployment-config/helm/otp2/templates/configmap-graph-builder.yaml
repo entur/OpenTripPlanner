@@ -12,6 +12,7 @@ data:
         "configVersion" : "{{ .Values.build.number }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
+            "CostlyAssertions" : {{ .Values.otpFeatures.costlyAssertions }},
             "Emission": {{ .Values.otpFeatures.emission }},
             "EmpiricalDelay": {{ .Values.otpFeatures.empiricalDelay }},
             "FlexRouting" : true,

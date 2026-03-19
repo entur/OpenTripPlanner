@@ -5,6 +5,7 @@ data:
    {
       "otpFeatures": {
         "ActuatorAPI": true,
+        "CostlyAssertions" : {{ .Values.configuration.costlyAssertions }},
         "Emission" : {{  .Values.configuration.emission }},
         "EmpiricalDelay": {{ .Values.configuration.empiricalDelay }},
         "FlexRouting": {{ .Values.configuration.flexRouting }},
