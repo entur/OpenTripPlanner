@@ -2,8 +2,8 @@ package org.opentripplanner.graph_builder.issues;
 
 import java.util.List;
 import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 
@@ -14,15 +14,15 @@ public record HopSpeedFast(
   int seq,
   StopLocation fromStop,
   StopLocation toStop
-)
-  implements DataImportIssue {
+) implements DataImportIssue {
   private static final String FMT =
     "Excessive speed of %d kph over %.1fm on route %s trip %s " +
     "stop sequence %d between %s and %s.";
 
   @Override
   public String getMessage() {
-    int kph = (int) (3.6 * metersPerSecond); // convert meters per second to kph
+    // convert meters per second to kph
+    int kph = (int) (3.6 * metersPerSecond);
     return String.format(
       FMT,
       kph,

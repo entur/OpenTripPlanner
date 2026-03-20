@@ -12,15 +12,12 @@ import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueSto
 import org.opentripplanner.graph_builder.issues.ParkAndRideUnlinked;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
 import org.opentripplanner.osm.DefaultOsmProvider;
-import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
-import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.VertexLabel;
 import org.opentripplanner.test.support.ResourceLoader;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 
@@ -133,7 +130,7 @@ public class UnconnectedAreasTest {
     // the node that has already been injected into the way. So either of these cases are valid.
     assertTrue(
       connections.contains(VertexLabel.osm(-102266)) ||
-      connections.contains(VertexLabel.osm(-102267))
+        connections.contains(VertexLabel.osm(-102267))
     );
   }
 
@@ -158,24 +155,21 @@ public class UnconnectedAreasTest {
   }
 
   private Graph buildOsmGraph(String osmFileName, DataImportIssueStore issueStore) {
-    var deduplicator = new Deduplicator();
     var siteRepository = new SiteRepository();
-    var graph = new Graph(deduplicator);
-    var timetableRepository = new TimetableRepository(siteRepository, deduplicator);
+    var graph = new Graph();
+    var timetableRepository = new TimetableRepository(siteRepository);
     DefaultOsmProvider provider = new DefaultOsmProvider(RESOURCE_LOADER.file(osmFileName), false);
-    OsmModule loader = OsmModule.of(
-      provider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+
+    var osmModule = OsmModuleTestFactory.of(provider)
+      .withGraph(graph)
+      .builder()
       .withIssueStore(issueStore)
       .withAreaVisibility(true)
       .withStaticParkAndRide(true)
       .withStaticBikeParkAndRide(true)
       .build();
 
-    loader.buildGraph();
+    osmModule.buildGraph();
 
     TestStreetLinkerModule.link(graph, timetableRepository);
 

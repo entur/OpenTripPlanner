@@ -1,6 +1,7 @@
 package org.opentripplanner.transit.model.filter.expr;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 class ContainsMatcherTest {
 
-  private static final Map<Integer, List<String>> integerListMap = Map.of(
+  private static final Map<Integer, List<String>> INTEGER_LIST_MAP = Map.of(
     1,
     List.of("foo"),
     2,
@@ -21,7 +22,7 @@ class ContainsMatcherTest {
   void testMatch() {
     var matcher = new ContainsMatcher<>(
       "contains",
-      integerListMap::get,
+      INTEGER_LIST_MAP::get,
       new EqualityMatcher<>("string", "foo", s -> s)
     );
 

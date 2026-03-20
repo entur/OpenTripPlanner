@@ -10,7 +10,7 @@ import static org.opentripplanner.model.plan.paging.cursor.PageType.PREVIOUS_PAG
 import java.time.Duration;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.model.plan.ItinerarySortKey;
 import org.opentripplanner.utils.time.DurationUtils;
 
@@ -42,7 +42,7 @@ class PageCursorSerializerTest {
   private static final ItinerarySortKey CUT = new DeduplicationPageCut(
     DT,
     AT,
-    Cost.costOfSeconds(1200),
+    Cost.normalizedCost(1200),
     3,
     true
   );

@@ -8,22 +8,23 @@ import static org.opentripplanner.ext.flex.template.BoardAlight.BOARD_AND_ALIGHT
 import static org.opentripplanner.ext.flex.template.BoardAlight.BOARD_ONLY;
 import static org.opentripplanner.utils.time.TimeUtils.time;
 
-import gnu.trove.set.hash.TIntHashSet;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.flexpathcalculator.ScheduledFlexPathCalculator;
 import org.opentripplanner.ext.flex.flexpathcalculator.StreetFlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
-import org.opentripplanner.framework.i18n.I18NString;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
@@ -34,7 +35,6 @@ import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.booking.RoutingBookingInfo;
 
 class FlexTemplateFactoryTest {
 
@@ -59,11 +59,12 @@ class FlexTemplateFactoryTest {
   /**
    * The date is pass-through information in this test, so one date is enough.
    */
-  private static final FlexServiceDate DATE = new FlexServiceDate(
+  private static final FlexServiceDate DATE = FlexServiceDate.of(
     LocalDate.of(2024, Month.MAY, 17),
     SERVICE_TIME_OFFSET,
-    RoutingBookingInfo.NOT_SET,
-    new TIntHashSet()
+    null,
+    ZoneId.of("Europe/Oslo"),
+    new ArrayList<>()
   );
 
   // Stop A-D is a mix of regular and area stops - it should not matter for this test

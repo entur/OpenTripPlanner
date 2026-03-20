@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.street.model.StreetMode;
 
 class StreetModeMapperTest {
 
@@ -102,6 +102,22 @@ class StreetModeMapperTest {
     assertEquals(
       "Only one or two modes can be specified for a leg, got: [WALK, BIKE_TO_PARK, CAR_TO_PARK].",
       exception.getMessage()
+    );
+  }
+
+  @Test
+  void testGetStreetModeForRoutingWithCarPoolOnly() {
+    assertEquals(
+      StreetMode.CARPOOL,
+      StreetModeMapper.getStreetModeForRouting(List.of(StreetMode.CARPOOL))
+    );
+  }
+
+  @Test
+  void testGetStreetModeForRoutingWithCarPoolAndWalk() {
+    assertEquals(
+      StreetMode.CARPOOL,
+      StreetModeMapper.getStreetModeForRouting(List.of(StreetMode.WALK, StreetMode.CARPOOL))
     );
   }
 }

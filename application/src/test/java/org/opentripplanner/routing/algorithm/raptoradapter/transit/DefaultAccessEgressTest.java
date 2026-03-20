@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.street.search.state.State;
@@ -66,30 +66,6 @@ class DefaultAccessEgressTest {
     assertEquals(LAST_STATE, subject.getLastState());
   }
 
-  /**
-   * @deprecated TODO - This test dos not test a single line in DefaultAccessEgress. If the
-   *                    test have value move it to where it belong (StateTest ?).
-   */
-  @Deprecated
-  @Test
-  void containsDriving() {
-    var state = TestStateBuilder.ofDriving().streetEdge().streetEdge().streetEdge().build();
-    var access = new DefaultAccessEgress(0, state);
-    assertTrue(access.getLastState().containsModeCar());
-  }
-
-  /**
-   * @deprecated TODO - This test dos not test a single line in DefaultAccessEgress. If the
-   *                    test have value move it to where it belong (StateTest ?).
-   */
-  @Deprecated
-  @Test
-  void walking() {
-    var state = TestStateBuilder.ofWalking().streetEdge().streetEdge().streetEdge().build();
-    var access = new DefaultAccessEgress(0, state);
-    assertFalse(access.getLastState().containsModeCar());
-  }
-
   @Test
   void containsModeWalkOnly() {
     var stateWalk = TestStateBuilder.ofWalking().build();
@@ -120,6 +96,9 @@ class DefaultAccessEgressTest {
   @Test
   void testToString() {
     assertEquals("Walk 1d8h50m15s C₁236_429 ~ 5", subject.toString());
-    assertEquals("Walk 1d8h50m15s C₁236_440 w/penalty(1s $11) ~ 5", subjectWithPenalty.toString());
+    assertEquals(
+      "Walk 1d8h50m15s C₁236_440 Pₜ1 w/penalty(1s $11) ~ 5",
+      subjectWithPenalty.toString()
+    );
   }
 }

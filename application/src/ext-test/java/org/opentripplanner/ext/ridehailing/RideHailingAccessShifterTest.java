@@ -22,7 +22,7 @@ import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultAccessEgress;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 
@@ -64,7 +64,7 @@ class RideHailingAccessShifterTest {
       .withFrom(TO)
       .withDateTime(searchTime)
       .withJourney(jb ->
-        jb.setModes(RequestModes.of().withAccessMode(StreetMode.CAR_HAILING).build())
+        jb.withModes(RequestModes.of().withAccessMode(StreetMode.CAR_HAILING).build())
       )
       .buildRequest();
 
@@ -134,7 +134,7 @@ class RideHailingAccessShifterTest {
       .withFrom(FROM)
       .withTo(TO)
       .withJourney(jb ->
-        jb.setModes(RequestModes.of().withAccessMode(StreetMode.CAR_HAILING).build())
+        jb.withModes(RequestModes.of().withAccessMode(StreetMode.CAR_HAILING).build())
       )
       .buildRequest();
   }

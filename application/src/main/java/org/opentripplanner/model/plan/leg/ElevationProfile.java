@@ -102,7 +102,10 @@ public class ElevationProfile {
    * @return The list of elevation steps but without those elements where the y value is unknown.
    */
   public List<Step> stepsWithoutUnknowns() {
-    return steps.stream().filter(step -> !step.isYUnknown()).toList();
+    return steps
+      .stream()
+      .filter(step -> !step.isYUnknown())
+      .toList();
   }
 
   @Override
@@ -112,8 +115,12 @@ public class ElevationProfile {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     ElevationProfile that = (ElevationProfile) o;
     return Objects.equals(steps, that.steps);
   }
@@ -195,8 +202,12 @@ public class ElevationProfile {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) return true;
-      if (o == null || getClass() != o.getClass()) return false;
+      if (this == o) {
+        return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+        return false;
+      }
       var that = (Step) o;
       return that.x == x && that.y == y;
     }

@@ -1,16 +1,15 @@
 package org.opentripplanner.gtfs.mapping;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.fare.FareMedium;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.fare.RiderCategory;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class FareProductMapper {
 
@@ -27,16 +26,11 @@ class FareProductMapper {
     var currency = Currency.getInstance(rhs.getCurrency());
     var price = Money.ofFractionalAmount(currency, rhs.getAmount());
 
-    Duration duration = null;
-    if (rhs.getDurationUnit() != NOT_SET) {
-      duration = toDuration(rhs.getDurationUnit(), rhs.getDurationAmount());
-    }
     var fp = FareProduct.of(
       idFactory.createId(rhs.getFareProductId(), "fare product"),
       rhs.getName(),
       price
     )
-      .withValidity(duration)
       .withCategory(toInternalModel(rhs.getRiderCategory()))
       .withMedium(toInternalModel(rhs.getFareMedium()))
       .build();
@@ -51,7 +45,10 @@ class FareProductMapper {
   }
 
   public Collection<FareProduct> findFareProducts(FeedScopedId fareProductId) {
-    return mappedFareProducts.stream().filter(p -> p.id().equals(fareProductId)).toList();
+    return mappedFareProducts
+      .stream()
+      .filter(p -> p.id().equals(fareProductId))
+      .toList();
   }
 
   @Nullable
@@ -61,27 +58,17 @@ class FareProductMapper {
     if (riderCategory == null) {
       return null;
     } else {
-      return new RiderCategory(
-        idFactory.createId(riderCategory.getId(), "rider category"),
-        riderCategory.getName(),
-        riderCategory.getEligibilityUrl()
-      );
+      return RiderCategory.of(idFactory.createId(riderCategory.getId(), "rider category"))
+        .withName(riderCategory.getName())
+        .withIsDefault(mapIsDefaultCategory(riderCategory))
+        .build();
     }
   }
 
-  private static Duration toDuration(int unit, int amount) {
-    // TODO: this isn't totally correct since we need to check if we go, for example, past the
-    // end of the business day. the correct solution would be to also take duration_type into account.
-    return switch (unit) {
-      case 0 -> Duration.ofSeconds(amount);
-      case 1 -> Duration.ofMinutes(amount);
-      case 2 -> Duration.ofHours(amount);
-      case 3 -> Duration.ofDays(amount);
-      case 4 -> Duration.ofDays(amount * 7L);
-      case 5 -> Duration.ofDays(amount * 31L); // not totally right but good enough
-      case 6 -> Duration.ofDays(amount * 365L);
-      default -> throw new IllegalStateException("Unexpected value: " + unit);
-    };
+  private static boolean mapIsDefaultCategory(
+    org.onebusaway.gtfs.model.RiderCategory riderCategory
+  ) {
+    return riderCategory.getIsDefaultFareCategory() == 1;
   }
 
   @Nullable

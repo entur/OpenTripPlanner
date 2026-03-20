@@ -36,8 +36,12 @@ public class TokenDefinition {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     TokenDefinition that = (TokenDefinition) o;
     return version == that.version && listFields().equals(that.listFields());
   }
@@ -74,7 +78,10 @@ public class TokenDefinition {
   }
 
   List<FieldDefinition> listNonDeprecatedFields() {
-    return listFields().stream().filter(it -> !it.deprecated()).toList();
+    return listFields()
+      .stream()
+      .filter(it -> !it.deprecated())
+      .toList();
   }
 
   List<FieldDefinition> listFields() {

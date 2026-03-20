@@ -3,7 +3,7 @@ package org.opentripplanner.model;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
 
@@ -50,6 +50,10 @@ public class GenericLocation {
     this.stopId = stopId;
     this.lat = lat;
     this.lng = lng;
+  }
+
+  public static GenericLocation fromStopId(FeedScopedId id) {
+    return new GenericLocation(null, id, null, null);
   }
 
   public static GenericLocation fromStopId(String name, String feedId, String stopId) {

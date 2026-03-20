@@ -2,8 +2,8 @@
 package org.opentripplanner.transit.model.site;
 
 import java.util.Objects;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
  * A place along a platform, where the vehicle van be boarded. Equivalent to GTFS stop location.

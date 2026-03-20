@@ -11,15 +11,15 @@ env:
 jobs:
   run:
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'opentripplanner' && contains( github.event.pull_request.labels.*.name, 'Integration Test' )
+    if: github.repository_owner == 'opentripplanner' && contains( github.event.pull_request.labels.*.name, '+Integration Test' )
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
-          java-version: 21
+          java-version: 25
           distribution: temurin
           cache: maven
 

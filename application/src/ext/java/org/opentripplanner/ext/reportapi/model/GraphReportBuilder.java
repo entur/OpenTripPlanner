@@ -11,7 +11,7 @@ public class GraphReportBuilder {
   public static GraphStats build(OtpServerRequestContext context) {
     var transitService = context.transitService();
     var graph = context.graph();
-    var constrainedTransfers = transitService.getTransferService().listAll();
+    var constrainedTransfers = transitService.getConstrainedTransferService().listAll();
 
     var constrainedTransferCounts = countValues(constrainedTransfers, transfer -> {
       var transferConstraint = transfer.getTransferConstraint();
@@ -23,7 +23,9 @@ public class GraphReportBuilder {
         return "guaranteed";
       } else if (transferConstraint.isNotAllowed()) {
         return "notAllowed";
-      } else return "unknown";
+      } else {
+        return "unknown";
+      }
     });
 
     var stopCounts = countValues(

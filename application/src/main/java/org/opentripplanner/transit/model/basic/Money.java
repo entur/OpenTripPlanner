@@ -16,6 +16,7 @@ import org.opentripplanner.utils.lang.IntUtils;
 public class Money implements Comparable<Money>, Serializable {
 
   public static final Currency USD = Currency.getInstance("USD");
+  public static final Currency EUR = Currency.getInstance("EUR");
   public static final Money ZERO_USD = Money.usDollars(0);
   private final Currency currency;
   private final int amount;
@@ -35,7 +36,7 @@ public class Money implements Comparable<Money>, Serializable {
    * @param amount Amount in fractional euro, so 1.5 for 1.50 EUR
    */
   public static Money euros(float amount) {
-    return Money.ofFractionalAmount(Currency.getInstance("EUR"), amount);
+    return Money.ofFractionalAmount(EUR, amount);
   }
 
   /**
@@ -198,9 +199,9 @@ public class Money implements Comparable<Money>, Serializable {
     if (!currency.equals(other.currency)) {
       throw new IllegalArgumentException(
         "Cannot perform operations on %s and %s because they have unequal currency.".formatted(
-            this,
-            other
-          )
+          this,
+          other
+        )
       );
     }
   }

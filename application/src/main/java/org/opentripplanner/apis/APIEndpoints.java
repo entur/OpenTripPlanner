@@ -6,6 +6,7 @@ import static org.opentripplanner.framework.application.OTPFeature.ActuatorAPI;
 import static org.opentripplanner.framework.application.OTPFeature.DebugRasterTiles;
 import static org.opentripplanner.framework.application.OTPFeature.DebugUi;
 import static org.opentripplanner.framework.application.OTPFeature.GtfsGraphQlApi;
+import static org.opentripplanner.framework.application.OTPFeature.OjpApi;
 import static org.opentripplanner.framework.application.OTPFeature.ReportApi;
 import static org.opentripplanner.framework.application.OTPFeature.SandboxAPIGeocoder;
 import static org.opentripplanner.framework.application.OTPFeature.SandboxAPIMapboxVectorTilesApi;
@@ -17,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import org.opentripplanner.api.resource.ServerInfo;
+import org.opentripplanner.api.resource.ServerInfoResource;
 import org.opentripplanner.api.resource.UpdaterStatusResource;
 import org.opentripplanner.apis.gtfs.GtfsGraphQLAPI;
 import org.opentripplanner.apis.transmodel.TransmodelAPI;
@@ -25,9 +26,10 @@ import org.opentripplanner.apis.vectortiles.DebugVectorTilesResource;
 import org.opentripplanner.ext.actuator.ActuatorAPI;
 import org.opentripplanner.ext.debugrastertiles.api.resource.DebugRasterTileResource;
 import org.opentripplanner.ext.geocoder.GeocoderResource;
+import org.opentripplanner.ext.ojp.resource.OjpResource;
+import org.opentripplanner.ext.ojp.resource.TriasResource;
 import org.opentripplanner.ext.parkAndRideApi.ParkAndRideResource;
 import org.opentripplanner.ext.reportapi.resource.ReportResource;
-import org.opentripplanner.ext.trias.trias.TriasResource;
 import org.opentripplanner.ext.vectortiles.VectorTilesResource;
 import org.opentripplanner.framework.application.OTPFeature;
 
@@ -41,7 +43,7 @@ public class APIEndpoints {
   private APIEndpoints() {
     // Add feature enabled APIs, these can be enabled by default, some is not.
     // See the OTPFeature enum for details.
-    addIfEnabled(APIServerInfo, ServerInfo.class);
+    addIfEnabled(APIServerInfo, ServerInfoResource.class);
     addIfEnabled(APIUpdaterStatus, UpdaterStatusResource.class);
     addIfEnabled(DebugUi, DebugVectorTilesResource.class);
     addIfEnabled(GtfsGraphQlApi, GtfsGraphQLAPI.class);
@@ -54,6 +56,7 @@ public class APIEndpoints {
     // Sandbox extension APIs
     addIfEnabled(ActuatorAPI, ActuatorAPI.class);
     addIfEnabled(DebugRasterTiles, DebugRasterTileResource.class);
+    addIfEnabled(OjpApi, OjpResource.class);
     addIfEnabled(ReportApi, ReportResource.class);
     addIfEnabled(SandboxAPIMapboxVectorTilesApi, VectorTilesResource.class);
     addIfEnabled(SandboxAPIParkAndRideApi, ParkAndRideResource.class);

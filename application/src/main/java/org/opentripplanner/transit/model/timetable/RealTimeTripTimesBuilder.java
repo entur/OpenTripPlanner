@@ -2,12 +2,13 @@ package org.opentripplanner.transit.model.timetable;
 
 import static org.opentripplanner.transit.model.timetable.TimetableValidationError.ErrorCode.MISSING_ARRIVAL_TIME;
 import static org.opentripplanner.transit.model.timetable.TimetableValidationError.ErrorCode.MISSING_DEPARTURE_TIME;
-import static org.opentripplanner.transit.model.timetable.TimetableValidationError.ErrorCode.NEGATIVE_DWELL_TIME;
 
 import java.util.Arrays;
+import java.util.BitSet;
+import java.util.stream.IntStream;
 import javax.annotation.Nullable;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.transit.model.basic.Accessibility;
+import org.opentripplanner.core.model.accessibility.Accessibility;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 
 public class RealTimeTripTimesBuilder {
@@ -21,6 +22,10 @@ public class RealTimeTripTimesBuilder {
 
   private final StopRealTimeState[] stopRealTimeStates;
 
+  private final BitSet extraCalls;
+  private final BitSet hasArrived;
+  private final BitSet hasDeparted;
+
   @Nullable
   private I18NString tripHeadsign;
 
@@ -33,9 +38,9 @@ public class RealTimeTripTimesBuilder {
   private boolean updated;
 
   /**
-   * This constructor take a ScheduledTripTimes (not base TripTimes) to enforce creating a new
+   * This constructor takes a ScheduledTripTimes (not base TripTimes) to enforce creating a new
    * RealTimeTripTimes based on the scheduled info. RT updates are  NOT cumulative and this
-   * enforce copying the scheduled information, not the previous real-time update.
+   * enforces copying the scheduled information, not the previous real-time update.
    * <p>
    * The arrival and departure times are left uninitialized by this constructor, and they need to
    * be set explicitly.
@@ -47,9 +52,19 @@ public class RealTimeTripTimesBuilder {
     departureTimes = new Integer[numStops];
     stopRealTimeStates = new StopRealTimeState[numStops];
     Arrays.fill(stopRealTimeStates, StopRealTimeState.DEFAULT);
+    extraCalls = new BitSet(numStops);
     stopHeadsigns = new I18NString[numStops];
     occupancyStatus = new OccupancyStatus[numStops];
     Arrays.fill(occupancyStatus, OccupancyStatus.NO_DATA_AVAILABLE);
+    hasArrived = new BitSet(numStops);
+    hasDeparted = new BitSet(numStops);
+  }
+
+  /**
+   * Does this stop have any real-time update on the departure or arrival time?
+   */
+  public boolean containsNoRealTimeTimes(int i) {
+    return getArrivalDelay(i) == null && getDepartureDelay(i) == null;
   }
 
   static RealTimeTripTimesBuilder fromScheduledTimes(ScheduledTripTimes tripTimes) {
@@ -68,6 +83,14 @@ public class RealTimeTripTimesBuilder {
 
   public int numberOfStops() {
     return scheduledTripTimes().getNumStops();
+  }
+
+  /**
+   * Returns a stream of the positions of the stops in these trip times (starting at 0). Useful
+   * for iterating over them.
+   */
+  public IntStream listStopPositions() {
+    return IntStream.range(0, numberOfStops());
   }
 
   public int[] arrivalTimes() {
@@ -184,8 +207,16 @@ public class RealTimeTripTimesBuilder {
     return stopRealTimeStates.clone();
   }
 
-  public RealTimeTripTimesBuilder withRecorded(int stop) {
-    return withStopRealTimeState(stop, StopRealTimeState.RECORDED);
+  public BitSet extraCalls() {
+    return (BitSet) extraCalls.clone();
+  }
+
+  public BitSet hasArrived() {
+    return (BitSet) hasArrived.clone();
+  }
+
+  public BitSet hasDeparted() {
+    return (BitSet) hasDeparted.clone();
   }
 
   public RealTimeTripTimesBuilder withCanceled(int stop) {
@@ -202,6 +233,27 @@ public class RealTimeTripTimesBuilder {
 
   public RealTimeTripTimesBuilder withStopRealTimeState(int stop, StopRealTimeState state) {
     this.stopRealTimeStates[stop] = state;
+    return this;
+  }
+
+  public RealTimeTripTimesBuilder withExtraCall(int stop, boolean extraCall) {
+    this.extraCalls.set(stop, extraCall);
+    return this;
+  }
+
+  public RealTimeTripTimesBuilder withHasArrived(int stop, boolean arrived) {
+    if (stop > numberOfStops()) {
+      throw new IllegalArgumentException("Stop index out of range");
+    }
+    this.hasArrived.set(stop, arrived);
+    return this;
+  }
+
+  public RealTimeTripTimesBuilder withHasDeparted(int stop, boolean departed) {
+    if (stop > numberOfStops()) {
+      throw new IllegalArgumentException("Stop index out of range");
+    }
+    this.hasDeparted.set(stop, departed);
     return this;
   }
 

@@ -7,20 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.osm.DefaultOsmProvider;
-import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
-import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
+import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.model.vertex.VertexLabel;
+import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.search.StreetSearchBuilder;
+import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
-import org.opentripplanner.street.search.strategy.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.test.support.ResourceLoader;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 
 /**
  * Verify that OSM ways that represent proposed or as yet unbuilt roads are not used for routing.
@@ -35,20 +31,17 @@ class UnroutableTest {
 
   @BeforeEach
   public void setUp() throws Exception {
-    var deduplicator = new Deduplicator();
-    graph = new Graph(deduplicator);
+    this.graph = new Graph();
 
     var osmDataFile = ResourceLoader.of(UnroutableTest.class).file("bridge_construction.osm.pbf");
-    DefaultOsmProvider provider = new DefaultOsmProvider(osmDataFile, true);
-    OsmModule osmBuilder = OsmModule.of(
-      provider,
-      graph,
-      new DefaultOsmInfoGraphBuildRepository(),
-      new DefaultVehicleParkingRepository()
-    )
+    var provider = new DefaultOsmProvider(osmDataFile, true);
+    var osmModule = OsmModuleTestFactory.of(provider)
+      .withGraph(graph)
+      .builder()
       .withAreaVisibility(true)
       .build();
-    osmBuilder.buildGraph();
+
+    osmModule.buildGraph();
   }
 
   /**
@@ -58,18 +51,15 @@ class UnroutableTest {
    */
   @Test
   public void testOnBoardRouting() {
-    var request = RouteRequest.of()
-      .withJourney(j -> j.withDirect(new StreetRequest(StreetMode.BIKE)))
-      .buildDefault();
+    var request = StreetSearchRequest.of().withMode(StreetMode.BIKE).build();
 
     Vertex from = graph.getVertex(VertexLabel.osm(2003617278));
     Vertex to = graph.getVertex(VertexLabel.osm(40446276));
     ShortestPathTree<State, Edge, Vertex> spt = StreetSearchBuilder.of()
-      .setHeuristic(new EuclideanRemainingWeightHeuristic())
-      .setRequest(request)
-      .setStreetRequest(request.journey().direct())
-      .setFrom(from)
-      .setTo(to)
+      .withHeuristic(new EuclideanRemainingWeightHeuristic())
+      .withRequest(request)
+      .withFrom(from)
+      .withTo(to)
       .getShortestPathTree();
 
     GraphPath<State, Edge, Vertex> path = spt.getPath(to);

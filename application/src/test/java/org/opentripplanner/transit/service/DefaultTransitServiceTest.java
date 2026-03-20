@@ -18,16 +18,15 @@ import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.model.RealTimeTripUpdate;
-import org.opentripplanner.model.TimetableSnapshot;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.CalendarServiceData;
+import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.transit.api.model.FilterValues;
+import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.GroupOfStations;
@@ -36,7 +35,9 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
+import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
@@ -80,7 +81,7 @@ class DefaultTransitServiceTest {
   );
   private static final TripPattern REAL_TIME_PATTERN = TEST_MODEL.pattern(BUS)
     .withStopPattern(REAL_TIME_STOP_PATTERN)
-    .withCreatedByRealtimeUpdater(true)
+    .withRealTimeStopPatternModified()
     .build();
 
   static FeedScopedId CALENDAR_ID = id("CAL_1");
@@ -152,7 +153,7 @@ class DefaultTransitServiceTest {
       .build();
 
     var deduplicator = new Deduplicator();
-    var timetableRepository = new TimetableRepository(siteRepository, new Deduplicator());
+    var timetableRepository = new TimetableRepository(siteRepository);
     var canceledStopTimes = TEST_MODEL.stopTimesEvery5Minutes(3, TRIP, "11:30");
     var canceledTripTimes = TripTimesFactory.tripTimes(TRIP, canceledStopTimes, deduplicator)
       .createRealTimeFromScheduledTimes()
@@ -184,11 +185,7 @@ class DefaultTransitServiceTest {
     timetableRepository.addTripPattern(BUS_PATTERN.getId(), BUS_PATTERN);
     timetableRepository.addTripPattern(BUS_PATTERN_TODAY.getId(), BUS_PATTERN_TODAY);
 
-    timetableRepository.updateCalendarServiceData(
-      true,
-      calendarServiceData,
-      DataImportIssueStore.NOOP
-    );
+    timetableRepository.updateCalendarServiceData(calendarServiceData);
 
     timetableRepository.index();
 
@@ -198,14 +195,22 @@ class DefaultTransitServiceTest {
       .withDepartureTimes(new int[] { 0, 1 })
       .withServiceCode(SERVICE_CODE)
       .build();
-    timetableSnapshot.update(new RealTimeTripUpdate(REAL_TIME_PATTERN, tripTimes, firstDate));
-    timetableSnapshot.update(new RealTimeTripUpdate(RAIL_PATTERN, canceledTripTimes, firstDate));
-    timetableSnapshot.update(new RealTimeTripUpdate(RAIL_PATTERN, canceledTripTimes, secondDate));
     timetableSnapshot.update(
-      new RealTimeTripUpdate(REAL_TIME_PATTERN, REALTIME_TRIP_TIMES, SERVICE_DATE)
+      RealTimeTripUpdate.of(REAL_TIME_PATTERN, tripTimes, firstDate).build()
     );
     timetableSnapshot.update(
-      new RealTimeTripUpdate(REAL_TIME_PATTERN, ADDED_TRIP_TIMES, SERVICE_DATE, null, true, false)
+      RealTimeTripUpdate.of(RAIL_PATTERN, canceledTripTimes, firstDate).build()
+    );
+    timetableSnapshot.update(
+      RealTimeTripUpdate.of(RAIL_PATTERN, canceledTripTimes, secondDate).build()
+    );
+    timetableSnapshot.update(
+      RealTimeTripUpdate.of(REAL_TIME_PATTERN, REALTIME_TRIP_TIMES, SERVICE_DATE).build()
+    );
+    timetableSnapshot.update(
+      RealTimeTripUpdate.of(REAL_TIME_PATTERN, ADDED_TRIP_TIMES, SERVICE_DATE)
+        .withTripCreation(true)
+        .build()
     );
 
     var snapshot = timetableSnapshot.commit();
@@ -256,6 +261,31 @@ class DefaultTransitServiceTest {
   void listCanceledTrips() {
     var canceledTrips = service.listCanceledTrips();
     assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", canceledTrips.toString());
+  }
+
+  @Test
+  void findAllCanceledTrips() {
+    // No filters, should return all canceled trips
+    var canceledTrips = service.findCanceledTrips(TripOnServiceDateRequest.of().build());
+    assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", canceledTrips.toString());
+  }
+
+  @Test
+  void findCanceledBusTrips() {
+    var busFilter = FilterValues.ofEmptyIsEverything("modesToInclude", List.of(BUS));
+    var busRequest = TripOnServiceDateRequest.of().withIncludeModes(busFilter).build();
+    var busTrips = service.findCanceledTrips(busRequest);
+    assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", busTrips.toString());
+  }
+
+  @Test
+  void findCanceledNonBusTrips() {
+    var busExcludeFilter = FilterValues.ofEmptyIsEverything("modesToExclude", List.of(BUS));
+    var busExcludeRequest = TripOnServiceDateRequest.of()
+      .withExcludeModes(busExcludeFilter)
+      .build();
+    var excludedBusTrips = service.findCanceledTrips(busExcludeRequest);
+    assertThat(excludedBusTrips).isEmpty();
   }
 
   @Test

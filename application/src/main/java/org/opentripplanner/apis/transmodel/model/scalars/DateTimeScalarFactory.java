@@ -16,8 +16,7 @@ import org.opentripplanner.utils.time.OffsetDateTimeParser;
 
 public final class DateTimeScalarFactory {
 
-  private static final String DOCUMENTATION =
-    """
+  private static final String DOCUMENTATION = """
     DateTime format accepting ISO 8601 dates with time zone offset.
 
     Format:  `YYYY-MM-DD'T'hh:mm[:ss](Z|±01:00)`
@@ -41,7 +40,15 @@ public final class DateTimeScalarFactory {
           @Override
           public String serialize(Object input) {
             if (input instanceof Long inputAsLong) {
-              return Instant.ofEpochMilli(inputAsLong).atZone(timeZone).format(FORMATTER);
+              return mapToString(Instant.ofEpochMilli(inputAsLong));
+            }
+            if (input instanceof Instant inputAsInstant) {
+              return mapToString(inputAsInstant);
+            }
+            if (input instanceof ZonedDateTime zonedDateTime) {
+              // We map to an instant first to output in the given timeZone, not in the
+              // timeZone of the input.
+              return mapToString(zonedDateTime.toInstant());
             }
             return null;
           }
@@ -83,6 +90,10 @@ public final class DateTimeScalarFactory {
               return parseValue(inputAsStringValue.getValue());
             }
             return null;
+          }
+
+          private String mapToString(Instant instant) {
+            return instant.atZone(timeZone).format(FORMATTER);
           }
         }
       )

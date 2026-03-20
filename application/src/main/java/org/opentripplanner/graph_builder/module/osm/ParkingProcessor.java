@@ -12,29 +12,29 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.LocalizedStringFormat;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.LocalizedStringFormat;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.InvalidVehicleParkingCapacity;
 import org.opentripplanner.graph_builder.issues.ParkAndRideUnlinked;
-import org.opentripplanner.model.calendar.openinghours.OHCalendar;
 import org.opentripplanner.osm.OsmOpeningHoursParser;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
-import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
-import org.opentripplanner.service.vehicleparking.model.VehicleParkingHelper;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
+import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.VehicleParkingHelper;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
+import org.opentripplanner.street.model.openinghours.OHCalendar;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
-import org.opentripplanner.street.model.vertex.VertexFactory;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.streetadapter.VertexFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -400,10 +400,7 @@ class ParkingProcessor {
     I18NString creativeName = osmEntity.getAssumedName();
     if (creativeName == null) {
       // ... otherwise resort to "CreativeNamer"s
-      creativeName = osmEntity
-        .getOsmProvider()
-        .getWayPropertySet()
-        .getCreativeNameForWay(osmEntity);
+      creativeName = osmEntity.getOsmProvider().getWayPropertySet().getCreativeName(osmEntity);
     }
     if (creativeName == null) {
       creativeName = new NonLocalizedString(

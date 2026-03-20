@@ -6,7 +6,6 @@ import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.raptor.api.model.RaptorConstrainedTransfer;
 import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
@@ -18,15 +17,16 @@ import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.util.BitSetIterator;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultSlackProvider;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransferIndex;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.SlackProvider;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.ConstrainedBoardingSearch;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.ConstrainedTransfersForPatterns;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.GeneralizedCostParametersMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -40,7 +40,7 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
 
   private final RaptorTransitData raptorTransitData;
 
-  private final TransferService transferService;
+  private final ConstrainedTransferService transferService;
 
   /**
    * Active route indices by stop index
@@ -100,14 +100,19 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
     this.transferIndex = raptorTransitData.getRaptorTransfersForRequest(request);
     this.constrainedTransfers = raptorTransitData.getConstrainedTransfers();
 
-    var mcCostParams = GeneralizedCostParametersMapper.map(request, patternIndex);
+    var mcCostParams = GeneralizedCostParametersMapper.map(
+      request,
+      patternIndex,
+      p -> p.route().getId(),
+      p -> p.route().getAgency().getId()
+    );
 
     this.generalizedCostCalculator = CostCalculatorFactory.createCostCalculator(
       mcCostParams,
       raptorTransitData.getStopBoardAlightTransferCosts()
     );
 
-    this.slackProvider = new SlackProvider(
+    this.slackProvider = new DefaultSlackProvider(
       (int) request.preferences().transfer().slack().toSeconds(),
       request.preferences().transit().boardSlack(),
       request.preferences().transit().alightSlack()
@@ -142,7 +147,7 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
   }
 
   @Override
-  public Iterator<RaptorTransfer> getTransfersFromStop(int stopIndex) {
+  public Iterator<? extends RaptorTransfer> getTransfersFromStop(int stopIndex) {
     return transferIndex.getForwardTransfers(stopIndex).iterator();
   }
 

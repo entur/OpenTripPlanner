@@ -6,20 +6,22 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner._support.geometry.Coordinates;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.plan.Place;
+import org.opentripplanner.model.plan.leg.ViaLocationType;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.GroupOfRoutesBuilder;
 import org.opentripplanner.transit.model.network.Route;
@@ -30,6 +32,8 @@ import org.opentripplanner.transit.model.network.TripPatternBuilder;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.site.AreaStopBuilder;
 import org.opentripplanner.transit.model.site.GroupStop;
+import org.opentripplanner.transit.model.site.MultiModalStation;
+import org.opentripplanner.transit.model.site.MultiModalStationBuilder;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.RegularStopBuilder;
 import org.opentripplanner.transit.model.site.Station;
@@ -50,7 +54,10 @@ import org.opentripplanner.utils.time.TimeUtils;
  *       withing the context of a SiteRepository, mixing more than one model in a test is sharing
  *       state between tests. For now, it is just the stop index - but we want to
  *       use this to encapsulate the SiteRepository completely.
+ *
+ * @deprecated This has been deprecated in favour of {@link TransitTestEnvironment}
  */
+@Deprecated
 public class TimetableRepositoryForTest {
 
   public static final String FEED_ID = "F";
@@ -59,15 +66,14 @@ public class TimetableRepositoryForTest {
   public static final WgsCoordinate ANY_COORDINATE = new WgsCoordinate(60.0, 10.0);
 
   // This is used to create valid objects - do not use it for verification
-  private static final Polygon ANY_POLYGON = GeometryUtils.getGeometryFactory()
-    .createPolygon(
-      new Coordinate[] {
-        Coordinates.of(61.0, 10.0),
-        Coordinates.of(61.0, 12.0),
-        Coordinates.of(60.0, 11.0),
-        Coordinates.of(61.0, 10.0),
-      }
-    );
+  private static final Polygon ANY_POLYGON = GeometryUtils.getGeometryFactory().createPolygon(
+    new Coordinate[] {
+      Coordinates.of(61.0, 10.0),
+      Coordinates.of(61.0, 12.0),
+      Coordinates.of(60.0, 11.0),
+      Coordinates.of(61.0, 10.0),
+    }
+  );
 
   public static final Agency AGENCY = Agency.of(id("A1"))
     .withName("Agency Test")
@@ -164,6 +170,14 @@ public class TimetableRepositoryForTest {
       .withPriority(StopTransferPriority.ALLOWED);
   }
 
+  public MultiModalStationBuilder multiModalStation(String idAndName) {
+    return MultiModalStation.of(new FeedScopedId(FEED_ID, idAndName))
+      .withName(new NonLocalizedString(idAndName))
+      .withCode(idAndName)
+      .withCoordinate(new WgsCoordinate(60.0, 10.0))
+      .withDescription("MultiModalStation " + idAndName);
+  }
+
   public GroupStop groupStop(String idAndName, RegularStop... stops) {
     var builder = siteRepositoryBuilder
       .groupStop(id(idAndName))
@@ -217,14 +231,22 @@ public class TimetableRepositoryForTest {
     return stopTime;
   }
 
-  public Place place(String name, Consumer<RegularStopBuilder> stopBuilder) {
+  public Place place(
+    String name,
+    Consumer<RegularStopBuilder> stopBuilder,
+    @Nullable ViaLocationType viaLocationType
+  ) {
     var stop = stop(name);
     stopBuilder.accept(stop);
-    return Place.forStop(stop.build());
+    return Place.forStop(stop.build(), viaLocationType);
+  }
+
+  public Place place(String name, Consumer<RegularStopBuilder> stopBuilder) {
+    return place(name, stopBuilder, null);
   }
 
   public Place place(String name, double lat, double lon) {
-    return place(name, b -> b.withCoordinate(lat, lon));
+    return place(name, b -> b.withCoordinate(lat, lon), null);
   }
 
   /**

@@ -39,8 +39,7 @@ public record NodeInfo(
   @Nullable String defaultValue,
   boolean required,
   boolean skipChild
-)
-  implements Comparable<NodeInfo> {
+) implements Comparable<NodeInfo> {
   static final String EXPERIMENTAL_FEATURE =
     "**THIS IS STILL AN EXPERIMENTAL FEATURE - IT MAY CHANGE WITHOUT ANY NOTICE!**";
 
@@ -144,8 +143,12 @@ public record NodeInfo(
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     NodeInfo leafNode = (NodeInfo) o;
     return Objects.equals(name, leafNode.name);
   }

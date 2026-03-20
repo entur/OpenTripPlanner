@@ -15,10 +15,10 @@ import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
+import org.opentripplanner.transit.model.timetable.Timetable;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
-import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -50,38 +50,77 @@ class TripTimeOnDateTest {
   }
 
   @Test
-  void isRecordedStop() {
+  void hasArrivedStop() {
     var pattern = TEST_MODEL.pattern(TransitMode.BUS).build();
     var trip = TimetableRepositoryForTest.trip("123").build();
     var stopTimes = TEST_MODEL.stopTimesEvery5Minutes(3, trip, "11:00");
 
     var tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator())
       .createRealTimeFromScheduledTimes()
-      .withRecorded(1)
+      .withHasArrived(1, true)
       .build();
 
     var subject = new TripTimeOnDate(tripTimes, 0, pattern);
-
-    assertFalse(subject.isRecordedStop());
+    assertFalse(subject.hasArrived());
 
     subject = new TripTimeOnDate(tripTimes, 1, pattern);
+    assertTrue(subject.hasArrived());
+  }
 
-    assertTrue(subject.isRecordedStop());
+  @Test
+  void hasDepartedStop() {
+    var pattern = TEST_MODEL.pattern(TransitMode.BUS).build();
+    var trip = TimetableRepositoryForTest.trip("123").build();
+    var stopTimes = TEST_MODEL.stopTimesEvery5Minutes(3, trip, "11:00");
+
+    var tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator())
+      .createRealTimeFromScheduledTimes()
+      .withHasDeparted(1, true)
+      .build();
+
+    var subject = new TripTimeOnDate(tripTimes, 0, pattern);
+    assertFalse(subject.hasDeparted());
+
+    subject = new TripTimeOnDate(tripTimes, 1, pattern);
+    assertTrue(subject.hasDeparted());
   }
 
   @Test
   void previousTimes() {
     var subject = tripTimeOnDate();
 
-    var ids = subject.previousTimes().stream().map(t -> t.getStop().getId().toString()).toList();
+    var ids = subject
+      .previousTimes()
+      .stream()
+      .map(t -> t.getStop().getId().toString())
+      .toList();
     assertEquals(List.of("F:stop-10", "F:stop-20"), ids);
     assertThat(subject.previousTimes().getFirst().previousTimes()).isEmpty();
   }
 
   @Test
+  void previousTimesWithCount() {
+    var subject = tripTimeOnDate();
+    assertTrue(mapTripTimeOnDateToStopId(subject.previousTimes(0)).isEmpty());
+    assertEquals(List.of("F:stop-20"), mapTripTimeOnDateToStopId(subject.previousTimes(1)));
+    assertEquals(
+      List.of("F:stop-10", "F:stop-20"),
+      mapTripTimeOnDateToStopId(subject.previousTimes(2))
+    );
+    assertEquals(
+      List.of("F:stop-10", "F:stop-20"),
+      mapTripTimeOnDateToStopId(subject.previousTimes(3))
+    );
+  }
+
+  @Test
   void nextTimes() {
     var subject = tripTimeOnDate();
-    var ids = subject.nextTimes().stream().map(t -> t.getStop().getId().toString()).toList();
+    var ids = subject
+      .nextTimes()
+      .stream()
+      .map(t -> t.getStop().getId().toString())
+      .toList();
     assertEquals(List.of("F:stop-40", "F:stop-50"), ids);
     var secondLast = subject.nextTimes().getFirst();
     var lastStop = secondLast
@@ -91,6 +130,21 @@ class TripTimeOnDateTest {
       .toList();
     assertEquals(List.of("F:stop-50"), lastStop);
     assertThat(secondLast.nextTimes().getFirst().nextTimes()).isEmpty();
+  }
+
+  @Test
+  void nextTimesWithCount() {
+    var subject = tripTimeOnDate();
+    assertTrue(mapTripTimeOnDateToStopId(subject.nextTimes(0)).isEmpty());
+    assertEquals(List.of("F:stop-40"), mapTripTimeOnDateToStopId(subject.nextTimes(1)));
+    assertEquals(
+      List.of("F:stop-40", "F:stop-50"),
+      mapTripTimeOnDateToStopId(subject.nextTimes(2))
+    );
+    assertEquals(
+      List.of("F:stop-40", "F:stop-50"),
+      mapTripTimeOnDateToStopId(subject.nextTimes(3))
+    );
   }
 
   @Test
@@ -119,7 +173,7 @@ class TripTimeOnDateTest {
     var testModel = TimetableRepositoryForTest.of();
     var trip = TimetableRepositoryForTest.trip("123").build();
     var siteRepository = testModel.siteRepositoryBuilder().build();
-    var timetableRepository = new TimetableRepository(siteRepository, new Deduplicator());
+    var timetableRepository = new TimetableRepository(siteRepository);
     var tripTimes = ScheduledTripTimes.of()
       .withTrip(trip)
       .withDepartureTimes(new int[] { 0, 1 })
@@ -132,7 +186,6 @@ class TripTimeOnDateTest {
     timetableRepository.index();
     var timetableSnapshot = new TimetableSnapshot();
     timetableSnapshot.commit();
-    var transitService = new DefaultTransitService(timetableRepository, timetableSnapshot);
     var serviceDate = LocalDate.of(2025, 1, 1);
     // Construct a timetable which definitely does not contain this trip, because it is empty.
     Timetable timetable = Timetable.of()
@@ -151,8 +204,15 @@ class TripTimeOnDateTest {
       assertNull(tripTimeOnDate.getServiceDay());
       assertEquals(tripTimeOnDate.getServiceDayMidnight(), TripTimeOnDate.UNDEFINED);
       assertEquals(tripTimeOnDate.getTripTimes(), tripTimes);
-      assertEquals(tripTimeOnDate.getStopIndex(), i);
+      assertEquals(tripTimeOnDate.getStopPosition(), i);
       i++;
     }
+  }
+
+  private List<String> mapTripTimeOnDateToStopId(List<TripTimeOnDate> tripTimes) {
+    return tripTimes
+      .stream()
+      .map(t -> t.getStop().getId().toString())
+      .toList();
   }
 }

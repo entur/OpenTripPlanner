@@ -20,18 +20,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.TranslatedString;
-import org.opentripplanner.model.calendar.openinghours.OpeningHoursCalendarService;
+import org.opentripplanner.core.model.i18n.TranslatedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
+import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public class VehicleParkingsLayerTest {
 
@@ -59,11 +59,7 @@ public class VehicleParkingsLayerTest {
     vehicleParking = VehicleParking.builder()
       .id(ID)
       .name(
-        TranslatedString.getI18NString(
-          Map.of("", "default name", "de", "deutscher Name"),
-          false,
-          false
-        )
+        TranslatedString.getI18NString(Map.of("", "default name", "de", "deutscher Name"), false)
       )
       .coordinate(new WgsCoordinate(2, 1))
       .bicyclePlaces(true)
@@ -87,8 +83,7 @@ public class VehicleParkingsLayerTest {
     var repo = new DefaultVehicleParkingRepository();
     repo.updateVehicleParking(List.of(vehicleParking), List.of());
 
-    var config =
-      """
+    var config = """
       {
         "vectorTiles": {
           "layers" : [

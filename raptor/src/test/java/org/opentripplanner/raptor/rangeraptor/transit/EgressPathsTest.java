@@ -23,26 +23,26 @@ class EgressPathsTest {
   private static final int STOP_E = 6;
   private static final int[] ALL_STOPS = new int[] { STOP_A, STOP_B, STOP_C, STOP_D, STOP_E };
 
-  private static final int D1m = DurationUtils.durationInSeconds("1m");
-  private static final int D2m = DurationUtils.durationInSeconds("2m");
+  private static final int D1_m = DurationUtils.durationInSeconds("1m");
+  private static final int D2_m = DurationUtils.durationInSeconds("2m");
 
   private final List<RaptorAccessEgress> egresses = List.of(
     // Simple, one egress
-    walk(STOP_A, D1m),
+    walk(STOP_A, D1_m),
     // Duration, short is better
-    flex(STOP_B, D1m),
-    flex(STOP_B, D2m),
+    flex(STOP_B, D1_m),
+    flex(STOP_B, D2_m),
     // Reached on-board is better than on-street
-    flex(STOP_C, D1m),
-    flexAndWalk(STOP_C, D1m),
+    flex(STOP_C, D1_m),
+    flexAndWalk(STOP_C, D1_m),
     // Number of rides, smallest is better
-    flex(STOP_D, D1m, 2),
-    flex(STOP_D, D1m, 3),
+    flex(STOP_D, D1_m, 2),
+    flex(STOP_D, D1_m, 3),
     // Opening Hours dominate each other (no check on overlapping)
-    walk(STOP_E, D2m),
-    walk(STOP_E, D1m).openingHours("10:00", "11:45"),
-    walk(STOP_E, D1m).openingHours("11:30", "12:30"),
-    walk(STOP_E, D2m).openingHours("14:00", "14:00")
+    walk(STOP_E, D2_m),
+    walk(STOP_E, D1_m).openingHours("10:00", "11:45"),
+    walk(STOP_E, D1_m).openingHours("11:30", "12:30"),
+    walk(STOP_E, D2_m).openingHours("14:00", "14:00")
   );
 
   private final EgressPaths subjectStd = EgressPaths.create(egresses, RaptorProfile.STANDARD);
@@ -52,9 +52,9 @@ class EgressPathsTest {
   void byStopStandard() {
     var byStop = subjectStd.byStop();
     assertEquals("[Walk 1m C₁120 ~ 2]", byStop.get(STOP_A).toString());
-    assertEquals("[Flex 1m C₁120 1x ~ 3]", byStop.get(STOP_B).toString());
-    assertEquals("[Flex 1m C₁120 1x ~ 4]", byStop.get(STOP_C).toString());
-    assertEquals("[Flex 1m C₁120 2x ~ 5]", byStop.get(STOP_D).toString());
+    assertEquals("[Flex 1m C₁120 Rₙ1 ~ 3]", byStop.get(STOP_B).toString());
+    assertEquals("[Flex 1m C₁120 Rₙ1 ~ 4]", byStop.get(STOP_C).toString());
+    assertEquals("[Flex 1m C₁120 Rₙ2 ~ 5]", byStop.get(STOP_D).toString());
     assertEquals(
       "[Walk 2m C₁240 ~ 6, Walk 1m C₁120 Open(10:00 11:45) ~ 6, Walk 1m C₁120 Open(11:30 12:30) ~ 6]",
       byStop.get(STOP_E).toString()
@@ -73,9 +73,9 @@ class EgressPathsTest {
   void listAll() {
     assertEquals(
       """
-      Flex 1m C₁120 1x ~ 3
-      Flex 1m C₁120 1x ~ 4
-      Flex 1m C₁120 2x ~ 5
+      Flex 1m C₁120 Rₙ1 ~ 3
+      Flex 1m C₁120 Rₙ1 ~ 4
+      Flex 1m C₁120 Rₙ2 ~ 5
       Walk 1m C₁120 Open(10:00 11:45) ~ 6
       Walk 1m C₁120 Open(11:30 12:30) ~ 6
       Walk 1m C₁120 ~ 2
@@ -86,9 +86,9 @@ class EgressPathsTest {
 
     assertEquals(
       """
-      Flex 1m C₁120 1x ~ 3
-      Flex 1m C₁120 1x ~ 4
-      Flex 1m C₁120 2x ~ 5
+      Flex 1m C₁120 Rₙ1 ~ 3
+      Flex 1m C₁120 Rₙ1 ~ 4
+      Flex 1m C₁120 Rₙ2 ~ 5
       Walk 1m C₁120 Open(10:00 11:45) ~ 6
       Walk 1m C₁120 Open(11:30 12:30) ~ 6
       Walk 1m C₁120 ~ 2

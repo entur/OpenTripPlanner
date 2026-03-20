@@ -11,22 +11,22 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.opentripplanner.routing.linking.DisposableEdgeCollection;
-import org.opentripplanner.routing.linking.VertexLinker;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.street.linking.DisposableEdgeCollection;
+import org.opentripplanner.street.linking.LinkingDirection;
+import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
-import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.model.edge.StreetEdge;
-import org.opentripplanner.street.model.vertex.VertexFactory;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
@@ -35,7 +35,6 @@ import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataS
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.time.DurationUtils;
-import org.opentripplanner.utils.time.TimeUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -209,7 +208,9 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       List<FeedScopedId> toRemove = new ArrayList<>();
       for (Entry<FeedScopedId, VehicleRentalPlaceVertex> entry : verticesByStation.entrySet()) {
         FeedScopedId station = entry.getKey();
-        if (stationSet.contains(station)) continue;
+        if (stationSet.contains(station)) {
+          continue;
+        }
         toRemove.add(station);
         service.removeVehicleRentalStation(station);
       }
@@ -236,7 +237,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         var millis = Duration.ofMillis(end - start);
         LOG.info(
           "Geofencing zones computation took {}. Added extension to {} edges. For {}",
-          TimeUtils.durationToStrCompact(millis),
+          DurationUtils.durationToStr(millis),
           latestModifiedEdges.size(),
           nameForLogging
         );

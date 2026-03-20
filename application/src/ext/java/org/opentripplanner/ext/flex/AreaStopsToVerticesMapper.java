@@ -5,9 +5,11 @@ import com.google.common.collect.ImmutableMultimap;
 import jakarta.inject.Inject;
 import java.util.stream.Stream;
 import org.locationtech.jts.geom.Point;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -57,11 +59,12 @@ public class AreaStopsToVerticesMapper implements GraphBuilderModule {
         return matchedVertices;
       });
 
-    ImmutableMultimap<StreetVertex, AreaStop> mappedResults = results.collect(
-      ImmutableListMultimap.<MatchResult, StreetVertex, AreaStop>flatteningToImmutableListMultimap(
-        MatchResult::vertex,
-        mr -> Stream.of(mr.stop())
-      )
+    ImmutableMultimap<StreetVertex, FeedScopedId> mappedResults = results.collect(
+      ImmutableListMultimap.<
+          MatchResult,
+          StreetVertex,
+          FeedScopedId
+        >flatteningToImmutableListMultimap(MatchResult::vertex, mr -> Stream.of(mr.stop().getId()))
     );
 
     mappedResults
@@ -74,6 +77,7 @@ public class AreaStopsToVerticesMapper implements GraphBuilderModule {
   }
 
   private static Stream<MatchResult> matchingVerticesForStop(Graph graph, AreaStop areaStop) {
+    var geom = PreparedGeometryFactory.prepare(areaStop.getGeometry());
     return graph
       .findVertices(areaStop.getGeometry().getEnvelopeInternal())
       .stream()
@@ -83,7 +87,7 @@ public class AreaStopsToVerticesMapper implements GraphBuilderModule {
       .filter(vertx -> {
         // The street index overselects, so need to check for exact geometry inclusion
         Point p = GeometryUtils.getGeometryFactory().createPoint(vertx.getCoordinate());
-        return areaStop.getGeometry().intersects(p);
+        return geom.intersects(p);
       })
       .map(vertx -> new MatchResult(vertx, areaStop));
   }

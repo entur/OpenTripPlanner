@@ -266,7 +266,7 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private EgressPaths egressPaths() {
     return Objects.requireNonNull(
-      ctx.legs().getLast().egressPaths(),
+      ctx.segments().getLast().egressPaths(),
       "Last leg must have non-null egressPaths"
     );
   }
@@ -292,10 +292,10 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
       if (!type.isInstance(instance)) {
         throw new IllegalArgumentException(
           "The instance of type " +
-          instance.getClass().getSimpleName() +
-          " is not an instance of type " +
-          type.getSimpleName() +
-          "."
+            instance.getClass().getSimpleName() +
+            " is not an instance of type " +
+            type.getSimpleName() +
+            "."
         );
       }
       if (oneOfInstanceTypes.contains(type)) {

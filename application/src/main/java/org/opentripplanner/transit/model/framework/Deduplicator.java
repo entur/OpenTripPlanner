@@ -1,6 +1,5 @@
 package org.opentripplanner.transit.model.framework;
 
-import jakarta.inject.Inject;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -14,11 +13,16 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * Does the same thing as String.intern, but for several different types. Java's String.intern uses
- * perm gen space and is broken anyway.
+ * Object deduplicator used to reduce memory footprint.
+ * Deduplication is based on the hashcode/equals method of the target object. Some Java data
+ * structures that do not have proper native equality (int[], ...) are wrapped.
+ * <p>
+ * In older JVMs, this deduplicator used to be more efficient for deduplicating String than
+ * String.intern() (not tested with recent JVMs).
  */
 public class Deduplicator implements DeduplicatorService, Serializable {
 
@@ -35,7 +39,6 @@ public class Deduplicator implements DeduplicatorService, Serializable {
 
   private final Map<String, Integer> effectCounter = new HashMap<>();
 
-  @Inject
   public Deduplicator() {}
 
   /** Free up any memory used by the deduplicator. */
@@ -169,8 +172,9 @@ public class Deduplicator implements DeduplicatorService, Serializable {
       return null;
     }
 
-    Map<List<?>, List<?>> canonicalLists =
-      this.canonicalLists.computeIfAbsent(clazz, key -> new HashMap<>());
+    Map<List<?>, List<?>> canonicalLists = this.canonicalLists.computeIfAbsent(clazz, key ->
+      new HashMap<>()
+    );
 
     @SuppressWarnings("unchecked")
     List<T> canonical = (List<T>) canonicalLists.get(original);

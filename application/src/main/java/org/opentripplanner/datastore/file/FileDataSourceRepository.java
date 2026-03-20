@@ -4,6 +4,7 @@ import static org.opentripplanner.datastore.OtpDataStore.BUILD_REPORT_DIR;
 import static org.opentripplanner.datastore.api.FileType.CONFIG;
 import static org.opentripplanner.datastore.api.FileType.DEM;
 import static org.opentripplanner.datastore.api.FileType.EMISSION;
+import static org.opentripplanner.datastore.api.FileType.EMPIRICAL_DATA;
 import static org.opentripplanner.datastore.api.FileType.GRAPH;
 import static org.opentripplanner.datastore.api.FileType.GTFS;
 import static org.opentripplanner.datastore.api.FileType.NETEX;
@@ -35,6 +36,7 @@ public class FileDataSourceRepository implements LocalDataSourceRepository {
 
   private final Pattern GRAPH_PATTERN = Pattern.compile("(?i)(street)?graph.*\\.obj");
   private final Pattern EMISSION_PATTERN = Pattern.compile("(?i)(emission).*\\.(txt|csv)");
+  private final Pattern EMPIRICAL_DELAY_PATTERN = Pattern.compile("(?i)(empirical[_-]?delay).*");
 
   private final File baseDir;
   private final Pattern gtfsLocalFilePattern;
@@ -132,12 +134,12 @@ public class FileDataSourceRepository implements LocalDataSourceRepository {
     } catch (IllegalArgumentException e) {
       throw new OtpAppException(
         "The file URI is invalid for file type " +
-        type +
-        ". " +
-        "URI: '" +
-        uri +
-        "', details: " +
-        e.getMessage()
+          type +
+          ". " +
+          "URI: '" +
+          uri +
+          "', details: " +
+          e.getMessage()
       );
     }
   }
@@ -155,11 +157,11 @@ public class FileDataSourceRepository implements LocalDataSourceRepository {
     }
     throw new IllegalArgumentException(
       "The " +
-      file +
-      " is not recognized as a zip-file or " +
-      "directory. Unable to create composite data source for file type " +
-      type +
-      "."
+        file +
+        " is not recognized as a zip-file or " +
+        "directory. Unable to create composite data source for file type " +
+        type +
+        "."
     );
   }
 
@@ -191,6 +193,9 @@ public class FileDataSourceRepository implements LocalDataSourceRepository {
     }
     if (EMISSION_PATTERN.matcher(name).find()) {
       return EMISSION;
+    }
+    if (EMPIRICAL_DELAY_PATTERN.matcher(name).find()) {
+      return EMPIRICAL_DATA;
     }
     if (GRAPH_PATTERN.matcher(name).find()) {
       return GRAPH;

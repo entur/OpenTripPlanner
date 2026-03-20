@@ -8,12 +8,12 @@ import static org.opentripplanner._support.asserts.AssertString.assertEqualsIgno
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.api.request.DebugRaptor;
 import org.opentripplanner.routing.api.request.request.filter.SelectRequest;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilterRequest;
 import org.opentripplanner.routing.api.request.request.filter.TransitGroupSelect;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 class TransitRequestTest {
 
@@ -37,7 +37,7 @@ class TransitRequestTest {
   );
 
   private final TransitRequest subject = TransitRequest.of()
-    .setFilters(FILTERS)
+    .withFilters(FILTERS)
     .withBannedTrips(BANNED_TRIPS)
     .withPriorityGroupsByAgency(PRIORITY_GROUP_BY_AGENCY)
     .addPriorityGroupsGlobal(PRIORITY_GROUP_GLOBAL)
@@ -105,7 +105,11 @@ class TransitRequestTest {
         subject.copyOf().disable().build(),
         subject.copyOf().withPriorityGroupsByAgency(List.of()).build(),
         subject.copyOf().addPriorityGroupsGlobal(List.of()).build(),
-        subject.copyOf().withRaptorDebugging(d -> d.withStops("")).build().toString()
+        subject
+          .copyOf()
+          .withRaptorDebugging(d -> d.withStops(""))
+          .build()
+          .toString()
       );
   }
 

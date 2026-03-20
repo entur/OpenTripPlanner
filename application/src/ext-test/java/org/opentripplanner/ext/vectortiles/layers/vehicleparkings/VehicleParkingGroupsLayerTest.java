@@ -13,10 +13,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.TranslatedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.vectortiles.VectorTilesResource;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
-import org.opentripplanner.framework.i18n.TranslatedString;
 import org.opentripplanner.inspector.vector.KeyValue;
 import org.opentripplanner.inspector.vector.LayerParameters;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
@@ -27,8 +27,8 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParkingGroup;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 public class VehicleParkingGroupsLayerTest {
 
@@ -48,7 +48,6 @@ public class VehicleParkingGroupsLayerTest {
               put("de", "groupDE");
             }
           },
-          false,
           false
         )
       )
@@ -64,7 +63,6 @@ public class VehicleParkingGroupsLayerTest {
               put("de", "DE");
             }
           },
-          false,
           false
         )
       )
@@ -90,8 +88,7 @@ public class VehicleParkingGroupsLayerTest {
     var repository = new DefaultVehicleParkingRepository();
     repository.updateVehicleParking(List.of(vehicleParking), List.of());
 
-    var config =
-      """
+    var config = """
       {
         "vectorTiles": {
           "layers" :[

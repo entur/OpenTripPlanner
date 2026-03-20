@@ -6,7 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 
 public class FileUtils {
 
@@ -27,10 +27,10 @@ public class FileUtils {
    * occurs the exception is converted to a {@link RuntimeException}.
    */
   public static void writeFile(File file, String doc) {
-    try (var fileOut = new FileOutputStream(file)) {
-      var out = new PrintWriter(fileOut);
-      out.write(doc);
-      out.flush();
+    try (var os = new FileOutputStream(file); var writer = new OutputStreamWriter(os, UTF_8)) {
+      // writes '\n' as a single LF byte
+      writer.write(doc);
+      writer.flush();
     } catch (IOException e) {
       throw new RuntimeException(e.getMessage(), e);
     }
@@ -46,7 +46,8 @@ public class FileUtils {
     var expectedLines = expectedDoc.split("[\n\r]+");
     var resultLines = resultDoc.split("[\n\r]+");
 
-    int i = 0, j = 0;
+    int i = 0;
+    int j = 0;
 
     while (i < expectedLines.length && j < resultLines.length) {
       while (expectedLines[i].isBlank()) {

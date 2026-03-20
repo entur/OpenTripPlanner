@@ -1,6 +1,6 @@
 package org.opentripplanner.graph_builder.module.ned;
 
-import static org.opentripplanner.street.model.elevation.ElevationUtils.computeEllipsoidToGeoidDifference;
+import static org.opentripplanner.routing.util.EllipsoidUtils.computeEllipsoidToGeoidDifference;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -27,15 +27,15 @@ import org.geotools.referencing.CRS;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner.framework.geometry.EncodedPolyline;
-import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.ElevationFlattened;
 import org.opentripplanner.graph_builder.issues.ElevationProfileFailure;
 import org.opentripplanner.graph_builder.issues.Graphwide;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.geometry.PolylineEncoder;
+import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetElevationExtensionBuilder;
@@ -247,7 +247,7 @@ public class ElevationModule implements GraphBuilderModule {
         );
         LOG.warn(
           "Elevation is missing at a large number of points. DEM may be for the wrong region. " +
-          "If it is unprojected, perhaps the axes are not in (longitude, latitude) order."
+            "If it is unprojected, perhaps the axes are not in (longitude, latitude) order."
         );
       }
     }
@@ -268,7 +268,7 @@ public class ElevationModule implements GraphBuilderModule {
       HashMap<String, PackedCoordinateSequence> newCachedElevations = new HashMap<>();
       for (StreetEdge streetEdge : edgesWithCalculatedElevations) {
         newCachedElevations.put(
-          EncodedPolyline.encode(streetEdge.getGeometry()).points(),
+          PolylineEncoder.encodeGeometry(streetEdge.getGeometry()).points(),
           streetEdge.getElevationProfile()
         );
       }
@@ -314,7 +314,7 @@ public class ElevationModule implements GraphBuilderModule {
       } else {
         LOG.warn(
           "No cached elevations file found at {} or read access not allowed! Unable " +
-          "to load in cached elevations. This could take a while...",
+            "to load in cached elevations. This could take a while...",
           cachedElevationsFile.toPath().toAbsolutePath()
         );
       }
@@ -400,14 +400,15 @@ public class ElevationModule implements GraphBuilderModule {
     // with this method avoids potentially waiting for a lock to be released for calculating the thread-specific
     // coverage.
     if (ee.hasElevationExtension()) {
-      return;/* already set up */
+      // already set up
+      return;
     }
 
     // first try to find a cached value if possible
     Geometry edgeGeometry = ee.getGeometry();
     if (cachedElevations != null) {
       PackedCoordinateSequence coordinateSequence = cachedElevations.get(
-        EncodedPolyline.encode(edgeGeometry).points()
+        PolylineEncoder.encodeGeometry(edgeGeometry).points()
       );
       if (coordinateSequence != null) {
         // found a cached value! Set the elevation profile with the pre-calculated data.
@@ -436,7 +437,10 @@ public class ElevationModule implements GraphBuilderModule {
       double edgeLenM = 0;
       double sampleDistance = distanceBetweenSamplesM;
       double previousDistance = 0;
-      double x1 = coords[0].x, y1 = coords[0].y, x2, y2;
+      double x1 = coords[0].x;
+      double y1 = coords[0].y;
+      double x2;
+      double y2;
       for (int i = 0; i < coords.length - 1; i++) {
         x2 = coords[i + 1].x;
         y2 = coords[i + 1].y;
@@ -557,7 +561,9 @@ public class ElevationModule implements GraphBuilderModule {
     try {
       return getElevation(coverage, c.x, c.y);
     } catch (
-      ArrayIndexOutOfBoundsException | PointOutsideCoverageException | TransformException e
+      ArrayIndexOutOfBoundsException
+      | PointOutsideCoverageException
+      | TransformException e
     ) {
       // Each of the above exceptions can occur when finding the elevation at a coordinate.
       // - The ArrayIndexOutOfBoundsException seems to occur at the edges of some elevation tiles that

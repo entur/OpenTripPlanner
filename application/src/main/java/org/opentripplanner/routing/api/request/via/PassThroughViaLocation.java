@@ -2,7 +2,7 @@ package org.opentripplanner.routing.api.request.via;
 
 import java.util.Collection;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -17,7 +17,7 @@ public class PassThroughViaLocation extends AbstractViaLocation {
     if (stopLocationIds.isEmpty()) {
       throw new IllegalArgumentException(
         "A pass-through via-location must have at least one stop location." +
-        (label == null ? "" : " Label: " + label)
+          (label == null ? "" : " Label: " + label)
       );
     }
   }

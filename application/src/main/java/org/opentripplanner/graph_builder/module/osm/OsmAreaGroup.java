@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import gnu.trove.list.TLongList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,12 +18,12 @@ import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
-import org.opentripplanner.framework.geometry.GeometryUtils;
 import org.opentripplanner.graph_builder.module.osm.Ring.RingConstructionException;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +119,7 @@ class OsmAreaGroup {
   }
 
   public static List<OsmAreaGroup> groupAreas(
-    Map<OsmArea, OsmLevel> areasLevels,
+    Map<OsmArea, Set<OsmLevel>> areasLevels,
     Multimap<OsmNode, OsmWay> barriers
   ) {
     DisjointSet<OsmArea> groups = new DisjointSet<>();
@@ -139,11 +138,12 @@ class OsmAreaGroup {
     // and these two consecutive nodes must not also be consecutive nodes on a barrier
     for (var nodePair : areasForNodePair.keySet()) {
       for (OsmArea area1 : areasForNodePair.get(nodePair)) {
-        OsmLevel level1 = areasLevels.get(area1);
+        Set<OsmLevel> levelSet1 = areasLevels.get(area1);
         for (OsmArea area2 : areasForNodePair.get(nodePair)) {
-          OsmLevel level2 = areasLevels.get(area2);
-          boolean onSameLevel =
-            (level1 == null && level2 == null) || (level1 != null && level1.equals(level2));
+          Set<OsmLevel> levelSet2 = areasLevels.get(area2);
+          boolean onSameLevels =
+            (levelSet1 == null && levelSet2 == null) ||
+            (levelSet1 != null && levelSet1.equals(levelSet2));
           var crossablePermissions = Objects.requireNonNull(area1)
             .getPermission()
             .intersection(Objects.requireNonNull(area2).getPermission());
@@ -166,7 +166,7 @@ class OsmAreaGroup {
             })
             .toList();
           boolean shareBarrier = area1 != area2 && !sharedBarriers.isEmpty();
-          if (onSameLevel && !shareBarrier) {
+          if (onSameLevels && !shareBarrier) {
             groups.union(area1, area2);
           }
         }
@@ -181,8 +181,8 @@ class OsmAreaGroup {
         for (OsmArea area : areaSet) {
           LOG.debug(
             "Failed to create merged area for " +
-            area +
-            ".  This area might not be at fault; it might be one of the other areas in this list."
+              area +
+              ".  This area might not be at fault; it might be one of the other areas in this list."
           );
           out.add(new OsmAreaGroup(Arrays.asList(area)));
         }

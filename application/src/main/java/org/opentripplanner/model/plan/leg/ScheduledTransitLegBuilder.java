@@ -6,10 +6,11 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.Emission;
-import org.opentripplanner.model.transfer.ConstrainedTransfer;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -35,7 +36,8 @@ public class ScheduledTransitLegBuilder<B extends ScheduledTransitLegBuilder<B>>
   private ConstrainedTransfer transferToNextLeg;
   private int generalizedCost;
   private Set<TransitAlert> alerts = Set.of();
-  private Double distanceMeters;
+  private ViaLocationType fromViaLocationType;
+  private ViaLocationType toViaLocationType;
 
   // Sandbox fields
   private Float accessibilityScore;
@@ -58,8 +60,9 @@ public class ScheduledTransitLegBuilder<B extends ScheduledTransitLegBuilder<B>>
     generalizedCost = original.generalizedCost();
     zoneId = original.zoneId();
     alerts = original.listTransitAlerts();
-    distanceMeters = original.distanceMeters();
     fareOffers = original.fareOffers();
+    fromViaLocationType = original.fromViaLocationType();
+    toViaLocationType = original.toViaLocationType();
 
     // Sandbox fields
     accessibilityScore = original.accessibilityScore();
@@ -188,15 +191,6 @@ public class ScheduledTransitLegBuilder<B extends ScheduledTransitLegBuilder<B>>
     return alerts;
   }
 
-  public B withDistanceMeters(double distance) {
-    this.distanceMeters = distance;
-    return instance();
-  }
-
-  public Double distanceMeters() {
-    return distanceMeters;
-  }
-
   public Float accessibilityScore() {
     return accessibilityScore;
   }
@@ -217,6 +211,26 @@ public class ScheduledTransitLegBuilder<B extends ScheduledTransitLegBuilder<B>>
   public B withFareProducts(List<FareOffer> fareProducts) {
     this.fareOffers = Objects.requireNonNull(fareProducts);
     return instance();
+  }
+
+  public B withFromViaLocationType(@Nullable ViaLocationType type) {
+    this.fromViaLocationType = type;
+    return instance();
+  }
+
+  @Nullable
+  public ViaLocationType fromViaLocationType() {
+    return fromViaLocationType;
+  }
+
+  public B withToViaLocationType(@Nullable ViaLocationType type) {
+    this.toViaLocationType = type;
+    return instance();
+  }
+
+  @Nullable
+  public ViaLocationType toViaLocationType() {
+    return toViaLocationType;
   }
 
   public ScheduledTransitLeg build() {

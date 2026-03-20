@@ -5,25 +5,22 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.model.FeedInfo;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.model.StopTimesInPattern;
-import org.opentripplanner.model.Timetable;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.calendar.CalendarService;
-import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.services.TransitAlertService;
+import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transit.api.request.FindRegularStopsByBoundingBoxRequest;
 import org.opentripplanner.transit.api.request.FindRoutesRequest;
 import org.opentripplanner.transit.api.request.FindStopLocationsRequest;
@@ -33,20 +30,20 @@ import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.AreaStop;
+import org.opentripplanner.transit.model.site.Entrance;
 import org.opentripplanner.transit.model.site.GroupStop;
 import org.opentripplanner.transit.model.site.MultiModalStation;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.site.StopLocationsGroup;
+import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
@@ -147,6 +144,17 @@ public interface TransitService {
   @Nullable
   RegularStop getRegularStop(FeedScopedId id);
 
+  /**
+   * @return the transit entrance
+   * @throws Exception if not found
+   */
+  Entrance getEntrance(FeedScopedId id);
+
+  /**
+   * Gets the area stop with the given id and throws an exception if it was not found.
+   */
+  AreaStop getAreaStop(FeedScopedId id);
+
   Collection<StopLocation> listStopLocations();
 
   Collection<GroupStop> listGroupStops();
@@ -193,6 +201,11 @@ public interface TransitService {
   List<TripOnServiceDate> listCanceledTrips();
 
   /**
+   * Lists all canceled trips which match the filtering criteria in the request.
+   */
+  List<TripOnServiceDate> findCanceledTrips(TripOnServiceDateRequest request);
+
+  /**
    * Return all routes, including those created by real-time updates.
    */
   Collection<Route> listRoutes();
@@ -225,18 +238,18 @@ public interface TransitService {
    * <p>
    * TODO: Add frequency based trips
    *
-   * @param stop                  Stop object to perform the search for
-   * @param startTime             Start time for the search.
-   * @param timeRange             Searches forward for timeRange from startTime
-   * @param numberOfDepartures    Number of departures to fetch per pattern
-   * @param arrivalDeparture      Filter by arrivals, departures, or both
-   * @param includeCancelledTrips If true, cancelled trips will also be included in result.
+   * @param stop                         Stop object to perform the search for
+   * @param startTime                    Start time for the search.
+   * @param timeRange                    Searches forward for timeRange from startTime
+   * @param numberOfDeparturesPerPattern Number of departures to fetch per pattern
+   * @param arrivalDeparture             Filter by arrivals, departures, or both
+   * @param includeCancelledTrips        If true, cancelled trips will also be included in result.
    */
   List<StopTimesInPattern> findStopTimesInPattern(
     StopLocation stop,
     Instant startTime,
     Duration timeRange,
-    int numberOfDepartures,
+    int numberOfDeparturesPerPattern,
     ArrivalDeparture arrivalDeparture,
     boolean includeCancelledTrips
   );
@@ -263,22 +276,23 @@ public interface TransitService {
    * <p>
    * TODO: Add frequency based trips
    *
-   * @param stop                 Stop object to perform the search for
-   * @param pattern              Pattern object to perform the search for
-   * @param startTime            Start time for the search.
-   * @param timeRange            Searches forward for timeRange from startTime
-   * @param numberOfDepartures   Number of departures to fetch per pattern
-   * @param arrivalDeparture     Filter by arrivals, departures, or both
-   * @param includeCancellations If the result should include those trip times where either the entire
-   *                             trip or the stop at the given stop location has been cancelled.
-   *                             Deleted trips are never returned no matter the value of this parameter.
+   * @param stop                         Stop object to perform the search for
+   * @param pattern                      Pattern object to perform the search for
+   * @param startTime                    Start time for the search.
+   * @param timeRange                    Searches forward for timeRange from startTime
+   * @param numberOfDeparturesPerPattern Number of departures to fetch per pattern
+   * @param arrivalDeparture             Filter by arrivals, departures, or both
+   * @param includeCancellations         If the result should include those trip times where either
+   *                                     the entire trip or the stop at the given stop location has
+   *                                     been cancelled. Deleted trips are never returned no matter
+   *                                     the value of this parameter.
    */
   List<TripTimeOnDate> findTripTimesOnDate(
     StopLocation stop,
     TripPattern pattern,
     Instant startTime,
     Duration timeRange,
-    int numberOfDepartures,
+    int numberOfDeparturesPerPattern,
     ArrivalDeparture arrivalDeparture,
     boolean includeCancellations
   );
@@ -329,8 +343,6 @@ public interface TransitService {
 
   Collection<TripOnServiceDate> listTripsOnServiceDate();
 
-  Collection<PathTransfer> findPathTransfers(StopLocation stop);
-
   RaptorTransitData getRaptorTransitData();
 
   RaptorTransitData getRealtimeRaptorTransitData();
@@ -343,11 +355,11 @@ public interface TransitService {
 
   FlexIndex getFlexIndex();
 
-  ZonedDateTime getTransitServiceEnds();
+  Instant getTransitServiceEnds();
 
-  ZonedDateTime getTransitServiceStarts();
+  Instant getTransitServiceStarts();
 
-  TransferService getTransferService();
+  ConstrainedTransferService getConstrainedTransferService();
 
   boolean transitFeedCovers(Instant dateTime);
 
@@ -380,8 +392,6 @@ public interface TransitService {
    * So, if more patterns of mode BUS than RAIL visit the stop, the result will be [BUS,RAIL].
    */
   List<TransitMode> findTransitModes(StopLocation stop);
-
-  Deduplicator getDeduplicator();
 
   Set<LocalDate> listServiceDates();
 
@@ -434,4 +444,10 @@ public interface TransitService {
    * This does not include real-time updates, so it only checks the scheduled service dates.
    */
   boolean hasScheduledServicesAfter(LocalDate date, StopLocation stop);
+
+  /**
+   * Returns a helper for Route/Trip/TripOnServiceDate replacement logic, with the same lifecycle
+   * as TransitService.
+   */
+  ReplacementHelper getReplacementHelper();
 }

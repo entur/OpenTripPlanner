@@ -8,17 +8,16 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.graph_builder.module.ned.DegreeGridNEDTileSource;
 import org.opentripplanner.graph_builder.module.ned.ElevationModule;
 import org.opentripplanner.graph_builder.module.ned.NEDGridCoverageFactoryImpl;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.OsmVertex;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 
 public class ElevationModuleTest {
 
@@ -34,8 +33,7 @@ public class ElevationModuleTest {
   @Disabled
   public void testSetElevationOnEdgesUsingS3BucketTiles() {
     // create a graph with a StreetWithElevationEdge
-    var deduplicator = new Deduplicator();
-    var graph = new Graph(deduplicator);
+    var graph = new Graph();
     OsmVertex from = new OsmVertex(-122.6932051, 45.5122964, 40513757);
     OsmVertex to = new OsmVertex(-122.6903532, 45.5115309, 1677595882);
     LineString geometry = GeometryUtils.makeLineString(

@@ -78,8 +78,12 @@ public final class GeneralizedCostRelaxFunction implements RelaxFunction {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     GeneralizedCostRelaxFunction that = (GeneralizedCostRelaxFunction) o;
     return normalizedRatio == that.normalizedRatio && slack == that.slack;
   }
@@ -101,9 +105,9 @@ public final class GeneralizedCostRelaxFunction implements RelaxFunction {
     if (SLACK_RANGE.isOutside(slack)) {
       throw new IllegalArgumentException(
         "Cost slack is not in range: %d not in %s".formatted(
-            slack,
-            SLACK_RANGE.toString(v -> DurationUtils.durationToStr(v / SLACK_PRECISSION))
-          )
+          slack,
+          SLACK_RANGE.toString(v -> DurationUtils.durationToStr(v / SLACK_PRECISSION))
+        )
       );
     }
   }

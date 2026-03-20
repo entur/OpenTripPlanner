@@ -178,7 +178,7 @@ public class WayTestData {
 
   public static OsmWay sidewalkBoth() {
     var way = new OsmWay();
-    way.addTag("highway", "both");
+    way.addTag("highway", "primary");
     way.addTag("sidewalk", "both");
     return way;
   }
@@ -217,6 +217,12 @@ public class WayTestData {
     return way;
   }
 
+  public static OsmWay motorwayRamp() {
+    var way = new OsmWay();
+    way.addTag("highway", "motorway_link");
+    return way;
+  }
+
   public static OsmWay highwayTrunk() {
     var way = new OsmWay();
     way.addTag("highway", "trunk");
@@ -230,9 +236,14 @@ public class WayTestData {
     return way;
   }
 
-  public static OsmWay highwayPrimaryWithMotorroad() {
+  public static OsmWay highwayPrimary() {
     var way = new OsmWay();
     way.addTag("highway", "primary");
+    return way;
+  }
+
+  public static OsmWay highwayPrimaryWithMotorroad() {
+    var way = highwayPrimary();
     way.addTag("motorroad", "yes");
     return way;
   }
@@ -240,6 +251,36 @@ public class WayTestData {
   public static OsmWay highwayTertiary() {
     var way = new OsmWay();
     way.addTag("highway", "tertiary");
+    return way;
+  }
+
+  public static OsmWay highwaySecondary() {
+    var way = new OsmWay();
+    way.addTag("highway", "secondary");
+    return way;
+  }
+
+  public static OsmWay highwayService() {
+    var way = new OsmWay();
+    way.addTag("highway", "service");
+    return way;
+  }
+
+  public static OsmWay highwayServiceWithSidewalk() {
+    var way = highwayService();
+    way.addTag("sidewalk", "both");
+    return way;
+  }
+
+  public static OsmWay highwayPedestrian() {
+    var way = new OsmWay();
+    way.addTag("highway", "pedestrian");
+    return way;
+  }
+
+  public static OsmWay highwayPedestrianWithSidewalk() {
+    var way = highwayPedestrian();
+    way.addTag("sidewalk", "both");
     return way;
   }
 

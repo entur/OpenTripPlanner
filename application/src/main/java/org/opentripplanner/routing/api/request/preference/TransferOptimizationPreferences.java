@@ -5,8 +5,8 @@ import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
 import java.io.Serializable;
 import java.util.Objects;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.framework.model.Units;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferOptimizationParameters;
+import org.opentripplanner.utils.lang.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -76,8 +76,12 @@ public final class TransferOptimizationPreferences
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     TransferOptimizationPreferences that = (TransferOptimizationPreferences) o;
     return (
       optimizeTransferWaitTime == that.optimizeTransferWaitTime &&

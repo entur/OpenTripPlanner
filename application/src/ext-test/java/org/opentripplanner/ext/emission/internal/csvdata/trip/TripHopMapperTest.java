@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.model.Gram;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 class TripHopMapperTest {
@@ -87,9 +87,9 @@ class TripHopMapperTest {
     assertEquals(
       List.of(
         "Emission 'from_stop_id' (B) not found in stop pattern for trip (E:T:2): " +
-        "TripHopsRow[tripId=T:2, fromStopId=B, fromStopSequence=1, co2=2g]",
+          "TripHopsRow[tripId=T:2, fromStopId=B, fromStopSequence=1, co2=2g]",
         "The emission 'from_stop_sequence' (4) is out of bounds [1, 3]: " +
-        "TripHopsRow[tripId=T:1, fromStopId=A, fromStopSequence=4, co2=2g]"
+          "TripHopsRow[tripId=T:1, fromStopId=A, fromStopSequence=4, co2=2g]"
       ),
       issueStore.listIssues().stream().map(DataImportIssue::getMessage).toList()
     );

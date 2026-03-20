@@ -2,7 +2,7 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.street.model._data.StreetModelForTest.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelForTest.intersectionVertex;
 
 import java.util.EnumSet;
 import java.util.List;
@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.geometry.Coordinates;
 import org.opentripplanner.raptor.api.model.RaptorCostConverter;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
-import org.opentripplanner.routing.api.request.StreetMode;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 
@@ -47,7 +47,7 @@ class TransferTest {
       var edge = StreetModelForTest.streetEdge(BERLIN_V, BRANDENBURG_GATE_V);
       var transfer = new Transfer(0, List.of(edge), EnumSet.of(StreetMode.WALK));
       assertTrue(transfer.getDistanceMeters() < 4000);
-      final Optional<RaptorTransfer> raptorTransfer = transfer.asRaptorTransfer(
+      final Optional<DefaultRaptorTransfer> raptorTransfer = transfer.asRaptorTransfer(
         StreetSearchRequest.of().build()
       );
       // cost is below max limit and included as is in RAPTOR unchanged
@@ -80,7 +80,7 @@ class TransferTest {
     @Test
     void allowLowCost() {
       var transfer = new Transfer(0, 200, EnumSet.of(StreetMode.WALK));
-      final Optional<RaptorTransfer> raptorTransfer = transfer.asRaptorTransfer(
+      final Optional<DefaultRaptorTransfer> raptorTransfer = transfer.asRaptorTransfer(
         StreetSearchRequest.of().build()
       );
       // cost is below max limit and should be included as is in RAPTOR

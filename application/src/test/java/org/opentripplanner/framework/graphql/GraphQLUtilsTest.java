@@ -1,22 +1,21 @@
 package org.opentripplanner.framework.graphql;
 
-import static graphql.execution.ExecutionContextBuilder.newExecutionContextBuilder;
 import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import graphql.ExecutionInput;
 import graphql.execution.ExecutionContext;
-import graphql.execution.ExecutionId;
 import graphql.schema.DataFetchingEnvironmentImpl;
 import java.util.Locale;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.i18n.TranslatedString;
+import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
+import org.opentripplanner.core.model.i18n.TranslatedString;
 
 class GraphQLUtilsTest {
 
-  static final ExecutionContext executionContext;
+  static final ExecutionContext EXECUTION_CONTEXT;
 
   static {
     ExecutionInput executionInput = ExecutionInput.newExecutionInput()
@@ -24,15 +23,12 @@ class GraphQLUtilsTest {
       .locale(Locale.ENGLISH)
       .build();
 
-    executionContext = newExecutionContextBuilder()
-      .executionInput(executionInput)
-      .executionId(ExecutionId.from("GraphQLUtilsTest"))
-      .build();
+    EXECUTION_CONTEXT = DataFetchingSupport.executionContext(executionInput);
   }
 
   @Test
   void testGetTranslationWithNullString() {
-    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
+    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(EXECUTION_CONTEXT)
       .locale(Locale.ENGLISH)
       .build();
 
@@ -43,7 +39,7 @@ class GraphQLUtilsTest {
 
   @Test
   void testGetTranslationWithTranslations() {
-    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
+    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(EXECUTION_CONTEXT)
       .locale(Locale.FRENCH)
       .build();
 
@@ -52,7 +48,7 @@ class GraphQLUtilsTest {
       entry("en", "translationEn"),
       entry("fr", frenchTranslation)
     );
-    var translatedString = TranslatedString.getI18NString(translations, true, false);
+    var translatedString = TranslatedString.getDeduplicatedI18NString(translations, false);
 
     var translation = GraphQLUtils.getTranslation(translatedString, env);
 
@@ -61,7 +57,7 @@ class GraphQLUtilsTest {
 
   @Test
   void testGetLocaleWithDefinedLocaleArg() {
-    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
+    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(EXECUTION_CONTEXT)
       .localContext(Map.of("locale", Locale.GERMAN))
       .locale(Locale.ENGLISH)
       .build();
@@ -78,7 +74,7 @@ class GraphQLUtilsTest {
   @Test
   void testGetLocaleWithEnvLocale() {
     var frenchLocale = Locale.FRENCH;
-    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
+    var env = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(EXECUTION_CONTEXT)
       .locale(Locale.FRENCH)
       .build();
 
@@ -92,7 +88,7 @@ class GraphQLUtilsTest {
     // Should use locale from local context even if env locale is defined
 
     var frenchLocale = Locale.FRENCH;
-    var envWithNoLocale = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(executionContext)
+    var envWithNoLocale = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(EXECUTION_CONTEXT)
       .locale(Locale.GERMAN)
       .localContext(Map.of("locale", Locale.FRENCH))
       .build();
@@ -106,7 +102,7 @@ class GraphQLUtilsTest {
     var wildcardLocale = new Locale("*");
 
     var envWithWildcardLocale = DataFetchingEnvironmentImpl.newDataFetchingEnvironment(
-      executionContext
+      EXECUTION_CONTEXT
     )
       .locale(wildcardLocale)
       .localContext(Map.of("locale", Locale.FRENCH))

@@ -16,8 +16,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Trip;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.network.CarAccess;
 import org.opentripplanner.transit.model.timetable.Direction;
@@ -48,6 +48,7 @@ public class TripMapperTest {
       new RouteMapper(
         ID_FACTORY,
         new AgencyMapper(ID_FACTORY),
+        new RouteNetworkAssignmentMapper(ID_FACTORY),
         ISSUE_STORE,
         new TranslationHelper()
       ),

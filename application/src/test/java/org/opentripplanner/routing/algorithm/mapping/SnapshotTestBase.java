@@ -2,8 +2,6 @@ package org.opentripplanner.routing.algorithm.mapping;
 
 import static au.com.origin.snapshots.SnapshotMatcher.expect;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import au.com.origin.snapshots.serializers.SerializerType;
 import au.com.origin.snapshots.serializers.SnapshotSerializer;
@@ -47,14 +45,14 @@ import org.opentripplanner.routing.algorithm.mapping._support.mapping.ItineraryM
 import org.opentripplanner.routing.algorithm.mapping._support.model.ApiLeg;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilterRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.utils.time.TimeUtils;
+import org.opentripplanner.utils.time.DurationUtils;
 
 /**
  * A base class for creating snapshots test of itinerary generation using the Portland graph.
@@ -64,14 +62,16 @@ import org.opentripplanner.utils.time.TimeUtils;
  */
 public abstract class SnapshotTestBase {
 
-  private static final DateTimeFormatter apiDateFormatter = DateTimeFormatter.ofPattern(
+  private static final DateTimeFormatter API_DATE_FORMATTER = DateTimeFormatter.ofPattern(
     "MM-dd-yyyy"
   );
-  private static final DateTimeFormatter apiTimeFormatter = DateTimeFormatter.ofPattern("H:mm%20a");
-  private static final SnapshotSerializer snapshotSerializer = new SnapshotItinerarySerializer();
-  private static final ItineraryMapper itineraryMapper = new ItineraryMapper(Locale.ENGLISH, true);
+  private static final DateTimeFormatter API_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+    "H:mm%20a"
+  );
+  private static final SnapshotSerializer SNAPSHOT_SERIALIZER = new SnapshotItinerarySerializer();
+  private static final ItineraryMapper ITINERARY_MAPPER = new ItineraryMapper(Locale.ENGLISH, true);
 
-  static final boolean verbose = Boolean.getBoolean("otp.test.verbose");
+  static final boolean VERBOSE = Boolean.getBoolean("otp.test.verbose");
 
   protected OtpServerRequestContext serverContext;
 
@@ -89,6 +89,7 @@ public abstract class SnapshotTestBase {
       serverContext = TestServerContext.createServerContext(
         model.graph(),
         model.timetableRepository(),
+        model.transferRepository(),
         model.fareServiceFactory().makeFareService()
       );
     }
@@ -138,9 +139,9 @@ public abstract class SnapshotTestBase {
       System.out.printf(
         "Itinerary %2d - duration: %s [%5s] (effective: %s [%5s]) - wait time: %s, transit time: %s \n",
         i,
-        TimeUtils.durationToStrCompact(itinerary.totalDuration()),
+        DurationUtils.durationToStr(itinerary.totalDuration()),
         itinerary.totalDuration(),
-        TimeUtils.durationToStrCompact(itinerary.effectiveDuration()),
+        DurationUtils.durationToStr(itinerary.effectiveDuration()),
         itinerary.effectiveDuration(),
         itinerary.totalWaitingDuration(),
         itinerary.totalTransitDuration()
@@ -181,37 +182,9 @@ public abstract class SnapshotTestBase {
     logDebugInformationOnFailure(request, () -> expectItinerariesToMatchSnapshot(itineraries));
   }
 
-  protected void expectArriveByToMatchDepartAtAndSnapshot(RouteRequest request) {
-    List<Itinerary> departByItineraries = retrieveItineraries(request);
-
-    logDebugInformationOnFailure(request, () -> assertFalse(departByItineraries.isEmpty()));
-
-    logDebugInformationOnFailure(request, () ->
-      expectItinerariesToMatchSnapshot(departByItineraries)
-    );
-
-    RouteRequest arriveBy = request
-      .copyOf()
-      .withArriveBy(true)
-      .withDateTime(departByItineraries.get(0).legs().getLast().endTime().toInstant())
-      .buildRequest();
-
-    List<Itinerary> arriveByItineraries = retrieveItineraries(arriveBy);
-
-    var departAtItinerary = departByItineraries.get(0);
-    var arriveByItinerary = arriveByItineraries.get(0);
-
-    logDebugInformationOnFailure(arriveBy, () ->
-      assertEquals(
-        asJsonString(itineraryMapper.mapItinerary(departAtItinerary)),
-        asJsonString(itineraryMapper.mapItinerary(arriveByItinerary))
-      )
-    );
-  }
-
   protected void expectItinerariesToMatchSnapshot(List<Itinerary> itineraries) {
-    expect(itineraryMapper.mapItineraries(itineraries))
-      .serializer(snapshotSerializer)
+    expect(ITINERARY_MAPPER.mapItineraries(itineraries))
+      .serializer(SNAPSHOT_SERIALIZER)
       .toMatchSnapshot();
   }
 
@@ -252,7 +225,7 @@ public abstract class SnapshotTestBase {
   }
 
   private static String asJsonString(Object object) {
-    return snapshotSerializer.apply(new Object[] { object });
+    return SNAPSHOT_SERIALIZER.apply(new Object[] { object });
   }
 
   private List<Itinerary> retrieveItineraries(RouteRequest request) {
@@ -261,7 +234,7 @@ public abstract class SnapshotTestBase {
 
     List<Itinerary> itineraries = response.getTripPlan().itineraries;
 
-    if (verbose) {
+    if (VERBOSE) {
       printItineraries(
         itineraries,
         startMillis,
@@ -305,8 +278,8 @@ public abstract class SnapshotTestBase {
       "http://localhost:8080/?module=planner&fromPlace=%s&toPlace=%s&date=%s&time=%s&mode=%s&arriveBy=%s&wheelchair=%s",
       formatPlace(request.from()),
       formatPlace(request.to()),
-      dateTime.toLocalDate().format(apiDateFormatter),
-      dateTime.toLocalTime().format(apiTimeFormatter),
+      dateTime.toLocalDate().format(API_DATE_FORMATTER),
+      dateTime.toLocalTime().format(API_TIME_FORMATTER),
       modes,
       request.arriveBy(),
       request.preferences().wheelchair()

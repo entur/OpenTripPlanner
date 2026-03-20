@@ -21,8 +21,8 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.locationtech.jts.linearref.LocationIndexedLine;
 import org.opentripplanner.framework.application.OtpAppException;
-import org.opentripplanner.routing.graph.Graph;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -158,9 +158,15 @@ public class GraphStats {
       List<Vertex> vertices = new ArrayList<>();
       GeodeticCalculator gc = new GeodeticCalculator();
       Class<?> klasse = useStops ? TransitStopVertex.class : StreetVertex.class;
-      for (Vertex v : graph.getVertices()) if (klasse.isInstance(v)) vertices.add(v);
+      for (Vertex v : graph.getVertices()) {
+        if (klasse.isInstance(v)) {
+          vertices.add(v);
+        }
+      }
       Random random = new Random();
-      if (seed != null) random.setSeed(seed);
+      if (seed != null) {
+        random.setSeed(seed);
+      }
       Collections.shuffle(vertices, random);
       vertices = vertices.subList(0, n);
       try {

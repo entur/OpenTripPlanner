@@ -5,8 +5,9 @@ import static java.util.Objects.requireNonNull;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 import org.opentripplanner.routing.api.request.framework.DurationForEnum;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -31,6 +32,7 @@ public final class TransitPreferences implements Serializable {
   private final boolean includePlannedCancellations;
   private final boolean includeRealtimeCancellations;
   private final RaptorPreferences raptor;
+  private final DirectTransitPreferences directTransitPreferences;
 
   private TransitPreferences() {
     this.boardSlack = this.alightSlack = DurationForEnum.of(TransitMode.class).build();
@@ -42,6 +44,7 @@ public final class TransitPreferences implements Serializable {
     this.includePlannedCancellations = false;
     this.includeRealtimeCancellations = false;
     this.raptor = RaptorPreferences.DEFAULT;
+    this.directTransitPreferences = DirectTransitPreferences.DEFAULT;
   }
 
   private TransitPreferences(Builder builder) {
@@ -55,6 +58,7 @@ public final class TransitPreferences implements Serializable {
     this.includePlannedCancellations = builder.includePlannedCancellations;
     this.includeRealtimeCancellations = builder.includeRealtimeCancellations;
     this.raptor = requireNonNull(builder.raptor);
+    this.directTransitPreferences = requireNonNull(builder.directTransitPreferences);
   }
 
   public static Builder of() {
@@ -169,10 +173,20 @@ public final class TransitPreferences implements Serializable {
     return raptor;
   }
 
+  public Optional<DirectTransitPreferences> directTransit() {
+    return directTransitPreferences.enabled()
+      ? Optional.of(directTransitPreferences)
+      : Optional.empty();
+  }
+
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     TransitPreferences that = (TransitPreferences) o;
     return (
       boardSlack.equals(that.boardSlack) &&
@@ -184,7 +198,8 @@ public final class TransitPreferences implements Serializable {
       ignoreRealtimeUpdates == that.ignoreRealtimeUpdates &&
       includePlannedCancellations == that.includePlannedCancellations &&
       includeRealtimeCancellations == that.includeRealtimeCancellations &&
-      raptor.equals(that.raptor)
+      raptor.equals(that.raptor) &&
+      directTransitPreferences.equals(that.directTransitPreferences)
     );
   }
 
@@ -200,7 +215,8 @@ public final class TransitPreferences implements Serializable {
       ignoreRealtimeUpdates,
       includePlannedCancellations,
       includeRealtimeCancellations,
-      raptor
+      raptor,
+      directTransitPreferences
     );
   }
 
@@ -230,6 +246,11 @@ public final class TransitPreferences implements Serializable {
         includeRealtimeCancellations != DEFAULT.includeRealtimeCancellations
       )
       .addObj("raptor", raptor, DEFAULT.raptor)
+      .addObj(
+        "directTransitPreferences",
+        directTransitPreferences,
+        DEFAULT.directTransitPreferences
+      )
       .toString();
   }
 
@@ -248,6 +269,7 @@ public final class TransitPreferences implements Serializable {
     private boolean includePlannedCancellations;
     private boolean includeRealtimeCancellations;
     private RaptorPreferences raptor;
+    private DirectTransitPreferences directTransitPreferences;
 
     public Builder(TransitPreferences original) {
       this.original = original;
@@ -261,6 +283,7 @@ public final class TransitPreferences implements Serializable {
       this.includePlannedCancellations = original.includePlannedCancellations;
       this.includeRealtimeCancellations = original.includeRealtimeCancellations;
       this.raptor = original.raptor;
+      this.directTransitPreferences = original.directTransitPreferences;
     }
 
     public TransitPreferences original() {
@@ -285,24 +308,24 @@ public final class TransitPreferences implements Serializable {
       return withAlightSlack(it -> it.withDefaultSec(defaultValue));
     }
 
-    public Builder setReluctanceForMode(Map<TransitMode, Double> reluctanceForMode) {
+    public Builder withReluctanceForMode(Map<TransitMode, Double> reluctanceForMode) {
       this.reluctanceForMode = reluctanceForMode;
       return this;
     }
 
     @Deprecated
-    public Builder setOtherThanPreferredRoutesPenalty(int otherThanPreferredRoutesPenalty) {
+    public Builder withOtherThanPreferredRoutesPenalty(int otherThanPreferredRoutesPenalty) {
       this.otherThanPreferredRoutesPenalty = Cost.costOfSeconds(otherThanPreferredRoutesPenalty);
       return this;
     }
 
-    public Builder setUnpreferredCost(CostLinearFunction unpreferredCost) {
+    public Builder withUnpreferredCost(CostLinearFunction unpreferredCost) {
       this.unpreferredCost = unpreferredCost;
       return this;
     }
 
-    public Builder setUnpreferredCostString(String constFunction) {
-      return setUnpreferredCost(CostLinearFunction.of(constFunction));
+    public Builder withUnpreferredCostString(String constFunction) {
+      return withUnpreferredCost(CostLinearFunction.of(constFunction));
     }
 
     public Builder withRelaxTransitGroupPriority(CostLinearFunction value) {
@@ -310,23 +333,30 @@ public final class TransitPreferences implements Serializable {
       return this;
     }
 
-    public Builder setIgnoreRealtimeUpdates(boolean ignoreRealtimeUpdates) {
+    public Builder withIgnoreRealtimeUpdates(boolean ignoreRealtimeUpdates) {
       this.ignoreRealtimeUpdates = ignoreRealtimeUpdates;
       return this;
     }
 
-    public Builder setIncludePlannedCancellations(boolean includePlannedCancellations) {
+    public Builder withIncludePlannedCancellations(boolean includePlannedCancellations) {
       this.includePlannedCancellations = includePlannedCancellations;
       return this;
     }
 
-    public Builder setIncludeRealtimeCancellations(boolean includeRealtimeCancellations) {
+    public Builder withIncludeRealtimeCancellations(boolean includeRealtimeCancellations) {
       this.includeRealtimeCancellations = includeRealtimeCancellations;
       return this;
     }
 
     public Builder withRaptor(Consumer<RaptorPreferences.Builder> body) {
       this.raptor = raptor.copyOf().apply(body).build();
+      return this;
+    }
+
+    public Builder withDirectTransitPreferences(Consumer<DirectTransitPreferences.Builder> body) {
+      var builder = directTransitPreferences.copyOf();
+      body.accept(builder);
+      this.directTransitPreferences = builder.build();
       return this;
     }
 

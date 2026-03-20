@@ -11,10 +11,12 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.MultiLineString;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -117,8 +119,11 @@ class GeofencingVertexUpdater {
     } else {
       candidates = Set.copyOf(getEdgesForEnvelope.apply(geom.getEnvelopeInternal()));
     }
+
+    PreparedGeometry preparedZone = PreparedGeometryFactory.prepare(geom);
+
     for (var e : candidates) {
-      if (e instanceof StreetEdge streetEdge && streetEdge.getGeometry().intersects(geom)) {
+      if (e instanceof StreetEdge streetEdge && preparedZone.intersects(streetEdge.getGeometry())) {
         streetEdge.addRentalRestriction(ext);
         edgesUpdated.put(streetEdge, ext);
       }

@@ -28,7 +28,7 @@ import org.locationtech.jts.linearref.LengthLocationMap;
 import org.locationtech.jts.linearref.LocationIndexedLine;
 import org.locationtech.jts.operation.buffer.BufferParameters;
 import org.locationtech.jts.operation.buffer.OffsetCurveBuilder;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -149,7 +149,10 @@ public class EdgeVertexTileRenderer implements TileRenderer {
         midLineGeom.getCoordinates(),
         lineWidth * 0.4
       );
-      if (coords.length < 2) continue; // Can happen for very small edges (<1mm)
+      if (coords.length < 2) {
+        // Can happen for very small edges (<1mm)
+        continue;
+      }
       LineString offsetLine = GeometryUtils.makeLineString(coords);
       Shape midLineShape = shapeWriter.toShape(midLineGeom);
       Shape offsetShape = shapeWriter.toShape(offsetLine);
@@ -225,17 +228,19 @@ public class EdgeVertexTileRenderer implements TileRenderer {
          * need to expand the envelope by an unbounded amount (max label size).
          */
         double x = tilePoint.getX();
-        if (x + labelWidth > context.tileWidth) x -= labelWidth;
+        if (x + labelWidth > context.tileWidth) {
+          x -= labelWidth;
+        }
         context.graphics.drawString(vvAttrs.label, (float) x, (float) tilePoint.getY());
       }
     }
   }
 
   public interface EdgeVertexRenderer {
-    Comparator<Vertex> defaultVertexComparator = Comparator.comparing((Vertex v) ->
+    Comparator<Vertex> DEFAULT_VERTEX_COMPARATOR = Comparator.comparing((Vertex v) ->
       v instanceof StreetVertex
     ).reversed();
-    Comparator<Edge> defaultEdgeComparator = Comparator.comparing(
+    Comparator<Edge> DEFAULT_EDGE_COMPARATOR = Comparator.comparing(
       (Edge e) -> e.getGeometry() != null
     ).thenComparing(e -> e instanceof StreetEdge);
 
@@ -260,11 +265,11 @@ public class EdgeVertexTileRenderer implements TileRenderer {
     }
 
     default int vertexSorter(Vertex v1, Vertex v2) {
-      return defaultVertexComparator.compare(v1, v2);
+      return DEFAULT_VERTEX_COMPARATOR.compare(v1, v2);
     }
 
     default int edgeSorter(Edge e1, Edge e2) {
-      return defaultEdgeComparator.compare(e1, e2);
+      return DEFAULT_EDGE_COMPARATOR.compare(e1, e2);
     }
   }
 

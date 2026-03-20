@@ -4,8 +4,9 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -65,7 +66,10 @@ public class EntityResolver {
 
     // It is possible that the trip has previously been added, resolve the added trip
     if (journey.getEstimatedVehicleJourneyCode() != null) {
-      var addedTrip = transitService.getTrip(resolveId(journey.getEstimatedVehicleJourneyCode()));
+      var adapter = new EstimatedVehicleJourneyCodeAdapter(
+        journey.getEstimatedVehicleJourneyCode()
+      );
+      var addedTrip = transitService.getTrip(resolveId(adapter.getServiceJourneyId()));
       if (addedTrip != null) {
         return addedTrip;
       }
@@ -211,7 +215,10 @@ public class EntityResolver {
   }
 
   @Nullable
-  public LocalDate resolveServiceDate(EstimatedVehicleJourney vehicleJourney) {
+  public LocalDate resolveServiceDate(
+    EstimatedVehicleJourney vehicleJourney,
+    List<CallWrapper> calls
+  ) {
     if (vehicleJourney.getFramedVehicleJourneyRef() != null) {
       var dataFrame = vehicleJourney.getFramedVehicleJourneyRef().getDataFrameRef();
       if (dataFrame != null) {
@@ -231,17 +238,18 @@ public class EntityResolver {
       }
     }
 
-    var datetime = CallWrapper.of(vehicleJourney)
-      .stream()
-      .findFirst()
-      .map(CallWrapper::getAimedDepartureTime);
-    if (datetime.isEmpty()) {
+    if (calls.isEmpty()) {
+      return null;
+    }
+
+    var departureTime = calls.getFirst().getAimedDepartureTime();
+    if (departureTime == null) {
       return null;
     }
 
     var daysOffset = calculateDayOffset(vehicleJourney);
 
-    return datetime.get().toLocalDate().minusDays(daysOffset);
+    return departureTime.toLocalDate().minusDays(daysOffset);
   }
 
   /**

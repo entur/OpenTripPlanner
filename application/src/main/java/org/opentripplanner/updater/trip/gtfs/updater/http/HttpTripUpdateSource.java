@@ -12,9 +12,9 @@ import de.mfdz.MfdzRealtimeExtensions;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.framework.io.OtpHttpClient;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
-import org.opentripplanner.updater.spi.HttpHeaders;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
@@ -48,8 +48,8 @@ class HttpTripUpdateSource {
     updateIncrementality = FULL_DATASET;
     try {
       // Decode message
-      feedMessage = otpHttpClient.getAndMap(URI.create(url), this.headers.asMap(), is ->
-        FeedMessage.parseFrom(is, registry)
+      feedMessage = otpHttpClient.getAndMap(URI.create(url), this.headers, response ->
+        FeedMessage.parseFrom(response.body(), registry)
       );
       feedEntityList = feedMessage.getEntityList();
 
@@ -68,7 +68,9 @@ class HttpTripUpdateSource {
       // Create List of TripUpdates
       updates = new ArrayList<>(feedEntityList.size());
       for (FeedEntity feedEntity : feedEntityList) {
-        if (feedEntity.hasTripUpdate()) updates.add(feedEntity.getTripUpdate());
+        if (feedEntity.hasTripUpdate()) {
+          updates.add(feedEntity.getTripUpdate());
+        }
       }
     } catch (Exception e) {
       LOG.error("Failed to process GTFS-RT TripUpdates feed from {}", url, e);

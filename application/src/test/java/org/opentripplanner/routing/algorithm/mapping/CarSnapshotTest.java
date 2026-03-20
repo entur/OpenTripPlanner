@@ -11,8 +11,8 @@ import org.junit.jupiter.api.parallel.ResourceLock;
 import org.junit.jupiter.api.parallel.Resources;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
+import org.opentripplanner.street.model.StreetMode;
 
 @ExtendWith(SnapshotExtension.class)
 @ResourceLock(Resources.LOCALE)
@@ -71,7 +71,7 @@ public class CarSnapshotTest extends SnapshotTestBase {
       .withTo(p2)
       .buildRequest();
 
-    expectArriveByToMatchDepartAtAndSnapshot(request);
+    expectRequestResponseToMatchSnapshot(request);
   }
 
   @DisplayName("Direct CAR_PICKUP (with walking both ends)")
@@ -118,6 +118,6 @@ public class CarSnapshotTest extends SnapshotTestBase {
       .withPreferences(pref -> pref.withWalk(w -> w.withSpeed(1.0)))
       .buildRequest();
 
-    expectArriveByToMatchDepartAtAndSnapshot(request);
+    expectRequestResponseToMatchSnapshot(request);
   }
 }

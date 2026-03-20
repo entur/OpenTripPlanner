@@ -8,11 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.GroupOfStations;
 import org.opentripplanner.transit.model.site.GroupStop;
@@ -24,8 +24,9 @@ class SiteRepositoryTest {
 
   private static final WgsCoordinate COOR_A = new WgsCoordinate(60.0, 11.0);
   private static final WgsCoordinate COOR_B = new WgsCoordinate(62.0, 12.0);
-  private static final Geometry GEOMETRY = GeometryUtils.getGeometryFactory()
-    .createPoint(COOR_A.asJtsCoordinate());
+  private static final Geometry GEOMETRY = GeometryUtils.getGeometryFactory().createPoint(
+    COOR_A.asJtsCoordinate()
+  );
   public static final NonLocalizedString NAME = NonLocalizedString.ofNullable("Name");
   private static final FeedScopedId ID = TimetableRepositoryForTest.id("A");
   private static final Station STATION = Station.of(ID)
@@ -69,7 +70,6 @@ class SiteRepositoryTest {
     assertEquals(expStops, m.listRegularStops().toString());
     assertEquals(expStops, m.listStopLocations().toString());
     assertEquals(stop, m.stopByIndex(stop.getIndex()));
-    assertEquals(COOR_A, m.getCoordinateById(ID));
     assertFalse(m.hasAreaStops());
   }
 
@@ -81,7 +81,6 @@ class SiteRepositoryTest {
     assertEquals("[AreaStop{F:A Name}]", m.listAreaStops().toString());
     assertEquals("[AreaStop{F:A Name}]", m.listStopLocations().toString());
     assertEquals(STOP_AREA, m.stopByIndex(STOP_AREA.getIndex()));
-    assertEquals(COOR_A, m.getCoordinateById(ID));
     assertTrue(m.hasAreaStops());
   }
 
@@ -91,7 +90,6 @@ class SiteRepositoryTest {
     assertEquals("[GroupStop{F:A}]", m.listGroupStops().toString());
     assertEquals("[GroupStop{F:A}]", m.listStopLocations().toString());
     assertEquals(stopGroup, m.stopByIndex(stopGroup.getIndex()));
-    assertEquals(COOR_A, m.getCoordinateById(ID));
     assertFalse(m.hasAreaStops());
   }
 
@@ -103,7 +101,6 @@ class SiteRepositoryTest {
     assertEquals(STATION, m.getStopLocationsGroup(ID));
     assertEquals(expStops, m.findStopOrChildStops(ID).toString());
     assertEquals(EXP_STATIONS, m.listStopLocationGroups().toString());
-    assertEquals(COOR_B, m.getCoordinateById(ID));
     assertFalse(m.hasAreaStops());
   }
 
@@ -116,7 +113,6 @@ class SiteRepositoryTest {
     assertEquals(mmStation, m.getStopLocationsGroup(ID));
     assertEquals(expStops, m.findStopOrChildStops(ID).toString());
     assertEquals(expMmStations, m.listStopLocationGroups().toString());
-    assertEquals(COOR_B, m.getCoordinateById(ID));
     assertFalse(m.hasAreaStops());
   }
 
@@ -127,7 +123,6 @@ class SiteRepositoryTest {
     assertEquals(groupOfStations, m.getStopLocationsGroup(ID));
     assertEquals(expStops, m.findStopOrChildStops(ID).toString());
     assertEquals(expGroupOfStation, m.listStopLocationGroups().toString());
-    assertEquals(COOR_B, m.getCoordinateById(ID));
     assertFalse(m.hasAreaStops());
   }
 

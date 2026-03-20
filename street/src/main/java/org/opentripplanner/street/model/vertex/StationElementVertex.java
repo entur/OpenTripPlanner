@@ -1,0 +1,31 @@
+package org.opentripplanner.street.model.vertex;
+
+import java.util.Objects;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.id.FeedScopedId;
+
+public abstract class StationElementVertex extends Vertex {
+
+  private final FeedScopedId id;
+  private final I18NString name;
+
+  protected StationElementVertex(FeedScopedId id, double x, double y, I18NString name) {
+    super(x, y);
+    this.id = Objects.requireNonNull(id);
+    this.name = name;
+  }
+
+  @Override
+  public final VertexLabel getLabel() {
+    return VertexLabel.feedScopedId(id);
+  }
+
+  @Override
+  public I18NString getName() {
+    return name;
+  }
+
+  public FeedScopedId getId() {
+    return id;
+  }
+}

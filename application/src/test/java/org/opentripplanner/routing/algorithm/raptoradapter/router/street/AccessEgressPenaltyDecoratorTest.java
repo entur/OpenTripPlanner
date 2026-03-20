@@ -12,10 +12,10 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.framework.TimeAndCostPenalty;
 import org.opentripplanner.routing.api.request.framework.TimeAndCostPenaltyForEnum;
 import org.opentripplanner.routing.api.request.framework.TimePenalty;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -24,11 +24,11 @@ class AccessEgressPenaltyDecoratorTest {
 
   private static final int DURATION_CAR_RENTAL = 45;
   private static final int DURATION_WALKING = 135;
-  private static final Duration D10m = DurationUtils.duration("10m");
+  private static final Duration D10_m = DurationUtils.duration("10m");
   private static final RoutingAccessEgress WALK = ofWalking(DURATION_WALKING);
   private static final RoutingAccessEgress CAR_RENTAL = ofCarRental(DURATION_CAR_RENTAL);
   private static final TimeAndCostPenalty PENALTY = new TimeAndCostPenalty(
-    TimePenalty.of(D10m, 1.5),
+    TimePenalty.of(D10_m, 1.5),
     2.0
   );
 
@@ -43,9 +43,12 @@ class AccessEgressPenaltyDecoratorTest {
 
   @BeforeAll
   static void verifyTestSetup() {
-    assertEquals("Walk 2m15s C₁238_035 w/penalty(13m23s $1606) ~ 1", EXP_WALK_W_PENALTY.toString());
     assertEquals(
-      "Walk 45s C₁237_887 w/penalty(11m8s $1336) ~ 1",
+      "Walk 2m15s C₁238_035 Pₜ803 w/penalty(13m23s $1606) ~ 1",
+      EXP_WALK_W_PENALTY.toString()
+    );
+    assertEquals(
+      "Walk 45s C₁237_887 Pₜ668 w/penalty(11m8s $1336) ~ 1",
       EXP_CAR_RENTAL_W_PENALTY.toString()
     );
   }

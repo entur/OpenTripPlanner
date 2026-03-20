@@ -2,6 +2,8 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
 import static org.opentripplanner.utils.collection.ListUtils.requireAtLeastNElements;
 
+import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -11,9 +13,9 @@ import org.opentripplanner.raptor.api.request.RaptorViaConnection;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.transit.ViaConnections;
 import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
-import org.opentripplanner.utils.collection.ListUtils;
 
 /**
  * This class is used to listen for stop arrivals in one raptor state and then copy
@@ -56,31 +58,30 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
    * Factory method for creating a {@link org.opentripplanner.raptor.util.paretoset.ParetoSet}
    * listener used to copy the state when arriving at a "via point" into the next Raptor "leg".
    */
-  public static <T extends RaptorTripSchedule> List<
-    ViaConnectionStopArrivalEventListener<T>
+  public static <T extends RaptorTripSchedule> TIntObjectMap<
+    ParetoSetEventListener<ArrivalView<T>>
   > createEventListeners(
     @Nullable ViaConnections viaConnections,
     McStopArrivalFactory<T> stopArrivalFactory,
     McStopArrivals<T> nextLegStopArrivals,
     Consumer<Runnable> onTransitComplete
   ) {
+    var map = new TIntObjectHashMap<ParetoSetEventListener<ArrivalView<T>>>();
     if (viaConnections == null) {
-      return List.of();
+      return map;
     }
-    var list = new ArrayList<ViaConnectionStopArrivalEventListener<T>>();
-    viaConnections
-      .byFromStop()
-      .forEachEntry((stop, connections) ->
-        list.add(
-          new ViaConnectionStopArrivalEventListener<>(
-            stopArrivalFactory,
-            connections,
-            nextLegStopArrivals,
-            onTransitComplete
-          )
-        )
+    TIntObjectMap<List<RaptorViaConnection>> connectionsByStop = viaConnections.byFromStop();
+    for (var stop : connectionsByStop.keys()) {
+      var connections = connectionsByStop.get(stop);
+      ParetoSetEventListener<ArrivalView<T>> l = new ViaConnectionStopArrivalEventListener<>(
+        stopArrivalFactory,
+        connections,
+        nextLegStopArrivals,
+        onTransitComplete
       );
-    return list;
+      map.put(stop, l);
+    }
+    return map;
   }
 
   private void publishTransfers() {

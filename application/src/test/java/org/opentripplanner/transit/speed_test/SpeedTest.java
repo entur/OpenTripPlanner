@@ -13,24 +13,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import org.opentripplanner.TestServerContext;
-import org.opentripplanner.ext.fares.impl.gtfs.DefaultFareService;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.ext.carpooling.internal.DefaultCarpoolingRepository;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.framework.application.OtpAppException;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.standalone.OtpStartupInfo;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.DebugUiConfig;
+import org.opentripplanner.standalone.config.OtpConfigLoader;
+import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.config.routerconfig.RaptorEnvironmentFactory;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.standalone.server.DefaultServerRequestContext;
+import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.speed_test.model.SpeedTestProfile;
@@ -61,6 +67,7 @@ public class SpeedTest {
 
   private final SpeedTestCmdLineOpts opts;
   private final SpeedTestConfig config;
+  private final RouterConfig routerConfig;
   private final List<TestCaseDefinition> testCaseDefinitions;
   private final Map<String, ExpectedResults> expectedResultsByTcId;
   private final Map<SpeedTestProfile, TestCases> lastSampleResult = new HashMap<>();
@@ -74,17 +81,20 @@ public class SpeedTest {
   public SpeedTest(
     SpeedTestCmdLineOpts opts,
     SpeedTestConfig config,
+    RouterConfig routerConfig,
     Graph graph,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    TransferRepository transferRepository
   ) {
     this.opts = opts;
     this.config = config;
+    this.routerConfig = routerConfig;
     this.timetableRepository = timetableRepository;
 
     this.tcIO = new CsvFileSupport(
       opts.rootDir(),
       TRAVEL_SEARCH_FILENAME,
-      config.feedId,
+      config.feedId(),
       opts.replaceExpectedResultsFiles()
     );
 
@@ -96,44 +106,55 @@ public class SpeedTest {
 
     UpdaterConfigurator.configure(
       graph,
-      TestVertexLinker.of(graph),
+      DeduplicatorService.NOOP,
+      VertexLinkerTestFactory.of(graph),
       new DefaultRealtimeVehicleService(transitService),
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingRepository(),
       timetableRepository,
+      new DefaultCarpoolingRepository(),
       new TimetableSnapshotManager(null, TimetableSnapshotParameters.DEFAULT, LocalDate::now),
-      config.updatersConfig
+      routerConfig.updaterConfig()
     );
     if (timetableRepository.getUpdaterManager() != null) {
       timetableRepository.getUpdaterManager().startUpdaters();
     }
 
     var raptorConfig = new RaptorConfig<TripSchedule>(
-      config.transitRoutingParams,
-      RaptorEnvironmentFactory.create(config.transitRoutingParams.searchThreadPoolSize())
+      routerConfig.transitTuningConfig(),
+      RaptorEnvironmentFactory.create(routerConfig.transitTuningConfig().searchThreadPoolSize())
     );
+
+    var vertexLinker = VertexLinkerTestFactory.of(graph);
 
     this.serverContext = new DefaultServerRequestContext(
       DebugUiConfig.DEFAULT,
       new DefaultFareService(),
-      config.flexConfig,
+      routerConfig.flexParameters(),
       graph,
+      TestServerContext.createLinkingContextFactory(graph, vertexLinker, transitService),
       timer.getRegistry(),
+      null,
       raptorConfig,
       TestServerContext.createRealtimeVehicleService(transitService),
       List.of(),
-      config.request,
+      routerConfig.routingRequestDefaults(),
       TestServerContext.createStreetLimitationParametersService(),
-      config.transitRoutingParams,
+      TransferServiceTestFactory.transferService(transferRepository),
+      routerConfig.transitTuningConfig(),
       new DefaultTransitService(timetableRepository),
       null,
       null,
       VectorTileConfig.DEFAULT,
       TestServerContext.createVehicleParkingService(),
       TestServerContext.createVehicleRentalService(),
-      TestVertexLinker.of(graph),
+      vertexLinker,
       TestServerContext.createViaTransferResolver(graph, transitService),
       TestServerContext.createWorldEnvelopeService(),
+      null,
+      null,
+      null,
+      TestServerContext.createStreetDetailsService(),
       null,
       null,
       null,
@@ -145,9 +166,13 @@ public class SpeedTest {
     );
     // Creating raptor transit data should be integrated into the TimetableRepository, but for now
     // we do it manually here
-    createRaptorTransitData(timetableRepository, config.transitRoutingParams);
+    createRaptorTransitData(
+      timetableRepository,
+      transferRepository,
+      routerConfig.transitTuningConfig()
+    );
 
-    initializeTransferCache(config.transitRoutingParams, timetableRepository);
+    initializeTransferCache(routerConfig.transitTuningConfig(), timetableRepository);
 
     timer.setUp(opts.groupResultsByCategory());
   }
@@ -158,18 +183,27 @@ public class SpeedTest {
 
   public static void main(String[] args) {
     try {
-      OtpStartupInfo.logInfo("Run Speed Test");
       // Given the following setup
       SpeedTestCmdLineOpts opts = new SpeedTestCmdLineOpts(args);
-      var config = SpeedTestConfig.config(opts.rootDir());
       SetupHelper.loadOtpFeatures(opts);
-      var model = SetupHelper.loadGraph(opts.rootDir(), config.graph);
+      var config = SpeedTestConfig.config(opts.rootDir());
+      var routerConfig = new OtpConfigLoader(opts.rootDir()).loadRouterConfig();
+      OtpStartupInfo.logInfo("Run Speed Test");
+      var model = SetupHelper.loadGraph(opts.rootDir(), config.graph());
       var timetableRepository = model.timetableRepository();
+      var transferRepository = model.transferRepository();
       var buildConfig = model.buildConfig();
       var graph = model.graph();
 
       // create a new test
-      var speedTest = new SpeedTest(opts, config, graph, timetableRepository);
+      var speedTest = new SpeedTest(
+        opts,
+        config,
+        routerConfig,
+        graph,
+        timetableRepository,
+        transferRepository
+      );
 
       assertTestDateHasData(timetableRepository, config, buildConfig);
 
@@ -271,6 +305,7 @@ public class SpeedTest {
       opts,
       config,
       profile,
+      routerConfig.routingRequestDefaults(),
       timetableRepository.getTimeZone()
     );
     var routingRequest = speedTestRequest.toRouteRequest();
@@ -352,7 +387,7 @@ public class SpeedTest {
   private List<Itinerary> trimItineraries(RoutingResponse routingResponse) {
     var stream = routingResponse.getTripPlan().itineraries.stream();
 
-    if (config.ignoreStreetResults) {
+    if (config.ignoreStreetResults()) {
       stream = stream.filter(Predicate.not(Itinerary::isStreetOnly));
     }
     return stream.limit(opts.numOfItineraries()).toList();

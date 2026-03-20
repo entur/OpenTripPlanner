@@ -13,12 +13,12 @@ import org.opentripplanner.ext.flex.FlexPathDurations;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.model.PathTransfer;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.EdgeTraverser;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -107,8 +107,7 @@ abstract class AbstractFlexTemplate {
     // transferStop is Location Area/Line
     else {
       double maxDistanceMeters =
-        maxTransferDuration.getSeconds() *
-        accessEgress.state.getRequest().preferences().walk().speed();
+        maxTransferDuration.getSeconds() * accessEgress.state.getRequest().walk().speed();
 
       return getTransfersFromTransferStop(callback)
         .stream()

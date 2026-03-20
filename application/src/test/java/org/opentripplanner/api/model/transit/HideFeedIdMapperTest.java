@@ -1,9 +1,10 @@
 package org.opentripplanner.api.model.transit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 class HideFeedIdMapperTest {
 
@@ -12,7 +13,7 @@ class HideFeedIdMapperTest {
   @Test
   void parse() {
     var id = MAPPER.parse("bbb");
-    assertEquals(new FeedScopedId("aaa", "bbb"), id);
+    assertEquals(Optional.of(new FeedScopedId("aaa", "bbb")), id);
   }
 
   @Test

@@ -1,7 +1,7 @@
 package org.opentripplanner.apis.gtfs.mapping.routerequest;
 
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.street.model.StreetMode;
 
 /**
  * Maps access street mode from API to internal model or vice versa.
@@ -34,7 +34,7 @@ public class AccessModeMapper {
       case CAR_PICKUP -> GraphQLTypes.GraphQLPlanAccessMode.CAR_DROP_OFF;
       case FLEXIBLE -> GraphQLTypes.GraphQLPlanAccessMode.FLEX;
       case SCOOTER_RENTAL -> GraphQLTypes.GraphQLPlanAccessMode.SCOOTER_RENTAL;
-      case WALK, CAR_HAILING, NOT_SET -> GraphQLTypes.GraphQLPlanAccessMode.WALK;
+      case WALK, CAR_HAILING, CARPOOL, NOT_SET -> GraphQLTypes.GraphQLPlanAccessMode.WALK;
     };
   }
 }

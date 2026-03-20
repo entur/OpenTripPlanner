@@ -31,7 +31,7 @@ public class TripPatternType {
           .description("Time that the trip departs.")
           .type(dateTimeScalar)
           .deprecate("Replaced with expectedStartTime")
-          .dataFetcher(env -> itinerary(env).startTime().toInstant().toEpochMilli())
+          .dataFetcher(env -> itinerary(env).startTime())
           .build()
       )
       .field(
@@ -40,7 +40,7 @@ public class TripPatternType {
           .description("Time that the trip arrives.")
           .type(dateTimeScalar)
           .deprecate("Replaced with expectedEndTime")
-          .dataFetcher(env -> itinerary(env).endTime().toInstant().toEpochMilli())
+          .dataFetcher(env -> itinerary(env).endTime())
           .build()
       )
       .field(
@@ -50,11 +50,7 @@ public class TripPatternType {
           .type(new GraphQLNonNull(dateTimeScalar))
           .dataFetcher(env ->
             // startTime is already adjusted for real-time - need to subtract delay to get aimed time
-            itinerary(env)
-              .startTime()
-              .minusSeconds(itinerary(env).departureDelay())
-              .toInstant()
-              .toEpochMilli()
+            itinerary(env).startTime().minusSeconds(itinerary(env).departureDelay())
           )
           .build()
       )
@@ -63,7 +59,7 @@ public class TripPatternType {
           .name("expectedStartTime")
           .description("The expected, real-time adjusted date and time the trip starts.")
           .type(new GraphQLNonNull(dateTimeScalar))
-          .dataFetcher(env -> itinerary(env).startTime().toInstant().toEpochMilli())
+          .dataFetcher(env -> itinerary(env).startTime())
           .build()
       )
       .field(
@@ -73,11 +69,7 @@ public class TripPatternType {
           .type(new GraphQLNonNull(dateTimeScalar))
           .dataFetcher(env ->
             // endTime is already adjusted for real-time - need to subtract delay to get aimed time
-            itinerary(env)
-              .endTime()
-              .minusSeconds(itinerary(env).arrivalDelay())
-              .toInstant()
-              .toEpochMilli()
+            itinerary(env).endTime().minusSeconds(itinerary(env).arrivalDelay())
           )
           .build()
       )
@@ -86,7 +78,7 @@ public class TripPatternType {
           .name("expectedEndTime")
           .description("The expected, real-time adjusted date and time the trip ends.")
           .type(new GraphQLNonNull(dateTimeScalar))
-          .dataFetcher(env -> itinerary(env).endTime().toInstant().toEpochMilli())
+          .dataFetcher(env -> itinerary(env).endTime())
           .build()
       )
       .field(
@@ -134,7 +126,7 @@ public class TripPatternType {
           .name("streetDistance")
           .description(
             "How far the user has to walk, bike and/or drive in meters. It includes " +
-            "all street (none transit) modes."
+              "all street (none transit) modes."
           )
           .type(Scalars.GraphQLFloat)
           .dataFetcher(env -> itinerary(env).totalStreetDistanceMeters())
@@ -153,9 +145,9 @@ public class TripPatternType {
           .name("legs")
           .description(
             "A list of legs. Each leg is either a walking (cycling, car) " +
-            "portion of the trip, or a ride leg on a particular vehicle. So " +
-            "a trip where the use walks to the Q train, transfers to the 6, " +
-            "then walks to their destination, has four legs."
+              "portion of the trip, or a ride leg on a particular vehicle. So " +
+              "a trip where the use walks to the Q train, transfers to the 6, " +
+              "then walks to their destination, has four legs."
           )
           .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(legType))))
           .dataFetcher(env -> itinerary(env).legs())
@@ -182,7 +174,7 @@ public class TripPatternType {
           .name("generalizedCost2")
           .description(
             "A second cost or weight of the itinerary. Some use-cases like pass-through " +
-            "and transit-priority-groups use a second cost during routing. This is used for debugging."
+              "and transit-priority-groups use a second cost during routing. This is used for debugging."
           )
           .type(Scalars.GraphQLInt)
           .dataFetcher(env -> itinerary(env).generalizedCost2().orElse(null))
@@ -193,7 +185,7 @@ public class TripPatternType {
           .name("waitTimeOptimizedCost")
           .description(
             "A cost calculated to distribute wait-time and avoid very " +
-            "short transfers. This field is meant for debugging only."
+              "short transfers. This field is meant for debugging only."
           )
           .type(Scalars.GraphQLInt)
           .dataFetcher(env -> itinerary(env).waitTimeOptimizedCost())
@@ -204,7 +196,7 @@ public class TripPatternType {
           .name("transferPriorityCost")
           .description(
             "A cost calculated to favor transfer with higher priority. This " +
-            "field is meant for debugging only."
+              "field is meant for debugging only."
           )
           .type(Scalars.GraphQLInt)
           .dataFetcher(env -> itinerary(env).transferPriorityCost())

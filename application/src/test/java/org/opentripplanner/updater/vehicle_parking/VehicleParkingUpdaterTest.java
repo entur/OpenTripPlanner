@@ -10,8 +10,7 @@ import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.opentripplanner.graph_builder.module.linking.TestVertexLinker;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingTestGraphData;
 import org.opentripplanner.service.vehicleparking.VehicleParkingTestUtil;
@@ -19,7 +18,8 @@ import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParking
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
-import org.opentripplanner.street.model._data.StreetModelForTest;
+import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
@@ -79,7 +79,7 @@ class VehicleParkingUpdaterTest {
     vehicleParkingUpdater = new VehicleParkingUpdater(
       parameters,
       dataSource,
-      TestVertexLinker.of(graph),
+      VertexLinkerTestFactory.of(graph),
       parkingRepository
     );
   }

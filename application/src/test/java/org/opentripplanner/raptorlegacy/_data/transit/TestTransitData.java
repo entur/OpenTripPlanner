@@ -7,13 +7,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
-import org.opentripplanner.model.transfer.ConstrainedTransfer;
-import org.opentripplanner.model.transfer.TransferConstraint;
 import org.opentripplanner.raptor.api.model.RaptorConstrainedTransfer;
 import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
 import org.opentripplanner.raptor.api.model.RaptorTransfer;
 import org.opentripplanner.raptor.api.model.RaptorTripPattern;
-import org.opentripplanner.raptor.spi.DefaultSlackProvider;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
@@ -24,13 +21,14 @@ import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.raptorlegacy._data.RaptorTestConstants;
-import org.opentripplanner.routing.algorithm.raptoradapter.api.DefaultTripPattern;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultRaptorTransfer;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.GeneralizedCostParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.GeneralizedCostParametersBuilder;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.TripStopTime;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.TransferServiceAdaptor;
+import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
+import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 
 /**
  * @deprecated This was earlier part of Raptor and should not be used outside the Raptor
@@ -50,9 +48,6 @@ public class TestTransitData
   public static final TransferConstraint TX_LONG_MIN_TIME = TransferConstraint.of()
     .minTransferTime(3600)
     .build();
-
-  // Slack defaults: 1 minute for transfer-slack, 0 minutes for board- and alight-slack.
-  public static final RaptorSlackProvider SLACK_PROVIDER = new DefaultSlackProvider(60, 0, 0);
 
   private final List<List<RaptorTransfer>> transfersFromStop = new ArrayList<>();
   private final List<List<RaptorTransfer>> transfersToStop = new ArrayList<>();
@@ -215,9 +210,7 @@ public class TestTransitData
   public TestTransitData withTransfer(int fromStop, DefaultRaptorTransfer transfer) {
     expandNumOfStops(Math.max(fromStop, transfer.stop()));
     transfersFromStop.get(fromStop).add(transfer);
-    transfersToStop
-      .get(transfer.stop())
-      .add(((DefaultRaptorTransfer) transfer).reverseOf(fromStop));
+    transfersToStop.get(transfer.stop()).add(transfer.reverseOf(fromStop));
     return this;
   }
 
@@ -310,7 +303,7 @@ public class TestTransitData
     };
   }
 
-  public List<DefaultTripPattern> getPatterns() {
+  public List<TestTripPattern> getPatterns() {
     return routes.stream().map(TestRoute::pattern).toList();
   }
 

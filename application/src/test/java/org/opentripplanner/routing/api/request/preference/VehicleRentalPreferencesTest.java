@@ -7,7 +7,7 @@ import static org.opentripplanner.routing.api.request.preference.ImmutablePrefer
 import java.time.Duration;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.model.Cost;
+import org.opentripplanner.core.model.basic.Cost;
 
 class VehicleRentalPreferencesTest {
 
@@ -20,6 +20,7 @@ class VehicleRentalPreferencesTest {
   public static final boolean ALLOW_ARRIVING_IN_RENTED_VEHICLE = true;
   public static final Set<String> ALLOWED_NETWORKS = Set.of("foo");
   public static final Set<String> BANNED_NETWORKS = Set.of("bar");
+  public static final double ELECTRIC_ASSIST_SLOPE_SENSITIVITY = 0.5;
 
   private final VehicleRentalPreferences subject = VehicleRentalPreferences.of()
     .withPickupTime(PICKUP_TIME)
@@ -31,6 +32,7 @@ class VehicleRentalPreferencesTest {
     .withAllowArrivingInRentedVehicleAtDestination(ALLOW_ARRIVING_IN_RENTED_VEHICLE)
     .withAllowedNetworks(ALLOWED_NETWORKS)
     .withBannedNetworks(BANNED_NETWORKS)
+    .withElectricAssistSlopeSensitivity(ELECTRIC_ASSIST_SLOPE_SENSITIVITY)
     .build();
 
   @Test
@@ -85,6 +87,24 @@ class VehicleRentalPreferencesTest {
   }
 
   @Test
+  void electricAssistSlopeSensitivity() {
+    assertEquals(
+      ELECTRIC_ASSIST_SLOPE_SENSITIVITY,
+      subject.electricAssistSlopeSensitivity(),
+      0.001
+    );
+  }
+
+  @Test
+  void electricAssistSlopeSensitivityDefault() {
+    assertEquals(
+      VehicleRentalPreferences.DEFAULT_ELECTRIC_ASSIST_SLOPE_SENSITIVITY,
+      VehicleRentalPreferences.DEFAULT.electricAssistSlopeSensitivity(),
+      0.001
+    );
+  }
+
+  @Test
   void testOfAndCopyOf() {
     // Return same object if no value is set
     assertSame(VehicleRentalPreferences.DEFAULT, VehicleRentalPreferences.of().build());
@@ -104,16 +124,17 @@ class VehicleRentalPreferencesTest {
     assertEquals("VehicleRentalPreferences{}", VehicleRentalPreferences.DEFAULT.toString());
     assertEquals(
       "VehicleRentalPreferences{" +
-      "pickupTime: 25s, " +
-      "pickupCost: $250, " +
-      "dropOffTime: 45s, " +
-      "dropOffCost: $450, " +
-      "useAvailabilityInformation, " +
-      "arrivingInRentalVehicleAtDestinationCost: $500, " +
-      "allowArrivingInRentedVehicleAtDestination, " +
-      "allowedNetworks: [foo], " +
-      "bannedNetworks: [bar]" +
-      "}",
+        "pickupTime: 25s, " +
+        "pickupCost: $250, " +
+        "dropOffTime: 45s, " +
+        "dropOffCost: $450, " +
+        "useAvailabilityInformation, " +
+        "arrivingInRentalVehicleAtDestinationCost: $500, " +
+        "allowArrivingInRentedVehicleAtDestination, " +
+        "allowedNetworks: [foo], " +
+        "bannedNetworks: [bar], " +
+        "electricAssistSlopeSensitivity: 0.5" +
+        "}",
       subject.toString()
     );
   }

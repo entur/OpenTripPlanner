@@ -11,14 +11,19 @@ import static org.opentripplanner.street.search.TraverseMode.WALK;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.graph_builder.module.osm.naming.DefaultNamer;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.opentripplanner.graph_builder.services.osm.DefaultNamer;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
+import org.opentripplanner.street.model.vertex.OsmEntityType;
 import org.opentripplanner.street.model.vertex.OsmVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.search.TraverseMode;
@@ -26,7 +31,7 @@ import org.opentripplanner.street.search.TraverseMode;
 class BarrierEdgeBuilderTest {
 
   private static final EdgeNamer EDGE_NAMER = new DefaultNamer();
-  private static final BarrierEdgeBuilder subject = new BarrierEdgeBuilder(EDGE_NAMER);
+  private static final BarrierEdgeBuilder SUBJECT = new BarrierEdgeBuilder(EDGE_NAMER);
 
   private static final OsmWay WALL = (OsmWay) new OsmWay().addTag("barrier", "wall");
   private static final OsmWay FENCE = (OsmWay) new OsmWay().addTag("barrier", "fence");
@@ -38,29 +43,29 @@ class BarrierEdgeBuilderTest {
 
   @Test
   void connectOneVertexWithoutBarrier() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
     connectToOutsideWorld(v1);
-    subject.build(new OsmNode(), List.of(v1), List.of());
+    SUBJECT.build(new OsmNode(), List.of(v1), List.of());
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
   }
 
   @Test
   void connectOneVertexWithBarrier() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
     connectToOutsideWorld(v1);
-    subject.build(new OsmNode(), List.of(v1), List.of(WALL));
+    SUBJECT.build(new OsmNode(), List.of(v1), List.of(WALL));
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
   }
 
   @Test
   void connectThreeVerticesWithoutBarrier() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
-    subject.build(new OsmNode(), List.of(v1, v2, v3), List.of());
+    SUBJECT.build(new OsmNode(), List.of(v1, v2, v3), List.of());
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -75,13 +80,13 @@ class BarrierEdgeBuilderTest {
 
   @Test
   void connectThreeVerticesWithWall() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
 
     // a wall can't be passed with any means so no edges should be created
-    subject.build(new OsmNode(), List.of(v1, v2, v3), List.of(WALL));
+    SUBJECT.build(new OsmNode(), List.of(v1, v2, v3), List.of(WALL));
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
     assertEquals(1, v2.getDegreeIn());
@@ -92,13 +97,13 @@ class BarrierEdgeBuilderTest {
 
   @Test
   void connectThreeVerticesWithChain() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
 
     // a chain is passable by pedestrians so edges should be created
-    subject.build(new OsmNode(), List.of(v1, v2, v3), List.of(CHAIN));
+    SUBJECT.build(new OsmNode(), List.of(v1, v2, v3), List.of(CHAIN));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -122,13 +127,13 @@ class BarrierEdgeBuilderTest {
 
   @Test
   void connectThreeVerticesWithKerb() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
 
     // a kerb allows everything to get across but may pose a problem for wheelchair
-    subject.build(new OsmNode(), List.of(v1, v2, v3), List.of(KERB));
+    SUBJECT.build(new OsmNode(), List.of(v1, v2, v3), List.of(KERB));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -144,14 +149,14 @@ class BarrierEdgeBuilderTest {
 
   @Test
   void connectThreeVerticesWithKerbAndHandrail() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
 
     // a handrail intersects with a kerb, therefore only pedestrians can pass this barrier
     // intersection and wheelchair can't get through it
-    subject.build(new OsmNode(), List.of(v1, v2, v3), List.of(KERB, HANDRAIL));
+    SUBJECT.build(new OsmNode(), List.of(v1, v2, v3), List.of(KERB, HANDRAIL));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -167,13 +172,13 @@ class BarrierEdgeBuilderTest {
 
   @Test
   void connectThreeVerticesWithKerbAndFence() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
 
     // a fence intersects with a kerb, nothing can get through it
-    subject.build(new OsmNode(), List.of(v1, v2, v3), List.of(KERB, FENCE));
+    SUBJECT.build(new OsmNode(), List.of(v1, v2, v3), List.of(KERB, FENCE));
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
     assertEquals(1, v2.getDegreeIn());
@@ -182,44 +187,29 @@ class BarrierEdgeBuilderTest {
     assertEquals(1, v3.getDegreeOut());
   }
 
-  @Test
-  void connectThreeVerticesWithWallAndGate() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
-    connectToOutsideWorld(v1, v2, v3);
-
-    var node = new OsmNode();
-    node.addTag("barrier", "gate");
-    node.addTag("access", "no");
-    node.addTag("foot", "yes");
-
-    // A gate can be used to pass the wall, so edges should be built
-    subject.build(node, List.of(v1, v2, v3), List.of(WALL));
-    assertEquals(3, v1.getDegreeIn());
-    assertEquals(3, v1.getDegreeOut());
-    assertEquals(3, v2.getDegreeIn());
-    assertEquals(3, v2.getDegreeOut());
-    assertEquals(3, v3.getDegreeIn());
-    assertEquals(3, v3.getDegreeOut());
-    for (var edge : getEdgesThroughBarrierFromVertex(v1)) {
-      assertEquals(PEDESTRIAN, edge.getPermission());
-      assertTrue(edge.isWheelchairAccessible());
-    }
+  static List<Arguments> wallCases() {
+    return List.of(
+      Arguments.of(
+        new OsmNode().addTag("barrier", "gate").addTag("access", "no").addTag("foot", "yes"),
+        PEDESTRIAN
+      ),
+      Arguments.of(new OsmNode().addTag("barrier", "bollard"), PEDESTRIAN_AND_BICYCLE),
+      Arguments.of(new OsmNode().addTag("entrance", "main"), ALL)
+    );
   }
 
-  @Test
-  void connectThreeVerticesWithWallAndBollard() {
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
-    var v3 = new BarrierPassThroughVertex(0, 0, 0, 3);
+  @ParameterizedTest
+  @MethodSource("wallCases")
+  void connectThreeVerticesWithWallAndBarrier(
+    OsmNode node,
+    StreetTraversalPermission expectedPermission
+  ) {
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
+    var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
 
-    var node = new OsmNode();
-    node.addTag("barrier", "bollard");
-
-    // I consider this tagging a hole on the wall, so edges should be built
-    subject.build(node, List.of(v1, v2, v3), List.of(WALL));
+    SUBJECT.build(node, List.of(v1, v2, v3), List.of(WALL));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -227,7 +217,7 @@ class BarrierEdgeBuilderTest {
     assertEquals(3, v3.getDegreeIn());
     assertEquals(3, v3.getDegreeOut());
     for (var edge : getEdgesThroughBarrierFromVertex(v1)) {
-      assertEquals(PEDESTRIAN_AND_BICYCLE, edge.getPermission());
+      assertEquals(expectedPermission, edge.getPermission());
       assertTrue(edge.isWheelchairAccessible());
     }
   }
@@ -235,8 +225,8 @@ class BarrierEdgeBuilderTest {
   @Test
   void throughOneWayTraffic() {
     var v0 = new OsmVertex(0, 0, 1);
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
     var v3 = new OsmVertex(0, 0, 2);
     connect(v0, v1);
     connect(v2, v3);
@@ -244,7 +234,7 @@ class BarrierEdgeBuilderTest {
     var node = new OsmNode();
     node.addTag("barrier", "bollard");
 
-    subject.build(node, List.of(v1, v2), List.of(WALL));
+    SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());
     assertEquals(1, v2.getDegreeOut());
     for (var edge : getEdgesThroughBarrierFromVertex(v1)) {
@@ -258,8 +248,8 @@ class BarrierEdgeBuilderTest {
   @Test
   void noThroughOneWayTraffic() {
     var v0 = new OsmVertex(0, 0, 1);
-    var v1 = new BarrierPassThroughVertex(0, 0, 0, 1);
-    var v2 = new BarrierPassThroughVertex(0, 0, 0, 2);
+    var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
+    var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
     var v3 = new OsmVertex(0, 0, 2);
     connect(v0, v1, WALK);
     connect(v2, v3, BICYCLE);
@@ -267,7 +257,7 @@ class BarrierEdgeBuilderTest {
     var node = new OsmNode();
     node.addTag("barrier", "gate");
 
-    subject.build(node, List.of(v1, v2), List.of(WALL));
+    SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());
     assertEquals(1, v2.getDegreeOut());
     for (var edge : getEdgesThroughBarrierFromVertex(v1)) {

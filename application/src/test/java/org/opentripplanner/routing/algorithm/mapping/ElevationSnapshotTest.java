@@ -15,10 +15,10 @@ import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.StreetMode;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.core.VehicleRoutingOptimizeType;
 import org.opentripplanner.routing.error.RoutingValidationException;
+import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
 
 @ExtendWith(SnapshotExtension.class)
 @ResourceLock(Resources.LOCALE)
@@ -84,7 +84,7 @@ public class ElevationSnapshotTest extends SnapshotTestBase {
       .withTo(p2)
       .buildRequest();
 
-    expectArriveByToMatchDepartAtAndSnapshot(request);
+    expectRequestResponseToMatchSnapshot(request);
   }
 
   @DisplayName("Direct BIKE")
@@ -124,7 +124,7 @@ public class ElevationSnapshotTest extends SnapshotTestBase {
       .buildRequest();
 
     try {
-      expectArriveByToMatchDepartAtAndSnapshot(request);
+      expectRequestResponseToMatchSnapshot(request);
     } catch (CompletionException e) {
       RoutingValidationException.unwrapAndRethrowCompletionException(e);
     }
@@ -139,7 +139,7 @@ public class ElevationSnapshotTest extends SnapshotTestBase {
       .withTo(p1)
       .buildRequest();
 
-    expectArriveByToMatchDepartAtAndSnapshot(request);
+    expectRequestResponseToMatchSnapshot(request);
   }
 
   @Override

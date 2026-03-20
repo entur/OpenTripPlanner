@@ -1,22 +1,19 @@
 package org.opentripplanner.raptor.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.D1m;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.D2m;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.D30s;
+import static org.opentripplanner.raptor._data.RaptorTestConstants.D1_m;
+import static org.opentripplanner.raptor._data.RaptorTestConstants.D2_m;
+import static org.opentripplanner.raptor._data.RaptorTestConstants.D30_s;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_A;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_B;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_C;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_D;
-import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_E;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_F;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
-import static org.opentripplanner.raptor._data.transit.TestRoute.route;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
-import static org.opentripplanner.raptor._data.transit.TestTripSchedule.schedule;
 import static org.opentripplanner.raptor.api.request.RaptorViaLocation.via;
 
 import java.time.Duration;
@@ -31,7 +28,7 @@ import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.api.request.RaptorViaLocation;
-import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.raptor.configure.RaptorTestFactory;
 
 /**
  * FEATURE UNDER TEST
@@ -65,12 +62,12 @@ class J02_ViaStopSearchTest {
     viaLocation("D", STOP_B)
   );
 
-  private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
-    RaptorConfig.defaultConfigForTest()
-  );
+  private final TestTransitData data = new TestTransitData();
+
+  private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
   private RaptorRequestBuilder<TestTripSchedule> prepareRequest() {
-    var builder = new RaptorRequestBuilder<TestTripSchedule>();
+    var builder = data.requestBuilder();
 
     builder
       .profile(RaptorProfile.MULTI_CRITERIA)
@@ -91,31 +88,29 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName(
     "Basic via search with just one route. You should be forced to get off the " +
-    "first trip and wait for the next one at the specified via stop."
+      "first trip and wait for the next one at the specified via stop."
   )
   void viaSearchAlightingAtViaStop() {
-    var data = new TestTransitData();
-
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-        schedule("0:02 0:10 0:20 0:30"),
-        schedule("0:12 0:20 0:30 0:40")
+    data
+      .access("Walk 30s ~ A")
+      .withTimetables(
+        """
+        A     B     C     D
+        0:02  0:10  0:20  0:30
+        0:12  0:20  0:30  0:40
+        """
       )
-    );
+      .egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocation(via("C").addViaStop(STOP_C).build())
-      .addEgressPaths(walk(STOP_D, D30s));
+    requestBuilder.searchParams().addViaLocation(via("C").addViaStop(STOP_C).build());
 
     var result = raptorService.route(requestBuilder.build(), data);
 
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
-      "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ C ~ BUS R1 0:30 0:40 ~ D ~ Walk 30s [0:01:30 0:40:30 39m Tₓ1 C₁3_600]",
+      "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ C ~ BUS R1 0:30 0:40 ~ D ~ Walk 30s [0:01:30 0:40:30 39m Tₙ1 C₁3_600]",
       pathsToString(result)
     );
   }
@@ -123,35 +118,36 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName(
     "Basic via search with just two routes. You should be forced to get off the first route, " +
-    "then transfer and BOARD the second trip at the specified via stop. This test that via works " +
-    "at the boarding stop. We will add better options for the transfer to see that the given via " +
-    "stop is used over the alternatives."
+      "then transfer and BOARD the second trip at the specified via stop. This test that via works " +
+      "at the boarding stop. We will add better options for the transfer to see that the given via " +
+      "stop is used over the alternatives."
   )
   void viaSearchArrivingByTransferAtViaStop() {
-    var data = new TestTransitData();
-
     data
-      .withRoutes(
-        route("R1", STOP_A, STOP_B, STOP_D, STOP_E).withTimetable(schedule("0:02 0:10 0:20 0:30")),
-        route("R2", STOP_C, STOP_D, STOP_E).withTimetable(schedule("0:25 0:30 0:40"))
+      .withTimetables(
+        """
+        A     B           D     E
+        0:02  0:10        0:20  0:30
+        --
+                    C     D     E
+                    0:25  0:30  0:40
+        """
       )
       // Walk 1 minute to transfer from D to C - this is the only way to visit stop C
-      .withTransfer(STOP_D, transfer(STOP_C, D1m));
+      .withTransfer(STOP_D, transfer(STOP_C, D1_m));
+
+    data.access("Walk 30s ~ A").egress("E ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
-    requestBuilder
-      .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addViaLocation(via("C").addViaStop(STOP_C).build())
-      .addEgressPaths(walk(STOP_E, D30s));
+    requestBuilder.searchParams().addViaLocation(via("C").addViaStop(STOP_C).build());
 
     var result = raptorService.route(requestBuilder.build(), data);
 
     // Verify that we alight the first trip at stop C and board the second trip
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:20 ~ D ~ Walk 1m ~ C ~ BUS R2 0:25 0:40 ~ E ~ Walk 30s " +
-      "[0:01:30 0:40:30 39m Tₓ1 C₁3_660]",
+        "[0:01:30 0:40:30 39m Tₙ1 C₁3_660]",
       pathsToString(result)
     );
   }
@@ -159,40 +155,37 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName(
     "Via stop as the first stop in the journey - only the access will be used for the first " +
-    "part, no transit. Access arrival should be copied over to 'next' worker."
+      "part, no transit. Access arrival should be copied over to 'next' worker."
   )
   void accessWalkToViaStopWithoutTransit() {
-    var data = new TestTransitData();
-
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-        schedule("0:02 0:05 0:10 0:15"),
+    data.withTimetables(
+      """
+        A B C D
+        0:02 0:05 0:10 0:15
+        """ +
         // We add another trip to allow riding trip one - via B - then ride trip two, this
         // is not a pareto-optimal solution and should only appear if there is something wrong.
-        schedule("0:12 0:15 0:20 0:25")
-      )
+        """
+        0:12 0:15 0:20 0:25
+        """
     );
-
-    var requestBuilder = prepareRequest();
 
     // We will add access to A, B, and C, but since the B stop is the via point we expect that to
     // be used
-    requestBuilder
-      .searchParams()
-      .addViaLocations(VIA_LOCATION_STOP_B)
-      // We allow access to A, B, and C - if the via search works as expected, only access to B
-      // should be used - access to A would require an extra transfer; C has no valid paths.
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addAccessPaths(walk(STOP_B, D30s))
-      .addAccessPaths(walk(STOP_C, D30s))
-      .addEgressPaths(walk(STOP_D, D30s));
+    // We allow access to A, B, and C - if the via search works as expected, only access to B
+    // should be used - access to A would require an extra transfer; C has no valid paths.
+    data.access("Walk 30s ~ A", "Walk 30s ~ B", "Walk 30s ~ C").egress("D ~ Walk 30s");
+
+    var requestBuilder = prepareRequest();
+
+    requestBuilder.searchParams().addViaLocations(VIA_LOCATION_STOP_B);
 
     // Verify that the journey start by walking to the via stop, the uses one trip to the destination.
     // A combination of trip one and two with a transfer is not expected.
     assertEquals(
       PathUtils.join(
-        "Walk 30s ~ B ~ BUS R1 0:05 0:15 ~ D ~ Walk 30s [0:04:30 0:15:30 11m Tₓ0 C₁1_320]",
-        "Walk 30s ~ B ~ BUS R1 0:15 0:25 ~ D ~ Walk 30s [0:14:30 0:25:30 11m Tₓ0 C₁1_320]"
+        "Walk 30s ~ B ~ BUS R1 0:05 0:15 ~ D ~ Walk 30s [0:04:30 0:15:30 11m Tₙ0 C₁1_320]",
+        "Walk 30s ~ B ~ BUS R1 0:15 0:25 ~ D ~ Walk 30s [0:14:30 0:25:30 11m Tₙ0 C₁1_320]"
       ),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
@@ -201,19 +194,18 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName(
     "Via stop as the last stop in the journey - only the egress will be used for the last " +
-    "part, no transit. The transit arrival at the via stop should be copied over to the " +
-    "next worker and then this should be used to add the egress - without any transfers or" +
-    "more transit."
+      "part, no transit. The transit arrival at the via stop should be copied over to the " +
+      "next worker and then this should be used to add the egress - without any transfers or" +
+      "more transit."
   )
   void transitToViaStopThenTakeEgressWalkToDestination() {
-    var data = new TestTransitData();
-
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B, STOP_C, STOP_D).withTimetable(
-        schedule("0:02 0:05 0:10 0:20"),
-        // We add another trip to check that we do not transfer to the other trip at some point.
-        schedule("0:12 0:15 0:20 0:25")
-      )
+    data.withTimetables(
+      // The second trip is to check that we do not transfer to the other trip at some point.
+      """
+      A     B     C     D
+      0:02  0:05  0:10  0:20
+      0:12 0:15 0:20 0:25
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -222,19 +214,19 @@ class J02_ViaStopSearchTest {
     // be used
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
+      .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocations(VIA_LOCATION_STOP_C)
       // We allow egress from B, C, and D - if the via search works as expected, only egress from C
       // should be used - egress from B has not visited via stop C, and egress from stop D would
       // require a transfer at stop C to visit the via stop - this is not an optimal path.
-      .addEgressPaths(walk(STOP_B, D30s))
-      .addEgressPaths(walk(STOP_C, D30s))
-      .addEgressPaths(walk(STOP_D, D30s));
+      .addEgressPaths(walk(STOP_B, D30_s))
+      .addEgressPaths(walk(STOP_C, D30_s))
+      .addEgressPaths(walk(STOP_D, D30_s));
 
     assertEquals(
       PathUtils.join(
-        "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ C ~ Walk 30s [0:01:30 0:10:30 9m Tₓ0 C₁1_200]",
-        "Walk 30s ~ A ~ BUS R1 0:12 0:20 ~ C ~ Walk 30s [0:11:30 0:20:30 9m Tₓ0 C₁1_200]"
+        "Walk 30s ~ A ~ BUS R1 0:02 0:10 ~ C ~ Walk 30s [0:01:30 0:10:30 9m Tₙ0 C₁1_200]",
+        "Walk 30s ~ A ~ BUS R1 0:12 0:20 ~ C ~ Walk 30s [0:11:30 0:20:30 9m Tₙ0 C₁1_200]"
       ),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
@@ -243,21 +235,17 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName("Multiple via points")
   void multipleViaPoints() {
-    var data = new TestTransitData();
-
     // Create two routes.
     // The first one includes one via stop point.
     // The second one includes the second via point.
     // Both arrive at the desired destination, so normally there should not be any transfers.
-    data.withRoutes(
-      route("R2").timetable(
-        """
-        A    B    C    D    E    F
-        0:02 0:05 0:10 0:15 0:20 0:25
-        0:12 0:15 0:20 0:25 0:30 0:35
-        0:22 0:25 0:30 0:35 0:40 0:45
-        """
-      )
+    data.withTimetables(
+      """
+      A     B     C     D     E     F
+      0:02  0:05  0:10  0:15  0:20  0:25
+      0:12  0:15  0:20  0:25  0:30  0:35
+      0:22  0:25  0:30  0:35  0:40  0:45
+      """
     );
 
     data.withTransferCost(100);
@@ -266,18 +254,18 @@ class J02_ViaStopSearchTest {
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
+      .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocations(VIA_LOCATION_STOP_B_THEN_D)
-      .addEgressPaths(walk(STOP_F, D30s));
+      .addEgressPaths(walk(STOP_F, D30_s));
 
     // Verify that both via points are included
     assertEquals(
       "Walk 30s ~ A " +
-      "~ BUS R2 0:02 0:05 ~ B " +
-      "~ BUS R2 0:15 0:25 ~ D " +
-      "~ BUS R2 0:35 0:45 ~ F " +
-      "~ Walk 30s " +
-      "[0:01:30 0:45:30 44m Tₓ2 C₁4_700]",
+        "~ BUS R1 0:02 0:05 ~ B " +
+        "~ BUS R1 0:15 0:25 ~ D " +
+        "~ BUS R1 0:35 0:45 ~ F " +
+        "~ Walk 30s " +
+        "[0:01:30 0:45:30 44m Tₙ2 C₁4_700]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }
@@ -287,36 +275,28 @@ class J02_ViaStopSearchTest {
   void viaSearchWithCircularLine() {
     var data = new TestTransitData();
 
-    data.withRoute(
-      route(
-        "R1",
-        STOP_A,
-        STOP_B,
-        STOP_C,
-        STOP_B,
-        STOP_C,
-        STOP_B,
-        STOP_C,
-        STOP_B,
-        STOP_D
-      ).withTimetable(schedule("0:05 0:10 0:15 0:20 0:25 0:30 0:35 0:40 0:45"))
+    data.withTimetables(
+      """
+      A     B     C     B     C     B     C     B     D
+      0:05  0:10  0:15  0:20  0:25  0:30  0:35  0:40  0:45
+      """
     );
 
     var requestBuilder = prepareRequest();
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
+      .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocations(VIA_LOCATION_STOP_C_THEN_B)
-      .addEgressPaths(walk(STOP_D, D30s));
+      .addEgressPaths(walk(STOP_D, D30_s));
 
     assertEquals(
       "Walk 30s ~ A " +
-      "~ BUS R1 0:05 0:15 ~ C " +
-      "~ BUS R1 0:25 0:30 ~ B " +
-      "~ BUS R1 0:40 0:45 ~ D " +
-      "~ Walk 30s " +
-      "[0:04:30 0:45:30 41m Tₓ2 C₁4_320]",
+        "~ BUS R1 0:05 0:15 ~ C " +
+        "~ BUS R1 0:25 0:30 ~ B " +
+        "~ BUS R1 0:40 0:45 ~ D " +
+        "~ Walk 30s " +
+        "[0:04:30 0:45:30 41m Tₙ2 C₁4_320]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }
@@ -324,29 +304,32 @@ class J02_ViaStopSearchTest {
   @Test
   @DisplayName("Multiple stops in the same via location")
   void testViaSearchWithManyStopsInTheViaLocation() {
-    var data = new TestTransitData();
-
-    data.withRoutes(
-      route("R1", STOP_A, STOP_C).withTimetable(schedule("0:04 0:15")),
-      route("R2", STOP_B, STOP_C).withTimetable(schedule("0:05 0:14"))
+    data.withTimetables(
+      """
+      A           C
+      0:04        0:15
+      --
+            B     C
+            0:05  0:14
+      """
     );
 
     var requestBuilder = prepareRequest();
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
-      .addAccessPaths(walk(STOP_B, D2m))
+      .addAccessPaths(walk(STOP_A, D30_s))
+      .addAccessPaths(walk(STOP_B, D2_m))
       .addViaLocations(VIA_LOCATION_STOP_A_OR_B)
-      .addEgressPaths(walk(STOP_C, D30s));
+      .addEgressPaths(walk(STOP_C, D30_s));
 
     // Both routes are pareto optimal.
     // Route 2 is faster, but it contains more walking
     // Verify that both routes are included as a valid result
     assertEquals(
       PathUtils.join(
-        "Walk 2m ~ B ~ BUS R2 0:05 0:14 ~ C ~ Walk 30s [0:03 0:14:30 11m30s Tₓ0 C₁1_440]",
-        "Walk 30s ~ A ~ BUS R1 0:04 0:15 ~ C ~ Walk 30s [0:03:30 0:15:30 12m Tₓ0 C₁1_380]"
+        "Walk 2m ~ B ~ BUS R2 0:05 0:14 ~ C ~ Walk 30s [0:03 0:14:30 11m30s Tₙ0 C₁1_440]",
+        "Walk 30s ~ A ~ BUS R1 0:04 0:15 ~ C ~ Walk 30s [0:03:30 0:15:30 12m Tₙ0 C₁1_380]"
       ),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
@@ -356,13 +339,16 @@ class J02_ViaStopSearchTest {
   @DisplayName("Test minimum wait time")
   void testMinWaitTime() {
     var data = new TestTransitData();
-    data.withRoutes(
-      route("R1", STOP_A, STOP_B).withTimetable(schedule("0:02:00 0:04:00")),
-      route("R2", STOP_B, STOP_C).withTimetable(
-        schedule("0:05:44 0:10"),
-        schedule("0:05:45 0:11"),
-        schedule("0:05:46 0:12")
-      )
+    data.withTimetables(
+      """
+      A     B
+      0:02  0:04
+      --
+            B        C
+            0:05:44  0:10
+            0:05:45  0:11
+            0:05:46  0:12
+      """
     );
 
     var requestBuilder = prepareRequest();
@@ -370,15 +356,15 @@ class J02_ViaStopSearchTest {
 
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D30s))
+      .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocations(List.of(RaptorViaLocation.via("B", minWaitTime).addViaStop(STOP_B).build()))
-      .addEgressPaths(walk(STOP_C, D30s));
+      .addEgressPaths(walk(STOP_C, D30_s));
 
     // We expect to bard the second trip at 0:05:45, since the minWaitTime is 45s and the
     // transfer slack is 60s.
     assertEquals(
       "Walk 30s ~ A ~ BUS R1 0:02 0:04 ~ B ~ BUS R2 0:05:45 0:11 ~ C ~ Walk 30s " +
-      "[0:01:30 0:11:30 10m Tₓ1 C₁1_860]",
+        "[0:01:30 0:11:30 10m Tₙ1 C₁1_860]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
   }

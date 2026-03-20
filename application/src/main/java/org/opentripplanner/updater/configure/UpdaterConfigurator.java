@@ -4,17 +4,21 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.ext.carpooling.CarpoolingRepository;
+import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
 import org.opentripplanner.ext.siri.updater.azure.SiriAzureUpdater;
+import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.api.VehicleRentalServiceDirectoryFetcherParameters;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
-import org.opentripplanner.model.TimetableSnapshot;
-import org.opentripplanner.model.calendar.openinghours.OpeningHoursCalendarService;
-import org.opentripplanner.routing.graph.Graph;
-import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
+import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.VertexLinker;
+import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
@@ -46,25 +50,30 @@ import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataS
 public class UpdaterConfigurator {
 
   private final Graph graph;
+  private final DeduplicatorService deduplicator;
   private final VertexLinker linker;
   private final TimetableRepository timetableRepository;
   private final UpdatersParameters updatersParameters;
   private final RealtimeVehicleRepository realtimeVehicleRepository;
   private final VehicleRentalRepository vehicleRentalRepository;
+  private final CarpoolingRepository carpoolingRepository;
   private final VehicleParkingRepository parkingRepository;
   private final TimetableSnapshotManager snapshotManager;
 
   private UpdaterConfigurator(
     Graph graph,
+    DeduplicatorService deduplicator,
     VertexLinker linker,
     RealtimeVehicleRepository realtimeVehicleRepository,
     VehicleRentalRepository vehicleRentalRepository,
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
+    CarpoolingRepository carpoolingRepository,
     TimetableSnapshotManager snapshotManager,
     UpdatersParameters updatersParameters
   ) {
     this.graph = graph;
+    this.deduplicator = deduplicator;
     this.linker = linker;
     this.realtimeVehicleRepository = realtimeVehicleRepository;
     this.vehicleRentalRepository = vehicleRentalRepository;
@@ -72,25 +81,30 @@ public class UpdaterConfigurator {
     this.updatersParameters = updatersParameters;
     this.parkingRepository = parkingRepository;
     this.snapshotManager = snapshotManager;
+    this.carpoolingRepository = carpoolingRepository;
   }
 
   public static void configure(
     Graph graph,
+    DeduplicatorService deduplicator,
     VertexLinker linker,
     RealtimeVehicleRepository realtimeVehicleRepository,
     VehicleRentalRepository vehicleRentalRepository,
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
+    CarpoolingRepository carpoolingRepository,
     TimetableSnapshotManager snapshotManager,
     UpdatersParameters updatersParameters
   ) {
     new UpdaterConfigurator(
       graph,
+      deduplicator,
       linker,
       realtimeVehicleRepository,
       vehicleRentalRepository,
       parkingRepository,
       timetableRepository,
+      carpoolingRepository,
       snapshotManager,
       updatersParameters
     ).configure();
@@ -185,6 +199,9 @@ public class UpdaterConfigurator {
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
     }
+    for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
+      updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
+    }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
       updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
     }
@@ -223,17 +240,23 @@ public class UpdaterConfigurator {
     for (var configItem : updatersParameters.getSiriAzureSXUpdaterParameters()) {
       updaters.add(SiriAzureUpdater.createSXUpdater(configItem, timetableRepository));
     }
+    for (var configItem : updatersParameters.getMqttSiriETUpdaterParameters()) {
+      updaters.add(new SiriETMqttUpdater(configItem, provideSiriAdapter()));
+    }
 
     return updaters;
   }
 
   private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
-    return new SiriRealTimeTripUpdateAdapter(timetableRepository, snapshotManager);
+    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, snapshotManager);
   }
 
   private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
-    return new GtfsRealTimeTripUpdateAdapter(timetableRepository, snapshotManager, () ->
-      LocalDate.now(timetableRepository.getTimeZone())
+    return new GtfsRealTimeTripUpdateAdapter(
+      timetableRepository,
+      deduplicator,
+      snapshotManager,
+      () -> LocalDate.now(timetableRepository.getTimeZone())
     );
   }
 

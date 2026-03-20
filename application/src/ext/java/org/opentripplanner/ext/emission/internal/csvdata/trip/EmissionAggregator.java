@@ -5,11 +5,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.emission.model.TripPatternEmission;
 import org.opentripplanner.framework.error.OtpError;
 import org.opentripplanner.framework.error.WordList;
 import org.opentripplanner.model.plan.Emission;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.utils.collection.CollectionUtils;
 import org.opentripplanner.utils.collection.ListUtils;
@@ -113,7 +113,7 @@ class EmissionAggregator {
       OtpError.of(
         "EmissionMissingTripStopPattern",
         "No trip with stop pattern found for trip (%s). Trip or stop-pattern is missing. " +
-        "The trip is skipped.",
+          "The trip is skipped.",
         tripId
       )
     );
@@ -174,7 +174,7 @@ class EmissionAggregator {
         OtpError.of(
           "EmissionMissingTripHop",
           "Warning! All hops in a trip (%s) should have an emission value. " +
-          "Hop %s does not have an emission value.",
+            "Hop %s does not have an emission value.",
           tripId,
           buf.toString()
         )
@@ -187,7 +187,7 @@ class EmissionAggregator {
           OtpError.of(
             "EmissionTripHopDuplicates",
             "Warning! The emission import contains duplicate rows for the same hop for " +
-            "trip (%s). An average value is used.",
+              "trip (%s). An average value is used.",
             tripId
           )
         );

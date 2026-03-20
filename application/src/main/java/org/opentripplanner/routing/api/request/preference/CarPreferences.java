@@ -6,9 +6,9 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Cost;
-import org.opentripplanner.framework.model.Units;
+import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.utils.lang.DoubleUtils;
+import org.opentripplanner.utils.lang.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -113,8 +113,12 @@ public final class CarPreferences implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     CarPreferences that = (CarPreferences) o;
     return (
       DoubleUtils.doubleEquals(that.reluctance, reluctance) &&

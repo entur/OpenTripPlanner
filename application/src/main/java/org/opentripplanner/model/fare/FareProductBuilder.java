@@ -1,8 +1,7 @@
 package org.opentripplanner.model.fare;
 
-import java.time.Duration;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.Money;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 
 /**
  * Builder for {@link FareProduct}.
@@ -12,7 +11,6 @@ public class FareProductBuilder {
   private final FeedScopedId id;
   private final String name;
   private final Money price;
-  private Duration validity;
   private RiderCategory category;
   private FareMedium medium;
 
@@ -24,11 +22,6 @@ public class FareProductBuilder {
 
   public FeedScopedId id() {
     return id;
-  }
-
-  public FareProductBuilder withValidity(Duration validity) {
-    this.validity = validity;
-    return this;
   }
 
   public FareProductBuilder withCategory(RiderCategory category) {
@@ -47,10 +40,6 @@ public class FareProductBuilder {
 
   public Money price() {
     return price;
-  }
-
-  public Duration validity() {
-    return validity;
   }
 
   public RiderCategory category() {

@@ -1,6 +1,7 @@
 package org.opentripplanner.api.model.transit;
 
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import java.util.Optional;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
  * An id mapper that passes input and output ids through with the feed id.
@@ -8,8 +9,8 @@ import org.opentripplanner.transit.model.framework.FeedScopedId;
 public class DefaultFeedIdMapper implements FeedScopedIdMapper {
 
   @Override
-  public FeedScopedId parse(String id) {
-    return FeedScopedId.parse(id);
+  public Optional<FeedScopedId> parse(String id) {
+    return FeedScopedId.parseOptional(id);
   }
 
   @Override

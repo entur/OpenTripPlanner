@@ -9,18 +9,19 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.framework.io.OtpHttpClient;
 import org.opentripplanner.framework.io.OtpHttpClientException;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingGroup;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LiipiHubsDownloader {
 
   private static final Logger LOG = LoggerFactory.getLogger(LiipiHubsDownloader.class);
-  private static final ObjectMapper mapper = new ObjectMapper();
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   private final String jsonParsePath;
   private final Function<JsonNode, Map<FeedScopedId, VehicleParkingGroup>> hubsParser;
@@ -45,9 +46,9 @@ public class LiipiHubsDownloader {
       return null;
     }
     try {
-      return otpHttpClient.getAndMap(URI.create(url), Map.of(), is -> {
+      return otpHttpClient.getAndMap(URI.create(url), HttpHeaders.empty(), response -> {
         try {
-          return parseJSON(is);
+          return parseJSON(response.body());
         } catch (IllegalArgumentException e) {
           LOG.warn("Error parsing hubs from {}", url, e);
         } catch (JsonProcessingException e) {
@@ -75,7 +76,7 @@ public class LiipiHubsDownloader {
 
     String hubsString = convertStreamToString(dataStream);
 
-    JsonNode rootNode = mapper.readTree(hubsString);
+    JsonNode rootNode = MAPPER.readTree(hubsString);
 
     if (!jsonParsePath.isEmpty()) {
       String delimiter = "/";

@@ -9,7 +9,9 @@ import java.util.stream.Stream;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.Scope;
+import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
@@ -22,7 +24,7 @@ public class SameEdgeAdjuster {
   private SameEdgeAdjuster() {}
 
   /**
-   * Utility class. If the from and to vertices are generated and lie along some of the same edges,
+   * Utility class. If the from, to or via vertices are generated and lie along some of the same edges,
    * we need to wire them up along those edges so that we don't get odd circuitous routes for really
    * short trips.
    */

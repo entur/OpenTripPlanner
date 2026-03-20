@@ -2,8 +2,8 @@ package org.opentripplanner.updater.trip.siri.updater.lite;
 
 import java.net.URI;
 import java.time.Duration;
-import org.opentripplanner.updater.spi.HttpHeaders;
-import org.opentripplanner.updater.trip.siri.updater.SiriETUpdater;
+import org.opentripplanner.framework.io.HttpHeaders;
+import org.opentripplanner.updater.trip.siri.updater.SiriETUpdaterParameters;
 
 public record SiriETLiteUpdaterParameters(
   String configRef,
@@ -13,12 +13,7 @@ public record SiriETLiteUpdaterParameters(
   Duration timeout,
   boolean fuzzyTripMatching,
   HttpHeaders httpRequestHeaders
-)
-  implements SiriETUpdater.Parameters, SiriETLiteHttpTripUpdateSource.Parameters {
-  public SiriETLiteHttpTripUpdateSource.Parameters sourceParameters() {
-    return this;
-  }
-
+) implements SiriETUpdaterParameters, SiriETLiteHttpTripUpdateSource.Parameters {
   @Override
   public String url() {
     return uri.toString();

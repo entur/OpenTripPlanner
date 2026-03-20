@@ -4,7 +4,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.routing.api.request.StreetMode;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.utils.lang.IntUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -61,8 +61,12 @@ public class MaxStopCountLimit {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
 
     var that = (MaxStopCountLimit) o;
 

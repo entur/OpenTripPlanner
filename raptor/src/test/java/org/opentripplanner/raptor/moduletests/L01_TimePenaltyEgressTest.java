@@ -14,7 +14,6 @@ import static org.opentripplanner.utils.time.TimeUtils.time;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,7 @@ import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
-import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.raptor.configure.RaptorTestFactory;
 import org.opentripplanner.raptor.moduletests.support.ExpectedList;
 import org.opentripplanner.raptor.moduletests.support.ModuleTestDebugLogging;
 import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
@@ -44,28 +43,25 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
  */
 public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
 
-  private static final Duration D8m = Duration.ofMinutes(8);
+  private static final Duration D8_m = Duration.ofMinutes(8);
 
   // There are 5 possible trips
 
   private final TestTransitData data = new TestTransitData();
-  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder =
-    new RaptorRequestBuilder<>();
-  private final RaptorService<TestTripSchedule> raptorService = new RaptorService<>(
-    RaptorConfig.defaultConfigForTest()
-  );
+  private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
+  private final RaptorService<TestTripSchedule> raptorService = RaptorTestFactory.raptorService();
 
   @BeforeEach
   public void setup() {
     data.withRoute(route("R1", STOP_A, STOP_B).withTimetable(schedule("0:10 0:40").repeat(10, 60)));
     requestBuilder
       .searchParams()
-      .addAccessPaths(walk(STOP_A, D1m))
-      .addEgressPaths(walk(STOP_B, D2m).withTimePenalty(D1m));
+      .addAccessPaths(walk(STOP_A, D1_m))
+      .addEgressPaths(walk(STOP_B, D2_m).withTimePenalty(D1_m));
 
     requestBuilder.searchParams().timetable(true);
 
-    ModuleTestDebugLogging.setupDebugLogging(data, requestBuilder);
+    ModuleTestDebugLogging.setupDebugLogging(data);
   }
 
   private static List<RaptorModuleTestCase> firstTwoPathsArriveBeforeLAT() {
@@ -75,13 +71,13 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
     int lat = time("0:43");
 
     var expected = new ExpectedList(
-      "BUS R1 0:10 0:40 30m ~ B 0s ~ Walk 2m 0:40 0:42 [0:09 0:42 33m Tₓ0]",
-      "BUS R1 0:11 0:41 30m ~ B 0s ~ Walk 2m 0:41 0:43 [0:10 0:43 33m Tₓ0]"
+      "BUS R1 0:10 0:40 30m ~ B 0s ~ Walk 2m Pₜ60 0:40 0:42 [0:09 0:42 33m Tₙ0]",
+      "BUS R1 0:11 0:41 30m ~ B 0s ~ Walk 2m Pₜ60 0:41 0:43 [0:10 0:43 33m Tₙ0]"
     );
 
     return RaptorModuleTestCase.of()
       .withRequest(r ->
-        r.searchParams().earliestDepartureTime(edt).latestArrivalTime(lat).searchWindow(D8m)
+        r.searchParams().earliestDepartureTime(edt).latestArrivalTime(lat).searchWindow(D8_m)
       )
       .addMinDuration("34m", TX_0, edt, lat)
       .add(TC_STANDARD, withoutCost(expected.all()))
@@ -108,13 +104,13 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
     int lat = time("0:51");
 
     var expected = new ExpectedList(
-      "BUS R1 0:18 0:48 30m ~ B 0s ~ Walk 2m 0:48 0:50 [0:17 0:50 33m Tₓ0]",
-      "BUS R1 0:19 0:49 30m ~ B 0s ~ Walk 2m 0:49 0:51 [0:18 0:51 33m Tₓ0]"
+      "BUS R1 0:18 0:48 30m ~ B 0s ~ Walk 2m Pₜ60 0:48 0:50 [0:17 0:50 33m Tₙ0]",
+      "BUS R1 0:19 0:49 30m ~ B 0s ~ Walk 2m Pₜ60 0:49 0:51 [0:18 0:51 33m Tₙ0]"
     );
 
     return RaptorModuleTestCase.of()
       .withRequest(r ->
-        r.searchParams().earliestDepartureTime(edt).latestArrivalTime(lat).searchWindow(D8m)
+        r.searchParams().earliestDepartureTime(edt).latestArrivalTime(lat).searchWindow(D8_m)
       )
       .addMinDuration("34m", TX_0, edt, lat)
       // Note! this test that the time-penalty is removed from the "arrive-by" limit in the
@@ -139,10 +135,6 @@ public class L01_TimePenaltyEgressTest implements RaptorTestConstants {
   }
 
   public static String focusOnEgress(String path) {
-    // We are only interested in the access and the first boarding. We include the
-    // pareto vector as well.
-    var p = Pattern.compile("(BUS R1 .+)(\\[.+)");
-
     // BUS R1 0:18 0:48 30m ~ B 0s ~ Walk 1m 0:48 0:49  .. [0:16 0:49 33m Tₓ0]
     String[] lines = path.split("\n");
     return Stream.of(lines)

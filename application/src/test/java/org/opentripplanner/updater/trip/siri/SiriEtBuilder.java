@@ -7,23 +7,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import javax.annotation.Nullable;
-import org.opentripplanner.DateTimeHelper;
+import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
+import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
+import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DataFrameRefStructure;
 import uk.org.siri.siri21.DatedVehicleJourneyRef;
+import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.EstimatedVersionFrameStructure;
 import uk.org.siri.siri21.FramedVehicleJourneyRefStructure;
 import uk.org.siri.siri21.LineRef;
+import uk.org.siri.siri21.NaturalLanguageStringStructure;
+import uk.org.siri.siri21.OccupancyEnumeration;
 import uk.org.siri.siri21.OperatorRefStructure;
 import uk.org.siri.siri21.QuayRefStructure;
 import uk.org.siri.siri21.RecordedCall;
 import uk.org.siri.siri21.StopAssignmentStructure;
 import uk.org.siri.siri21.StopPointRefStructure;
 import uk.org.siri.siri21.VehicleJourneyRef;
+import uk.org.siri.siri21.VehicleModesEnumeration;
+import uk.org.siri.siri21.VehicleRef;
 
 /**
  * This is a helper class for constucting Siri ET messages to use in tests.
@@ -31,10 +38,10 @@ import uk.org.siri.siri21.VehicleJourneyRef;
 public class SiriEtBuilder {
 
   private final EstimatedVehicleJourney evj;
-  private final DateTimeHelper dateTimeHelper;
+  private final LocalTimeParser localTimeParser;
 
-  public SiriEtBuilder(DateTimeHelper dateTimeHelper) {
-    this.dateTimeHelper = dateTimeHelper;
+  public SiriEtBuilder(LocalTimeParser localTimeParser) {
+    this.localTimeParser = localTimeParser;
     this.evj = new EstimatedVehicleJourney();
 
     // Set default values
@@ -96,6 +103,49 @@ public class SiriEtBuilder {
     return this;
   }
 
+  public SiriEtBuilder withOccupancy(OccupancyEnumeration occupancy) {
+    evj.setOccupancy(occupancy);
+    return this;
+  }
+
+  public SiriEtBuilder withPredictionInaccurate(boolean predictionInaccurate) {
+    evj.setPredictionInaccurate(predictionInaccurate);
+    return this;
+  }
+
+  public SiriEtBuilder withDestinationName(String destinationName) {
+    var name = new NaturalLanguageStringStructure();
+    name.setValue(destinationName);
+    evj.getDestinationNames().add(name);
+    return this;
+  }
+
+  public SiriEtBuilder withExternalLineRef(String externalLineRef) {
+    var ref = new LineRef();
+    ref.setValue(externalLineRef);
+    evj.setExternalLineRef(ref);
+    return this;
+  }
+
+  public SiriEtBuilder withPublishedLineName(String lineName) {
+    var name = new NaturalLanguageStringStructure();
+    name.setValue(lineName);
+    evj.getPublishedLineNames().add(name);
+    return this;
+  }
+
+  public SiriEtBuilder withVehicleRef(String vehicleRef) {
+    var ref = new VehicleRef();
+    ref.setValue(vehicleRef);
+    evj.setVehicleRef(ref);
+    return this;
+  }
+
+  public SiriEtBuilder withVehicleMode(VehicleModesEnumeration mode) {
+    evj.getVehicleModes().add(mode);
+    return this;
+  }
+
   public SiriEtBuilder withRecordedCalls(
     Function<RecordedCallsBuilder, RecordedCallsBuilder> producer
   ) {
@@ -105,7 +155,7 @@ public class SiriEtBuilder {
         "You need to call withRecordedCalls() before withEstimatedCalls()"
       );
     }
-    var builder = new RecordedCallsBuilder(dateTimeHelper, 0);
+    var builder = new RecordedCallsBuilder(localTimeParser, 0);
 
     builder = producer.apply(builder);
 
@@ -121,7 +171,7 @@ public class SiriEtBuilder {
     int offset = evj.getRecordedCalls() == null
       ? 0
       : evj.getRecordedCalls().getRecordedCalls().size();
-    var builder = new EstimatedCallsBuilder(dateTimeHelper, offset);
+    var builder = new EstimatedCallsBuilder(localTimeParser, offset);
 
     builder = producer.apply(builder);
 
@@ -179,10 +229,10 @@ public class SiriEtBuilder {
 
     private final ArrayList<RecordedCall> calls;
     private final int orderOffset;
-    private final DateTimeHelper dateTimeHelper;
+    private final LocalTimeParser localTimeParser;
 
-    public RecordedCallsBuilder(DateTimeHelper dateTimeHelper, int orderOffset) {
-      this.dateTimeHelper = dateTimeHelper;
+    public RecordedCallsBuilder(LocalTimeParser localTimeParser, int orderOffset) {
+      this.localTimeParser = localTimeParser;
       this.orderOffset = orderOffset;
       this.calls = new ArrayList<>();
     }
@@ -201,15 +251,28 @@ public class SiriEtBuilder {
 
     public RecordedCallsBuilder arriveAimedActual(String aimedTime, String actualTime) {
       var call = calls.getLast();
-      call.setAimedArrivalTime(dateTimeHelper.zonedDateTime(aimedTime));
-      call.setActualArrivalTime(dateTimeHelper.zonedDateTime(actualTime));
+      call.setAimedArrivalTime(localTimeParser.zonedDateTime(aimedTime));
+      call.setActualArrivalTime(localTimeParser.zonedDateTime(actualTime));
       return this;
     }
 
     public RecordedCallsBuilder departAimedActual(String aimedTime, String actualTime) {
       var call = calls.getLast();
-      call.setAimedDepartureTime(dateTimeHelper.zonedDateTime(aimedTime));
-      call.setActualDepartureTime(dateTimeHelper.zonedDateTime(actualTime));
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      call.setActualDepartureTime(localTimeParser.zonedDateTime(actualTime));
+      return this;
+    }
+
+    public RecordedCallsBuilder departAimedExpected(String aimedTime, String expectedTime) {
+      var call = calls.getLast();
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public RecordedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
       return this;
     }
 
@@ -225,6 +288,19 @@ public class SiriEtBuilder {
       return this;
     }
 
+    public RecordedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
+      return this;
+    }
+
+    public RecordedCallsBuilder addDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
     public List<RecordedCall> build() {
       return calls;
     }
@@ -234,10 +310,10 @@ public class SiriEtBuilder {
 
     private final ArrayList<EstimatedCall> calls;
     private final int orderOffset;
-    private final DateTimeHelper dateTimeHelper;
+    private final LocalTimeParser localTimeParser;
 
-    public EstimatedCallsBuilder(DateTimeHelper dateTimeHelper, int orderOffset) {
-      this.dateTimeHelper = dateTimeHelper;
+    public EstimatedCallsBuilder(LocalTimeParser localTimeParser, int orderOffset) {
+      this.localTimeParser = localTimeParser;
       this.orderOffset = orderOffset;
       this.calls = new ArrayList<>();
     }
@@ -264,10 +340,10 @@ public class SiriEtBuilder {
     ) {
       var call = calls.getLast();
       if (aimedTime != null) {
-        call.setAimedArrivalTime(dateTimeHelper.zonedDateTime(aimedTime));
+        call.setAimedArrivalTime(localTimeParser.zonedDateTime(aimedTime));
       }
       if (expectedTime != null) {
-        call.setExpectedArrivalTime(dateTimeHelper.zonedDateTime(expectedTime));
+        call.setExpectedArrivalTime(localTimeParser.zonedDateTime(expectedTime));
       }
       return this;
     }
@@ -278,11 +354,17 @@ public class SiriEtBuilder {
     ) {
       var call = calls.getLast();
       if (aimedTime != null) {
-        call.setAimedDepartureTime(dateTimeHelper.zonedDateTime(aimedTime));
+        call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
       }
       if (expectedTime != null) {
-        call.setExpectedDepartureTime(dateTimeHelper.zonedDateTime(expectedTime));
+        call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
       }
+      return this;
+    }
+
+    public EstimatedCallsBuilder withVisitNumber(int visitNumber) {
+      var call = calls.getLast();
+      call.setVisitNumber(BigInteger.valueOf(visitNumber));
       return this;
     }
 
@@ -316,6 +398,91 @@ public class SiriEtBuilder {
 
       var call = calls.getLast();
       call.getArrivalStopAssignments().add(stopAssignmentStructure);
+      return this;
+    }
+
+    public EstimatedCallsBuilder clearOrder() {
+      var call = calls.getLast();
+      call.setOrder(null);
+      return this;
+    }
+
+    public EstimatedCallsBuilder addDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withArrivalStatus(CallStatusEnumeration callStatus) {
+      calls.getLast().setArrivalStatus(callStatus);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withAimedArrivalTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedArrivalTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withExpectedArrivalTime(String expectedTime) {
+      var call = calls.getLast();
+      call.setExpectedArrivalTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withAimedDepartureTime(String aimedTime) {
+      var call = calls.getLast();
+      call.setAimedDepartureTime(localTimeParser.zonedDateTime(aimedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withExpectedDepartureTime(String expectedTime) {
+      var call = calls.getLast();
+      call.setExpectedDepartureTime(localTimeParser.zonedDateTime(expectedTime));
+      return this;
+    }
+
+    public EstimatedCallsBuilder withCancellation(boolean cancel) {
+      var call = calls.getLast();
+      call.setCancellation(cancel);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withPredictionInaccurate(boolean inaccurate) {
+      var call = calls.getLast();
+      call.setPredictionInaccurate(inaccurate);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withArrivalBoardingActivity(
+      ArrivalBoardingActivityEnumeration activity
+    ) {
+      calls.getLast().setArrivalBoardingActivity(activity);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withDepartureBoardingActivity(
+      DepartureBoardingActivityEnumeration activity
+    ) {
+      calls.getLast().setDepartureBoardingActivity(activity);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withDestinationDisplay(String destinationDisplay) {
+      var dd = new NaturalLanguageStringStructure();
+      dd.setValue(destinationDisplay);
+      calls.getLast().getDestinationDisplaies().add(dd);
+      return this;
+    }
+
+    public EstimatedCallsBuilder withOccupancy(uk.org.siri.siri21.OccupancyEnumeration occupancy) {
+      var call = calls.getLast();
+      call.setOccupancy(occupancy);
+      return this;
+    }
+
+    public EstimatedCallsBuilder next() {
       return this;
     }
 

@@ -8,13 +8,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
-import org.opentripplanner.framework.i18n.I18NString;
-import org.opentripplanner.framework.i18n.NonLocalizedString;
-import org.opentripplanner.framework.i18n.TranslatedString;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.core.model.i18n.TranslatedString;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingGroup;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LiipiHubToVehicleParkingGroupMapper {
 
-  private static final Logger log = LoggerFactory.getLogger(
+  private static final Logger LOG = LoggerFactory.getLogger(
     LiipiHubToVehicleParkingGroupMapper.class
   );
 
@@ -52,7 +52,7 @@ public class LiipiHubToVehicleParkingGroupMapper {
         });
       I18NString name = translations.isEmpty()
         ? new NonLocalizedString(hubId.getId())
-        : TranslatedString.getI18NString(translations, true, false);
+        : TranslatedString.getI18NString(translations, false);
       Geometry geometry = GEOMETRY_PARSER.geometryFromJson(jsonNode.path("location"));
       var vehicleParkingGroup = VehicleParkingGroup.of(hubId)
         .withName(name)
@@ -71,14 +71,14 @@ public class LiipiHubToVehicleParkingGroupMapper {
 
       return hubForPark;
     } catch (Exception e) {
-      log.warn("Error parsing hub {}", hubId, e);
+      LOG.warn("Error parsing hub {}", hubId, e);
       return null;
     }
   }
 
   public List<FeedScopedId> getVehicleParkingIds(ArrayNode facilityIdsNode, FeedScopedId hubId) {
     if (facilityIdsNode == null || !facilityIdsNode.isArray() || facilityIdsNode.isEmpty()) {
-      log.warn("Hub {} contained no facilities", hubId);
+      LOG.warn("Hub {} contained no facilities", hubId);
       return null;
     }
     var vehicleParkingIds = new ArrayList<FeedScopedId>();

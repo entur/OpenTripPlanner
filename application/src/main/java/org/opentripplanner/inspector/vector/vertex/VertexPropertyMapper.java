@@ -15,11 +15,9 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParkingEntrance;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
-import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 import org.opentripplanner.utils.collection.ListUtils;
 
 public class VertexPropertyMapper extends PropertyMapper<Vertex> {
@@ -31,17 +29,16 @@ public class VertexPropertyMapper extends PropertyMapper<Vertex> {
       kv("class", input.getClass().getSimpleName()),
       kv("label", input.getLabel().toString())
     );
-    List<KeyValue> properties =
-      switch (input) {
-        case BarrierVertex v -> List.of(kv("permission", v.getBarrierPermissions().toString()));
-        case VehicleRentalPlaceVertex v -> List.of(kv("rentalId", v.getStation()));
-        case VehicleParkingEntranceVertex v -> List.of(
-          kv("parkingId", v.getVehicleParking().getId()),
-          kColl("spacesFor", spacesFor(v.getVehicleParking())),
-          kColl("traversalPermission", traversalPermissions(v.getParkingEntrance()))
-        );
-        default -> List.of();
-      };
+    List<KeyValue> properties = switch (input) {
+      case BarrierVertex v -> List.of(kv("permission", v.getBarrierPermissions().toString()));
+      case VehicleRentalPlaceVertex v -> List.of(kv("rentalId", v.getStation()));
+      case VehicleParkingEntranceVertex v -> List.of(
+        kv("parkingId", v.getVehicleParking().getId()),
+        kColl("spacesFor", spacesFor(v.getVehicleParking())),
+        kColl("traversalPermission", traversalPermissions(v.getParkingEntrance()))
+      );
+      default -> List.of();
+    };
 
     return ListUtils.combine(baseProps, properties, areaStops(input));
   }
@@ -50,9 +47,7 @@ public class VertexPropertyMapper extends PropertyMapper<Vertex> {
     if (input.areaStops().isEmpty()) {
       return List.of();
     } else {
-      return List.of(
-        kv("areaStops", input.areaStops().stream().map(AbstractTransitEntity::getId).toList())
-      );
+      return List.of(kv("areaStops", input.areaStops()));
     }
   }
 

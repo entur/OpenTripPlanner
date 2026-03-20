@@ -10,7 +10,7 @@ import java.util.Set;
 import org.apache.commons.lang3.NotImplementedException;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedId;
 
 class FeedScopedIdMapperTest {
 
@@ -19,8 +19,8 @@ class FeedScopedIdMapperTest {
   private static class IdMapperTestImpl implements FeedScopedIdMapper {
 
     @Override
-    public FeedScopedId parse(String id) {
-      return new FeedScopedId("FIXED", id);
+    public Optional<FeedScopedId> parse(String id) {
+      return FeedScopedId.ofOptional("FIXED", id);
     }
 
     @Override

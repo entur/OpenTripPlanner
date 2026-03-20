@@ -1,10 +1,9 @@
 
 # Files
 .classpath
+.claude
 .externalToolBuilders
 .gradle
-.project
-.pydevproject
 .settings
 .sonar
 .nvmrc
@@ -51,3 +50,6 @@ graph.obj
 
 # draw.io backup files
 *.svg.bkp
+
+# EPSG files
+application/v??.?.??

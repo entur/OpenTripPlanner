@@ -5,7 +5,7 @@ import static org.opentripplanner.routing.api.request.preference.AccessibilityPr
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.opentripplanner.framework.model.Units;
+import org.opentripplanner.utils.lang.Units;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -123,8 +123,12 @@ public class WheelchairPreferences implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (o == null || getClass() != o.getClass()) return false;
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
     WheelchairPreferences that = (WheelchairPreferences) o;
     return (
       Double.compare(that.inaccessibleStreetReluctance, inaccessibleStreetReluctance) == 0 &&
