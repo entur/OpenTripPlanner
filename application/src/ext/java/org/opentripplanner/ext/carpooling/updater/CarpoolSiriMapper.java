@@ -16,6 +16,7 @@ import org.opentripplanner.ext.carpooling.model.CarpoolStop;
 import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
+import org.opentripplanner.ext.carpooling.model.SimpleContactStructure;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class CarpoolSiriMapper {
       ? lastStop.getExpectedArrivalTime()
       : lastStop.getAimedArrivalTime();
 
-    return new CarpoolTripBuilder(new FeedScopedId(FEED_ID, tripId))
+    var builder = new CarpoolTripBuilder(new FeedScopedId(FEED_ID, tripId))
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withProvider(journey.getOperatorRef().getValue())
@@ -78,8 +79,16 @@ public class CarpoolSiriMapper {
       .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       // TODO: Make available seats dynamic based on EstimatedVehicleJourney data
       .withAvailableSeats(DEFAULT_AVAILABLE_SEATS)
-      .withStops(stops)
-      .build();
+      .withStops(stops);
+
+    var publicContact = journey.getPublicContact();
+    if (publicContact != null) {
+      builder.withPublicContactInformation(
+        new SimpleContactStructure(publicContact.getPhoneNumber(), publicContact.getUrl())
+      );
+    }
+
+    return builder.build();
   }
 
   /**

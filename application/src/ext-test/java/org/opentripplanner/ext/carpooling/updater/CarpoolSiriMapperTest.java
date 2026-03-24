@@ -2,6 +2,7 @@ package org.opentripplanner.ext.carpooling.updater;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.arrivalIsAfterDepartureTime;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.lessThanTwoStops;
@@ -9,6 +10,7 @@ import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyD
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.minimalCompleteJourneyWithPolygon;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.stopTimesAreOutOfOrder;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasAimedTimesOnly;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithPublicContact;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasExpectedTimesOnly;
 
 import org.junit.jupiter.api.Test;
@@ -107,5 +109,23 @@ public class CarpoolSiriMapperTest {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(stopTimesAreOutOfOrder())
     );
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withPublicContact_mapsContactInformation() {
+    var journey = journeyWithPublicContact("+4712345678", "https://example.com/book");
+    var mapped = mapper.mapSiriToCarpoolTrip(journey);
+
+    assertNotNull(mapped.publicContactInformation());
+    assertEquals("+4712345678", mapped.publicContactInformation().phoneNumber());
+    assertEquals("https://example.com/book", mapped.publicContactInformation().url());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withoutPublicContact_contactInformationIsNull() {
+    var journey = minimalCompleteJourney();
+    var mapped = mapper.mapSiriToCarpoolTrip(journey);
+
+    assertNull(mapped.publicContactInformation());
   }
 }

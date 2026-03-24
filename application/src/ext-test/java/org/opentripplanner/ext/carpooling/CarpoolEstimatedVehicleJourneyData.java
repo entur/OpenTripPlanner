@@ -19,6 +19,7 @@ import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.OperatorRefStructure;
+import uk.org.siri.siri21.SimpleContactStructure;
 import uk.org.siri.siri21.StopAssignmentStructure;
 
 public class CarpoolEstimatedVehicleJourneyData {
@@ -127,6 +128,18 @@ public class CarpoolEstimatedVehicleJourneyData {
     lastStop.setAimedArrivalTime(null);
     lastStop.setExpectedArrivalTime(ZonedDateTime.now().plusMinutes(45));
 
+    return journey;
+  }
+
+  public static EstimatedVehicleJourney journeyWithPublicContact(
+    String phoneNumber,
+    String url
+  ) {
+    var journey = minimalCompleteJourney();
+    var contact = new SimpleContactStructure();
+    contact.setPhoneNumber(phoneNumber);
+    contact.setUrl(url);
+    journey.setPublicContact(contact);
     return journey;
   }
 

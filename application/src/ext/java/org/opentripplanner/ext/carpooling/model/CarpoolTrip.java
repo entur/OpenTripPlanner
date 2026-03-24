@@ -69,6 +69,9 @@ public class CarpoolTrip
   // Ordered list of stops along the carpool route where passengers can be picked up or dropped off
   private final List<CarpoolStop> stops;
 
+  @Nullable
+  private final SimpleContactStructure publicContactInformation;
+
   public CarpoolTrip(CarpoolTripBuilder builder) {
     super(builder.getId());
     this.startTime = builder.startTime();
@@ -77,6 +80,7 @@ public class CarpoolTrip
     this.availableSeats = builder.availableSeats();
     this.deviationBudget = builder.deviationBudget();
     this.stops = Collections.unmodifiableList(builder.stops());
+    this.publicContactInformation = builder.publicContactInformation();
   }
 
   /**
@@ -137,6 +141,11 @@ public class CarpoolTrip
    */
   public List<CarpoolStop> stops() {
     return stops;
+  }
+
+  @Nullable
+  public SimpleContactStructure publicContactInformation() {
+    return publicContactInformation;
   }
 
   /**
