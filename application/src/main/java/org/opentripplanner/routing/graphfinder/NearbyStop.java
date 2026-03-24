@@ -1,7 +1,6 @@
 package org.opentripplanner.routing.graphfinder;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -34,22 +33,8 @@ public class NearbyStop implements Comparable<NearbyStop> {
    * away it is and the geometry of the path leading up to the given State.
    */
   public static NearbyStop nearbyStopForState(State state, StopLocation stop) {
-    // Walk the state chain directly to collect edges, avoiding GraphPath allocation.
-    double effectiveWalkDistance = 0.0;
-    var edges = new ArrayList<Edge>();
-    for (State cur = state; cur != null; cur = cur.getBackState()) {
-      Edge backEdge = cur.getBackEdge();
-      if (backEdge != null && cur.getBackState() != null) {
-        effectiveWalkDistance += backEdge.getEffectiveWalkDistance();
-        edges.add(backEdge);
-      }
-    }
-    // For depart-after, edges are in reverse chronological order; reverse to chronological.
-    // For arriveBy, the A* searched backward so edges are already chronological.
-    if (!state.getRequest().arriveBy()) {
-      Collections.reverse(edges);
-    }
-    return new NearbyStop(stop, effectiveWalkDistance, edges, state);
+    var result = StateEdgeExtractor.extractEdgesInChronologicalOrder(state);
+    return new NearbyStop(stop, result.effectiveWalkDistance(), result.edges(), state);
   }
 
   /**
