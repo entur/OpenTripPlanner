@@ -3,6 +3,7 @@ package org.opentripplanner.ext.carpooling.internal;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.LineString;
@@ -22,6 +23,7 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.model.organization.ContactInfo;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
+import org.opentripplanner.transit.model.timetable.booking.BookingMethod;
 
 /**
  * Maps carpooling insertion candidates to OTP itineraries for API responses.
@@ -228,6 +230,14 @@ public class CarpoolItineraryMapper {
     if (contact == null) {
       return null;
     }
+    var bookingMethods = EnumSet.noneOf(BookingMethod.class);
+    if (contact.phoneNumber() != null) {
+      bookingMethods.add(BookingMethod.CALL_OFFICE);
+    }
+    if (contact.url() != null) {
+      bookingMethods.add(BookingMethod.ONLINE);
+    }
+
     return BookingInfo.of()
       .withContactInfo(
         ContactInfo.of()
@@ -235,6 +245,7 @@ public class CarpoolItineraryMapper {
           .withBookingUrl(contact.url())
           .build()
       )
+      .withBookingMethods(bookingMethods)
       .build();
   }
 }
