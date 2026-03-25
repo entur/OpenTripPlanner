@@ -2,8 +2,9 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 import java.util.List;
-import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.view.ArrivalView;
@@ -20,72 +21,77 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListenerComposite
 ///
 /// If the debugger is not done first, then the logging will be strange -> events
 /// arriving at the destination, before arriving at the egress stop.
-public class ArrivalsEventListenerMapper<T extends RaptorTripSchedule> {
+public class McArrivalsEventListenerFactory<T extends RaptorTripSchedule> {
 
   private final DebugHandlerFactory<T> debugHandlerFactory;
   private final TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> nextConnectionListener;
-  private final @Nullable EgressPaths egressPaths;
-  private final DestinationArrivalPaths<T> paths;
+  private final EgressPaths egressPaths;
+  private final DestinationArrivalPaths<T> destinationPaths;
+  private boolean processed = false;
 
-  private final TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> result =
+  private final TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> arrivalListeners =
     new TIntObjectHashMap<>();
 
-  private ArrivalsEventListenerMapper(
+  public McArrivalsEventListenerFactory(
     DebugHandlerFactory<T> debugHandlerFactory,
     TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> nextConnectionListener,
-    @Nullable EgressPaths egressPaths,
-    DestinationArrivalPaths<T> paths
+    EgressPaths egressPaths,
+    DestinationArrivalPaths<T> destinationPaths
   ) {
     this.debugHandlerFactory = debugHandlerFactory;
     this.nextConnectionListener = nextConnectionListener;
     this.egressPaths = egressPaths;
-    this.paths = paths;
+    this.destinationPaths = destinationPaths;
   }
 
-  public static <T extends RaptorTripSchedule> TIntObjectMap<
-    ParetoSetEventListener<ArrivalView<T>>
-  > map(
-    DebugHandlerFactory<T> debugHandlerFactory,
-    TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> connectionListeners,
-    EgressPaths egressPaths,
-    DestinationArrivalPaths<T> destinationPaths
-  ) {
-    return new ArrivalsEventListenerMapper<>(
-      debugHandlerFactory,
-      connectionListeners,
-      egressPaths,
-      destinationPaths
-    ).map();
+  public TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> arrivalListeners() {
+    return assertProcessed(arrivalListeners);
   }
 
   /**
    * This method creates a ParetoSet for the given egress stop. When arrivals are added to the stop,
    * the "glue" make sure new destination arrivals are added to the destination arrivals.
    */
-  private TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> map() {
-    for (int stop : nextConnectionListener.keys()) {
-      append(stop, nextConnectionListener.get(stop));
-    }
+  public McArrivalsEventListenerFactory<T> create() {
     var egressByStop = egressPaths.byStop();
 
-    for (int stop : egressByStop.keys()) {
-      List<RaptorAccessEgress> egressList = egressByStop.get(stop);
-      append(stop, new CalculateTransferToDestination<>(egressList, paths));
+    TIntSet stops = new TIntHashSet();
+    stops.addAll(nextConnectionListener.keySet());
+    stops.addAll(egressByStop.keySet());
+
+    var it = stops.iterator();
+    while (it.hasNext()) {
+      createListenerForStop(it.next(), egressByStop);
     }
-    return result;
+
+    this.processed = true;
+    return this;
   }
 
-  private void append(int stop, ParetoSetEventListener<ArrivalView<T>> listener) {
-    var e = result.get(stop);
-    var l = listener;
-    if (e != null) {
-      // existing listeners should be inserted before new one
-      l = ParetoSetEventListenerComposite.of(e, listener);
-    } else if (debugHandlerFactory.isDebugStopArrival(stop)) {
-      // Debug listerner is inserted first
-      var debug = debugHandlerFactory.paretoSetStopArrivalListener(stop);
-      l = ParetoSetEventListenerComposite.of(debug, l);
+  private void createListenerForStop(
+    int stop,
+    TIntObjectMap<List<RaptorAccessEgress>> egressByStop
+  ) {
+    var l = ParetoSetEventListenerComposite.of(
+      debugHandlerFactory.paretoSetStopArrivalListener(stop),
+      egressStopListeners(egressByStop.get(stop)),
+      nextConnectionListener.get(stop)
+    );
+    this.arrivalListeners.put(stop, l);
+  }
+
+  private ParetoSetEventListener<ArrivalView<T>> egressStopListeners(
+    List<RaptorAccessEgress> egressList
+  ) {
+    return egressList == null
+      ? null
+      : new CalculateTransferToDestination<>(egressList, destinationPaths);
+  }
+
+  private <R> R assertProcessed(R result) {
+    if (!processed) {
+      throw new IllegalStateException("Call the map() method before accessing the result!");
     }
-    result.put(stop, l);
+    return result;
   }
 }
