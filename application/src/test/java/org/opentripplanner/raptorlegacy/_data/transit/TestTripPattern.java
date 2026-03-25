@@ -127,7 +127,7 @@ public class TestTripPattern implements RaptorTripPattern {
   }
 
   @Override
-  public int patternIndex() {
+  public int routeIndex() {
     return patternIndex;
   }
 

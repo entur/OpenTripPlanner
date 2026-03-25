@@ -6,7 +6,11 @@ package org.opentripplanner.raptor.spi;
  * no gaps, as the trips visit the stops.
  */
 public interface RaptorTripPattern {
-  int patternIndex();
+  /**
+   * Used to reference the Rote this pattern is part of. The index is also used to x-reference
+   * stops and routes, and to look up "decorating" information like constraint transfers.
+   */
+  int routeIndex();
 
   /**
    * Number of stops in the pattern.

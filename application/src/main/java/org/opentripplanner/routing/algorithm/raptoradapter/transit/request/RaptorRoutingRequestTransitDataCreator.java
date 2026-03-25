@@ -58,7 +58,7 @@ class RaptorRoutingRequestTransitDataCreator {
     // Loop through all patterns, and mark all stops containing that pattern
     for (TripPatternForDates tripPatternForDateList : tripPatternsForDate) {
       final RoutingTripPattern tripPattern = tripPatternForDateList.getTripPattern();
-      final int patternIndex = tripPattern.patternIndex();
+      final int patternIndex = tripPattern.routeIndex();
       final int numberOfStopsInPattern = tripPattern.numberOfStopsInPattern();
       for (int i = 0; i < numberOfStopsInPattern; i++) {
         patternsForStop[tripPattern.stopIndex(i)].add(patternIndex);
@@ -77,7 +77,7 @@ class RaptorRoutingRequestTransitDataCreator {
   public List<TripPatternForDates> createPatternIndex(List<TripPatternForDates> tripPatterns) {
     TripPatternForDates[] result = new TripPatternForDates[RoutingTripPattern.indexCounter()];
     for (var pattern : tripPatterns) {
-      result[pattern.getTripPattern().patternIndex()] = pattern;
+      result[pattern.getTripPattern().routeIndex()] = pattern;
     }
     return Arrays.asList(result);
   }

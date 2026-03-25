@@ -79,11 +79,7 @@ final class AccessStopArrival<T extends RaptorTripSchedule> extends McStopArriva
   @Override
   public RaptorTripScheduleStopPosition subsequentBoardingConstraint() {
     if (access instanceof RaptorOnBoardAccess onBoardAccess) {
-      return new RaptorTripScheduleStopPosition(
-        onBoardAccess.tripBoarding().routeIndex(),
-        onBoardAccess.tripBoarding().tripScheduleIndex(),
-        onBoardAccess.tripBoarding().stopPositionInPattern()
-      );
+      return onBoardAccess.tripBoarding();
     }
     throw new UnsupportedOperationException();
   }

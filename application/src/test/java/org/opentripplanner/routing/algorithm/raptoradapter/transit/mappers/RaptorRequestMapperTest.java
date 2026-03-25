@@ -115,7 +115,7 @@ class RaptorRequestMapperTest {
 
     var result = map(req.buildRequest());
 
-    assertTrue(result.searchParams().isVisitViaSearch());
+    assertTrue(result.searchParams().isViaSearch());
     assertEquals(
       "[RaptorViaLocation{via Via A wait 13m : [(stop 0, 13m)]}]",
       result.searchParams().viaLocations().toString()
@@ -130,7 +130,6 @@ class RaptorRequestMapperTest {
 
     var result = map(req.buildRequest());
 
-    assertTrue(result.searchParams().isPassThroughSearch());
     assertEquals(
       "[RaptorViaLocation{pass-through Via A : [(stop " + STOP_A.getIndex() + ")]}]",
       result.searchParams().viaLocations().toString()
@@ -291,7 +290,7 @@ class RaptorRequestMapperTest {
     switch (feature) {
       case VIA_VISIT:
         if (expected) {
-          assertTrue(result.searchParams().isVisitViaSearch());
+          assertTrue(result.searchParams().isViaSearch());
           // One via location exist(no NPE), but it does not allow pass-through
           assertEquals(
             "RaptorViaLocation{via Via A : [(stop 0)]}",
@@ -301,7 +300,7 @@ class RaptorRequestMapperTest {
         break;
       case VIA_PASS_THROUGH:
         if (expected) {
-          assertTrue(result.searchParams().isPassThroughSearch());
+          assertTrue(result.searchParams().isViaSearch());
           assertEquals(
             "RaptorViaLocation{pass-through Via A : [(stop 0)]}",
             result.searchParams().viaLocations().get(0).toString()
@@ -310,9 +309,6 @@ class RaptorRequestMapperTest {
         break;
       case TRANSIT_GROUP_PRIORITY:
         assertEquals(expected, result.multiCriteria().transitPriorityCalculator().isPresent());
-        if (expected) {
-          assertFalse(result.searchParams().isPassThroughSearch());
-        }
         break;
     }
   }

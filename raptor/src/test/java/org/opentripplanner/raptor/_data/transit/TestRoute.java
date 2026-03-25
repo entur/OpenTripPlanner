@@ -100,6 +100,11 @@ public class TestRoute implements RaptorRoute<TestTripSchedule>, RaptorTimeTable
     return this;
   }
 
+  public TestRoute withIndex(int index) {
+    pattern.initRouteIndex(index);
+    return this;
+  }
+
   @Override
   public String toString() {
     return ToStringBuilder.of(TestRoute.class)

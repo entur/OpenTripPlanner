@@ -53,7 +53,6 @@ class N01_OnBoardAccessTest {
   @DisplayName("On-board access with two routes boards the correct route")
   void onBoardAccess() {
     data
-      .access(new TestRaptorOnBoardAccess(0, 0, 1, STOP_B, 0))
       .withRoutes()
       .withTimetables(
         """
@@ -64,8 +63,9 @@ class N01_OnBoardAccessTest {
         A     B           D
         0:00  0:06        0:15
         """
-      )
-      .egress("D ~ Walk 30s");
+      );
+    var trip = data.getRoute(0).getTripSchedule(0);
+    data.access(new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -83,7 +83,6 @@ class N01_OnBoardAccessTest {
   )
   void transfer() {
     data
-      .access(new TestRaptorOnBoardAccess(0, 0, 1, STOP_B, 0))
       .withRoutes()
       .withTimetables(
         """
@@ -94,8 +93,10 @@ class N01_OnBoardAccessTest {
         A     B     C     D
         0:00  0:06  0:12  0:15
         """
-      )
-      .egress("D ~ Walk 30s");
+      );
+
+    var trip = data.getRoute(0).getTripSchedule(0);
+    data.access(new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -113,7 +114,6 @@ class N01_OnBoardAccessTest {
   @DisplayName("On-board access does not allow invalid boardings or transfers")
   void noInvalidTransfers() {
     data
-      .access(new TestRaptorOnBoardAccess(0, 0, 1, STOP_B, 0))
       .withRoutes()
       .withTimetables(
         """
@@ -127,8 +127,10 @@ class N01_OnBoardAccessTest {
         A     B     C     D
         0:00  0:06  0:09  0:15
         """
-      )
-      .egress("D ~ Walk 30s");
+      );
+
+    var trip = data.getRoute(0).getTripSchedule(0);
+    data.access(new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -144,7 +146,6 @@ class N01_OnBoardAccessTest {
   @DisplayName("On-board access on a ring-line starts from the provided stop position")
   void ringLineBoardsCorrectStopPosition() {
     data
-      .access(new TestRaptorOnBoardAccess(0, 0, 5, STOP_B, 0))
       .withRoutes()
       .withTimetables(
         """
@@ -152,8 +153,9 @@ class N01_OnBoardAccessTest {
         A     B     C     D     A     B     C     D
         0:00  0:05  0:10  0:20  0:30  0:35  0:40  0:50
         """
-      )
-      .egress("D ~ Walk 30s");
+      );
+    var trip = data.getRoute(0).getTripSchedule(0);
+    data.access(new TestRaptorOnBoardAccess(trip, 5, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -171,7 +173,6 @@ class N01_OnBoardAccessTest {
   )
   void correctTrip() {
     data
-      .access(new TestRaptorOnBoardAccess(0, 1, 1, STOP_B, 0))
       .withRoutes()
       .withTimetables(
         """
@@ -181,8 +182,9 @@ class N01_OnBoardAccessTest {
         0:00  0:05  0:10  0:20
         0:00  0:10  0:15  0:25
         """
-      )
-      .egress("D ~ Walk 30s");
+      );
+    var trip = data.getRoute(0).getTripSchedule(1);
+    data.access(new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -199,18 +201,17 @@ class N01_OnBoardAccessTest {
   @Test
   @DisplayName("On-board access to a non-existing route results in exception")
   void nonExistentRoute() {
-    data
-      .access(new TestRaptorOnBoardAccess(1, 1, 1, STOP_B, 0))
-      .withTimetables(
-        """
-        -- R1
-        A     B     C     D
-        0:00  0:02  0:05  0:10
-        0:00  0:05  0:10  0:20
-        0:00  0:10  0:15  0:25
-        """
-      )
-      .egress("D ~ Walk 30s");
+    data.withTimetables(
+      """
+      -- R1
+      A     B     C     D
+      0:00  0:02  0:05  0:10
+      0:00  0:05  0:10  0:20
+      0:00  0:10  0:15  0:25
+      """
+    );
+    var trip = data.getRoute(1).getTripSchedule(1);
+    data.access(new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -222,18 +223,17 @@ class N01_OnBoardAccessTest {
   @Test
   @DisplayName("On-board access to a non-existing trip in route results in exception")
   void nonExistentTrip() {
-    data
-      .access(new TestRaptorOnBoardAccess(0, 3, 1, STOP_B, 0))
-      .withTimetables(
-        """
-        -- R1
-        A     B     D
-        0:00  0:05  0:10
-        0:00  0:10  0:20
-        0:00  0:15  0:25
-        """
-      )
-      .egress("D ~ Walk 30s");
+    data.withTimetables(
+      """
+      -- R1
+      A     B     D
+      0:00  0:05  0:10
+      0:00  0:10  0:20
+      0:00  0:15  0:25
+      """
+    );
+    var trip = data.getRoute(0).getTripSchedule(3);
+    data.access(new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)).egress("D ~ Walk 30s");
 
     var requestBuilder = prepareRequest();
 
@@ -245,26 +245,28 @@ class N01_OnBoardAccessTest {
   @Test
   @DisplayName("Multiple on-board accesses yields a pareto set of non-dominated paths")
   void multipleAccesses() {
+    data.withTimetables(
+      """
+      -- R1
+      A     B     C     D
+      0:00  0:05  0:10  0:15
+      0:05  0:10  0:15  0:20
+      -- R2
+      A     B
+      0:02  0:04
+      """
+    );
+    var trip01 = data.getRoute(0).getTripSchedule(1);
+    var trip10 = data.getRoute(1).getTripSchedule(0);
+
     data
       .access(
         // Dominated by trip 1 @ C
-        new TestRaptorOnBoardAccess(0, 1, 1, STOP_B, 0),
+        new TestRaptorOnBoardAccess(trip01, 1, STOP_B, 0),
         // Pareto-optimal
-        new TestRaptorOnBoardAccess(0, 1, 2, STOP_C, 0),
+        new TestRaptorOnBoardAccess(trip01, 2, STOP_C, 0),
         // Pareto-optimal
-        new TestRaptorOnBoardAccess(1, 0, 0, STOP_A, 0)
-      )
-      .withRoutes()
-      .withTimetables(
-        """
-        -- R1
-        A     B     C     D
-        0:00  0:05  0:10  0:15
-        0:05  0:10  0:15  0:20
-        -- R2
-        A     B
-        0:02  0:04
-        """
+        new TestRaptorOnBoardAccess(trip10, 0, STOP_A, 0)
       )
       .egress("D ~ Walk 30s");
 
@@ -285,12 +287,6 @@ class N01_OnBoardAccessTest {
   @DisplayName("Mixing walk and on-board accesses yields a pareto set of non-dominated paths")
   void walkAndOnBoard() {
     data
-      .access(
-        // Walk to E to catch a trip that arrives earlier
-        TestAccessEgress.of("Walk 5m ~ E"),
-        // Or stay on board
-        new TestRaptorOnBoardAccess(0, 0, 1, STOP_B, 0)
-      )
       .withRoutes()
       .withTimetables(
         """
@@ -301,6 +297,15 @@ class N01_OnBoardAccessTest {
                     E     D
                     0:10  0:12
         """
+      );
+
+    var trip = data.getRoute(0).getTripSchedule(0);
+    data
+      .access(
+        // Walk to E to catch a trip that arrives earlier
+        TestAccessEgress.of("Walk 5m ~ E"),
+        // Or stay on board
+        new TestRaptorOnBoardAccess(trip, 1, STOP_B, 0)
       )
       .egress("D ~ Walk 30s");
 
@@ -321,10 +326,6 @@ class N01_OnBoardAccessTest {
   @DisplayName("Range query results in multiple consecutive paths")
   void rangeQuery() {
     data
-      .access(
-        new TestRaptorOnBoardAccess(0, 0, 1, STOP_B, 0),
-        new TestRaptorOnBoardAccess(0, 1, 1, STOP_B, 0)
-      )
       .withRoutes()
       .withTimetables(
         """
@@ -333,6 +334,13 @@ class N01_OnBoardAccessTest {
         0:00  0:05:05  0:10  0:15
         0:05  0:10     0:15  0:20
         """
+      );
+    var trip0 = data.getRoute(0).getTripSchedule(0);
+    var trip1 = data.getRoute(0).getTripSchedule(1);
+    data
+      .access(
+        new TestRaptorOnBoardAccess(trip0, 1, STOP_B, 0),
+        new TestRaptorOnBoardAccess(trip1, 1, STOP_B, 0)
       )
       .egress("D ~ Walk 30s");
 

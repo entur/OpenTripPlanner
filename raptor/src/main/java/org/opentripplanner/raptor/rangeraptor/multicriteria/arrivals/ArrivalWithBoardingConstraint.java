@@ -11,7 +11,7 @@ public class ArrivalWithBoardingConstraint<T extends RaptorTripSchedule> {
 
   public ArrivalWithBoardingConstraint(
     McStopArrival<T> stopArrival,
-    RaptorTripScheduleStopPosition tripBoarding
+    RaptorTripScheduleStopPosition<T> tripBoarding
   ) {
     this.stopArrival = stopArrival;
     this.tripBoarding = tripBoarding;
@@ -21,7 +21,7 @@ public class ArrivalWithBoardingConstraint<T extends RaptorTripSchedule> {
     return stopArrival;
   }
 
-  public RaptorTripScheduleStopPosition tripToBoard() {
+  public RaptorTripScheduleStopPosition<T> tripToBoard() {
     return tripBoarding;
   }
 

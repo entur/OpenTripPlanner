@@ -59,7 +59,7 @@ class PatternCostCalculator<T extends DefaultTripSchedule> implements RaptorCost
       trip,
       toStop
     );
-    boolean includeUnpreferredCost = unpreferredPatterns.get(trip.pattern().patternIndex());
+    boolean includeUnpreferredCost = unpreferredPatterns.get(trip.pattern().routeIndex());
 
     if (includeUnpreferredCost) {
       int unpreferredCostValue = unpreferredCost.calculateRaptorCost(transitTime);

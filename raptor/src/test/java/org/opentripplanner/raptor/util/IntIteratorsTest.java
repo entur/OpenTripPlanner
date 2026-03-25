@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.opentripplanner.raptor.util.IntIterators.intDecIterator;
 import static org.opentripplanner.raptor.util.IntIterators.intIncIterator;
 import static org.opentripplanner.raptor.util.IntIterators.singleValueIterator;
@@ -86,7 +87,78 @@ public class IntIteratorsTest {
 
   @Test
   public void testEmptyIterator() {
+    assertFalse(IntIterators.empty().hasNext());
     assertEquals("[]", toString(IntIterators.empty()));
+  }
+
+  @Test
+  public void testSkipIncrementByOne() {
+    // Skip 0 elements - no change
+    assertEquals("[0, 1, 2, 3]", toStringSkip(intIncIterator(0, 4), 0));
+
+    // Skip 2 elements from the start
+    assertEquals("[2, 3]", toStringSkip(intIncIterator(0, 4), 2));
+
+    // Skip all remaining elements
+    assertEquals("[]", toStringSkip(intIncIterator(0, 4), 4));
+
+    // Skip more than available
+    assertEquals("[]", toStringSkip(intIncIterator(0, 4), 10));
+
+    // Skip 1 element mid-iteration: consume 0, then skip 1 and 2
+    var it = intIncIterator(0, 6);
+    it.next();
+    it.skip(2);
+    assertEquals("[3, 4, 5]", toString(it));
+  }
+
+  @Test
+  public void testSkipIncrementByN() {
+    // increment=3, endValue=9: full sequence is [3, 6, 9]; skip 1 skips 3, leaving [6, 9]
+    assertEquals("[6, 9]", toStringSkip(intIncIterator(0, 9, 3), 1));
+
+    // Skip 2 elements from sequence [3, 6, 9]
+    assertEquals("[9]", toStringSkip(intIncIterator(0, 9, 3), 2));
+
+    // Skip all
+    assertEquals("[]", toStringSkip(intIncIterator(0, 9, 3), 3));
+  }
+
+  @Test
+  public void testSkipDecrementByOne() {
+    // Skip 0 elements - no change
+    assertEquals("[4, 3, 2, 1]", toStringSkip(intDecIterator(5, 1), 0));
+
+    // Skip 2 elements from start (4, 3 skipped -> [2, 1])
+    assertEquals("[2, 1]", toStringSkip(intDecIterator(5, 1), 2));
+
+    // Skip all remaining elements
+    assertEquals("[]", toStringSkip(intDecIterator(5, 1), 4));
+
+    // Skip 1 element mid-iteration: consume 4, then skip 3
+    var it = intDecIterator(5, 1);
+    it.next();
+    it.skip(1);
+    assertEquals("[2, 1]", toString(it));
+  }
+
+  @Test
+  public void testSkipDecrementByN() {
+    // decrement=7: startValue=21, sequence is 14, 7, 0; skip 1 skips 14, leaving [7, 0]
+    assertEquals("[7, 0]", toStringSkip(intDecIterator(21, 0, 7), 1));
+
+    // Skip 2 skips 14 and 7, leaving [0]
+    assertEquals("[0]", toStringSkip(intDecIterator(21, 0, 7), 2));
+
+    // Skip all
+    assertEquals("[]", toStringSkip(intDecIterator(21, 0, 7), 3));
+  }
+
+  @Test
+  public void testSkipEmpty() {
+    var it = IntIterators.empty();
+    it.skip(5);
+    assertEquals("[]", toString(it));
   }
 
   private static String toString(IntIterator it) {
@@ -98,5 +170,9 @@ public class IntIteratorsTest {
       buf.append(", ").append(it.next());
     }
     return empty ? "[]" : "[" + buf.substring(2) + "]";
+  }
+
+  private static String toStringSkip(IntIterator it, int skipCount) {
+    return toString(it.skip(skipCount));
   }
 }

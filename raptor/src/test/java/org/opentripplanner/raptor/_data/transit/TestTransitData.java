@@ -267,13 +267,13 @@ public class TestTransitData
   }
 
   public TestTransitData withRoute(TestRoute route) {
-    this.routes.add(route);
-    int routeIndex = this.routes.indexOf(route);
+    var r = route.withIndex(routes.size());
+    this.routes.add(r);
     var pattern = route.pattern();
     for (int i = 0; i < pattern.numberOfStopsInPattern(); ++i) {
       int stopIndex = pattern.stopIndex(i);
       expandNumOfStops(stopIndex);
-      routeIndexesByStopIndex.get(stopIndex).add(routeIndex);
+      routeIndexesByStopIndex.get(stopIndex).add(r.pattern().routeIndex());
     }
     return this;
   }

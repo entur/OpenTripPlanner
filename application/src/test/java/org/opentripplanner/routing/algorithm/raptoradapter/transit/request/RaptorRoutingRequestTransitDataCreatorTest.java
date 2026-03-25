@@ -79,9 +79,9 @@ public class RaptorRoutingRequestTransitDataCreatorTest {
     );
 
     // Get the results
-    var r1 = findTripPatternForDate(tripPattern1.patternIndex(), combinedTripPatterns);
-    var r2 = findTripPatternForDate(tripPattern2.patternIndex(), combinedTripPatterns);
-    var r3 = findTripPatternForDate(tripPattern3.patternIndex(), combinedTripPatterns);
+    var r1 = findTripPatternForDate(tripPattern1.routeIndex(), combinedTripPatterns);
+    var r2 = findTripPatternForDate(tripPattern2.routeIndex(), combinedTripPatterns);
+    var r3 = findTripPatternForDate(tripPattern3.routeIndex(), combinedTripPatterns);
 
     // Check the number of trip schedules available for each pattern after combining dates in the search range
     assertEquals(2, r1.numberOfTripSchedules());
@@ -175,7 +175,7 @@ public class RaptorRoutingRequestTransitDataCreatorTest {
   ) {
     return list
       .stream()
-      .filter(p -> patternIndex == p.getTripPattern().patternIndex())
+      .filter(p -> patternIndex == p.getTripPattern().routeIndex())
       .findFirst()
       .orElseThrow();
   }

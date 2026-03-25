@@ -161,6 +161,12 @@ public class AccessPaths {
           raptorIterationStartTime - signedIterationStep(AccessPaths.this.iterationTimePenaltyLimit)
         );
       }
+
+      @Override
+      public IntIterator skip(int n) {
+        AccessPaths.this.iterationTimePenaltyLimit += iterationStep * n;
+        return this;
+      }
     };
   }
 

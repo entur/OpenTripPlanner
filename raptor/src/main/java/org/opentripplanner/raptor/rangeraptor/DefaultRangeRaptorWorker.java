@@ -14,8 +14,8 @@ import org.opentripplanner.raptor.rangeraptor.transit.AccessPaths;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstants;
-import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
+import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
 /**
@@ -130,8 +130,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   public void applyOnBoardTripAccess(int iterationDepartureTime) {
     for (var accessPath : accessPaths.onBoardAccessPaths()) {
       var boarding = accessPath.tripBoarding();
-      var route = transitData.getRouteForIndex(boarding.routeIndex());
-      var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
+      var trip = resolveTrip(boarding);
       var boardTime = trip.departure(boarding.stopPositionInPattern());
 
       if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
@@ -152,54 +151,12 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
       while (routeIndexIterator.hasNext()) {
         var routeIndex = routeIndexIterator.next();
         var route = transitData.getRouteForIndex(routeIndex);
-        var pattern = route.pattern();
-        var txSearch = enableTransferConstraints
-          ? calculator.transferConstraintsSearch(transitData, routeIndex)
-          : null;
-
-        int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
-        int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
 
         transitWorker.prepareForTransitWith(route);
 
-        IntIterator stopPositions = calculator.patternStopIterator(
-          pattern.numberOfStopsInPattern()
-        );
-
-        while (stopPositions.hasNext()) {
-          int stopPos = stopPositions.next();
-          int stopIndex = pattern.stopIndex(stopPos);
-
-          transitWorker.prepareForNextStop(stopIndex, stopPos);
-
-          // attempt to alight if we're on board, this is done above the board search
-          // so that we don't alight on first stop boarded
-          if (calculator.alightingPossibleAt(pattern, stopPos)) {
-            if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
-              transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
-            } else {
-              transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
-            }
-          }
-
-          if (calculator.boardingPossibleAt(pattern, stopPos)) {
-            // Don't attempt to board if this stop was not reached in the last round.
-            // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
-            if (state.isStopReachedInPreviousRound(stopIndex)) {
-              // has constrained transfers
-              if (enableTransferConstraints && txSearch.transferExistTargetStop(stopPos)) {
-                transitWorker.boardWithConstrainedTransfer(
-                  stopIndex,
-                  stopPos,
-                  boardSlack,
-                  txSearch
-                );
-              } else {
-                transitWorker.boardWithRegularTransfer(stopIndex, stopPos, boardSlack);
-              }
-            }
-          }
-        }
+        var pattern = route.pattern();
+        var stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
+        boardAndAlightPattern(pattern, stopPositions);
       }
     });
   }
@@ -207,19 +164,18 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   @Override
   public void routeTransitUsingOnBoardTripAccess() {
     var arrivals = transitWorker.consumeOnBoardStopArrivals();
-    while (arrivals.hasNext()) {
-      var it = arrivals.next();
+    for (var it = arrivals.next(); arrivals.hasNext(); ) {
       var arrival = it.stopArrival();
       var boarding = it.tripToBoard();
       var route = transitData.getRouteForIndex(boarding.routeIndex());
-      var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
       int stopPosition = boarding.stopPositionInPattern();
+      T trip = resolveTrip(it.tripToBoard());
 
       transitWorker.prepareForTransitWith(route);
       boolean boarded = transitWorker.boardAsOnBoardAccess(arrival, stopPosition, trip);
 
       if (boarded) {
-        alightOnBoardAccess(boarding, route);
+        alightOnBoardAccess(boarding, route.pattern());
         arrivals.remove();
       }
     }
@@ -264,31 +220,23 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     }
   }
 
-  private void alightOnBoardAccess(
-    RaptorTripScheduleStopPosition tripBoarding,
-    RaptorRoute<T> route
-  ) {
-    var pattern = route.pattern();
-    IntIterator stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
-
+  /**
+   * Itterate over all stops in the given {@code stopPositions} and alight and board for each
+   * stop.
+   */
+  private void boardAndAlightPattern(RaptorTripPattern pattern, IntIterator stopPositions) {
+    int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
     int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
-
-    while (
-      stopPositions.hasNext() && stopPositions.next() != tripBoarding.stopPositionInPattern()
-    ) {
-      // Skip past the initial on-board access stop
-      // We will only consider alighting on stops after this one
-    }
-
     var txSearch = enableTransferConstraints
-      ? calculator.transferConstraintsSearch(transitData, tripBoarding.routeIndex())
+      ? calculator.transferConstraintsSearch(transitData, pattern.routeIndex())
       : null;
 
     while (stopPositions.hasNext()) {
       int stopPos = stopPositions.next();
       int stopIndex = pattern.stopIndex(stopPos);
 
-      // attempt to alight if we're on board
+      // attempt to alight if we're on board, this is done above the board search
+      // so that we don't alight on first stop boarded
       if (calculator.alightingPossibleAt(pattern, stopPos)) {
         if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
           transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
@@ -296,6 +244,40 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
           transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
         }
       }
+
+      if (calculator.boardingPossibleAt(pattern, stopPos)) {
+        // Don't attempt to board if this stop was not reached in the last round.
+        // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
+        if (state.isStopReachedInPreviousRound(stopIndex)) {
+          // has constrained transfers
+          if (enableTransferConstraints && txSearch.transferExistTargetStop(stopPos)) {
+            transitWorker.boardWithConstrainedTransfer(stopIndex, stopPos, boardSlack, txSearch);
+          } else {
+            transitWorker.boardWithRegularTransfer(stopIndex, stopPos, boardSlack);
+          }
+        }
+      }
     }
+  }
+
+  private void alightOnBoardAccess(
+    RaptorTripScheduleStopPosition tripBoarding,
+    RaptorTripPattern pattern
+  ) {
+    IntIterator stopPositions = calculator
+      .patternStopIterator(pattern.numberOfStopsInPattern())
+      .skip(tripBoarding.stopPositionInPattern());
+
+    boardAndAlightPattern(pattern, stopPositions);
+  }
+
+  private T resolveTrip(RaptorTripScheduleStopPosition<T> boarding) {
+    var trip = boarding.trip();
+
+    if (trip != null) {
+      return trip;
+    }
+    var route = transitData.getRouteForIndex(boarding.routeIndex());
+    return route.timetable().getTripSchedule(boarding.tripScheduleIndex());
   }
 }

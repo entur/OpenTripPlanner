@@ -14,4 +14,9 @@ public interface IntIterator {
    * @return true if there is more int values in the sequence.
    */
   boolean hasNext();
+
+  /**
+   * Skip the next {@code n} elements.
+   */
+  IntIterator skip(int n);
 }

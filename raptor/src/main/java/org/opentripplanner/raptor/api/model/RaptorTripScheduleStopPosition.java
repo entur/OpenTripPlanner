@@ -1,6 +1,9 @@
 package org.opentripplanner.raptor.api.model;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
+import org.opentripplanner.raptor.spi.RaptorConstants;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -8,11 +11,14 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * schedule in a route. This can for example be used to identify where a bording or alithing
  * happens.
  */
-public final class RaptorTripScheduleStopPosition {
+public final class RaptorTripScheduleStopPosition<T extends RaptorTripSchedule> {
 
   private final int routeIndex;
   private final int tripScheduleIndex;
   private final int stopPositionInPattern;
+
+  @Nullable
+  private final T trip;
 
   public RaptorTripScheduleStopPosition(
     int routeIndex,
@@ -22,6 +28,14 @@ public final class RaptorTripScheduleStopPosition {
     this.routeIndex = routeIndex;
     this.tripScheduleIndex = tripScheduleIndex;
     this.stopPositionInPattern = stopPositionInPattern;
+    this.trip = null;
+  }
+
+  public RaptorTripScheduleStopPosition(T trip, int stopPositionInPattern) {
+    this.routeIndex = trip.pattern().routeIndex();
+    this.tripScheduleIndex = RaptorConstants.NOT_SET;
+    this.stopPositionInPattern = stopPositionInPattern;
+    this.trip = trip;
   }
 
   /// The index of the boarded route
@@ -39,6 +53,11 @@ public final class RaptorTripScheduleStopPosition {
   /// pattern visit some of the same stops multiple times.
   public int stopPositionInPattern() {
     return stopPositionInPattern;
+  }
+
+  @Nullable
+  public T trip() {
+    return trip;
   }
 
   @Override

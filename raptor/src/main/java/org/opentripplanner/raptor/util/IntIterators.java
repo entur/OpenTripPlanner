@@ -15,6 +15,11 @@ public class IntIterators {
     public boolean hasNext() {
       return false;
     }
+
+    @Override
+    public IntIterator skip(int n) {
+      return this;
+    }
   };
 
   /** This is private to forbid construction. */
@@ -44,6 +49,12 @@ public class IntIterators {
       public boolean hasNext() {
         return i < endValue;
       }
+
+      @Override
+      public IntIterator skip(int n) {
+        i += n;
+        return this;
+      }
     };
   }
 
@@ -72,6 +83,12 @@ public class IntIterators {
       public boolean hasNext() {
         return i < endValue;
       }
+
+      @Override
+      public IntIterator skip(int n) {
+        i += increment * n;
+        return this;
+      }
     };
   }
 
@@ -93,6 +110,12 @@ public class IntIterators {
       @Override
       public boolean hasNext() {
         return i >= endValue;
+      }
+
+      @Override
+      public IntIterator skip(int n) {
+        i -= n;
+        return this;
       }
     };
   }
@@ -122,6 +145,12 @@ public class IntIterators {
       @Override
       public boolean hasNext() {
         return i >= endValue;
+      }
+
+      @Override
+      public IntIterator skip(int n) {
+        i -= decrement * n;
+        return this;
       }
     };
   }

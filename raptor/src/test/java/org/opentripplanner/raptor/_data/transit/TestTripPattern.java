@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor._data.transit;
 
 import java.util.Objects;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -10,22 +11,20 @@ public class TestTripPattern implements RaptorTripPattern {
   private final int[] stopIndexes;
   private final BoardAlightRestrictions restrictions;
   private final int slackIndex;
-  private final int patternIndex;
   private final int priorityGroupId;
+  private int routeIndex = RaptorConstants.NOT_SET;
 
   private TestTripPattern(
     String name,
     int[] stopIndexes,
     BoardAlightRestrictions restrictions,
     int slackIndex,
-    int patternIndex,
     int priorityGroupId
   ) {
     this.name = Objects.requireNonNull(name);
     this.stopIndexes = Objects.requireNonNull(stopIndexes);
     this.restrictions = Objects.requireNonNull(restrictions);
     this.slackIndex = slackIndex;
-    this.patternIndex = patternIndex;
     this.priorityGroupId = priorityGroupId;
   }
 
@@ -68,8 +67,8 @@ public class TestTripPattern implements RaptorTripPattern {
   }
 
   @Override
-  public int patternIndex() {
-    return patternIndex;
+  public int routeIndex() {
+    return routeIndex;
   }
 
   @Override
@@ -91,13 +90,19 @@ public class TestTripPattern implements RaptorTripPattern {
       .toString();
   }
 
+  public void initRouteIndex(int index) {
+    if (this.routeIndex != RaptorConstants.NOT_SET && index < 0) {
+      throw new IllegalStateException("Old value: " + routeIndex + ", new value:" + index);
+    }
+    this.routeIndex = index;
+  }
+
   public static class Builder {
 
     private final String name;
     private int[] stopIndexes;
     private String restrictions;
     private int slackIndex = 0;
-    private int patternIndex = 0;
     private int priorityGroupId = 0;
 
     public Builder(String name, int... stopIndexes) {
@@ -133,11 +138,6 @@ public class TestTripPattern implements RaptorTripPattern {
       return this;
     }
 
-    public Builder patternIndex(int index) {
-      this.patternIndex = index;
-      return this;
-    }
-
     public Builder priorityGroup(int priorityGroupId) {
       this.priorityGroupId = priorityGroupId;
       return this;
@@ -151,7 +151,6 @@ public class TestTripPattern implements RaptorTripPattern {
           ? BoardAlightRestrictions.noRestriction(stopIndexes.length)
           : BoardAlightRestrictions.restrictions(restrictions),
         slackIndex,
-        patternIndex,
         priorityGroupId
       );
     }

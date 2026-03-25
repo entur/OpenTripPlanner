@@ -103,11 +103,11 @@ class TransferIndexGeneratorTest {
     var result = subject.generateTransfers();
 
     // Pattern2 boards at STOP_C (position 1), so forward transfers should exist there
-    var toPattern2 = result.toStop(pattern2.getRoutingTripPattern().patternIndex());
+    var toPattern2 = result.toStop(pattern2.getRoutingTripPattern().routeIndex());
     assertNotNull(toPattern2, "Should have forward transfers for pattern2");
 
     // Pattern1 alights at STOP_C (position 2), so reverse transfers should exist there
-    var fromPattern1 = result.fromStop(pattern1.getRoutingTripPattern().patternIndex());
+    var fromPattern1 = result.fromStop(pattern1.getRoutingTripPattern().routeIndex());
     assertNotNull(fromPattern1, "Should have reverse transfers for pattern1");
   }
 }

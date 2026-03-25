@@ -128,19 +128,8 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
 
   private void applyPassThrough(RaptorViaConnection c, McStopArrival<T> e) {
     if (e instanceof TransitArrival transitArrival) {
-      next.addOnBoardTripArrival(
-        createViaStopArrivalWithTripBoarding(e.previous(), c),
-        transitArrival.tripArrival()
-      );
+      next.addOnBoardTripArrival(e.previous(), transitArrival.tripArrival());
     }
-  }
-
-  @Nullable
-  private McStopArrival<T> createViaStopArrivalWithTripBoarding(
-    McStopArrival<T> previous,
-    RaptorViaConnection viaConnection
-  ) {
-    return previous;
   }
 
   private static <T extends RaptorTripSchedule> McStopArrival<T> createViaStopArrivalWithWaitTime(

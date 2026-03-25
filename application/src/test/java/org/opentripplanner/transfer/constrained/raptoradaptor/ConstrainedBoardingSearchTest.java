@@ -145,8 +145,8 @@ public class ConstrainedBoardingSearchTest {
     // Forward
     var subject = new ConstrainedBoardingSearch(
       true,
-      constrainedTransfers.fromStop(routingPattern2.patternIndex()),
-      constrainedTransfers.toStop(routingPattern2.patternIndex())
+      constrainedTransfers.fromStop(routingPattern2.routeIndex()),
+      constrainedTransfers.toStop(routingPattern2.routeIndex())
     );
     assertTrue(subject.transferExistTargetStop(toStopPos));
     assertFalse(subject.transferExistSourceStop(toStopPos));
@@ -154,8 +154,8 @@ public class ConstrainedBoardingSearchTest {
     // Reverse -
     subject = new ConstrainedBoardingSearch(
       false,
-      constrainedTransfers.toStop(routingPattern1.patternIndex()),
-      constrainedTransfers.fromStop(routingPattern1.patternIndex())
+      constrainedTransfers.toStop(routingPattern1.routeIndex()),
+      constrainedTransfers.fromStop(routingPattern1.routeIndex())
     );
     assertTrue(subject.transferExistTargetStop(fromStopPos));
     assertFalse(subject.transferExistSourceStop(fromStopPos));
@@ -352,8 +352,8 @@ public class ConstrainedBoardingSearchTest {
     TransferConstraint expectedConstraint
   ) {
     var constrainedTransfers = generateTransfersForPatterns(txList);
-    var transfersFromStop = constrainedTransfers.fromStop(routingPattern2.patternIndex());
-    var transfersToStop = constrainedTransfers.toStop(routingPattern2.patternIndex());
+    var transfersFromStop = constrainedTransfers.fromStop(routingPattern2.routeIndex());
+    var transfersToStop = constrainedTransfers.toStop(routingPattern2.routeIndex());
 
     var subject = new ConstrainedBoardingSearch(true, transfersFromStop, transfersToStop);
 
@@ -396,8 +396,8 @@ public class ConstrainedBoardingSearchTest {
     var constrainedTransfers = generateTransfersForPatterns(txList);
     var subject = new ConstrainedBoardingSearch(
       false,
-      constrainedTransfers.toStop(routingPattern1.patternIndex()),
-      constrainedTransfers.fromStop(routingPattern1.patternIndex())
+      constrainedTransfers.toStop(routingPattern1.routeIndex()),
+      constrainedTransfers.fromStop(routingPattern1.routeIndex())
     );
     int targetStopPos = route1.stopPosition(transferStop);
 

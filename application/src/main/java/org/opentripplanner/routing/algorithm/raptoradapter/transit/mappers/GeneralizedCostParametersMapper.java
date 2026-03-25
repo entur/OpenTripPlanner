@@ -58,7 +58,7 @@ public class GeneralizedCostParametersMapper {
           (unpreferredRoutes.contains(resolveRouteId.apply(pattern)) ||
             unpreferredAgencies.contains(resolveAgencyId.apply(pattern)))
         ) {
-          unpreferredPatterns.set(pattern.patternIndex());
+          unpreferredPatterns.set(pattern.routeIndex());
         }
       }
       builder.unpreferredPatterns(unpreferredPatterns);

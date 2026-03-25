@@ -89,10 +89,10 @@ public class PatternCostCalculatorTest {
     );
     var unpreferredPatterns = costParams.unpreferredPatterns();
 
-    assertTrue(unpreferredPatterns.get(unpreferredRoutePattern.patternIndex()));
-    assertTrue(unpreferredPatterns.get(unpreferredAgencyPattern.patternIndex()));
-    assertTrue(unpreferredPatterns.get(unpreferredRouteAgencyPattern.patternIndex()));
-    assertFalse(unpreferredPatterns.get(defaultPattern.patternIndex()));
+    assertTrue(unpreferredPatterns.get(unpreferredRoutePattern.routeIndex()));
+    assertTrue(unpreferredPatterns.get(unpreferredAgencyPattern.routeIndex()));
+    assertTrue(unpreferredPatterns.get(unpreferredRouteAgencyPattern.routeIndex()));
+    assertFalse(unpreferredPatterns.get(defaultPattern.routeIndex()));
 
     // test creation of linear cost function, the cost is in Raptor centi-seconds
     double expected = unpreferredCostFunctionOtpDomain

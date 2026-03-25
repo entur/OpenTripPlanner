@@ -54,7 +54,7 @@ class GeneralizedCostParametersMapperTest {
     for (var pattern : data.getPatterns()) {
       assertEquals(
         pattern.route().getAgency().getId().equals(unpreferredAgency),
-        unpreferredPatterns.get(pattern.patternIndex())
+        unpreferredPatterns.get(pattern.routeIndex())
       );
     }
   }

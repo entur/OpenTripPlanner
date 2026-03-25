@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.api.request;
 
+import static java.util.function.Predicate.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -82,13 +83,9 @@ class SearchParamsTest {
       .addViaLocation(RaptorViaLocation.passThrough("Via").addPassThroughStop(5).build())
       .buildSearchParam();
 
-    assertFalse(noVia.isVisitViaSearch());
-    assertTrue(via.isVisitViaSearch());
-    assertFalse(passThrough.isVisitViaSearch());
-
-    assertFalse(noVia.isPassThroughSearch());
-    assertFalse(via.isPassThroughSearch());
-    assertTrue(passThrough.isPassThroughSearch());
+    assertFalse(noVia.isViaSearch());
+    assertTrue(via.isViaSearch());
+    assertTrue(passThrough.isViaSearch());
 
     assertEquals("[]", toString(noVia.viaLocations()));
     assertEquals("[RaptorViaLocation{via Via : [(stop E)]}]", toString(via.viaLocations()));
@@ -99,9 +96,8 @@ class SearchParamsTest {
   }
 
   @Test
-  void addBothViaAndPassThroughIsNotSupported() {
-    var ex = assertThrows(IllegalArgumentException.class, () ->
-      searchParamBuilder()
+  void addBothViaAndPassThroughIsSupported() {
+    var request = searchParamBuilder()
         .addAccessPaths(walk(1, 30))
         .addEgressPaths(walk(7, 30))
         .addViaLocations(
@@ -110,15 +106,10 @@ class SearchParamsTest {
             RaptorViaLocation.passThrough("PassThrough").addPassThroughStop(5).build()
           )
         )
-        .build()
-    );
-    assertEquals(
-      "Combining pass-through and regular via-vist it is not allowed: [" +
-        "RaptorViaLocation{via Via : [(stop 5)]}, " +
-        "RaptorViaLocation{pass-through PassThrough : [(stop 5)]}" +
-        "].",
-      ex.getMessage()
-    );
+        .build();
+    assertTrue(request.searchParams().isViaSearch());
+    assertTrue(request.searchParams().viaLocations().stream().anyMatch(RaptorViaLocation::isPassThroughSearch));
+    assertTrue(request.searchParams().viaLocations().stream().anyMatch(not(RaptorViaLocation::isPassThroughSearch)));
   }
 
   @Test

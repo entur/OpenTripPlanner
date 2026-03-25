@@ -27,4 +27,12 @@ public final class BitSetIterator implements IntIterator {
   public boolean hasNext() {
     return nextIndex != -1;
   }
+
+  @Override
+  public IntIterator skip(int n) {
+    for (int i = 0; i < n && nextIndex != -1; i++) {
+      nextIndex = set.nextSetBit(nextIndex + 1);
+    }
+    return this;
+  }
 }

@@ -149,8 +149,8 @@ public class TripPatternForDates
   /* Implementing RaptorTripPattern */
 
   @Override
-  public int patternIndex() {
-    return tripPattern.patternIndex();
+  public int routeIndex() {
+    return tripPattern.routeIndex();
   }
 
   @Override

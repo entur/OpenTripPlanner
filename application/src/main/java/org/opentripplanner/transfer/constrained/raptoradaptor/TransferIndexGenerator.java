@@ -420,18 +420,18 @@ public class TransferIndexGenerator {
       var c = tx.getTransferConstraint();
 
       // Forward search
-      if (forwardTransfers[to.pattern.patternIndex()] == null) {
-        forwardTransfers[to.pattern.patternIndex()] = new TransferForPatternByStopPos();
+      if (forwardTransfers[to.pattern.routeIndex()] == null) {
+        forwardTransfers[to.pattern.routeIndex()] = new TransferForPatternByStopPos();
       }
-      forwardTransfers[to.pattern.patternIndex()].add(
+      forwardTransfers[to.pattern.routeIndex()].add(
         to.stopPosition,
         new TransferForPattern(sourcePoint, to.trip, rank, c)
       );
       // Reverse search
-      if (reverseTransfers[pattern.patternIndex()] == null) {
-        reverseTransfers[pattern.patternIndex()] = new TransferForPatternByStopPos();
+      if (reverseTransfers[pattern.routeIndex()] == null) {
+        reverseTransfers[pattern.routeIndex()] = new TransferForPatternByStopPos();
       }
-      reverseTransfers[pattern.patternIndex()].add(
+      reverseTransfers[pattern.routeIndex()].add(
         stopPosition,
         new TransferForPattern(to.sourcePoint, trip, rank, c)
       );

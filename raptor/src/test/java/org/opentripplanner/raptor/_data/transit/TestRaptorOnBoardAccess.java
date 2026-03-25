@@ -10,17 +10,12 @@ public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
   private final RaptorTripScheduleStopPosition tripBoarding;
 
   public TestRaptorOnBoardAccess(
-    int routeIndex,
-    int tripScheduleIndex,
+    TestTripSchedule trip,
     int stopPositionInPattern,
     int stop,
     int generalizedCost
   ) {
-    this.tripBoarding = new RaptorTripScheduleStopPosition(
-      routeIndex,
-      tripScheduleIndex,
-      stopPositionInPattern
-    );
+    this.tripBoarding = new RaptorTripScheduleStopPosition(trip, stopPositionInPattern);
     this.stop = stop;
     this.generalizedCost = generalizedCost;
   }

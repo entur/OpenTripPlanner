@@ -37,10 +37,8 @@ public interface TransitArrival<T extends RaptorTripSchedule> {
   int arrivalTime();
 
   default RaptorTripScheduleStopPosition tripArrival() {
-    return new RaptorTripScheduleStopPosition(
-      trip().pattern().patternIndex(),
-      trip().tripSortIndex(),
-      arrivalTime()
-    );
+    var trip = trip();
+    int stopPosInPattern = trip.findArrivalStopPosition(arrivalTime(), stop());
+    return new RaptorTripScheduleStopPosition(trip, stopPosInPattern);
   }
 }
