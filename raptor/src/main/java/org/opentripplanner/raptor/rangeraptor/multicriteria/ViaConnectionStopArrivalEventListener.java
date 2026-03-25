@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.request.RaptorViaConnection;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.api.view.TransitArrival;
@@ -38,6 +37,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   private final List<RaptorViaConnection> connections;
   private final McStopArrivals<T> next;
   private final List<McStopArrival<T>> transfersCache = new ArrayList<>();
+  private final boolean hasPassThrough;
 
   /**
    * @param publishTransfersEventHandler A callback used to publish via-transfer-connections. This
@@ -53,6 +53,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     this.stopArrivalFactory = stopArrivalFactory;
     this.connections = requireAtLeastNElements(connections, 1);
     this.next = next;
+    this.hasPassThrough = this.connections.stream().anyMatch(RaptorViaConnection::isPassThrough);
     publishTransfersEventHandler.accept(this::applyTransfers);
   }
 
@@ -98,19 +99,39 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     var e = (McStopArrival<T>) newElement;
     for (RaptorViaConnection c : connections) {
       if (c.isPassThrough()) {
-        if (e instanceof TransitArrival transitArrival) {
-          var tripBoarding = new RaptorTripScheduleStopPosition(1, 1, 1);
-          next.addOnBoardTripArrival(
-            createViaStopArrivalWithTripBoarding(e.previous(), c),
-            tripBoarding
-          );
-        }
+        applyPassThrough(c, e);
       } else if (c.isSameStop()) {
         next.addStopArrival(createViaStopArrivalWithWaitTime(e, c));
       } else if (e.arrivedOnBoard()) {
         transfersCache.add(createViaStopArrivalWithTransfer(e, c));
       }
       // Ignore arrive-on-foot + via-transfer
+    }
+  }
+
+  @Override
+  public void notifyElementRejected(ArrivalView<T> element, ArrivalView<T> rejectedByElement) {
+    if (hasPassThrough) {
+      //var e = (McStopArrival<T>) rejectedByElement;
+      System.err.println(
+        "(((((((((((((((((((((((((     PASS-THROUGH-REJECTED     )))))))))))))))))))))))))"
+      );
+      /*
+      for (RaptorViaConnection c : connections) {
+        if (c.isPassThrough()) {
+          applyPassThrough(c, e);
+        }
+      }
+    */
+    }
+  }
+
+  private void applyPassThrough(RaptorViaConnection c, McStopArrival<T> e) {
+    if (e instanceof TransitArrival transitArrival) {
+      next.addOnBoardTripArrival(
+        createViaStopArrivalWithTripBoarding(e.previous(), c),
+        transitArrival.tripArrival()
+      );
     }
   }
 

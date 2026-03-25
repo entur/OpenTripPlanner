@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.api.view;
 
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
 /**
@@ -34,4 +35,12 @@ public interface TransitArrival<T extends RaptorTripSchedule> {
   int stop();
 
   int arrivalTime();
+
+  default RaptorTripScheduleStopPosition tripArrival() {
+    return new RaptorTripScheduleStopPosition(
+      trip().pattern().patternIndex(),
+      trip().tripSortIndex(),
+      arrivalTime()
+    );
+  }
 }
