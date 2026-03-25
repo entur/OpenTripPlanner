@@ -14,6 +14,7 @@ import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.filter.CarpoolingRequest;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
+import org.opentripplanner.ext.carpooling.filter.Postfilters;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
@@ -116,6 +117,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final CarpoolingRepository repository;
   private final StreetLimitationParametersService streetLimitationParametersService;
   private final FilterChain preFilters;
+  private final Postfilters postFilters;
   private final CarpoolItineraryMapper itineraryMapper;
   private final PassengerDelayConstraints delayConstraints;
   private final InsertionPositionFinder positionFinder;
@@ -143,6 +145,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
+    this.postFilters = Postfilters.defaults();
     this.itineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
     this.delayConstraints = new PassengerDelayConstraints();
     this.positionFinder = new InsertionPositionFinder(delayConstraints, new BeelineEstimator());
@@ -278,6 +281,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .stream()
         .map(candidate -> itineraryMapper.toItinerary(request, candidate))
         .filter(Objects::nonNull)
+        .filter(itinerary -> postFilters.accepts(itinerary, carpoolingRequest, searchWindow))
         .toList();
     }
 
