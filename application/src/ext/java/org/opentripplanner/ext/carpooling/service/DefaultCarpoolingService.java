@@ -587,7 +587,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
       relativeEndTime,
       segmentsWithPassenger,
       TimeAndCost.ZERO,
-      carpoolReluctance
+      carpoolReluctance,
+      insertionCandidate.trip()
     );
 
     return accessEgress;

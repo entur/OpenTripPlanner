@@ -3,6 +3,7 @@ package org.opentripplanner.ext.carpooling.routing;
 import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.astar.model.GraphPath;
+import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.model.RaptorCostConverter;
@@ -29,6 +30,7 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   private final TimeAndCost penalty;
   private final double totalWeight;
   private final double carpoolReluctance;
+  private final CarpoolTrip trip;
 
   public CarpoolAccessEgress(
     int stop,
@@ -37,7 +39,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     int arrivalTimeOfPassenger,
     List<GraphPath<State, Edge, Vertex>> segments,
     TimeAndCost penalty,
-    Double carpoolReluctance
+    Double carpoolReluctance,
+    CarpoolTrip trip
   ) {
     this.departureTimeOfPassenger = departureTimeOfPassenger;
     this.arrivalTimeOfPassenger = arrivalTimeOfPassenger;
@@ -48,6 +51,7 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     this.c1 = RaptorCostConverter.toRaptorCost(this.totalWeight);
     this.segments = segments;
     this.penalty = penalty;
+    this.trip = trip;
   }
 
   @Override
@@ -103,8 +107,13 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
       this.arrivalTimeOfPassenger,
       this.segments,
       penalty,
-      this.carpoolReluctance
+      this.carpoolReluctance,
+      this.trip
     );
+  }
+
+  public CarpoolTrip getTrip() {
+    return trip;
   }
 
   /*

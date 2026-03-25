@@ -1,0 +1,1382 @@
+{
+  "tripPattern": {
+    "id": "2daf4cf8-1ec0-404a-8bd4-1c4531b001fb",
+    "generalizedCost": 2405,
+    "startTime": "2026-03-25T08:00:17+01:00",
+    "endTime": "2026-03-25T08:20:05+01:00",
+    "expectedStartTime": "2026-03-25T08:00:17+01:00",
+    "expectedEndTime": "2026-03-25T08:20:05+01:00",
+    "directDuration": 1188,
+    "duration": 1188,
+    "distance": 7148.85,
+    "walkDistance": 184.54000000000002,
+    "systemNotices": [],
+    "legs": [
+      {
+        "generalizedCost": 508,
+        "aimedEndTime": "2026-03-25T08:02:00+01:00",
+        "aimedStartTime": "2026-03-25T08:00:17+01:00",
+        "authority": null,
+        "distance": 116.62,
+        "directDuration": 103,
+        "duration": 103,
+        "expectedEndTime": "2026-03-25T08:02:00+01:00",
+        "expectedStartTime": "2026-03-25T08:00:17+01:00",
+        "fromEstimatedCall": null,
+        "fromPlace": {
+          "name": "Gamlegrendåsen",
+          "latitude": 59.651892,
+          "longitude": 9.670542,
+          "quay": null,
+          "bikeRentalStation": null
+        },
+        "id": null,
+        "interchangeFrom": null,
+        "interchangeTo": null,
+        "intermediateEstimatedCalls": [],
+        "line": null,
+        "mode": "foot",
+        "nextLegs": null,
+        "operator": null,
+        "pointsOnLink": {
+          "points": "iwakJ{w_z@?Ak@e@@Wk@e@OOKOGOKQM]Ka@A@",
+          "length": 12
+        },
+        "previousLegs": null,
+        "realtime": false,
+        "ride": false,
+        "rentedBike": false,
+        "serviceDate": null,
+        "datedServiceJourney": null,
+        "serviceJourney": null,
+        "situations": [],
+        "toEstimatedCall": null,
+        "toPlace": {
+          "name": "Gustava Kiellands vei",
+          "latitude": 59.6527,
+          "longitude": 9.67169,
+          "quay": {
+            "id": "NSR:Quay:28941",
+            "name": "Gustava Kiellands vei",
+            "description": null,
+            "publicCode": null,
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:16620",
+              "description": "",
+              "name": "Gustava Kiellands vei",
+              "latitude": 59.6527,
+              "longitude": 9.67169,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "bikeRentalStation": null
+        },
+        "transportSubmode": null,
+        "bookingArrangements": null,
+        "notices": []
+      },
+      {
+        "generalizedCost": 0,
+        "aimedEndTime": "2026-03-25T08:19:00+01:00",
+        "aimedStartTime": "2026-03-25T08:02:00+01:00",
+        "authority": {
+          "id": "BRA:Authority:4",
+          "name": "Brakar",
+          "url": "https://www.brakar.no/"
+        },
+        "distance": 6964.31,
+        "directDuration": 1020,
+        "duration": 1020,
+        "expectedEndTime": "2026-03-25T08:19:00+01:00",
+        "expectedStartTime": "2026-03-25T08:02:00+01:00",
+        "fromEstimatedCall": {
+          "actualArrivalTime": null,
+          "actualDepartureTime": null,
+          "aimedArrivalTime": "2026-03-25T08:02:00+01:00",
+          "aimedDepartureTime": "2026-03-25T08:02:00+01:00",
+          "cancellation": false,
+          "date": "2026-03-25",
+          "destinationDisplay": {
+            "frontText": "Tislegård via Kongsberg knutepunkt",
+            "via": []
+          },
+          "empiricalDelay": {
+            "p50": "PT0S"
+          },
+          "expectedDepartureTime": "2026-03-25T08:02:00+01:00",
+          "expectedArrivalTime": "2026-03-25T08:02:00+01:00",
+          "forAlighting": true,
+          "forBoarding": true,
+          "notices": [],
+          "predictionInaccurate": false,
+          "quay": {
+            "id": "NSR:Quay:28941",
+            "name": "Gustava Kiellands vei",
+            "description": null,
+            "publicCode": null,
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:16620",
+              "description": "",
+              "name": "Gustava Kiellands vei",
+              "latitude": 59.6527,
+              "longitude": 9.67169,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "realtime": false,
+          "requestStop": false,
+          "serviceJourney": {
+            "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+            "journeyPattern": {
+              "line": {
+                "description": null,
+                "flexibleLineType": null,
+                "id": "BRA:Line:4_6406",
+                "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                "notices": [],
+                "publicCode": "406",
+                "transportMode": "bus",
+                "transportSubmode": "localBus",
+                "branding": null
+              },
+              "notices": []
+            },
+            "notices": [
+              {
+                "text": "Avgangen kjøres skoledager"
+              }
+            ],
+            "publicCode": null,
+            "privateCode": "1003"
+          }
+        },
+        "fromPlace": {
+          "name": "Gustava Kiellands vei",
+          "latitude": 59.6527,
+          "longitude": 9.67169,
+          "quay": {
+            "id": "NSR:Quay:28941",
+            "name": "Gustava Kiellands vei",
+            "description": null,
+            "publicCode": null,
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:16620",
+              "description": "",
+              "name": "Gustava Kiellands vei",
+              "latitude": 59.6527,
+              "longitude": 9.67169,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "bikeRentalStation": null
+        },
+        "id": "rO0ABXeHABhTQ0hFRFVMRURfVFJBTlNJVF9MRUdfVjMAL1JCOkJSQTpTZXJ2aWNlSm91cm5leTo2NDA2XzI1MTIwMjA3NDI3Mjg5MV8xMDAzAAoyMDI2LTAzLTI1AAAAAgAAAA4AEVJCOk5TUjpRdWF5OjI4OTQxABFSQjpOU1I6UXVheTozMDMzOQAA",
+        "interchangeFrom": null,
+        "interchangeTo": null,
+        "intermediateEstimatedCalls": [
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:03:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:03:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT0S"
+            },
+            "expectedDepartureTime": "2026-03-25T08:03:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:03:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:28944",
+              "name": "Eilertsløkka",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:16622",
+                "description": "",
+                "name": "Eilertsløkka",
+                "latitude": 59.65565,
+                "longitude": 9.675696,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:04:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:04:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT2M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:04:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:04:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:28951",
+              "name": "Hovdeplassen",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:16625",
+                "description": "",
+                "name": "Hovdeplassen",
+                "latitude": 59.66217,
+                "longitude": 9.67532,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:05:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:05:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT2M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:05:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:05:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:29228",
+              "name": "Henckelmyra",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:16767",
+                "description": "",
+                "name": "Henckelmyra",
+                "latitude": 59.664905,
+                "longitude": 9.67449,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:09:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:09:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT1M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:09:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:09:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:30372",
+              "name": "Madsebakken skole",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:17375",
+                "description": null,
+                "name": "Madsebakken skole",
+                "latitude": 59.67011,
+                "longitude": 9.67433,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:10:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:10:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT2M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:10:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:10:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:30373",
+              "name": "Tittuten",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:17376",
+                "description": "",
+                "name": "Tittuten",
+                "latitude": 59.670773,
+                "longitude": 9.677771,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:11:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:11:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT2M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:11:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:11:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:30371",
+              "name": "Frydenbergåsen",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:17374",
+                "description": null,
+                "name": "Frydenbergåsen",
+                "latitude": 59.67337,
+                "longitude": 9.67884,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:11:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:11:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT4M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:11:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:11:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:30370",
+              "name": "Rødshøgda",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:17373",
+                "description": null,
+                "name": "Rødshøgda",
+                "latitude": 59.676155,
+                "longitude": 9.678303,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:13:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:13:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT3M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:13:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:13:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:30375",
+              "name": "Madsebakken nord",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:17377",
+                "description": null,
+                "name": "Madsebakken nord",
+                "latitude": 59.67285,
+                "longitude": 9.67295,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:15:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:15:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT3M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:15:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:15:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:29224",
+              "name": "Kjærlighetsstien",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:16765",
+                "description": "",
+                "name": "Kjærlighetsstien",
+                "latitude": 59.667815,
+                "longitude": 9.666935,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:16:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:16:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT3M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:16:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:16:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:29213",
+              "name": "Kongsberg sykehus",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:16759",
+                "description": null,
+                "name": "Kongsberg sykehus",
+                "latitude": 59.67035,
+                "longitude": 9.659885,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          },
+          {
+            "actualArrivalTime": null,
+            "actualDepartureTime": null,
+            "aimedArrivalTime": "2026-03-25T08:17:00+01:00",
+            "aimedDepartureTime": "2026-03-25T08:17:00+01:00",
+            "cancellation": false,
+            "date": "2026-03-25",
+            "destinationDisplay": {
+              "frontText": "Tislegård via Kongsberg knutepunkt",
+              "via": []
+            },
+            "empiricalDelay": {
+              "p50": "PT3M"
+            },
+            "expectedDepartureTime": "2026-03-25T08:17:00+01:00",
+            "expectedArrivalTime": "2026-03-25T08:17:00+01:00",
+            "forAlighting": true,
+            "forBoarding": true,
+            "notices": [],
+            "predictionInaccurate": false,
+            "quay": {
+              "id": "NSR:Quay:29218",
+              "name": "Kongsberg Bekkedokk",
+              "description": null,
+              "publicCode": null,
+              "situations": [],
+              "stopPlace": {
+                "id": "NSR:StopPlace:16761",
+                "description": null,
+                "name": "Kongsberg Bekkedokk",
+                "latitude": 59.6708,
+                "longitude": 9.65448,
+                "tariffZones": [
+                  {
+                    "id": "VKT:TariffZone:630"
+                  },
+                  {
+                    "id": "BRA:TariffZone:104"
+                  },
+                  {
+                    "id": "BRA:FareZone:18"
+                  }
+                ]
+              }
+            },
+            "realtime": false,
+            "requestStop": false,
+            "serviceJourney": {
+              "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+              "journeyPattern": {
+                "line": {
+                  "description": null,
+                  "flexibleLineType": null,
+                  "id": "BRA:Line:4_6406",
+                  "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                  "notices": [],
+                  "publicCode": "406",
+                  "transportMode": "bus",
+                  "transportSubmode": "localBus",
+                  "branding": null
+                },
+                "notices": []
+              },
+              "notices": [
+                {
+                  "text": "Avgangen kjøres skoledager"
+                }
+              ],
+              "publicCode": null,
+              "privateCode": "1003"
+            }
+          }
+        ],
+        "line": {
+          "description": null,
+          "flexibleLineType": null,
+          "id": "BRA:Line:4_6406",
+          "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+          "notices": [],
+          "publicCode": "406",
+          "transportMode": "bus",
+          "transportSubmode": "localBus",
+          "branding": null
+        },
+        "mode": "bus",
+        "nextLegs": [
+          {
+            "id": "rO0ABXeHABhTQ0hFRFVMRURfVFJBTlNJVF9MRUdfVjMAL1JCOkJSQTpTZXJ2aWNlSm91cm5leTo2NDA2XzI1MTIwMjA3NDI3Mjg5NF8xMDA1AAoyMDI2LTAzLTI1AAAABQAAABEAEVJCOk5TUjpRdWF5OjI4OTQxABFSQjpOU1I6UXVheTozMDMzOQAA",
+            "mode": "bus",
+            "transportSubmode": "localBus",
+            "aimedStartTime": "2026-03-25T13:36:00+01:00",
+            "expectedStartTime": "2026-03-25T13:36:00+01:00",
+            "fromEstimatedCall": {
+              "actualDepartureTime": null
+            },
+            "line": {
+              "publicCode": "406"
+            },
+            "toPlace": {
+              "name": "Kongsberg knutepunkt"
+            },
+            "fromPlace": {
+              "name": "Gustava Kiellands vei"
+            }
+          }
+        ],
+        "operator": {
+          "id": "BRA:Operator:61",
+          "name": "Vy Buss AS",
+          "url": "https://www.vy.no/"
+        },
+        "pointsOnLink": {
+          "points": "q|akJw~_z@c@}Ao@{AI[Gi@?u@VqE?e@EcBBcBGq@E[aA{Bu@wAu@o@m@O_@@WF_@Pq@n@uBpCcAv@BN??DNJBFCXYJKEu@UXi@^gBx@wF~@qIFiBZo@?EIKGc@w@]{@U[_@Ua@Ec@LcG~C??g@PS?[GQMWYsAgC][QISCiCLk@MKWQAED??IT?f@JVLnB@jE??ClBIjBMfAa@bB_@|@W`@q@t@aCxBaBpAQD[b@Ud@i@|AG\\m@WM_@k@mDa@wAi@gAk@q@wA{@eCiAiAY}AKkADqBXS?{@GJsAPi@T]ZUlBi@b@[~BkC??d@]`BaAzAm@jAu@LSPs@F_@Bi@Ai@Cc@O{@a@u@_D}By@_@kA?_CT??Q@yBOIDQVUz@GLGH{@`@q@cB_@k@[Sw@Us@{@m@yA??Oc@SSw@i@W[uB_D[Y_A]u@?_@GMEKMO[_ApCSdAIjAArCFpA??Jj@Pf@R\\~EtGZj@jAnCXx@`@dB^~BDPXj@PRxAv@??vCzAdBh@r@BzBYlAEv@BbB\\bBp@dCvAr@|@d@`A^vAf@`DLb@L\\^`@Q`BW`DWfF??S|Ca@zC[xAo@vBoK~[??g@dBUlAQfAOvAKbBExAAlBKlBET@^J\\L`AL\\PdA??l@rBlA|B@RALI\\QLaABUL]^S^[`AKh@El@g@hKOKMAQHUCMKGOCQ",
+          "length": 230
+        },
+        "previousLegs": [
+          {
+            "id": "rO0ABXeHABhTQ0hFRFVMRURfVFJBTlNJVF9MRUdfVjMAL1JCOkJSQTpTZXJ2aWNlSm91cm5leTo2NDA2XzI1MTIwMjA3NDI3Mjg5MF8xMDAxAAoyMDI2LTAzLTI1AAAAAgAAAA4AEVJCOk5TUjpRdWF5OjI4OTQxABFSQjpOU1I6UXVheTozMDMzOQAA",
+            "mode": "bus",
+            "transportSubmode": "localBus",
+            "aimedStartTime": "2026-03-25T07:22:00+01:00",
+            "expectedStartTime": "2026-03-25T07:22:00+01:00",
+            "fromEstimatedCall": {
+              "actualDepartureTime": null
+            },
+            "line": {
+              "publicCode": "406"
+            },
+            "toPlace": {
+              "name": "Kongsberg knutepunkt"
+            },
+            "fromPlace": {
+              "name": "Gustava Kiellands vei"
+            }
+          }
+        ],
+        "realtime": false,
+        "ride": true,
+        "rentedBike": null,
+        "serviceDate": "2026-03-25",
+        "datedServiceJourney": null,
+        "serviceJourney": {
+          "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+          "journeyPattern": {
+            "line": {
+              "description": null,
+              "flexibleLineType": null,
+              "id": "BRA:Line:4_6406",
+              "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+              "notices": [],
+              "publicCode": "406",
+              "transportMode": "bus",
+              "transportSubmode": "localBus",
+              "branding": null
+            },
+            "notices": []
+          },
+          "notices": [
+            {
+              "text": "Avgangen kjøres skoledager"
+            }
+          ],
+          "publicCode": null,
+          "privateCode": "1003"
+        },
+        "situations": [],
+        "toEstimatedCall": {
+          "actualArrivalTime": null,
+          "actualDepartureTime": null,
+          "aimedArrivalTime": "2026-03-25T08:19:00+01:00",
+          "aimedDepartureTime": "2026-03-25T08:19:00+01:00",
+          "cancellation": false,
+          "date": "2026-03-25",
+          "destinationDisplay": {
+            "frontText": "Tislegård via Kongsberg knutepunkt",
+            "via": []
+          },
+          "empiricalDelay": {
+            "p50": "PT2M"
+          },
+          "expectedDepartureTime": "2026-03-25T08:19:00+01:00",
+          "expectedArrivalTime": "2026-03-25T08:19:00+01:00",
+          "forAlighting": true,
+          "forBoarding": true,
+          "notices": [],
+          "predictionInaccurate": false,
+          "quay": {
+            "id": "NSR:Quay:30339",
+            "name": "Kongsberg knutepunkt",
+            "description": null,
+            "publicCode": "F",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:17354",
+              "description": "",
+              "name": "Kongsberg knutepunkt",
+              "latitude": 59.671744,
+              "longitude": 9.650339,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "realtime": false,
+          "requestStop": false,
+          "serviceJourney": {
+            "id": "BRA:ServiceJourney:6406_251202074272891_1003",
+            "journeyPattern": {
+              "line": {
+                "description": null,
+                "flexibleLineType": null,
+                "id": "BRA:Line:4_6406",
+                "name": "Tislegård-Frydenberg-Kbg knutepunkt",
+                "notices": [],
+                "publicCode": "406",
+                "transportMode": "bus",
+                "transportSubmode": "localBus",
+                "branding": null
+              },
+              "notices": []
+            },
+            "notices": [
+              {
+                "text": "Avgangen kjøres skoledager"
+              }
+            ],
+            "publicCode": null,
+            "privateCode": "1003"
+          }
+        },
+        "toPlace": {
+          "name": "Kongsberg knutepunkt",
+          "latitude": 59.67192,
+          "longitude": 9.65015,
+          "quay": {
+            "id": "NSR:Quay:30339",
+            "name": "Kongsberg knutepunkt",
+            "description": null,
+            "publicCode": "F",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:17354",
+              "description": "",
+              "name": "Kongsberg knutepunkt",
+              "latitude": 59.671744,
+              "longitude": 9.650339,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "bikeRentalStation": null
+        },
+        "transportSubmode": "localBus",
+        "bookingArrangements": null
+      },
+      {
+        "generalizedCost": 277,
+        "aimedEndTime": "2026-03-25T08:20:05+01:00",
+        "aimedStartTime": "2026-03-25T08:19:00+01:00",
+        "authority": null,
+        "distance": 67.92,
+        "directDuration": 65,
+        "duration": 65,
+        "expectedEndTime": "2026-03-25T08:20:05+01:00",
+        "expectedStartTime": "2026-03-25T08:19:00+01:00",
+        "fromEstimatedCall": null,
+        "fromPlace": {
+          "name": "Kongsberg knutepunkt",
+          "latitude": 59.67192,
+          "longitude": 9.65015,
+          "quay": {
+            "id": "NSR:Quay:30339",
+            "name": "Kongsberg knutepunkt",
+            "description": null,
+            "publicCode": "F",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:17354",
+              "description": "",
+              "name": "Kongsberg knutepunkt",
+              "latitude": 59.671744,
+              "longitude": 9.650339,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "bikeRentalStation": null
+        },
+        "id": null,
+        "interchangeFrom": null,
+        "interchangeTo": null,
+        "intermediateEstimatedCalls": [],
+        "line": null,
+        "mode": "foot",
+        "nextLegs": null,
+        "operator": null,
+        "pointsOnLink": {
+          "points": "otekJmx{y@@?C]I?QD?O@QEEEKEKLaA??",
+          "length": 12
+        },
+        "previousLegs": null,
+        "realtime": false,
+        "ride": false,
+        "rentedBike": false,
+        "serviceDate": null,
+        "datedServiceJourney": null,
+        "serviceJourney": null,
+        "situations": [],
+        "toEstimatedCall": null,
+        "toPlace": {
+          "name": "Kongsberg stasjon",
+          "latitude": 59.672086,
+          "longitude": 9.650923,
+          "quay": {
+            "id": "NSR:Quay:851",
+            "name": "Kongsberg stasjon",
+            "description": null,
+            "publicCode": "1",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:519",
+              "description": null,
+              "name": "Kongsberg stasjon",
+              "latitude": 59.672219,
+              "longitude": 9.650913,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          },
+          "bikeRentalStation": null
+        },
+        "transportSubmode": null,
+        "bookingArrangements": null,
+        "notices": []
+      }
+    ]
+  },
+  "searchParams": {
+    "from": {
+      "place": "913530",
+      "name": "Gamlegrendåsen",
+      "coordinates": {
+        "latitude": 59.651892,
+        "longitude": 9.670542
+      }
+    },
+    "to": {
+      "place": "NSR:StopPlace:60603",
+      "name": "Kongsberg stasjon",
+      "coordinates": {
+        "latitude": 59.67227,
+        "longitude": 9.651194
+      }
+    },
+    "walkSpeed": 1.3,
+    "minimumTransferTime": 120,
+    "searchFilter": [
+      "rail",
+      "tram",
+      "bus",
+      "coach",
+      "water",
+      "car_ferry",
+      "metro",
+      "flytog",
+      "flybuss"
+    ],
+    "arriveBy": false,
+    "searchPreset": "RECOMMENDED",
+    "searchDate": "2026-03-25T07:00:00.000Z",
+    "debugItineraryFilter": false,
+    "modes": {
+      "accessMode": "foot",
+      "directMode": null,
+      "egressMode": "foot",
+      "transportModes": [
+        {
+          "transportMode": "lift",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "rail",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "tram",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "bus",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "coach",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "water",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "metro",
+          "transportSubModes": null
+        },
+        {
+          "transportMode": "taxi",
+          "transportSubModes": null
+        }
+      ]
+    }
+  },
+  "updateInfo": {
+    "status": "COMPLETE",
+    "updatedServiceJourneys": [
+      "BRA:ServiceJourney:6406_251202074272891_1003"
+    ]
+  }
+}

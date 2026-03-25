@@ -9,6 +9,8 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
+import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.ext.carpooling.model.SimpleContactStructure;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
 import org.opentripplanner.framework.time.ZoneIdFallback;
@@ -18,6 +20,8 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.transit.model.organization.ContactInfo;
+import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
 
 /**
  * Maps carpooling insertion candidates to OTP itineraries for API responses.
@@ -160,15 +164,21 @@ public class CarpoolItineraryMapper {
       .flatMap(seg -> seg.edges.stream())
       .toList();
 
-    CarpoolLeg carpoolLeg = CarpoolLeg.of()
+    var legBuilder = CarpoolLeg.of()
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withFrom(Place.normal(fromVertex, new NonLocalizedString("Carpool boarding")))
       .withTo(Place.normal(toVertex, new NonLocalizedString("Carpool alighting")))
       .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
-      .withGeneralizedCost((int) lastSegment.getWeight())
-      .build();
+      .withGeneralizedCost((int) lastSegment.getWeight());
+
+    var bookingInfo = toBookingInfo(candidate.trip());
+    if (bookingInfo != null) {
+      legBuilder.withPickupBookingInfo(bookingInfo);
+    }
+
+    CarpoolLeg carpoolLeg = legBuilder.build();
 
     return Itinerary.ofDirect(List.of(carpoolLeg))
       .withGeneralizedCost(Cost.costOfSeconds(carpoolLeg.generalizedCost()))
@@ -188,7 +198,7 @@ public class CarpoolItineraryMapper {
     LineString geometry = GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry);
     var cost = accessEgress.getTotalWeight();
 
-    var carpoolLeg = CarpoolLeg.of()
+    var accessEgressLegBuilder = CarpoolLeg.of()
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withFrom(Place.normal(fromVertex, new NonLocalizedString("Carpool boarding")))
@@ -196,13 +206,35 @@ public class CarpoolItineraryMapper {
       .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
       .withGeneralizedCost((int) cost)
-      .withGeometry(geometry)
-      .build();
+      .withGeometry(geometry);
+
+    var accessEgressBookingInfo = toBookingInfo(accessEgress.getTrip());
+    if (accessEgressBookingInfo != null) {
+      accessEgressLegBuilder.withPickupBookingInfo(accessEgressBookingInfo);
+    }
+
+    var carpoolLeg = accessEgressLegBuilder.build();
 
     var itinerary = Itinerary.ofDirect(List.of(carpoolLeg))
       .withGeneralizedCost(Cost.costOfSeconds(carpoolLeg.generalizedCost()))
       .build();
 
     return itinerary;
+  }
+
+  @Nullable
+  private static BookingInfo toBookingInfo(CarpoolTrip trip) {
+    SimpleContactStructure contact = trip.publicContactInformation();
+    if (contact == null) {
+      return null;
+    }
+    return BookingInfo.of()
+      .withContactInfo(
+        ContactInfo.of()
+          .withPhoneNumber(contact.phoneNumber())
+          .withBookingUrl(contact.url())
+          .build()
+      )
+      .build();
   }
 }

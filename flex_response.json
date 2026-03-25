@@ -1,0 +1,200 @@
+{
+  "tripPattern": {
+    "id": "60685359-0b9f-488a-937d-b331cf6d4d9a",
+    "generalizedCost": 1393,
+    "startTime": "2026-03-25T08:00:00+01:00",
+    "endTime": "2026-03-25T08:06:28+01:00",
+    "expectedStartTime": "2026-03-25T08:00:00+01:00",
+    "expectedEndTime": "2026-03-25T08:06:28+01:00",
+    "directDuration": 388,
+    "duration": 388,
+    "distance": 3598.62,
+    "walkDistance": 116.62,
+    "systemNotices": [],
+    "legs": [
+      {
+        "generalizedCost": 508,
+        "aimedEndTime": "2026-03-25T08:01:43+01:00",
+        "aimedStartTime": "2026-03-25T08:00:00+01:00",
+        "distance": 116.62,
+        "directDuration": 103,
+        "duration": 103,
+        "expectedEndTime": "2026-03-25T08:01:43+01:00",
+        "expectedStartTime": "2026-03-25T08:00:00+01:00",
+        "fromPlace": {
+          "name": "Gamlegrendåsen",
+          "latitude": 59.651892,
+          "longitude": 9.670542
+        },
+        "intermediateEstimatedCalls": [],
+        "mode": "foot",
+        "pointsOnLink": {
+          "points": "iwakJ{w_z@?Ak@e@@Wk@e@OOKOGOKQM]Ka@A@",
+          "length": 12
+        },
+        "realtime": false,
+        "ride": false,
+        "rentedBike": false,
+        "situations": [],
+        "toPlace": {
+          "name": "Gustava Kiellands vei",
+          "latitude": 59.6527,
+          "longitude": 9.67169,
+          "quay": {
+            "id": "NSR:Quay:28941",
+            "name": "Gustava Kiellands vei",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:16620",
+              "description": "",
+              "name": "Gustava Kiellands vei",
+              "latitude": 59.6527,
+              "longitude": 9.67169,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          }
+        },
+        "notices": []
+      },
+      {
+        "generalizedCost": 885,
+        "aimedEndTime": "2026-03-25T08:06:28+01:00",
+        "aimedStartTime": "2026-03-25T08:01:43+01:00",
+        "authority": {
+          "id": "BRA:Authority:4",
+          "name": "Brakar",
+          "codeSpace": "BRA",
+          "url": "https://www.brakar.no/"
+        },
+        "distance": 3482,
+        "directDuration": 285,
+        "duration": 285,
+        "expectedEndTime": "2026-03-25T08:06:28+01:00",
+        "expectedStartTime": "2026-03-25T08:01:43+01:00",
+        "fromPlace": {
+          "name": "Gustava Kiellands vei",
+          "latitude": 59.6527,
+          "longitude": 9.67169,
+          "quay": {
+            "id": "NSR:Quay:28941",
+            "name": "Gustava Kiellands vei",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:16620",
+              "description": "",
+              "name": "Gustava Kiellands vei",
+              "latitude": 59.6527,
+              "longitude": 9.67169,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          }
+        },
+        "intermediateEstimatedCalls": [],
+        "line": {
+          "flexibleLineType": "mixedFlexible",
+          "id": "BRA:FlexibleLine:9204411c-bf86-4b6a-b8fa-5c40b8702213",
+          "name": "Brakar Fleks Kongsberg",
+          "notices": [],
+          "publicCode": "Brakar Fleks Kongsberg",
+          "transportMode": "bus",
+          "transportSubmode": "localBus"
+        },
+        "mode": "bus",
+        "operator": {
+          "id": "BRA:Operator:1",
+          "name": "Brakar",
+          "url": "https://www.brakar.no/"
+        },
+        "pointsOnLink": {
+          "points": "k|akJa_`z@EJCIMe@Qo@e@iAIQI[CQCW?[?YBi@Dw@LoB?e@?UA]AYAU?Y?S@_@@UAWEYE[O]q@}A_@w@U_@WY]UWIUE_@@WF_@P]ZSR_@h@SXWXY`@OP]Ze@Z[NYHy@T{@Zy@RqBTcF@cCHI@OB[Fg@JQAI?K@G?EIEEEAIMEICIEGIMGQGOGOEIGMMMKIGEKEKCKAI?K@KBKFKDk@XgAl@KDw@b@SJc@VIDIDGBIBI@I@IAG?GCKCGEIGGGGIGGEKEIMUe@}@IOIMIIGIKGIEGCIAIAM?G?Q@q@Do@DOEG?KCGCCICGCEECE?E@CBEDCFAHAH?H?H@H@HBFDD@L@XBTDp@?z@@n@?F?l@?f@?L?\\?^Cb@Ah@C`@C^CVEVCVGVEVIZIVIRIRKTINMPKLSRQReA`A[Z_@Z[Vu@j@OJQFMNMRIPKRKTITIXIVG\\Ib@E^EZGr@IdAIxAEj@Cn@En@EbA?FA|@Cd@Eb@CZEb@E\\EZG^G\\G`@GXK\\Md@Qh@Of@]dAiAhDmE~Mg@xAADa@nAKZAB?@GRELOb@I\\Kb@Ih@Ih@G\\E\\C\\EZEf@C`@AXC\\?XA`@A`@?~@Ez@APAV?RCBAD?DADGFIDE@QVC@IHEFEJEJCNERERCTCXCXAV?R?N?L@NBNHz@?FDb@?D@X@V@T?L?JCLGVEJGHWVoBpBi@r@[h@KTNb@BD\\k@FT",
+          "length": 299
+        },
+        "realtime": false,
+        "ride": true,
+        "serviceDate": "2026-03-25",
+        "serviceJourney": {
+          "id": "BRA:ServiceJourney:a1963e66-d561-4b9a-ac90-86ec28cf715e",
+          "journeyPattern": {
+            "line": {
+              "flexibleLineType": "mixedFlexible",
+              "id": "BRA:FlexibleLine:9204411c-bf86-4b6a-b8fa-5c40b8702213",
+              "name": "Brakar Fleks Kongsberg",
+              "notices": [],
+              "publicCode": "Brakar Fleks Kongsberg",
+              "transportMode": "bus",
+              "transportSubmode": "localBus"
+            },
+            "notices": []
+          },
+          "notices": []
+        },
+        "situations": [],
+        "toPlace": {
+          "name": "Kongsberg stasjon Baneveien",
+          "latitude": 59.672446,
+          "longitude": 9.651428,
+          "quay": {
+            "id": "NSR:Quay:862",
+            "name": "Kongsberg stasjon Baneveien",
+            "situations": [],
+            "stopPlace": {
+              "id": "NSR:StopPlace:522",
+              "name": "Kongsberg stasjon Baneveien",
+              "latitude": 59.672477,
+              "longitude": 9.651487,
+              "tariffZones": [
+                {
+                  "id": "VKT:TariffZone:630"
+                },
+                {
+                  "id": "BRA:TariffZone:104"
+                },
+                {
+                  "id": "BRA:FareZone:18"
+                }
+              ]
+            }
+          }
+        },
+        "transportSubmode": "localBus",
+        "bookingArrangements": {
+          "bookingMethods": [
+            "callOffice",
+            "online"
+          ],
+          "bookingNote": "Brakar Fleks Kongsberg er en bestillingstjeneste der du kan bestille en bussreise fra holdeplass til holdeplass i Kongsberg. Mer informasjon om tilbudet og hvordan turer bestilles finner du på: https://www.brakar.no/fleks/",
+          "minimumBookingPeriod": "PT15M",
+          "bookingContact": {
+            "phone": "32 20 30 90",
+            "url": "https://www.brakar.no/fleks/"
+          }
+        },
+        "notices": []
+      }
+    ]
+  },
+  "updateInfo": {
+    "status": "FAILED",
+    "updatedServiceJourneys": []
+  }
+}
