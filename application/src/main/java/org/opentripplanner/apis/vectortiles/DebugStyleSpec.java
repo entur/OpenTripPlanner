@@ -1,5 +1,20 @@
 package org.opentripplanner.apis.vectortiles;
 
+import static org.opentripplanner.apis.vectortiles.Colors.BLACK;
+import static org.opentripplanner.apis.vectortiles.Colors.BRIGHT_GREEN;
+import static org.opentripplanner.apis.vectortiles.Colors.DARK_BLUE;
+import static org.opentripplanner.apis.vectortiles.Colors.DARK_GREEN;
+import static org.opentripplanner.apis.vectortiles.Colors.DARK_ORANGE;
+import static org.opentripplanner.apis.vectortiles.Colors.DARK_RED;
+import static org.opentripplanner.apis.vectortiles.Colors.LIGHT_BLUE;
+import static org.opentripplanner.apis.vectortiles.Colors.LIGHT_MAGENTA;
+import static org.opentripplanner.apis.vectortiles.Colors.LIGHT_RED;
+import static org.opentripplanner.apis.vectortiles.Colors.MAGENTA;
+import static org.opentripplanner.apis.vectortiles.Colors.ORANGE;
+import static org.opentripplanner.apis.vectortiles.Colors.PURPLE;
+import static org.opentripplanner.apis.vectortiles.Colors.RED;
+import static org.opentripplanner.apis.vectortiles.Colors.TEAL;
+import static org.opentripplanner.apis.vectortiles.Colors.TURQUOISE;
 import static org.opentripplanner.inspector.vector.edge.EdgePropertyMapper.streetPermissionAsString;
 import static org.opentripplanner.inspector.vector.geofencing.GeofencingZonesPropertyMapper.GEOFENCING_ZONE_TYPE;
 import static org.opentripplanner.inspector.vector.geofencing.GeofencingZonesPropertyMapper.GEOFENCING_ZONE_TYPE_BUSINESS_AREA;
@@ -68,21 +83,6 @@ public class DebugStyleSpec {
     OSM_BACKGROUND,
     POSITRON_BACKGROUND
   );
-  private static final String MAGENTA = "#f21d52";
-  private static final String LIGHT_MAGENTA = "#f783a0";
-  private static final String BRIGHT_GREEN = "#22DD9E";
-  private static final String DARK_GREEN = "#136b04";
-  private static final String TEAL = "#277eb5";
-  private static final String TURQUOISE = "#1cafad";
-  private static final String RED = "#fc0f2a";
-  private static final String PURPLE = "#BC55F2";
-  private static final String BLACK = "#140d0e";
-  private static final String LIGHT_RED = "#ff6b6b";
-  private static final String DARK_RED = "#cc0000";
-  private static final String ORANGE = "#ffa500";
-  private static final String DARK_ORANGE = "#ff8c00";
-  private static final String LIGHT_BLUE = "#4a9eff";
-  private static final String DARK_BLUE = "#0066cc";
 
   private static final int MAX_ZOOM = 23;
   private static final ZoomDependentNumber LARGE_CIRCLE_LINE_WIDTH = new ZoomDependentNumber(
@@ -120,16 +120,6 @@ public class DebugStyleSpec {
     TemporaryPartialStreetEdge.class,
     TemporaryFreeEdge.class,
   };
-  private static final String EDGES_GROUP = "Edges";
-  private static final String ELEVATION_GROUP = "Elevation";
-  private static final String WALK_SAFETY_GROUP = "Walk safety";
-  private static final String BICYCLE_SAFETY_GROUP = "Bicycle safety";
-  private static final String STOPS_GROUP = "Stops";
-  private static final String VERTICES_GROUP = "Vertices";
-  private static final String RENTAL_GROUP = "Rental";
-  private static final String PERMISSIONS_GROUP = "Permissions";
-  private static final String NO_THRU_TRAFFIC_GROUP = "No-thru traffic";
-  private static final String VERTICAL_TRANSPORTATION_GROUP = "Vertical transportation";
 
   private static final StreetTraversalPermission[] STREET_MODES = new StreetTraversalPermission[] {
     StreetTraversalPermission.PEDESTRIAN,
@@ -216,7 +206,7 @@ public class DebugStyleSpec {
   ) {
     return List.of(
       StyleBuilder.ofId("area-stop")
-        .group(STOPS_GROUP)
+        .group(Groups.STOPS_GROUP)
         .typeFill()
         .vectorSourceLayer(areaStops)
         .fillColor(BRIGHT_GREEN)
@@ -226,7 +216,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("group-stop")
-        .group(STOPS_GROUP)
+        .group(Groups.STOPS_GROUP)
         .typeFill()
         .vectorSourceLayer(groupStops)
         .fillColor(BRIGHT_GREEN)
@@ -236,7 +226,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("regular-stop")
-        .group(STOPS_GROUP)
+        .group(Groups.STOPS_GROUP)
         .typeCircle()
         .vectorSourceLayer(regularStops)
         .circleStroke(BLACK, LARGE_CIRCLE_LINE_WIDTH)
@@ -250,7 +240,7 @@ public class DebugStyleSpec {
   private static List<StyleBuilder> vertices(VectorSourceLayer vertices) {
     return List.of(
       StyleBuilder.ofId("vertex")
-        .group(VERTICES_GROUP)
+        .group(Groups.VERTICES_GROUP)
         .typeCircle()
         .vectorSourceLayer(vertices)
         .circleStroke(BLACK, CIRCLE_STROKE)
@@ -262,7 +252,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("parking-vertex")
-        .group(VERTICES_GROUP)
+        .group(Groups.VERTICES_GROUP)
         .typeCircle()
         .vectorSourceLayer(vertices)
         .vertexFilter(VehicleParkingEntranceVertex.class)
@@ -273,7 +263,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("barrier-vertex")
-        .group(VERTICES_GROUP)
+        .group(Groups.VERTICES_GROUP)
         .typeCircle()
         .vectorSourceLayer(vertices)
         .vertexFilter(BarrierVertex.class)
@@ -284,7 +274,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("barrier-passthrough-vertex")
-        .group(VERTICES_GROUP)
+        .group(Groups.VERTICES_GROUP)
         .typeCircle()
         .vectorSourceLayer(vertices)
         .vertexFilter(BarrierPassThroughVertex.class)
@@ -300,7 +290,7 @@ public class DebugStyleSpec {
   private static List<StyleBuilder> elevators(VectorSourceLayer edges, VectorSourceLayer vertices) {
     return List.of(
       StyleBuilder.ofId("elevator-hop-edge")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .edgeFilter(ElevatorHopEdge.class)
@@ -311,7 +301,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("elevator-board-edge")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .edgeFilter(ElevatorBoardEdge.class)
@@ -322,7 +312,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("elevator-alight-edge")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .edgeFilter(ElevatorAlightEdge.class)
@@ -333,7 +323,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("elevator-hop-vertex")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeCircle()
         .vectorSourceLayer(vertices)
         .vertexFilter(ElevatorHopVertex.class)
@@ -346,7 +336,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("osm-elevator-vertex")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeCircle()
         .vectorSourceLayer(vertices)
         .vertexFilter(OsmElevatorVertex.class)
@@ -359,7 +349,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("escalator-edge")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .edgeFilter(EscalatorEdge.class)
@@ -370,7 +360,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("stairs-edge")
-        .group(VERTICAL_TRANSPORTATION_GROUP)
+        .group(Groups.VERTICAL_TRANSPORTATION_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .booleanFilter("isStairs", true)
@@ -389,7 +379,7 @@ public class DebugStyleSpec {
   ) {
     return List.of(
       StyleBuilder.ofId("rental-vehicle")
-        .group(RENTAL_GROUP)
+        .group(Groups.RENTAL_GROUP)
         .typeCircle()
         .vectorSourceLayer(rentalLayer)
         .classFilter(VehicleRentalVehicle.class)
@@ -400,7 +390,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("rental-station")
-        .group(RENTAL_GROUP)
+        .group(Groups.RENTAL_GROUP)
         .typeCircle()
         .vectorSourceLayer(rentalLayer)
         .classFilter(VehicleRentalStation.class)
@@ -411,7 +401,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("geofencing-zones-no-drop-off")
-        .group(RENTAL_GROUP)
+        .group(Groups.RENTAL_GROUP)
         .typeFill()
         .vectorSourceLayer(geofencingZones)
         .filterValueInProperty(GEOFENCING_ZONE_TYPE, GEOFENCING_ZONE_TYPE_NO_DROP_OFF)
@@ -422,7 +412,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("geofencing-zones-no-traversal")
-        .group(RENTAL_GROUP)
+        .group(Groups.RENTAL_GROUP)
         .typeFill()
         .vectorSourceLayer(geofencingZones)
         .filterValueInProperty(GEOFENCING_ZONE_TYPE, GEOFENCING_ZONE_TYPE_NO_TRAVERSAL)
@@ -433,7 +423,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("geofencing-zones-business-area")
-        .group(RENTAL_GROUP)
+        .group(Groups.RENTAL_GROUP)
         .typeFill()
         .vectorSourceLayer(geofencingZones)
         .filterValueInProperty(GEOFENCING_ZONE_TYPE, GEOFENCING_ZONE_TYPE_BUSINESS_AREA)
@@ -449,7 +439,7 @@ public class DebugStyleSpec {
   private static List<StyleBuilder> edges(VectorSourceLayer edges) {
     return List.of(
       StyleBuilder.ofId("area-edge")
-        .group(EDGES_GROUP)
+        .group(Groups.EDGES_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .edgeFilter(AreaEdge.class)
@@ -461,7 +451,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("edge")
-        .group(EDGES_GROUP)
+        .group(Groups.EDGES_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .lineColor(MAGENTA)
@@ -472,7 +462,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("edge-name")
-        .group(EDGES_GROUP)
+        .group(Groups.EDGES_GROUP)
         .typeSymbol()
         .lineText("name")
         .vectorSourceLayer(edges)
@@ -481,7 +471,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("link")
-        .group(EDGES_GROUP)
+        .group(Groups.EDGES_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .lineColor(BRIGHT_GREEN)
@@ -504,7 +494,7 @@ public class DebugStyleSpec {
   private static List<StyleBuilder> elevation(VectorSourceLayer edges, VectorSourceLayer vertices) {
     return List.of(
       StyleBuilder.ofId("maximum-slope")
-        .group(ELEVATION_GROUP)
+        .group(Groups.ELEVATION_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         // Slope can be higher than this in theory but distinction between high values is not needed
@@ -516,7 +506,7 @@ public class DebugStyleSpec {
         .maxZoom(MAX_ZOOM)
         .intiallyHidden(),
       StyleBuilder.ofId("vertex-elevation")
-        .group(ELEVATION_GROUP)
+        .group(Groups.ELEVATION_GROUP)
         .typeSymbol()
         .symbolText("elevation")
         .vectorSourceLayer(vertices)
@@ -529,7 +519,7 @@ public class DebugStyleSpec {
   private static List<StyleBuilder> bicycleSafety(VectorSourceLayer edges) {
     return List.of(
       StyleBuilder.ofId("bicycle-safety")
-        .group(BICYCLE_SAFETY_GROUP)
+        .group(Groups.BICYCLE_SAFETY_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .log2LineColorFromProperty("bicycleSafetyFactor", 80)
@@ -541,7 +531,7 @@ public class DebugStyleSpec {
         .intiallyHidden(),
       StyleBuilder.ofId("bicycle-safety-text")
         .vectorSourceLayer(edges)
-        .group(BICYCLE_SAFETY_GROUP)
+        .group(Groups.BICYCLE_SAFETY_GROUP)
         .typeSymbol()
         .lineText("bicycleSafetyFactor")
         .textOffset(1)
@@ -555,7 +545,7 @@ public class DebugStyleSpec {
   private static List<StyleBuilder> walkSafety(VectorSourceLayer edges) {
     return List.of(
       StyleBuilder.ofId("walk-safety")
-        .group(WALK_SAFETY_GROUP)
+        .group(Groups.WALK_SAFETY_GROUP)
         .typeLine()
         .vectorSourceLayer(edges)
         .log2LineColorFromProperty("walkSafetyFactor", 80)
@@ -567,7 +557,7 @@ public class DebugStyleSpec {
         .intiallyHidden(),
       StyleBuilder.ofId("walk-safety-text")
         .vectorSourceLayer(edges)
-        .group(WALK_SAFETY_GROUP)
+        .group(Groups.WALK_SAFETY_GROUP)
         .typeSymbol()
         .lineText("walkSafetyFactor")
         .textOffset(1)
@@ -583,7 +573,7 @@ public class DebugStyleSpec {
       .map(streetTraversalPermission ->
         StyleBuilder.ofId("permission " + streetTraversalPermission)
           .vectorSourceLayer(edges)
-          .group(PERMISSIONS_GROUP)
+          .group(Groups.PERMISSIONS_GROUP)
           .typeLine()
           .filterValueInProperty(
             "permission",
@@ -602,7 +592,7 @@ public class DebugStyleSpec {
 
     var textStyle = StyleBuilder.ofId("permission-text")
       .vectorSourceLayer(edges)
-      .group(PERMISSIONS_GROUP)
+      .group(Groups.PERMISSIONS_GROUP)
       .typeSymbol()
       .lineText("permission")
       .textOffset(1)
@@ -619,7 +609,7 @@ public class DebugStyleSpec {
       .map(streetTraversalPermission ->
         StyleBuilder.ofId("no-thru-traffic " + streetTraversalPermission)
           .vectorSourceLayer(edges)
-          .group(NO_THRU_TRAFFIC_GROUP)
+          .group(Groups.NO_THRU_TRAFFIC_GROUP)
           .typeLine()
           .filterValueInProperty(
             "noThruTraffic",
@@ -638,7 +628,7 @@ public class DebugStyleSpec {
 
     var textStyle = StyleBuilder.ofId("no-thru-traffic-text")
       .vectorSourceLayer(edges)
-      .group(NO_THRU_TRAFFIC_GROUP)
+      .group(Groups.NO_THRU_TRAFFIC_GROUP)
       .typeSymbol()
       .lineText("noThruTraffic")
       .textOffset(1)
