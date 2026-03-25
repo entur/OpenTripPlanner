@@ -6,6 +6,7 @@ import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.RangeRaptor;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalWithBoardingConstraint;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
@@ -83,11 +84,13 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
   }
 
   /**
-   * @return an iterator over all on-board stop-arrivals currently in the state.
-   * The iterator allows removal and this is the expected way to remove or a stop-arrival. When
-   * removed is when we consider a stop-arrival to be "consumed".
+   * @return an iterator over all on-board stop-arrivals currently in the state. The iterator
+   * allows removal and this is the expected way to remove a stop-arrival. When removed is when we
+   * consider a stop-arrival to be "consumed".
+   *
+   * TODO - THERE IS A CYCLIC DEPENDENCY HERE - FIX ARCH TEST
    */
-  default Iterator<? extends ArrivalView<T>> consumeOnBoardStopArrivals() {
+  default Iterator<ArrivalWithBoardingConstraint<T>> consumeOnBoardStopArrivals() {
     return Collections.emptyIterator();
   }
 

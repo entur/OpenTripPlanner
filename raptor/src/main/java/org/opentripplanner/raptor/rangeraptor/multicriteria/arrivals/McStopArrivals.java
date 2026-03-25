@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.spi.IntIterator;
@@ -28,7 +29,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 public final class McStopArrivals<T extends RaptorTripSchedule> {
 
   private final ParetoSet<McStopArrival<T>>[] arrivals;
-  private final List<McStopArrival<T>> onBoardTripArrivals;
+  private final List<ArrivalWithBoardingConstraint<T>> onBoardTripArrivals;
 
   private final BitSet touchedStops;
 
@@ -129,12 +130,15 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     touchedStops.clear();
   }
 
-  public Iterable<? extends McStopArrival<T>> listOnBoardTripArrivals() {
+  public Iterable<ArrivalWithBoardingConstraint<T>> listOnBoardTripArrivals() {
     return onBoardTripArrivals;
   }
 
-  public void addOnBoardTripArrival(McStopArrival<T> arrival) {
-    onBoardTripArrivals.add(arrival);
+  public void addOnBoardTripArrival(
+    McStopArrival<T> arrival,
+    RaptorTripScheduleStopPosition tripBoarding
+  ) {
+    onBoardTripArrivals.add(new ArrivalWithBoardingConstraint<>(arrival, tripBoarding));
   }
 
   /* private methods */

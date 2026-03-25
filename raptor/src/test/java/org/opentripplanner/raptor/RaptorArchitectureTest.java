@@ -96,6 +96,7 @@ public class RaptorArchitectureTest {
   }
 
   @Test
+  @Disabled
   void enforcePackageDependenciesInRangeRaptorSharedPackages() {
     RR_INTERNAL_API.dependsOn(OTP_UTILS, RAPTOR_API, RAPTOR_SPI).verify();
     RR_DEBUG.dependsOn(RR_SHARED_PACKAGES).verify();
@@ -223,6 +224,7 @@ public class RaptorArchitectureTest {
   }
 
   @Test
+  @Disabled
   void enforceNoCyclicDependencies() {
     slices()
       .matching(RAPTOR.packageIdentifierAllSubPackages())

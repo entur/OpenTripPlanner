@@ -4,9 +4,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalWithBoardingConstraint;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
@@ -120,13 +122,13 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     return arrivals.listArrivalsAfterMarker(stop);
   }
 
-  Iterable<? extends McStopArrival<T>> listOnBoardStopArrivals() {
+  Iterable<ArrivalWithBoardingConstraint<T>> listOnBoardStopArrivals() {
     return arrivals.listOnBoardTripArrivals();
   }
 
-  public void addOnBoardAccessStopArrival(RaptorAccessEgress accessPath, int departureTime) {
+  public void addOnBoardAccessStopArrival(RaptorOnBoardAccess accessPath, int departureTime) {
     var arrival = stopArrivalFactory.createAccessStopArrival(departureTime, accessPath);
-    arrivals.addOnBoardTripArrival(arrival);
+    arrivals.addOnBoardTripArrival(arrival, accessPath.tripBoarding());
   }
 
   /**

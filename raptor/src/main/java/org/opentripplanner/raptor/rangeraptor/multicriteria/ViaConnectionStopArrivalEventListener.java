@@ -95,9 +95,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   public void notifyElementAccepted(ArrivalView<T> newElement) {
     var e = (McStopArrival<T>) newElement;
     for (RaptorViaConnection c : connections) {
-      if (c.isPassThrough()) {
-        next.addOnBoardTripArrival(e.previous());
-      } else if (c.isSameStop()) {
+      if (c.isSameStop()) {
         next.addStopArrival(createViaStopArrivalWithWaitTime(e, c));
       } else if (e.arrivedOnBoard()) {
         transfersCache.add(createViaStopArrivalWithTransfer(e, c));

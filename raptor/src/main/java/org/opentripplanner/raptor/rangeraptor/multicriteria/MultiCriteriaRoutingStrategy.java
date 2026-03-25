@@ -10,6 +10,7 @@ import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.internalapi.PassThroughPointsService;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.ArrivalWithBoardingConstraint;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
@@ -125,7 +126,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public Iterator<? extends McStopArrival<T>> consumeOnBoardStopArrivals() {
+  public Iterator<ArrivalWithBoardingConstraint<T>> consumeOnBoardStopArrivals() {
     return state.listOnBoardStopArrivals().iterator();
   }
 
@@ -136,7 +137,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     T trip
   ) {
     if (!(prevArrival instanceof McStopArrival<T> prevMcArrival)) {
-      throw new UnsupportedOperationException();
+      throw new IllegalStateException();
     }
 
     var boarding = boardingSupport.searchRegularTransfer(

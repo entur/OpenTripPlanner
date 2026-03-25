@@ -208,8 +208,9 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   public void routeTransitUsingOnBoardTripAccess() {
     var arrivals = transitWorker.consumeOnBoardStopArrivals();
     while (arrivals.hasNext()) {
-      var arrival = arrivals.next();
-      var boarding = arrival.subsequentBoardingConstraint();
+      var it = arrivals.next();
+      var arrival = it.stopArrival();
+      var boarding = it.tripToBoard();
       var route = transitData.getRouteForIndex(boarding.routeIndex());
       var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
       int stopPosition = boarding.stopPositionInPattern();
