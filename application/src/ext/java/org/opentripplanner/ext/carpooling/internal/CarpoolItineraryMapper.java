@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.carpooling.internal;
 
 import java.time.Duration;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.EnumSet;
@@ -24,6 +25,7 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.model.organization.ContactInfo;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
 import org.opentripplanner.transit.model.timetable.booking.BookingMethod;
+import org.opentripplanner.transit.model.timetable.booking.BookingTime;
 
 /**
  * Maps carpooling insertion candidates to OTP itineraries for API responses.
@@ -246,6 +248,7 @@ public class CarpoolItineraryMapper {
           .build()
       )
       .withBookingMethods(bookingMethods)
+      .withLatestBookingTime(new BookingTime(LocalTime.MIDNIGHT, 0))
       .build();
   }
 }
