@@ -20,6 +20,12 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
   @Nullable
   private SimpleContactStructure publicContactInformation;
 
+  @Nullable
+  private Duration minimumBookingNotice;
+
+  @Nullable
+  private String bookingMessage;
+
   public CarpoolTripBuilder(FeedScopedId id) {
     super(id);
   }
@@ -33,6 +39,8 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
     this.availableSeats = original.availableSeats();
     this.stops = new ArrayList<>(original.stops());
     this.publicContactInformation = original.publicContactInformation();
+    this.minimumBookingNotice = original.minimumBookingNotice().orElse(null);
+    this.bookingMessage = original.bookingMessage();
   }
 
   public CarpoolTripBuilder withStartTime(ZonedDateTime startTime) {
@@ -90,6 +98,26 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
   @Nullable
   public SimpleContactStructure publicContactInformation() {
     return publicContactInformation;
+  }
+
+  public CarpoolTripBuilder withMinimumBookingNotice(Duration minimumBookingNotice) {
+    this.minimumBookingNotice = minimumBookingNotice;
+    return this;
+  }
+
+  @Nullable
+  public Duration minimumBookingNotice() {
+    return minimumBookingNotice;
+  }
+
+  public CarpoolTripBuilder withBookingMessage(String bookingMessage) {
+    this.bookingMessage = bookingMessage;
+    return this;
+  }
+
+  @Nullable
+  public String bookingMessage() {
+    return bookingMessage;
   }
 
   public CarpoolTripBuilder withStops(List<CarpoolStop> stops) {

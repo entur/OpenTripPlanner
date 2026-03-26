@@ -20,10 +20,12 @@ import org.opentripplanner.ext.carpooling.model.SimpleContactStructure;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 import uk.org.siri.siri21.AimedFlexibleArea;
 import uk.org.siri.siri21.CircularAreaStructure;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
+import uk.org.siri.siri21.Extensions;
 
 public class CarpoolSiriMapper {
 
@@ -86,6 +88,19 @@ public class CarpoolSiriMapper {
       builder.withPublicContactInformation(
         new SimpleContactStructure(publicContact.getPhoneNumber(), publicContact.getUrl())
       );
+    }
+
+    var minimumBookingNotice = getExtensionValue(
+      journey.getExtensions(),
+      "MinimumBookingNotice"
+    );
+    if (minimumBookingNotice != null) {
+      builder.withMinimumBookingNotice(Duration.parse(minimumBookingNotice));
+    }
+
+    var bookingMessage = getExtensionValue(journey.getExtensions(), "BookingMessage");
+    if (bookingMessage != null) {
+      builder.withBookingMessage(bookingMessage);
     }
 
     return builder.build();
@@ -298,5 +313,18 @@ public class CarpoolSiriMapper {
     double lat = centroid.getY();
 
     return new WgsCoordinate(lat, lon);
+  }
+
+  private static String getExtensionValue(Extensions extensions, String elementName) {
+    if (extensions == null) {
+      return null;
+    }
+    for (Element element : extensions.getAnies()) {
+      var name = element.getLocalName() != null ? element.getLocalName() : element.getNodeName();
+      if (elementName.equals(name)) {
+        return element.getTextContent();
+      }
+    }
+    return null;
   }
 }

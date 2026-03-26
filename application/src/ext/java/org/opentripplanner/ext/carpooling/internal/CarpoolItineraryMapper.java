@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.carpooling.internal;
 
 import java.time.Duration;
-import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.EnumSet;
@@ -25,7 +24,6 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.transit.model.organization.ContactInfo;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
 import org.opentripplanner.transit.model.timetable.booking.BookingMethod;
-import org.opentripplanner.transit.model.timetable.booking.BookingTime;
 
 /**
  * Maps carpooling insertion candidates to OTP itineraries for API responses.
@@ -229,26 +227,40 @@ public class CarpoolItineraryMapper {
   @Nullable
   private static BookingInfo toBookingInfo(CarpoolTrip trip) {
     SimpleContactStructure contact = trip.publicContactInformation();
-    if (contact == null) {
+    boolean hasContact = contact != null;
+    boolean hasBookingNotice = trip.minimumBookingNotice().isPresent();
+    boolean hasBookingMessage = trip.bookingMessage() != null;
+
+    if (!hasContact && !hasBookingNotice && !hasBookingMessage) {
       return null;
     }
-    var bookingMethods = EnumSet.noneOf(BookingMethod.class);
-    if (contact.phoneNumber() != null) {
-      bookingMethods.add(BookingMethod.CALL_OFFICE);
-    }
-    if (contact.url() != null) {
-      bookingMethods.add(BookingMethod.ONLINE);
+
+    var builder = BookingInfo.of();
+
+    if (hasContact) {
+      var bookingMethods = EnumSet.noneOf(BookingMethod.class);
+      if (contact.phoneNumber() != null) {
+        bookingMethods.add(BookingMethod.CALL_OFFICE);
+      }
+      if (contact.url() != null) {
+        bookingMethods.add(BookingMethod.ONLINE);
+      }
+      builder
+        .withContactInfo(
+          ContactInfo.of()
+            .withPhoneNumber(contact.phoneNumber())
+            .withBookingUrl(contact.url())
+            .build()
+        )
+        .withBookingMethods(bookingMethods);
     }
 
-    return BookingInfo.of()
-      .withContactInfo(
-        ContactInfo.of()
-          .withPhoneNumber(contact.phoneNumber())
-          .withBookingUrl(contact.url())
-          .build()
-      )
-      .withBookingMethods(bookingMethods)
-      .withLatestBookingTime(new BookingTime(LocalTime.MIDNIGHT, 0))
-      .build();
+    trip.minimumBookingNotice().ifPresent(builder::withMinimumBookingNotice);
+
+    if (hasBookingMessage) {
+      builder.withMessage(trip.bookingMessage());
+    }
+
+    return builder.build();
   }
 }

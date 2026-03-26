@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
@@ -72,6 +73,12 @@ public class CarpoolTrip
   @Nullable
   private final SimpleContactStructure publicContactInformation;
 
+  @Nullable
+  private final Duration minimumBookingNotice;
+
+  @Nullable
+  private final String bookingMessage;
+
   public CarpoolTrip(CarpoolTripBuilder builder) {
     super(builder.getId());
     this.startTime = builder.startTime();
@@ -81,6 +88,8 @@ public class CarpoolTrip
     this.deviationBudget = builder.deviationBudget();
     this.stops = Collections.unmodifiableList(builder.stops());
     this.publicContactInformation = builder.publicContactInformation();
+    this.minimumBookingNotice = builder.minimumBookingNotice();
+    this.bookingMessage = builder.bookingMessage();
   }
 
   /**
@@ -146,6 +155,15 @@ public class CarpoolTrip
   @Nullable
   public SimpleContactStructure publicContactInformation() {
     return publicContactInformation;
+  }
+
+  public Optional<Duration> minimumBookingNotice() {
+    return Optional.ofNullable(minimumBookingNotice);
+  }
+
+  @Nullable
+  public String bookingMessage() {
+    return bookingMessage;
   }
 
   /**

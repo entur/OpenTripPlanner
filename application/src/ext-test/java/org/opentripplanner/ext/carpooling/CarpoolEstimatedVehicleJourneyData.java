@@ -7,6 +7,8 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import net.opengis.gml.siri.AbstractRingPropertyType;
 import net.opengis.gml.siri.LinearRingType;
 import net.opengis.gml.siri.ObjectFactory;
@@ -17,6 +19,7 @@ import uk.org.siri.siri21.AimedFlexibleArea;
 import uk.org.siri.siri21.CircularAreaStructure;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
+import uk.org.siri.siri21.Extensions;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.OperatorRefStructure;
 import uk.org.siri.siri21.SimpleContactStructure;
@@ -185,6 +188,31 @@ public class CarpoolEstimatedVehicleJourneyData {
 
     call.getDepartureStopAssignments().add(stop);
     return call;
+  }
+
+  public static EstimatedVehicleJourney journeyWithBookingExtensions(
+    String minimumBookingNotice,
+    String bookingMessage
+  ) {
+    var journey = minimalCompleteJourney();
+    var extensions = new Extensions();
+    try {
+      var doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+      if (minimumBookingNotice != null) {
+        var element = doc.createElement("MinimumBookingNotice");
+        element.setTextContent(minimumBookingNotice);
+        extensions.getAnies().add(element);
+      }
+      if (bookingMessage != null) {
+        var element = doc.createElement("BookingMessage");
+        element.setTextContent(bookingMessage);
+        extensions.getAnies().add(element);
+      }
+    } catch (ParserConfigurationException e) {
+      throw new RuntimeException(e);
+    }
+    journey.setExtensions(extensions);
+    return journey;
   }
 
   static AimedFlexibleArea poslistToAimedFlexibleArea(String coordinates) {
