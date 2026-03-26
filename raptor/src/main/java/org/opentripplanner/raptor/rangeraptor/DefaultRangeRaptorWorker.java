@@ -128,7 +128,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void applyOnBoardTripAccess(int iterationDepartureTime) {
+  public void applyOnBoardTripAccess() {
     for (var accessPath : accessPaths.onBoardAccessPaths()) {
       var boarding = accessPath.tripBoarding();
       var route = transitData.getRouteForIndex(boarding.routeIndex());

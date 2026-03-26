@@ -126,7 +126,7 @@ public final class RangeRaptor<T extends RaptorTripSchedule> implements RaptorRo
   private void runRaptorForMinute(int iterationDepartureTime) {
     setupIteration(iterationDepartureTime);
     worker.applyStreetStopAccess();
-    worker.applyOnBoardTripAccess(iterationDepartureTime);
+    worker.applyOnBoardTripAccess();
 
     while (hasMoreRounds()) {
       lifeCycle.prepareForNextRound(roundTracker.nextRound());

@@ -79,9 +79,9 @@ public class RangeRaptorWorkerComposite<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void applyOnBoardTripAccess(int iterationDepartureTime) {
+  public void applyOnBoardTripAccess() {
     for (RangeRaptorWorker<T> child : children) {
-      child.applyOnBoardTripAccess(iterationDepartureTime);
+      child.applyOnBoardTripAccess();
     }
   }
 
