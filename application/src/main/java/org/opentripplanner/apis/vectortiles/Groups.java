@@ -12,4 +12,5 @@ class Groups {
   static final String PERMISSIONS_GROUP = "Permissions";
   static final String NO_THRU_TRAFFIC_GROUP = "No-thru traffic";
   static final String VERTICAL_TRANSPORTATION_GROUP = "Vertical transportation";
+  static final String TRANSFERS_GROUP = "Transfers";
 }
