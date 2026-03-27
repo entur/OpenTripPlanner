@@ -140,7 +140,7 @@ Fast heuristic checks eliminate impossible positions **before any A* routing**:
 ```
 For each remaining trip:
   1. Generate all position combinations (pickup, dropoff) where:
-     - Pickup: between any two consecutive stops (1-indexed)
+     - Pickup: between any two consecutive stops (0-based index in modified route)
      - Dropoff: after pickup position
 
   2. For each position pair, check:
@@ -295,7 +295,7 @@ Represents a driver's journey offering carpool seats:
 - **startTime**: When driver departs
 - **endTime**: When driver arrives (includes deviation budget)
 - **deviationBudget**: Extra time driver is willing to spend for passengers
-- **availableSeats**: Current remaining capacity
+- **totalCapacity**: Number of seats in the car, including the driver seat
 - **stops**: Ordered list of waypoints (includes booked passenger stops)
 - **provider**: Source system identifier
 
@@ -306,17 +306,14 @@ Waypoint along a carpool route:
 - **coordinate**: Geographic location
 - **sequenceNumber**: Order in route (0-indexed)
 - **estimatedArrivalTime**: When driver expects to arrive
-- **stopType**: PICKUP or DROPOFF
-- **passengerDelta**: Change in passenger count (+1 for pickup, -1 for dropoff)
+- **onboardCount**: Number of passengers onboard (including the driver) when departing this stop
 
 ### InsertionPosition
 
 Represents a viable pickup/dropoff position pair:
 
-- **pickupPos**: Position to insert passenger pickup (1-indexed)
-- **dropoffPos**: Position to insert passenger dropoff (1-indexed)
-
-Note: Positions are 1-indexed to match insertion semantics (insert between existing points).
+- **pickupPos**: 0-based index of the passenger's pickup in the modified route
+- **dropoffPos**: 0-based index of the passenger's dropoff in the modified route
 
 ### InsertionCandidate
 
