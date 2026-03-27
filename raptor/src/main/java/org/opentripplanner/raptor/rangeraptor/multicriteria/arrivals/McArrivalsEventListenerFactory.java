@@ -74,8 +74,8 @@ public class McArrivalsEventListenerFactory<T extends RaptorTripSchedule> {
   ) {
     var l = ParetoSetEventListenerComposite.of(
       debugHandlerFactory.paretoSetStopArrivalListener(stop),
-      egressStopListeners(egressByStop.get(stop)),
-      nextConnectionListener.get(stop)
+      nextConnectionListener.get(stop),
+      egressStopListeners(egressByStop.get(stop))
     );
     this.arrivalListeners.put(stop, l);
   }
