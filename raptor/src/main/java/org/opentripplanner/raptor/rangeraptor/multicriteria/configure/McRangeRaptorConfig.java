@@ -163,7 +163,6 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private McRangeRaptorWorkerState<T> createState(Heuristics heuristics) {
     if (state == null) {
-      var egressData = computeEgressStopData();
       state = new McRangeRaptorWorkerState<>(
         stopArrivals(),
         createDestinationArrivalPaths(),
@@ -171,9 +170,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
         createStopArrivalFactory(),
         context().costCalculator(),
         context().calculator(),
-        context().lifeCycle(),
-        egressData[0],
-        egressData[1]
+        context().lifeCycle()
       );
     }
     return state;
@@ -272,30 +269,5 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
       return ParetoSetCost.USE_C1_RELAXED_IF_C2_IS_OPTIMAL;
     }
     return ParetoSetCost.USE_C1;
-  }
-
-  /**
-   * Compute egress stop data for Early Pruning: returns [stopIndices, minDurations].
-   */
-  private int[][] computeEgressStopData() {
-    var egressPaths = contextSegment.egressPaths();
-    if (egressPaths == null) {
-      return new int[][] { new int[0], new int[0] };
-    }
-    var minDurationByStop = new java.util.LinkedHashMap<Integer, Integer>();
-    for (var egress : egressPaths.listAll()) {
-      int stop = egress.stop();
-      int dur = egress.durationInSeconds();
-      minDurationByStop.merge(stop, dur, Math::min);
-    }
-    int[] stops = new int[minDurationByStop.size()];
-    int[] durations = new int[minDurationByStop.size()];
-    int i = 0;
-    for (var entry : minDurationByStop.entrySet()) {
-      stops[i] = entry.getKey();
-      durations[i] = entry.getValue();
-      i++;
-    }
-    return new int[][] { stops, durations };
   }
 }
