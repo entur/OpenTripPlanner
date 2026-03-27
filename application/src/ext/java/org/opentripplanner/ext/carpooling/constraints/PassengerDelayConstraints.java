@@ -51,8 +51,8 @@ public class PassengerDelayConstraints {
    *
    * @param originalCumulativeDurations Cumulative duration to each point in original route
    * @param modifiedCumulativeDurations Cumulative duration to each point in modified route
-   * @param pickupPos Position where passenger pickup is inserted (1-indexed)
-   * @param dropoffPos Position where passenger dropoff is inserted (1-indexed)
+   * @param pickupPos 0-based index of the passenger's pickup in the modified route
+   * @param dropoffPos 0-based index of the passenger's dropoff in the modified route
    * @return true if all existing passengers experience acceptable delays
    */
   public boolean satisfiesConstraints(

@@ -76,9 +76,10 @@ public class InsertionPositionFinder {
 
     List<InsertionPosition> viable = new ArrayList<>();
 
-    // Pickup positions: 1 to routePoints.size()-1 (cannot pick up at position 0/origin)
+    // pickupPos/dropoffPos are 0-based indices of the passenger's stops in the modified route.
+    // Pickup cannot be at index 0 (that's the driver's origin).
     for (int pickupPos = 1; pickupPos < routePoints.size(); pickupPos++) {
-      // Dropoff positions: pickupPos+1 to routePoints.size() (can drop off up to and including destination)
+      // Dropoff must be after pickup. Max is routePoints.size() (appended after all original stops except the last).
       for (int dropoffPos = pickupPos + 1; dropoffPos <= routePoints.size(); dropoffPos++) {
         if (!trip.hasCapacityForInsertion(pickupPos, dropoffPos, 1)) {
           LOG.trace(
@@ -139,8 +140,8 @@ public class InsertionPositionFinder {
    * to deviate too far from its intended direction.
    *
    * @param routePoints Current route points
-   * @param pickupPos Position to insert pickup (1-indexed)
-   * @param dropoffPos Position to insert dropoff (1-indexed)
+   * @param pickupPos 0-based index of the passenger's pickup in the modified route
+   * @param dropoffPos 0-based index of the passenger's dropoff in the modified route
    * @param passengerPickup Passenger pickup coordinate
    * @param passengerDropoff Passenger dropoff coordinate
    * @return true if insertion maintains forward progress
@@ -232,8 +233,8 @@ public class InsertionPositionFinder {
    * @param originalBeelineTimes Beeline cumulative times for original route
    * @param passengerPickup Passenger pickup location
    * @param passengerDropoff Passenger dropoff location
-   * @param pickupPos Pickup insertion position (1-indexed)
-   * @param dropoffPos Dropoff insertion position (1-indexed)
+   * @param pickupPos 0-based index of the passenger's pickup in the modified route
+   * @param dropoffPos 0-based index of the passenger's dropoff in the modified route
    * @return true if insertion might satisfy delay constraints (proceed with A* routing)
    */
   private boolean passesBeelineDelayCheck(

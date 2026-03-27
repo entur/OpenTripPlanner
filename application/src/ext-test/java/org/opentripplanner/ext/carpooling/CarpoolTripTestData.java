@@ -69,7 +69,7 @@ public class CarpoolTripTestData {
           .withExpectedArrivalTime(intermediate.getExpectedArrivalTime())
           .withAimedArrivalTime(intermediate.getAimedDepartureTime())
           .withSequenceNumber(intermediate.getSequenceNumber() + 1)
-          .withPassengerDelta(intermediate.getPassengerDelta())
+          .withOnboardCount(intermediate.getOnboardCount())
           .build()
       );
     }
@@ -110,7 +110,7 @@ public class CarpoolTripTestData {
       FeedScopedId.ofNullable("TEST", "trip-" + ID_COUNTER.incrementAndGet())
     )
       .withStops(stops)
-      .withAvailableSeats(seats)
+      .withTotalCapacity(seats)
       .withStartTime(ZonedDateTime.now())
       .withDeviationBudget(deviationBudget)
       .build();
@@ -129,7 +129,7 @@ public class CarpoolTripTestData {
       FeedScopedId.ofNullable("TEST", "trip-" + ID_COUNTER.incrementAndGet())
     )
       .withStops(stops)
-      .withAvailableSeats(seats)
+      .withTotalCapacity(seats)
       .withStartTime(startTime)
       .withEndTime(startTime.plusHours(1))
       .withDeviationBudget(Duration.ofMinutes(10))
@@ -137,35 +137,35 @@ public class CarpoolTripTestData {
   }
 
   /**
-   * Creates a CarpoolStop with specified sequence (0-based) and passenger delta.
+   * Creates a CarpoolStop with specified sequence (0-based) and onboard count.
    */
-  public static CarpoolStop createStop(int zeroBasedSequence, int passengerDelta) {
-    return createStopAt(zeroBasedSequence, passengerDelta, CarpoolTestCoordinates.OSLO_CENTER);
+  public static CarpoolStop createStop(int zeroBasedSequence, int onboardCount) {
+    return createStopAt(zeroBasedSequence, onboardCount, CarpoolTestCoordinates.OSLO_CENTER);
   }
 
   /**
-   * Creates a CarpoolStop at a specific location.
+   * Creates a CarpoolStop at a specific location with onboardCount=1 (driver only).
    */
   public static CarpoolStop createStopAt(int sequence, WgsCoordinate location) {
-    return createStopAt(sequence, 0, location);
+    return createStopAt(sequence, 1, location);
   }
 
   /**
    * Creates a CarpoolStop with all parameters.
    */
-  public static CarpoolStop createStopAt(int sequence, int passengerDelta, WgsCoordinate location) {
+  public static CarpoolStop createStopAt(int sequence, int onboardCount, WgsCoordinate location) {
     return CarpoolStop.of(
       FeedScopedId.ofNullable("TEST", "area-" + AREA_STOP_COUNTER.incrementAndGet()),
       AREA_STOP_COUNTER::getAndIncrement
     )
       .withCoordinate(location)
       .withSequenceNumber(sequence)
-      .withPassengerDelta(passengerDelta)
+      .withOnboardCount(onboardCount)
       .build();
   }
 
   /**
-   * Creates an origin stop (first stop, PICKUP_ONLY, passengerDelta=0, departure times only).
+   * Creates an origin stop (first stop, PICKUP_ONLY, onboardCount=1 for driver, departure times only).
    */
   public static CarpoolStop createOriginStop(WgsCoordinate location) {
     return createOriginStopWithTime(location, null, null);
@@ -181,13 +181,14 @@ public class CarpoolTripTestData {
   ) {
     return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-0"), () -> 0)
       .withCoordinate(location)
+      .withOnboardCount(1)
       .withExpectedDepartureTime(expectedDepartureTime)
       .withAimedDepartureTime(aimedDepartureTime)
       .build();
   }
 
   /**
-   * Creates a destination stop (last stop, DROP_OFF_ONLY, passengerDelta=0, arrival times only).
+   * Creates a destination stop (last stop, DROP_OFF_ONLY, onboardCount=1 for driver, arrival times only).
    */
   public static CarpoolStop createDestinationStop(WgsCoordinate location, int sequenceNumber) {
     return createDestinationStopWithTime(location, sequenceNumber, null, null);
@@ -209,6 +210,7 @@ public class CarpoolTripTestData {
       .withCoordinate(location)
       .withCarpoolStopType(CarpoolStopType.DROP_OFF_ONLY)
       .withSequenceNumber(sequenceNumber)
+      .withOnboardCount(1)
       .withExpectedArrivalTime(expectedArrivalTime)
       .withAimedArrivalTime(aimedArrivalTime)
       .build();
