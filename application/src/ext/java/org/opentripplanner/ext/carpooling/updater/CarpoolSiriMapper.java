@@ -30,7 +30,8 @@ public class CarpoolSiriMapper {
   private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
-  private static final int DEFAULT_AVAILABLE_SEATS = 5;
+  private static final int DEFAULT_TOTAL_CAPACITY_SEATS = 5;
+  private static final int DEFAULT_ONBOARD_COUNT = 1;
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
   // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
   // run-away memory use if it by error ends up in global repositories.
@@ -77,7 +78,7 @@ public class CarpoolSiriMapper {
       // TODO: Find a better way to exchange deviation budget with providers.
       .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       // TODO: Make available seats dynamic based on EstimatedVehicleJourney data
-      .withAvailableSeats(DEFAULT_AVAILABLE_SEATS)
+      .withTotalCapacity(DEFAULT_TOTAL_CAPACITY_SEATS)
       .withStops(stops)
       .build();
   }
@@ -231,7 +232,7 @@ public class CarpoolSiriMapper {
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
-      .withPassengerDelta(isLast ? 0 : calculatePassengerDelta(call, stopType))
+      .withOnboardCount(DEFAULT_ONBOARD_COUNT)
       .build();
   }
 
