@@ -141,7 +141,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
       throw new UnsupportedOperationException();
     }
 
-    var boarding = boardingSupport.searchRegularTransfer(
+    var boarding = boardingSupport.searchForRegularBoarding(
       prevArrival.arrivalTime(),
       stopPositionInPattern,
       slackProvider.boardSlack(trip.pattern().slackIndex())
@@ -191,7 +191,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     int stopPos,
     int boardSlack
   ) {
-    var result = boardingSupport.searchRegularTransfer(
+    var result = boardingSupport.searchForRegularBoarding(
       prevArrival.arrivalTime(),
       stopPos,
       boardSlack
@@ -208,7 +208,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     int boardSlack,
     RaptorConstrainedBoardingSearch<T> txSearch
   ) {
-    var boarding = boardingSupport.searchConstrainedTransfer(
+    var boarding = boardingSupport.searchForConstrainedBoarding(
       prevArrival.mostRecentTransitArrival(),
       prevArrival.arrivalTime(),
       boardSlack,

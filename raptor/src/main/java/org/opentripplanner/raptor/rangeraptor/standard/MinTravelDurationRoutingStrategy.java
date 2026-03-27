@@ -89,7 +89,7 @@ public final class MinTravelDurationRoutingStrategy<T extends RaptorTripSchedule
   @Override
   public void boardWithRegularTransfer(int stopIndex, int stopPos, int boardSlack) {
     int prevArrivalTime = prevArrivalTime(stopIndex);
-    var boarding = boardingSupport.searchRegularTransfer(
+    var boarding = boardingSupport.searchForRegularBoarding(
       prevArrivalTime,
       stopPos,
       boardSlack,
