@@ -4,12 +4,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.arrivalIsAfterDepartureTime;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithDifferentCapacitiesPerCall;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithOnboardCounts;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithTotalCapacity;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.lessThanTwoStops;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.minimalCompleteJourney;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.minimalCompleteJourneyWithPolygon;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.stopTimesAreOutOfOrder;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasAimedTimesOnly;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasExpectedTimesOnly;
+import static org.opentripplanner.ext.carpooling.updater.CarpoolSiriMapper.DEFAULT_ONBOARD_COUNT;
+import static org.opentripplanner.ext.carpooling.updater.CarpoolSiriMapper.DEFAULT_TOTAL_CAPACITY;
 
 import org.junit.jupiter.api.Test;
 import uk.org.siri.siri21.EstimatedCall;
@@ -107,5 +112,76 @@ public class CarpoolSiriMapperTest {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(stopTimesAreOutOfOrder())
     );
+  }
+
+  // -- extractTotalCapacity tests --
+
+  @Test
+  void mapSiriToCarpoolTrip_noCapacityData_returnsDefaultCapacity() {
+    var mapped = mapper.mapSiriToCarpoolTrip(minimalCompleteJourney());
+    assertEquals(DEFAULT_TOTAL_CAPACITY, mapped.totalCapacity());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withCapacityData_usesProvidedCapacity() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithTotalCapacity(3));
+    assertEquals(3, mapped.totalCapacity());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_zeroCapacity_returnsDefaultCapacity() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithTotalCapacity(0));
+    assertEquals(DEFAULT_TOTAL_CAPACITY, mapped.totalCapacity());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_negativeCapacity_returnsDefaultCapacity() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithTotalCapacity(-1));
+    assertEquals(DEFAULT_TOTAL_CAPACITY, mapped.totalCapacity());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_differentCapacitiesPerCall_usesFirstValue() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithDifferentCapacitiesPerCall(3, 7));
+    assertEquals(3, mapped.totalCapacity());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_consistentCapacitiesPerCall_usesValue() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithDifferentCapacitiesPerCall(4, 4));
+    assertEquals(4, mapped.totalCapacity());
+  }
+
+  // -- extractOnboardCount tests --
+
+  @Test
+  void mapSiriToCarpoolTrip_noOccupancyData_returnsDefaultOnboardCount() {
+    var mapped = mapper.mapSiriToCarpoolTrip(minimalCompleteJourney());
+    for (var stop : mapped.stops()) {
+      assertEquals(DEFAULT_ONBOARD_COUNT, stop.getOnboardCount());
+    }
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withOccupancyData_usesProvidedOnboardCount() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithOnboardCounts(2, 3));
+    assertEquals(2, mapped.stops().getFirst().getOnboardCount());
+    assertEquals(3, mapped.stops().getLast().getOnboardCount());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_zeroOnboardCount_returnsDefaultOnboardCount() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithOnboardCounts(0, 0));
+    for (var stop : mapped.stops()) {
+      assertEquals(DEFAULT_ONBOARD_COUNT, stop.getOnboardCount());
+    }
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_negativeOnboardCount_returnsDefaultOnboardCount() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithOnboardCounts(-1, -1));
+    for (var stop : mapped.stops()) {
+      assertEquals(DEFAULT_ONBOARD_COUNT, stop.getOnboardCount());
+    }
   }
 }
