@@ -19,7 +19,9 @@ import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.OperatorRefStructure;
+import uk.org.siri.siri21.PassengerCapacityStructure;
 import uk.org.siri.siri21.StopAssignmentStructure;
+import uk.org.siri.siri21.VehicleOccupancyStructure;
 
 public class CarpoolEstimatedVehicleJourneyData {
 
@@ -172,6 +174,46 @@ public class CarpoolEstimatedVehicleJourneyData {
 
     call.getDepartureStopAssignments().add(stop);
     return call;
+  }
+
+  public static EstimatedVehicleJourney journeyWithTotalCapacity(int capacity) {
+    var journey = minimalCompleteJourney();
+    for (var call : journey.getEstimatedCalls().getEstimatedCalls()) {
+      addTotalCapacity(call, capacity);
+    }
+    return journey;
+  }
+
+  public static EstimatedVehicleJourney journeyWithDifferentCapacitiesPerCall(
+    int firstCapacity,
+    int lastCapacity
+  ) {
+    var journey = minimalCompleteJourney();
+    var calls = journey.getEstimatedCalls().getEstimatedCalls();
+    addTotalCapacity(calls.getFirst(), firstCapacity);
+    addTotalCapacity(calls.getLast(), lastCapacity);
+    return journey;
+  }
+
+  public static EstimatedVehicleJourney journeyWithOnboardCounts(int... onboardCounts) {
+    var journey = minimalCompleteJourney();
+    var calls = journey.getEstimatedCalls().getEstimatedCalls();
+    for (int i = 0; i < Math.min(onboardCounts.length, calls.size()); i++) {
+      setOnboardCount(calls.get(i), onboardCounts[i]);
+    }
+    return journey;
+  }
+
+  private static void addTotalCapacity(EstimatedCall call, int totalCapacity) {
+    var capacity = new PassengerCapacityStructure();
+    capacity.setTotalCapacity(BigInteger.valueOf(totalCapacity));
+    call.getExpectedDepartureCapacities().add(capacity);
+  }
+
+  private static void setOnboardCount(EstimatedCall call, int onboardCount) {
+    var occupancy = new VehicleOccupancyStructure();
+    occupancy.setOnboardCount(BigInteger.valueOf(onboardCount));
+    call.getExpectedDepartureOccupancies().add(occupancy);
   }
 
   static AimedFlexibleArea poslistToAimedFlexibleArea(String coordinates) {
