@@ -14,8 +14,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.site.StopType;
 
 /**
- * Represents a stop along a carpool trip route with passenger pickup/drop-off information.
- * Each stop tracks the passenger delta (number of passengers picked up or dropped off).
+ * Represents a stop along a carpool trip route with occupancy and timing information.
  * Stops are ordered sequentially along the route.
  */
 public class CarpoolStop
@@ -34,7 +33,7 @@ public class CarpoolStop
   private final ZonedDateTime expectedDepartureTime;
   private final ZonedDateTime aimedDepartureTime;
   private final int sequenceNumber;
-  private final int passengerDelta;
+  private final int onboardCount;
 
   public CarpoolStop(CarpoolStopBuilder builder) {
     super(builder.getId());
@@ -55,7 +54,7 @@ public class CarpoolStop
     this.expectedDepartureTime = builder.expectedDepartureTime();
     this.aimedDepartureTime = builder.aimedDepartureTime();
     this.sequenceNumber = builder.sequenceNumber();
-    this.passengerDelta = builder.passengerDelta();
+    this.onboardCount = builder.onboardCount();
   }
 
   public static CarpoolStopBuilder of(FeedScopedId id, IntSupplier indexCounter) {
@@ -162,6 +161,9 @@ public class CarpoolStop
     return expectedDepartureTime;
   }
 
+  /**
+   * @return The 0-based position of this stop in the trip's stop sequence
+   */
   public int getSequenceNumber() {
     return sequenceNumber;
   }
@@ -185,8 +187,11 @@ public class CarpoolStop
     return aimedArrivalTime != null ? aimedArrivalTime : aimedDepartureTime;
   }
 
-  public int getPassengerDelta() {
-    return passengerDelta;
+  /**
+   * @return The number of passengers onboard (including the driver) when departing this stop
+   */
+  public int getOnboardCount() {
+    return onboardCount;
   }
 
   @Override
