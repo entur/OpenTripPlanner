@@ -84,7 +84,6 @@ org.opentripplanner.ext.carpooling/
 │
 ├── filter/                          # Pre-screening filters
 │   ├── FilterChain.java            # Composite filter
-│   ├── CapacityFilter.java         # Seat availability check
 │   ├── TimeBasedFilter.java        # Time window check
 │   ├── DirectionalCompatibilityFilter.java  # Direction check
 │   └── DistanceBasedFilter.java    # Distance check
@@ -124,10 +123,9 @@ org.opentripplanner.ext.carpooling/
 
 Filters eliminate obviously incompatible trips **without any street routing**:
 
-1. **CapacityFilter**: Does the vehicle have available seats?
-2. **TimeBasedFilter**: Is the trip timing compatible with passenger request?
-3. **DirectionalCompatibilityFilter**: Are driver and passenger heading the same direction?
-4. **DistanceBasedFilter**: Is the passenger's journey within reasonable distance of driver route?
+1. **TimeBasedFilter**: Is the trip timing compatible with passenger request?
+2. **DirectionalCompatibilityFilter**: Are driver and passenger heading the same direction?
+3. **DistanceBasedFilter**: Is the passenger's journey within reasonable distance of driver route?
 
 **Performance**: O(n) where n = number of active trips.
 
@@ -374,7 +372,6 @@ public class CustomFilter implements TripFilter {
 
 // Add to filter chain
 FilterChain chain = FilterChain.of(
-  new CapacityFilter(),
   new TimeBasedFilter(),
   new CustomFilter()
 );
@@ -405,17 +402,12 @@ Test individual components in isolation:
 
 ```java
 @Test
-void testCapacityFilter() {
-  var filter = new CapacityFilter();
-  var trip = createTripWithSeats(2);  // 2 available seats
+void testTimeBasedFilter() {
+  var filter = new TimeBasedFilter();
+  var trip = createSimpleTrip(origin, destination);
 
-  // Should pass - within capacity
+  // Should pass - within time window
   assertTrue(filter.accepts(trip, pickup, dropoff, now()));
-
-  var fullTrip = createTripWithSeats(0);  // No seats
-
-  // Should fail - no capacity
-  assertFalse(filter.accepts(fullTrip, pickup, dropoff, now()));
 }
 ```
 
