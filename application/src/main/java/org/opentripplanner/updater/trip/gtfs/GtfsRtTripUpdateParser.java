@@ -1,8 +1,8 @@
 package org.opentripplanner.updater.trip.gtfs;
 
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.INVALID_INPUT_STRUCTURE;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NOT_IMPLEMENTED_DUPLICATED;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_INPUT_STRUCTURE;
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DUPLICATED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
@@ -15,9 +15,9 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.Direction;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
@@ -64,13 +64,10 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   }
 
   @Override
-  public Result<ParsedTripUpdate, UpdateError> parse(GtfsRealtime.TripUpdate update) {
+  public ParsedTripUpdate parse(GtfsRealtime.TripUpdate update) {
     var tripUpdate = new TripUpdate(feedId, update, localDateNow);
 
-    var validationResult = tripUpdate.validate();
-    if (validationResult.isFailure()) {
-      return validationResult.toFailureResult();
-    }
+    tripUpdate.validate();
 
     var tripId = tripUpdate.tripId();
     var scheduleRelationship = tripUpdate.scheduleRelationship();
@@ -80,14 +77,10 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     var updateType = mapScheduleRelationship(scheduleRelationship);
 
     if (updateType == null) {
-      return switch (scheduleRelationship) {
-        case UNSCHEDULED -> UpdateError.result(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
-        case DUPLICATED -> UpdateError.result(tripId, NOT_IMPLEMENTED_DUPLICATED);
-        default -> UpdateError.result(
-          tripId,
-          INVALID_INPUT_STRUCTURE,
-          "Unknown schedule relationship"
-        );
+      throw switch (scheduleRelationship) {
+        case UNSCHEDULED -> UpdateException.of(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
+        case DUPLICATED -> UpdateException.of(tripId, NOT_IMPLEMENTED_DUPLICATED);
+        default -> UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
       };
     }
 
@@ -97,49 +90,37 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     );
 
     if (updateType == TripUpdateType.CANCEL_TRIP) {
-      return Result.success(new ParsedCancelTrip(tripReference, serviceDate, null, null));
+      return new ParsedCancelTrip(tripReference, serviceDate, null, null);
     }
     if (updateType == TripUpdateType.DELETE_TRIP) {
-      return Result.success(new ParsedDeleteTrip(tripReference, serviceDate, null, null));
+      return new ParsedDeleteTrip(tripReference, serviceDate, null, null);
     }
 
-    var stopTimeUpdateResult = parseStopTimeUpdates(
+    var stopTimeUpdates = parseStopTimeUpdates(
       tripId,
       tripUpdate.stopTimeUpdates(),
       serviceDate,
       updateType == TripUpdateType.ADD_NEW_TRIP
     );
 
-    if (stopTimeUpdateResult.isFailure()) {
-      return stopTimeUpdateResult.toFailureResult();
-    }
-
-    var stopTimeUpdates = stopTimeUpdateResult.successValue();
-
     return switch (updateType) {
-      case UPDATE_EXISTING -> Result.success(
-        ParsedUpdateExisting.builder(tripReference, serviceDate)
-          .withOptions(gtfsOptions)
-          .withStopTimeUpdates(stopTimeUpdates)
-          .build()
-      );
-      case MODIFY_TRIP -> Result.success(
-        ParsedModifyTrip.builder(tripReference, serviceDate)
-          .withOptions(gtfsOptions)
-          .withStopTimeUpdates(stopTimeUpdates)
-          .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
-          .build()
-      );
-      case ADD_NEW_TRIP -> Result.success(
-        ParsedAddNewTrip.builder(
-          tripReference,
-          serviceDate,
-          buildTripCreationInfo(tripId, tripUpdate)
-        )
-          .withOptions(gtfsOptions)
-          .withStopTimeUpdates(stopTimeUpdates)
-          .build()
-      );
+      case UPDATE_EXISTING -> ParsedUpdateExisting.builder(tripReference, serviceDate)
+        .withOptions(gtfsOptions)
+        .withStopTimeUpdates(stopTimeUpdates)
+        .build();
+      case MODIFY_TRIP -> ParsedModifyTrip.builder(tripReference, serviceDate)
+        .withOptions(gtfsOptions)
+        .withStopTimeUpdates(stopTimeUpdates)
+        .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
+        .build();
+      case ADD_NEW_TRIP -> ParsedAddNewTrip.builder(
+        tripReference,
+        serviceDate,
+        buildTripCreationInfo(tripId, tripUpdate)
+      )
+        .withOptions(gtfsOptions)
+        .withStopTimeUpdates(stopTimeUpdates)
+        .build();
       case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(
         "Unexpected update type: " + updateType
       );
@@ -181,7 +162,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return builder.build();
   }
 
-  private Result<List<ParsedStopTimeUpdate>, UpdateError> parseStopTimeUpdates(
+  private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     FeedScopedId tripId,
     List<StopTimeUpdate> updates,
     LocalDate serviceDate,
@@ -196,9 +177,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
       // Both stop_id and stop_sequence are missing — invalid stop time update
       if (stopId.isEmpty() && stopSequence.isEmpty()) {
-        return Result.failure(
-          new UpdateError(tripId, UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
-        );
+        throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_REFERENCE);
       }
 
       // Create StopReference - may have null stopId if only stopSequence is provided
@@ -227,7 +206,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       result.add(builder.build());
     }
 
-    return Result.success(result);
+    return result;
   }
 
   private ParsedStopTimeUpdate.StopUpdateStatus mapStopTimeStatus(StopTimeUpdate update) {

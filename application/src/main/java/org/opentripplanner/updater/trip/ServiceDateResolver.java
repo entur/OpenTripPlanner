@@ -4,10 +4,10 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Objects;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,29 +45,31 @@ public class ServiceDateResolver {
    *       the Trip's scheduled departure offset (handles overnight trips correctly)</li>
    *   <li>If aimedDepartureTime is present but Trip not resolvable, extract the date from
    *       the ZonedDateTime using its embedded timezone</li>
-   *   <li>If none of the above, return failure with NO_START_DATE error</li>
+   *   <li>If none of the above, throw UpdateException with NO_START_DATE error</li>
    * </ol>
    *
    * @param parsedUpdate the parsed trip update
-   * @return Result containing the resolved service date, or an UpdateError if not found
+   * @return the resolved service date
+   * @throws UpdateException if the service date cannot be resolved
    */
-  public Result<LocalDate, UpdateError> resolveServiceDate(ParsedTripUpdate parsedUpdate) {
+  public LocalDate resolveServiceDate(ParsedTripUpdate parsedUpdate) {
     var serviceDate = parsedUpdate.serviceDate();
     var tripReference = parsedUpdate.tripReference();
 
     // If service date is already present, return it
     if (serviceDate != null) {
-      return Result.success(serviceDate);
+      return serviceDate;
     }
 
     // Try to resolve from tripOnServiceDateId
     if (tripReference.hasTripOnServiceDateId()) {
-      var result = tripResolver.resolveTripOnServiceDate(tripReference);
-      if (result.isSuccess()) {
-        return Result.success(result.successValue().getServiceDate());
+      try {
+        var tripOnServiceDate = tripResolver.resolveTripOnServiceDate(tripReference);
+        return tripOnServiceDate.getServiceDate();
+      } catch (UpdateException e) {
+        // Fall through - tripOnServiceDateId didn't resolve (e.g. BNR numeric IDs
+        // that aren't valid NeTEx DatedServiceJourney IDs), try other strategies
       }
-      // Fall through — tripOnServiceDateId didn't resolve (e.g. BNR numeric IDs
-      // that aren't valid NeTEx DatedServiceJourney IDs), try other strategies
     }
 
     // Try deferred resolution using aimedDepartureTime
@@ -78,9 +80,7 @@ public class ServiceDateResolver {
 
     // No service date available
     LOG.warn("No service date available for trip update");
-    return Result.failure(
-      new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_START_DATE)
-    );
+    throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_START_DATE);
   }
 
   /**
@@ -90,7 +90,7 @@ public class ServiceDateResolver {
    * departure time to handle overnight trips correctly. Otherwise, fall back to
    * simple date extraction.
    */
-  private Result<LocalDate, UpdateError> resolveFromAimedDepartureTime(
+  private LocalDate resolveFromAimedDepartureTime(
     ParsedTripUpdate parsedUpdate,
     ZonedDateTime aimedDepartureTime
   ) {
@@ -108,7 +108,7 @@ public class ServiceDateResolver {
         daysOffset,
         aimedDepartureTime
       );
-      return Result.success(resolvedDate);
+      return resolvedDate;
     }
 
     // Fallback: Trip not resolvable, extract date from ZonedDateTime using its embedded timezone
@@ -118,7 +118,7 @@ public class ServiceDateResolver {
       "Trip not resolvable for deferred service date resolution, falling back to simple date extraction from {}",
       aimedDepartureTime
     );
-    return Result.success(aimedDepartureTime.toLocalDate());
+    return aimedDepartureTime.toLocalDate();
   }
 
   /**

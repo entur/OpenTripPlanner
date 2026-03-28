@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -72,15 +71,13 @@ class HandlerUtilsTest {
       stopResolver
     );
 
-    var result = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
       trip,
       stopUpdates,
       FirstLastStopTimeAdjustment.ADJUST
     );
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
-    var stopTimes = result.successValue().stopTimes();
+    var stopTimes = stopTimesAndPattern.stopTimes();
     assertEquals(2, stopTimes.size());
 
     // First stop: arrival = departure (fallback from departure when no arrival)
@@ -130,15 +127,13 @@ class HandlerUtilsTest {
       stopResolver
     );
 
-    var result = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
       trip,
       stopUpdates,
       FirstLastStopTimeAdjustment.ADJUST
     );
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
-    var stopTimes = result.successValue().stopTimes();
+    var stopTimes = stopTimesAndPattern.stopTimes();
     assertEquals(2, stopTimes.size());
 
     // First stop: arrival set, departure should equal arrival
