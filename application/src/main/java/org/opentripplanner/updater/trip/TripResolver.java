@@ -2,11 +2,11 @@ package org.opentripplanner.updater.trip;
 
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.TripReference;
 
 /**
@@ -39,21 +39,20 @@ public class TripResolver {
    * </ol>
    *
    * @param reference the trip reference containing identification information
-   * @return Result containing the resolved Trip on success, or an UpdateError if not found
+   * @return the resolved Trip
+   * @throws UpdateException if the trip cannot be found
    */
-  public Result<Trip, UpdateError> resolveTrip(TripReference reference) {
+  public Trip resolveTrip(TripReference reference) {
     Objects.requireNonNull(reference, "reference must not be null");
 
     // Try direct trip ID lookup first
     if (reference.hasTripId()) {
       Trip trip = transitService.getTrip(reference.tripId());
       if (trip != null) {
-        return Result.success(trip);
+        return trip;
       }
       // Trip ID was provided but not found
-      return Result.failure(
-        new UpdateError(reference.tripId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND)
-      );
+      throw UpdateException.of(reference.tripId(), UpdateErrorType.TRIP_NOT_FOUND);
     }
 
     // Try TripOnServiceDate ID lookup
@@ -62,30 +61,31 @@ public class TripResolver {
         reference.tripOnServiceDateId()
       );
       if (tripOnServiceDate != null) {
-        return Result.success(tripOnServiceDate.getTrip());
+        return tripOnServiceDate.getTrip();
       }
       // TripOnServiceDate ID was provided but not found
-      return Result.failure(
-        new UpdateError(reference.tripOnServiceDateId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND)
-      );
+      throw UpdateException.of(reference.tripOnServiceDateId(), UpdateErrorType.TRIP_NOT_FOUND);
     }
 
     // No trip identifier provided
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
+    throw UpdateException.noTripId(UpdateErrorType.TRIP_NOT_FOUND);
   }
 
   /**
    * Resolve a {@link Trip} from a {@link TripReference}, returning null if not found.
    * <p>
-   * This is a convenience method for cases where the caller prefers null over Result.
+   * This is a convenience method for cases where the caller prefers null over an exception.
    *
    * @param reference the trip reference containing identification information
    * @return the resolved Trip, or null if not found
    */
   @Nullable
   public Trip resolveTripOrNull(TripReference reference) {
-    var result = resolveTrip(reference);
-    return result.isSuccess() ? result.successValue() : null;
+    try {
+      return resolveTrip(reference);
+    } catch (UpdateException e) {
+      return null;
+    }
   }
 
   /**
@@ -95,9 +95,10 @@ public class TripResolver {
    * which are both contained in TripOnServiceDate.
    *
    * @param reference the trip reference containing tripOnServiceDateId
-   * @return Result containing the resolved TripOnServiceDate on success, or an UpdateError if not found
+   * @return the resolved TripOnServiceDate
+   * @throws UpdateException if the TripOnServiceDate cannot be found
    */
-  public Result<TripOnServiceDate, UpdateError> resolveTripOnServiceDate(TripReference reference) {
+  public TripOnServiceDate resolveTripOnServiceDate(TripReference reference) {
     Objects.requireNonNull(reference, "reference must not be null");
 
     if (reference.hasTripOnServiceDateId()) {
@@ -105,15 +106,13 @@ public class TripResolver {
         reference.tripOnServiceDateId()
       );
       if (tripOnServiceDate != null) {
-        return Result.success(tripOnServiceDate);
+        return tripOnServiceDate;
       }
-      return Result.failure(
-        new UpdateError(reference.tripOnServiceDateId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND)
-      );
+      throw UpdateException.of(reference.tripOnServiceDateId(), UpdateErrorType.TRIP_NOT_FOUND);
     }
 
     // No TripOnServiceDate ID provided
-    return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.TRIP_NOT_FOUND));
+    throw UpdateException.noTripId(UpdateErrorType.TRIP_NOT_FOUND);
   }
 
   /**
@@ -124,7 +123,10 @@ public class TripResolver {
    */
   @Nullable
   public TripOnServiceDate resolveTripOnServiceDateOrNull(TripReference reference) {
-    var result = resolveTripOnServiceDate(reference);
-    return result.isSuccess() ? result.successValue() : null;
+    try {
+      return resolveTripOnServiceDate(reference);
+    } catch (UpdateException e) {
+      return null;
+    }
   }
 }

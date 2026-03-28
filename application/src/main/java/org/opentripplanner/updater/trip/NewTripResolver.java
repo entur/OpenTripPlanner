@@ -3,12 +3,12 @@ package org.opentripplanner.updater.trip;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Objects;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -55,24 +55,19 @@ public class NewTripResolver {
    * Resolve a ParsedTripUpdate for adding a new trip.
    *
    * @param parsedUpdate The parsed update to resolve
-   * @return Result containing the resolved data, or an error if resolution fails
+   * @return the resolved data
+   * @throws UpdateException if resolution fails
    */
-  public Result<ResolvedNewTrip, UpdateError> resolve(ParsedAddNewTrip parsedUpdate) {
+  public ResolvedNewTrip resolve(ParsedAddNewTrip parsedUpdate) {
     // Resolve service date
-    var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
-    if (serviceDateResult.isFailure()) {
-      return Result.failure(serviceDateResult.failureValue());
-    }
-    LocalDate serviceDate = serviceDateResult.successValue();
+    LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 
     var tripId = parsedUpdate.tripCreationInfo().tripId();
 
     // Check if trip already exists in scheduled data (error case)
     if (transitService.getScheduledTrip(tripId) != null) {
       LOG.debug("ADD_NEW_TRIP: Trip {} already exists in scheduled data", tripId);
-      return Result.failure(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_ALREADY_EXISTS)
-      );
+      throw UpdateException.of(tripId, UpdateErrorType.TRIP_ALREADY_EXISTS);
     }
 
     // Check if trip was already added in real-time (update rather than create)
@@ -90,9 +85,7 @@ public class NewTripResolver {
       }
       if (existingPattern == null) {
         LOG.warn("UPDATE_ADDED_TRIP: Could not find pattern for existing trip {}", tripId);
-        return Result.failure(
-          new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-        );
+        throw UpdateException.of(tripId, UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
       }
 
       // Get trip times - check scheduled timetable first, then real-time timetable
@@ -110,9 +103,7 @@ public class NewTripResolver {
 
       if (scheduledTripTimes == null) {
         LOG.warn("UPDATE_ADDED_TRIP: Could not find trip times for trip {}", tripId);
-        return Result.failure(
-          new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-        );
+        throw UpdateException.of(tripId, UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
       }
 
       // Resolve stop time updates now that service date is known
@@ -123,15 +114,13 @@ public class NewTripResolver {
         stopResolver
       );
 
-      return Result.success(
-        ResolvedNewTrip.forExistingAddedTrip(
-          parsedUpdate,
-          serviceDate,
-          resolvedStopTimeUpdates,
-          existingRealTimeTrip,
-          existingPattern,
-          scheduledTripTimes
-        )
+      return ResolvedNewTrip.forExistingAddedTrip(
+        parsedUpdate,
+        serviceDate,
+        resolvedStopTimeUpdates,
+        existingRealTimeTrip,
+        existingPattern,
+        scheduledTripTimes
       );
     }
 
@@ -144,8 +133,6 @@ public class NewTripResolver {
     );
 
     // New trip - no existing trip to resolve
-    return Result.success(
-      ResolvedNewTrip.forNewTrip(parsedUpdate, serviceDate, resolvedStopTimeUpdates)
-    );
+    return ResolvedNewTrip.forNewTrip(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
   }
 }

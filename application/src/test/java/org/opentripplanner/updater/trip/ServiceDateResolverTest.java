@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -14,7 +14,8 @@ import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
 
@@ -64,22 +65,21 @@ class ServiceDateResolverTest {
 
       var result = resolver.resolveServiceDate(update);
 
-      assertTrue(result.isSuccess());
-      assertEquals(SERVICE_DATE, result.successValue());
+      assertEquals(SERVICE_DATE, result);
     }
 
     @Test
-    void resolveServiceDate_whenNoServiceDateAndNoAimedDeparture_returnsError() {
+    void resolveServiceDate_whenNoServiceDateAndNoAimedDeparture_throwsException() {
       var tripOnServiceDateId = new FeedScopedId(FEED_ID, "unknown-dsj");
       var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
       var update = ParsedUpdateExisting.builder(tripRef, null).build();
 
-      var result = resolver.resolveServiceDate(update);
-
       // When tripOnServiceDateId doesn't resolve and there's no aimedDepartureTime,
       // the resolver falls through all strategies and reports NO_START_DATE
-      assertTrue(result.isFailure());
-      assertEquals(UpdateError.UpdateErrorType.NO_START_DATE, result.failureValue().errorType());
+      var exception = assertThrows(UpdateException.class, () ->
+        resolver.resolveServiceDate(update)
+      );
+      assertEquals(UpdateErrorType.NO_START_DATE, exception.errorType());
     }
   }
 
@@ -129,9 +129,8 @@ class ServiceDateResolverTest {
 
       var result = resolver.resolveServiceDate(update);
 
-      assertTrue(result.isSuccess());
       // The service date should be the 15th, not the 16th
-      assertEquals(SERVICE_DATE, result.successValue());
+      assertEquals(SERVICE_DATE, result);
     }
 
     @Test
@@ -165,8 +164,7 @@ class ServiceDateResolverTest {
 
       var result = dayResolver.resolveServiceDate(update);
 
-      assertTrue(result.isSuccess());
-      assertEquals(SERVICE_DATE, result.successValue());
+      assertEquals(SERVICE_DATE, result);
     }
 
     @Test
@@ -186,10 +184,9 @@ class ServiceDateResolverTest {
 
       // Even though Trip resolution fails, service date should still be resolved
       // from the aimed departure time using toLocalDate() (fallback path)
-      assertTrue(result.isSuccess());
       // In the fallback case without Trip data, we use ZonedDateTime.toLocalDate()
       // which returns January 16th (the calendar date of 2:00 AM)
-      assertEquals(LocalDate.of(2024, 1, 16), result.successValue());
+      assertEquals(LocalDate.of(2024, 1, 16), result);
     }
   }
 }

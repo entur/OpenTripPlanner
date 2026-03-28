@@ -1,15 +1,15 @@
 package org.opentripplanner.updater.trip;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
@@ -28,9 +28,7 @@ class TripUpdateApplierTest {
 
     var applier = new MockTripUpdateApplier(true);
 
-    var result = applier.apply(parsedUpdate);
-
-    assertTrue(result.isSuccess());
+    assertDoesNotThrow(() -> applier.apply(parsedUpdate));
   }
 
   @Test
@@ -42,10 +40,8 @@ class TripUpdateApplierTest {
 
     var applier = new MockTripUpdateApplier(false);
 
-    var result = applier.apply(parsedUpdate);
-
-    assertFalse(result.isSuccess());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    var ex = assertThrows(UpdateException.class, () -> applier.apply(parsedUpdate));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, ex.errorType());
   }
 
   /**
@@ -60,15 +56,13 @@ class TripUpdateApplierTest {
     }
 
     @Override
-    public Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate) {
+    public TripUpdateResult apply(ParsedTripUpdate parsedUpdate) throws UpdateException {
       if (returnSuccess) {
-        return Result.success(null);
+        return null;
       } else {
-        return Result.failure(
-          new UpdateError(
-            parsedUpdate.tripReference().tripId(),
-            UpdateError.UpdateErrorType.TRIP_NOT_FOUND
-          )
+        throw UpdateException.of(
+          parsedUpdate.tripReference().tripId(),
+          UpdateErrorType.TRIP_NOT_FOUND
         );
       }
     }

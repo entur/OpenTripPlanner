@@ -7,7 +7,6 @@ import java.util.Objects;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.DataValidationException;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
@@ -17,7 +16,8 @@ import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -62,7 +62,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> handle(ResolvedNewTrip resolvedUpdate) {
+  public TripUpdateResult handle(ResolvedNewTrip resolvedUpdate) {
     var tripCreationInfo = resolvedUpdate.tripCreationInfo();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
 
@@ -78,31 +78,24 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     FeedScopedId serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
     if (serviceId == null) {
       LOG.debug("ADD_TRIP: Cannot get service ID for date {}", serviceDate);
-      return Result.failure(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.OUTSIDE_SERVICE_PERIOD)
-      );
+      throw UpdateException.of(tripId, UpdateErrorType.OUTSIDE_SERVICE_PERIOD);
     }
 
     // Filter stop time updates (GTFS-RT: filter unknown stops, SIRI: fail on unknown stops)
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-    var filtered = filterStopTimeUpdates(stopTimeUpdates, tripId);
-    if (filtered.isFailure()) {
-      return Result.failure(filtered.failureValue());
-    }
-    var filteredUpdates = filtered.successValue();
+    var filteredUpdates = filterStopTimeUpdates(stopTimeUpdates, tripId);
 
     // Check minimum stops
     if (filteredUpdates.updates().size() < 2) {
       LOG.debug("ADD_TRIP: Trip {} has fewer than 2 stops after filtering", tripId);
-      return Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TOO_FEW_STOPS));
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
     }
 
     // Resolve or create route
-    var routeResult = routeCreationStrategy.resolveOrCreateRoute(tripCreationInfo, transitService);
-    if (routeResult.isFailure()) {
-      return Result.failure(routeResult.failureValue());
-    }
-    var routeResolution = routeResult.successValue();
+    var routeResolution = routeCreationStrategy.resolveOrCreateRoute(
+      tripCreationInfo,
+      transitService
+    );
     Route route = routeResolution.route();
     boolean routeCreation = routeResolution.isNewRoute();
 
@@ -110,15 +103,11 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     Trip trip = createTrip(tripId, tripCreationInfo, route, serviceId);
 
     // Build stop pattern from stop time updates
-    var stopPatternResult = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
       trip,
       filteredUpdates.updates(),
       resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
-    if (stopPatternResult.isFailure()) {
-      return Result.failure(stopPatternResult.failureValue());
-    }
-    var stopTimesAndPattern = stopPatternResult.successValue();
 
     // Create scheduled trip times
     var scheduledTripTimes = TripTimesFactory.tripTimes(
@@ -132,7 +121,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       scheduledTripTimes.validateNonIncreasingTimes();
     } catch (DataValidationException e) {
       LOG.info("Invalid scheduled times for added trip {}: {}", tripId, e.getMessage());
-      return DataValidationExceptionMapper.toResult(e);
+      throw DataValidationExceptionMapper.map(e);
     }
 
     // Create the new pattern
@@ -204,10 +193,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
         .build();
 
       LOG.debug("Added trip {} on {} with pattern {}", tripId, serviceDate, pattern.getId());
-      return Result.success(new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings()));
+      return new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings());
     } catch (DataValidationException e) {
       LOG.info("Invalid real-time data for added trip {}: {}", tripId, e.getMessage());
-      return DataValidationExceptionMapper.toResult(e);
+      throw DataValidationExceptionMapper.map(e);
     }
   }
 
@@ -215,7 +204,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    * Update an existing real-time added trip with new data.
    * This is called when the same trip is added again (subsequent updates to an extra journey).
    */
-  private Result<TripUpdateResult, UpdateError> updateExistingAddedTrip(
+  private TripUpdateResult updateExistingAddedTrip(
     ResolvedNewTrip resolvedUpdate,
     TransitEditorService transitService
   ) {
@@ -229,11 +218,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Filter stop time updates
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-    var filtered = filterStopTimeUpdates(stopTimeUpdates, tripId);
-    if (filtered.isFailure()) {
-      return Result.failure(filtered.failureValue());
-    }
-    var filteredUpdates = filtered.successValue();
+    var filteredUpdates = filterStopTimeUpdates(stopTimeUpdates, tripId);
 
     // Create real-time trip times from the scheduled times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
@@ -258,10 +243,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
         .build();
 
       LOG.debug("Updated existing added trip {} on {}", tripId, serviceDate);
-      return Result.success(new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings()));
+      return new TripUpdateResult(realTimeTripUpdate, filteredUpdates.warnings());
     } catch (DataValidationException e) {
       LOG.info("Invalid real-time data for updated added trip {}: {}", tripId, e.getMessage());
-      return DataValidationExceptionMapper.toResult(e);
+      throw DataValidationExceptionMapper.map(e);
     }
   }
 
@@ -278,7 +263,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
    * Unknown stops in FAIL mode are caught by the validator before reaching this handler,
    * so this method only needs to handle IGNORE mode filtering.
    */
-  private Result<FilteredStopTimeUpdates, UpdateError> filterStopTimeUpdates(
+  private FilteredStopTimeUpdates filterStopTimeUpdates(
     List<ResolvedStopTimeUpdate> updates,
     FeedScopedId tripId
   ) {
@@ -298,7 +283,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       warnings.add(UpdateSuccess.WarningType.UNKNOWN_STOPS_REMOVED_FROM_ADDED_TRIP);
     }
 
-    return Result.success(new FilteredStopTimeUpdates(filteredUpdates, warnings));
+    return new FilteredStopTimeUpdates(filteredUpdates, warnings);
   }
 
   /**

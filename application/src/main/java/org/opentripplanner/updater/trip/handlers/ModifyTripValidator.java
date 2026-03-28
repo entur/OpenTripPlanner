@@ -1,11 +1,11 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import java.util.List;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
@@ -27,16 +27,14 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
   private static final Logger LOG = LoggerFactory.getLogger(ModifyTripValidator.class);
 
   @Override
-  public Result<Void, UpdateError> validate(ResolvedExistingTrip resolvedUpdate) {
+  public void validate(ResolvedExistingTrip resolvedUpdate) {
     var trip = resolvedUpdate.trip();
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
     // Validate minimum stops
     if (stopTimeUpdates.size() < 2) {
       LOG.debug("MODIFY_TRIP: trip {} has fewer than 2 stops, skipping.", trip.getId());
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TOO_FEW_STOPS)
-      );
+      throw UpdateException.of(trip.getId(), UpdateErrorType.TOO_FEW_STOPS);
     }
 
     // Check if this is a SIRI extra call (has isExtraCall flags)
@@ -44,22 +42,20 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
 
     // Validate SIRI extra call constraints
     if (hasSiriExtraCalls) {
-      return validateSiriExtraCalls(
+      validateSiriExtraCalls(
         stopTimeUpdates,
         resolvedUpdate.scheduledPattern(),
         trip,
         resolvedUpdate.options().stopReplacementConstraint()
       );
     }
-
-    return Result.success(null);
   }
 
   /**
    * Validate SIRI extra call constraints.
    * Non-extra stops must match the original pattern according to the stop replacement constraint.
    */
-  private Result<Void, UpdateError> validateSiriExtraCalls(
+  private void validateSiriExtraCalls(
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
     TripPattern originalPattern,
     Trip trip,
@@ -76,9 +72,7 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
         nonExtraCount,
         originalPattern.numberOfStops()
       );
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
-      );
+      throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_SEQUENCE);
     }
 
     var validator = new StopReplacementValidator();
@@ -93,9 +87,7 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
 
       StopLocation updateStop = stopUpdate.stop();
       if (updateStop == null) {
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
-        );
+        throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, i);
       }
 
       StopLocation originalStop = originalPattern.getStop(originalIndex);
@@ -110,14 +102,10 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
           originalStop.getId(),
           validationResult
         );
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.STOP_MISMATCH, i)
-        );
+        throw UpdateException.of(trip.getId(), UpdateErrorType.STOP_MISMATCH, i);
       }
 
       originalIndex++;
     }
-
-    return Result.success(null);
   }
 }
