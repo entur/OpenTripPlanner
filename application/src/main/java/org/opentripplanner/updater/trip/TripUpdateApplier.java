@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip;
 
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 
@@ -23,7 +22,8 @@ public interface TripUpdateApplier {
    * Apply a parsed trip update to create or update trip times.
    *
    * @param parsedUpdate The format-independent parsed update
-   * @return Result containing the TripUpdateResult (with RealTimeTripUpdate and warnings), or an error
+   * @return The TripUpdateResult (with RealTimeTripUpdate and warnings)
+   * @throws UpdateException if the update cannot be applied
    */
-  Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate);
+  TripUpdateResult apply(ParsedTripUpdate parsedUpdate) throws UpdateException;
 }

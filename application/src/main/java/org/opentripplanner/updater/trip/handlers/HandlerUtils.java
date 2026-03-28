@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
@@ -37,9 +37,10 @@ public final class HandlerUtils {
    * @param trip The trip being modified or created
    * @param stopTimeUpdates The resolved stop time updates (with pre-resolved stops)
    * @param firstLastAdjustment Strategy for adjusting first/last stop times
-   * @return Result containing stop times and pattern, or error if stops cannot be resolved
+   * @return stop times and pattern
+   * @throws UpdateException if stops cannot be resolved
    */
-  public static Result<StopTimesAndPattern, UpdateError> buildNewStopPattern(
+  public static StopTimesAndPattern buildNewStopPattern(
     Trip trip,
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
     FirstLastStopTimeAdjustment firstLastAdjustment
@@ -53,9 +54,7 @@ public final class HandlerUtils {
       StopLocation stop = stopUpdate.stop();
       if (stop == null) {
         LOG.debug("Unknown stop in pattern: {}", stopUpdate.stopReference());
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
-        );
+        throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, i);
       }
 
       // Create stop time
@@ -134,7 +133,7 @@ public final class HandlerUtils {
     }
 
     var stopPattern = new StopPattern(stopTimes);
-    return Result.success(new StopTimesAndPattern(stopTimes, stopPattern));
+    return new StopTimesAndPattern(stopTimes, stopPattern);
   }
 
   /**

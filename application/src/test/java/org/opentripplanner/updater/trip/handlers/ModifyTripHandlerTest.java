@@ -2,7 +2,7 @@ package org.opentripplanner.updater.trip.handlers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -14,10 +14,10 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.ExistingTripResolver;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
@@ -27,7 +27,6 @@ import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -103,20 +102,6 @@ class ModifyTripHandlerTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(ParsedModifyTrip parsedUpdate) {
-      var result = resolver.resolve(parsedUpdate);
-      if (result.isFailure()) {
-        throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
-      }
-      return result.successValue();
-    }
-
-    private Result<ResolvedExistingTrip, UpdateError> resolveForTest(
-      ParsedModifyTrip parsedUpdate
-    ) {
-      return resolver.resolve(parsedUpdate);
-    }
-
     @Test
     void replacementTrip_addStop() {
       // Original trip: A -> B -> C
@@ -137,22 +122,19 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 3, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
+      var result = handler.handle(resolver.resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
-      var update = result.successValue();
-      assertNotNull(update);
-      assertEquals(RealTimeState.MODIFIED, update.updatedTripTimes().getRealTimeState());
+      assertNotNull(result);
+      assertEquals(RealTimeState.MODIFIED, result.updatedTripTimes().getRealTimeState());
 
       // New pattern should have 4 stops
-      assertEquals(4, update.pattern().numberOfStops());
+      assertEquals(4, result.pattern().numberOfStops());
 
       // Verify stop order: A, B, D, C
-      assertEquals("A", update.pattern().getStop(0).getId().getId());
-      assertEquals("B", update.pattern().getStop(1).getId().getId());
-      assertEquals("D", update.pattern().getStop(2).getId().getId());
-      assertEquals("C", update.pattern().getStop(3).getId().getId());
+      assertEquals("A", result.pattern().getStop(0).getId().getId());
+      assertEquals("B", result.pattern().getStop(1).getId().getId());
+      assertEquals("D", result.pattern().getStop(2).getId().getId());
+      assertEquals("C", result.pattern().getStop(3).getId().getId());
     }
 
     @Test
@@ -173,17 +155,15 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
+      var result = handler.handle(resolver.resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
-      var update = result.successValue();
-      assertEquals(RealTimeState.MODIFIED, update.updatedTripTimes().getRealTimeState());
+      assertNotNull(result);
+      assertEquals(RealTimeState.MODIFIED, result.updatedTripTimes().getRealTimeState());
 
       // New pattern should have 2 stops
-      assertEquals(2, update.pattern().numberOfStops());
-      assertEquals("A", update.pattern().getStop(0).getId().getId());
-      assertEquals("C", update.pattern().getStop(1).getId().getId());
+      assertEquals(2, result.pattern().numberOfStops());
+      assertEquals("A", result.pattern().getStop(0).getId().getId());
+      assertEquals("C", result.pattern().getStop(1).getId().getId());
     }
 
     @Test
@@ -213,11 +193,10 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopCUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
+      var result = handler.handle(resolver.resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
-      var tripTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var tripTimes = result.updatedTripTimes();
       assertEquals(I18NString.of("New Headsign"), tripTimes.getHeadsign(0));
     }
 
@@ -238,11 +217,10 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
-      assertTrue(result.isSuccess());
+      var result = handler.handle(resolver.resolve(parsedUpdate));
 
       // Apply the update to the snapshot manager
-      snapshotManager.updateBuffer(result.successValue().realTimeTripUpdate());
+      snapshotManager.updateBuffer(result.realTimeTripUpdate());
       snapshotManager.purgeAndCommit();
 
       // Get the original pattern and verify the trip is DELETED there
@@ -273,12 +251,8 @@ class ModifyTripHandlerTest {
         .build();
 
       // Resolution should fail because trip not found
-      var resolveResult = resolveForTest(parsedUpdate);
-      assertTrue(resolveResult.isFailure());
-      assertEquals(
-        UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
-        resolveResult.failureValue().errorType()
-      );
+      var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
+      assertEquals(UpdateErrorType.TRIP_NOT_FOUND, ex.errorType());
     }
 
     @Test
@@ -301,12 +275,8 @@ class ModifyTripHandlerTest {
         .build();
 
       // Resolution should fail because trip not running on this date
-      var resolveResult = resolveForTest(parsedUpdate);
-      assertTrue(resolveResult.isFailure());
-      assertEquals(
-        UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE,
-        resolveResult.failureValue().errorType()
-      );
+      var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
+      assertEquals(UpdateErrorType.NO_SERVICE_ON_DATE, ex.errorType());
     }
 
     @Test
@@ -326,10 +296,10 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
-
-      assertTrue(result.isFailure());
-      assertEquals(UpdateError.UpdateErrorType.UNKNOWN_STOP, result.failureValue().errorType());
+      var ex = assertThrows(UpdateException.class, () ->
+        handler.handle(resolver.resolve(parsedUpdate))
+      );
+      assertEquals(UpdateErrorType.UNKNOWN_STOP, ex.errorType());
     }
 
     // replacementTrip_tooFewStops is now in ModifyTripValidatorTest since
@@ -405,14 +375,6 @@ class ModifyTripHandlerTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(ParsedModifyTrip parsedUpdate) {
-      var result = resolver.resolve(parsedUpdate);
-      if (result.isFailure()) {
-        throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
-      }
-      return result.successValue();
-    }
-
     @Test
     void extraCall_insertStop() {
       // Original trip: A -> B
@@ -432,18 +394,16 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
+      var result = handler.handle(resolver.resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
-      var update = result.successValue();
-      assertEquals(RealTimeState.MODIFIED, update.updatedTripTimes().getRealTimeState());
+      assertNotNull(result);
+      assertEquals(RealTimeState.MODIFIED, result.updatedTripTimes().getRealTimeState());
 
       // New pattern should have 3 stops: A, D, B
-      assertEquals(3, update.pattern().numberOfStops());
-      assertEquals("A", update.pattern().getStop(0).getId().getId());
-      assertEquals("D", update.pattern().getStop(1).getId().getId());
-      assertEquals("B", update.pattern().getStop(2).getId().getId());
+      assertEquals(3, result.pattern().numberOfStops());
+      assertEquals("A", result.pattern().getStop(0).getId().getId());
+      assertEquals("D", result.pattern().getStop(1).getId().getId());
+      assertEquals("B", result.pattern().getStop(2).getId().getId());
     }
 
     @Test
@@ -465,12 +425,11 @@ class ModifyTripHandlerTest {
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = handler.handle(resolve(parsedUpdate));
+      var result = handler.handle(resolver.resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-
+      assertNotNull(result);
       // Verify A2 is in the pattern, not A
-      assertEquals("A2", result.successValue().pattern().getStop(0).getId().getId());
+      assertEquals("A2", result.pattern().getStop(0).getId().getId());
     }
 
     // extraCall_wrongNumberOfNonExtraStops and extraCall_nonExtraStopDoesNotMatch are now

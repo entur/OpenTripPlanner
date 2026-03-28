@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.handlers;
 
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
@@ -22,7 +21,7 @@ public final class TripUpdateHandler {
    */
   @FunctionalInterface
   public interface ForExistingTrip {
-    Result<TripUpdateResult, UpdateError> handle(ResolvedExistingTrip resolvedUpdate);
+    TripUpdateResult handle(ResolvedExistingTrip resolvedUpdate) throws UpdateException;
   }
 
   /**
@@ -31,7 +30,7 @@ public final class TripUpdateHandler {
    */
   @FunctionalInterface
   public interface ForNewTrip {
-    Result<TripUpdateResult, UpdateError> handle(ResolvedNewTrip resolvedUpdate);
+    TripUpdateResult handle(ResolvedNewTrip resolvedUpdate) throws UpdateException;
   }
 
   /**
@@ -40,6 +39,6 @@ public final class TripUpdateHandler {
    */
   @FunctionalInterface
   public interface ForTripRemoval {
-    Result<TripUpdateResult, UpdateError> handle(ResolvedTripRemoval resolvedUpdate);
+    TripUpdateResult handle(ResolvedTripRemoval resolvedUpdate) throws UpdateException;
   }
 }

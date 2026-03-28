@@ -11,12 +11,12 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
@@ -121,7 +121,8 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       return UpdateResult.empty();
     }
 
-    List<Result<UpdateSuccess, UpdateError>> results = new ArrayList<>();
+    List<UpdateSuccess> successes = new ArrayList<>();
+    List<UpdateError> errors = new ArrayList<>();
 
     if (updateIncrementality == FULL_DATASET) {
       // Remove all updates from the buffer
@@ -146,33 +147,24 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     );
 
     for (GtfsRealtime.TripUpdate update : updates) {
-      results.add(apply(update, applier));
+      try {
+        successes.add(apply(update, applier));
+      } catch (UpdateException e) {
+        errors.add(e.toError());
+      }
     }
 
     LOG.debug("message contains {} trip updates", updates.size());
 
-    return UpdateResult.ofResults(results);
+    return UpdateResult.of(successes, errors);
   }
 
-  private Result<UpdateSuccess, UpdateError> apply(
-    GtfsRealtime.TripUpdate update,
-    DefaultTripUpdateApplier applier
-  ) {
+  private UpdateSuccess apply(GtfsRealtime.TripUpdate update, DefaultTripUpdateApplier applier) {
     // Parse the GTFS-RT message
-    var parseResult = parser.parse(update);
-    if (parseResult.isFailure()) {
-      return parseResult.toFailureResult();
-    }
-
-    var parsedUpdate = parseResult.successValue();
+    var parsedUpdate = parser.parse(update);
 
     // Apply the parsed update
-    var applyResult = applier.apply(parsedUpdate);
-    if (applyResult.isFailure()) {
-      return applyResult.toFailureResult();
-    }
-
-    var tripUpdateResult = applyResult.successValue();
+    var tripUpdateResult = applier.apply(parsedUpdate);
     var realTimeTripUpdate = tripUpdateResult.realTimeTripUpdate();
 
     // Cache the route if it's a new trip with route creation
@@ -184,6 +176,6 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     // Commit the update to the snapshot and add any warnings
     return snapshotManager
       .updateBuffer(realTimeTripUpdate)
-      .mapSuccess(s -> s.addWarnings(tripUpdateResult.warnings()));
+      .addWarnings(tripUpdateResult.warnings());
   }
 }

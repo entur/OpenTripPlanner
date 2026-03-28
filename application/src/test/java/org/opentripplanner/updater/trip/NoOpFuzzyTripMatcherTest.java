@@ -1,18 +1,20 @@
 package org.opentripplanner.updater.trip;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
 
 class NoOpFuzzyTripMatcherTest {
 
   @Test
-  void match_alwaysReturnsFailure() {
+  void match_alwaysThrowsException() {
     var matcher = NoOpFuzzyTripMatcher.INSTANCE;
     var tripReference = TripReference.builder().build();
     var parsedUpdate = ParsedUpdateExisting.builder(
@@ -20,13 +22,10 @@ class NoOpFuzzyTripMatcherTest {
       LocalDate.of(2024, 1, 15)
     ).build();
 
-    var result = matcher.match(tripReference, parsedUpdate, LocalDate.of(2024, 1, 15));
-
-    assertTrue(result.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH,
-      result.failureValue().errorType()
+    var exception = assertThrows(UpdateException.class, () ->
+      matcher.match(tripReference, parsedUpdate, LocalDate.of(2024, 1, 15))
     );
+    assertEquals(UpdateErrorType.NO_FUZZY_TRIP_MATCH, exception.errorType());
   }
 
   @Test

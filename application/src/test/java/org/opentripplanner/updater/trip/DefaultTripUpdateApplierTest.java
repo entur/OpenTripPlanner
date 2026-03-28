@@ -2,7 +2,7 @@ package org.opentripplanner.updater.trip;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -15,7 +15,8 @@ import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
 import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
@@ -82,36 +83,24 @@ class DefaultTripUpdateApplierTest {
       LocalDate.now()
     ).build();
 
-    var result = applier.apply(update);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());
   }
 
   @Test
   void testCancelTrip_tripNotFound() {
     var update = new ParsedCancelTrip(TripReference.builder().build(), LocalDate.now(), null, null);
 
-    var result = applier.apply(update);
-
-    assertTrue(result.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
-      result.failureValue().errorType()
-    );
+    var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
+    assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, exception.errorType());
   }
 
   @Test
   void testDeleteTrip_tripNotFound() {
     var update = new ParsedDeleteTrip(TripReference.builder().build(), LocalDate.now(), null, null);
 
-    var result = applier.apply(update);
-
-    assertTrue(result.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
-      result.failureValue().errorType()
-    );
+    var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
+    assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, exception.errorType());
   }
 
   @Test
@@ -124,13 +113,9 @@ class DefaultTripUpdateApplierTest {
 
     var result = applier.apply(update);
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
-    assertEquals(tripId, result.successValue().updatedTripTimes().getTrip().getId());
-    assertEquals(
-      RealTimeState.DELETED,
-      result.successValue().updatedTripTimes().getRealTimeState()
-    );
+    assertNotNull(result);
+    assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.DELETED, result.updatedTripTimes().getRealTimeState());
   }
 
   @Test
@@ -143,14 +128,10 @@ class DefaultTripUpdateApplierTest {
 
     var result = applier.apply(update);
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
+    assertNotNull(result);
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
-    assertEquals(expectedTripId, result.successValue().updatedTripTimes().getTrip().getId());
-    assertEquals(
-      RealTimeState.DELETED,
-      result.successValue().updatedTripTimes().getRealTimeState()
-    );
+    assertEquals(expectedTripId, result.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.DELETED, result.updatedTripTimes().getRealTimeState());
   }
 
   @Test
@@ -163,10 +144,8 @@ class DefaultTripUpdateApplierTest {
 
     var result = applier.apply(update);
 
-    assertTrue(result.isSuccess());
-
-    var updateResult = result.successValue();
-    snapshotManager.updateBuffer(updateResult.realTimeTripUpdate());
+    assertNotNull(result);
+    snapshotManager.updateBuffer(result.realTimeTripUpdate());
 
     snapshotManager.purgeAndCommit();
 
@@ -184,13 +163,9 @@ class DefaultTripUpdateApplierTest {
 
     var result = applier.apply(update);
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
-    assertEquals(tripId, result.successValue().updatedTripTimes().getTrip().getId());
-    assertEquals(
-      RealTimeState.CANCELED,
-      result.successValue().updatedTripTimes().getRealTimeState()
-    );
+    assertNotNull(result);
+    assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.CANCELED, result.updatedTripTimes().getRealTimeState());
   }
 
   @Test
@@ -203,14 +178,10 @@ class DefaultTripUpdateApplierTest {
 
     var result = applier.apply(update);
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
+    assertNotNull(result);
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
-    assertEquals(expectedTripId, result.successValue().updatedTripTimes().getTrip().getId());
-    assertEquals(
-      RealTimeState.CANCELED,
-      result.successValue().updatedTripTimes().getRealTimeState()
-    );
+    assertEquals(expectedTripId, result.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.CANCELED, result.updatedTripTimes().getRealTimeState());
   }
 
   @Test
@@ -223,10 +194,8 @@ class DefaultTripUpdateApplierTest {
 
     var result = applier.apply(update);
 
-    assertTrue(result.isSuccess());
-
-    var updateResult = result.successValue();
-    snapshotManager.updateBuffer(updateResult.realTimeTripUpdate());
+    assertNotNull(result);
+    snapshotManager.updateBuffer(result.realTimeTripUpdate());
 
     snapshotManager.purgeAndCommit();
 

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
@@ -51,10 +53,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertNull(parsed.tripReference().tripId());
     assertEquals(
@@ -87,10 +86,7 @@ class SiriTripUpdateParserTest {
       .withCancellation(true)
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    assertInstanceOf(ParsedCancelTrip.class, result.successValue());
+    assertInstanceOf(ParsedCancelTrip.class, parser.parse(journey));
   }
 
   @Test
@@ -112,10 +108,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, parser.parse(journey));
 
     assertNotNull(parsed.tripCreationInfo());
     assertEquals(
@@ -148,10 +141,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedModifyTrip.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedModifyTrip.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
 
@@ -181,10 +171,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
     var cancelledStop = parsed.stopTimeUpdates().get(1);
@@ -199,10 +186,7 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("stop2").arriveAimedExpected("08:30", "08:32"))
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -229,10 +213,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertTrue(stopUpdate.predictionInaccurate());
@@ -251,10 +232,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
@@ -271,9 +249,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isFailure());
+    assertThrows(UpdateException.class, () -> parser.parse(journey));
   }
 
   @Test
@@ -286,10 +262,7 @@ class SiriTripUpdateParserTest {
       .withCancellation(true)
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    assertInstanceOf(ParsedCancelTrip.class, result.successValue());
+    assertInstanceOf(ParsedCancelTrip.class, parser.parse(journey));
   }
 
   @Test
@@ -299,9 +272,7 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("").withAimedDepartureTime("08:00"))
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isFailure());
+    assertThrows(UpdateException.class, () -> parser.parse(journey));
   }
 
   @Test
@@ -317,10 +288,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.occupancy());
@@ -342,10 +310,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
 
@@ -369,10 +334,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(ForwardsDelayPropagationType.NONE, parsed.options().forwardsPropagation());
   }
@@ -388,10 +350,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = parser.parse(journey);
 
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
     assertNull(parsed.tripReference().tripOnServiceDateId());
@@ -420,10 +379,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
     assertEquals(
@@ -449,10 +405,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = result.successValue();
+    var parsed = parser.parse(journey);
 
     assertEquals("DATASOURCE", parsed.dataSource());
   }
@@ -475,10 +428,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -511,10 +461,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -554,10 +501,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
 
@@ -580,10 +524,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(1, parsed.stopTimeUpdates().size());
 
@@ -606,10 +547,7 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("stop2").arriveAimedExpected("08:30", "08:35"))
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -651,10 +589,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var result = parser.parse(journey);
-
-    assertTrue(result.isSuccess());
-    var parsed = assertInstanceOf(ParsedAddNewTrip.class, result.successValue());
+    var parsed = assertInstanceOf(ParsedAddNewTrip.class, parser.parse(journey));
 
     assertNotNull(parsed.tripCreationInfo());
 
