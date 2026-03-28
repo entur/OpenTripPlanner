@@ -4,12 +4,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -70,34 +70,29 @@ public class ExistingTripResolver {
    * Resolve a ParsedTripUpdate for an existing trip.
    *
    * @param parsedUpdate The parsed update to resolve
-   * @return Result containing the resolved data, or an error if resolution fails
+   * @return the resolved data
+   * @throws UpdateException if resolution fails
    */
-  public Result<ResolvedExistingTrip, UpdateError> resolve(ParsedExistingTripUpdate parsedUpdate) {
+  public ResolvedExistingTrip resolve(ParsedExistingTripUpdate parsedUpdate) {
     // Resolve service date
-    var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
-    if (serviceDateResult.isFailure()) {
-      return Result.failure(serviceDateResult.failureValue());
-    }
-    LocalDate serviceDate = serviceDateResult.successValue();
+    LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 
     var tripReference = parsedUpdate.tripReference();
 
     // Resolve trip and pattern
-    var tripAndPatternResult = resolveTripWithPattern(parsedUpdate, serviceDate);
-    if (tripAndPatternResult.isFailure()) {
+    TripAndPattern tripAndPattern;
+    try {
+      tripAndPattern = resolveTripWithPattern(parsedUpdate, serviceDate);
+    } catch (UpdateException e) {
       LOG.debug("Could not resolve trip for update: {}", tripReference);
-      return Result.failure(tripAndPatternResult.failureValue());
+      throw e;
     }
 
-    var tripAndPattern = tripAndPatternResult.successValue();
     Trip trip = tripAndPattern.trip();
     TripPattern pattern = tripAndPattern.tripPattern();
 
     // Validate service date is valid for this trip
-    var validationResult = validateServiceDate(trip, serviceDate);
-    if (validationResult.isFailure()) {
-      return Result.failure(validationResult.failureValue());
-    }
+    validateServiceDate(trip, serviceDate);
 
     // Get the scheduled pattern. When the pattern is modified (e.g. a cancelled stop created a
     // new RT pattern), look up the trip's own scheduled pattern from the index rather than
@@ -116,9 +111,7 @@ public class ExistingTripResolver {
         trip.getId(),
         scheduledPattern.getId()
       );
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-      );
+      throw UpdateException.of(trip.getId(), UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
     }
 
     // Resolve stop time updates now that service date is known
@@ -129,16 +122,14 @@ public class ExistingTripResolver {
       stopResolver
     );
 
-    return Result.success(
-      new ResolvedExistingTrip(
-        parsedUpdate,
-        serviceDate,
-        trip,
-        pattern,
-        scheduledPattern,
-        tripTimes,
-        resolvedStopTimeUpdates
-      )
+    return new ResolvedExistingTrip(
+      parsedUpdate,
+      serviceDate,
+      trip,
+      pattern,
+      scheduledPattern,
+      tripTimes,
+      resolvedStopTimeUpdates
     );
   }
 
@@ -146,43 +137,40 @@ public class ExistingTripResolver {
    * Resolve a Trip and its TripPattern from a ParsedTripUpdate.
    * Supports both exact matching and fuzzy matching (if configured).
    */
-  private Result<TripAndPattern, UpdateError> resolveTripWithPattern(
+  private TripAndPattern resolveTripWithPattern(
     ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
     TripReference reference = parsedUpdate.tripReference();
 
     // Try exact match first
-    var exactResult = tripResolver.resolveTrip(reference);
-    if (exactResult.isSuccess()) {
-      Trip trip = exactResult.successValue();
+    try {
+      Trip trip = tripResolver.resolveTrip(reference);
       TripPattern pattern = transitService.findPattern(trip, serviceDate);
       if (pattern == null) {
         pattern = transitService.findPattern(trip);
       }
       if (pattern != null) {
-        return Result.success(new TripAndPattern(trip, pattern));
+        return new TripAndPattern(trip, pattern);
       }
       LOG.warn("Trip {} found but no pattern available", trip.getId());
-      return Result.failure(
-        new UpdateError(reference.tripId(), UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN)
-      );
-    }
+      throw UpdateException.of(reference.tripId(), UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
+    } catch (UpdateException exactMatchException) {
+      // Exact match failed - try fuzzy matching if configured
+      if (fuzzyTripMatcher != null) {
+        LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
+        return fuzzyTripMatcher.match(reference, parsedUpdate, serviceDate);
+      }
 
-    // Exact match failed - try fuzzy matching if configured
-    if (fuzzyTripMatcher != null) {
-      LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
-      return fuzzyTripMatcher.match(reference, parsedUpdate, serviceDate);
+      // Return the original exact match error
+      throw exactMatchException;
     }
-
-    // Return the original exact match error
-    return Result.failure(exactResult.failureValue());
   }
 
   /**
    * Validate that the service date is valid for the trip's service.
    */
-  private Result<Void, UpdateError> validateServiceDate(Trip trip, LocalDate serviceDate) {
+  private void validateServiceDate(Trip trip, LocalDate serviceDate) {
     var serviceId = trip.getServiceId();
     var serviceDates = transitService.getCalendarService().getServiceDatesForServiceId(serviceId);
     if (!serviceDates.contains(serviceDate)) {
@@ -191,10 +179,7 @@ public class ExistingTripResolver {
         trip.getId(),
         serviceDate
       );
-      return Result.failure(
-        new UpdateError(trip.getId(), UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE)
-      );
+      throw UpdateException.of(trip.getId(), UpdateErrorType.NO_SERVICE_ON_DATE);
     }
-    return Result.success(null);
   }
 }

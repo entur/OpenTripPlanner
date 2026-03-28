@@ -1,9 +1,7 @@
 package org.opentripplanner.updater.trip.handlers;
 
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
-import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +18,7 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
   private static final Logger LOG = LoggerFactory.getLogger(AbstractTripRemovalHandler.class);
 
   @Override
-  public final Result<TripUpdateResult, UpdateError> handle(ResolvedTripRemoval resolvedUpdate) {
+  public final TripUpdateResult handle(ResolvedTripRemoval resolvedUpdate) {
     var serviceDate = resolvedUpdate.serviceDate();
     var tripId = resolvedUpdate.tripId();
 
@@ -37,7 +35,7 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
         .build();
 
       LOG.debug("{} previously added trip {} on {}", getLogAction(), tripId, serviceDate);
-      return Result.success(new TripUpdateResult(realTimeTripUpdate));
+      return new TripUpdateResult(realTimeTripUpdate);
     }
 
     // Not a previously added trip - use scheduled trip from resolved data
@@ -56,7 +54,7 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
 
     LOG.debug("{} trip {} on {}", getLogAction(), trip.getId(), serviceDate);
 
-    return Result.success(new TripUpdateResult(realTimeTripUpdate));
+    return new TripUpdateResult(realTimeTripUpdate);
   }
 
   /**

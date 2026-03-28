@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.Set;
 import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -18,7 +17,8 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
@@ -69,7 +69,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
   }
 
   @Override
-  public Result<TripAndPattern, UpdateError> match(
+  public TripAndPattern match(
     TripReference tripReference,
     ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
@@ -79,9 +79,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     List<ParsedStopTimeUpdate> stopTimeUpdates = parsedUpdate.stopTimeUpdates();
     if (stopTimeUpdates.isEmpty()) {
       LOG.debug("Cannot fuzzy match without stop time updates");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_VALID_STOPS)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_VALID_STOPS);
     }
 
     // Get first and last stop updates
@@ -92,9 +90,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     Integer aimedDepartureSeconds = getAimedDepartureSeconds(firstStopUpdate, serviceDate);
     if (aimedDepartureSeconds == null) {
       LOG.debug("Cannot fuzzy match without aimed departure time at first stop");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Get the aimed arrival time at last stop (for cache lookup)
@@ -105,9 +101,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     }
     if (aimedArrivalSeconds == null) {
       LOG.debug("Cannot fuzzy match without aimed arrival time at last stop");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Resolve first and last stops
@@ -115,9 +109,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     StopLocation lastStop = resolveStop(lastStopUpdate.stopReference());
     if (firstStop == null || lastStop == null) {
       LOG.debug("Cannot resolve first or last stop for fuzzy matching");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_VALID_STOPS)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_VALID_STOPS);
     }
 
     // Try matching by internal planning code first (for RAIL trips with VehicleRef)
@@ -134,16 +126,17 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
           }
         }
         if (!codeCandidates.isEmpty()) {
-          var result = findExactMatch(
-            codeCandidates,
-            firstStop,
-            lastStop,
-            aimedDepartureSeconds,
-            serviceDate,
-            tripReference
-          );
-          if (result.isSuccess()) {
-            return result;
+          try {
+            return findExactMatch(
+              codeCandidates,
+              firstStop,
+              lastStop,
+              aimedDepartureSeconds,
+              serviceDate,
+              tripReference
+            );
+          } catch (UpdateException e) {
+            // Internal planning code match failed, fall through to arrival time matching
           }
         }
       }
@@ -157,9 +150,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
         lastStop.getId(),
         aimedArrivalSeconds
       );
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Filter by route if provided
@@ -172,9 +163,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
 
     if (candidateTrips.isEmpty()) {
       LOG.debug("No candidate trips after route filtering");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Find exact match by first/last stop and departure time
@@ -301,7 +290,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     return filtered;
   }
 
-  private Result<TripAndPattern, UpdateError> findExactMatch(
+  private TripAndPattern findExactMatch(
     Set<Trip> candidateTrips,
     StopLocation journeyFirstStop,
     StopLocation journeyLastStop,
@@ -346,19 +335,12 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     }
 
     if (matches.isEmpty()) {
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     if (matches.size() > 1) {
       LOG.warn("Multiple fuzzy matches found ({}), skipping all: {}", matches.size(), matches);
-      return Result.failure(
-        new UpdateError(
-          tripReference.tripId(),
-          UpdateError.UpdateErrorType.MULTIPLE_FUZZY_TRIP_MATCHES
-        )
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.MULTIPLE_FUZZY_TRIP_MATCHES);
     }
 
     TripAndPattern match = matches.iterator().next();
@@ -367,7 +349,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
       match.trip().getId(),
       match.tripPattern().getId()
     );
-    return Result.success(match);
+    return match;
   }
 
   private boolean stopsMatch(StopLocation patternStop, StopLocation journeyStop) {

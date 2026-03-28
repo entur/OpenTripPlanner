@@ -2,9 +2,9 @@ package org.opentripplanner.updater.trip.siri;
 
 import static java.lang.Boolean.TRUE;
 import static org.opentripplanner.updater.alert.siri.mapping.SiriTransportModeMapper.mapTransitMainMode;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NOT_MONITORED;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.NO_START_DATE;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.UNKNOWN;
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_MONITORED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.NO_START_DATE;
+import static org.opentripplanner.updater.spi.UpdateErrorType.UNKNOWN;
 import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
 
 import java.time.LocalDate;
@@ -18,8 +18,7 @@ import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
@@ -60,16 +59,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   }
 
   @Override
-  public Result<ParsedTripUpdate, UpdateError> parse(EstimatedVehicleJourney journey) {
-    var callsResult = CallWrapper.of(journey);
-    if (callsResult.isFailure()) {
-      return UpdateError.result(null, callsResult.failureValue(), journey.getDataSource());
-    }
-    List<CallWrapper> calls = callsResult.successValue();
+  public ParsedTripUpdate parse(EstimatedVehicleJourney journey) {
+    List<CallWrapper> calls = CallWrapper.of(journey);
 
     // Check if journey is monitored (unless cancelled)
     if (!TRUE.equals(journey.isMonitored()) && !TRUE.equals(journey.isCancellation())) {
-      return UpdateError.result(null, NOT_MONITORED, journey.getDataSource());
+      throw UpdateException.noTripId(NOT_MONITORED);
     }
 
     // Determine update type, service date, and trip reference
@@ -80,26 +75,24 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       updateType == TripUpdateType.ADD_NEW_TRIP && journey.getEstimatedVehicleJourneyCode() == null
     ) {
       LOG.debug("ADD_NEW_TRIP requires EstimatedVehicleJourneyCode");
-      return UpdateError.result(null, UNKNOWN, journey.getDataSource());
+      throw UpdateException.noTripId(UNKNOWN);
     }
 
     ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(journey, feedId).parse();
 
     if (psd.isEmpty()) {
-      return UpdateError.result(null, NO_START_DATE, journey.getDataSource());
+      throw UpdateException.noTripId(NO_START_DATE);
     }
 
     var tripReference = buildTripReference(journey, updateType, psd);
 
     // Handle cancellation (no stop times needed)
     if (TRUE.equals(journey.isCancellation())) {
-      return Result.success(
-        new ParsedCancelTrip(
-          tripReference,
-          psd.serviceDate(),
-          psd.aimedDepartureTime(),
-          journey.getDataSource()
-        )
+      return new ParsedCancelTrip(
+        tripReference,
+        psd.serviceDate(),
+        psd.aimedDepartureTime(),
+        journey.getDataSource()
       );
     }
 
@@ -120,7 +113,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
         }
-        yield Result.success(builder.build());
+        yield builder.build();
       }
       case MODIFY_TRIP -> {
         var builder = ParsedModifyTrip.builder(tripReference, psd.serviceDate())
@@ -130,12 +123,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
         }
-        yield Result.success(builder.build());
+        yield builder.build();
       }
       case ADD_NEW_TRIP -> {
         var creationInfo = buildTripCreationInfo(journey);
         if (creationInfo == null) {
-          yield UpdateError.result(null, UNKNOWN, journey.getDataSource());
+          throw UpdateException.noTripId(UNKNOWN);
         }
         var builder = ParsedAddNewTrip.builder(tripReference, psd.serviceDate(), creationInfo)
           .withOptions(TripUpdateOptions.siriDefaults())
@@ -144,7 +137,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
         }
-        yield Result.success(builder.build());
+        yield builder.build();
       }
       case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(
         "Unexpected update type: " + updateType
@@ -200,15 +193,15 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     // Get aimed start time from first call
     ZonedDateTime aimedStartTime = null;
-    var callsForStartTime = CallWrapper.of(journey);
-    if (callsForStartTime.isSuccess()) {
-      for (var call : callsForStartTime.successValue()) {
+    try {
+      var callsForStartTime = CallWrapper.of(journey);
+      for (var call : callsForStartTime) {
         aimedStartTime = call.getAimedDepartureTime();
         if (aimedStartTime != null) {
           break;
         }
       }
-    }
+    } catch (UpdateException ignored) {}
     if (aimedStartTime != null && psd.serviceDate() != null) {
       ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(psd.serviceDate(), timeZone);
       int seconds = ServiceDateUtils.secondsSinceStartOfService(startOfService, aimedStartTime);

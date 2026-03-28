@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip.handlers;
 
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
 import org.slf4j.Logger;
@@ -23,10 +23,10 @@ public class AddNewTripValidator implements TripUpdateValidator.ForNewTrip {
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripValidator.class);
 
   @Override
-  public Result<Void, UpdateError> validate(ResolvedNewTrip resolvedUpdate) {
+  public void validate(ResolvedNewTrip resolvedUpdate) {
     // Skip validation for updates to existing added trips
     if (resolvedUpdate.isUpdateToExistingTrip()) {
-      return Result.success(null);
+      return;
     }
 
     var tripId = resolvedUpdate.tripCreationInfo().tripId();
@@ -39,9 +39,7 @@ public class AddNewTripValidator implements TripUpdateValidator.ForNewTrip {
         var stopUpdate = stopTimeUpdates.get(i);
         if (stopUpdate.stop() == null) {
           LOG.debug("ADD_TRIP: Unknown stop {} in added trip", stopUpdate.stopReference());
-          return Result.failure(
-            new UpdateError(tripId, UpdateError.UpdateErrorType.UNKNOWN_STOP, i)
-          );
+          throw UpdateException.of(tripId, UpdateErrorType.UNKNOWN_STOP, i);
         }
       }
     }
@@ -49,9 +47,7 @@ public class AddNewTripValidator implements TripUpdateValidator.ForNewTrip {
     // Minimum stops check on original list
     if (stopTimeUpdates.size() < 2) {
       LOG.debug("ADD_TRIP: Trip {} has fewer than 2 stops", tripId);
-      return Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TOO_FEW_STOPS));
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
     }
-
-    return Result.success(null);
   }
 }

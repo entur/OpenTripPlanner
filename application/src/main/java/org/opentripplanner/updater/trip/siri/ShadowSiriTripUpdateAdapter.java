@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
@@ -147,15 +147,22 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
     }
 
     var comparator = new RealTimeTripUpdateComparator(outputDirectory);
-    List<Result<UpdateSuccess, UpdateError>> results = new ArrayList<>();
+    List<UpdateSuccess> successes = new ArrayList<>();
+    List<UpdateError> errors = new ArrayList<>();
 
     for (var etDelivery : updates) {
       for (var versionFrame : etDelivery.getEstimatedJourneyVersionFrames()) {
         var journeys = versionFrame.getEstimatedVehicleJourneies();
         LOG.debug("Shadow: handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
-          results.add(
-            processOneTrip(journey, fuzzyTripMatcher, entityResolver, feedId, comparator)
+          processOneTrip(
+            journey,
+            fuzzyTripMatcher,
+            entityResolver,
+            feedId,
+            comparator,
+            successes,
+            errors
           );
         }
       }
@@ -163,16 +170,18 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
 
     comparator.logSummary();
 
-    LOG.debug("Shadow: message contains {} trip updates", results.size());
-    return UpdateResult.ofResults(results);
+    LOG.debug("Shadow: message contains {} trip updates", successes.size() + errors.size());
+    return UpdateResult.of(successes, errors);
   }
 
-  private Result<UpdateSuccess, UpdateError> processOneTrip(
+  private void processOneTrip(
     EstimatedVehicleJourney journey,
     @Nullable org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher fuzzyTripMatcher,
     EntityResolver entityResolver,
     String feedId,
-    RealTimeTripUpdateComparator comparator
+    RealTimeTripUpdateComparator comparator,
+    List<UpdateSuccess> successes,
+    List<UpdateError> errors
   ) {
     var tripId = DebugString.of(journey);
 
@@ -180,19 +189,12 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
     RealTimeTripUpdate shadowRecord = null;
     String shadowFailureReason = null;
     try {
-      var parseResult = parser.parse(journey);
-      if (parseResult.isSuccess()) {
-        var applyResult = applier.apply(parseResult.successValue());
-        if (applyResult.isSuccess()) {
-          shadowRecord = applyResult.successValue().realTimeTripUpdate();
-        } else {
-          shadowFailureReason = "apply failed: " + applyResult.failureValue();
-          LOG.warn("Shadow apply failed for trip {}: {}", tripId, applyResult.failureValue());
-        }
-      } else {
-        shadowFailureReason = "parse failed: " + parseResult.failureValue();
-        LOG.warn("Shadow parse failed for trip {}: {}", tripId, parseResult.failureValue());
-      }
+      var parsedUpdate = parser.parse(journey);
+      var applyResult = applier.apply(parsedUpdate);
+      shadowRecord = applyResult.realTimeTripUpdate();
+    } catch (UpdateException e) {
+      shadowFailureReason = "failed: " + e.errorType();
+      LOG.warn("Shadow failed for trip {}: {}", tripId, e.errorType());
     } catch (Exception e) {
       shadowFailureReason = "exception: " + e.getMessage();
       LOG.warn("Shadow adapter error for trip {}", tripId, e);
@@ -228,14 +230,14 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
         shadowFailureReason
       );
 
-      // Return the primary result (single trip → single result)
+      // Return the primary result (single trip -> single result)
       if (primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()) {
-        return Result.failure(primaryResult.errors().getFirst());
+        errors.add(primaryResult.errors().getFirst());
+      } else if (!primaryResult.successes().isEmpty()) {
+        successes.add(primaryResult.successes().getFirst());
+      } else {
+        successes.add(UpdateSuccess.noWarnings());
       }
-      if (!primaryResult.successes().isEmpty()) {
-        return Result.success(primaryResult.successes().getFirst());
-      }
-      return Result.success(UpdateSuccess.noWarnings());
     } finally {
       snapshotManager.setUpdateBufferListener(null);
     }

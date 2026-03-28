@@ -4,13 +4,13 @@ import java.time.LocalDate;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedTripRemoval;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.slf4j.Logger;
@@ -56,27 +56,25 @@ public class TripRemovalResolver {
    * Resolve a ParsedTripUpdate for trip cancellation or deletion.
    *
    * @param parsedUpdate The parsed update to resolve
-   * @return Result containing the resolved data, or error if trip cannot be found at all
+   * @return the resolved data
+   * @throws UpdateException if trip cannot be found at all
    */
-  public Result<ResolvedTripRemoval, UpdateError> resolve(ParsedTripRemoval parsedUpdate) {
+  public ResolvedTripRemoval resolve(ParsedTripRemoval parsedUpdate) {
     // Resolve service date
-    var serviceDateResult = serviceDateResolver.resolveServiceDate(parsedUpdate);
-    if (serviceDateResult.isFailure()) {
-      return Result.failure(serviceDateResult.failureValue());
-    }
-    LocalDate serviceDate = serviceDateResult.successValue();
+    LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 
     var tripReference = parsedUpdate.tripReference();
     FeedScopedId tripId = tripReference.tripId();
     String dataSource = parsedUpdate.dataSource();
 
     // Try to resolve as scheduled trip from static transit model
-    var tripResult = tripResolver.resolveTrip(tripReference);
-    if (tripResult.isFailure()) {
+    Trip trip;
+    try {
+      trip = tripResolver.resolveTrip(tripReference);
+    } catch (UpdateException e) {
       // Trip not found in scheduled data - check for previously added trips
       return resolveAddedTripOrNotFound(serviceDate, tripId, dataSource);
     }
-    Trip trip = tripResult.successValue();
 
     // Find pattern for the trip
     TripPattern pattern = transitService.findPattern(trip);
@@ -90,16 +88,14 @@ public class TripRemovalResolver {
       return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource);
     }
 
-    return Result.success(
-      ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes, dataSource)
-    );
+    return ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes, dataSource);
   }
 
   /**
    * Check for a previously added (real-time) trip in the snapshot manager.
-   * Returns a success with added trip data if found, or a failure otherwise.
+   * Returns the resolved data if found, or throws UpdateException otherwise.
    */
-  private Result<ResolvedTripRemoval, UpdateError> resolveAddedTripOrNotFound(
+  private ResolvedTripRemoval resolveAddedTripOrNotFound(
     LocalDate serviceDate,
     FeedScopedId tripId,
     @Nullable String dataSource
@@ -110,20 +106,16 @@ public class TripRemovalResolver {
         var timetable = snapshotManager.resolve(pattern, serviceDate);
         var tripTimes = timetable.getTripTimes(tripId);
         if (tripTimes != null && tripTimes.getRealTimeState() == RealTimeState.ADDED) {
-          return Result.success(
-            ResolvedTripRemoval.forPreviouslyAddedTrip(
-              serviceDate,
-              tripId,
-              pattern,
-              tripTimes,
-              dataSource
-            )
+          return ResolvedTripRemoval.forPreviouslyAddedTrip(
+            serviceDate,
+            tripId,
+            pattern,
+            tripTimes,
+            dataSource
           );
         }
       }
     }
-    return Result.failure(
-      new UpdateError(tripId, UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND)
-    );
+    throw UpdateException.of(tripId, UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND);
   }
 }

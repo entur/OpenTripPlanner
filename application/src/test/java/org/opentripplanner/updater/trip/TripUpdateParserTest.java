@@ -1,15 +1,14 @@
 package org.opentripplanner.updater.trip;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -24,15 +23,13 @@ class TripUpdateParserTest {
     var tripRef = TripReference.ofTripId(tripId);
     var serviceDate = LocalDate.of(2024, 1, 15);
 
-    var parser = new MockTripUpdateParser(
-      Result.success(ParsedUpdateExisting.builder(tripRef, serviceDate).build())
-    );
+    var expectedResult = ParsedUpdateExisting.builder(tripRef, serviceDate).build();
+    var parser = new MockTripUpdateParser(expectedResult, null);
 
     var result = parser.parse("test-input");
 
-    assertTrue(result.isSuccess());
-    assertInstanceOf(ParsedUpdateExisting.class, result.successValue());
-    assertEquals(tripRef, result.successValue().tripReference());
+    assertInstanceOf(ParsedUpdateExisting.class, result);
+    assertEquals(tripRef, result.tripReference());
   }
 
   @Test
@@ -40,13 +37,12 @@ class TripUpdateParserTest {
     var tripId = new FeedScopedId(FEED_ID, "trip1");
 
     var parser = new MockTripUpdateParser(
-      Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TRIP_NOT_FOUND))
+      null,
+      UpdateException.of(tripId, UpdateErrorType.TRIP_NOT_FOUND)
     );
 
-    var result = parser.parse("test-input");
-
-    assertFalse(result.isSuccess());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    var ex = assertThrows(UpdateException.class, () -> parser.parse("test-input"));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, ex.errorType());
   }
 
   /**
@@ -54,14 +50,19 @@ class TripUpdateParserTest {
    */
   static class MockTripUpdateParser implements TripUpdateParser<String> {
 
-    private final Result<ParsedTripUpdate, UpdateError> result;
+    private final ParsedTripUpdate result;
+    private final UpdateException exception;
 
-    MockTripUpdateParser(Result<ParsedTripUpdate, UpdateError> result) {
+    MockTripUpdateParser(ParsedTripUpdate result, UpdateException exception) {
       this.result = result;
+      this.exception = exception;
     }
 
     @Override
-    public Result<ParsedTripUpdate, UpdateError> parse(String update) {
+    public ParsedTripUpdate parse(String update) throws UpdateException {
+      if (exception != null) {
+        throw exception;
+      }
       return result;
     }
   }

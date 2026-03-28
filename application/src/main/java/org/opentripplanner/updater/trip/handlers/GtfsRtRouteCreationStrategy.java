@@ -7,11 +7,9 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
@@ -39,7 +37,7 @@ public class GtfsRtRouteCreationStrategy implements RouteCreationStrategy {
   }
 
   @Override
-  public Result<RouteResolution, UpdateError> resolveOrCreateRoute(
+  public RouteResolution resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,
     TransitEditorService transitService
   ) {
@@ -54,32 +52,28 @@ public class GtfsRtRouteCreationStrategy implements RouteCreationStrategy {
         // Always mark isNewRoute=true for GTFS-RT. In FULL_DATASET mode the snapshot
         // buffer is cleared each batch, so routes always need re-registration even if
         // they were found in the cache or transit service.
-        return Result.success(new RouteResolution(existingRoute, true));
+        return new RouteResolution(existingRoute, true);
       }
 
       // Route not found - create using routeCreationInfo if available
       if (tripCreationInfo.routeCreationInfo() != null) {
-        return Result.success(
-          new RouteResolution(
-            createRouteWithInfo(
-              routeId,
-              tripId,
-              tripCreationInfo.routeCreationInfo(),
-              transitService
-            ),
-            true
-          )
+        return new RouteResolution(
+          createRouteWithInfo(
+            routeId,
+            tripId,
+            tripCreationInfo.routeCreationInfo(),
+            transitService
+          ),
+          true
         );
       }
 
       // No routeCreationInfo - create fallback route with routeId
-      return Result.success(
-        new RouteResolution(createFallbackRoute(routeId, transitService), true)
-      );
+      return new RouteResolution(createFallbackRoute(routeId, transitService), true);
     }
 
     // No route ID at all - create fallback route using trip ID
-    return Result.success(new RouteResolution(createFallbackRoute(tripId, transitService), true));
+    return new RouteResolution(createFallbackRoute(tripId, transitService), true);
   }
 
   @Nullable

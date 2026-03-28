@@ -1,8 +1,9 @@
 package org.opentripplanner.updater.trip.handlers;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -12,16 +13,15 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripRemovalResolver;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
-import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.opentripplanner.updater.trip.model.TripReference;
 
 /**
@@ -72,18 +72,6 @@ class CancelTripHandlerTest {
     handler = new CancelTripHandler();
   }
 
-  private ResolvedTripRemoval resolve(ParsedCancelTrip parsedUpdate) {
-    var result = resolver.resolve(parsedUpdate);
-    if (result.isFailure()) {
-      throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
-    }
-    return result.successValue();
-  }
-
-  private Result<ResolvedTripRemoval, UpdateError> resolveForTest(ParsedCancelTrip parsedUpdate) {
-    return resolver.resolve(parsedUpdate);
-  }
-
   @Test
   void cancelTripByTripId() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
@@ -93,15 +81,11 @@ class CancelTripHandlerTest {
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate));
+    var result = handler.handle(resolver.resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
-    assertEquals(tripId, result.successValue().updatedTripTimes().getTrip().getId());
-    assertEquals(
-      RealTimeState.CANCELED,
-      result.successValue().updatedTripTimes().getRealTimeState()
-    );
+    assertNotNull(result);
+    assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.CANCELED, result.updatedTripTimes().getRealTimeState());
   }
 
   @Test
@@ -113,17 +97,13 @@ class CancelTripHandlerTest {
     // Verify trip is scheduled before cancellation
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate));
+    var result = handler.handle(resolver.resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
+    assertNotNull(result);
     // The underlying trip should be cancelled
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
-    assertEquals(expectedTripId, result.successValue().updatedTripTimes().getTrip().getId());
-    assertEquals(
-      RealTimeState.CANCELED,
-      result.successValue().updatedTripTimes().getRealTimeState()
-    );
+    assertEquals(expectedTripId, result.updatedTripTimes().getTrip().getId());
+    assertEquals(RealTimeState.CANCELED, result.updatedTripTimes().getRealTimeState());
   }
 
   @Test
@@ -132,13 +112,9 @@ class CancelTripHandlerTest {
     var tripRef = TripReference.ofTripId(unknownTripId);
     var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Resolver returns failure when trip is not found anywhere
-    var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
-      resolveResult.failureValue().errorType()
-    );
+    // Resolver throws exception when trip is not found anywhere
+    var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
+    assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, ex.errorType());
   }
 
   @Test
@@ -155,8 +131,7 @@ class CancelTripHandlerTest {
 
     // Resolution succeeds for CANCEL_TRIP because we find the scheduled pattern regardless of date.
     // The trip can be cancelled on any date, the pattern is found from the scheduled timetable.
-    var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isSuccess(), "Expected success but got: " + resolveResult);
+    assertDoesNotThrow(() -> resolver.resolve(parsedUpdate));
   }
 
   @Test
@@ -165,13 +140,9 @@ class CancelTripHandlerTest {
     var tripRef = TripReference.builder().build();
     var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
-    // Resolver returns failure when no trip reference is provided
-    var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
-      resolveResult.failureValue().errorType()
-    );
+    // Resolver throws exception when no trip reference is provided
+    var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
+    assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, ex.errorType());
   }
 
   @Test
@@ -183,13 +154,10 @@ class CancelTripHandlerTest {
     // Before cancellation, the trip should be scheduled
     assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
 
-    var result = handler.handle(resolve(parsedUpdate));
-
-    assertTrue(result.isSuccess());
+    var result = handler.handle(resolver.resolve(parsedUpdate));
 
     // Apply the update to the snapshot manager
-    var update = result.successValue();
-    snapshotManager.updateBuffer(update.realTimeTripUpdate());
+    snapshotManager.updateBuffer(result.realTimeTripUpdate());
 
     // Commit the snapshot to make the update visible
     snapshotManager.purgeAndCommit();

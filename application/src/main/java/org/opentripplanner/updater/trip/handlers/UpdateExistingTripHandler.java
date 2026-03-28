@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.framework.DataValidationException;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -15,7 +14,8 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
@@ -46,7 +46,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> handle(ResolvedExistingTrip resolvedUpdate) {
+  public TripUpdateResult handle(ResolvedExistingTrip resolvedUpdate) {
     // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern pattern = resolvedUpdate.pattern();
@@ -81,15 +81,16 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         trip.getId(),
         serviceDate
       );
-      return Result.success(new TripUpdateResult(realTimeTripUpdate));
+      return new TripUpdateResult(realTimeTripUpdate);
     }
 
     // Apply stop time updates - returns PatternModificationResult
-    var applyResult = applyStopTimeUpdates(resolvedUpdate, builder, scheduledPattern, trip);
-    if (applyResult.isFailure()) {
-      return Result.failure(applyResult.failureValue());
-    }
-    PatternModificationResult modResult = applyResult.successValue();
+    PatternModificationResult modResult = applyStopTimeUpdates(
+      resolvedUpdate,
+      builder,
+      scheduledPattern,
+      trip
+    );
 
     // Determine the pattern to use
     // After reverting, start with the scheduled pattern unless new modifications are needed
@@ -131,14 +132,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         .withHideTripInScheduledPattern(patternToDeleteFrom)
         .build();
       LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
-      return Result.success(new TripUpdateResult(realTimeTripUpdate));
+      return new TripUpdateResult(realTimeTripUpdate);
     } catch (DataValidationException e) {
       LOG.info(
         "Invalid real-time data for trip {} - TripTimes failed to validate. {}",
         trip.getId(),
         e.getMessage()
       );
-      return DataValidationExceptionMapper.toResult(e);
+      throw DataValidationExceptionMapper.map(e);
     }
   }
 
@@ -214,9 +215,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
   /**
    * Apply stop time updates from the resolved update to the builder.
-   * @return Result containing PatternModificationResult tracking all changes, or an error if validation fails
+   * @return PatternModificationResult tracking all changes
+   * @throws UpdateException if validation fails
    */
-  private Result<PatternModificationResult, UpdateError> applyStopTimeUpdates(
+  private PatternModificationResult applyStopTimeUpdates(
     ResolvedExistingTrip resolvedUpdate,
     org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder builder,
     TripPattern scheduledPattern,
@@ -242,9 +244,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         // Use the pre-resolved stop for validation and replacement
         resolvedStop = stopUpdate.stop();
         if (resolvedStop == null) {
-          return Result.failure(
-            new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
-          );
+          throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, stopIndex);
         }
       } else {
         // PARTIAL_UPDATE (GTFS-RT): use stopSequence or lookup by stopId
@@ -257,12 +257,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
               stopIndex,
               scheduledPattern.numberOfStops()
             );
-            return Result.failure(
-              new UpdateError(
-                trip.getId(),
-                UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE,
-                stopIndex
-              )
+            throw UpdateException.of(
+              trip.getId(),
+              UpdateErrorType.INVALID_STOP_SEQUENCE,
+              stopIndex
             );
           }
 
@@ -274,9 +272,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
           // GTFS-RT without stopSequence: lookup stop by ID in pattern
           resolvedStop = stopUpdate.stop();
           if (resolvedStop == null) {
-            return Result.failure(
-              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
-            );
+            throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_REFERENCE);
           }
           int matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, nextStopSearchIndex);
           // If not found from current position, try from beginning (supports out-of-order updates)
@@ -284,9 +280,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
             matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, 0);
           }
           if (matchIndex < 0) {
-            return Result.failure(
-              new UpdateError(trip.getId(), UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
-            );
+            throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_REFERENCE);
           }
           stopIndex = matchIndex;
           nextStopSearchIndex = matchIndex + 1;
@@ -300,9 +294,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
       // Check if we failed to resolve an assigned stop
       if (resolvedStop == null && stopUpdate.stopReference().hasAssignedStopId()) {
-        return Result.failure(
-          new UpdateError(trip.getId(), UpdateError.UpdateErrorType.UNKNOWN_STOP, stopIndex)
-        );
+        throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, stopIndex);
       }
 
       // Track stop replacements
@@ -319,10 +311,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
         if (validationResult != StopReplacementValidator.Result.VALID) {
           var errorType = switch (validationResult) {
-            case STOP_MISMATCH -> UpdateError.UpdateErrorType.STOP_MISMATCH;
-            default -> UpdateError.UpdateErrorType.UNKNOWN;
+            case STOP_MISMATCH -> UpdateErrorType.STOP_MISMATCH;
+            default -> UpdateErrorType.UNKNOWN;
           };
-          return Result.failure(new UpdateError(trip.getId(), errorType, stopIndex));
+          throw UpdateException.of(trip.getId(), errorType, stopIndex);
         }
 
         // Valid replacement - track it
@@ -452,7 +444,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       LOG.trace("Copied remaining scheduled times for trip {}", trip.getId());
     }
 
-    return Result.success(result);
+    return result;
   }
 
   /**

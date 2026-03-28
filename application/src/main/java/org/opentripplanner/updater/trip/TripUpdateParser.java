@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip;
 
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 
 /**
@@ -21,7 +20,8 @@ public interface TripUpdateParser<T> {
    * Parse a single format-specific update into the common model.
    *
    * @param update  The format-specific update message
-   * @return Result containing either the parsed update or an error
+   * @return The parsed update
+   * @throws UpdateException if the update cannot be parsed
    */
-  Result<ParsedTripUpdate, UpdateError> parse(T update);
+  ParsedTripUpdate parse(T update) throws UpdateException;
 }

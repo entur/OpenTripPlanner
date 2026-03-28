@@ -4,12 +4,12 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.rutebanken.netex.model.BusSubmodeEnumeration;
 import org.rutebanken.netex.model.RailSubmodeEnumeration;
@@ -32,7 +32,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
   }
 
   @Override
-  public Result<RouteResolution, UpdateError> resolveOrCreateRoute(
+  public RouteResolution resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,
     TransitEditorService transitService
   ) {
@@ -43,7 +43,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
       Route existingRoute = transitService.getRoute(routeId);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route {}", routeId);
-        return Result.success(new RouteResolution(existingRoute, false));
+        return new RouteResolution(existingRoute, false);
       }
     }
 
@@ -56,12 +56,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
     // 2. Fall back to replaced route's agency
     Agency agency = resolveAgency(operator, tripCreationInfo, transitService);
     if (agency == null) {
-      return Result.failure(
-        new UpdateError(
-          tripCreationInfo.tripId(),
-          UpdateError.UpdateErrorType.CANNOT_RESOLVE_AGENCY
-        )
-      );
+      throw UpdateException.of(tripCreationInfo.tripId(), UpdateErrorType.CANNOT_RESOLVE_AGENCY);
     }
 
     // Create route ID (use routeId from tripCreationInfo, or tripId as fallback)
@@ -93,7 +88,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
 
     Route route = builder.build();
     LOG.debug("ADD_TRIP: Created new SIRI route {}", effectiveRouteId);
-    return Result.success(new RouteResolution(route, true));
+    return new RouteResolution(route, true);
   }
 
   @Nullable

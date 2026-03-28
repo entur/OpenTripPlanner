@@ -3,7 +3,7 @@ package org.opentripplanner.updater.trip;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +12,8 @@ import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.TripReference;
 
 /**
@@ -54,11 +55,10 @@ class TripResolverTest {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var reference = TripReference.ofTripId(tripId);
 
-    var result = resolver.resolveTrip(reference);
+    var trip = resolver.resolveTrip(reference);
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
-    assertEquals(tripId, result.successValue().getId());
+    assertNotNull(trip);
+    assertEquals(tripId, trip.getId());
   }
 
   @Test
@@ -66,12 +66,11 @@ class TripResolverTest {
     var tripOnServiceDateId = new FeedScopedId(FEED_ID, TRIP_ON_SERVICE_DATE_ID);
     var reference = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
 
-    var result = resolver.resolveTrip(reference);
+    var trip = resolver.resolveTrip(reference);
 
-    assertTrue(result.isSuccess());
-    assertNotNull(result.successValue());
+    assertNotNull(trip);
     // The resolved trip should be the underlying trip from the TripOnServiceDate
-    assertEquals(new FeedScopedId(FEED_ID, TRIP_ID), result.successValue().getId());
+    assertEquals(new FeedScopedId(FEED_ID, TRIP_ID), trip.getId());
   }
 
   @Test
@@ -84,42 +83,36 @@ class TripResolverTest {
       .withTripOnServiceDateId(tripOnServiceDateId)
       .build();
 
-    var result = resolver.resolveTrip(reference);
+    var trip = resolver.resolveTrip(reference);
 
-    assertTrue(result.isSuccess());
-    assertEquals(tripId, result.successValue().getId());
+    assertNotNull(trip);
+    assertEquals(tripId, trip.getId());
   }
 
   @Test
-  void resolveTripWithUnknownTripId_returnsFailure() {
+  void resolveTripWithUnknownTripId_throwsException() {
     var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
     var reference = TripReference.ofTripId(unknownTripId);
 
-    var result = resolver.resolveTrip(reference);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    var exception = assertThrows(UpdateException.class, () -> resolver.resolveTrip(reference));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());
   }
 
   @Test
-  void resolveTripWithUnknownTripOnServiceDateId_returnsFailure() {
+  void resolveTripWithUnknownTripOnServiceDateId_throwsException() {
     var unknownId = new FeedScopedId(FEED_ID, "unknown-dated-trip");
     var reference = TripReference.builder().withTripOnServiceDateId(unknownId).build();
 
-    var result = resolver.resolveTrip(reference);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    var exception = assertThrows(UpdateException.class, () -> resolver.resolveTrip(reference));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());
   }
 
   @Test
-  void resolveTripWithNoIds_returnsFailure() {
+  void resolveTripWithNoIds_throwsException() {
     var reference = TripReference.builder().build();
 
-    var result = resolver.resolveTrip(reference);
-
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TRIP_NOT_FOUND, result.failureValue().errorType());
+    var exception = assertThrows(UpdateException.class, () -> resolver.resolveTrip(reference));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());
   }
 
   @Test

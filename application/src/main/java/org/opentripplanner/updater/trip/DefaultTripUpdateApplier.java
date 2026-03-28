@@ -4,9 +4,7 @@ import java.time.ZoneId;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
 import org.opentripplanner.updater.trip.handlers.AddNewTripValidator;
 import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
@@ -26,8 +24,6 @@ import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Default implementation of TripUpdateApplier that applies parsed trip updates to the transit
@@ -48,8 +44,6 @@ import org.slf4j.LoggerFactory;
  * </ul>
  */
 public class DefaultTripUpdateApplier implements TripUpdateApplier {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DefaultTripUpdateApplier.class);
 
   private final TransitEditorService transitService;
 
@@ -163,79 +157,25 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> apply(ParsedTripUpdate parsedUpdate) {
-    try {
-      var producer = parsedUpdate.dataSource();
-      return switch (parsedUpdate) {
-        case ParsedUpdateExisting u -> {
-          var resolveResult = existingTripResolver.resolve(u);
-          if (resolveResult.isFailure()) {
-            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
-          }
-          var resolved = resolveResult.successValue();
-          var validationResult = updateExistingValidator.validate(resolved);
-          if (validationResult.isFailure()) {
-            yield withProducer(Result.failure(validationResult.failureValue()), producer);
-          }
-          yield updateExistingHandler.handle(resolved);
-        }
-        case ParsedModifyTrip u -> {
-          var resolveResult = existingTripResolver.resolve(u);
-          if (resolveResult.isFailure()) {
-            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
-          }
-          var resolved = resolveResult.successValue();
-          var validationResult = modifyTripValidator.validate(resolved);
-          if (validationResult.isFailure()) {
-            yield withProducer(Result.failure(validationResult.failureValue()), producer);
-          }
-          yield modifyTripHandler.handle(resolved);
-        }
-        case ParsedAddNewTrip u -> {
-          var resolveResult = newTripResolver.resolve(u);
-          if (resolveResult.isFailure()) {
-            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
-          }
-          var resolved = resolveResult.successValue();
-          var validationResult = addNewTripValidator.validate(resolved);
-          if (validationResult.isFailure()) {
-            yield withProducer(Result.failure(validationResult.failureValue()), producer);
-          }
-          yield addNewTripHandler.handle(resolved);
-        }
-        case ParsedCancelTrip u -> {
-          var resolveResult = tripRemovalResolver.resolve(u);
-          if (resolveResult.isFailure()) {
-            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
-          }
-          yield cancelTripHandler.handle(resolveResult.successValue());
-        }
-        case ParsedDeleteTrip u -> {
-          var resolveResult = tripRemovalResolver.resolve(u);
-          if (resolveResult.isFailure()) {
-            yield withProducer(Result.failure(resolveResult.failureValue()), producer);
-          }
-          yield deleteTripHandler.handle(resolveResult.successValue());
-        }
-      };
-    } catch (Exception e) {
-      LOG.error("Error applying trip update: {}", e.getMessage(), e);
-      return Result.failure(UpdateError.noTripId(UpdateError.UpdateErrorType.UNKNOWN));
-    }
-  }
-
-  /**
-   * Enrich a failure result with producer information from the parsed update.
-   * On the success path, the producer is already set in the RealTimeTripUpdate by the handlers.
-   */
-  private static Result<TripUpdateResult, UpdateError> withProducer(
-    Result<TripUpdateResult, UpdateError> result,
-    @Nullable String producer
-  ) {
-    if (result.isSuccess() || producer == null) {
-      return result;
-    }
-    var e = result.failureValue();
-    return Result.failure(new UpdateError(e.tripId(), e.errorType(), e.stopIndex(), producer));
+  public TripUpdateResult apply(ParsedTripUpdate parsedUpdate) {
+    return switch (parsedUpdate) {
+      case ParsedUpdateExisting u -> {
+        var resolved = existingTripResolver.resolve(u);
+        updateExistingValidator.validate(resolved);
+        yield updateExistingHandler.handle(resolved);
+      }
+      case ParsedModifyTrip u -> {
+        var resolved = existingTripResolver.resolve(u);
+        modifyTripValidator.validate(resolved);
+        yield modifyTripHandler.handle(resolved);
+      }
+      case ParsedAddNewTrip u -> {
+        var resolved = newTripResolver.resolve(u);
+        addNewTripValidator.validate(resolved);
+        yield addNewTripHandler.handle(resolved);
+      }
+      case ParsedCancelTrip u -> cancelTripHandler.handle(tripRemovalResolver.resolve(u));
+      case ParsedDeleteTrip u -> deleteTripHandler.handle(tripRemovalResolver.resolve(u));
+    };
   }
 }

@@ -3,12 +3,12 @@ package org.opentripplanner.updater.trip;
 import gnu.trove.set.TIntSet;
 import java.time.LocalDate;
 import java.util.Objects;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.utils.time.TimeUtils;
@@ -43,7 +43,7 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
   }
 
   @Override
-  public Result<TripAndPattern, UpdateError> match(
+  public TripAndPattern match(
     TripReference tripReference,
     ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
@@ -51,25 +51,19 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
     // Validate required fields
     if (!tripReference.hasRouteId()) {
       LOG.debug("Cannot fuzzy match without route ID");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     if (!tripReference.hasStartTime()) {
       LOG.debug("Cannot fuzzy match without start time");
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Look up the route
     Route route = transitService.getRoute(tripReference.routeId());
     if (route == null) {
       LOG.debug("Route not found: {}", tripReference.routeId());
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Parse start time
@@ -98,9 +92,7 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
         tripReference.startTime(),
         effectiveDate
       );
-      return Result.failure(
-        new UpdateError(tripReference.tripId(), UpdateError.UpdateErrorType.NO_FUZZY_TRIP_MATCH)
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     LOG.debug(
@@ -108,7 +100,7 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
       match.trip().getId(),
       match.tripPattern().getId()
     );
-    return Result.success(match);
+    return match;
   }
 
   private TripAndPattern findTrip(

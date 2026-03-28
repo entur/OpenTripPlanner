@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip.handlers;
 
-import org.opentripplanner.transit.model.framework.Result;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 
@@ -13,16 +13,16 @@ import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
  *   <li>Must not use stopSequence</li>
  *   <li>Stop count must exactly match the pattern</li>
  * </ul>
- * PARTIAL_UPDATE is always valid (returns success).
+ * PARTIAL_UPDATE is always valid (returns without throwing).
  */
 public class UpdateExistingTripValidator implements TripUpdateValidator.ForExistingTrip {
 
   @Override
-  public Result<Void, UpdateError> validate(ResolvedExistingTrip resolvedUpdate) {
+  public void validate(ResolvedExistingTrip resolvedUpdate) {
     var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
 
     if (stopUpdateStrategy != StopUpdateStrategy.FULL_UPDATE) {
-      return Result.success(null);
+      return;
     }
 
     var tripId = resolvedUpdate.trip().getId();
@@ -31,9 +31,7 @@ public class UpdateExistingTripValidator implements TripUpdateValidator.ForExist
 
     // FULL_UPDATE must not use stopSequence
     if (resolvedUpdate.hasStopSequences()) {
-      return Result.failure(
-        new UpdateError(tripId, UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE)
-      );
+      throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_SEQUENCE);
     }
 
     // FULL_UPDATE must have exact stop count match against the scheduled pattern.
@@ -41,12 +39,10 @@ public class UpdateExistingTripValidator implements TripUpdateValidator.ForExist
     // a revert update may send fewer stops than a previously modified pattern (e.g. after
     // removing an extra call).
     if (stopTimeUpdates.size() < scheduledPattern.numberOfStops()) {
-      return Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TOO_FEW_STOPS));
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
     }
     if (stopTimeUpdates.size() > scheduledPattern.numberOfStops()) {
-      return Result.failure(new UpdateError(tripId, UpdateError.UpdateErrorType.TOO_MANY_STOPS));
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_MANY_STOPS);
     }
-
-    return Result.success(null);
   }
 }

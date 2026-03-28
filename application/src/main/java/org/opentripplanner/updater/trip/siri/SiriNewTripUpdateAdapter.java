@@ -6,11 +6,11 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
@@ -117,7 +117,8 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       return UpdateResult.empty();
     }
 
-    List<Result<UpdateSuccess, UpdateError>> results = new ArrayList<>();
+    List<UpdateSuccess> successes = new ArrayList<>();
+    List<UpdateError> errors = new ArrayList<>();
 
     if (incrementality == FULL_DATASET) {
       // Remove all updates from the buffer
@@ -129,36 +130,30 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
         var journeys = estimatedJourneyVersion.getEstimatedVehicleJourneies();
         LOG.debug("Handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
-          results.add(apply(journey));
+          try {
+            successes.add(apply(journey));
+          } catch (UpdateException e) {
+            errors.add(e.toError(journey.getDataSource()));
+          }
         }
       }
     }
 
     LOG.debug("message contains {} trip updates", updates.size());
 
-    return UpdateResult.ofResults(results);
+    return UpdateResult.of(successes, errors);
   }
 
-  private Result<UpdateSuccess, UpdateError> apply(EstimatedVehicleJourney journey) {
+  private UpdateSuccess apply(EstimatedVehicleJourney journey) {
     // Parse the SIRI message
-    var parseResult = parser.parse(journey);
-    if (parseResult.isFailure()) {
-      return parseResult.toFailureResult();
-    }
-
-    var parsedUpdate = parseResult.successValue();
+    var parsedUpdate = parser.parse(journey);
 
     // Apply the parsed update
-    var applyResult = applier.apply(parsedUpdate);
-    if (applyResult.isFailure()) {
-      return applyResult.toFailureResult();
-    }
-
-    var tripUpdateResult = applyResult.successValue();
+    var tripUpdateResult = applier.apply(parsedUpdate);
 
     // Commit the update to the snapshot and add any warnings
     return snapshotManager
       .updateBuffer(tripUpdateResult.realTimeTripUpdate())
-      .mapSuccess(s -> s.addWarnings(tripUpdateResult.warnings()));
+      .addWarnings(tripUpdateResult.warnings());
   }
 }

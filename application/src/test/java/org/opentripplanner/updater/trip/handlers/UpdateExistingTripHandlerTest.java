@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.handlers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
@@ -14,11 +15,11 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.ExistingTripResolver;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
@@ -97,16 +98,6 @@ class UpdateExistingTripHandlerTest {
   }
 
   private ResolvedExistingTrip resolve(ParsedUpdateExisting parsedUpdate) {
-    var result = resolver.resolve(parsedUpdate);
-    if (result.isFailure()) {
-      throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
-    }
-    return result.successValue();
-  }
-
-  private Result<ResolvedExistingTrip, UpdateError> resolveForTest(
-    ParsedUpdateExisting parsedUpdate
-  ) {
     return resolver.resolve(parsedUpdate);
   }
 
@@ -135,10 +126,9 @@ class UpdateExistingTripHandlerTest {
 
     var result = handler.handle(resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
-    assertNotNull(result.successValue());
+    assertNotNull(result);
 
-    var updatedTimes = result.successValue().updatedTripTimes();
+    var updatedTimes = result.updatedTripTimes();
     assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
     assertEquals(tripId, updatedTimes.getTrip().getId());
 
@@ -189,9 +179,9 @@ class UpdateExistingTripHandlerTest {
 
     var result = handler.handle(resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    assertNotNull(result);
 
-    var updatedTimes = result.successValue().updatedTripTimes();
+    var updatedTimes = result.updatedTripTimes();
     assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
 
     // Each stop should have its specific delay
@@ -226,9 +216,9 @@ class UpdateExistingTripHandlerTest {
 
     var result = handler.handle(resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    assertNotNull(result);
 
-    var updatedTimes = result.successValue().updatedTripTimes();
+    var updatedTimes = result.updatedTripTimes();
     assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
 
     // Stop B should have the absolute time (10:35)
@@ -244,12 +234,8 @@ class UpdateExistingTripHandlerTest {
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate()).build();
 
     // Resolution should fail because trip not found
-    var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.TRIP_NOT_FOUND,
-      resolveResult.failureValue().errorType()
-    );
+    var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
+    assertEquals(UpdateErrorType.TRIP_NOT_FOUND, ex.errorType());
   }
 
   @Test
@@ -262,12 +248,8 @@ class UpdateExistingTripHandlerTest {
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, differentDate).build();
 
     // Resolution should fail because trip not running on this date
-    var resolveResult = resolveForTest(parsedUpdate);
-    assertTrue(resolveResult.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.NO_SERVICE_ON_DATE,
-      resolveResult.failureValue().errorType()
-    );
+    var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
+    assertEquals(UpdateErrorType.NO_SERVICE_ON_DATE, ex.errorType());
   }
 
   @Test
@@ -294,9 +276,9 @@ class UpdateExistingTripHandlerTest {
 
     var result = handler.handle(resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    assertNotNull(result);
 
-    var updatedTimes = (RealTimeTripTimes) result.successValue().updatedTripTimes();
+    var updatedTimes = (RealTimeTripTimes) result.updatedTripTimes();
     // Cancelled stops are tracked as pickup/dropoff changes (unified behavior),
     // but GTFS-RT uses ALWAYS_UPDATED strategy, so TripTimes state remains UPDATED
     assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
@@ -332,9 +314,9 @@ class UpdateExistingTripHandlerTest {
 
     var result = handler.handle(resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    assertNotNull(result);
 
-    var updatedTimes = result.successValue().updatedTripTimes();
+    var updatedTimes = result.updatedTripTimes();
     assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
 
     // Stop A (index 0) should be marked as arrived and departed
@@ -371,9 +353,9 @@ class UpdateExistingTripHandlerTest {
 
     var result = handler.handle(resolve(parsedUpdate));
 
-    assertTrue(result.isSuccess(), "Expected success but got: " + result);
+    assertNotNull(result);
 
-    var updatedTimes = (RealTimeTripTimes) result.successValue().updatedTripTimes();
+    var updatedTimes = (RealTimeTripTimes) result.updatedTripTimes();
     assertTrue(updatedTimes.isPredictionInaccurate(1));
   }
 
@@ -422,11 +404,7 @@ class UpdateExistingTripHandlerTest {
     }
 
     private ResolvedExistingTrip resolveStation(ParsedUpdateExisting parsedUpdate) {
-      var result = stationResolver.resolve(parsedUpdate);
-      if (result.isFailure()) {
-        throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
-      }
-      return result.successValue();
+      return stationResolver.resolve(parsedUpdate);
     }
 
     @Test
@@ -457,7 +435,7 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolveStation(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      assertNotNull(result);
     }
 
     @Test
@@ -485,11 +463,11 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate));
-
-      assertTrue(result.isFailure(), "Expected failure but got success");
-      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
-      assertEquals(0, result.failureValue().stopIndex());
+      var ex = assertThrows(UpdateException.class, () ->
+        handler.handle(resolveStation(parsedUpdate))
+      );
+      assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
+      assertEquals(0, ex.stopIndex());
     }
 
     @Test
@@ -517,7 +495,7 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolveStation(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      assertNotNull(result);
     }
 
     @Test
@@ -542,10 +520,10 @@ class UpdateExistingTripHandlerTest {
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate));
-
-      assertTrue(result.isFailure(), "Expected failure but got success");
-      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
+      var ex = assertThrows(UpdateException.class, () ->
+        handler.handle(resolveStation(parsedUpdate))
+      );
+      assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
     }
 
     @Test
@@ -575,7 +553,7 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolveStation(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      assertNotNull(result);
     }
 
     @Test
@@ -614,7 +592,7 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolveStation(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
+      assertNotNull(result);
     }
 
     @Test
@@ -651,14 +629,11 @@ class UpdateExistingTripHandlerTest {
         .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
 
-      var result = handler.handle(resolveStation(parsedUpdate));
-
-      assertTrue(
-        result.isFailure(),
-        "Expected failure when replacing A1 (station1) with B1 (station2)"
+      var ex = assertThrows(UpdateException.class, () ->
+        handler.handle(resolveStation(parsedUpdate))
       );
-      assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
-      assertEquals(0, result.failureValue().stopIndex());
+      assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
+      assertEquals(0, ex.stopIndex());
     }
   }
 
@@ -701,8 +676,8 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-      var updatedTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var updatedTimes = result.updatedTripTimes();
 
       // Stop A should have 1 minute delay (matched by ID, not position)
       assertEquals(STOP_A_ARRIVAL + 60, updatedTimes.getArrivalTime(0));
@@ -749,8 +724,8 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-      var updatedTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var updatedTimes = result.updatedTripTimes();
 
       // Stop A has explicit 5 minute delay
       assertEquals(STOP_A_ARRIVAL + 300, updatedTimes.getArrivalTime(0));
@@ -800,8 +775,8 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-      var updatedTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var updatedTimes = result.updatedTripTimes();
 
       // Stop A has explicit 5 minute delay
       assertEquals(STOP_A_ARRIVAL + 300, updatedTimes.getArrivalTime(0));
@@ -838,8 +813,8 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-      var updatedTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var updatedTimes = result.updatedTripTimes();
 
       // Stop B has explicit 5 minute early arrival
       assertEquals(STOP_B_ARRIVAL - 300, updatedTimes.getArrivalTime(1));
@@ -879,8 +854,8 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-      var updatedTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var updatedTimes = result.updatedTripTimes();
 
       // Stop B has explicit 10 minute delay
       assertEquals(STOP_B_ARRIVAL + 600, updatedTimes.getArrivalTime(1));
@@ -930,8 +905,8 @@ class UpdateExistingTripHandlerTest {
 
       var result = handler.handle(resolve(parsedUpdate));
 
-      assertTrue(result.isSuccess(), "Expected success but got: " + result);
-      var updatedTimes = result.successValue().updatedTripTimes();
+      assertNotNull(result);
+      var updatedTimes = result.updatedTripTimes();
 
       // Stop A has explicit 2 minute delay
       assertEquals(STOP_A_ARRIVAL + 120, updatedTimes.getArrivalTime(0));

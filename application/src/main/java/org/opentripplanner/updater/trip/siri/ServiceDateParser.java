@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.updater.spi.UpdateException;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 public class ServiceDateParser {
@@ -53,15 +54,15 @@ public class ServiceDateParser {
     // Always extract aimedDepartureTime as a fallback for service date resolution.
     // This is needed even when tripOnServiceDateId is present, because the ID may not
     // resolve to a valid NeTEx DatedServiceJourney (e.g. BNR numeric IDs).
-    var callsResult = CallWrapper.of(journey);
-    var aimedDepartureTime = callsResult.isSuccess()
-      ? callsResult
-          .successValue()
-          .stream()
-          .findFirst()
-          .map(CallWrapper::getAimedDepartureTime)
-          .orElse(null)
-      : null;
+    ZonedDateTime aimedDepartureTime = null;
+    try {
+      var calls = CallWrapper.of(journey);
+      aimedDepartureTime = calls
+        .stream()
+        .findFirst()
+        .map(CallWrapper::getAimedDepartureTime)
+        .orElse(null);
+    } catch (UpdateException ignored) {}
 
     if (tripOnServiceDateId != null) {
       return new ParsedServiceDate(null, tripOnServiceDateId, aimedDepartureTime);

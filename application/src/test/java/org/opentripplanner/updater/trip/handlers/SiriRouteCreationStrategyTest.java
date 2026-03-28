@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.handlers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +14,8 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.rutebanken.netex.model.BusSubmodeEnumeration;
 import org.rutebanken.netex.model.RailSubmodeEnumeration;
@@ -67,11 +69,10 @@ class SiriRouteCreationStrategyTest {
   void returnsExistingRouteWhenFound() {
     var info = TripCreationInfo.builder(TRIP_ID).withRouteId(ROUTE_ID).build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertFalse(result.successValue().isNewRoute());
-    assertEquals(ROUTE_ID, result.successValue().route().getId());
+    assertFalse(resolution.isNewRoute());
+    assertEquals(ROUTE_ID, resolution.route().getId());
   }
 
   @Test
@@ -84,11 +85,10 @@ class SiriRouteCreationStrategyTest {
       .withShortName("B1")
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isNewRoute());
-    var route = result.successValue().route();
+    assertTrue(resolution.isNewRoute());
+    var route = resolution.route();
     assertEquals(newRouteId, route.getId());
     assertEquals(TransitMode.BUS, route.getMode());
     assertEquals("B1", route.getShortName());
@@ -106,11 +106,10 @@ class SiriRouteCreationStrategyTest {
       .withReplacedRouteId(ROUTE_ID)
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isNewRoute());
-    var route = result.successValue().route();
+    assertTrue(resolution.isNewRoute());
+    var route = resolution.route();
     assertEquals(newRouteId, route.getId());
     assertNotNull(route.getAgency());
   }
@@ -124,13 +123,10 @@ class SiriRouteCreationStrategyTest {
       .withMode(TransitMode.BUS)
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
-
-    assertTrue(result.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.CANNOT_RESOLVE_AGENCY,
-      result.failureValue().errorType()
+    var ex = assertThrows(UpdateException.class, () ->
+      strategy.resolveOrCreateRoute(info, transitService)
     );
+    assertEquals(UpdateErrorType.CANNOT_RESOLVE_AGENCY, ex.errorType());
   }
 
   @Test
@@ -145,13 +141,12 @@ class SiriRouteCreationStrategyTest {
       .withReplacedRouteId(railRouteId)
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isNewRoute());
+    assertTrue(resolution.isNewRoute());
     assertEquals(
       RailSubmodeEnumeration.REPLACEMENT_RAIL_SERVICE.value(),
-      result.successValue().route().getNetexSubmode().name()
+      resolution.route().getNetexSubmode().name()
     );
   }
 
@@ -167,13 +162,12 @@ class SiriRouteCreationStrategyTest {
       .withReplacedRouteId(railRouteId)
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isNewRoute());
+    assertTrue(resolution.isNewRoute());
     assertEquals(
       BusSubmodeEnumeration.RAIL_REPLACEMENT_BUS.value(),
-      result.successValue().route().getNetexSubmode().name()
+      resolution.route().getNetexSubmode().name()
     );
   }
 
@@ -189,11 +183,10 @@ class SiriRouteCreationStrategyTest {
       .withReplacedRouteId(ROUTE_ID)
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isNewRoute());
-    assertEquals("localBus", result.successValue().route().getNetexSubmode().name());
+    assertTrue(resolution.isNewRoute());
+    assertEquals("localBus", resolution.route().getNetexSubmode().name());
   }
 
   @Test
@@ -203,10 +196,9 @@ class SiriRouteCreationStrategyTest {
       .withMode(TransitMode.BUS)
       .build();
 
-    var result = strategy.resolveOrCreateRoute(info, transitService);
+    var resolution = strategy.resolveOrCreateRoute(info, transitService);
 
-    assertTrue(result.isSuccess());
-    assertTrue(result.successValue().isNewRoute());
-    assertEquals(TRIP_ID, result.successValue().route().getId());
+    assertTrue(resolution.isNewRoute());
+    assertEquals(TRIP_ID, resolution.route().getId());
   }
 }

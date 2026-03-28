@@ -1,7 +1,8 @@
 package org.opentripplanner.updater.trip.handlers;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -12,7 +13,8 @@ import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.ExistingTripResolver;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
@@ -72,11 +74,7 @@ class UpdateExistingTripValidatorTest {
   }
 
   private ResolvedExistingTrip resolve(ParsedUpdateExisting parsedUpdate) {
-    var result = resolver.resolve(parsedUpdate);
-    if (result.isFailure()) {
-      throw new IllegalStateException("Failed to resolve update: " + result.failureValue());
-    }
-    return result.successValue();
+    return resolver.resolve(parsedUpdate);
   }
 
   @Test
@@ -100,8 +98,7 @@ class UpdateExistingTripValidatorTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = validator.validate(resolve(parsedUpdate));
-    assertTrue(result.isSuccess());
+    assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
   }
 
   @Test
@@ -124,12 +121,8 @@ class UpdateExistingTripValidatorTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = validator.validate(resolve(parsedUpdate));
-    assertTrue(result.isFailure());
-    assertEquals(
-      UpdateError.UpdateErrorType.INVALID_STOP_SEQUENCE,
-      result.failureValue().errorType()
-    );
+    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    assertEquals(UpdateErrorType.INVALID_STOP_SEQUENCE, ex.errorType());
   }
 
   @Test
@@ -158,9 +151,8 @@ class UpdateExistingTripValidatorTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate))
       .build();
 
-    var result = validator.validate(resolve(parsedUpdate));
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
+    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
   }
 
   @Test
@@ -201,9 +193,8 @@ class UpdateExistingTripValidatorTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate, stopDUpdate))
       .build();
 
-    var result = validator.validate(resolve(parsedUpdate));
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TOO_MANY_STOPS, result.failureValue().errorType());
+    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    assertEquals(UpdateErrorType.TOO_MANY_STOPS, ex.errorType());
   }
 
   @Test
@@ -241,7 +232,6 @@ class UpdateExistingTripValidatorTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
 
-    var result = validator.validate(resolve(parsedUpdate));
-    assertTrue(result.isSuccess());
+    assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
   }
 }

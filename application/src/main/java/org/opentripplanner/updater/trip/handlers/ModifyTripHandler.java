@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.Objects;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.DataValidationException;
-import org.opentripplanner.transit.model.framework.Result;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
@@ -12,7 +11,6 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
-import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
@@ -49,7 +47,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
   }
 
   @Override
-  public Result<TripUpdateResult, UpdateError> handle(ResolvedExistingTrip resolvedUpdate) {
+  public TripUpdateResult handle(ResolvedExistingTrip resolvedUpdate) {
     // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
@@ -65,15 +63,11 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
     // Build the new stop pattern from stop time updates
-    var stopPatternResult = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
       trip,
       stopTimeUpdates,
       resolvedUpdate.options().firstLastStopTimeAdjustment()
     );
-    if (stopPatternResult.isFailure()) {
-      return Result.failure(stopPatternResult.failureValue());
-    }
-    var stopTimesAndPattern = stopPatternResult.successValue();
 
     // Create scheduled trip times for the new pattern (used as baseline for real-time)
     var scheduledTripTimes = TripTimesFactory.tripTimes(
@@ -87,7 +81,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
       scheduledTripTimes.validateNonIncreasingTimes();
     } catch (DataValidationException e) {
       LOG.info("Invalid scheduled times for modified trip {}: {}", trip.getId(), e.getMessage());
-      return DataValidationExceptionMapper.toResult(e);
+      throw DataValidationExceptionMapper.map(e);
     }
 
     // Create the new pattern - don't add scheduled times, only real-time times will be added
@@ -122,10 +116,10 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
         serviceDate,
         newPattern.getId()
       );
-      return Result.success(new TripUpdateResult(realTimeTripUpdate));
+      return new TripUpdateResult(realTimeTripUpdate);
     } catch (DataValidationException e) {
       LOG.info("Invalid real-time data for modified trip {}: {}", trip.getId(), e.getMessage());
-      return DataValidationExceptionMapper.toResult(e);
+      throw DataValidationExceptionMapper.map(e);
     }
   }
 }
