@@ -11,7 +11,8 @@ import org.opentripplanner.street.model.vertex.IntersectionVertex;
 class StreetFlexPathCalculatorTest {
 
   private static final int IGNORED = -99;
-  private static final int EPISILON = 1000;
+  private static final int EPSILON = 1000;
+  private static final int EXPECTED_DISTANCE = 471_653;
 
   private final IntersectionVertex v0 = intersectionVertex(0, 0);
   private final IntersectionVertex v1 = intersectionVertex(1, 1);
@@ -33,16 +34,15 @@ class StreetFlexPathCalculatorTest {
     var forwardPath = forwardCalculator.calculateFlexPath(v0, v3, IGNORED, IGNORED);
     assertEquals("LINESTRING (0 0, 1 1, 2 2, 3 3)", forwardPath.getGeometry().toString());
 
-    assertEquals(forwardPath.distanceMeters, 471_653, EPISILON);
+    assertEquals(EXPECTED_DISTANCE, forwardPath.distanceMeters, EPSILON);
   }
 
   @Test
-    void backward(){
-
+  void backward() {
     var reverseCalculator = new StreetFlexPathCalculator(true, Duration.ofDays(1));
     var reversePath = reverseCalculator.calculateFlexPath(v3, v0, IGNORED, IGNORED);
     assertEquals("LINESTRING (3 3, 2 2, 1 1, 0 0)", reversePath.getGeometry().toString());
 
-    assertEquals(reversePath.distanceMeters, 471_653, EPISILON);
+    assertEquals(EXPECTED_DISTANCE, reversePath.distanceMeters, EPSILON);
   }
 }

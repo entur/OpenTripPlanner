@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.flex.flexpathcalculator;
 
+import com.google.common.collect.Iterables;
 import java.util.function.Supplier;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -37,19 +38,24 @@ class StateToFlexPathMapper {
     // this improves performance quite a bit.
 
     Supplier<LineString> geometrySupplier = () -> {
-      Iterable<Edge> edges;
       if (state.getRequest().arriveBy()) {
-        edges = state.listBackEdges();
+        var geometries = Iterables.transform(state.listBackEdges(), Edge::getGeometry);
+        return GeometryUtils.concatenateLineStrings(geometries);
       } else {
-        edges = state.reverse().listBackEdges();
+        var geometries = Iterables.transform(state.listBackEdges(), StateToFlexPathMapper::reverse);
+        return GeometryUtils.concatenateLineStrings(geometries).reverse();
       }
-      return GeometryUtils.concatenateLineStrings(
-        edges,
-        Edge::getGeometry
-      );
-
     };
 
     return new FlexPath((int) distance_m, (int) state.getElapsedTimeSeconds(), geometrySupplier);
+  }
+
+  private static LineString reverse(Edge e) {
+    var geom = e.getGeometry();
+    if (geom == null) {
+      return null;
+    } else {
+      return e.getGeometry().reverse();
+    }
   }
 }
