@@ -5,9 +5,9 @@ import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
 
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.view.AccessPathView;
 import org.opentripplanner.raptor.api.view.PathLegType;
-import org.opentripplanner.raptor.api.view.TripScheduleStopPosition;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
@@ -77,12 +77,12 @@ final class AccessStopArrival<T extends RaptorTripSchedule> extends McStopArriva
   }
 
   @Override
-  public TripScheduleStopPosition subsequentBoardingConstraint() {
+  public RaptorTripScheduleStopPosition subsequentBoardingConstraint() {
     if (access instanceof RaptorOnBoardAccess onBoardAccess) {
-      return new TripScheduleStopPosition(
-        onBoardAccess.routeIndex(),
-        onBoardAccess.tripScheduleIndex(),
-        onBoardAccess.stopPositionInPattern()
+      return new RaptorTripScheduleStopPosition(
+        onBoardAccess.tripBoarding().routeIndex(),
+        onBoardAccess.tripBoarding().tripScheduleIndex(),
+        onBoardAccess.tripBoarding().stopPositionInPattern()
       );
     }
     throw new UnsupportedOperationException();

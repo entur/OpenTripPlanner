@@ -8,21 +8,9 @@ package org.opentripplanner.raptor.api.model;
  */
 public interface RaptorOnBoardAccess extends RaptorAccessEgress {
   /**
-   * The index of the boarded route
+   * Return the trip boarding this access is requiered to use.
    */
-  int routeIndex();
-
-  /**
-   * The index of the boarded trip within the route
-   */
-  int tripScheduleIndex();
-
-  /**
-   * The stop position in the route pattern for the board stop. It must refer to the same stop as
-   * the {@link #stop()} method. The stop position is required because the stop can be visited twice
-   * in case of a circular stop pattern.
-   */
-  int stopPositionInPattern();
+  RaptorTripScheduleStopPosition tripBoarding();
 
   /**
    * The stop index corresponding to {@link #stopPositionInPattern()}.

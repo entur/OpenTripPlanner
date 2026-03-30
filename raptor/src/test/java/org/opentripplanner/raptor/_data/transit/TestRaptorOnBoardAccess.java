@@ -1,14 +1,13 @@
 package org.opentripplanner.raptor._data.transit;
 
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 
 public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
 
   private final int stop;
-  private final int stopPositionInPattern;
-  private final int routeIndex;
-  private final int tripScheduleIndex;
   private final int generalizedCost;
+  private final RaptorTripScheduleStopPosition tripBoarding;
 
   public TestRaptorOnBoardAccess(
     int routeIndex,
@@ -17,26 +16,13 @@ public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
     int stop,
     int generalizedCost
   ) {
-    this.routeIndex = routeIndex;
-    this.tripScheduleIndex = tripScheduleIndex;
+    this.tripBoarding = new RaptorTripScheduleStopPosition(
+      routeIndex,
+      tripScheduleIndex,
+      stopPositionInPattern
+    );
     this.stop = stop;
-    this.stopPositionInPattern = stopPositionInPattern;
     this.generalizedCost = generalizedCost;
-  }
-
-  @Override
-  public int routeIndex() {
-    return routeIndex;
-  }
-
-  @Override
-  public int tripScheduleIndex() {
-    return tripScheduleIndex;
-  }
-
-  @Override
-  public int stopPositionInPattern() {
-    return stopPositionInPattern;
   }
 
   @Override
@@ -47,6 +33,11 @@ public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
   @Override
   public int c1() {
     return generalizedCost;
+  }
+
+  @Override
+  public RaptorTripScheduleStopPosition tripBoarding() {
+    return tripBoarding;
   }
 
   @Override

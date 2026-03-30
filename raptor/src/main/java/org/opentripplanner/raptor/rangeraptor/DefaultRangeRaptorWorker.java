@@ -3,7 +3,7 @@ package org.opentripplanner.raptor.rangeraptor;
 import java.util.Collection;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.api.view.ArrivalView;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -129,10 +129,11 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   @Override
   public void applyOnBoardTripAccess(int iterationDepartureTime) {
     for (var accessPath : accessPaths.onBoardAccessPaths()) {
-      var route = transitData.getRouteForIndex(accessPath.routeIndex());
-      var trip = route.timetable().getTripSchedule(accessPath.tripScheduleIndex());
+      var boarding = accessPath.tripBoarding();
+      var route = transitData.getRouteForIndex(boarding.routeIndex());
+      var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
+      var boardTime = trip.departure(boarding.stopPositionInPattern());
 
-      var boardTime = trip.departure(accessPath.stopPositionInPattern());
       if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
         transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime);
       }
@@ -205,20 +206,20 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   @Override
   public void routeTransitUsingOnBoardTripAccess() {
-    var onBoardStopArrivals = transitWorker.consumeOnBoardStopArrivals();
-    while (onBoardStopArrivals.hasNext()) {
-      var onBoardStopArrival = onBoardStopArrivals.next();
-      var route = transitData.getRouteForIndex(
-        onBoardStopArrival.subsequentBoardingConstraint().routeIndex()
-      );
+    var arrivals = transitWorker.consumeOnBoardStopArrivals();
+    while (arrivals.hasNext()) {
+      var arrival = arrivals.next();
+      var boarding = arrival.subsequentBoardingConstraint();
+      var route = transitData.getRouteForIndex(boarding.routeIndex());
+      var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
+      int stopPosition = boarding.stopPositionInPattern();
 
       transitWorker.prepareForTransitWith(route);
-
-      var boarded = tryBoardOnBoardAccess(onBoardStopArrival, route);
+      boolean boarded = transitWorker.boardAsOnBoardAccess(arrival, stopPosition, trip);
 
       if (boarded) {
-        alightOnBoardAccess(onBoardStopArrival, route);
-        onBoardStopArrivals.remove();
+        alightOnBoardAccess(boarding, route);
+        arrivals.remove();
       }
     }
   }
@@ -262,35 +263,24 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     }
   }
 
-  private boolean tryBoardOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
-    var onBoardTripConstraint = onBoardStopArrival.subsequentBoardingConstraint();
-    var trip = route.timetable().getTripSchedule(onBoardTripConstraint.tripScheduleIndex());
-
-    return transitWorker.boardAsOnBoardAccess(
-      onBoardStopArrival,
-      onBoardTripConstraint.stopPositionInPattern(),
-      trip
-    );
-  }
-
-  private void alightOnBoardAccess(ArrivalView<T> onBoardStopArrival, RaptorRoute<T> route) {
-    var onBoardTripConstraint = onBoardStopArrival.subsequentBoardingConstraint();
-
+  private void alightOnBoardAccess(
+    RaptorTripScheduleStopPosition tripBoarding,
+    RaptorRoute<T> route
+  ) {
     var pattern = route.pattern();
     IntIterator stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
 
     int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
 
     while (
-      stopPositions.hasNext() &&
-      stopPositions.next() != onBoardTripConstraint.stopPositionInPattern()
+      stopPositions.hasNext() && stopPositions.next() != tripBoarding.stopPositionInPattern()
     ) {
       // Skip past the initial on-board access stop
       // We will only consider alighting on stops after this one
     }
 
     var txSearch = enableTransferConstraints
-      ? calculator.transferConstraintsSearch(transitData, onBoardTripConstraint.routeIndex())
+      ? calculator.transferConstraintsSearch(transitData, tripBoarding.routeIndex())
       : null;
 
     while (stopPositions.hasNext()) {
