@@ -1,6 +1,7 @@
 package org.opentripplanner.street.search.state;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
@@ -21,6 +22,9 @@ class BackEdgeIterator implements Iterator<Edge> {
 
   @Override
   public Edge next() {
+    if(!hasNext()){
+      throw new NoSuchElementException("No more back edges available");
+    }
     var ret = current;
     current = current.getBackState();
     return ret.getBackEdge();
