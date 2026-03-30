@@ -5,13 +5,27 @@ import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
+/**
+ * This is used as a data container for when we want more accurate mode matching than is available
+ * with just MainAndSubMode. Currently only the additional filtering of replacement is implemented,
+ * but this is designed to be capable of holding whatever NeTEx submode/GTFS extended type derived
+ * features we implement.
+ *
+ * @see org.opentripplanner.model.modes.AllowNarrowedTransitModeFilter
+ */
 public class NarrowedTransitMode {
 
   TransitMode mode;
 
+  /**
+   * null here means that we don't care about what SubMode the trip has
+   */
   @Nullable
   SubMode subMode;
 
+  /**
+   * null here means that we don't care about whether the trip is a replacement
+   */
   @Nullable
   Boolean replacement;
 

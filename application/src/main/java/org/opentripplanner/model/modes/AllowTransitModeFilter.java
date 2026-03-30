@@ -2,6 +2,7 @@ package org.opentripplanner.model.modes;
 
 import java.io.Serializable;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
 import org.opentripplanner.transit.model.basic.SubMode;
@@ -30,7 +31,7 @@ public interface AllowTransitModeFilter extends Serializable {
   /**
    * Check if this filter allows the provided TransitMode
    */
-  boolean match(TransitMode transitMode, SubMode netexSubMode, Integer gtfsExtendedType);
+  boolean match(TransitMode transitMode, SubMode netexSubMode, @Nullable Integer gtfsExtendedType);
 
   /**
    * Returns {@code true} if this filter is selective about which modes it allows, i.e. it does

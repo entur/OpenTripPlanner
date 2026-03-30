@@ -1,6 +1,7 @@
 package org.opentripplanner.model.modes;
 
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
 import org.opentripplanner.transit.model.basic.SubMode;
@@ -22,15 +23,24 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
   }
 
   @Override
-  public boolean match(TransitMode transitMode, SubMode netexSubmode, Integer gtfsExtendedType) {
+  public boolean match(TransitMode transitMode, SubMode netexSubmode, @Nullable Integer gtfsExtendedType) {
     if (mode.getMode() != transitMode) {
       return false;
     }
-    return (
-      (Boolean.TRUE.equals(mode.isReplacement()) &&
-        ReplacementHelper.isReplacement(netexSubmode, gtfsExtendedType)) ||
-      (mode.getSubMode() != null && mode.getSubMode() == netexSubmode)
-    );
+    // Three-valued boolean logic here. Both mode.getSubMode() and mode.isReplacement() can be null,
+    // which means "don't care". If we do care, mode.isReplacement() is compared to
+    // ReplacementHelper.isReplacement and mode.getSubMode() is compared to netexSubMode.
+    // See truth table:
+    //    | T  F  x
+    //  --+---------
+    //  T | T  T  T
+    //  F | T  F  F
+    //  x | T  F  T
+    if (mode.getSubMode() == null && mode.isReplacement() == null) {
+      return true;
+    }
+    return Boolean.valueOf(ReplacementHelper.isReplacement(netexSubmode, gtfsExtendedType)).equals(mode.isReplacement()) ||
+      netexSubmode.equals(mode.getSubMode());
   }
 
   @Override

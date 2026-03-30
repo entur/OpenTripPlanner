@@ -1,12 +1,13 @@
 package org.opentripplanner.model.modes;
 
+import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 
 class AllowAllModesFilter implements AllowTransitModeFilter {
 
   @Override
-  public boolean match(TransitMode transitMode, SubMode netexSubMode, Integer gtfsExtendedType) {
+  public boolean match(TransitMode transitMode, SubMode netexSubMode, @Nullable Integer gtfsExtendedType) {
     return true;
   }
 
