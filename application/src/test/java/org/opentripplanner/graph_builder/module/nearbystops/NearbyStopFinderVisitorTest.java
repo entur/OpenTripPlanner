@@ -5,10 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -40,16 +37,6 @@ class NearbyStopFinderVisitorTest {
       return AREA_STOP;
     }
   };
-
-  @BeforeAll
-  static void setup() {
-    OTPFeature.enableFeatures(Map.of(OTPFeature.FlexRouting, true));
-  }
-
-  @AfterAll
-  static void teardown() {
-    OTPFeature.enableFeatures(Map.of(OTPFeature.FlexRouting, false));
-  }
 
   @Test
   void collectsTransitStops() {
@@ -97,47 +84,53 @@ class NearbyStopFinderVisitorTest {
 
   @Test
   void collectsAreaStopsWhenFlexEnabled() {
-    var vertex = StreetModelForTest.intersectionVertex(10, 10);
-    var other = StreetModelForTest.intersectionVertex(10.1, 10.1);
-    StreetModelForTest.streetEdge(vertex, other, StreetTraversalPermission.CAR);
-    vertex.addAreaStops(Set.of(AREA_STOP.getId()));
+    OTPFeature.FlexRouting.testOn(() -> {
+      var vertex = StreetModelForTest.intersectionVertex(10, 10);
+      var other = StreetModelForTest.intersectionVertex(10.1, 10.1);
+      StreetModelForTest.streetEdge(vertex, other, StreetTraversalPermission.CAR);
+      vertex.addAreaStops(Set.of(AREA_STOP.getId()));
 
-    var state = new State(vertex, StreetSearchRequest.of().withStartTime(Instant.EPOCH).build());
-    var visitor = new NearbyStopFinderVisitor(STOP_RESOLVER, Set.of(), Set.of(), false);
-    visitor.visitVertex(state);
+      var state = new State(vertex, StreetSearchRequest.of().withStartTime(Instant.EPOCH).build());
+      var visitor = new NearbyStopFinderVisitor(STOP_RESOLVER, Set.of(), Set.of(), false);
+      visitor.visitVertex(state);
 
-    assertEquals(1, visitor.areaStopStates().size());
-    assertTrue(visitor.areaStopStates().containsKey(AREA_STOP));
-    assertEquals(state, visitor.areaStopStates().get(AREA_STOP).iterator().next());
+      assertEquals(1, visitor.areaStopStates().size());
+      assertTrue(visitor.areaStopStates().containsKey(AREA_STOP));
+      assertEquals(state, visitor.areaStopStates().get(AREA_STOP).iterator().next());
+    });
   }
 
   @Test
   void doesNotCollectAreaStopsWithoutCarPermission() {
-    var vertex = StreetModelForTest.intersectionVertex(20, 20);
-    var other = StreetModelForTest.intersectionVertex(20.1, 20.1);
-    StreetModelForTest.streetEdge(vertex, other, StreetTraversalPermission.PEDESTRIAN);
-    vertex.addAreaStops(Set.of(AREA_STOP.getId()));
+    OTPFeature.FlexRouting.testOn(() -> {
+      var vertex = StreetModelForTest.intersectionVertex(20, 20);
+      var other = StreetModelForTest.intersectionVertex(20.1, 20.1);
+      StreetModelForTest.streetEdge(vertex, other, StreetTraversalPermission.PEDESTRIAN);
+      vertex.addAreaStops(Set.of(AREA_STOP.getId()));
 
-    var state = new State(vertex, StreetSearchRequest.of().withStartTime(Instant.EPOCH).build());
-    var visitor = new NearbyStopFinderVisitor(STOP_RESOLVER, Set.of(), Set.of(), false);
-    visitor.visitVertex(state);
+      var state = new State(vertex, StreetSearchRequest.of().withStartTime(Instant.EPOCH).build());
+      var visitor = new NearbyStopFinderVisitor(STOP_RESOLVER, Set.of(), Set.of(), false);
+      visitor.visitVertex(state);
 
-    assertTrue(visitor.areaStopStates().isEmpty());
+      assertTrue(visitor.areaStopStates().isEmpty());
+    });
   }
 
   @Test
   void collectsAreaStopsInReverseDirection() {
-    var vertex = StreetModelForTest.intersectionVertex(30, 30);
-    var other = StreetModelForTest.intersectionVertex(30.1, 30.1);
-    // Create incoming CAR edge: other -> vertex
-    StreetModelForTest.streetEdge(other, vertex, StreetTraversalPermission.CAR);
-    vertex.addAreaStops(Set.of(AREA_STOP.getId()));
+    OTPFeature.FlexRouting.testOn(() -> {
+      var vertex = StreetModelForTest.intersectionVertex(30, 30);
+      var other = StreetModelForTest.intersectionVertex(30.1, 30.1);
+      // Create incoming CAR edge: other -> vertex
+      StreetModelForTest.streetEdge(other, vertex, StreetTraversalPermission.CAR);
+      vertex.addAreaStops(Set.of(AREA_STOP.getId()));
 
-    var state = new State(vertex, StreetSearchRequest.of().withStartTime(Instant.EPOCH).build());
-    var visitor = new NearbyStopFinderVisitor(STOP_RESOLVER, Set.of(), Set.of(), true);
-    visitor.visitVertex(state);
+      var state = new State(vertex, StreetSearchRequest.of().withStartTime(Instant.EPOCH).build());
+      var visitor = new NearbyStopFinderVisitor(STOP_RESOLVER, Set.of(), Set.of(), true);
+      visitor.visitVertex(state);
 
-    assertEquals(1, visitor.areaStopStates().size());
-    assertTrue(visitor.areaStopStates().containsKey(AREA_STOP));
+      assertEquals(1, visitor.areaStopStates().size());
+      assertTrue(visitor.areaStopStates().containsKey(AREA_STOP));
+    });
   }
 }
