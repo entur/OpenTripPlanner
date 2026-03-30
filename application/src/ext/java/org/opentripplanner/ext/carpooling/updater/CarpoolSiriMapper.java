@@ -36,9 +36,9 @@ public class CarpoolSiriMapper {
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
   /** Default total capacity (including driver) when SIRI data has no capacity information. */
-  static final int DEFAULT_TOTAL_CAPACITY = 5;
+  public static final int DEFAULT_TOTAL_CAPACITY = 5;
   /** Default onboard count per stop (1 = driver only) when SIRI data has no occupancy information. */
-  static final int DEFAULT_ONBOARD_COUNT = 1;
+  public static final int DEFAULT_ONBOARD_COUNT = 1;
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
   // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
   // run-away memory use if it by error ends up in global repositories.

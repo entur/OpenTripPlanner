@@ -20,12 +20,12 @@ public class CarpoolTripTestData {
   private static final AtomicInteger AREA_STOP_COUNTER = new AtomicInteger(0);
 
   /**
-   * Creates a simple trip with origin and destination stops, default capacity of 4.
+   * Creates a simple trip with origin and destination stops, default capacity of 5.
    */
   public static CarpoolTrip createSimpleTrip(WgsCoordinate boarding, WgsCoordinate alighting) {
     var origin = createOriginStop(boarding);
     var destination = createDestinationStop(alighting, 1);
-    return createTripWithCapacity(4, List.of(origin, destination));
+    return createTripWithCapacity(5, List.of(origin, destination));
   }
 
   /**
@@ -43,7 +43,7 @@ public class CarpoolTripTestData {
       startTime.plusHours(1),
       startTime.plusHours(1)
     );
-    return createTripWithTime(startTime, 4, List.of(origin, destination));
+    return createTripWithTime(startTime, 5, List.of(origin, destination));
   }
 
   /**
@@ -75,7 +75,7 @@ public class CarpoolTripTestData {
     }
 
     allStops.add(createDestinationStop(alighting, allStops.size()));
-    return createTripWithCapacity(4, allStops);
+    return createTripWithCapacity(5, allStops);
   }
 
   /**
@@ -95,7 +95,7 @@ public class CarpoolTripTestData {
   ) {
     var origin = createOriginStop(boarding);
     var destination = createDestinationStop(alighting, 1);
-    return createTripWithDeviationBudget(deviationBudget, 4, List.of(origin, destination));
+    return createTripWithDeviationBudget(deviationBudget, 5, List.of(origin, destination));
   }
 
   /**
