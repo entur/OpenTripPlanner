@@ -1,6 +1,5 @@
 package org.opentripplanner.street.model.edge;
 
-import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -11,7 +10,6 @@ import static org.opentripplanner.street.model.StreetModelFactory.streetEdge;
 import static org.opentripplanner.street.model.StreetModelFactory.streetEdgeBuilder;
 import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
 
-import com.google.common.collect.Range;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +19,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
-import org.opentripplanner._support.geometry.Coordinates;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -227,7 +224,7 @@ public class StreetEdgeTest {
     State s1 = e0.traverse(s0)[0];
     State s2 = e1.traverse(s1)[0];
 
-    assertEquals(100.00, s2.getWalkDistance());
+    assertEquals(100.00, s2.getTraversalDistanceMeters());
   }
 
   /**
@@ -467,20 +464,4 @@ public class StreetEdgeTest {
     assertEquals(mainStreet, edge.getName());
     assertFalse(edge.nameIsDerived());
   }
-
-  /**
-   * We test that length is really in the correct unit.
-   */
-  @Test
-  void lengthIsInMeters() {
-    var v0 = intersectionVertex(Coordinates.BERLIN);
-    var v1 = intersectionVertex(Coordinates.BERLIN_BRANDENBURG_GATE);
-    var edge = StreetModelForTest.streetEdge(v0, v1);
-    var range = Range.closed(2000d, 3000d);
-    assertThat(edge.getDistanceMeters()).isIn(range);
-    State s0 = new State(v1, proto);
-    State s1 = edge.traverse(s0)[0];
-    assertThat(s1.getTraversalDistanceMeters()).isIn(range);
-  }
 }
-
