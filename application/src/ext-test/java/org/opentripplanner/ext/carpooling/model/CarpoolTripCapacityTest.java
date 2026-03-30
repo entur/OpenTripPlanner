@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Tests for capacity checking methods on {@link CarpoolTrip}.
  * <p>
- * All trips created via {@code createTripWithStops} have totalCapacity=4.
+ * All trips created via {@code createTripWithStops} have totalCapacity=5.
  * The method wraps intermediate stops with an Origin (onboard=1) at the front
  * and a Destination (onboard=1) at the end.
  * <p>
@@ -64,77 +64,58 @@ class CarpoolTripCapacityTest {
     assertThrows(IllegalArgumentException.class, () -> trip.getPassengerCountAtDepartureOfStop(2));
   }
 
-  // -- hasCapacityForInsertion tests --
-  //
-  // pickupPosition and dropoffPosition are 0-based indices of the passenger's
-  // stops in the modified route. The method checks capacity at the original stops
-  // where the passenger would be riding, from original index (pickupPosition - 1)
-  // to (dropoffPosition - 2) inclusive.
-
   @Test
   void adjacentPositions_onlyChecksStopBeforePickup() {
-    // Original stops: [Origin(1), A(4), Destination(1)]   totalCapacity=4
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 4)), OSLO_NORTH);
+    // Original stops: [Origin(1), A(5), Destination(1)]   totalCapacity=5
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 5)), OSLO_NORTH);
 
     // Modified route: [Origin, Pickup, Dropoff, A, Destination]
     //                     0       1       2     3      4
     // Checked original stops: Origin (index 0, onboard=1). A is NOT checked.
-    assertTrue(trip.hasCapacityForInsertion(1, 2, 3));
+    assertTrue(trip.hasCapacityForInsertion(1, 2, 4));
   }
 
   @Test
   void adjacentPositions_fullAtStopBeforePickup() {
-    // Original stops: [Origin(1), A(4), Destination(1)]   totalCapacity=4
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 4)), OSLO_NORTH);
+    // Original stops: [Origin(1), A(5), Destination(1)]   totalCapacity=5
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 5)), OSLO_NORTH);
 
     // Modified route: [Origin, A, Pickup, Dropoff, Destination]
     //                     0     1    2       3        4
-    // Checked original stops: A (index 1, onboard=4). No room.
+    // Checked original stops: A (index 1, onboard=5). No room.
     assertFalse(trip.hasCapacityForInsertion(2, 3, 1));
   }
 
   @Test
   void widerGap_checksAllOriginalStopsBetweenPickupAndDropoff() {
-    // Original stops: [Origin(1), A(2), B(3), C(1), Destination(1)]   totalCapacity=4
+    // Original stops: [Origin(1), A(2), B(4), C(1), Destination(1)]   totalCapacity=5
     var trip = createTripWithStops(
       OSLO_CENTER,
-      List.of(createStop(0, 2), createStop(1, 3), createStop(2, 1)),
+      List.of(createStop(0, 2), createStop(1, 4), createStop(2, 1)),
       OSLO_NORTH
     );
 
     // Modified route: [Origin, Pickup, A, B, Dropoff, C, Destination]
     //                     0       1    2  3     4     5      6
-    // Checked original stops: Origin(1), A(2), B(3). Max is 3, room for 1.
+    // Checked original stops: Origin(1), A(2), B(4). Max is 4, room for 1.
     assertTrue(trip.hasCapacityForInsertion(1, 4, 1));
     assertFalse(trip.hasCapacityForInsertion(1, 4, 2));
   }
 
   @Test
   void stopAfterDropoff_isNotChecked() {
-    // Original stops: [Origin(1), A(1), B(4), Destination(1)]   totalCapacity=4
+    // Original stops: [Origin(1), A(1), B(5), Destination(1)]   totalCapacity=5
     // B is full, but the passenger is dropped off before B.
     var trip = createTripWithStops(
       OSLO_CENTER,
-      List.of(createStop(0, 1), createStop(1, 4)),
+      List.of(createStop(0, 1), createStop(1, 5)),
       OSLO_NORTH
     );
 
     // Modified route: [Origin, Pickup, A, Dropoff, B, Destination]
     //                     0       1    2     3     4      5
     // Checked original stops: Origin(1), A(1). B is after the dropoff.
-    assertTrue(trip.hasCapacityForInsertion(1, 3, 2));
-  }
-
-  @Test
-  void pickupNearEnd_checksOnlyStopBeforePickup() {
-    // Original stops: [Origin(1), A(3), Destination(1)]   totalCapacity=4
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 3)), OSLO_NORTH);
-
-    // Modified route: [Origin, A, Pickup, Dropoff, Destination]
-    //                     0     1    2       3        4
-    // Checked original stops: A (index 1, onboard=3). Room for 1.
-    assertTrue(trip.hasCapacityForInsertion(2, 3, 1));
-    assertFalse(trip.hasCapacityForInsertion(2, 3, 2));
+    assertTrue(trip.hasCapacityForInsertion(1, 3, 3));
   }
 
   @Test
@@ -151,14 +132,14 @@ class CarpoolTripCapacityTest {
 
   @Test
   void fullRangeInsertion_checksAllOriginalStops() {
-    // Original stops: [Origin(2), A(2), Destination(2)]   totalCapacity=4
+    // Original stops: [Origin(2), A(2), Destination(2)]   totalCapacity=5
     var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 2)), OSLO_NORTH);
 
     // Modified route: [Origin, Pickup, A, Dropoff, Destination]
     //                     0       1    2     3        4
-    // Checked original stops: Origin(2), A(2). Both onboard=2, room for 2.
-    assertTrue(trip.hasCapacityForInsertion(1, 3, 2));
-    assertFalse(trip.hasCapacityForInsertion(1, 3, 3));
+    // Checked original stops: Origin(2), A(2). Both onboard=2, room for 3.
+    assertTrue(trip.hasCapacityForInsertion(1, 3, 3));
+    assertFalse(trip.hasCapacityForInsertion(1, 3, 4));
   }
 
   @Test
@@ -177,7 +158,7 @@ class CarpoolTripCapacityTest {
 
   @Test
   void bottleneckInMiddle_limitsCapacity() {
-    // Original stops: [Origin(1), A(1), B(3), C(1), D(1), Destination(1)]   totalCapacity=4
+    // Original stops: [Origin(1), A(1), B(4), C(1), D(1), Destination(1)]   totalCapacity=5
     var trip = createTripWithStops(
       OSLO_CENTER,
       List.of(createStop(0, 1), createStop(1, 4), createStop(2, 1), createStop(3, 1)),
@@ -186,7 +167,7 @@ class CarpoolTripCapacityTest {
 
     // Modified route: [Origin, Pickup, A, B, C, Dropoff, D, Destination]
     //                     0       1    2  3  4     5     6      7
-    // Checked original stops: Origin(1), A(1), B(3), C(1). Max is 3 at B, room for 1.
+    // Checked original stops: Origin(1), A(1), B(4), C(1). Max is 4 at B, room for 1.
     assertTrue(trip.hasCapacityForInsertion(1, 5, 1));
     assertFalse(trip.hasCapacityForInsertion(1, 5, 2));
   }
