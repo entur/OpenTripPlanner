@@ -4,8 +4,10 @@ import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 
 import gnu.trove.map.TIntObjectMap;
 import gnu.trove.set.TIntSet;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.opentripplanner.raptor.api.view.ArrivalView;
@@ -27,6 +29,8 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 public final class McStopArrivals<T extends RaptorTripSchedule> {
 
   private final ParetoSet<McStopArrival<T>>[] arrivals;
+  private final List<McStopArrival<T>> onBoardTripArrivals;
+
   private final BitSet touchedStops;
 
   private final DebugHandlerFactory<T> debugHandlerFactory;
@@ -42,6 +46,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
   ) {
     //noinspection unchecked
     this.arrivals = (ParetoSet<McStopArrival<T>>[]) new ParetoSet[nStops];
+    this.onBoardTripArrivals = new ArrayList<>();
     this.touchedStops = new BitSet(nStops);
     this.comparator = comparatorFactory.compareArrivalTimeRoundAndCost();
     this.debugHandlerFactory = debugHandlerFactory;
@@ -94,7 +99,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
   }
 
   public boolean updateExist() {
-    return !touchedStops.isEmpty();
+    return !touchedStops.isEmpty() || !onBoardTripArrivals.isEmpty();
   }
 
   public IntIterator stopsTouchedIterator() {
@@ -131,6 +136,14 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
       arrivals[it.next()].markAtEndOfSet();
     }
     touchedStops.clear();
+  }
+
+  public Iterable<? extends McStopArrival<T>> listOnBoardTripArrivals() {
+    return onBoardTripArrivals;
+  }
+
+  public void addOnBoardTripArrival(McStopArrival<T> arrival) {
+    onBoardTripArrivals.add(arrival);
   }
 
   /* private methods */
