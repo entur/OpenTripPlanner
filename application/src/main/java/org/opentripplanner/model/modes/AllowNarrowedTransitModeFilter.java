@@ -23,7 +23,11 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
   }
 
   @Override
-  public boolean match(TransitMode transitMode, SubMode netexSubmode, @Nullable Integer gtfsExtendedType) {
+  public boolean match(
+    TransitMode transitMode,
+    SubMode netexSubmode,
+    @Nullable Integer gtfsExtendedType
+  ) {
     if (mode.getMode() != transitMode) {
       return false;
     }
@@ -39,8 +43,12 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
     if (mode.getSubMode() == null && mode.isReplacement() == null) {
       return true;
     }
-    return Boolean.valueOf(ReplacementHelper.isReplacement(netexSubmode, gtfsExtendedType)).equals(mode.isReplacement()) ||
-      netexSubmode.equals(mode.getSubMode());
+    return (
+      Boolean.valueOf(ReplacementHelper.isReplacement(netexSubmode, gtfsExtendedType)).equals(
+        mode.isReplacement()
+      ) ||
+      netexSubmode.equals(mode.getSubMode())
+    );
   }
 
   @Override
