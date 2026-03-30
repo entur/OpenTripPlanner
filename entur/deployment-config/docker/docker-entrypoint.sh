@@ -36,9 +36,15 @@ gcs_read() {
 }
 
 # Read graph pointer file for this serialization version.
+# When GRAPH_POINTER_PREFIX is set, the pointer is looked up under
+# <prefix>/<serialization-id>/. When empty, the pointer is at the bucket root.
 # If not found, the graph may still be building — sleep 5m to avoid
 # CrashLoopBackOff and give the graph builder time to finish.
-POINTER="${GRAPH_POINTER_PREFIX}/${SER_ID}/${GRAPH_POINTER_FILE}"
+if [ -n "$GRAPH_POINTER_PREFIX" ]; then
+  POINTER="${GRAPH_POINTER_PREFIX}/${SER_ID}/${GRAPH_POINTER_FILE}"
+else
+  POINTER="${GRAPH_POINTER_FILE}"
+fi
 if FILENAME=$(gcs_read "$POINTER"); then
   echo "Found graph pointer: $FILENAME"
 else
