@@ -3,7 +3,6 @@ package org.opentripplanner.raptor.rangeraptor;
 import java.util.Collection;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -162,26 +161,6 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void routeTransitUsingOnBoardTripAccess() {
-    var arrivals = transitWorker.consumeOnBoardStopArrivals();
-    while (arrivals.hasNext()) {
-      var arrival = arrivals.next();
-      var boarding = arrival.subsequentBoardingConstraint();
-      var route = transitData.getRouteForIndex(boarding.routeIndex());
-      var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
-      int stopPosition = boarding.stopPositionInPattern();
-
-      transitWorker.prepareForTransitWith(route);
-      boolean boarded = transitWorker.boardAsOnBoardAccess(arrival, stopPosition, trip);
-
-      if (boarded) {
-        alightOnBoardAccess(boarding, route);
-        arrivals.remove();
-      }
-    }
-  }
-
-  @Override
   public void applyTransfers() {
     timers.applyTransfers(() -> {
       IntIterator it = state.stopsTouchedByTransitCurrentRound();
@@ -220,41 +199,6 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     }
   }
 
-  private void alightOnBoardAccess(
-    RaptorTripScheduleStopPosition tripBoarding,
-    RaptorRoute<T> route
-  ) {
-    var pattern = route.pattern();
-    IntIterator stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
-
-    int alightSlack = slackProvider.alightSlack(pattern.slackIndex());
-
-    while (
-      stopPositions.hasNext() && stopPositions.next() != tripBoarding.stopPositionInPattern()
-    ) {
-      // Skip past the initial on-board access stop
-      // We will only consider alighting on stops after this one
-    }
-
-    var txSearch = enableTransferConstraints
-      ? calculator.transferConstraintsSearch(transitData, tripBoarding.routeIndex())
-      : null;
-
-    while (stopPositions.hasNext()) {
-      int stopPos = stopPositions.next();
-      int stopIndex = pattern.stopIndex(stopPos);
-
-      // attempt to alight if we're on board
-      if (calculator.alightingPossibleAt(pattern, stopPos)) {
-        if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
-          transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
-        } else {
-          transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
-        }
-      }
-    }
-  }
-
   private void boardAndAlightRoute(
     int routeIndex,
     RaptorRoute<T> route,
@@ -269,6 +213,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
 
     transitWorker.prepareForTransitWith(route);
+    var onBoardArrivals = transitWorker.consumeOnBoardStopArrivals(routeIndex);
 
     while (stopPositions.hasNext()) {
       int stopPos = stopPositions.next();
@@ -283,6 +228,14 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
           transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
         } else {
           transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
+        }
+      }
+      // attempt to board using on-board trip access
+      if (onBoardArrivals != null && onBoardArrivals.containsKey(stopPos)) {
+        for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
+          var boarding = arrival.subsequentBoardingConstraint();
+          var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
+          transitWorker.boardAsOnBoardAccess(arrival, stopPos, trip);
         }
       }
 

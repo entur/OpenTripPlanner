@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.internalapi;
 
-import java.util.Collections;
-import java.util.Iterator;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.api.view.ArrivalView;
@@ -83,12 +82,13 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
   }
 
   /**
-   * @return an iterator over all on-board stop-arrivals currently in the state.
-   * The iterator allows removal and this is the expected way to remove or a stop-arrival. When
-   * removed is when we consider a stop-arrival to be "consumed".
+   * @return all on-board trip access arrival for the given {@code routeIndex}. The arrivals are
+   * removed from state and can only be fetched once. The method return {@code null} if no
+   * arrivals exist - this should be very efficient to check.
    */
-  default Iterator<? extends ArrivalView<T>> consumeOnBoardStopArrivals() {
-    return Collections.emptyIterator();
+  @Nullable
+  default OnBoardTripAccessPathsForRoute<T> consumeOnBoardStopArrivals(int routeIndex) {
+    return null;
   }
 
   /**

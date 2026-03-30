@@ -2,11 +2,12 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
 import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
 
-import java.util.Iterator;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
 import org.opentripplanner.raptor.api.view.ArrivalView;
+import org.opentripplanner.raptor.rangeraptor.internalapi.OnBoardTripAccessPathsForRoute;
 import org.opentripplanner.raptor.rangeraptor.internalapi.PassThroughPointsService;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
@@ -125,8 +126,9 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public Iterator<? extends McStopArrival<T>> consumeOnBoardStopArrivals() {
-    return state.listOnBoardStopArrivals().iterator();
+  @Nullable
+  public OnBoardTripAccessPathsForRoute<T> consumeOnBoardStopArrivals(int routeIndex) {
+    return state.consumeOnBoardStopArrivals(routeIndex);
   }
 
   @Override

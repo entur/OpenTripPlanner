@@ -3,7 +3,9 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.rangeraptor.internalapi.OnBoardTripAccessPathsForRoute;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
@@ -120,8 +122,9 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     return arrivals.listArrivalsAfterMarker(stop);
   }
 
-  Iterable<? extends McStopArrival<T>> listOnBoardStopArrivals() {
-    return arrivals.listOnBoardTripArrivals();
+  @Nullable
+  OnBoardTripAccessPathsForRoute<T> consumeOnBoardStopArrivals(int routeIndex) {
+    return arrivals.consumeOnBoardStopArrivals(routeIndex);
   }
 
   public void addOnBoardAccessStopArrival(RaptorAccessEgress accessPath, int departureTime) {
