@@ -1,15 +1,15 @@
 package org.opentripplanner.raptor._data.transit;
 
-import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 
-public class TestRaptorOnBoardAccess implements RaptorOnBoardAccess {
+public class TestRaptorStartOnBoardAccess implements RaptorStartOnBoardAccess {
 
   private final int stop;
   private final int generalizedCost;
   private final RaptorTripScheduleStopPosition tripBoarding;
 
-  public TestRaptorOnBoardAccess(
+  public TestRaptorStartOnBoardAccess(
     int routeIndex,
     int tripScheduleIndex,
     int stopPositionInPattern,

@@ -2,7 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.internalapi;
 
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.RangeRaptor;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
@@ -75,7 +75,7 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
     RaptorConstrainedBoardingSearch<T> txSearch
   );
 
-  default void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime) {
+  default void registerOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
     throw new UnsupportedOperationException(
       "On-board access is not yet supported for this routing strategy"
     );

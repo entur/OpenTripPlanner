@@ -1,12 +1,12 @@
 package org.opentripplanner.raptor.api.model;
 
 /**
- * RaptorOnBoardAccess allows you to board a specific trip at a given stop. The trip is
- * identified by the route index and trip schedule index. A typical use-case for this is when you
- * want to start a trip on-board, meaning that one is already on the vehicle when the path starts.
- * The returned paths will start with a zero duration access and a boarding at the given stop.
+ * This class allows you to board a specific trip at a given stop. The trip is identified by the
+ * route index and trip schedule index. A typical use-case for this is when you* want to start a
+ * trip on-board, meaning that one is already on the vehicle when the path starts. The returned
+ * paths will start with a zero duration access and a boarding at the given stop.
  */
-public interface RaptorOnBoardAccess extends RaptorAccessEgress {
+public interface RaptorStartOnBoardAccess extends RaptorAccessEgress {
   /**
    * Return the trip boarding this access is requiered to use.
    */

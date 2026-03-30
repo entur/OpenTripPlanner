@@ -5,7 +5,7 @@ import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnBoardTripAccessPathsForRoute;
 import org.opentripplanner.raptor.rangeraptor.internalapi.PassThroughPointsService;
@@ -121,7 +121,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public void registerOnBoardAccessStopArrival(RaptorOnBoardAccess access, int boardTime) {
+  public void registerOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
     state.addOnBoardAccessStopArrival(access, boardTime);
   }
 
