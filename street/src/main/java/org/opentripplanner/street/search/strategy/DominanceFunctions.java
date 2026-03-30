@@ -143,9 +143,9 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
   }
 
   /**
-   * A dominance function that prefers the lowest distance.
+   * A dominance function that prefers the shortest distance.
    */
-  public static class LowestDistance extends DominanceFunctions {
+  public static class ShortestDistance extends DominanceFunctions {
 
     @Override
     protected boolean betterOrEqual(State a, State b) {

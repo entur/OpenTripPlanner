@@ -6,7 +6,7 @@ import static org.opentripplanner.street.model.StreetModelFactory.intersectionVe
 import com.google.common.collect.Range;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.locationtech.jts.geom.TestCoordinates;
+import org.opentripplanner.street.geometry.TestCoordinates;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.search.request.StreetSearchRequest;

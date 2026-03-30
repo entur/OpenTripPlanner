@@ -371,7 +371,7 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
 
       editor.incrementTimeInMilliseconds(orig.getAbsTimeDeltaMilliseconds());
       editor.incrementWeight(orig.getWeightDelta());
-      editor.incrementTraversalDistanceMeters(orig.getWalkDistanceDeltaMeters());
+      editor.incrementTraversalDistanceMeters(orig.getTraversalDistanceDeltaMeters());
 
       // propagate the modes through to the reversed edge
       editor.setBackMode(orig.getBackMode());
@@ -517,7 +517,7 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     return Math.abs(getTimeDeltaMilliseconds());
   }
 
-  private double getWalkDistanceDeltaMeters() {
+  private double getTraversalDistanceDeltaMeters() {
     if (backState != null) {
       return Math.abs(this.traversalDistance_m - backState.traversalDistance_m);
     } else {

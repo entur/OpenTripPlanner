@@ -1,4 +1,6 @@
-package org.locationtech.jts.geom;
+package org.opentripplanner.street.geometry;
+
+import org.locationtech.jts.geom.Coordinate;
 
 public class TestCoordinates {
 
