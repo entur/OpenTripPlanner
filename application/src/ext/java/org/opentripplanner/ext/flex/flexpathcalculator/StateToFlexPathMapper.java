@@ -37,17 +37,17 @@ class StateToFlexPathMapper {
     // this improves performance quite a bit.
 
     Supplier<LineString> geometrySupplier = () -> {
-      // For depart-after, edges are in reverse chronological order; reverse to chronological.
-      // For arriveBy, the A* searched backward so edges are already chronological.
-      var linestring = GeometryUtils.concatenateLineStrings(
-        state.listBackEdges(),
+      Iterable<Edge> edges;
+      if (state.getRequest().arriveBy()) {
+        edges = state.listBackEdges();
+      } else {
+        edges = state.reverse().listBackEdges();
+      }
+      return GeometryUtils.concatenateLineStrings(
+        edges,
         Edge::getGeometry
       );
-      if (state.getRequest().arriveBy()) {
-        return linestring;
-      } else {
-        return linestring.reverse();
-      }
+
     };
 
     return new FlexPath((int) distance_m, (int) state.getElapsedTimeSeconds(), geometrySupplier);

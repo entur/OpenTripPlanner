@@ -6,30 +6,43 @@ import static org.opentripplanner.street.model.StreetModelForTest.streetEdge;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.street.model.vertex.IntersectionVertex;
 
 class StreetFlexPathCalculatorTest {
 
-  public static final int IGNORED = -99;
+  private static final int IGNORED = -99;
+  private static final int EPISILON = 1000;
+
+  private final IntersectionVertex v0 = intersectionVertex(0, 0);
+  private final IntersectionVertex v1 = intersectionVertex(1, 1);
+  private final IntersectionVertex v2 = intersectionVertex(2, 2);
+  private final IntersectionVertex v3 = intersectionVertex(3, 3);
+
+  {
+    streetEdge(v0, v1);
+    streetEdge(v1, v0);
+    streetEdge(v1, v2);
+    streetEdge(v2, v1);
+    streetEdge(v2, v3);
+    streetEdge(v3, v2);
+  }
 
   @Test
-  void test() {
-    var v0 = intersectionVertex(0, 0);
-    var v1 = intersectionVertex(1, 1);
-    var v2 = intersectionVertex(2, 2);
-    var v3 = intersectionVertex(3, 3);
-
-    streetEdge(v0, v1);
-    streetEdge(v1, v2);
-    streetEdge(v2, v3);
-
+  void forward() {
     var forwardCalculator = new StreetFlexPathCalculator(false, Duration.ofDays(1));
     var forwardPath = forwardCalculator.calculateFlexPath(v0, v3, IGNORED, IGNORED);
-    assertEquals("LINESTRING (1 1, 0 0, 2 2, 1 1, 3 3, 2 2)", forwardPath.getGeometry().toString());
+    assertEquals("LINESTRING (0 0, 1 1, 2 2, 3 3)", forwardPath.getGeometry().toString());
+
+    assertEquals(forwardPath.distanceMeters, 471_653, EPISILON);
+  }
+
+  @Test
+    void backward(){
 
     var reverseCalculator = new StreetFlexPathCalculator(true, Duration.ofDays(1));
-    var reversePath = reverseCalculator.calculateFlexPath(v0, v3, IGNORED, IGNORED);
-    assertEquals("LINESTRING (0 0, 1 1, 2 2, 3 3)", reversePath.getGeometry().toString());
+    var reversePath = reverseCalculator.calculateFlexPath(v3, v0, IGNORED, IGNORED);
+    assertEquals("LINESTRING (3 3, 2 2, 1 1, 0 0)", reversePath.getGeometry().toString());
 
-    assertEquals(forwardPath.distanceMeters, reversePath.distanceMeters);
+    assertEquals(reversePath.distanceMeters, 471_653, EPISILON);
   }
 }
