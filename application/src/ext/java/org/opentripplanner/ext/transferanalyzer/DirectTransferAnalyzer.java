@@ -93,8 +93,8 @@ public class DirectTransferAnalyzer implements GraphBuilderModule {
       Map<RegularStop, NearbyStop> stopsEuclidean = nearbyStopFinderEuclidian
         .findClosestStops(c0, radiusMeters)
         .stream()
-        .filter(nearbyStop -> getStop(nearbyStop.stopId) != null)
-        .collect(Collectors.toMap(nearbyStop -> getStop(nearbyStop.stopId), t -> t));
+        .filter(nearbyStop -> getRegularStop(nearbyStop.stopId) != null)
+        .collect(Collectors.toMap(nearbyStop -> getRegularStop(nearbyStop.stopId), t -> t));
 
       Map<RegularStop, NearbyStop> stopsStreets = new HashMap<>();
       try {
@@ -102,8 +102,10 @@ public class DirectTransferAnalyzer implements GraphBuilderModule {
         nearbyStopFinderStreets
           .findClosestStops(c0, radiusMeters * RADIUS_MULTIPLIER)
           .stream()
-          .filter(nearbyStop -> getStop(nearbyStop.stopId) != null)
-          .forEach(nearbyStop -> stopsStreets.putIfAbsent(getStop(nearbyStop.stopId), nearbyStop));
+          .filter(nearbyStop -> getRegularStop(nearbyStop.stopId) != null)
+          .forEach(nearbyStop ->
+            stopsStreets.putIfAbsent(getRegularStop(nearbyStop.stopId), nearbyStop)
+          );
       } catch (Exception ignored) {}
 
       RegularStop originStop = Objects.requireNonNull(
@@ -191,7 +193,7 @@ public class DirectTransferAnalyzer implements GraphBuilderModule {
     );
   }
 
-  private RegularStop getStop(FeedScopedId id) {
+  private RegularStop getRegularStop(FeedScopedId id) {
     return timetableRepository.getSiteRepository().getRegularStop(id);
   }
 

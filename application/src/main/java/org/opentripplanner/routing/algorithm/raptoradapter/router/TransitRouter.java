@@ -67,6 +67,7 @@ public class TransitRouter {
   private final LinkingContext linkingContext;
   private final TransitServiceResolver transitServiceResolver;
   private final CarpoolingService carpoolingService;
+  private final AccessEgressMapper accessEgressMapper;
 
   private TransitRouter(
     RouteRequest request,
@@ -88,6 +89,7 @@ public class TransitRouter {
     this.linkingContext = linkingContext;
     this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
     this.carpoolingService = carpoolingService;
+    this.accessEgressMapper = new AccessEgressMapper(transitServiceResolver);
   }
 
   public static TransitRouterResult route(
@@ -306,7 +308,6 @@ public class TransitRouter {
       stopCountLimit,
       linkingContext
     );
-    var accessEgressMapper = new AccessEgressMapper(transitServiceResolver);
     var accessEgresses = accessEgressMapper.mapNearbyStops(nearbyStops, type);
     accessEgresses = timeshiftRideHailing(streetRequest, type, accessEgresses);
 
