@@ -4,6 +4,7 @@ set -euo pipefail
 
 : ${MARDUK_GCP_BASE="gs://marduk/"}
 : ${GRAPH_POINTER_FILE="current-otp2"}
+: ${GRAPH_POINTER_PREFIX="netex-otp2"}
 
 # Extract bucket name from gs:// URI
 # e.g. "gs://ror-otp-graphs-gcp2-production/" -> "ror-otp-graphs-gcp2-production"
@@ -37,7 +38,7 @@ gcs_read() {
 # Read graph pointer file for this serialization version.
 # If not found, the graph may still be building — sleep 5m to avoid
 # CrashLoopBackOff and give the graph builder time to finish.
-POINTER="netex-otp2/${SER_ID}/${GRAPH_POINTER_FILE}"
+POINTER="${GRAPH_POINTER_PREFIX}/${SER_ID}/${GRAPH_POINTER_FILE}"
 if FILENAME=$(gcs_read "$POINTER"); then
   echo "Found graph pointer: $FILENAME"
 else

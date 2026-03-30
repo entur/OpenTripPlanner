@@ -78,6 +78,8 @@ spec:
           value: {{ .Values.environmentValues.mardukGcpBaseName }}
         - name: GRAPH_POINTER_FILE
           value: current-otp2nordic
+        - name: GRAPH_POINTER_PREFIX
+          value: netex-otp2nordic
         lifecycle:
           preStop:
             exec:
