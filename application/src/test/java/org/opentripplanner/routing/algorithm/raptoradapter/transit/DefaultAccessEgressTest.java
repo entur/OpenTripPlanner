@@ -63,7 +63,7 @@ class DefaultAccessEgressTest {
 
   @Test
   void getLastState() {
-    assertEquals(LAST_STATE, subject.getLastState());
+    assertEquals(LAST_STATE, subject.getFinalState());
   }
 
   @Test

@@ -20,17 +20,17 @@ public class DefaultAccessEgress implements RoutingAccessEgress {
   private final TimeAndCost penalty;
 
   /**
-   * The last state from the access/egress street search. For egress searches this State is
+   * The final state from the access/egress street search. For egress searches this State is
    * unreversed ({@code request.arriveBy() == true}) — reversal is deferred to
    * {@link org.opentripplanner.astar.model.GraphPath} construction, which only happens for
-   * winning paths during itinerary mapping. This avoids the cost of cloning the entire State
+   * winning paths during itinerary mapping. This avoids the cost of cloning and reversing the entire State
    * chain for every egress candidate.
    * <p>
    * The scalar values extracted below ({@code getElapsedTimeSeconds}, {@code getWeight},
    * {@code containsOnlyWalkMode}) are direction-independent and produce identical results on
    * both reversed and unreversed State chains.
    */
-  private final State lastState;
+  private final State finalState;
 
   /**
    * This is public to allow unit-tests full control over the field values.
@@ -40,23 +40,23 @@ public class DefaultAccessEgress implements RoutingAccessEgress {
     int durationInSeconds,
     int generalizedCost,
     TimeAndCost penalty,
-    State lastState
+    State finalState
   ) {
     this.stop = stop;
     this.durationInSeconds = durationInSeconds;
     this.generalizedCost = generalizedCost;
     this.timePenalty = penalty.isZero() ? RaptorConstants.TIME_NOT_SET : penalty.timeInSeconds();
     this.penalty = penalty;
-    this.lastState = Objects.requireNonNull(lastState);
+    this.finalState = Objects.requireNonNull(finalState);
   }
 
-  public DefaultAccessEgress(int stop, State lastState) {
+  public DefaultAccessEgress(int stop, State finalState) {
     this(
       stop,
-      (int) lastState.getElapsedTimeSeconds(),
-      RaptorCostConverter.toRaptorCost(lastState.getWeight()),
+      (int) finalState.getElapsedTimeSeconds(),
+      RaptorCostConverter.toRaptorCost(finalState.getWeight()),
       TimeAndCost.ZERO,
-      lastState
+      finalState
     );
   }
 
@@ -69,7 +69,7 @@ public class DefaultAccessEgress implements RoutingAccessEgress {
       other.durationInSeconds(),
       other.c1() + penalty.cost().toCentiSeconds(),
       penalty,
-      other.getLastState()
+      other.getFinalState()
     );
     if (other.penalty() != TimeAndCost.ZERO) {
       throw new IllegalStateException("Can not add penalty twice...");
@@ -102,13 +102,13 @@ public class DefaultAccessEgress implements RoutingAccessEgress {
   }
 
   @Override
-  public State getLastState() {
-    return lastState;
+  public State getFinalState() {
+    return finalState;
   }
 
   @Override
   public boolean isWalkOnly() {
-    return lastState.containsOnlyWalkMode();
+    return finalState.containsOnlyWalkMode();
   }
 
   @Override
