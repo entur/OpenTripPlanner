@@ -53,7 +53,7 @@ public final class TripScheduleAlightSearch<T extends RaptorTripSchedule>
   }
 
   @Override
-  public int tripIndex() {
+  public int tripScheduleIndex() {
     return candidateTripIndex;
   }
 

@@ -35,7 +35,7 @@ public class ConstrainedTransferBoarding<T extends RaptorTripSchedule>
   }
 
   @Override
-  public int tripIndex() {
+  public int tripScheduleIndex() {
     return tripIndex;
   }
 

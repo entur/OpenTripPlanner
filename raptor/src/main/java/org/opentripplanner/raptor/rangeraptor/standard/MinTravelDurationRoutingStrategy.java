@@ -137,7 +137,7 @@ public final class MinTravelDurationRoutingStrategy<T extends RaptorTripSchedule
   }
 
   private void board(int stopIndex, RaptorBoardOrAlightEvent<T> boarding) {
-    onTripIndex = boarding.tripIndex();
+    onTripIndex = boarding.tripScheduleIndex();
     onTrip = boarding.trip();
     onTripBoardTime = boarding.earliestBoardTime();
     onTripBoardStop = stopIndex;

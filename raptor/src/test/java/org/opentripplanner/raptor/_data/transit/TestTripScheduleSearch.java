@@ -74,7 +74,7 @@ class TestTripScheduleSearch
   }
 
   @Override
-  public int tripIndex() {
+  public int tripScheduleIndex() {
     return tripIndex;
   }
 
