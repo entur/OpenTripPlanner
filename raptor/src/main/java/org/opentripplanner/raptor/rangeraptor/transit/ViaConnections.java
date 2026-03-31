@@ -6,21 +6,21 @@ import gnu.trove.map.TIntObjectMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.Collection;
 import java.util.List;
-import org.opentripplanner.raptor.api.request.RaptorViaConnection;
+import org.opentripplanner.raptor.api.request.via.AbstractViaConnection;
 
 public class ViaConnections {
 
-  private final TIntObjectMap<List<RaptorViaConnection>> groupByFromStop;
+  private final TIntObjectMap<List<AbstractViaConnection>> groupByFromStop;
 
-  public ViaConnections(Collection<RaptorViaConnection> viaConnections) {
+  public ViaConnections(Collection<AbstractViaConnection> viaConnections) {
     this.groupByFromStop = new TIntObjectHashMap<>();
     viaConnections
       .stream()
-      .collect(groupingBy(RaptorViaConnection::fromStop))
+      .collect(groupingBy(AbstractViaConnection::fromStop))
       .forEach(groupByFromStop::put);
   }
 
-  public TIntObjectMap<List<RaptorViaConnection>> byFromStop() {
+  public TIntObjectMap<List<AbstractViaConnection>> byFromStop() {
     return groupByFromStop;
   }
 }

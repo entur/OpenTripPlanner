@@ -8,7 +8,7 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_D;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
-import static org.opentripplanner.raptor.api.request.RaptorViaLocation.passThrough;
+import static org.opentripplanner.raptor.api.request.via.RaptorViaLocation.passThrough;
 
 import java.time.Duration;
 import java.util.List;
@@ -19,7 +19,7 @@ import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
-import org.opentripplanner.raptor.api.request.RaptorViaLocation;
+import org.opentripplanner.raptor.api.request.via.RaptorViaLocation;
 import org.opentripplanner.raptor.configure.RaptorTestFactory;
 
 /**
