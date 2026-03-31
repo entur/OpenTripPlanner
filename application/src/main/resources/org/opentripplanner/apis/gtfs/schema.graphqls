@@ -5033,8 +5033,6 @@ input TransitPreferencesInput {
   paths have a different set of transit-group-priorities, then the generalized-cost
   comparison is relaxed. The final set of paths are filtered through the normal
   itinerary-filters.
-    
-  THIS IS STILL AN EXPERIMENTAL FEATURE - IT MAY CHANGE WITHOUT ANY NOTICE!
   """
   relaxTransitGroupPriority: RelaxCostFunctionInput
   "Preferences related to cancellations and real-time."
