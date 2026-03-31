@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.api.request;
+package org.opentripplanner.raptor.api.request.via;
 
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -38,17 +38,17 @@ import org.opentripplanner.utils.time.DurationUtils;
  * {@code durationInSeconds}. The calculation of {@code c1} should include the walk time, but not
  * the min-wait-time (assuming all connections have the same minimum wait time).
  */
-public abstract sealed class RaptorViaConnection {
+public abstract sealed class AbstractViaConnection {
 
   private final int fromStop;
   private final int durationInSeconds;
 
-  private RaptorViaConnection(RaptorViaLocation parent, int fromStop, int durationInSeconds) {
+  private AbstractViaConnection(RaptorViaLocation parent, int fromStop, int durationInSeconds) {
     this.fromStop = fromStop;
     this.durationInSeconds = parent.minimumWaitTime() + durationInSeconds;
   }
 
-  public static RaptorViaConnection of(
+  public static AbstractViaConnection of(
     RaptorViaLocation parent,
     int fromStop,
     RaptorTransfer transfer
@@ -101,7 +101,7 @@ public abstract sealed class RaptorViaConnection {
    * The method returns {@code true} if this instance is better or equals to the given other
    * stop with respect to being pareto-optimal.
    */
-  boolean isBetterOrEqual(RaptorViaConnection other) {
+  boolean isBetterOrEqual(AbstractViaConnection other) {
     if (fromStop != other.fromStop || toStop() != other.toStop()) {
       return false;
     }
@@ -120,7 +120,7 @@ public abstract sealed class RaptorViaConnection {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    RaptorViaConnection that = (RaptorViaConnection) o;
+    AbstractViaConnection that = (AbstractViaConnection) o;
     return (
       fromStop == that.fromStop &&
       durationInSeconds == that.durationInSeconds &&
@@ -150,7 +150,7 @@ public abstract sealed class RaptorViaConnection {
     return buf.append(')').toString();
   }
 
-  private static final class RaptorViaStopConnection extends RaptorViaConnection {
+  private static final class RaptorViaStopConnection extends AbstractViaConnection {
 
     RaptorViaStopConnection(RaptorViaLocation parent, int fromStop) {
       super(parent, fromStop, 0);
@@ -178,7 +178,7 @@ public abstract sealed class RaptorViaConnection {
     }
   }
 
-  private static final class RaptorViaTransferConnection extends RaptorViaConnection {
+  private static final class RaptorViaTransferConnection extends AbstractViaConnection {
 
     private final RaptorTransfer transfer;
 

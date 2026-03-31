@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.api.request;
+package org.opentripplanner.raptor.api.request.via;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -26,7 +26,7 @@ public final class RaptorViaLocation {
   private final String label;
   private final boolean passThroughSearch;
   private final int minimumWaitTime;
-  private final List<RaptorViaConnection> connections;
+  private final List<AbstractViaConnection> connections;
 
   private RaptorViaLocation(
     String label,
@@ -83,7 +83,7 @@ public final class RaptorViaLocation {
     return minimumWaitTime;
   }
 
-  public List<RaptorViaConnection> connections() {
+  public List<AbstractViaConnection> connections() {
     return connections;
   }
 
@@ -94,7 +94,7 @@ public final class RaptorViaLocation {
   public BitSet asBitSet() {
     return connections
       .stream()
-      .mapToInt(RaptorViaConnection::fromStop)
+      .mapToInt(AbstractViaConnection::fromStop)
       .collect(BitSet::new, BitSet::set, BitSet::or);
   }
 
@@ -150,13 +150,13 @@ public final class RaptorViaLocation {
     return buf.append("}").toString();
   }
 
-  private List<RaptorViaConnection> mapConnections(List<BuilderStopAndTransfer> connections) {
+  private List<AbstractViaConnection> mapConnections(List<BuilderStopAndTransfer> connections) {
     if (connections.isEmpty()) {
       throw new IllegalArgumentException("At least one connection is required.");
     }
     return connections
       .stream()
-      .map(it -> RaptorViaConnection.of(this, it.fromStop, it.transfer))
+      .map(it -> AbstractViaConnection.of(this, it.fromStop, it.transfer))
       .toList();
   }
 
@@ -221,7 +221,7 @@ public final class RaptorViaLocation {
   /**
    * Use internally to store connection data, before creating the connection objects. If is
    * needed to create the bidirectional relationship between {@link RaptorViaLocation} and
-   * {@link RaptorViaConnection}.
+   * {@link AbstractViaConnection}.
    */
   private static record BuilderStopAndTransfer(int fromStop, @Nullable RaptorTransfer transfer) {}
 }

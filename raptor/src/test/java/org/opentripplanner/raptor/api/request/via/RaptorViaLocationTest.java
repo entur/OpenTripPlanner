@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.api.request;
+package org.opentripplanner.raptor.api.request.via;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,21 +36,21 @@ class RaptorViaLocationTest implements RaptorTestConstants {
     .addPassThroughStop(STOP_D)
     .build();
 
-  private final RaptorViaConnection transferConnection = subject
+  private final AbstractViaConnection transferConnection = subject
     .connections()
     .stream()
     .filter(it -> it.isTransfer())
     .findFirst()
     .orElseThrow();
 
-  private final RaptorViaConnection stopConnection = subject
+  private final AbstractViaConnection stopConnection = subject
     .connections()
     .stream()
     .filter(it -> it.isSameStop())
     .findFirst()
     .orElseThrow();
 
-  private final RaptorViaConnection passThroughStopConnection = subjectPassThrough
+  private final AbstractViaConnection passThroughStopConnection = subjectPassThrough
     .connections()
     .stream()
     .findFirst()
