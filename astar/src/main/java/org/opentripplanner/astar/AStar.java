@@ -43,7 +43,7 @@ public class AStar<
   private final SkipEdgeStrategy<State, Edge> skipEdgeStrategy;
   private final SearchTerminationStrategy<State> terminationStrategy;
   private final TraverseVisitor<State, Edge> traverseVisitor;
-  private final StatisticsCallback<Vertex> statistics;
+  private final StatisticsCallback<Vertex> statisticsCallback;
   private final Duration timeout;
 
   private final ShortestPathTree<State, Edge, Vertex> spt;
@@ -65,7 +65,7 @@ public class AStar<
     DominanceFunction<State> dominanceFunction,
     Duration timeout,
     Collection<State> initialStates,
-    StatisticsCallback<Vertex> stats
+    StatisticsCallback<Vertex> statisticsCallback
   ) {
     this.heuristic = heuristic;
     this.skipEdgeStrategy = skipEdgeStrategy;
@@ -78,7 +78,7 @@ public class AStar<
 
     this.spt = new ShortestPathTree<>(dominanceFunction);
 
-    this.statistics = stats;
+    this.statisticsCallback = statisticsCallback;
     this.preSearchHook = preSearchHook;
 
     // Initialized with a reasonable size, see #4445
@@ -169,7 +169,7 @@ public class AStar<
     // execute the hook before the search begins so that it can be checked if the request
     // has already timed out.
     preSearchHook.run();
-    statistics.searchStarted();
+    statisticsCallback.searchStarted();
     long abortTime = DateUtils.absoluteTimeout(timeout);
 
     /* the core of the A* algorithm */
@@ -210,6 +210,6 @@ public class AStar<
       }
     }
 
-    statistics.searchFinished(fromVertices, toVertices, nVisited);
+    statisticsCallback.searchFinished(fromVertices, toVertices, nVisited);
   }
 }

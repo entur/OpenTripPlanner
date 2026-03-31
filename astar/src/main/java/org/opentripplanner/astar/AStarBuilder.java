@@ -40,7 +40,7 @@ public abstract class AStarBuilder<
   private Set<Vertex> toVertices;
   private SearchTerminationStrategy<State> terminationStrategy;
   private DominanceFunction<State> dominanceFunction;
-  private StatisticsCallback<Vertex> statsCallback = StatisticsCallback.NOOP;
+  private StatisticsCallback<Vertex> statisticsCallback = StatisticsCallback.NOOP;
 
   protected AStarBuilder() {}
 
@@ -72,8 +72,8 @@ public abstract class AStarBuilder<
     return builder;
   }
 
-  public Builder withStatisticsCallback(StatisticsCallback<Vertex> printer) {
-    this.statsCallback = printer;
+  public Builder withStatisticsCallback(StatisticsCallback<Vertex> statisticsCallback) {
+    this.statisticsCallback = statisticsCallback;
     return builder;
   }
 
@@ -147,7 +147,7 @@ public abstract class AStarBuilder<
       Optional.ofNullable(dominanceFunction).orElseGet(this::createDefaultDominanceFunction),
       streetRoutingTimeout(),
       initialStates,
-      statsCallback
+      statisticsCallback
     );
   }
 
