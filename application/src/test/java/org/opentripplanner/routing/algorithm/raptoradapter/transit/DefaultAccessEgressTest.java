@@ -63,7 +63,7 @@ class DefaultAccessEgressTest {
 
   @Test
   void getLastState() {
-    assertEquals(LAST_STATE, subject.getLastState());
+    assertEquals(LAST_STATE, subject.getFinalState());
   }
 
   @Test
@@ -100,5 +100,24 @@ class DefaultAccessEgressTest {
       "Walk 1d8h50m15s C₁236_440 Pₜ1 w/penalty(1s $11) ~ 5",
       subjectWithPenalty.toString()
     );
+  }
+
+  /**
+   * Verify that the scalar values extracted during DefaultAccessEgress construction
+   * (duration, generalized cost, walk-only mode) are identical for reversed and unreversed
+   * State chains. This invariant allows deferring State.reverse() from AccessEgressMapper
+   * to GraphPath construction, where it is only applied to winning paths rather than all
+   * candidates.
+   */
+  @Test
+  void scalarValuesAreIdenticalForReversedAndUnreversedState() {
+    var state = TestStateBuilder.ofWalking().streetEdge().streetEdge().streetEdge().build();
+
+    var fromUnreversed = new DefaultAccessEgress(STOP, state);
+    var fromReversed = new DefaultAccessEgress(STOP, state.reverse());
+
+    assertEquals(fromUnreversed.durationInSeconds(), fromReversed.durationInSeconds());
+    assertEquals(fromUnreversed.c1(), fromReversed.c1());
+    assertEquals(fromUnreversed.isWalkOnly(), fromReversed.isWalkOnly());
   }
 }
