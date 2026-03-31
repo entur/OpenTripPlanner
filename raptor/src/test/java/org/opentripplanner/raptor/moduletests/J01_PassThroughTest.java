@@ -40,25 +40,19 @@ import org.opentripplanner.raptor.configure.RaptorTestFactory;
  */
 class J01_PassThroughTest {
 
-  static final RaptorViaLocation PASS_THROUGH_STOP_A = passThrough("A")
-    .addPassThroughStop(STOP_A)
-    .build();
-  static final RaptorViaLocation PASS_THROUGH_STOP_C = passThrough("C")
-    .addPassThroughStop(STOP_C)
-    .build();
-  static final RaptorViaLocation PASS_THROUGH_STOP_D = passThrough("D")
-    .addPassThroughStop(STOP_D)
-    .build();
+  static final RaptorViaLocation PASS_THROUGH_STOP_A = passThrough("A").addStop(STOP_A).build();
+  static final RaptorViaLocation PASS_THROUGH_STOP_C = passThrough("C").addStop(STOP_C).build();
+  static final RaptorViaLocation PASS_THROUGH_STOP_D = passThrough("D").addStop(STOP_D).build();
   static final List<RaptorViaLocation> PASS_THROUGH_STOP_B_OR_C = List.of(
-    passThrough("B&C").addPassThroughStop(STOP_B).addPassThroughStop(STOP_C).build()
+    passThrough("B&C").addStop(STOP_B).addStop(STOP_C).build()
   );
   static final List<RaptorViaLocation> PASS_THROUGH_STOP_B_THEN_C = List.of(
-    passThrough("B").addPassThroughStop(STOP_B).build(),
-    passThrough("C").addPassThroughStop(STOP_C).build()
+    passThrough("B").addStop(STOP_B).build(),
+    passThrough("C").addStop(STOP_C).build()
   );
   static final List<RaptorViaLocation> PASS_THROUGH_STOP_B_THEN_D = List.of(
-    passThrough("B").addPassThroughStop(STOP_B).build(),
-    passThrough("D").addPassThroughStop(STOP_D).build()
+    passThrough("B").addStop(STOP_B).build(),
+    passThrough("D").addStop(STOP_D).build()
   );
 
   private final TestTransitData data = new TestTransitData();

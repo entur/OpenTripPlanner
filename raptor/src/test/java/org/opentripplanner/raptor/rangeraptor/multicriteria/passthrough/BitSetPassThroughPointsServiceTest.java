@@ -32,8 +32,8 @@ class BitSetPassThroughPointsServiceTest {
 
   private static final PassThroughPointsService SUBJECT = BitSetPassThroughPointsService.of(
     List.of(
-      RaptorViaLocation.passThrough("PT1").addPassThroughStops(STOPS_1).build(),
-      RaptorViaLocation.passThrough("PT2").addPassThroughStops(STOPS_2).build()
+      RaptorViaLocation.passThrough("PT1").addStop(STOPS_1).build(),
+      RaptorViaLocation.passThrough("PT2").addStop(STOPS_2).build()
     )
   );
   /**

@@ -15,7 +15,7 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
 import static org.opentripplanner.raptor._data.transit.TestAccessEgress.walk;
 import static org.opentripplanner.raptor._data.transit.TestTransfer.transfer;
-import static org.opentripplanner.raptor.api.request.via.RaptorViaLocation.via;
+import static org.opentripplanner.raptor.api.request.via.RaptorViaLocation.viaVisit;
 
 import java.time.Duration;
 import java.util.List;
@@ -90,8 +90,8 @@ class J03_ViaTransferSearchTest {
       .searchParams()
       .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocation(
-        RaptorViaLocation.via("B")
-          .addViaTransfer(STOP_B, TestTransfer.transfer(STOP_B, D1_m))
+        RaptorViaLocation.viaVisit("B")
+          .addTransfer(STOP_B, TestTransfer.transfer(STOP_B, D1_m))
           .build()
       )
       .addEgressPaths(walk(STOP_D, D30_s));
@@ -128,7 +128,7 @@ class J03_ViaTransferSearchTest {
       .searchParams()
       .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocation(
-        via("BxC").addViaTransfer(STOP_B, TestTransfer.transfer(STOP_C, D1_m)).build()
+        viaVisit("BxC").addTransfer(STOP_B, TestTransfer.transfer(STOP_C, D1_m)).build()
       )
       .addEgressPaths(walk(STOP_E, D30_s));
 
@@ -171,7 +171,7 @@ class J03_ViaTransferSearchTest {
       .searchParams()
       .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocation(
-        via("BxC").addViaTransfer(STOP_B, TestTransfer.transfer(STOP_C, D1_m)).build()
+        viaVisit("BxC").addTransfer(STOP_B, TestTransfer.transfer(STOP_C, D1_m)).build()
       )
       .addEgressPaths(walk(STOP_F, D30_s));
 
@@ -211,8 +211,8 @@ class J03_ViaTransferSearchTest {
       .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocations(
         List.of(
-          RaptorViaLocation.via("B", minWaitTime)
-            .addViaTransfer(STOP_B, transfer(STOP_B, D20_s))
+          RaptorViaLocation.viaVisit("B", minWaitTime)
+            .addTransfer(STOP_B, transfer(STOP_B, D20_s))
             .build()
         )
       )

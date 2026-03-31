@@ -7,7 +7,7 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.STOP_D;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T00_00;
 import static org.opentripplanner.raptor._data.RaptorTestConstants.T01_00;
 import static org.opentripplanner.raptor._data.api.PathUtils.pathsToString;
-import static org.opentripplanner.raptor.api.request.via.RaptorViaLocation.via;
+import static org.opentripplanner.raptor.api.request.via.RaptorViaLocation.viaVisit;
 
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -210,14 +210,14 @@ class J05_ViaVisitWithEgressTest {
   }
 
   private void viaStop(int stop) {
-    var via = via(data.stopNameResolver().apply(stop)).addViaStop(stop).build();
+    var via = viaVisit(data.stopNameResolver().apply(stop)).addStop(stop).build();
     requestBuilder.searchParams().addViaLocation(via);
   }
 
   private void viaStops(String label, int... stops) {
-    var builder = via(label);
+    var builder = viaVisit(label);
     for (int stop : stops) {
-      builder.addViaStop(stop);
+      builder.addStop(stop);
     }
     requestBuilder.searchParams().addViaLocation(builder.build());
   }
