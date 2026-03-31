@@ -22,7 +22,7 @@ class BackEdgeIterator implements Iterator<Edge> {
 
   @Override
   public Edge next() {
-    if(!hasNext()){
+    if (!hasNext()) {
       throw new NoSuchElementException("No more back edges available");
     }
     var ret = current;

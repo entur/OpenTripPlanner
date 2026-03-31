@@ -36,11 +36,10 @@ class BackEdgeIteratorTest {
     var edges = ImmutableList.copyOf(state.listBackEdges());
     assertThat(edges).hasSize(expectedSize);
     assertThat(edges).doesNotContain(null);
-
   }
 
   @Test
-  void exception(){
+  void exception() {
     var state = TestStateBuilder.ofWalking().streetEdge().build();
     var iterator = state.listBackEdges().iterator();
     var edges = ImmutableList.copyOf(iterator);
