@@ -26,6 +26,7 @@ class StreetNearbyStopFinderMultipleLinksTest extends GraphRoutingTest {
 
   @BeforeEach
   protected void setUp() throws Exception {
+    // TODO this could be reimplemented to use StreetModelForTest
     modelOf(
       new Builder() {
         @Override
