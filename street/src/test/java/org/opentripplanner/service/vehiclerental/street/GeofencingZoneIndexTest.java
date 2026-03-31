@@ -3,12 +3,12 @@ package org.opentripplanner.service.vehiclerental.street;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner._support.geometry.Polygons;
+import org.opentripplanner.street.geometry.Polygons;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 
 class GeofencingZoneIndexTest {
