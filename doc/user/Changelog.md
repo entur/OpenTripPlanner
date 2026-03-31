@@ -14,6 +14,8 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - fix: Introduce stable order for fareZones (tariffZones) [#7434](https://github.com/opentripplanner/OpenTripPlanner/pull/7434)
 - Prevent long routes mistakenly getting grouped across service-date [#7452](https://github.com/opentripplanner/OpenTripPlanner/pull/7452)
 - Migrate away from deprecated FeedScopedId.parse() [#7457](https://github.com/opentripplanner/OpenTripPlanner/pull/7457)
+- Expose GTFS feed version in the GTFS GraphQL API [#7445](https://github.com/opentripplanner/OpenTripPlanner/pull/7445)
+- Fix MC Raptor Pareto comparator performance regression [#7440](https://github.com/opentripplanner/OpenTripPlanner/pull/7440)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
