@@ -18,7 +18,7 @@ class TestCaseBuilder {
   }
 
   TestCaseBuilder points(int... stops) {
-    points.add(RaptorViaLocation.passThrough("PT").addPassThroughStops(stops).build());
+    points.add(RaptorViaLocation.passThrough("PT").addStop(stops).build());
     return this;
   }
 

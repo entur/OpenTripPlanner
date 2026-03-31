@@ -85,7 +85,7 @@ class J06_TransitAndTransferArrivalAtViaConnectionStopTest implements RaptorTest
       .searchWindow(Duration.ofMinutes(10))
       .timetable(true)
       .addViaLocation(
-        RaptorViaLocation.via("D→F").addViaTransfer(STOP_D, transfer(STOP_F, D1_m)).build()
+        RaptorViaLocation.viaVisit("D→F").addTransfer(STOP_D, transfer(STOP_F, D1_m)).build()
       );
 
     assertEquals(

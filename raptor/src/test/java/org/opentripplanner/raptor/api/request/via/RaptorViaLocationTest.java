@@ -25,15 +25,15 @@ class RaptorViaLocationTest implements RaptorTestConstants {
   private static final int TX_DURATION = D30_s;
   private static final TestTransfer TRANSFER = TestTransfer.transfer(STOP_C, TX_DURATION, TX_C1);
 
-  private final RaptorViaLocation subject = RaptorViaLocation.via(VIA_LABEL, MINIMUM_WAIT_TIME)
-    .addViaTransfer(STOP_B, TRANSFER)
-    .addViaStop(STOP_A)
+  private final RaptorViaLocation subject = RaptorViaLocation.viaVisit(VIA_LABEL, MINIMUM_WAIT_TIME)
+    .addTransfer(STOP_B, TRANSFER)
+    .addStop(STOP_A)
     .build();
 
   private final RaptorViaLocation subjectPassThrough = RaptorViaLocation.passThrough(
     PASS_THROUGH_LABEL
   )
-    .addPassThroughStop(STOP_D)
+    .addStop(STOP_D)
     .build();
 
   private final AbstractViaConnection transferConnection = subject
@@ -169,14 +169,14 @@ class RaptorViaLocationTest implements RaptorTestConstants {
     boolean expected,
     String description
   ) {
-    var subject = RaptorViaLocation.via("Subject")
-      .addViaTransfer(STOP_A, new TestTransfer(STOP_B, TX_DURATION, TX_C1))
+    var subject = RaptorViaLocation.viaVisit("Subject")
+      .addTransfer(STOP_A, new TestTransfer(STOP_B, TX_DURATION, TX_C1))
       .build()
       .connections()
       .getFirst();
 
-    var candidate = RaptorViaLocation.via("Candidate")
-      .addViaTransfer(fromStop, new TestTransfer(toStop, minWaitTime, c1))
+    var candidate = RaptorViaLocation.viaVisit("Candidate")
+      .addTransfer(fromStop, new TestTransfer(toStop, minWaitTime, c1))
       .build()
       .connections()
       .getFirst();
@@ -187,9 +187,9 @@ class RaptorViaLocationTest implements RaptorTestConstants {
   @Test
   void asBitSet() {
     var subject = RaptorViaLocation.passThrough(VIA_LABEL)
-      .addPassThroughStop(2)
-      .addPassThroughStop(7)
-      .addPassThroughStop(13)
+      .addStop(2)
+      .addStop(7)
+      .addStop(13)
       .build();
 
     var bitSet = subject.asBitSet();
@@ -206,11 +206,11 @@ class RaptorViaLocationTest implements RaptorTestConstants {
 
   @Test
   void testEqualsAndHAshCode() {
-    var viaTxConnection = RaptorViaLocation.via("SameAsVia", MINIMUM_WAIT_TIME)
-      .addViaTransfer(STOP_B, TRANSFER)
+    var viaTxConnection = RaptorViaLocation.viaVisit("SameAsVia", MINIMUM_WAIT_TIME)
+      .addTransfer(STOP_B, TRANSFER)
       .build();
-    var viaStopConnections = RaptorViaLocation.via("SameAsVia", MINIMUM_WAIT_TIME)
-      .addViaStop(STOP_A)
+    var viaStopConnections = RaptorViaLocation.viaVisit("SameAsVia", MINIMUM_WAIT_TIME)
+      .addStop(STOP_A)
       .build();
 
     var sameTransferConnection = viaTxConnection.connections().get(0);

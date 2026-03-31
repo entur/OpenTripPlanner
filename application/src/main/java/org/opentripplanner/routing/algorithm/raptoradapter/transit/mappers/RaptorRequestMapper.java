@@ -234,16 +234,16 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
     if (input.isPassThroughLocation()) {
       var builder = RaptorViaLocation.passThrough(input.label());
       for (int stopIndex : lookUpStopIndex.lookupStopLocationIndexes(input.stopLocationIds())) {
-        builder.addPassThroughStop(stopIndex);
+        builder.addStop(stopIndex);
       }
       return builder.build();
     }
     // Visit Via location
     else {
       var viaStops = new HashSet<Integer>();
-      var builder = RaptorViaLocation.via(input.label(), input.minimumWaitTime());
+      var builder = RaptorViaLocation.viaVisit(input.label(), input.minimumWaitTime());
       for (int stopIndex : lookUpStopIndex.lookupStopLocationIndexes(input.stopLocationIds())) {
-        builder.addViaStop(stopIndex);
+        builder.addStop(stopIndex);
         viaStops.add(stopIndex);
       }
       if (input.coordinate().isPresent()) {
@@ -267,7 +267,7 @@ public class RaptorRequestMapper<T extends RaptorTripSchedule> {
             if (it.stop() == it.fromStopIndex() && viaStops.contains(it.stop())) {
               continue;
             }
-            builder.addViaTransfer(it.fromStopIndex(), it);
+            builder.addTransfer(it.fromStopIndex(), it);
           }
         }
       }

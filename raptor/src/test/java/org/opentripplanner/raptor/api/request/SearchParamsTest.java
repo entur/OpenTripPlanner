@@ -77,10 +77,10 @@ class SearchParamsTest {
   void viaAndPassThrough() {
     var noVia = searchParamBuilder().buildSearchParam();
     var via = searchParamBuilder()
-      .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
+      .addViaLocation(RaptorViaLocation.viaVisit("Via").addStop(5).build())
       .buildSearchParam();
     var passThrough = searchParamBuilder()
-      .addViaLocation(RaptorViaLocation.passThrough("Via").addPassThroughStop(5).build())
+      .addViaLocation(RaptorViaLocation.passThrough("Via").addStop(5).build())
       .buildSearchParam();
 
     assertFalse(noVia.isVisitViaSearch());
@@ -107,8 +107,8 @@ class SearchParamsTest {
         .addEgressPaths(walk(7, 30))
         .addViaLocations(
           List.of(
-            RaptorViaLocation.via("Via").addViaStop(5).build(),
-            RaptorViaLocation.passThrough("PassThrough").addPassThroughStop(5).build()
+            RaptorViaLocation.viaVisit("Via").addStop(5).build(),
+            RaptorViaLocation.passThrough("PassThrough").addStop(5).build()
           )
         )
         .build()
@@ -128,7 +128,7 @@ class SearchParamsTest {
       searchParamBuilder()
         .addAccessPaths(walk(1, 30).withViaLocationsVisited(-1))
         .addEgressPaths(walk(7, 30))
-        .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
+        .addViaLocation(RaptorViaLocation.viaVisit("Via").addStop(5).build())
         .build()
     );
     assertEquals("Access cannot have negative via visits: -1", ex.getMessage());
@@ -140,7 +140,7 @@ class SearchParamsTest {
       searchParamBuilder()
         .addAccessPaths(walk(1, 30).withViaLocationsVisited(2))
         .addEgressPaths(walk(7, 30))
-        .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
+        .addViaLocation(RaptorViaLocation.viaVisit("Via").addStop(5).build())
         .build()
     );
     assertEquals("Access visits 2 via locations, but only 1 are defined", ex.getMessage());
@@ -152,7 +152,7 @@ class SearchParamsTest {
       searchParamBuilder()
         .addAccessPaths(walk(1, 30))
         .addEgressPaths(walk(7, 30).withViaLocationsVisited(2))
-        .addViaLocation(RaptorViaLocation.via("Via").addViaStop(5).build())
+        .addViaLocation(RaptorViaLocation.viaVisit("Via").addStop(5).build())
         .build()
     );
     assertEquals("Egress visits 2 via locations, but only 1 are defined", ex.getMessage());

@@ -57,8 +57,8 @@ public final class RaptorViaLocation {
    * alight transit at the given stop, on-board visits do not count, see
    * {@link #passThrough(String)}.
    */
-  public static ViaVisitBuilder via(@Nullable String label) {
-    return via(label, MIN_WAIT_TIME);
+  public static ViaVisitBuilder viaVisit(@Nullable String label) {
+    return viaVisit(label, MIN_WAIT_TIME);
   }
 
   /**
@@ -66,7 +66,7 @@ public final class RaptorViaLocation {
    * before continuing. To visit a stop, the path must board or alight transit at the given stop,
    * on-board visits do not count, see {@link #passThrough(String)}.
    */
-  public static ViaVisitBuilder via(@Nullable String label, Duration minimumWaitTime) {
+  public static ViaVisitBuilder viaVisit(@Nullable String label, Duration minimumWaitTime) {
     return new ViaVisitBuilder(label, minimumWaitTime);
   }
 
@@ -184,11 +184,11 @@ public final class RaptorViaLocation {
       this.minimumWaitTime = minimumWaitTime;
     }
 
-    public ViaVisitBuilder addViaStop(int stop) {
+    public ViaVisitBuilder addStop(int stop) {
       return addConnection(stop, null);
     }
 
-    public ViaVisitBuilder addViaTransfer(int fromStop, RaptorTransfer transfer) {
+    public ViaVisitBuilder addTransfer(int fromStop, RaptorTransfer transfer) {
       return addConnection(fromStop, transfer);
     }
 
@@ -203,13 +203,13 @@ public final class RaptorViaLocation {
       super(label);
     }
 
-    public PassThroughBuilder addPassThroughStop(int stop) {
+    public PassThroughBuilder addStop(int stop) {
       this.connections.add(new BuilderStopAndTransfer(stop, null));
       return this;
     }
 
-    public PassThroughBuilder addPassThroughStops(int... stops) {
-      IntStream.of(stops).forEach(this::addPassThroughStop);
+    public PassThroughBuilder addStop(int... stops) {
+      IntStream.of(stops).forEach(this::addStop);
       return this;
     }
 
