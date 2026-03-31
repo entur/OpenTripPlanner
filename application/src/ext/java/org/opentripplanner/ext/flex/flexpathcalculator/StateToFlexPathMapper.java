@@ -55,7 +55,7 @@ class StateToFlexPathMapper {
     if (geom == null) {
       return null;
     } else {
-      return e.getGeometry().reverse();
+      return geom.reverse();
     }
   }
 }
