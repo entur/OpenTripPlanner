@@ -1,12 +1,10 @@
 package org.opentripplanner.routing.graphfinder;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.search.state.State;
@@ -35,14 +33,8 @@ public class NearbyStop implements Comparable<NearbyStop> {
    * away it is and the geometry of the path leading up to the given State.
    */
   public static NearbyStop nearbyStopForState(State state, FeedScopedId stopId) {
-    double effectiveWalkDistance = 0.0;
-    var graphPath = new GraphPath<>(state);
-    var edges = new ArrayList<Edge>();
-    for (Edge edge : graphPath.edges) {
-      effectiveWalkDistance += edge.getEffectiveWalkDistance();
-      edges.add(edge);
-    }
-    return new NearbyStop(stopId, effectiveWalkDistance, edges, state);
+    var result = ChronologicalGraphPath.of(state);
+    return new NearbyStop(stopId, result.effectiveWalkDistance(), result.edges(), state);
   }
 
   /**
