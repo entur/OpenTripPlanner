@@ -27,7 +27,7 @@ public class StateEditorTest {
     stateEditor.setTimeSeconds(0);
     stateEditor.incrementTimeInMilliseconds(999999999);
 
-    assertEquals(999999999, stateEditor.child.getTimeMilliseconds());
+    assertEquals(999999999, stateEditor.makeState().getTimeMilliseconds());
   }
 
   @Test
