@@ -60,6 +60,13 @@ public class SchemaFactoryTest {
     );
     assertEquals(maxTransfers, defaultMaxTransfers.getValue().intValue());
 
+    var defaultRelaxCoefficient = (FloatValue) getDefaultValueForField(
+      schema,
+      "LinearCostFunctionInput",
+      "coefficient"
+    );
+    assertEquals(1.0, defaultRelaxCoefficient.getValue().floatValue());
+
     var defaultNumberOfItineraries = (IntValue) getDefaultValueForArgument(
       schema,
       "planConnection",
