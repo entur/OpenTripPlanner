@@ -46,7 +46,7 @@ public class StateEditor {
    */
   public StateEditor(Vertex v, StreetSearchRequest request) {
     this.original = new State(v, request);
-    this.stateData = original.stateData.clone();
+    this.stateData = original.stateData;
     this.backState = null;
     this.backEdge = null;
     this.vertex = v;
@@ -57,7 +57,7 @@ public class StateEditor {
 
   public StateEditor(State parent, Edge e) {
     this.original = parent;
-    this.stateData = parent.stateData.clone();
+    this.stateData = parent.stateData;
     this.backState = parent;
     this.backEdge = e;
     this.time_ms = parent.time_ms;
