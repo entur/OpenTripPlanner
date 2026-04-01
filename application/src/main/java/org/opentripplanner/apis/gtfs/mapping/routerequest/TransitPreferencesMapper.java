@@ -47,14 +47,16 @@ public class TransitPreferencesMapper {
     var relax = transitArgs.getGraphQLRelaxTransitGroupPriority();
     if (relax != null) {
       Cost constant = Cost.ZERO;
-      Double ratio = 1.0;
+      Double coefficient = 1.0;
       if (relax.getGraphQLConstant() != null) {
         constant = relax.getGraphQLConstant();
       }
-      if (relax.getGraphQLRatio() != null) {
-        ratio = relax.getGraphQLRatio();
+      if (relax.getGraphQLCoefficient() != null) {
+        coefficient = relax.getGraphQLCoefficient();
       }
-      transitPreferences.withRelaxTransitGroupPriority(CostLinearFunction.of(constant, ratio));
+      transitPreferences.withRelaxTransitGroupPriority(
+        CostLinearFunction.of(constant, coefficient)
+      );
     }
 
     var board = transitArgs.getGraphQLBoard();

@@ -1623,6 +1623,35 @@ public class GraphQLTypes {
     }
   }
 
+  public static class GraphQLLinearCostFunctionInput {
+
+    private Double coefficient;
+    private org.opentripplanner.core.model.basic.Cost constant;
+
+    public GraphQLLinearCostFunctionInput(Map<String, Object> args) {
+      if (args != null) {
+        this.coefficient = (Double) args.get("coefficient");
+        this.constant = (org.opentripplanner.core.model.basic.Cost) args.get("constant");
+      }
+    }
+
+    public Double getGraphQLCoefficient() {
+      return this.coefficient;
+    }
+
+    public org.opentripplanner.core.model.basic.Cost getGraphQLConstant() {
+      return this.constant;
+    }
+
+    public void setGraphQLCoefficient(Double coefficient) {
+      this.coefficient = coefficient;
+    }
+
+    public void setGraphQLConstant(org.opentripplanner.core.model.basic.Cost constant) {
+      this.constant = constant;
+    }
+  }
+
   public static class GraphQLLocalDateRangeInput {
 
     private java.time.LocalDate end;
@@ -4596,35 +4625,6 @@ public class GraphQLTypes {
     UTURN_RIGHT,
   }
 
-  public static class GraphQLRelaxCostFunctionInput {
-
-    private org.opentripplanner.core.model.basic.Cost constant;
-    private Double ratio;
-
-    public GraphQLRelaxCostFunctionInput(Map<String, Object> args) {
-      if (args != null) {
-        this.constant = (org.opentripplanner.core.model.basic.Cost) args.get("constant");
-        this.ratio = (Double) args.get("ratio");
-      }
-    }
-
-    public org.opentripplanner.core.model.basic.Cost getGraphQLConstant() {
-      return this.constant;
-    }
-
-    public Double getGraphQLRatio() {
-      return this.ratio;
-    }
-
-    public void setGraphQLConstant(org.opentripplanner.core.model.basic.Cost constant) {
-      this.constant = constant;
-    }
-
-    public void setGraphQLRatio(Double ratio) {
-      this.ratio = ratio;
-    }
-  }
-
   public static class GraphQLRouteAlertsArgs {
 
     private List<GraphQLRouteAlertType> types;
@@ -5444,7 +5444,7 @@ public class GraphQLTypes {
     private GraphQLAlightPreferencesInput alight;
     private GraphQLBoardPreferencesInput board;
     private List<GraphQLTransitFilterInput> filters;
-    private GraphQLRelaxCostFunctionInput relaxTransitGroupPriority;
+    private GraphQLLinearCostFunctionInput relaxTransitGroupPriority;
     private GraphQLTimetablePreferencesInput timetable;
     private GraphQLTransferPreferencesInput transfer;
 
@@ -5457,7 +5457,7 @@ public class GraphQLTypes {
             .map(o -> o == null ? null : new GraphQLTransitFilterInput(o))
             .collect(Collectors.toList());
         }
-        this.relaxTransitGroupPriority = new GraphQLRelaxCostFunctionInput(
+        this.relaxTransitGroupPriority = new GraphQLLinearCostFunctionInput(
           (Map<String, Object>) args.get("relaxTransitGroupPriority")
         );
         this.timetable = new GraphQLTimetablePreferencesInput(
@@ -5481,7 +5481,7 @@ public class GraphQLTypes {
       return this.filters;
     }
 
-    public GraphQLRelaxCostFunctionInput getGraphQLRelaxTransitGroupPriority() {
+    public GraphQLLinearCostFunctionInput getGraphQLRelaxTransitGroupPriority() {
       return this.relaxTransitGroupPriority;
     }
 
@@ -5506,7 +5506,7 @@ public class GraphQLTypes {
     }
 
     public void setGraphQLRelaxTransitGroupPriority(
-      GraphQLRelaxCostFunctionInput relaxTransitGroupPriority
+      GraphQLLinearCostFunctionInput relaxTransitGroupPriority
     ) {
       this.relaxTransitGroupPriority = relaxTransitGroupPriority;
     }
