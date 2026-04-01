@@ -79,7 +79,7 @@ public class State implements AStarState<State, Edge, Vertex> {
     this.time_ms = startTime.toEpochMilli();
   }
 
-  State(
+  public State(
     StreetSearchRequest request,
     double weight,
     Vertex vertex,
