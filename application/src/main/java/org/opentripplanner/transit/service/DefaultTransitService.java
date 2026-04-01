@@ -46,7 +46,6 @@ import org.opentripplanner.transit.model.filter.transit.StopLocationMatcherFacto
 import org.opentripplanner.transit.model.filter.transit.TripMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateMatcherFactory;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -422,7 +421,7 @@ public class DefaultTransitService implements TransitEditorService {
     StopLocation stop,
     Instant startTime,
     Duration timeRange,
-    int numberOfDepartures,
+    int numberOfDeparturesPerPattern,
     ArrivalDeparture arrivalDeparture,
     boolean includeCancelledTrips
   ) {
@@ -431,10 +430,11 @@ public class DefaultTransitService implements TransitEditorService {
       stop,
       startTime,
       timeRange,
-      numberOfDepartures,
+      numberOfDeparturesPerPattern,
       arrivalDeparture,
       includeCancelledTrips,
-      TripTimeOnDate.compareByDeparture()
+      TripTimeOnDate.compareByDeparture(),
+      null
     );
   }
 
@@ -460,7 +460,7 @@ public class DefaultTransitService implements TransitEditorService {
     TripPattern pattern,
     Instant startTime,
     Duration timeRange,
-    int numberOfDepartures,
+    int numberOfDeparturesPerPattern,
     ArrivalDeparture arrivalDeparture,
     boolean includeCancellations
   ) {
@@ -470,7 +470,7 @@ public class DefaultTransitService implements TransitEditorService {
       pattern,
       startTime,
       timeRange,
-      numberOfDepartures,
+      numberOfDeparturesPerPattern,
       arrivalDeparture,
       includeCancellations
     );
@@ -719,11 +719,6 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public List<TransitMode> findTransitModes(StopLocation stop) {
     return sortByOccurrenceAndReduce(getPatternModesOfStop(stop)).toList();
-  }
-
-  @Override
-  public Deduplicator getDeduplicator() {
-    return timetableRepository.getDeduplicator();
   }
 
   @Override
