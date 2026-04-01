@@ -1,15 +1,11 @@
 package org.opentripplanner.raptor.api.request.via;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
-import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.utils.lang.IntUtils;
-import org.opentripplanner.utils.time.DurationUtils;
 
 /**
  * Defines a via location which Raptor will force the path through. The concrete location is
@@ -24,25 +20,15 @@ public final class RaptorViaLocation {
   private static final Duration MIN_WAIT_TIME = Duration.ZERO;
 
   private final String label;
-  private final boolean passThroughSearch;
-  private final int minimumWaitTime;
   private final List<AbstractViaConnection> connections;
 
-  private RaptorViaLocation(
-    String label,
-    boolean passThroughSearch,
-    Duration minimumWaitTime,
-    List<BuilderStopAndTransfer> connections
-  ) {
+  RaptorViaLocation(String label, List<AbstractViaConnection> connections) {
     this.label = label;
-    this.passThroughSearch = passThroughSearch;
-    this.minimumWaitTime = IntUtils.requireInRange(
-      (int) minimumWaitTime.toSeconds(),
-      (int) MIN_WAIT_TIME.toSeconds(),
-      (int) MAX_WAIT_TIME.toSeconds(),
-      "minimumWaitTime"
-    );
-    this.connections = mapConnections(connections);
+    this.connections = connections;
+
+    if (connections.isEmpty()) {
+      throw new IllegalArgumentException("At least on connection must exist!");
+    }
   }
 
   /**
@@ -75,12 +61,8 @@ public final class RaptorViaLocation {
     return label;
   }
 
-  public boolean isPassThroughSearch() {
-    return passThroughSearch;
-  }
-
-  public int minimumWaitTime() {
-    return minimumWaitTime;
+  private boolean isPassThroughSearch() {
+    return connections.stream().anyMatch(it -> it instanceof RaptorPassThroughViaConnection);
   }
 
   public List<AbstractViaConnection> connections() {
@@ -98,8 +80,8 @@ public final class RaptorViaLocation {
       .collect(BitSet::new, BitSet::set, BitSet::or);
   }
 
-  /// Compare all pairs to check for duplicates and non-optimal connections
-  /// Avoid usage of this method because it can have a really bad performance.
+  /// Compare all pairs to check for duplicates and non-optimal connections Avoid usage of this
+  /// method because it can have a really bad performance.
   public void validateDuplicateConnections() {
     for (int i = 0; i < connections.size(); ++i) {
       var a = connections.get(i);
@@ -131,12 +113,9 @@ public final class RaptorViaLocation {
 
   public String toString(RaptorStopNameResolver stopNameResolver) {
     var buf = new StringBuilder(getClass().getSimpleName()).append('{');
-    buf.append(isPassThroughSearch() ? "pass-through " : "via ");
+    buf.append(isPassThroughSearch() ? "pass-through " : "via-visit ");
     if (label != null) {
       buf.append(label).append(" ");
-    }
-    if (minimumWaitTime > MIN_WAIT_TIME.toSeconds()) {
-      buf.append("wait ").append(DurationUtils.durationToStr(minimumWaitTime)).append(" ");
     }
     buf
       .append(connections.size() <= 10 ? ": " : "(10/" + connections.size() + "): ")
@@ -150,78 +129,12 @@ public final class RaptorViaLocation {
     return buf.append("}").toString();
   }
 
-  private List<AbstractViaConnection> mapConnections(List<BuilderStopAndTransfer> connections) {
-    if (connections.isEmpty()) {
-      throw new IllegalArgumentException("At least one connection is required.");
-    }
-    return connections
-      .stream()
-      .map(it -> AbstractViaConnection.of(this, it.fromStop, it.transfer))
-      .toList();
+  static int validateMinimumWaitTime(Duration minimumWaitTime) {
+    return IntUtils.requireInRange(
+      (int) minimumWaitTime.toSeconds(),
+      (int) MIN_WAIT_TIME.toSeconds(),
+      (int) MAX_WAIT_TIME.toSeconds(),
+      "minimumWaitTime"
+    );
   }
-
-  public abstract static sealed class AbstractBuilder<T extends AbstractBuilder> {
-
-    protected final String label;
-    protected final List<BuilderStopAndTransfer> connections = new ArrayList<>();
-
-    public AbstractBuilder(String label) {
-      this.label = label;
-    }
-
-    T addConnection(int stop, @Nullable RaptorTransfer transfer) {
-      this.connections.add(new BuilderStopAndTransfer(stop, transfer));
-      return (T) this;
-    }
-  }
-
-  public static final class ViaVisitBuilder extends AbstractBuilder<ViaVisitBuilder> {
-
-    private final Duration minimumWaitTime;
-
-    public ViaVisitBuilder(String label, Duration minimumWaitTime) {
-      super(label);
-      this.minimumWaitTime = minimumWaitTime;
-    }
-
-    public ViaVisitBuilder addStop(int stop) {
-      return addConnection(stop, null);
-    }
-
-    public ViaVisitBuilder addTransfer(int fromStop, RaptorTransfer transfer) {
-      return addConnection(fromStop, transfer);
-    }
-
-    public RaptorViaLocation build() {
-      return new RaptorViaLocation(label, false, minimumWaitTime, connections);
-    }
-  }
-
-  public static final class PassThroughBuilder extends AbstractBuilder<PassThroughBuilder> {
-
-    public PassThroughBuilder(String label) {
-      super(label);
-    }
-
-    public PassThroughBuilder addStop(int stop) {
-      this.connections.add(new BuilderStopAndTransfer(stop, null));
-      return this;
-    }
-
-    public PassThroughBuilder addStop(int... stops) {
-      IntStream.of(stops).forEach(this::addStop);
-      return this;
-    }
-
-    public RaptorViaLocation build() {
-      return new RaptorViaLocation(label, true, Duration.ZERO, connections);
-    }
-  }
-
-  /**
-   * Use internally to store connection data, before creating the connection objects. If is
-   * needed to create the bidirectional relationship between {@link RaptorViaLocation} and
-   * {@link AbstractViaConnection}.
-   */
-  private static record BuilderStopAndTransfer(int fromStop, @Nullable RaptorTransfer transfer) {}
 }

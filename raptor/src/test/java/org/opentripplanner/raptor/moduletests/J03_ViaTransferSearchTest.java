@@ -90,9 +90,7 @@ class J03_ViaTransferSearchTest {
       .searchParams()
       .addAccessPaths(walk(STOP_A, D30_s))
       .addViaLocation(
-        RaptorViaLocation.viaVisit("B")
-          .addTransfer(STOP_B, TestTransfer.transfer(STOP_B, D1_m))
-          .build()
+        viaVisit("B").addTransfer(STOP_B, TestTransfer.transfer(STOP_B, D1_m)).build()
       )
       .addEgressPaths(walk(STOP_D, D30_s));
 
@@ -127,9 +125,7 @@ class J03_ViaTransferSearchTest {
     requestBuilder
       .searchParams()
       .addAccessPaths(walk(STOP_A, D30_s))
-      .addViaLocation(
-        viaVisit("BxC").addTransfer(STOP_B, TestTransfer.transfer(STOP_C, D1_m)).build()
-      )
+      .addViaLocation(viaVisit("BxC").addTransfer(STOP_B, transfer(STOP_C, D1_m)).build())
       .addEgressPaths(walk(STOP_E, D30_s));
 
     var result = raptorService.route(requestBuilder.build(), data);

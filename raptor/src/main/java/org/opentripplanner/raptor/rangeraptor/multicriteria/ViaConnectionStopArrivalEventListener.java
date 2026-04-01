@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
+import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 import static org.opentripplanner.utils.collection.ListUtils.requireAtLeastNElements;
 
 import gnu.trove.map.TIntObjectMap;
@@ -7,14 +8,20 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.request.via.AbstractViaConnection;
+import org.opentripplanner.raptor.api.request.via.RaptorPassThroughViaConnection;
+import org.opentripplanner.raptor.api.request.via.RaptorTransferViaConnection;
+import org.opentripplanner.raptor.api.request.via.RaptorVisitStopViaConnection;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.transit.ViaConnections;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
+import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 
 /**
@@ -36,6 +43,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   private final List<AbstractViaConnection> connections;
   private final McStopArrivals<T> next;
   private final List<McStopArrival<T>> transfersCache = new ArrayList<>();
+  private final Function<T, RaptorTripScheduleReference> tripInfoProvider;
 
   /**
    * @param publishTransfersEventHandler A callback used to publish via-transfer-connections. This
@@ -46,12 +54,14 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     McStopArrivalFactory<T> stopArrivalFactory,
     List<AbstractViaConnection> connections,
     McStopArrivals<T> next,
-    Consumer<Runnable> publishTransfersEventHandler
+    Consumer<Runnable> publishTransfersEventHandler,
+    Function<T, RaptorTripScheduleReference> tripInfoProvider
   ) {
     this.stopArrivalFactory = stopArrivalFactory;
     this.connections = requireAtLeastNElements(connections, 1);
     this.next = next;
-    publishTransfersEventHandler.accept(this::publishTransfers);
+    this.tripInfoProvider = tripInfoProvider;
+    publishTransfersEventHandler.accept(this::applyTransfers);
   }
 
   /**
@@ -64,73 +74,95 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     @Nullable ViaConnections viaConnections,
     McStopArrivalFactory<T> stopArrivalFactory,
     McStopArrivals<T> nextLegStopArrivals,
-    Consumer<Runnable> onTransitComplete
+    Consumer<Runnable> onTransitComplete,
+    Function<T, RaptorTripScheduleReference> tripInfoProvider
   ) {
     var map = new TIntObjectHashMap<ParetoSetEventListener<ArrivalView<T>>>();
     if (viaConnections == null) {
       return map;
     }
     TIntObjectMap<List<AbstractViaConnection>> connectionsByStop = viaConnections.byFromStop();
-    for (var stop : connectionsByStop.keys()) {
+    for (int stop : connectionsByStop.keys()) {
       var connections = connectionsByStop.get(stop);
-      ParetoSetEventListener<ArrivalView<T>> l = new ViaConnectionStopArrivalEventListener<>(
+      var listener = new ViaConnectionStopArrivalEventListener<>(
         stopArrivalFactory,
         connections,
         nextLegStopArrivals,
-        onTransitComplete
+        onTransitComplete,
+        tripInfoProvider
       );
-      map.put(stop, l);
+      map.put(stop, listener);
     }
     return map;
   }
 
-  private void publishTransfers() {
+  private void applyTransfers() {
     for (var arrival : transfersCache) {
       next.addStopArrival(arrival);
     }
     transfersCache.clear();
   }
 
-  int fromStop() {
-    return connections.getFirst().fromStop();
-  }
-
   @Override
   public void notifyElementAccepted(ArrivalView<T> newElement) {
+    var e = (McStopArrival<T>) newElement;
+
     for (AbstractViaConnection c : connections) {
-      var e = (McStopArrival<T>) newElement;
-      var n = createViaStopArrival(e, c);
-      if (n != null) {
-        if (c.isTransfer()) {
-          transfersCache.add(n);
-        } else {
-          next.addStopArrival(n);
+      switch (c) {
+        case RaptorPassThroughViaConnection ignore -> {
+          continueOnSameTripInNextSegment(e);
+          continueFromSameStopArrival(e);
+        }
+        case RaptorVisitStopViaConnection visitStop -> {
+          continueFromSameStopArrival(e, visitStop);
+        }
+        case RaptorTransferViaConnection transfer -> {
+          if (e.arrivedOnBoard()) {
+            continueWithTransfer(e, transfer);
+          }
+          // Ignore arrive-on-foot + via-transfer
         }
       }
     }
   }
 
-  @Nullable
-  private McStopArrival<T> createViaStopArrival(
-    McStopArrival<T> previous,
-    AbstractViaConnection viaConnection
-  ) {
-    if (viaConnection.isSameStop()) {
-      if (viaConnection.durationInSeconds() == 0) {
-        return previous;
-      } else {
-        return previous.addSlackToArrivalTime(viaConnection.durationInSeconds());
-      }
-    } else {
-      if (previous.arrivedOnBoard()) {
-        return stopArrivalFactory.createTransferStopArrival(
-          previous,
-          viaConnection.transfer(),
-          previous.arrivalTime() + viaConnection.durationInSeconds()
-        );
-      } else {
-        return null;
-      }
+  private void continueOnSameTripInNextSegment(ArrivalView<T> e) {
+    if (!e.arrivedBy(TRANSIT)) {
+      next.addStopArrival((McStopArrival<T>) e);
+      return;
     }
+    T trip = e.transitPath().trip();
+    var info = tripInfoProvider.apply(trip);
+
+    var boardingArrival = e.previous();
+    int passThroughStopPos = trip.findDepartureStopPosition(
+      boardingArrival.arrivalTime(),
+      e.stop()
+    );
+    var onBoardTripConstrant = new RaptorTripScheduleStopPosition(
+      info.routeIndex(),
+      info.tripScheduleIndex(),
+      passThroughStopPos
+    );
+
+    next.addOnBoardTripArrival(boardingArrival, e.stop(), onBoardTripConstrant);
+  }
+
+  private void continueFromSameStopArrival(
+    McStopArrival<T> arrival,
+    RaptorVisitStopViaConnection via
+  ) {
+    int d = via.minimumWaitTime();
+    continueFromSameStopArrival(d == 0 ? arrival : arrival.addSlackToArrivalTime(d));
+  }
+
+  private void continueFromSameStopArrival(McStopArrival<T> arrival) {
+    next.addStopArrival(arrival);
+  }
+
+  private void continueWithTransfer(McStopArrival<T> from, RaptorTransferViaConnection via) {
+    int arrivalTime = from.arrivalTime() + via.durationInSeconds();
+    var to = stopArrivalFactory.createTransferStopArrival(from, via.transfer(), arrivalTime);
+    transfersCache.add(to);
   }
 }

@@ -3,7 +3,7 @@ package org.opentripplanner.raptor.api.request.via;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
@@ -14,7 +14,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
-import org.opentripplanner.raptor.spi.RaptorConstants;
 
 class RaptorViaLocationTest implements RaptorTestConstants {
 
@@ -36,31 +35,28 @@ class RaptorViaLocationTest implements RaptorTestConstants {
     .addStop(STOP_D)
     .build();
 
-  private final AbstractViaConnection transferConnection = subject
+  private final RaptorTransferViaConnection transferConnection = subject
     .connections()
     .stream()
-    .filter(it -> it.isTransfer())
+    .filter(it -> it instanceof RaptorTransferViaConnection)
     .findFirst()
+    .map(it -> (RaptorTransferViaConnection) it)
     .orElseThrow();
 
-  private final AbstractViaConnection stopConnection = subject
+  private final RaptorVisitStopViaConnection stopConnection = subject
     .connections()
     .stream()
-    .filter(it -> it.isSameStop())
+    .filter(it -> it instanceof RaptorVisitStopViaConnection)
     .findFirst()
+    .map(it -> (RaptorVisitStopViaConnection) it)
     .orElseThrow();
 
-  private final AbstractViaConnection passThroughStopConnection = subjectPassThrough
+  private final RaptorPassThroughViaConnection passThroughStopConnection = subjectPassThrough
     .connections()
     .stream()
     .findFirst()
+    .map(it -> (RaptorPassThroughViaConnection) it)
     .orElseThrow();
-
-  @Test
-  void passThrough() {
-    assertFalse(subject.isPassThroughSearch());
-    assertTrue(subjectPassThrough.isPassThroughSearch());
-  }
 
   @Test
   void connections() {
@@ -70,9 +66,29 @@ class RaptorViaLocationTest implements RaptorTestConstants {
   }
 
   @Test
+  void atLeastOneConnectionMustExist() {
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      RaptorViaLocation.viaVisit(VIA_LABEL, MINIMUM_WAIT_TIME).build()
+    );
+    assertEquals("At least on connection must exist!", ex.getMessage());
+  }
+
+  @Test
+  void at() {
+    var subject = RaptorViaLocation.passThrough(VIA_LABEL).addStop(STOP_A, STOP_A).build();
+    var ex = assertThrows(IllegalArgumentException.class, () ->
+      subject.validateDuplicateConnections()
+    );
+    assertEquals(
+      "All connection need to be pareto-optimal: ((stop 1)) <-> ((stop 1))",
+      ex.getMessage()
+    );
+  }
+
+  @Test
   void testToString() {
     assertEquals(
-      "RaptorViaLocation{via Via wait 23s : [(stop 2 ~ 3, 53s), (stop 1, 23s)]}",
+      "RaptorViaLocation{via-visit Via : [(transfer 2 ~ 3 53s C₁30), (stop 1 23s)]}",
       subject.toString()
     );
     assertEquals(
@@ -81,15 +97,9 @@ class RaptorViaLocationTest implements RaptorTestConstants {
     );
 
     assertEquals(
-      "RaptorViaLocation{via Via wait 23s : [(stop B ~ C, 53s), (stop A, 23s)]}",
+      "RaptorViaLocation{via-visit Via : [(transfer B ~ C 53s C₁30), (stop A 23s)]}",
       subject.toString(RaptorTestConstants::stopIndexToName)
     );
-  }
-
-  @Test
-  void minimumWaitTime() {
-    assertEquals(MINIMUM_WAIT_TIME.toSeconds(), subject.minimumWaitTime());
-    assertEquals(Duration.ZERO.toSeconds(), subjectPassThrough.minimumWaitTime());
   }
 
   @Test
@@ -107,21 +117,16 @@ class RaptorViaLocationTest implements RaptorTestConstants {
 
   @Test
   void transfer() {
-    assertNull(stopConnection.transfer());
-    assertNull(passThroughStopConnection.transfer());
     assertEquals(TRANSFER, transferConnection.transfer());
   }
 
   @Test
   void toStop() {
-    assertEquals(STOP_A, stopConnection.toStop());
-    assertEquals(STOP_D, passThroughStopConnection.toStop());
     assertEquals(STOP_C, transferConnection.toStop());
   }
 
   @Test
   void durationInSeconds() {
-    assertEquals(MINIMUM_WAIT_TIME.toSeconds(), stopConnection.durationInSeconds());
     assertEquals(
       MINIMUM_WAIT_TIME.plusSeconds(TRANSFER.durationInSeconds()).toSeconds(),
       transferConnection.durationInSeconds()
@@ -129,44 +134,38 @@ class RaptorViaLocationTest implements RaptorTestConstants {
   }
 
   @Test
+  void minimumWaitTime() {
+    assertEquals(MINIMUM_WAIT_TIME.toSeconds(), stopConnection.minimumWaitTime());
+  }
+
+  @Test
   void c1() {
-    assertEquals(RaptorConstants.ZERO, stopConnection.c1());
     assertEquals(TX_C1, transferConnection.c1());
   }
 
-  @Test
-  void isSameStop() {
-    assertTrue(stopConnection.isSameStop());
-    assertFalse(transferConnection.isSameStop());
-  }
-
-  @Test
-  void isTransfer() {
-    assertFalse(stopConnection.isTransfer());
-    assertTrue(transferConnection.isTransfer());
-  }
-
-  static List<Arguments> isBetterThanTestCases() {
+  static List<Arguments> isBetterThanViaTransferTestCases() {
     // Subject is: STOP_A, STOP_B, MIN_DURATION, C1
+    // Candidate is:
     return List.of(
-      Arguments.of(STOP_A, STOP_B, TX_DURATION, TX_C1, true, "Same"),
-      Arguments.of(STOP_C, STOP_B, TX_DURATION, TX_C1, false, "toStop differ"),
-      Arguments.of(STOP_A, STOP_C, TX_DURATION, TX_C1, false, "fromStop differ"),
-      Arguments.of(STOP_A, STOP_B, TX_DURATION + 1, TX_C1, true, "Wait time is better"),
-      Arguments.of(STOP_A, STOP_B, TX_DURATION - 1, TX_C1, false, "Wait time is worse"),
-      Arguments.of(STOP_A, STOP_B, TX_DURATION, TX_C1 + 1, true, "C1 is better"),
-      Arguments.of(STOP_A, STOP_B, TX_DURATION, TX_C1 - 1, false, "C1 is worse")
+      Arguments.of(STOP_A, STOP_B, TX_DURATION, TX_C1, true, true, "Same values"),
+      Arguments.of(STOP_C, STOP_B, TX_DURATION, TX_C1, false, false, "toStop differ"),
+      Arguments.of(STOP_A, STOP_C, TX_DURATION, TX_C1, false, false, "fromStop differ"),
+      Arguments.of(STOP_A, STOP_B, TX_DURATION + 1, TX_C1, true, false, "Duration is better"),
+      Arguments.of(STOP_A, STOP_B, TX_DURATION - 1, TX_C1, false, false, "Duration is worse"),
+      Arguments.of(STOP_A, STOP_B, TX_DURATION, TX_C1 + 1, true, false, "C1 is better"),
+      Arguments.of(STOP_A, STOP_B, TX_DURATION, TX_C1 - 1, false, false, "C1 is worse")
     );
   }
 
   @ParameterizedTest
-  @MethodSource("isBetterThanTestCases")
-  void isBetterThan(
+  @MethodSource("isBetterThanViaTransferTestCases")
+  void isBetterThanViaTransfer(
     int fromStop,
     int toStop,
     int minWaitTime,
     int c1,
-    boolean expected,
+    boolean expectedIsBetter,
+    boolean expectedEquals,
     String description
   ) {
     var subject = RaptorViaLocation.viaVisit("Subject")
@@ -181,7 +180,88 @@ class RaptorViaLocationTest implements RaptorTestConstants {
       .connections()
       .getFirst();
 
-    assertEquals(subject.isBetterOrEqual(candidate), expected, description);
+    assertEquals(subject.isBetterOrEqual(candidate), expectedIsBetter, description);
+    assertEquals(subject.equals(candidate), expectedEquals);
+
+    if (expectedEquals) {
+      assertEquals(subject.hashCode(), candidate.hashCode());
+    } else {
+      assertNotEquals(subject.hashCode(), candidate.hashCode());
+    }
+  }
+
+  static List<Arguments> isBetterThanViaStopVisitTestCases() {
+    // Subject is: STOP_A, STOP_B, MIN_DURATION, C1
+    // Candidate is:
+    return List.of(
+      Arguments.of(STOP_A, MINIMUM_WAIT_TIME, true, true, "Same values"),
+      Arguments.of(STOP_C, MINIMUM_WAIT_TIME, false, false, "fromStop differ"),
+      Arguments.of(STOP_A, MINIMUM_WAIT_TIME.plusSeconds(1), true, false, "Duration is better"),
+      Arguments.of(STOP_A, MINIMUM_WAIT_TIME.minusSeconds(1), false, false, "Duration is worse")
+    );
+  }
+
+  @ParameterizedTest
+  @MethodSource("isBetterThanViaStopVisitTestCases")
+  void isBetterThanViaStopVisit(
+    int fromStop,
+    Duration minWaitTime,
+    boolean expectedIsBetter,
+    boolean expectedEquals,
+    String description
+  ) {
+    var subject = RaptorViaLocation.viaVisit("Subject", MINIMUM_WAIT_TIME)
+      .addStop(STOP_A)
+      .build()
+      .connections()
+      .getFirst();
+
+    var candidate = RaptorViaLocation.viaVisit("Candidate", minWaitTime)
+      .addStop(fromStop)
+      .build()
+      .connections()
+      .getFirst();
+
+    assertEquals(subject.isBetterOrEqual(candidate), expectedIsBetter, description);
+    assertEquals(subject.equals(candidate), expectedEquals);
+
+    if (expectedEquals) {
+      assertEquals(subject.hashCode(), candidate.hashCode());
+    } else {
+      assertNotEquals(subject.hashCode(), candidate.hashCode());
+    }
+  }
+
+  @Test
+  void passThroughIsBetterEqualsAndHashCode() {
+    var subject = RaptorViaLocation.passThrough("Subject")
+      .addStop(STOP_A)
+      .build()
+      .connections()
+      .getFirst();
+
+    var same = RaptorViaLocation.passThrough("Same")
+      .addStop(STOP_A)
+      .build()
+      .connections()
+      .getFirst();
+
+    var diffrent = RaptorViaLocation.viaVisit("Diffrent")
+      .addStop(STOP_B)
+      .build()
+      .connections()
+      .getFirst();
+
+    assertTrue(subject.isBetterOrEqual(subject));
+    assertTrue(subject.isBetterOrEqual(same));
+    assertFalse(subject.isBetterOrEqual(diffrent));
+
+    assertTrue(subject.equals(subject));
+    assertTrue(subject.equals(same));
+    assertFalse(subject.equals(diffrent));
+
+    assertEquals(subject.hashCode(), same.hashCode());
+    assertNotEquals(subject.hashCode(), diffrent.hashCode());
   }
 
   @Test

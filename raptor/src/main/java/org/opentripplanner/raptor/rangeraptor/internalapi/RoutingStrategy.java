@@ -32,14 +32,6 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
   void prepareForTransitWith(RaptorRoute<T> route);
 
   /**
-   * First the {@link #prepareForTransitWith(RaptorRoute)} is called, then this method is
-   * called before alight and board methods are called. This allows the strategy to update
-   * the state before alighting and boarding is processed. Especially if there is a change
-   * in the state as a result of passing through a stop this method might come in handy.
-   */
-  default void prepareForNextStop(int stopIndex, int stopPos) {}
-
-  /**
    * Alight the current trip at the given stop.
    */
   void alightOnlyRegularTransferExist(
@@ -76,9 +68,7 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
   );
 
   default void registerOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
-    throw new UnsupportedOperationException(
-      "On-board access is not yet supported for this routing strategy"
-    );
+    throw createOnTripAccessNotSupportedException();
   }
 
   /**
@@ -87,20 +77,17 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
    * arrivals exist - this should be very efficient to check.
    */
   @Nullable
-  default OnBoardTripAccessPathsForRoute<T> consumeOnBoardStopArrivals(int routeIndex) {
+  default OnTripAccessArrivals<T> consumeOnTripStopArrivalsForRoute(int routeIndex) {
     return null;
   }
 
-  /**
-   * @return true if boarding successful, false otherwise
-   */
-  default boolean boardAsOnBoardAccess(
-    ArrivalView<T> prevArrival,
-    int stopPositionInPattern,
-    T trip
-  ) {
-    throw new UnsupportedOperationException(
-      "On-board access is not yet supported for this routing strategy"
+  default void boardOnTripAccess(ArrivalView<T> prevArrival, T trip, int stopPositionInPattern) {
+    throw createOnTripAccessNotSupportedException();
+  }
+
+  private static RuntimeException createOnTripAccessNotSupportedException() {
+    return new UnsupportedOperationException(
+      "On-board trio access is not yet supported for this routing strategy"
     );
   }
 }
