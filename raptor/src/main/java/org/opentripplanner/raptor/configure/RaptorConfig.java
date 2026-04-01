@@ -13,7 +13,6 @@ import org.opentripplanner.raptor.rangeraptor.RangeRaptorWorkerComposite;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContext;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContextViaSegments;
 import org.opentripplanner.raptor.rangeraptor.internalapi.Heuristics;
-import org.opentripplanner.raptor.rangeraptor.internalapi.PassThroughPointsService;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
@@ -39,21 +38,13 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
   private final RaptorEnvironment environment;
   private final RaptorTuningParameters tuningParameters;
 
-  /** The service is not final, because it depends on the request. */
-  private PassThroughPointsService passThroughPointsService = null;
-
   public RaptorConfig(RaptorTuningParameters tuningParameters, RaptorEnvironment environment) {
     this.tuningParameters = tuningParameters;
     this.environment = environment;
   }
 
   public SearchContext<T> context(RaptorTransitDataProvider<T> transit, RaptorRequest<T> request) {
-    // The passThroughPointsService is needed to create the context, so we initialize it here.
-    this.passThroughPointsService = createPassThroughPointsService(request);
-    var acceptC2AtDestination = passThroughPointsService.isNoop()
-      ? null
-      : passThroughPointsService.acceptC2AtDestination();
-    return SearchContext.of(request, tuningParameters, transit, acceptC2AtDestination).build();
+    return SearchContext.of(request, tuningParameters, transit).build();
   }
 
   public RaptorRouter<T> createRangeRaptorWithStdWorker(
@@ -104,12 +95,11 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     RangeRaptorWorker<T> worker = null;
     McStopArrivals<T> nextStopArrivals = null;
 
-    if (request.searchParams().isVisitViaSearch()) {
+    if (request.searchParams().isViaSearch()) {
       for (SearchContextViaSegments<T> ctxSegment : context.segments().reversed()) {
-        var c = new McRangeRaptorConfig<>(
-          ctxSegment,
-          passThroughPointsService
-        ).connectWithNextSegmentArrivals(nextStopArrivals);
+        var c = new McRangeRaptorConfig<>(ctxSegment).connectWithNextSegmentArrivals(
+          nextStopArrivals
+        );
         var w = createWorker(ctxSegment, c.state(), c.strategy());
         worker = RangeRaptorWorkerComposite.of(c.createPathParetoComparator(), w, worker);
         nextStopArrivals = c.stopArrivals();
@@ -117,9 +107,7 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     } else {
       // The first segment is the only segment
       var segment = context.segments().getFirst();
-      var c = new McRangeRaptorConfig<>(segment, passThroughPointsService).withHeuristics(
-        heuristics
-      );
+      var c = new McRangeRaptorConfig<>(segment).withHeuristics(heuristics);
       worker = createWorker(segment, c.state(), c.strategy());
     }
     return createRangeRaptor(context, worker);
@@ -165,13 +153,6 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
   }
 
   /* private factory methods */
-
-  private static PassThroughPointsService createPassThroughPointsService(RaptorRequest<?> request) {
-    return McRangeRaptorConfig.createPassThroughPointsService(
-      request.searchParams().isPassThroughSearch(),
-      request.searchParams().viaLocations()
-    );
-  }
 
   private RangeRaptorWorker<T> createWorker(
     SearchContextViaSegments<T> ctxSegment,

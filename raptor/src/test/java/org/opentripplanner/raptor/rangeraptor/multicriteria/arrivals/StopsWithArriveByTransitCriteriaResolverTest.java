@@ -76,7 +76,7 @@ class StopsWithArriveByTransitCriteriaResolverTest implements RaptorTestConstant
 
   @Test
   void viaTransferFromStopIsIncluded() {
-    var viaLocation = RaptorViaLocation.viaVisit("Via", Duration.ZERO)
+    var viaLocation = RaptorViaLocation.viaVisit("Via")
       .addTransfer(STOP_C, TestTransfer.transfer(STOP_D, 120))
       .build();
     var viaConnections = new ViaConnections(viaLocation.connections());
@@ -91,7 +91,7 @@ class StopsWithArriveByTransitCriteriaResolverTest implements RaptorTestConstant
 
   @Test
   void viaSameStopConnectionIsNotIncluded() {
-    var viaLocation = RaptorViaLocation.viaVisit("Via", Duration.ZERO).addStop(STOP_C).build();
+    var viaLocation = RaptorViaLocation.viaVisit("Via").addStop(STOP_C).build();
     var viaConnections = new ViaConnections(viaLocation.connections());
 
     var result = StopsWithArriveByTransitCriteriaResolver.resolve(

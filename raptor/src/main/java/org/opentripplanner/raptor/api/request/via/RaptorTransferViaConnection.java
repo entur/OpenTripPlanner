@@ -1,6 +1,10 @@
 package org.opentripplanner.raptor.api.request.via;
 
+import java.util.Objects;
+import org.opentripplanner.raptor.api.model.RaptorValueType;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
+import org.opentripplanner.raptor.spi.RaptorTransfer;
+import org.opentripplanner.utils.time.DurationUtils;
 
 /**
  * A via-connection is used to define one of the physical locations in a via location Raptor must
@@ -33,45 +37,76 @@ import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
  * {@code durationInSeconds}. The calculation of {@code c1} should include the walk time, but not
  * the min-wait-time (assuming all connections have the same minimum wait time).
  */
-public abstract sealed class AbstractViaConnection
-  permits
-    RaptorPassThroughViaConnection, RaptorTransferViaConnection, RaptorVisitStopViaConnection {
+public final class RaptorTransferViaConnection extends AbstractViaConnection {
 
-  private final int fromStop;
+  private final int minimumWaitTime;
+  private final RaptorTransfer transfer;
 
-  public AbstractViaConnection(int fromStop) {
-    this.fromStop = fromStop;
+  RaptorTransferViaConnection(int fromStop, int minimumWaitTime, RaptorTransfer transfer) {
+    super(fromStop);
+    this.transfer = Objects.requireNonNull(transfer);
+    this.minimumWaitTime = minimumWaitTime;
+  }
+
+  public RaptorTransfer transfer() {
+    return transfer;
   }
 
   /**
-   * Stop index where the connection starts.
-   * Note! The {@code toStop()} is only relevant for {@link RaptorTransferViaConnection}s.
+   * Stop index where the connection ends - only transfers have this.
    */
-  public final int fromStop() {
-    return fromStop;
+  public int toStop() {
+    return transfer.stop();
   }
 
-  /**
-   * This method is used to check that all connections are unique/provide an optimal path.
-   * The method returns {@code true} if this instance is better or equals to the given other
-   * stop with respect to being pareto-optimal.
-   */
-  public abstract boolean isBetterOrEqual(AbstractViaConnection other);
+  public int durationInSeconds() {
+    return minimumWaitTime + transfer.durationInSeconds();
+  }
+
+  int c1() {
+    return transfer.c1();
+  }
 
   @Override
-  public final String toString() {
-    return toString(Integer::toString);
-  }
-
-  public abstract String toString(RaptorStopNameResolver stopNameResolver);
-
-  /// Use this to test if the {@code other} value is of type {@code expectedType}, have the same
-  /// {@code fromStop} and the given {@code test} is {@code true}, if not, return {@code false}.
-  final boolean equalsTo(Object other, Class<? extends AbstractViaConnection> expectedType) {
-    if (other == null || expectedType != other.getClass()) {
+  public boolean isBetterOrEqual(AbstractViaConnection other) {
+    if (!super.equalsTo(other, getClass())) {
       return false;
     }
-    var that = (AbstractViaConnection) other;
-    return fromStop() == that.fromStop();
+    var o = (RaptorTransferViaConnection) other;
+    if (toStop() != o.toStop()) {
+      return false;
+    }
+    if (durationInSeconds() < o.durationInSeconds() || c1() < o.c1()) {
+      return true;
+    }
+    return durationInSeconds() == o.durationInSeconds() && c1() == o.c1();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (!super.equalsTo(other, getClass())) {
+      return false;
+    }
+    var o = (RaptorTransferViaConnection) other;
+    return toStop() == o.toStop() && durationInSeconds() == o.durationInSeconds() && c1() == o.c1();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(fromStop(), toStop(), durationInSeconds(), c1());
+  }
+
+  @Override
+  public final String toString(RaptorStopNameResolver stopNameResolver) {
+    return new StringBuilder("(transfer ")
+      .append(stopNameResolver.apply(fromStop()))
+      .append(" ~ ")
+      .append(stopNameResolver.apply(toStop()))
+      .append(" ")
+      .append(DurationUtils.durationToStr(durationInSeconds()))
+      .append(" ")
+      .append(RaptorValueType.C1.format(c1()))
+      .append(')')
+      .toString();
   }
 }

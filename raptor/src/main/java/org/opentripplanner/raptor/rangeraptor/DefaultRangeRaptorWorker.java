@@ -213,13 +213,12 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
 
     transitWorker.prepareForTransitWith(route);
-    var onBoardArrivals = transitWorker.consumeOnBoardStopArrivals(routeIndex);
+
+    var onBoardArrivals = transitWorker.consumeOnTripStopArrivalsForRoute(routeIndex);
 
     while (stopPositions.hasNext()) {
       int stopPos = stopPositions.next();
       int stopIndex = pattern.stopIndex(stopPos);
-
-      transitWorker.prepareForNextStop(stopIndex, stopPos);
 
       // attempt to alight if we're on board, this is done above the board search
       // so that we don't alight on first stop boarded
@@ -231,11 +230,11 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
         }
       }
       // attempt to board using on-board trip access
-      if (onBoardArrivals != null && onBoardArrivals.containsKey(stopPos)) {
+      if (onBoardArrivals != null && onBoardArrivals.arrivalExistForStopPosition(stopPos)) {
         for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
-          var boarding = arrival.subsequentBoardingConstraint();
+          var boarding = arrival.boardingConstrant();
           var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
-          transitWorker.boardAsOnBoardAccess(arrival, stopPos, trip);
+          transitWorker.boardOnTripAccess(arrival.accessStopArrival(), trip, stopPos);
         }
       }
 
