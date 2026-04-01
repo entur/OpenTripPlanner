@@ -64,6 +64,35 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
   }
 
   @Test
+  void filterAwayLongTravelTimeWithoutWaitWithFlexItinerary() {
+    // Given: a direct flex itinerary with high cost - does not have any effect on filtering
+    var flex1 = newItinerary(A, 6).flex(6, 8, E).build(300);
+
+    // Given: a direct flex itinerary with low cost - transit with clearly higher cost are removed
+    var flex2 = newItinerary(A).flex(6, 8, E).build(200);
+
+    // transit with almost equal cost should not be dropped
+    var i1 = newItinerary(A).bus(21, 6, 10, E).build(220);
+
+    // transit with considerably higher cost will be dropped
+    var i2 = newItinerary(A).bus(21, 6, 10, E).build(400);
+
+    // When:
+    var flagger = new RemoveTransitIfStreetOnlyIsBetter(
+      CostLinearFunction.of(Duration.ofSeconds(60), 1.2),
+      null
+    );
+    List<Itinerary> result = flagger.removeMatchesForTest(List.of(flex1, flex2, i1, i2));
+
+    // Then:
+    assertEquals(toStr(List.of(flex1, flex2, i1)), toStr(result));
+    assertEquals(
+      Cost.costOfSeconds(flex2.generalizedCost()),
+      flagger.getRemoveTransitIfStreetOnlyIsBetterResult().generalizedCostMaxLimit()
+    );
+  }
+
+  @Test
   void filterAwayLongTravelTimeWithoutWaitTimeWithCursorInfoAndWithoutDirectItinerary() {
     // transit with almost equal cost should not be dropped
     Itinerary i1 = newItinerary(A).bus(21, 6, 8, E).build(220);
