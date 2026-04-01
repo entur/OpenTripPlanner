@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 public class StateEditor {
 
   private static final Logger LOG = LoggerFactory.getLogger(StateEditor.class);
-  private State backState;
+  private final State backState;
   private final Edge backEdge;
-  private Vertex vertex;
+  private final Vertex vertex;
   private StateData stateData;
   private double weight;
   private long time_ms;
@@ -64,25 +64,10 @@ public class StateEditor {
     this.weight = parent.weight;
     this.traversalDistance_m = parent.traversalDistance_m;
 
-
     final Vertex parentVertex = parent.vertex;
-
-    if (e == null) {
-      this.backState = null;
-      this.vertex = parentVertex;
-      return;
-    }
 
     final Vertex fromVertex = e.getFromVertex();
     final Vertex toVertex = e.getToVertex();
-
-    if (fromVertex == null || toVertex == null) {
-      this.vertex = parentVertex;
-      this.stateData = original.stateData.clone();
-      LOG.error("From or to vertex is null for {}", e);
-      defectiveTraversal = true;
-      return;
-    }
 
     // Note that we use equals(), not ==, here to allow for dynamically created vertices
     if (parentVertex.equals(fromVertex)) {
@@ -101,6 +86,7 @@ public class StateEditor {
       LOG.warn("   to     vertex: {}", toVertex);
       LOG.warn("   parent vertex: {}", parentVertex);
       defectiveTraversal = true;
+      this.vertex = null;
     }
 
     if (traversingBackward != parent.getRequest().arriveBy()) {
