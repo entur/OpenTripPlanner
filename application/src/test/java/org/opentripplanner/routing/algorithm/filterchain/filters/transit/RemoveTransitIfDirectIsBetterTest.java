@@ -14,7 +14,7 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 
-public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants {
+public class RemoveTransitIfDirectIsBetterTest implements PlanTestConstants {
 
   @Test
   void filterAwayNothingIfNoWalking() {
@@ -23,7 +23,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     var i2 = newItinerary(A).rail(110, 6, 9, E).build();
 
     // When:
-    RemoveTransitIfStreetOnlyIsBetter flagger = new RemoveTransitIfStreetOnlyIsBetter(
+    RemoveTransitIfDirectIsBetter flagger = new RemoveTransitIfDirectIsBetter(
       CostLinearFunction.of(Duration.ofSeconds(200), 1.2),
       null
     );
@@ -31,7 +31,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
 
     // Then:
     assertEquals(toStr(List.of(i1, i2)), toStr(result));
-    assertEquals(flagger.getRemoveTransitIfStreetOnlyIsBetterResult(), null);
+    assertEquals(flagger.getRemoveTransitIfDirectIsBetterResult(), null);
   }
 
   @Test
@@ -49,7 +49,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     var i2 = newItinerary(A).bus(31, 6, 8, E).build(360);
 
     // When:
-    RemoveTransitIfStreetOnlyIsBetter flagger = new RemoveTransitIfStreetOnlyIsBetter(
+    RemoveTransitIfDirectIsBetter flagger = new RemoveTransitIfDirectIsBetter(
       CostLinearFunction.of(Duration.ofSeconds(60), 1.2),
       null
     );
@@ -58,7 +58,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     // Then:
     assertEquals(toStr(List.of(bicycle, walk, i1)), toStr(result));
     assertEquals(
-      flagger.getRemoveTransitIfStreetOnlyIsBetterResult().generalizedCostMaxLimit(),
+      flagger.getRemoveTransitIfDirectIsBetterResult().generalizedCostMaxLimit(),
       Cost.costOfSeconds(bicycle.generalizedCost())
     );
   }
@@ -78,7 +78,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     var i2 = newItinerary(A).bus(21, 6, 10, E).build(400);
 
     // When:
-    var flagger = new RemoveTransitIfStreetOnlyIsBetter(
+    var flagger = new RemoveTransitIfDirectIsBetter(
       CostLinearFunction.of(Duration.ofSeconds(60), 1.2),
       null
     );
@@ -88,7 +88,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     assertEquals(toStr(List.of(flex1, flex2, i1)), toStr(result));
     assertEquals(
       Cost.costOfSeconds(flex2.generalizedCost()),
-      flagger.getRemoveTransitIfStreetOnlyIsBetterResult().generalizedCostMaxLimit()
+      flagger.getRemoveTransitIfDirectIsBetterResult().generalizedCostMaxLimit()
     );
   }
 
@@ -101,7 +101,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     Itinerary i2 = newItinerary(A).bus(31, 6, 8, E).build(360);
 
     // When:
-    RemoveTransitIfStreetOnlyIsBetter flagger = new RemoveTransitIfStreetOnlyIsBetter(
+    RemoveTransitIfDirectIsBetter flagger = new RemoveTransitIfDirectIsBetter(
       CostLinearFunction.of(Duration.ofSeconds(60), 1.2),
       // This generalized cost that usually comes from the cursor should be used because it is the
       // only cost given to the filter because no direct itineraries exist.
@@ -113,7 +113,7 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
     assertEquals(toStr(List.of(i1)), toStr(result));
     // The lowest generalized cost value should be saved
     assertEquals(
-      flagger.getRemoveTransitIfStreetOnlyIsBetterResult().generalizedCostMaxLimit(),
+      flagger.getRemoveTransitIfDirectIsBetterResult().generalizedCostMaxLimit(),
       Cost.costOfSeconds(199)
     );
   }
@@ -121,8 +121,10 @@ public class RemoveTransitIfStreetOnlyIsBetterTest implements PlanTestConstants 
   @Nested
   class AccessEgressPenalties {
 
-    private static final RemoveTransitIfStreetOnlyIsBetter FLAGGER =
-      new RemoveTransitIfStreetOnlyIsBetter(CostLinearFunction.of(Duration.ZERO, 1.0), null);
+    private static final RemoveTransitIfDirectIsBetter FLAGGER = new RemoveTransitIfDirectIsBetter(
+      CostLinearFunction.of(Duration.ZERO, 1.0),
+      null
+    );
 
     @Test
     void keepBusWithLowCostAndPenalty() {

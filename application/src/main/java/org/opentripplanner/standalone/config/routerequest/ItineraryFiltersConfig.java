@@ -151,7 +151,7 @@ public class ItineraryFiltersConfig {
           )
           .asCostLinearFunction(dft.nonTransitGeneralizedCostLimit())
       )
-      .withRemoveTransitWithHigherCostThanBestOnStreetOnly(
+      .withRemoveTransitWithHigherCostThanBestDirect(
         c
           .of("removeTransitWithHigherCostThanBestOnStreetOnly")
           .since(V2_4)
@@ -169,7 +169,7 @@ public class ItineraryFiltersConfig {
             a plain walk itinerary, it will be removed even if the cost limit function would keep it.
             """
           )
-          .asCostLinearFunction(dft.removeTransitWithHigherCostThanBestOnStreetOnly())
+          .asCostLinearFunction(dft.removeTransitWithHigherCostThanBestDirect())
       )
       .withBikeRentalDistanceRatio(
         c
