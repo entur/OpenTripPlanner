@@ -120,7 +120,7 @@ public class StreetPath {
         if (change_m > 0.0) {
           elevationGained_m += change_m;
         } else {
-          elevationLost_m += change_m;
+          elevationLost_m -= change_m;
         }
       }
     }
