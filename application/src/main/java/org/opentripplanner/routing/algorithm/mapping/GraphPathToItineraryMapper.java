@@ -34,12 +34,12 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.note.StreetNote;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 
