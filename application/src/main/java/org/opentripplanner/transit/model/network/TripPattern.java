@@ -3,6 +3,7 @@ package org.opentripplanner.transit.model.network;
 import static java.util.Objects.requireNonNull;
 import static org.opentripplanner.utils.lang.ObjectUtils.requireNotInitialized;
 
+import com.google.common.collect.Iterables;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
