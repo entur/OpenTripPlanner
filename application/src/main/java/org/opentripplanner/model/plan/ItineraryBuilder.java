@@ -7,7 +7,7 @@ import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.SystemNotice;
 import org.opentripplanner.model.fare.ItineraryFare;
-import org.opentripplanner.street.search.ElevationChange;
+import org.opentripplanner.street.model.path.ElevationChange;
 
 public class ItineraryBuilder {
 

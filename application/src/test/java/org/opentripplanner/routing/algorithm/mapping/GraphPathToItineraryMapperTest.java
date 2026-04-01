@@ -16,7 +16,7 @@ import org.opentripplanner.routing.graphfinder.NoopSiteResolver;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.internal.notes.StreetNotesService;
-import org.opentripplanner.street.search.StreetPath;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;

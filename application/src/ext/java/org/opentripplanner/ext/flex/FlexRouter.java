@@ -30,7 +30,7 @@ import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
-import org.opentripplanner.street.search.StreetPath;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.api.request.TripRequest;

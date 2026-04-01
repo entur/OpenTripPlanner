@@ -1,4 +1,4 @@
-package org.opentripplanner.street.search;
+package org.opentripplanner.street.model.path;
 
 import java.time.Duration;
 import java.time.Instant;

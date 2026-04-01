@@ -20,7 +20,7 @@ import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
-import org.opentripplanner.street.search.StreetPath;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.test.support.ResourceLoader;
 
 class WalkRoutingTest {

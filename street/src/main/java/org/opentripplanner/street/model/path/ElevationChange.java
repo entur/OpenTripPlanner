@@ -1,4 +1,4 @@
-package org.opentripplanner.street.search;
+package org.opentripplanner.street.model.path;
 
 /// A DTO for expressing the gained and lost elevation. Both values are non-negative.
 public record ElevationChange(double elevationGainedMeters, double elevationLostMeters) {

@@ -10,6 +10,7 @@ import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
 import org.opentripplanner.astar.strategy.PathComparator;
 import org.opentripplanner.street.model.edge.Edge;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;

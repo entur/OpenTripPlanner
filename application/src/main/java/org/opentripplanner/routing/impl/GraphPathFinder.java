@@ -17,7 +17,7 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
-import org.opentripplanner.street.search.StreetPath;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;

@@ -49,7 +49,7 @@ import org.opentripplanner.street.model.vertex.TransitPathwayNodeVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.street.search.StreetPath;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.search.state.State;
 import processing.core.PApplet;
 import processing.core.PFont;
