@@ -9,8 +9,8 @@ import org.opentripplanner.street.search.state.State;
 
 public class TestEdge extends Edge {
   private final double weight;
-  private final double distance;
-  private final int seconds;
+  private final double distanceMeters;
+  private final int durationSeconds;
   private final I18NString name;
   private final boolean includeGeometryInPath;
   private final LineString geometry;
@@ -18,9 +18,9 @@ public class TestEdge extends Edge {
   private TestEdge(TestEdgeBuilder builder) {
     super(builder.from, builder.to);
     this.weight = builder.weight;
-    this.seconds = builder.seconds;
+    this.durationSeconds = builder.durationSeconds;
     this.name = builder.name;
-    this.distance = builder.distance;
+    this.distanceMeters = builder.distanceMeters;
     this.includeGeometryInPath = builder.includeGeometryInPath;
 
     Coordinate[] coords = new Coordinate[2];
@@ -42,14 +42,14 @@ public class TestEdge extends Edge {
   public State[] traverse(State s0) {
     var editor = s0.edit(this);
     editor.incrementWeight(weight);
-    editor.incrementTimeInSeconds(seconds);
-    editor.incrementWalkDistance(distance);
+    editor.incrementTimeInSeconds(durationSeconds);
+    editor.incrementWalkDistance(distanceMeters);
     return editor.makeStateArray();
   }
 
   @Override
   public double getDistanceMeters() {
-    return distance;
+    return distanceMeters;
   }
 
   @Override
@@ -66,8 +66,8 @@ public class TestEdge extends Edge {
     Vertex from;
     Vertex to;
     double weight = 100;
-    double distance = 100;
-    int seconds = 100;
+    double distanceMeters = 100;
+    int durationSeconds = 100;
     I18NString name = I18NString.of("TestEdge");
     public boolean includeGeometryInPath = true;
 
@@ -81,13 +81,13 @@ public class TestEdge extends Edge {
       return this;
     }
 
-    public TestEdgeBuilder withSeconds(int seconds) {
-      this.seconds = seconds;
+    public TestEdgeBuilder withDurationSeconds(int seconds) {
+      this.durationSeconds = seconds;
       return this;
     }
 
-    public TestEdgeBuilder withDistance(double distance) {
-      this.distance = distance;
+    public TestEdgeBuilder withDistanceMeters(double meters) {
+      this.distanceMeters = meters;
       return this;
     }
 

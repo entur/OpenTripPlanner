@@ -838,7 +838,7 @@ public class ShowGraph extends PApplet implements MouseWheelListener {
         // The edge list was cleared or added to while it was being drawn, no harm done.
       }
     }
-    /* Draw highlighted graph path in another color */
+    /* Draw highlighted street path in another color */
     if (highlightedStreetPath != null) {
       drawStreetPath(highlightedStreetPath);
     }

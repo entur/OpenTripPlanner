@@ -52,7 +52,7 @@ class GraphPathToItineraryMapperTest {
   }
 
   @Test
-  void testPickUpCar() {
+  void testCarRentalPickUp() {
     var mapper = mapper();
 
     var state = TestStateBuilder.ofCarRental().streetEdge().pickUpCarFromStation().build();
