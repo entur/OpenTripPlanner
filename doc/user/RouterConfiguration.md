@@ -612,7 +612,7 @@ Used to group requests when monitoring OTP.
         "intervalRelaxFactor" : 0.4
       },
       "nonTransitGeneralizedCostLimit" : "400 + 1.5x",
-      "removeTransitWithHigherCostThanBestOnStreetOnly" : "60 + 1.3x",
+      "removeTransitWithHigherCostThanBestDirect" : "60 + 1.3x",
       "bikeRentalDistanceRatio" : 0.3,
       "accessibilityScore" : true,
       "minBikeParkingDistance" : 300,
