@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 public class StateEditor {
 
   private static final Logger LOG = LoggerFactory.getLogger(StateEditor.class);
+  private final StreetSearchRequest request;
   private final State backState;
   private final Edge backEdge;
   private final Vertex vertex;
@@ -30,8 +31,6 @@ public class StateEditor {
   private double weight;
   private long time_ms;
   private double traversalDistance_m;
-
-  protected State original;
 
   private boolean spawned = false;
 
@@ -45,8 +44,8 @@ public class StateEditor {
    * The very first state in the chain before any iteration has started.
    */
   public StateEditor(Vertex v, StreetSearchRequest request) {
-    this.original = new State(v, request);
-    this.stateData = original.stateData;
+    this.request = request;
+    this.stateData = new State(v, request).stateData;
     this.backState = null;
     this.backEdge = null;
     this.vertex = v;
@@ -56,7 +55,7 @@ public class StateEditor {
   }
 
   public StateEditor(State parent, Edge e) {
-    this.original = parent;
+    this.request = parent.getRequest();
     this.stateData = parent.stateData;
     this.backState = parent;
     this.backEdge = e;
@@ -116,7 +115,7 @@ public class StateEditor {
 
     // if something was flagged incorrect, do not make a new state
     if (defectiveTraversal) {
-      LOG.error("Defective traversal flagged on edge " + original.backEdge);
+      LOG.error("Defective traversal flagged on edge " + backEdge);
       return null;
     }
 
@@ -125,19 +124,19 @@ public class StateEditor {
       // direction
       if (
         traversingBackward
-          ? (original.getTimeDeltaMilliseconds() > 0)
-          : (original.getTimeDeltaMilliseconds() < 0)
+          ? (backState.getTimeDeltaMilliseconds() > 0)
+          : (backState.getTimeDeltaMilliseconds() < 0)
       ) {
         LOG.trace(
           "Time was incremented the wrong direction during state editing. {}",
-          original.backEdge
+          backEdge
         );
         return null;
       }
     }
     spawned = true;
     return new State(
-      original.getRequest(),
+      request,
       weight,
       vertex,
       backState,
@@ -157,7 +156,7 @@ public class StateEditor {
   }
 
   public String toString() {
-    return "StateEditor{" + original + "}";
+    return "StateEditor{" + backState + "}";
   }
 
   /* PUBLIC METHODS TO MODIFY A STATE BEFORE IT IS USED */
@@ -170,7 +169,7 @@ public class StateEditor {
         "A state's weight is being incremented by " +
           weight +
           " while traversing edge " +
-          original.backEdge
+          backEdge
       );
       defectiveTraversal = true;
       return;
@@ -178,7 +177,7 @@ public class StateEditor {
     if (weight < 0) {
       LOG.warn(
         "A state's weight is being incremented by a negative amount while traversing edge " +
-          original.backEdge
+          backEdge
       );
       defectiveTraversal = true;
       return;
@@ -195,7 +194,7 @@ public class StateEditor {
     if (milliseconds < 0) {
       LOG.warn(
         "A state's time is being incremented by a negative amount while traversing edge " +
-          original.getBackEdge()
+          backState
       );
       defectiveTraversal = true;
       return;
@@ -256,7 +255,7 @@ public class StateEditor {
   }
 
   public void setBackMode(TraverseMode mode) {
-    if (mode == original.stateData.backMode) {
+    if (mode == stateData.backMode) {
       return;
     }
 
@@ -359,7 +358,7 @@ public class StateEditor {
       stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
       stateData.currentMode = formFactor != null
         ? formFactor.traverseMode
-        : StreetModeToRentalTraverseModeMapper.map(original.getRequest().mode());
+        : StreetModeToRentalTraverseModeMapper.map(request.mode());
       stateData.vehicleRentalNetwork = network;
       stateData.rentalVehicleFormFactor = formFactor;
       stateData.rentalVehiclePropulsionType = propulsionType;

@@ -6,7 +6,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.spi.AStarState;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
@@ -161,13 +160,6 @@ public class State implements AStarState<State, Edge, Vertex> {
    */
   public static boolean isEmpty(State[] s) {
     return s.length == 0;
-  }
-
-  /**
-   * Takes a stream of states and converts it to an array while removing nulls.
-   */
-  public static State[] ofStream(Stream<State> states) {
-    return states.filter(Objects::nonNull).toArray(State[]::new);
   }
 
   /**
