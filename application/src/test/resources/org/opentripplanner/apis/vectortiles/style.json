@@ -639,7 +639,6 @@
         "in",
         "class",
         "StreetEdge",
-        "AreaEdge",
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
@@ -793,7 +792,6 @@
         "in",
         "class",
         "StreetEdge",
-        "AreaEdge",
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
@@ -947,7 +945,6 @@
         "in",
         "class",
         "StreetEdge",
-        "AreaEdge",
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
@@ -1283,7 +1280,6 @@
         "in",
         "class",
         "StreetEdge",
-        "AreaEdge",
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
@@ -1327,6 +1323,56 @@
       }
     },
     {
+      "id" : "area-edge",
+      "type" : "line",
+      "source" : "vectorSource",
+      "source-layer" : "edges",
+      "minzoom" : 15,
+      "maxzoom" : 23,
+      "paint" : {
+        "line-color" : "#f783a0",
+        "line-width" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.01,
+          23,
+          3.0
+        ],
+        "line-offset" : [
+          "interpolate",
+          [
+            "linear"
+          ],
+          [
+            "zoom"
+          ],
+          13,
+          0.4,
+          23,
+          7.0
+        ],
+        "line-opacity" : 0.5
+      },
+      "filter" : [
+        "in",
+        "class",
+        "AreaEdge"
+      ],
+      "layout" : {
+        "line-cap" : "round",
+        "visibility" : "none"
+      },
+      "metadata" : {
+        "group" : "Edges"
+      }
+    },
+    {
       "id" : "edge",
       "type" : "line",
       "source" : "vectorSource",
@@ -1366,7 +1412,6 @@
         "in",
         "class",
         "StreetEdge",
-        "AreaEdge",
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
@@ -1400,7 +1445,6 @@
         "in",
         "class",
         "StreetEdge",
-        "AreaEdge",
         "EscalatorEdge",
         "PathwayEdge",
         "ElevatorHopEdge",
