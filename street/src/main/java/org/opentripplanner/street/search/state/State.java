@@ -517,13 +517,6 @@ public class State implements AStarState<State, Edge, Vertex> {
       .toString();
   }
 
-  void checkNegativeWeight() {
-    double dw = weight - backState.weight;
-    if (dw < 0) {
-      throw new NegativeWeightException(dw + " on edge " + backEdge);
-    }
-  }
-
   private int getAbsTimeDeltaMilliseconds() {
     return Math.abs(getTimeDeltaMilliseconds());
   }
@@ -540,10 +533,13 @@ public class State implements AStarState<State, Edge, Vertex> {
     // these must be getTime(), not getTimeAccurate(), so that the reversed path (which does not
     // have arriveBy true anymore) has times which round correctly, as the rounding rules
     // depend on arriveBy
-    StreetSearchRequest reversedRequest = request
-      .copyOfReversed(getTime())
-      .withUseRentalAvailability(false)
-      .build();
+    var builder = request
+      .copyOfReversed(getTime());
+    // mutating the builder is a hot spot, only do it if needed
+    if(request.mode().includesRenting()){
+      builder.withUseRentalAvailability(false);
+    }
+    var reversedRequest = builder.build();
     StateData newStateData = stateData.clone();
     newStateData.backMode = null;
     return new State(this.vertex, getTime(), newStateData, reversedRequest);

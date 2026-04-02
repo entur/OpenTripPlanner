@@ -32,8 +32,6 @@ public class StateEditor {
   private long time_ms;
   private double traversalDistance_m;
 
-  private boolean spawned = false;
-
   private boolean defectiveTraversal = false;
 
   private boolean traversingBackward;
@@ -108,11 +106,6 @@ public class StateEditor {
    */
   @Nullable
   public State makeState() {
-    // check that this editor has not been used already
-    if (spawned) {
-      throw new IllegalStateException("A StateEditor can only be used once.");
-    }
-
     // if something was flagged incorrect, do not make a new state
     if (defectiveTraversal) {
       LOG.error("Defective traversal flagged on edge " + backEdge);
@@ -134,7 +127,6 @@ public class StateEditor {
         return null;
       }
     }
-    spawned = true;
     return new State(
       request,
       weight,
