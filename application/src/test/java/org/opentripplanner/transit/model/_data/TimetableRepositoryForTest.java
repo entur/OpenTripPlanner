@@ -15,12 +15,12 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.trip.ScheduledDeviatedTrip;
 import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
-import org.opentripplanner.framework.geometry.GeometryUtils;
-import org.opentripplanner.framework.geometry.WgsCoordinate;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.leg.ViaLocationType;
+import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.GroupOfRoutesBuilder;
@@ -66,15 +66,14 @@ public class TimetableRepositoryForTest {
   public static final WgsCoordinate ANY_COORDINATE = new WgsCoordinate(60.0, 10.0);
 
   // This is used to create valid objects - do not use it for verification
-  private static final Polygon ANY_POLYGON = GeometryUtils.getGeometryFactory()
-    .createPolygon(
-      new Coordinate[] {
-        Coordinates.of(61.0, 10.0),
-        Coordinates.of(61.0, 12.0),
-        Coordinates.of(60.0, 11.0),
-        Coordinates.of(61.0, 10.0),
-      }
-    );
+  private static final Polygon ANY_POLYGON = GeometryUtils.getGeometryFactory().createPolygon(
+    new Coordinate[] {
+      Coordinates.of(61.0, 10.0),
+      Coordinates.of(61.0, 12.0),
+      Coordinates.of(60.0, 11.0),
+      Coordinates.of(61.0, 10.0),
+    }
+  );
 
   public static final Agency AGENCY = Agency.of(id("A1"))
     .withName("Agency Test")

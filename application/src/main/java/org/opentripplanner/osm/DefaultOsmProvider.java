@@ -136,7 +136,7 @@ public class DefaultOsmProvider implements OsmProvider {
         hasWarnedAboutMissingTimeZone = true;
         LOG.warn(
           "Missing time zone for OSM source {} - time-restricted entities will " +
-          "not be created, please configure it in the {}",
+            "not be created, please configure it in the {}",
           source.uri(),
           OtpFileNames.BUILD_CONFIG_FILENAME
         );

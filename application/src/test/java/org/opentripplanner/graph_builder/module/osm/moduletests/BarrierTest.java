@@ -19,7 +19,7 @@ import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.routing.graph.Graph;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
@@ -136,7 +136,12 @@ public class BarrierTest {
     assertEquals(3, graph.getVerticesOfType(BarrierPassThroughVertex.class).size());
     assertEquals(
       2,
-      graph.getVerticesOfType(OsmVertex.class).stream().filter(v -> v.nodeId() == 1).toList().size()
+      graph
+        .getVerticesOfType(OsmVertex.class)
+        .stream()
+        .filter(v -> v.nodeId() == 1)
+        .toList()
+        .size()
     );
 
     // check traversal permission starting from node 2

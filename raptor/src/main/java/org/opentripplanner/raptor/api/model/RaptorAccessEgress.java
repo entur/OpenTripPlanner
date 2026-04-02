@@ -159,11 +159,11 @@ public interface RaptorAccessEgress {
     if (viaVisits > numberOfViaLocations) {
       throw new IllegalArgumentException(
         type +
-        " visits " +
-        viaVisits +
-        " via locations, but only " +
-        numberOfViaLocations +
-        " are defined"
+          " visits " +
+          viaVisits +
+          " via locations, but only " +
+          numberOfViaLocations +
+          " are defined"
       );
     }
   }

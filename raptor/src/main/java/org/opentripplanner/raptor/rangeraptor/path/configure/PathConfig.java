@@ -110,20 +110,20 @@ public class PathConfig<T extends RaptorTripSchedule> {
   ) {
     return searchDirection.isForward()
       ? new ForwardPathMapper<>(
-        slackProvider,
-        costCalculator,
-        stopNameResolver,
-        txConstraintsSearch,
-        lifeCycle,
-        profile.useApproximateTripSearch()
-      )
+          slackProvider,
+          costCalculator,
+          stopNameResolver,
+          txConstraintsSearch,
+          lifeCycle,
+          profile.useApproximateTripSearch()
+        )
       : new ReversePathMapper<>(
-        slackProvider,
-        costCalculator,
-        stopNameResolver,
-        txConstraintsSearch,
-        lifeCycle,
-        profile.useApproximateTripSearch()
-      );
+          slackProvider,
+          costCalculator,
+          stopNameResolver,
+          txConstraintsSearch,
+          lifeCycle,
+          profile.useApproximateTripSearch()
+        );
   }
 }

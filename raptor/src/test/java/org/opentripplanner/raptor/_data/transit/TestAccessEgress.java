@@ -374,7 +374,8 @@ public class TestAccessEgress implements RaptorAccessEgress {
           case RIDES -> withNRides(field.value());
           case TIME_PENALTY -> withTimePenalty(field.value());
           case VIAS -> withViaLocationsVisited(field.value());
-          case C2,
+          case
+            C2,
             TRANSFERS,
             TRANSFER_PRIORITY,
             WAIT_TIME_COST -> throw new IllegalArgumentException(field.toString());
@@ -421,10 +422,10 @@ public class TestAccessEgress implements RaptorAccessEgress {
       if (openFrom > openUntil) {
         throw new IllegalStateException(
           "Must open before is close. Opens at " +
-          TimeUtils.timeToStrCompact(openFrom) +
-          " and close at " +
-          TimeUtils.timeToStrCompact(openUntil) +
-          "."
+            TimeUtils.timeToStrCompact(openFrom) +
+            " and close at " +
+            TimeUtils.timeToStrCompact(openUntil) +
+            "."
         );
       }
       this.closed = false;

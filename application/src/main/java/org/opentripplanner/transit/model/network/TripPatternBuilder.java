@@ -8,8 +8,8 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.geometry.CompactLineStringUtils;
-import org.opentripplanner.framework.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.CompactLineStringUtils;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;
@@ -57,8 +57,8 @@ public final class TripPatternBuilder
     this.hopGeometries = original.getGeometry() == null
       ? null
       : IntStream.range(0, original.numberOfStops() - 1)
-        .mapToObj(original::getHopGeometry)
-        .toList();
+          .mapToObj(original::getHopGeometry)
+          .toList();
   }
 
   public TripPatternBuilder withName(String name) {
@@ -269,13 +269,12 @@ public final class TripPatternBuilder
       } else {
         // Create new straight-line geometry for hop
         hopGeometries.add(
-          GeometryUtils.getGeometryFactory()
-            .createLineString(
-              new Coordinate[] {
-                stopPattern.getStop(i).getCoordinate().asJtsCoordinate(),
-                stopPattern.getStop(i + 1).getCoordinate().asJtsCoordinate(),
-              }
-            )
+          GeometryUtils.getGeometryFactory().createLineString(
+            new Coordinate[] {
+              stopPattern.getStop(i).getCoordinate().asJtsCoordinate(),
+              stopPattern.getStop(i + 1).getCoordinate().asJtsCoordinate(),
+            }
+          )
         );
       }
     }
