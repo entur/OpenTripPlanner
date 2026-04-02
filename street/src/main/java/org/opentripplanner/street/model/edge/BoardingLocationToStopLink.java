@@ -1,6 +1,5 @@
 package org.opentripplanner.street.model.edge;
 
-import java.util.List;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -40,6 +39,6 @@ public class BoardingLocationToStopLink extends StreetTransitEntityLink<TransitS
 
   @Override
   public LineString getGeometry() {
-    return GeometryUtils.makeLineString(List.of(fromv.getCoordinate(), tov.getCoordinate()));
+    return GeometryUtils.makeLineString(fromv.getX(), fromv.getY(), tov.getX(), tov.getY());
   }
 }

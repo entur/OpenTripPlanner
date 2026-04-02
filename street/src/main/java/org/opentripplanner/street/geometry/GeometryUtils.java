@@ -15,7 +15,6 @@ import org.geojson.LngLatAlt;
 import org.locationtech.jts.algorithm.ConvexHull;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
-import org.locationtech.jts.geom.CoordinateSequenceFactory;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
@@ -31,7 +30,7 @@ import org.locationtech.jts.linearref.LocationIndexedLine;
 
 public class GeometryUtils {
 
-  private static final CoordinateSequenceFactory CSF = new PackedCoordinateSequenceFactory();
+  private static final PackedCoordinateSequenceFactory CSF = new PackedCoordinateSequenceFactory();
   private static final GeometryFactory GF = new GeometryFactory(CSF);
 
   public static <T> Geometry makeConvexHull(
@@ -50,12 +49,8 @@ public class GeometryUtils {
   }
 
   public static LineString makeLineString(double... coords) {
-    GeometryFactory factory = getGeometryFactory();
-    Coordinate[] coordinates = new Coordinate[coords.length / 2];
-    for (int i = 0; i < coords.length; i += 2) {
-      coordinates[i / 2] = new Coordinate(coords[i], coords[i + 1]);
-    }
-    return factory.createLineString(coordinates);
+    var seq= CSF.create(coords, 2);
+    return GF.createLineString(seq);
   }
 
   public static LineString makeLineString(List<Coordinate> coordinates) {
@@ -292,17 +287,6 @@ public class GeometryUtils {
     }
 
     return Arrays.stream(envelopes);
-  }
-
-  /**
-   * Returns the sum of the distances in between the pairs of coordinates in meters.
-   */
-  public static double sumDistances(List<Coordinate> coordinates) {
-    double distance = 0;
-    for (int i = 1; i < coordinates.size(); i++) {
-      distance += SphericalDistanceLibrary.distance(coordinates.get(i - 1), coordinates.get(i));
-    }
-    return distance;
   }
 
   /// Returns the sum of the distances in between the pairs of coordinates in meters.

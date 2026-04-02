@@ -399,7 +399,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
           .withTo(to)
           .withDistanceMeters(transfer.getDistanceMeters())
           .withGeneralizedCost(toOtpDomainCost(pathLeg.c1()))
-          .withGeometry(GeometryUtils.makeLineString(transfer.getCoordinates()))
+          .withGeometry(transfer.getGeometry())
           .withWalkSteps(List.of())
           .build()
       );
