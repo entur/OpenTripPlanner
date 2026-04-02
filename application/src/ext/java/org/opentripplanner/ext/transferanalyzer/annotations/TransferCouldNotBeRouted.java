@@ -62,6 +62,9 @@ public class TransferCouldNotBeRouted implements DataImportIssue {
 
   @Override
   public Geometry getGeometry() {
-    return GeometryUtils.makeLineString(origin.getCoordinate(), destination.getCoordinate());
+    return GeometryUtils.makeLineString(
+        origin.getCoordinate(),
+        destination.getCoordinate()
+    );
   }
 }
