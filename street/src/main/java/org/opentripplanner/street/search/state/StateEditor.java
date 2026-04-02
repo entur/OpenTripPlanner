@@ -120,10 +120,7 @@ public class StateEditor {
           ? (backState.getTimeDeltaMilliseconds() > 0)
           : (backState.getTimeDeltaMilliseconds() < 0)
       ) {
-        LOG.trace(
-          "Time was incremented the wrong direction during state editing. {}",
-          backEdge
-        );
+        LOG.trace("Time was incremented the wrong direction during state editing. {}", backEdge);
         return null;
       }
     }
@@ -158,10 +155,7 @@ public class StateEditor {
   public void incrementWeight(double weight) {
     if (Double.isInfinite(weight) || Double.isNaN(weight)) {
       LOG.warn(
-        "A state's weight is being incremented by " +
-          weight +
-          " while traversing edge " +
-          backEdge
+        "A state's weight is being incremented by " + weight + " while traversing edge " + backEdge
       );
       defectiveTraversal = true;
       return;

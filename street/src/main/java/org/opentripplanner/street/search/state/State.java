@@ -533,10 +533,9 @@ public class State implements AStarState<State, Edge, Vertex> {
     // these must be getTime(), not getTimeAccurate(), so that the reversed path (which does not
     // have arriveBy true anymore) has times which round correctly, as the rounding rules
     // depend on arriveBy
-    var builder = request
-      .copyOfReversed(getTime());
+    var builder = request.copyOfReversed(getTime());
     // mutating the builder is a hot spot, only do it if needed
-    if(request.mode().includesRenting()){
+    if (request.mode().includesRenting()) {
       builder.withUseRentalAvailability(false);
     }
     var reversedRequest = builder.build();

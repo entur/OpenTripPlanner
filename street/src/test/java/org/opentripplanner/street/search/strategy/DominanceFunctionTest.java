@@ -25,8 +25,8 @@ public class DominanceFunctionTest {
 
     StreetSearchRequest streetSearchRequest = StreetSearchRequest.of().build();
     StateData stateData = StateData.getBaseCaseStateData(streetSearchRequest);
-    State stateA = new State(streetSearchRequest, 1, fromVertex,  null, null, stateData, 0, 0);
-    State stateB = new State(streetSearchRequest, 2, toVertex,  null ,null, stateData, 0,0);
+    State stateA = new State(streetSearchRequest, 1, fromVertex, null, null, stateData, 0, 0);
+    State stateB = new State(streetSearchRequest, 2, toVertex, null, null, stateData, 0, 0);
 
     assertTrue(minimumWeightDominanceFunction.betterOrEqualAndComparable(stateA, stateB));
     assertFalse(minimumWeightDominanceFunction.betterOrEqualAndComparable(stateB, stateA));
@@ -47,7 +47,7 @@ public class DominanceFunctionTest {
 
     StateData stateData = StateData.getBaseCaseStateData(req);
 
-    State outsideZone = new State(req, 0, fromVertex,  null, null,stateData, 0, 0);
+    State outsideZone = new State(req, 0, fromVertex, null, null, stateData, 0, 0);
     assertFalse(outsideZone.isInsideNoRentalDropOffArea());
 
     var edge = StreetModelFactory.streetEdge(fromVertex, toVertex);
