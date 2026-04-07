@@ -4,12 +4,12 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.BitSet;
 import org.opentripplanner.core.model.accessibility.Accessibility;
-import org.opentripplanner.raptor.api.model.RaptorTripPattern;
-import org.opentripplanner.raptor.api.model.SearchDirection;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
+import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleSearch;
+import org.opentripplanner.raptor.spi.SearchDirection;
 import org.opentripplanner.raptor.util.IntIterators;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -197,10 +197,6 @@ public class TripPatternForDates
     return priorityGroupId;
   }
 
-  public int transitReluctanceFactorIndex() {
-    return tripPattern.transitReluctanceFactorIndex();
-  }
-
   @Override
   public String debugInfo() {
     return tripPattern.debugInfo();
@@ -234,6 +230,10 @@ public class TripPatternForDates
   @Override
   public int numberOfTripSchedules() {
     return numberOfTripSchedules;
+  }
+
+  public int transitReluctanceFactorIndex() {
+    return tripPattern.transitReluctanceFactorIndex();
   }
 
   public Route route() {

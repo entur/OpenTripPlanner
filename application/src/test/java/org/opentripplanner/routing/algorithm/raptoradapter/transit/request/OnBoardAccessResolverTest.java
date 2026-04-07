@@ -63,9 +63,9 @@ class OnBoardAccessResolverTest {
     var tripData = env.tripData("T1");
     var routingPattern = tripData.scheduledTripPattern().getRoutingTripPattern();
 
-    assertEquals(routingPattern.patternIndex(), result.routeIndex());
-    assertEquals(0, result.tripScheduleIndex());
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(0, result.tripBoarding().tripScheduleIndex());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(1), result.stop());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
@@ -86,7 +86,7 @@ class OnBoardAccessResolverTest {
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
-    assertEquals(0, result.stopPositionInPattern());
+    assertEquals(0, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(0), result.stop());
     assertEquals(10 * 3600, result.boardingTime());
   }
@@ -198,9 +198,9 @@ class OnBoardAccessResolverTest {
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
-    assertEquals(routingPattern.patternIndex(), result.routeIndex());
-    assertEquals(0, result.tripScheduleIndex());
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(0, result.tripBoarding().tripScheduleIndex());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(1), result.stop());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
@@ -243,8 +243,8 @@ class OnBoardAccessResolverTest {
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
-    assertEquals(routingPattern.patternIndex(), result.routeIndex());
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(1), result.stop());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
@@ -284,13 +284,13 @@ class OnBoardAccessResolverTest {
     // First occurrence of STOP_A at 10:00
     var firstOccurrence = TripLocation.of(tripRef, STOP_A.getId(), toInstant(10 * 3600));
     var result1 = resolver.resolve(firstOccurrence, patternSearch);
-    assertEquals(0, result1.stopPositionInPattern());
+    assertEquals(0, result1.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600, result1.boardingTime());
 
     // Second occurrence of STOP_A at 10:15
     var secondOccurrence = TripLocation.of(tripRef, STOP_A.getId(), toInstant(10 * 3600 + 15 * 60));
     var result2 = resolver.resolve(secondOccurrence, patternSearch);
-    assertEquals(2, result2.stopPositionInPattern());
+    assertEquals(2, result2.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
   }
 
@@ -335,8 +335,8 @@ class OnBoardAccessResolverTest {
     // falls back to findPattern(trip) which returns scheduledPattern (in index)
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(scheduledPattern.getRoutingTripPattern().patternIndex(), result.routeIndex());
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(scheduledPattern.getRoutingTripPattern().patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
@@ -403,7 +403,7 @@ class OnBoardAccessResolverTest {
     );
 
     var result = resolver.resolve(tripLocation, patternSearch);
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
@@ -431,7 +431,7 @@ class OnBoardAccessResolverTest {
     );
 
     var result = resolver.resolve(tripLocation, patternSearch);
-    assertEquals(0, result.stopPositionInPattern());
+    assertEquals(0, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600, result.boardingTime());
   }
 
@@ -496,13 +496,13 @@ class OnBoardAccessResolverTest {
     // With departure time for SA1 at 10:00 — should find position 0
     var withTimeFirst = TripLocation.of(tripRef, id("StationA"), toInstant(10 * 3600));
     var result1 = resolver.resolve(withTimeFirst, patternSearch);
-    assertEquals(0, result1.stopPositionInPattern());
+    assertEquals(0, result1.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600, result1.boardingTime());
 
     // With departure time for SA2 at 10:15 — should find position 2
     var withTime = TripLocation.of(tripRef, id("StationA"), toInstant(10 * 3600 + 15 * 60));
     var result2 = resolver.resolve(withTime, patternSearch);
-    assertEquals(2, result2.stopPositionInPattern());
+    assertEquals(2, result2.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
   }
 
@@ -561,8 +561,8 @@ class OnBoardAccessResolverTest {
     // Should succeed by falling back to scheduledTimetable.getPattern() (the original)
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(originalPattern.getRoutingTripPattern().patternIndex(), result.routeIndex());
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(originalPattern.getRoutingTripPattern().patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
@@ -655,8 +655,8 @@ class OnBoardAccessResolverTest {
     // copiedPattern.scheduledTimetable.getPattern() → originalPattern (in index!)
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(originalPattern.getRoutingTripPattern().patternIndex(), result.routeIndex());
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(originalPattern.getRoutingTripPattern().patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
@@ -699,7 +699,7 @@ class OnBoardAccessResolverTest {
     var patternSearch = env.raptorRequestData();
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(1, result.stopPositionInPattern());
+    assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 

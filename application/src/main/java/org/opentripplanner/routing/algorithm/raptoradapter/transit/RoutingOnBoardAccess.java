@@ -2,10 +2,11 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit;
 
 import java.util.Objects;
 import org.opentripplanner.framework.model.TimeAndCost;
-import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.street.search.state.State;
 
-public final class RoutingOnBoardAccess implements RaptorOnBoardAccess, RoutingAccessEgress {
+public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, RoutingAccessEgress {
 
   private final int routeIndex;
   private final int tripScheduleIndex;
@@ -42,18 +43,12 @@ public final class RoutingOnBoardAccess implements RaptorOnBoardAccess, RoutingA
   }
 
   @Override
-  public int routeIndex() {
-    return routeIndex;
-  }
-
-  @Override
-  public int tripScheduleIndex() {
-    return tripScheduleIndex;
-  }
-
-  @Override
-  public int stopPositionInPattern() {
-    return stopPositionInPattern;
+  public RaptorTripScheduleStopPosition tripBoarding() {
+    return new RaptorTripScheduleStopPosition(
+      routeIndex,
+      tripScheduleIndex,
+      stopPositionInPattern
+    );
   }
 
   @Override
