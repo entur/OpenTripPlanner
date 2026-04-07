@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -73,6 +74,8 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
   private final VertexFactory vertexFactory;
   private final VertexLinker linker;
 
+  private final Map<Area, OsmBoardingLocationVertex> existingBoardingLocationsAtAreas;
+
   /**
    * @param timetableRepository This module requires the timetable repository because at the time
    *                            of the instantiation the site repository is empty.
@@ -90,6 +93,7 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
     this.osmInfoGraphBuildService = osmInfoGraphBuildService;
     this.vertexFactory = new VertexFactory(graph);
     this.linker = linker;
+    this.existingBoardingLocationsAtAreas = new HashMap<>();
   }
 
   @Override
@@ -175,12 +179,7 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
         if (platOpt.isPresent()) {
           var platform = platOpt.get();
           if (matchesReference(stop, platform.references())) {
-            var boardingLocation = makeBoardingLocation(
-              stop,
-              platform.geometry().getCentroid(),
-              platform.references(),
-              area.getName()
-            );
+            var boardingLocation = makeBoardingLocationForArea(stop, area, platform);
             linker.addPermanentAreaVertex(boardingLocation, areaGroup);
             linkBoardingLocationToStop(ts, stop.getCode(), boardingLocation);
             return true;
@@ -270,6 +269,25 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
       }
     }
     return false;
+  }
+
+  /*
+   * when two stops reference the same OSM platform area, only one
+   * OsmBoardingLocationVertex centroid is created for that area and both stops are linked to it.
+   */
+  private OsmBoardingLocationVertex makeBoardingLocationForArea(
+    RegularStop stop,
+    Area area,
+    Platform platform
+  ) {
+    return existingBoardingLocationsAtAreas.computeIfAbsent(area, _ ->
+      makeBoardingLocation(
+        stop,
+        platform.geometry().getCentroid(),
+        platform.references(),
+        area.getName()
+      )
+    );
   }
 
   private OsmBoardingLocationVertex makeBoardingLocation(

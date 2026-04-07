@@ -48,14 +48,14 @@ class OsmBoardingLocationsModuleTest {
       Arguments.of(
         false,
         Stream.of(
-          302563833L,
-          3223067049L,
-          302563836L,
-          3223067680L,
-          302563834L,
-          768590748L,
-          302563839L
-        )
+            302563833L,
+            3223067049L,
+            302563836L,
+            3223067680L,
+            302563834L,
+            768590748L,
+            302563839L
+          )
           .map(VertexLabel::osm)
           .collect(Collectors.toSet())
       ),
@@ -209,11 +209,11 @@ class OsmBoardingLocationsModuleTest {
     var graph = new Graph();
     var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
     var osmModule = OsmModuleTestFactory.of(
-      new DefaultOsmProvider(
-        ResourceLoader.of(OsmBoardingLocationsModuleTest.class).file("moorgate.osm.pbf"),
-        false
+        new DefaultOsmProvider(
+          ResourceLoader.of(OsmBoardingLocationsModuleTest.class).file("moorgate.osm.pbf"),
+          false
+        )
       )
-    )
       .withGraph(graph)
       .withOsmInfoGraphBuildRepository(osmInfoRepository)
       .builder()
@@ -338,6 +338,113 @@ class OsmBoardingLocationsModuleTest {
         assertSplitVertex(vertex.getToVertex(), centroid, fromVertex, toVertex);
       }
     }
+  }
+
+  /**
+   * Test that when two stops reference the same OSM platform area (via ref:IFOPT), only one
+   * OsmBoardingLocationVertex centroid is created for that area and both stops are linked to it.
+   * <p>
+   * The Herrenberg platform area (way 27558650) has ref:IFOPT=de:08115:4512:4:101;de:08115:4512:4:102,
+   * so both stop IDs match the same area.
+   */
+  @Test
+  void testDeduplicationOfAreaBoardinglocations() {
+    File file = ResourceLoader.of(OsmBoardingLocationsModuleTest.class).file(
+      "herrenberg-minimal.osm.pbf"
+    );
+
+    // Two stops that both match the same platform area via ref:IFOPT
+    RegularStop platform1 = testModel
+      .stop("de:08115:4512:4:101")
+      .withCoordinate(48.59328, 8.86128)
+      .build();
+    RegularStop platform2 = testModel
+      .stop("de:08115:4512:4:102")
+      .withCoordinate(48.59328, 8.86128)
+      .build();
+
+    var siteRepo = testModel
+      .siteRepositoryBuilder()
+      .withRegularStops(List.of(platform1, platform2))
+      .build();
+
+    var graph = new Graph();
+    var timetableRepository = new TimetableRepository(siteRepo);
+    var factory = new VertexFactory(graph);
+
+    var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
+    var osmModule = OsmModuleTestFactory.of(new DefaultOsmProvider(file, false))
+      .withGraph(graph)
+      .withOsmInfoGraphBuildRepository(osmInfoRepository)
+      .builder()
+      .withBoardingAreaRefTags(Set.of("ref", "ref:IFOPT"))
+      .withAreaVisibility(true)
+      .build();
+
+    osmModule.buildGraph();
+
+    var platformVertex1 = factory.transitStop(ofStop(platform1));
+    var platformVertex2 = factory.transitStop(ofStop(platform2));
+
+    timetableRepository.index();
+    graph.index();
+
+    // Both vertices should start unlinked
+    assertEquals(0, platformVertex1.getIncoming().size());
+    assertEquals(0, platformVertex1.getOutgoing().size());
+    assertEquals(0, platformVertex2.getIncoming().size());
+    assertEquals(0, platformVertex2.getOutgoing().size());
+
+    var osmService = new DefaultOsmInfoGraphBuildService(osmInfoRepository);
+    new OsmBoardingLocationsModule(
+      graph,
+      timetableRepository,
+      VertexLinkerTestFactory.of(graph),
+      osmService
+    ).buildGraph();
+
+    // Both vertices should now be linked
+    assertEquals(1, platformVertex1.getIncoming().size());
+    assertEquals(1, platformVertex1.getOutgoing().size());
+    assertEquals(1, platformVertex2.getIncoming().size());
+    assertEquals(1, platformVertex2.getOutgoing().size());
+
+    var boardingLocations = graph.getVerticesOfType(OsmBoardingLocationVertex.class);
+
+    // Only one centroid should exist for the shared platform area
+    var areaCentroids = boardingLocations
+      .stream()
+      .filter(
+        bl ->
+          bl.references.contains(platform1.getId().getId()) ||
+            bl.references.contains(platform2.getId().getId())
+      )
+      .toList();
+    assertEquals(
+      1,
+      areaCentroids.size(),
+      "Expected exactly one OsmBoardingLocationVertex for the shared platform area, but found " +
+        areaCentroids.size()
+    );
+
+    // Both transit stop vertices should be connected to the same boarding location vertex
+    var linkedVertex1 = platformVertex1
+      .getOutgoing()
+      .stream()
+      .findFirst()
+      .orElseThrow()
+      .getToVertex();
+    var linkedVertex2 = platformVertex2
+      .getOutgoing()
+      .stream()
+      .findFirst()
+      .orElseThrow()
+      .getToVertex();
+    assertEquals(
+      linkedVertex1,
+      linkedVertex2,
+      "Both stops should be linked to the same deduplicated boarding location vertex"
+    );
   }
 
   /**
