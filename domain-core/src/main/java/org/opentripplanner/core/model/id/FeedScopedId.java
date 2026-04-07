@@ -29,6 +29,12 @@ public final class FeedScopedId implements Serializable, Comparable<FeedScopedId
     this.id = assertHasValue(id, "Missing mandatory id on FeedScopeId");
   }
 
+  /// Create a FeedScopedID
+  /// @throws IllegalArgumentException if the feedId or id is empty
+  public static FeedScopedId of(String feedId, String id) throws IllegalArgumentException {
+    return new FeedScopedId(feedId, id);
+  }
+
   /// Create a FeedScopedId
   ///
   /// @return Optional.empty if the feedId or id is empty, otherwise a FeedScopedId
@@ -72,27 +78,9 @@ public final class FeedScopedId implements Serializable, Comparable<FeedScopedId
   /// @param value id of the form "feedId:entityId"
   /// @throws IllegalArgumentException if the input is not a valid FeedScopedId
   public static FeedScopedId parseStrict(String value) throws IllegalArgumentException {
-    return parseOptional(value).orElseThrow(() -> new IllegalArgumentException("Invalid FeedScopedId: " + value));
-  }
-
-  /// Given an id of the form "feedId:entityId", parses into a {@link FeedScopedId} id object.
-  ///
-  /// @param value id of the form "feedId:entityId"
-  /// @return an id object or null if the input is empty or null
-  /// @throws IllegalArgumentException if the id cannot be parsed
-  /// @deprecated Use [FeedScopedId#parseOptional] or [FeedScopedId#parseStrict] instead
-  @Deprecated
-  @Nullable
-  public static FeedScopedId parse(@Nullable String value) throws IllegalArgumentException {
-    if (StringUtils.hasNoValue(value)) {
-      return null;
-    }
-    int index = value.indexOf(ID_SEPARATOR);
-    if (index == -1) {
-      throw new IllegalArgumentException("invalid feed-scoped-id: " + value);
-    } else {
-      return new FeedScopedId(value.substring(0, index), value.substring(index + 1));
-    }
+    return parseOptional(value).orElseThrow(() ->
+      new IllegalArgumentException("Invalid FeedScopedId: " + value)
+    );
   }
 
   /**
@@ -106,7 +94,7 @@ public final class FeedScopedId implements Serializable, Comparable<FeedScopedId
         throw new IllegalArgumentException("Collection of FeedScopedId must not contain null.");
       }
     });
-    return value.stream().map(FeedScopedId::parse).toList();
+    return value.stream().map(FeedScopedId::parseStrict).toList();
   }
 
   /**
@@ -121,12 +109,8 @@ public final class FeedScopedId implements Serializable, Comparable<FeedScopedId
     return Arrays.stream(s.split(","))
       .map(String::strip)
       .filter(i -> !i.isBlank())
-      .map(FeedScopedId::parse)
+      .map(FeedScopedId::parseStrict)
       .toList();
-  }
-
-  public static boolean isValidString(@Nullable String value) throws IllegalArgumentException {
-    return value != null && value.indexOf(ID_SEPARATOR) > -1;
   }
 
   public void requireSameFeedId(FeedScopedId other) {

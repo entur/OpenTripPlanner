@@ -12,6 +12,11 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 -  Cache TransferIndexGenerator results to skip redundant regeneration [#7355](https://github.com/opentripplanner/OpenTripPlanner/pull/7355)
 - Improve compatibility with Swiss NeTEx data [#7427](https://github.com/opentripplanner/OpenTripPlanner/pull/7427)
 - fix: Introduce stable order for fareZones (tariffZones) [#7434](https://github.com/opentripplanner/OpenTripPlanner/pull/7434)
+- Prevent long routes mistakenly getting grouped across service-date [#7452](https://github.com/opentripplanner/OpenTripPlanner/pull/7452)
+- Migrate away from deprecated FeedScopedId.parse() [#7457](https://github.com/opentripplanner/OpenTripPlanner/pull/7457)
+- Expose GTFS feed version in the GTFS GraphQL API [#7445](https://github.com/opentripplanner/OpenTripPlanner/pull/7445)
+- Fix MC Raptor Pareto comparator performance regression [#7440](https://github.com/opentripplanner/OpenTripPlanner/pull/7440)
+- Use A* traversal distance for flex access/egress [#7490](https://github.com/opentripplanner/OpenTripPlanner/pull/7490)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
