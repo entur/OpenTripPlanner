@@ -168,10 +168,6 @@ public class PatternCostCalculatorTest {
       return "RoutePenaltyTC {" + sb.substring(sb.isEmpty() ? 0 : 2) + "}";
     }
 
-    boolean isDefault() {
-      return !(unPreferredAgency || unPreferredRoute);
-    }
-
     RaptorCostCalculator<TestTripSchedule> createCostCalculator(TestTripSchedule schedule) {
       GeneralizedCostParameters costParams = GeneralizedCostParametersMapper.map(
         createRouteRequest(),

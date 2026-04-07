@@ -44,8 +44,8 @@ public class WheelchairCostCalculator<T extends DefaultTripSchedule>
   }
 
   @Override
-  public int onTripRelativeRidingCost(int boardTime, T tripScheduledBoarded) {
-    return delegate.onTripRelativeRidingCost(boardTime, tripScheduledBoarded);
+  public int transitCost(int transitTime, T tripScheduledBoarded) {
+    return delegate.transitCost(transitTime, tripScheduledBoarded);
   }
 
   @Override

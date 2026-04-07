@@ -28,12 +28,9 @@ public interface RaptorCostCalculator<T extends RaptorTripSchedule> {
   );
 
   /**
-   * Calculate cost of boarding a trip. This should be the cost of the waiting time, any board and
-   * transfer cost, and the penalty for the board stop visit. This cost should NOT include the
-   * previous stop arrival cost, but the incremental cost to be added to the previous stop arrival
-   * cost.
+   * Calculate the cost of riding a trip for the given {@code transitTime}.
    */
-  int onTripRelativeRidingCost(int boardTime, T tripScheduledBoarded);
+  int transitCost(int transitTime, T tripScheduledBoarded);
 
   /**
    * Calculate the value when arriving by transit.
