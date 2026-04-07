@@ -1,5 +1,6 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.BitSet;
 import org.opentripplanner.core.model.accessibility.Accessibility;
@@ -124,6 +125,19 @@ public class TripPatternForDates
 
   public TripPatternForDate tripPatternForDate(int dayIndex) {
     return tripPatternForDates[dayIndex];
+  }
+
+  public TripPatternForDate tripPatternForDate(LocalDate serviceDate) {
+    var matching = Arrays.stream(tripPatternForDates).filter(x ->
+      x.getServiceDate().equals(serviceDate)
+    );
+    return matching
+      .findFirst()
+      .orElseThrow(() ->
+        new IllegalArgumentException(
+          "Service date %s not found in TripPatternForDates".formatted(serviceDate)
+        )
+      );
   }
 
   /**

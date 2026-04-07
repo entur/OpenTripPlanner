@@ -1,7 +1,9 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -175,14 +177,6 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
     return patternIndex.get(routeIndex);
   }
 
-  /**
-   * Create an {@link OnBoardTripPatternSearch} for resolving on-board trip locations against the
-   * active Raptor pattern index.
-   */
-  public OnBoardTripPatternSearch onBoardTripPatternSearch() {
-    return new OnBoardTripPatternSearch(patternIndex);
-  }
-
   @Override
   public int numberOfStops() {
     return raptorTransitData.getStopCount();
@@ -267,5 +261,20 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       return ConstrainedBoardingSearch.NOOP_SEARCH;
     }
     return new ConstrainedBoardingSearch(false, toStopTransfers, fromStopTransfers);
+  }
+
+  public Collection<TripPatternForDates> activeTripPatternsPerStop(int stopIndex) {
+    var routeIndices = activeTripPatternsPerStop.get(stopIndex);
+    return Arrays.stream(routeIndices).mapToObj(patternIndex::get).toList();
+  }
+
+  public Collection<TripPatternForDates> activeTripPatternsByStopIndices(
+    Collection<Integer> stopIndices
+  ) {
+    return stopIndices
+      .stream()
+      .flatMap(x -> Arrays.stream(activeTripPatternsPerStop.get(x)).boxed())
+      .map(patternIndex::get)
+      .toList();
   }
 }

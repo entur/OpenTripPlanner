@@ -57,7 +57,7 @@ class OnBoardAccessResolverTest {
       STOP_B.getId()
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     var result = resolver.resolve(tripLocation, patternSearch);
 
     var tripData = env.tripData("T1");
@@ -82,7 +82,7 @@ class OnBoardAccessResolverTest {
       STOP_A.getId()
     );
 
-    var result = resolver.resolve(tripLocation, env.raptorRequestData().onBoardTripPatternSearch());
+    var result = resolver.resolve(tripLocation, env.raptorRequestData());
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
@@ -103,7 +103,7 @@ class OnBoardAccessResolverTest {
       STOP_C.getId()
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
       resolver.resolve(tripLocation, patternSearch)
     );
@@ -122,7 +122,7 @@ class OnBoardAccessResolverTest {
       toInstant(10 * 3600 + 10 * 60)
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
       resolver.resolve(tripLocation, patternSearch)
     );
@@ -140,7 +140,7 @@ class OnBoardAccessResolverTest {
       STOP_A.getId()
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
       resolver.resolve(tripLocation, patternSearch)
     );
@@ -158,7 +158,7 @@ class OnBoardAccessResolverTest {
       id("unknown-stop")
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
       resolver.resolve(tripLocation, patternSearch)
     );
@@ -176,7 +176,7 @@ class OnBoardAccessResolverTest {
       STOP_B.getId()
     );
 
-    var result = resolver.resolve(tripLocation, env.raptorRequestData().onBoardTripPatternSearch());
+    var result = resolver.resolve(tripLocation, env.raptorRequestData());
     assertEquals(0, result.c1());
   }
 
@@ -193,7 +193,7 @@ class OnBoardAccessResolverTest {
       toInstant(10 * 3600 + 5 * 60)
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     var result = resolver.resolve(tripLocation, patternSearch);
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -219,7 +219,7 @@ class OnBoardAccessResolverTest {
       toInstant(10 * 3600)
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
       resolver.resolve(tripLocation, patternSearch)
     );
@@ -238,7 +238,7 @@ class OnBoardAccessResolverTest {
     );
 
     // Use ignoreRealtimeUpdates=true, mirroring the production flag in TransitRouter
-    var patternSearch = env.raptorRequestData(true).onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData(true);
     var result = resolver.resolve(tripLocation, patternSearch);
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -261,7 +261,7 @@ class OnBoardAccessResolverTest {
       STOP_A.getId()
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     assertThrows(RoutingValidationException.class, () ->
       resolver.resolve(tripLocation, patternSearch)
     );
@@ -279,7 +279,7 @@ class OnBoardAccessResolverTest {
 
     var resolver = new OnBoardAccessResolver(env.transitService());
     var tripRef = TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // First occurrence of STOP_A at 10:00
     var firstOccurrence = TripLocation.of(tripRef, STOP_A.getId(), toInstant(10 * 3600));
@@ -309,7 +309,7 @@ class OnBoardAccessResolverTest {
     var tripTimes = tripData.scheduledTripTimes();
 
     // Build pattern search BEFORE applying the realtime update — so it only has scheduled patterns
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // Realtime-modified pattern (different route index, not in Raptor data)
     var realtimePattern = TripPattern.of(id("P1-rt"))
@@ -394,7 +394,7 @@ class OnBoardAccessResolverTest {
     ).build();
 
     var resolver = new OnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // Pass the station ID — should resolve to the child stop's position
     var tripLocation = TripLocation.of(
@@ -422,7 +422,7 @@ class OnBoardAccessResolverTest {
     ).build();
 
     var resolver = new OnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // Pass station ID — should find SA2 at position 1 (even though SA1 also belongs to StationA)
     var tripLocation = TripLocation.of(
@@ -450,7 +450,7 @@ class OnBoardAccessResolverTest {
     ).build();
 
     var resolver = new OnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // A2 is the stop visited, but here we pass A1
     var tripLocation = TripLocation.of(
@@ -484,7 +484,7 @@ class OnBoardAccessResolverTest {
     ).build();
 
     var resolver = new OnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     var tripRef = TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE);
 
     // Without departure time — ambiguous, should throw
@@ -527,7 +527,7 @@ class OnBoardAccessResolverTest {
 
     // Build Raptor data BEFORE replacing the pattern — so it indexes the original's
     // RoutingTripPattern
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // Simulate what TransitDataImportBuilder does: copy the pattern while reusing the
     // existing scheduledTimetable. The copy gets a new RoutingTripPattern (different
@@ -622,7 +622,7 @@ class OnBoardAccessResolverTest {
     var tripTimes = tripData.scheduledTripTimes();
 
     // Build Raptor data with the original pattern
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // Step 1: Copy the pattern (simulating graph build), reusing scheduledTimetable
     var copiedPattern = originalPattern
@@ -696,7 +696,7 @@ class OnBoardAccessResolverTest {
       aimedDeparture
     );
 
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
     var result = resolver.resolve(tripLocation, patternSearch);
 
     assertEquals(1, result.stopPositionInPattern());
@@ -716,7 +716,7 @@ class OnBoardAccessResolverTest {
     ).build();
 
     var resolver = new OnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData().onBoardTripPatternSearch();
+    var patternSearch = env.raptorRequestData();
 
     // StationC has child stop SC1 which is not in the trip's pattern
     var tripLocation = TripLocation.of(

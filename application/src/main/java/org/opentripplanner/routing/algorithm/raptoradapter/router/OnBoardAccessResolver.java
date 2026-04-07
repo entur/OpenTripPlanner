@@ -3,10 +3,15 @@ package org.opentripplanner.routing.algorithm.raptoradapter.router;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.raptor.spi.RaptorTimeTable;
+import org.opentripplanner.raptor.util.IntIterators;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingOnBoardAccess;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.OnBoardTripPatternSearch;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.TripPatternForDates;
 import org.opentripplanner.routing.api.request.TripLocation;
 import org.opentripplanner.routing.api.request.TripOnDateReference;
 import org.opentripplanner.routing.api.response.InputField;
@@ -15,6 +20,7 @@ import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -36,64 +42,95 @@ public class OnBoardAccessResolver {
    * access and the service date.
    *
    * @param tripLocation the on-board location to resolve
-   * @param patternSearch the search service for the active Raptor pattern index
+   * @param raptorRequestTransitData the raptorRequestTransitDataProvider
    * @return a {@link RoutingOnBoardAccess} for the given trip location
    * @throws IllegalArgumentException if the trip, stop, or departure time is invalid
    * @throws RoutingValidationException if the on-board location is ambiguous
    */
   public RoutingOnBoardAccess resolve(
     TripLocation tripLocation,
-    OnBoardTripPatternSearch patternSearch
+    RaptorRoutingRequestTransitData raptorRequestTransitData
   ) {
     var tripAndServiceDate = resolveTripAndServiceDate(tripLocation.tripOnDateReference());
     var trip = tripAndServiceDate.trip();
     var serviceDate = tripAndServiceDate.serviceDate();
-    var tripPattern = findPatternInRaptorData(trip, serviceDate, patternSearch);
+
+    var raptorTimetables = getRaptorTimetablesForStopLocation(
+      raptorRequestTransitData,
+      tripLocation.stopLocationId()
+    );
+
+    // Step 3: Find the one timetable matching our trip and service date
+    var raptorTimetable = raptorTimetables
+      .stream()
+      .filter(patternForDates ->
+        patternForDates
+          .tripPatternForDate(serviceDate)
+          .tripTimes()
+          .stream()
+          .anyMatch(tripTime -> tripTime.getTrip().getId().equals(trip.getId()))
+      )
+      .findFirst()
+      .orElseThrow(() ->
+        new IllegalArgumentException(
+          "No trip pattern on date %s for trip %s".formatted(serviceDate, trip)
+        )
+      );
 
     Integer targetSeconds = toSecondsSinceStartOfService(
       tripLocation.aimedDepartureTime(),
       serviceDate
     );
-    int stopPosInPattern = findStopPosition(
-      tripPattern,
-      tripLocation.stopLocationId(),
+    var stopIndices = getStopIndices(tripLocation.stopLocationId());
+    int stopPosInPattern = getStopPositionInPattern(
+      raptorTimetable,
       trip,
       serviceDate,
-      targetSeconds
+      targetSeconds,
+      stopIndices
     );
 
-    RoutingTripPattern routingPattern = tripPattern.getRoutingTripPattern();
-    int routeIndex = routingPattern.patternIndex();
-    int raptorStopIndex = routingPattern.stopIndex(stopPosInPattern);
+    var tripPatternForServiceDate = raptorTimetable.tripPatternForDate(serviceDate);
+    RoutingTripPattern routingPattern = tripPatternForServiceDate.getTripPattern();
 
-    var tripPatternForDates = patternSearch.findTripPatternForDates(routeIndex);
-    int tripScheduleIndex = patternSearch.findTripScheduleIndex(
-      tripPatternForDates,
-      trip,
-      serviceDate
-    );
-
-    var tripTimes = transitService
-      .findTimetable(tripPattern, serviceDate)
-      .getTripTimesWithScheduleFallback(trip);
-    if (tripTimes == null) {
-      throw new IllegalArgumentException(
-        "Trip %s not found in timetable for pattern %s on date %s".formatted(
-          trip.getId(),
-          tripPattern.getId(),
-          serviceDate
+    var tripTimes = tripPatternForServiceDate
+      .tripTimes()
+      .stream()
+      .filter(t -> t.getTrip().getId().equals(trip.getId()))
+      .findFirst()
+      .orElseThrow(() ->
+        new IllegalArgumentException(
+          "Trip %s not found in timetable on date %s".formatted(trip.getId(), serviceDate)
         )
       );
-    }
 
     int boardingTime = tripTimes.getScheduledDepartureTime(stopPosInPattern);
 
+    // TODO We can get this with RaptorTripInfo.tripScheduleIndex
+    var tripScheduleIndex = getTripScheduleIndex(raptorTimetable, trip, serviceDate);
+
     return new RoutingOnBoardAccess(
-      routeIndex,
+      routingPattern.patternIndex(),
       tripScheduleIndex,
       stopPosInPattern,
-      raptorStopIndex,
+      routingPattern.stopIndex(stopPosInPattern),
       boardingTime
+    );
+  }
+
+  private Collection<Integer> getStopIndices(FeedScopedId stopLocationId) {
+    var stop = transitService.getRegularStop(stopLocationId);
+    if (stop != null) {
+      return List.of(stop.getIndex());
+    }
+
+    var station = transitService.getStation(stopLocationId);
+    if (station != null) {
+      return station.getChildStops().stream().map(StopLocation::getIndex).toList();
+    }
+
+    throw new IllegalArgumentException(
+      "No stop or station found with id %s".formatted(stopLocationId)
     );
   }
 
@@ -110,9 +147,6 @@ public class OnBoardAccessResolver {
 
     var tripPattern = transitService.findPattern(trip, serviceDate);
     if (tripPattern == null) {
-      tripPattern = transitService.findPattern(trip);
-    }
-    if (tripPattern == null) {
       throw new IllegalArgumentException(
         "No pattern found for trip %s on date %s".formatted(trip.getId(), serviceDate)
       );
@@ -122,7 +156,7 @@ public class OnBoardAccessResolver {
       tripLocation.aimedDepartureTime(),
       serviceDate
     );
-    int stopPosInPattern = findStopPosition(
+    int stopPosInPattern = findStopPositionInPattern(
       tripPattern,
       tripLocation.stopLocationId(),
       trip,
@@ -176,59 +210,6 @@ public class OnBoardAccessResolver {
   }
 
   /**
-   * Find the trip pattern that exists in the Raptor transit data's pattern index. There are
-   * several reasons why the pattern returned by {@code findPattern} may not be directly in the
-   * index:
-   * <ul>
-   *   <li>A realtime update may have created a new pattern not yet in the Raptor data — in that
-   *       case the base/static pattern (from {@code findPattern(trip)}) should be used.</li>
-   *   <li>During graph build, patterns may be copied, creating a new {@link RoutingTripPattern}
-   *       with a different index while the scheduled timetable still references the original.
-   *       In that case, the scheduled timetable's pattern should be used.</li>
-   * </ul>
-   */
-  private TripPattern findPatternInRaptorData(
-    Trip trip,
-    LocalDate serviceDate,
-    OnBoardTripPatternSearch patternSearch
-  ) {
-    var result = findInIndex(transitService.findPattern(trip, serviceDate), patternSearch);
-    if (result == null) {
-      result = findInIndex(transitService.findPattern(trip), patternSearch);
-    }
-    if (result == null) {
-      throw new IllegalArgumentException(
-        "No pattern for trip %s on date %s found in active Raptor data".formatted(
-          trip.getId(),
-          serviceDate
-        )
-      );
-    }
-    return result;
-  }
-
-  /**
-   * Check if the given pattern (or its scheduledTimetable's pattern) is in the Raptor index.
-   * Returns the pattern that is in the index, or null if neither is.
-   */
-  private static TripPattern findInIndex(
-    TripPattern pattern,
-    OnBoardTripPatternSearch patternSearch
-  ) {
-    if (pattern == null) {
-      return null;
-    }
-    if (patternSearch.isInPatternIndex(pattern)) {
-      return pattern;
-    }
-    var scheduledPattern = pattern.getScheduledTimetable().getPattern();
-    if (scheduledPattern != pattern && patternSearch.isInPatternIndex(scheduledPattern)) {
-      return scheduledPattern;
-    }
-    return null;
-  }
-
-  /**
    * Convert an instant to seconds since start-of-service of the given service date in the
    * transit system's timezone. Returns null if the instant is null.
    * <p>
@@ -256,7 +237,7 @@ public class OnBoardAccessResolver {
    * a retry with an {@code aimedDepartureTime} is needed. When an {@code aimedDepartureTime} is provided, it is always
    * validated against the timetable — even for unique stops.
    */
-  private int findStopPosition(
+  private int findStopPositionInPattern(
     TripPattern tripPattern,
     FeedScopedId stopLocationId,
     Trip trip,
@@ -371,6 +352,172 @@ public class OnBoardAccessResolver {
     }
 
     return stopPositionInPattern;
+  }
+
+  private Collection<TripPatternForDates> getRaptorTimetablesForStopLocation(
+    RaptorRoutingRequestTransitData raptorRequestTransitData,
+    FeedScopedId stopLocationId
+  ) {
+    var stop = transitService.getRegularStop(stopLocationId);
+    var station = transitService.getStation(stopLocationId);
+    if (stop == null && station == null) {
+      throw new IllegalArgumentException(
+        "No stop or station found with id %s".formatted(stopLocationId)
+      );
+    }
+    if (stop != null) {
+      return raptorRequestTransitData.activeTripPatternsPerStop(stop.getIndex());
+    } else {
+      var stopsInStation = station.getChildStops().stream().map(StopLocation::getIndex).toList();
+      return raptorRequestTransitData.activeTripPatternsByStopIndices(stopsInStation);
+    }
+  }
+
+  private int getTripScheduleIndex(
+    RaptorTimeTable<TripSchedule> timetable,
+    Trip trip,
+    LocalDate serviceDate
+  ) {
+    var scheduleIndexIterator = IntIterators.intIncIterator(0, timetable.numberOfTripSchedules());
+
+    while (scheduleIndexIterator.hasNext()) {
+      int tripScheduleIndex = scheduleIndexIterator.next();
+      var tripSchedule = timetable.getTripSchedule(tripScheduleIndex);
+      if (!tripSchedule.getServiceDate().equals(serviceDate)) {
+        continue;
+      }
+      var targetTrip = tripSchedule.getOriginalTripTimes().getTrip();
+      if (targetTrip.getId().equals(trip.getId())) {
+        return tripScheduleIndex;
+      }
+    }
+
+    throw new IllegalArgumentException(
+      "No trip pattern on date %s for trip %s".formatted(serviceDate, trip)
+    );
+  }
+
+  private int getStopPositionInPattern(
+    RaptorTimeTable<TripSchedule> timetable,
+    Trip trip,
+    LocalDate serviceDate,
+    Integer targetTimeSeconds,
+    Collection<Integer> stopIndices
+  ) {
+    var scheduleIndexIterator = IntIterators.intIncIterator(0, timetable.numberOfTripSchedules());
+
+    while (scheduleIndexIterator.hasNext()) {
+      int tripScheduleIndex = scheduleIndexIterator.next();
+      var tripSchedule = timetable.getTripSchedule(tripScheduleIndex);
+      if (!tripSchedule.getServiceDate().equals(serviceDate)) {
+        continue;
+      }
+      var targetTrip = tripSchedule.getOriginalTripTimes().getTrip();
+
+      int stopPos = -1;
+      if (targetTrip.getId().equals(trip.getId())) {
+        if (targetTimeSeconds == null) {
+          stopPos = findStopPositionInTripSchedule(tripSchedule, stopIndices);
+        } else {
+          stopPos = findStopPositionInTripScheduleAtTime(
+            tripSchedule,
+            stopIndices,
+            targetTimeSeconds
+          );
+        }
+      }
+
+      int lastStopPos = tripSchedule.pattern().numberOfStopsInPattern() - 1;
+      if (stopPos == lastStopPos) {
+        throw new IllegalArgumentException(
+          "Cannot board at the last stop of trip %s — no further travel is possible".formatted(trip)
+        );
+      }
+      if (stopPos != -1) {
+        return stopPos;
+      }
+    }
+
+    throw new IllegalArgumentException(
+      "Could not find a stop position on %s at %s seconds for trip %s".formatted(
+        serviceDate,
+        targetTimeSeconds,
+        trip
+      )
+    );
+  }
+
+  private int findStopPositionInTripScheduleAtTime(
+    TripSchedule tripSchedule,
+    Collection<Integer> stopIndices,
+    int targetTimeSeconds
+  ) {
+    var stopPositions = stopIndices
+      .stream()
+      .flatMap(stop -> tripSchedule.findDepartureStopPositions(targetTimeSeconds, stop).stream())
+      .toList();
+
+    for (int stopPos : stopPositions) {
+      if (tripSchedule.departure(stopPos) == targetTimeSeconds) {
+        return stopPos;
+      }
+    }
+
+    throw new IllegalArgumentException(
+      "Could not find a stop position in schedule %s for any of the stop indexes in %s".formatted(
+        tripSchedule,
+        stopIndices
+      )
+    );
+  }
+
+  /**
+   * Find a single stop position within a trip schedule by looking for the stop position that
+   * matches one of the given stop indices. This method takes multiple stop indices to search with
+   * in order to support stations. In that case, the caller should pass the child stop indices of
+   * the station. It is not intended to pass multiple stopIndices across multiple stations.
+   *
+   * @param tripSchedule the trip schedule to search
+   * @param stopIndices a single stop index in case of a stop, or multiple stop indices in case of
+   *                    a station with multiple child stops
+   *
+   * @throws IllegalArgumentException if a tripSchedule doesn't contain any index in stopIndices
+   * @throws RoutingValidationException if the search returns more than one stop position. This
+   *                                    means the trip schedule visits the same stop or station
+   *                                    multiple times and
+   *                                    {@link #findStopPositionInTripScheduleAtTime} should be used
+   *                                    instead to disambiguate.
+   */
+  private int findStopPositionInTripSchedule(
+    TripSchedule tripSchedule,
+    Collection<Integer> stopIndices
+  ) {
+    var stopPositions = stopIndices
+      .stream()
+      .flatMap(stop -> tripSchedule.findDepartureStopPositions(0, stop).stream())
+      .toList();
+
+    if (stopPositions.isEmpty()) {
+      throw new IllegalArgumentException(
+        "Could not find a stop position in schedule %s for any of the stop indexes in %s".formatted(
+          tripSchedule,
+          stopIndices
+        )
+      );
+    }
+
+    if (stopPositions.size() > 1) {
+      throw new RoutingValidationException(
+        List.of(
+          new RoutingError(
+            RoutingErrorCode.ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME,
+            InputField.FROM_PLACE
+          )
+        )
+      );
+    }
+
+    return stopPositions.getFirst();
   }
 
   private record TripAndServiceDate(Trip trip, LocalDate serviceDate) {}

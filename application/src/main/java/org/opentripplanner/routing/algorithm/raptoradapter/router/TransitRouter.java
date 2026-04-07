@@ -250,7 +250,7 @@ public class TransitRouter {
     RaptorRoutingRequestTransitData requestTransitDataProvider
   ) {
     var resolver = new OnBoardAccessResolver(serverContext.transitService());
-    return resolver.resolve(tripLocation, requestTransitDataProvider.onBoardTripPatternSearch());
+    return resolver.resolve(tripLocation, requestTransitDataProvider);
   }
 
   private AccessEgresses fetchAccessEgresses() {
