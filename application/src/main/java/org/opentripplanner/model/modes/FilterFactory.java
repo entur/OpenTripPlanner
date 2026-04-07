@@ -24,7 +24,7 @@ class FilterFactory {
   private FilterFactory() {}
 
   static AllowTransitModeFilter of(NarrowedTransitMode mode) {
-    if (mode.isReplacement() != null) {
+    if (!mode.isReplacement().equals(NarrowedTransitMode.ReplacementRequirement.IGNORED)) {
       return new AllowNarrowedTransitModeFilter(mode);
     }
     if (mode.getSubMode() == null) {

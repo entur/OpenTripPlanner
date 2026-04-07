@@ -3231,6 +3231,15 @@ enum BikesAllowed {
   NO_INFORMATION
 }
 
+enum BooleanFeatureRequirement {
+  "The feature must be off."
+  FORBIDDEN
+  "It does not matter if the feature is on or off."
+  IGNORED
+  "The feature must be on."
+  REQUIRED
+}
+
 enum CarsAllowed {
   "The vehicle being used on this particular trip can accommodate at least one car."
   ALLOWED
@@ -4739,12 +4748,13 @@ input PlanTransitModePreferenceInput {
   mode: TransitMode!
   """
   If present and not null, further limits the transit mode selection.  A transit trip matches
-  a PlanTransitModePreferenceInput if the mandatory TransitMode field mode matches. If the boolean
-  field replacement is present and not null, the leg must also be a replacement (if true) or not be
-  a replacement (if false). Whether a leg is a replacement is recognized both by the NeTEx submode
+  a PlanTransitModePreferenceInput if the mandatory TransitMode field mode matches. If replacement
+  is REQUIRED, the trip must also be a replacement. If replacement is FORBIDDEN, the trip must not
+  be a replacement. If replacement is IGNORED or missing, it does not matter if the trip is
+  a replacement or not. Whether a leg is a replacement is recognized both by the NeTEx submode
   and the GTFS extended type, depending on the data source.
   """
-  replacement: Boolean
+  replacement: BooleanFeatureRequirement
 }
 
 """

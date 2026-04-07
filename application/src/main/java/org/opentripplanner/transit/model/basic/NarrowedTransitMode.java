@@ -23,20 +23,22 @@ public class NarrowedTransitMode {
   @Nullable
   SubMode subMode;
 
-  /**
-   * null here means that we don't care about whether the trip is a replacement
-   */
-  @Nullable
-  Boolean replacement;
+  ReplacementRequirement replacement;
+
+  public enum ReplacementRequirement {
+    REQUIRED,
+    FORBIDDEN,
+    IGNORED,
+  }
 
   private static final List<NarrowedTransitMode> ALL = Stream.of(TransitMode.values())
-    .map(mode -> new NarrowedTransitMode(mode, null, null))
+    .map(mode -> new NarrowedTransitMode(mode, null, ReplacementRequirement.IGNORED))
     .toList();
 
   public NarrowedTransitMode(
     TransitMode mode,
     @Nullable SubMode subMode,
-    @Nullable Boolean replacement
+    ReplacementRequirement replacement
   ) {
     this.mode = mode;
     this.subMode = subMode;
@@ -44,7 +46,7 @@ public class NarrowedTransitMode {
   }
 
   public static NarrowedTransitMode of(MainAndSubMode mode) {
-    return new NarrowedTransitMode(mode.mainMode(), mode.subMode(), null);
+    return new NarrowedTransitMode(mode.mainMode(), mode.subMode(), ReplacementRequirement.IGNORED);
   }
 
   public static List<NarrowedTransitMode> all() {
@@ -52,11 +54,11 @@ public class NarrowedTransitMode {
   }
 
   public boolean isMainModeOnly() {
-    return (this.subMode == null && this.replacement == null);
+    return (this.subMode == null && this.replacement.equals(ReplacementRequirement.IGNORED));
   }
 
   public MainAndSubMode toMainAndSubMode() {
-    if (this.replacement != null) {
+    if (!this.replacement.equals(ReplacementRequirement.IGNORED)) {
       throw new IllegalArgumentException("Not convertible to MainAndSubMode");
     }
     return new MainAndSubMode(this.mode, this.subMode);
@@ -71,13 +73,12 @@ public class NarrowedTransitMode {
     return subMode;
   }
 
-  @Nullable
-  public Boolean isReplacement() {
+  public ReplacementRequirement isReplacement() {
     return replacement;
   }
 
   public String toString() {
-    if (replacement != null) {
+    if (!replacement.equals(ReplacementRequirement.IGNORED)) {
       return mode.name() + "::" + (subMode == null ? "" : subMode.name()) + "::" + replacement;
     }
     if (subMode == null) {

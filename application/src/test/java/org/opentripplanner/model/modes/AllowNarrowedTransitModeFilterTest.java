@@ -11,30 +11,53 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 public class AllowNarrowedTransitModeFilterTest {
 
   private static final SubMode LOCAL_BUS = SubMode.getOrBuildAndCacheForever("localBus");
+  private static final SubMode RAIL_REPLACEMENT_BUS = SubMode.getOrBuildAndCacheForever(
+    "railReplacementBus"
+  );
 
   private final AllowNarrowedTransitModeFilter fullFilter = new AllowNarrowedTransitModeFilter(
-    new NarrowedTransitMode(TransitMode.BUS, LOCAL_BUS, Boolean.TRUE)
+    new NarrowedTransitMode(
+      TransitMode.BUS,
+      LOCAL_BUS,
+      NarrowedTransitMode.ReplacementRequirement.REQUIRED
+    )
   );
   private final AllowNarrowedTransitModeFilter nullSubmodeFilter =
     new AllowNarrowedTransitModeFilter(
-      new NarrowedTransitMode(TransitMode.BUS, null, Boolean.TRUE)
+      new NarrowedTransitMode(
+        TransitMode.BUS,
+        null,
+        NarrowedTransitMode.ReplacementRequirement.REQUIRED
+      )
     );
   private final AllowNarrowedTransitModeFilter nullReplacementFilter =
-    new AllowNarrowedTransitModeFilter(new NarrowedTransitMode(TransitMode.BUS, LOCAL_BUS, null));
+    new AllowNarrowedTransitModeFilter(
+      new NarrowedTransitMode(
+        TransitMode.BUS,
+        LOCAL_BUS,
+        NarrowedTransitMode.ReplacementRequirement.IGNORED
+      )
+    );
 
   @Test
   void allows() {
+    // filter.match will always be called with either netexSubmode == SubMode.UNKNOWN or gtfsExtendedType == null
+    // depending on the data source type. Both can be true if the data is from a GTFS source and the extended
+    // type just happens to be not set.
     assertTrue(fullFilter.match(TransitMode.BUS, LOCAL_BUS, null));
     assertTrue(fullFilter.match(TransitMode.BUS, SubMode.UNKNOWN, 714));
-    assertFalse(fullFilter.match(TransitMode.TRAM, LOCAL_BUS, 714));
+    assertFalse(fullFilter.match(TransitMode.TRAM, SubMode.UNKNOWN, 714));
 
-    assertTrue(nullSubmodeFilter.match(TransitMode.BUS, LOCAL_BUS, 714));
-    assertFalse(nullSubmodeFilter.match(TransitMode.BUS, LOCAL_BUS, 700));
+    assertTrue(nullSubmodeFilter.match(TransitMode.BUS, SubMode.UNKNOWN, 714));
+    assertFalse(nullSubmodeFilter.match(TransitMode.BUS, SubMode.UNKNOWN, 700));
     assertFalse(nullSubmodeFilter.match(TransitMode.BUS, LOCAL_BUS, null));
     assertFalse(nullSubmodeFilter.match(TransitMode.TRAM, LOCAL_BUS, null));
 
-    assertTrue(nullReplacementFilter.match(TransitMode.BUS, LOCAL_BUS));
-    assertFalse(nullReplacementFilter.match(TransitMode.BUS, SubMode.UNKNOWN));
-    assertFalse(nullReplacementFilter.match(TransitMode.TRAM, LOCAL_BUS));
+    assertTrue(nullSubmodeFilter.match(TransitMode.BUS, RAIL_REPLACEMENT_BUS, null));
+    assertFalse(nullSubmodeFilter.match(TransitMode.TRAM, RAIL_REPLACEMENT_BUS, null));
+
+    assertTrue(nullReplacementFilter.match(TransitMode.BUS, LOCAL_BUS, null));
+    assertFalse(nullReplacementFilter.match(TransitMode.BUS, SubMode.UNKNOWN, null));
+    assertFalse(nullReplacementFilter.match(TransitMode.TRAM, LOCAL_BUS, null));
   }
 }

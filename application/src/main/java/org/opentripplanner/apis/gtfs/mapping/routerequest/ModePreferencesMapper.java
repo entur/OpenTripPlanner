@@ -98,12 +98,29 @@ public class ModePreferencesMapper {
     }
   }
 
+  private static NarrowedTransitMode.ReplacementRequirement map(
+    @Nullable GraphQLTypes.GraphQLBooleanFeatureRequirement requirement
+  ) {
+    if (
+      requirement == null ||
+      requirement.equals(GraphQLTypes.GraphQLBooleanFeatureRequirement.IGNORED)
+    ) {
+      return NarrowedTransitMode.ReplacementRequirement.IGNORED;
+    } else if (requirement.equals(GraphQLTypes.GraphQLBooleanFeatureRequirement.REQUIRED)) {
+      return NarrowedTransitMode.ReplacementRequirement.REQUIRED;
+    } else if (requirement.equals(GraphQLTypes.GraphQLBooleanFeatureRequirement.FORBIDDEN)) {
+      return NarrowedTransitMode.ReplacementRequirement.FORBIDDEN;
+    } else {
+      return null;
+    }
+  }
+
   private static NarrowedTransitMode map(GraphQLTypes.GraphQLPlanTransitModePreferenceInput input) {
     if (input != null) {
       return new NarrowedTransitMode(
         TransitModeMapper.map(input.getGraphQLMode()),
         null,
-        input.getGraphQLReplacement()
+        map(input.getGraphQLReplacement())
       );
     } else {
       return null;

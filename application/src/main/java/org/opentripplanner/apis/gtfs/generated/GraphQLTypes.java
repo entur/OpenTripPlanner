@@ -497,6 +497,12 @@ public class GraphQLTypes {
     }
   }
 
+  public enum GraphQLBooleanFeatureRequirement {
+    FORBIDDEN,
+    IGNORED,
+    REQUIRED,
+  }
+
   public static class GraphQLCanceledTripsFilterInput {
 
     private List<GraphQLCanceledTripsFilterSelectInput> exclude;
@@ -2281,7 +2287,7 @@ public class GraphQLTypes {
 
     private GraphQLTransitModePreferenceCostInput cost;
     private GraphQLTransitMode mode;
-    private Boolean replacement;
+    private GraphQLBooleanFeatureRequirement replacement;
 
     public GraphQLPlanTransitModePreferenceInput(Map<String, Object> args) {
       if (args != null) {
@@ -2293,7 +2299,13 @@ public class GraphQLTypes {
         } else if (args.get("mode") != null) {
           this.mode = GraphQLTransitMode.valueOf((String) args.get("mode"));
         }
-        this.replacement = (Boolean) args.get("replacement");
+        if (args.get("replacement") instanceof GraphQLBooleanFeatureRequirement) {
+          this.replacement = (GraphQLBooleanFeatureRequirement) args.get("replacement");
+        } else if (args.get("replacement") != null) {
+          this.replacement = GraphQLBooleanFeatureRequirement.valueOf(
+            (String) args.get("replacement")
+          );
+        }
       }
     }
 
@@ -2305,7 +2317,7 @@ public class GraphQLTypes {
       return this.mode;
     }
 
-    public Boolean getGraphQLReplacement() {
+    public GraphQLBooleanFeatureRequirement getGraphQLReplacement() {
       return this.replacement;
     }
 
@@ -2317,7 +2329,7 @@ public class GraphQLTypes {
       this.mode = mode;
     }
 
-    public void setGraphQLReplacement(Boolean replacement) {
+    public void setGraphQLReplacement(GraphQLBooleanFeatureRequirement replacement) {
       this.replacement = replacement;
     }
   }
