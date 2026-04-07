@@ -16,12 +16,12 @@ import org.opentripplanner.street.search.state.TestStateBuilder;
 class DefaultAccessEgressTest {
 
   private static final int STOP = 5;
-  private static final State LAST_STATE = TestStateBuilder.ofWalking().streetEdge().build();
+  private static final State FINAL_STATE = TestStateBuilder.ofWalking().streetEdge().build();
   public static final Duration TIME_PENALTY = Duration.ofSeconds(1);
   public static final Cost COST_PENALTY = Cost.costOfSeconds(11);
   public static final TimeAndCost PENALTY = new TimeAndCost(TIME_PENALTY, COST_PENALTY);
 
-  private final DefaultAccessEgress subject = new DefaultAccessEgress(STOP, LAST_STATE);
+  private final DefaultAccessEgress subject = new DefaultAccessEgress(STOP, FINAL_STATE);
   private final RoutingAccessEgress subjectWithPenalty = subject.withPenalty(PENALTY);
 
   @Test
@@ -31,7 +31,7 @@ class DefaultAccessEgressTest {
 
   @Test
   void durationInSeconds() {
-    int expected = (int) LAST_STATE.getElapsedTimeSeconds();
+    int expected = (int) FINAL_STATE.getElapsedTimeSeconds();
     assertEquals(expected, subject.durationInSeconds());
     assertEquals(expected, subjectWithPenalty.durationInSeconds());
   }
@@ -62,8 +62,8 @@ class DefaultAccessEgressTest {
   }
 
   @Test
-  void getLastState() {
-    assertEquals(LAST_STATE, subject.getFinalState());
+  void getFinalState() {
+    assertEquals(FINAL_STATE, subject.getFinalState());
   }
 
   @Test
