@@ -48,14 +48,14 @@ class OsmBoardingLocationsModuleTest {
       Arguments.of(
         false,
         Stream.of(
-            302563833L,
-            3223067049L,
-            302563836L,
-            3223067680L,
-            302563834L,
-            768590748L,
-            302563839L
-          )
+          302563833L,
+          3223067049L,
+          302563836L,
+          3223067680L,
+          302563834L,
+          768590748L,
+          302563839L
+        )
           .map(VertexLabel::osm)
           .collect(Collectors.toSet())
       ),
@@ -64,8 +64,9 @@ class OsmBoardingLocationsModuleTest {
   }
 
   /**
-   * We test that the platform area at Herrenberg station (https://www.openstreetmap.org/way/27558650)
-   * is correctly linked to the stop even though it is not the closest edge to the stop.
+   * We test that the platform area at Herrenberg station
+   * (https://www.openstreetmap.org/way/27558650) is correctly linked to the stop even though it is
+   * not the closest edge to the stop.
    */
   @ParameterizedTest(
     name = "add boarding locations and link them to platform edges when skipVisibility={0}"
@@ -201,19 +202,20 @@ class OsmBoardingLocationsModuleTest {
   }
 
   /**
-   * We test that the underground platforms at Moorgate station (https://www.openstreetmap.org/way/1328222021)
-   * is correctly linked to the stop even though it is not the closest edge to the stop.
+   * We test that the underground platforms at Moorgate station
+   * (https://www.openstreetmap.org/way/1328222021) is correctly linked to the stop even though it
+   * is not the closest edge to the stop.
    */
   @Test
   void testLinearPlatforms() {
     var graph = new Graph();
     var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
     var osmModule = OsmModuleTestFactory.of(
-        new DefaultOsmProvider(
-          ResourceLoader.of(OsmBoardingLocationsModuleTest.class).file("moorgate.osm.pbf"),
-          false
-        )
+      new DefaultOsmProvider(
+        ResourceLoader.of(OsmBoardingLocationsModuleTest.class).file("moorgate.osm.pbf"),
+        false
       )
+    )
       .withGraph(graph)
       .withOsmInfoGraphBuildRepository(osmInfoRepository)
       .builder()
@@ -344,8 +346,8 @@ class OsmBoardingLocationsModuleTest {
    * Test that when two stops reference the same OSM platform area (via ref:IFOPT), only one
    * OsmBoardingLocationVertex centroid is created for that area and both stops are linked to it.
    * <p>
-   * The Herrenberg platform area (way 27558650) has ref:IFOPT=de:08115:4512:4:101;de:08115:4512:4:102,
-   * so both stop IDs match the same area.
+   * The Herrenberg platform area (way 27558650) has
+   * ref:IFOPT=de:08115:4512:4:101;de:08115:4512:4:102, so both stop IDs match the same area.
    */
   @Test
   void testDeduplicationOfAreaBoardinglocations() {
@@ -417,7 +419,7 @@ class OsmBoardingLocationsModuleTest {
       .filter(
         bl ->
           bl.references.contains(platform1.getId().getId()) ||
-            bl.references.contains(platform2.getId().getId())
+          bl.references.contains(platform2.getId().getId())
       )
       .toList();
     assertEquals(
@@ -486,8 +488,8 @@ class OsmBoardingLocationsModuleTest {
   }
 
   /**
-   * Assert that there is a one-way path from the beginning through the given vertex to the end
-   * or vice versa.
+   * Assert that there is a one-way path from the beginning through the given vertex to the end or
+   * vice versa.
    */
   private static void assertConnections(Vertex vertex, Vertex beginning, Vertex end) {
     if (vertex == beginning || vertex == end) {

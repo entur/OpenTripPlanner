@@ -65,7 +65,7 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
   private static final LocalizedString LOCALIZED_PLATFORM_NAME = new LocalizedString(
     "name.platform"
   );
-  private final double searchRadiusDegrees = SphericalDistanceLibrary.metersToDegrees(250);
+  private static final double SEARCH_RADIUS_DEGREES = SphericalDistanceLibrary.metersToDegrees(250);
 
   private final Graph graph;
 
@@ -105,15 +105,8 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
 
     for (TransitStopVertex ts : graph.getVerticesOfType(TransitStopVertex.class)) {
       // if the street is already linked there is no need to link it again,
-      // could happened if using the prune isolated island
-      boolean alreadyLinked = false;
-      for (Edge e : ts.getOutgoing()) {
-        if (e instanceof StreetTransitStopLink) {
-          alreadyLinked = true;
-          break;
-        }
-      }
-      if (alreadyLinked) {
+      // could happen if using the prune isolated island
+      if (ts.getOutgoing().stream().anyMatch(StreetTransitStopLink.class::isInstance)) {
         continue;
       }
       // only connect transit stops that are not part of a pathway network
@@ -150,7 +143,7 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
     Envelope envelope = new Envelope(ts.getCoordinate());
 
     double xscale = Math.cos((ts.getCoordinate().y * Math.PI) / 180);
-    envelope.expandBy(searchRadiusDegrees / xscale, searchRadiusDegrees);
+    envelope.expandBy(SEARCH_RADIUS_DEGREES / xscale, SEARCH_RADIUS_DEGREES);
     return envelope;
   }
 
@@ -205,13 +198,7 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
         .findPlatform(edge)
         .ifPresent(platform -> {
           if (matchesReference(stop, platform.references())) {
-            if (!nearbyEdges.containsKey(platform)) {
-              var list = new ArrayList<Edge>();
-              list.add(edge);
-              nearbyEdges.put(platform, list);
-            } else {
-              nearbyEdges.get(platform).add(edge);
-            }
+            nearbyEdges.computeIfAbsent(platform, _ -> new ArrayList<>()).add(edge);
           }
         });
     }
