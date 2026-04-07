@@ -43,7 +43,7 @@ public class TestEdge extends Edge {
     var editor = s0.edit(this);
     editor.incrementWeight(weight);
     editor.incrementTimeInSeconds(durationSeconds);
-    editor.incrementWalkDistance(distanceMeters);
+    editor.incrementTraversalDistanceMeters(distanceMeters);
     return editor.makeStateArray();
   }
 
