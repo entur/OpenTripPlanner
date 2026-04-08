@@ -5,6 +5,7 @@ import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.BoardingLocationResolver;
 import org.opentripplanner.street.search.state.State;
 
 public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, RoutingAccessEgress {
@@ -17,15 +18,13 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
 
   public RoutingOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
-    int stopPositionInPattern,
-    int stop,
-    int boardingTime
+    BoardingLocationResolver.BoardingLocationInPatternReference tripLocationInScheduleReference
   ) {
     this.routeIndex = tripScheduleReference.routeIndex();
     this.tripScheduleIndex = tripScheduleReference.tripScheduleIndex();
-    this.stopPositionInPattern = stopPositionInPattern;
-    this.stop = stop;
-    this.boardingTime = boardingTime;
+    this.stopPositionInPattern = tripLocationInScheduleReference.stopPositionInPattern();
+    this.stop = tripLocationInScheduleReference.stopIndex();
+    this.boardingTime = tripLocationInScheduleReference.boardingTimeSeconds();
   }
 
   public int boardingTime() {
