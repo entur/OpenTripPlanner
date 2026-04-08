@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.OnBoardAccessResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.OnBoardAccessResolver;
 import org.opentripplanner.routing.api.request.TripLocation;
 import org.opentripplanner.routing.api.request.TripOnDateReference;
 import org.opentripplanner.routing.error.RoutingValidationException;

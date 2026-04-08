@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.raptoradapter.router;
+package org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess;
 
 import java.time.Instant;
 import java.time.LocalDate;
