@@ -54,4 +54,29 @@ public class OsmNodeTest {
     node.addTag("entrance", "main");
     assertTrue(node.isTaggedBarrierCrossing());
   }
+
+  @Test
+  public void isEntrance() {
+    OsmNode node = new OsmNode();
+    node.addTag("entrance", "main");
+    assertTrue(node.isEntrance());
+    assertFalse(node.isStationEntrance());
+    node.addTag("railway", "train_station_entrance");
+    assertTrue(node.isEntrance());
+
+    node = new OsmNode();
+    node.addTag("railway", "train_station_entrance");
+    assertTrue(node.isEntrance());
+    assertTrue(node.isStationEntrance());
+
+    node = new OsmNode();
+    node.addTag("railway", "subway_entrance");
+    assertTrue(node.isEntrance());
+    assertTrue(node.isStationEntrance());
+
+    node = new OsmNode();
+    node.addTag("public_transport", "entrance");
+    assertTrue(node.isEntrance());
+    assertTrue(node.isStationEntrance());
+  }
 }
