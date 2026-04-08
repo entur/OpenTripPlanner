@@ -92,6 +92,8 @@ spec:
         - -XX:+AlwaysPreTouch
         - -XX:+UseCompactObjectHeaders
         - -XX:ActiveProcessorCount={{ .Values.resources.cpuRequest }}
+        - -XX:ParallelGCThreads=6
+        - -XX:ConcGCThreads=2
         - --add-opens=java.base/java.lang=ALL-UNNAMED
         - --add-opens=java.base/java.nio=ALL-UNNAMED
         - --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
