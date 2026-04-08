@@ -19,16 +19,17 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  */
 public final class OnTripAccessArrivals<T extends RaptorTripSchedule> {
 
-  private final TIntObjectMap<List<OnTripAccessArrival<T>>> arrivals = new TIntObjectHashMap<>();
+  private final TIntObjectMap<List<OnTripAccessArrival<T>>> arrivalsForStopPosition =
+    new TIntObjectHashMap<>();
 
   /** Returns {@code true} if there are on-board arrivals waiting to board at {@code stopPos}. */
   public boolean arrivalExistForStopPosition(int stopPos) {
-    return arrivals.containsKey(stopPos);
+    return arrivalsForStopPosition.containsKey(stopPos);
   }
 
   /** Returns all on-board arrivals that should board at {@code stopPos}. */
   public Iterable<OnTripAccessArrival<T>> listArrivals(int stopPos) {
-    return arrivals.get(stopPos);
+    return arrivalsForStopPosition.get(stopPos);
   }
 
   /** Adds an on-board arrival, indexing it by its boarding stop position in the pattern. */
@@ -36,10 +37,10 @@ public final class OnTripAccessArrivals<T extends RaptorTripSchedule> {
     ArrivalView<T> accessStopArrival,
     RaptorTripScheduleStopPosition boardingConstraint
   ) {
-    var list = arrivals.get(boardingConstraint.stopPositionInPattern());
+    var list = arrivalsForStopPosition.get(boardingConstraint.stopPositionInPattern());
     if (list == null) {
       list = new ArrayList<>();
-      arrivals.put(boardingConstraint.stopPositionInPattern(), list);
+      arrivalsForStopPosition.put(boardingConstraint.stopPositionInPattern(), list);
     }
     list.add(new OnTripAccessArrival<>(accessStopArrival, boardingConstraint));
   }
