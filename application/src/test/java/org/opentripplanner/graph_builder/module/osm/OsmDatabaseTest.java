@@ -223,4 +223,42 @@ public class OsmDatabaseTest {
     // innerRingWithBarrier should not be polluted with the highway tag when fetched from the way
     assertFalse(osmdb.getWay(innerRingWithBarrier.getId()).hasTag("highway"));
   }
+
+  @Test
+  void testEntranceTagAdded() {
+    var entrance1 = new OsmNode(0, 0);
+    entrance1.setId(1);
+    entrance1.addTag("entrance", "yes");
+
+    var entrance2 = new OsmNode(0, 0);
+    entrance2.setId(2);
+    entrance2.addTag("entrance", "yes");
+
+    var footway = new OsmWay();
+    footway.addNodeRef(1);
+    footway.addNodeRef(2);
+    footway.addTag("highway", "footway");
+
+    var stopArea = new OsmRelation();
+    stopArea.addTag("type", "public_transport");
+    stopArea.addTag("public_transport", "stop_area");
+
+    var member = new OsmRelationMember();
+    member.setType(OsmMemberType.NODE);
+    member.setRef(1);
+    stopArea.addMember(member);
+
+    var osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
+    osmdb.addRelation(stopArea);
+    osmdb.doneFirstPhaseRelations();
+    osmdb.addWay(footway);
+    osmdb.doneSecondPhaseWays();
+    osmdb.addNode(entrance1);
+    osmdb.addNode(entrance2);
+    osmdb.doneThirdPhaseNodes();
+    osmdb.postLoad();
+
+    assertTrue(entrance1.isTag("public_transport", "entrance"));
+    assertFalse(entrance2.isTag("public_transport", "entrance"));
+  }
 }
