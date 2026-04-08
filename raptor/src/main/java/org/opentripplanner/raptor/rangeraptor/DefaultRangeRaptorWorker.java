@@ -117,17 +117,17 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void applyStreetStopAccess() {
+  public void applyAccessArrivedOnStreet() {
     addAccessPaths(accessPaths.arrivedOnStreetByNumOfRides(round));
   }
 
   @Override
-  public void applyOnBoardStopAccess() {
+  public void applyAccessArrivedOnBoard() {
     addAccessPaths(accessPaths.arrivedOnBoardByNumOfRides(round));
   }
 
   @Override
-  public void applyOnBoardTripAccess() {
+  public void applyAccessStartOnBoard() {
     for (var accessPath : accessPaths.startOnBoardAccessPaths()) {
       var boarding = accessPath.tripBoarding();
       var route = transitData.getRouteForIndex(boarding.routeIndex());
