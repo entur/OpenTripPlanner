@@ -213,12 +213,4 @@ class J05_ViaVisitWithEgressTest {
     var via = RaptorViaLocation.viaVisit(data.stopNameResolver().apply(stop)).addStop(stop).build();
     requestBuilder.searchParams().addViaLocation(via);
   }
-
-  private void viaStops(String label, int... stops) {
-    var builder = RaptorViaLocation.viaVisit(label);
-    for (int stop : stops) {
-      builder.addStop(stop);
-    }
-    requestBuilder.searchParams().addViaLocation(builder.build());
-  }
 }

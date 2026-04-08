@@ -6,9 +6,6 @@ import static org.opentripplanner.raptor._data.RaptorTestConstants.SECONDS_IN_A_
 import static org.opentripplanner.raptor.spi.RaptorConstants.isTimeSet;
 import static org.opentripplanner.raptor.spi.RaptorCostConverter.toRaptorCost;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
@@ -89,10 +86,6 @@ public class TestAccessEgress implements RaptorAccessEgress {
     return new Builder(stop, durationInSeconds).build();
   }
 
-  public static TestAccessEgress walk(int stop, int durationInSeconds, double walkReluctance) {
-    return walk(stop, durationInSeconds, walkCost(durationInSeconds, walkReluctance));
-  }
-
   public static TestAccessEgress walk(int stop, int durationInSeconds, int cost) {
     return new Builder(stop, durationInSeconds).withCost(cost).build();
   }
@@ -138,14 +131,6 @@ public class TestAccessEgress implements RaptorAccessEgress {
     return new Builder(stop, durationInSeconds).withNRides(nRides).withCost(cost).build();
   }
 
-  public static Collection<RaptorAccessEgress> transfers(int... stopTimes) {
-    List<RaptorAccessEgress> legs = new ArrayList<>();
-    for (int i = 0; i < stopTimes.length; i += 2) {
-      legs.add(walk(stopTimes[i], stopTimes[i + 1]));
-    }
-    return legs;
-  }
-
   public static int walkCost(int durationInSeconds) {
     return walkCost(durationInSeconds, DEFAULT_WALK_RELUCTANCE);
   }
@@ -172,10 +157,6 @@ public class TestAccessEgress implements RaptorAccessEgress {
 
   public TestAccessEgress openingHoursClosed() {
     return copyOf().withClosed().build();
-  }
-
-  public TestAccessEgress withCost(int c1) {
-    return this.copyOf().withCost(c1).build();
   }
 
   public TestAccessEgress withTimePenalty(int timePenalty) {

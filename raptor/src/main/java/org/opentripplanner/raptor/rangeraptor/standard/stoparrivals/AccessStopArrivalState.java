@@ -48,11 +48,6 @@ public class AccessStopArrivalState<T extends RaptorTripSchedule> implements Sto
   }
 
   @Override
-  public boolean reachedOnStreet() {
-    return arrivedByAccessOnStreet() || arrivedByTransfer();
-  }
-
-  @Override
   public boolean arrivedByAccessOnStreet() {
     return accessArriveOnStreet != null;
   }

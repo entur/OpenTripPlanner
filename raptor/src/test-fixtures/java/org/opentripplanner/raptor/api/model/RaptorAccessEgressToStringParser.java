@@ -45,10 +45,6 @@ public final class RaptorAccessEgressToStringParser {
     return new RaptorAccessEgressToStringParser(stopIndexResolver, input).parse();
   }
 
-  public String label() {
-    return label;
-  }
-
   public int stopIndex() {
     return stopIndex;
   }

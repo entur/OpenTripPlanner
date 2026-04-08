@@ -175,12 +175,6 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
     reachedCurrentRound = false;
   }
 
-  private void debugRejectByTimeLimitOptimization(DestinationArrival<T> destArrival) {
-    if (isDebugOn()) {
-      debugReject(destArrival, transitCalculator.exceedsTimeLimitReason());
-    }
-  }
-
   @Nullable
   private DestinationArrival<T> createDestinationArrivalView(
     ArrivalView<T> stopArrival,

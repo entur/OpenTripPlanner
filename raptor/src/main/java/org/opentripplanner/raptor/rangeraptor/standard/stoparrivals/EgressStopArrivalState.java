@@ -34,14 +34,6 @@ final class EgressStopArrivalState<T extends RaptorTripSchedule>
     this.callback = transitCallback;
   }
 
-  public int round() {
-    return round;
-  }
-
-  public int stop() {
-    return stop;
-  }
-
   @Override
   public void arriveByTransit(int arrivalTime, int boardStop, int boardTime, T trip) {
     super.arriveByTransit(arrivalTime, boardStop, boardTime, trip);

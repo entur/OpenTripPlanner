@@ -128,10 +128,6 @@ public final class BestTimes {
     return false;
   }
 
-  public int size() {
-    return times.length;
-  }
-
   public SingleCriteriaStopArrivals extractBestOverallArrivals() {
     return new IntArraySingleCriteriaArrivals(calculator.unreachedTime(), times);
   }

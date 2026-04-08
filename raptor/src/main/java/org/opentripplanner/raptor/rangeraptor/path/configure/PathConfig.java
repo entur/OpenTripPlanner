@@ -121,7 +121,6 @@ public class PathConfig<T extends RaptorTripSchedule> {
           costCalculator,
           stopNameResolver,
           txConstraintsSearch,
-          lifeCycle,
           profile.useApproximateTripSearch()
         );
   }

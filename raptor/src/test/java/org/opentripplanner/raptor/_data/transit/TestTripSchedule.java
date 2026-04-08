@@ -57,10 +57,6 @@ public class TestTripSchedule implements RaptorTripSchedule {
     return pattern;
   }
 
-  public int size() {
-    return arrivalTimes.length;
-  }
-
   @Override
   public String toString() {
     if (Arrays.equals(arrivalTimes, departureTimes)) {
