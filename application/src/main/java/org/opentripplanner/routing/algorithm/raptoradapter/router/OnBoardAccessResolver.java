@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
+import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.raptor.util.IntIterators;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingOnBoardAccess;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -60,7 +61,6 @@ public class OnBoardAccessResolver {
       tripLocation.stopLocationId()
     );
 
-    // Step 3: Find the one timetable matching our trip and service date
     var raptorTimetable = raptorTimetables
       .stream()
       .filter(patternForDates ->
@@ -106,12 +106,15 @@ public class OnBoardAccessResolver {
 
     int boardingTime = tripTimes.getScheduledDepartureTime(stopPosInPattern);
 
-    // TODO We can get this with RaptorTripInfo.tripScheduleIndex
-    var tripScheduleIndex = getTripScheduleIndex(raptorTimetable, trip, serviceDate);
+    var tripScheduleIndexReference = getTripScheduleReference(
+      raptorRequestTransitData,
+      raptorTimetable,
+      trip,
+      serviceDate
+    );
 
     return new RoutingOnBoardAccess(
-      routingPattern.patternIndex(),
-      tripScheduleIndex,
+      tripScheduleIndexReference,
       stopPosInPattern,
       routingPattern.stopIndex(stopPosInPattern),
       boardingTime
@@ -373,7 +376,8 @@ public class OnBoardAccessResolver {
     }
   }
 
-  private int getTripScheduleIndex(
+  private RaptorTripScheduleReference getTripScheduleReference(
+    RaptorRoutingRequestTransitData raptorRoutingRequestTransitData,
     RaptorTimeTable<TripSchedule> timetable,
     Trip trip,
     LocalDate serviceDate
@@ -388,7 +392,7 @@ public class OnBoardAccessResolver {
       }
       var targetTrip = tripSchedule.getOriginalTripTimes().getTrip();
       if (targetTrip.getId().equals(trip.getId())) {
-        return tripScheduleIndex;
+        return raptorRoutingRequestTransitData.tripScheduleReference(tripSchedule);
       }
     }
 

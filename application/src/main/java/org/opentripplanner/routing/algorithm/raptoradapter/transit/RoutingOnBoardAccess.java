@@ -4,6 +4,7 @@ import java.util.Objects;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
+import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.street.search.state.State;
 
 public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, RoutingAccessEgress {
@@ -15,14 +16,13 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
   private final int boardingTime;
 
   public RoutingOnBoardAccess(
-    int routeIndex,
-    int tripScheduleIndex,
+    RaptorTripScheduleReference tripScheduleReference,
     int stopPositionInPattern,
     int stop,
     int boardingTime
   ) {
-    this.routeIndex = routeIndex;
-    this.tripScheduleIndex = tripScheduleIndex;
+    this.routeIndex = tripScheduleReference.routeIndex();
+    this.tripScheduleIndex = tripScheduleReference.tripScheduleIndex();
     this.stopPositionInPattern = stopPositionInPattern;
     this.stop = stop;
     this.boardingTime = boardingTime;
@@ -44,11 +44,7 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
 
   @Override
   public RaptorTripScheduleStopPosition tripBoarding() {
-    return new RaptorTripScheduleStopPosition(
-      routeIndex,
-      tripScheduleIndex,
-      stopPositionInPattern
-    );
+    return new RaptorTripScheduleStopPosition(routeIndex, tripScheduleIndex, stopPositionInPattern);
   }
 
   @Override
