@@ -24,12 +24,12 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * Resolves a {@link TripLocation} into a {@link RoutingOnBoardAccess} by looking up the trip,
  * pattern, stop position, and trip schedule index in the transit model.
  */
-public class OnBoardAccessResolver {
+public class StartOnBoardAccessResolver {
 
   private final TransitService transitService;
   private final BoardingLocationResolver boardingLocationResolver;
 
-  public OnBoardAccessResolver(TransitService transitService) {
+  public StartOnBoardAccessResolver(TransitService transitService) {
     this.transitService = transitService;
     boardingLocationResolver = new BoardingLocationResolver(transitService);
   }

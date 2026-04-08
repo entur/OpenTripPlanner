@@ -24,7 +24,7 @@ import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
 import org.opentripplanner.raptor.extensions.extrasearch.ExtraMcRouterSearch;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.OnBoardAccessResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressPenaltyDecorator;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
@@ -134,7 +134,6 @@ public class TransitRouter {
       ? serverContext.transitService().getRaptorTransitData()
       : serverContext.transitService().getRealtimeRaptorTransitData();
 
-    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
 
     var requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
 
@@ -142,6 +141,7 @@ public class TransitRouter {
 
     AccessEgresses accessEgresses;
 
+    var onBoardTripLocation = request.from() != null ? request.from().tripLocation : null;
     if (onBoardTripLocation != null) {
       var access = resolveOnBoardAccess(onBoardTripLocation, requestTransitDataProvider);
       var egressPaths = fetchEgress();
@@ -250,7 +250,7 @@ public class TransitRouter {
     TripLocation tripLocation,
     RaptorRoutingRequestTransitData requestTransitDataProvider
   ) {
-    var resolver = new OnBoardAccessResolver(serverContext.transitService());
+    var resolver = new StartOnBoardAccessResolver(serverContext.transitService());
     return resolver.resolve(tripLocation, requestTransitDataProvider);
   }
 
