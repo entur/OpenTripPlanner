@@ -143,9 +143,9 @@ public class AccessStopArrivalState<T extends RaptorTripSchedule> implements Sto
   /* package local methods */
 
   void setAccessTime(int time, RaptorAccessEgress access, boolean isOverallBestTime) {
-    this.delegate.setAccessTime(time, isOverallBestTime, access.stopReachedOnBoard());
+    this.delegate.setAccessTime(time, isOverallBestTime, access.arrivedOnBoard());
 
-    if (access.stopReachedOnBoard()) {
+    if (access.arrivedOnBoard()) {
       accessArriveOnBoard = access;
     } else {
       accessArriveOnStreet = access;

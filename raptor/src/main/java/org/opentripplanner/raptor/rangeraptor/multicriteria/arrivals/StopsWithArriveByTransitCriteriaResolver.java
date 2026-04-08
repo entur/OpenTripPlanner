@@ -74,7 +74,7 @@ public class StopsWithArriveByTransitCriteriaResolver {
     for (var it = egressByStop.keySet().iterator(); it.hasNext(); ) {
       int stop = it.next();
       var egressList = egressByStop.get(stop);
-      if (egressList.stream().anyMatch(e -> e.stopReachedByWalking())) {
+      if (egressList.stream().anyMatch(e -> e.arrivedOnStreet())) {
         stops.add(stop);
       }
     }

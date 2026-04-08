@@ -19,12 +19,20 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
   /**
    * Add access path to state. This should be called in the matching round and appropriate place in
    * the algorithm according to the {@link RaptorAccessEgress#numberOfRides()} and {@link
-   * RaptorAccessEgress#stopReachedOnBoard()}.
+   * RaptorAccessEgress#arrivedOnBoard()}.
    *
    * @param departureTime The access departure time. The current iteration departure time or
    *                      the time-shifted departure time for access with opening hours.
    */
-  void setAccessToStop(RaptorAccessEgress accessPath, int departureTime);
+  void addAccessStopArrival(RaptorAccessEgress accessPath, int departureTime);
+
+  /**
+   * Add a start-on-board access arrival to state. Called when the traveller is already on board a
+   * vehicle at the start of the search.
+   */
+  default void addStartOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
+    throw createStartOnBoardAccessNotSupportedException();
+  }
 
   /**
    * Prepare the {@link RoutingStrategy} to route using the {@link RaptorTimeTable}.
@@ -67,25 +75,29 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
     RaptorConstrainedBoardingSearch<T> txSearch
   );
 
-  default void registerOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
-    throw createOnTripAccessNotSupportedException();
-  }
-
   /**
    * @return all on-board trip access arrivals for the given {@code routeIndex}. The arrivals are
    * removed from state and can only be fetched once. The method returns {@code null} if no
    * arrivals exist - this should be very efficient to check.
    */
   @Nullable
-  default OnTripAccessArrivals<T> consumeOnTripStopArrivalsForRoute(int routeIndex) {
+  default OnTripAccessArrivals<T> consumeStartOnBoardStopArrivalsForRoute(int routeIndex) {
     return null;
   }
 
-  default void boardOnTripAccess(ArrivalView<T> prevArrival, T trip, int stopPositionInPattern) {
-    throw createOnTripAccessNotSupportedException();
+  /**
+   * Board the given {@code trip} at the given {@code stopPositionInPattern} using an
+   * start-on-board access arrival as the previous state.
+   */
+  default void boardWithStartOnBoardAccess(
+    ArrivalView<T> prevArrival,
+    T trip,
+    int stopPositionInPattern
+  ) {
+    throw createStartOnBoardAccessNotSupportedException();
   }
 
-  private static RuntimeException createOnTripAccessNotSupportedException() {
+  private static RuntimeException createStartOnBoardAccessNotSupportedException() {
     return new UnsupportedOperationException(
       "On-board trio access is not yet supported for this routing strategy"
     );

@@ -61,7 +61,7 @@ public final class RaptorAccessEgressToStringParser {
     return free;
   }
 
-  public boolean isStopReachedOnBoard() {
+  public boolean arrivedOnBoard() {
     return stopReachedOnBoard;
   }
 

@@ -55,7 +55,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public void setAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
+  public void addAccessStopArrival(RaptorAccessEgress accessPath, int departureTime) {
     state.setAccessToStop(accessPath, departureTime);
   }
 
@@ -101,18 +101,22 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public void registerOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
+  public void addStartOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
     state.addOnTripAccessStopArrival(access, boardTime);
   }
 
   @Nullable
   @Override
-  public OnTripAccessArrivals<T> consumeOnTripStopArrivalsForRoute(int routeIndex) {
+  public OnTripAccessArrivals<T> consumeStartOnBoardStopArrivalsForRoute(int routeIndex) {
     return state.consumeOnTripStopArrivalsForRoute(routeIndex);
   }
 
   @Override
-  public void boardOnTripAccess(ArrivalView<T> prevArrival, T trip, int stopPositionInPattern) {
+  public void boardWithStartOnBoardAccess(
+    ArrivalView<T> prevArrival,
+    T trip,
+    int stopPositionInPattern
+  ) {
     if (!(prevArrival instanceof McStopArrival<T> prevMcArrival)) {
       throw new IllegalArgumentException(prevArrival.toString());
     }

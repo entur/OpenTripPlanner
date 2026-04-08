@@ -48,7 +48,7 @@ public class FlexAccessEgressAdapter extends DefaultAccessEgress {
   }
 
   @Override
-  public boolean stopReachedOnBoard() {
+  public boolean arrivedOnBoard() {
     return flexAccessEgress.stopReachedOnBoard();
   }
 

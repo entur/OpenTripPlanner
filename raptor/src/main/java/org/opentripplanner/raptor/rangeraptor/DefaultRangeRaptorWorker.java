@@ -128,14 +128,14 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
   @Override
   public void applyAccessStartOnBoard() {
-    for (var accessPath : accessPaths.startOnBoardAccessPaths()) {
+    for (var accessPath : accessPaths.listStartOnBoardAccesses()) {
       var boarding = accessPath.tripBoarding();
       var route = transitData.getRouteForIndex(boarding.routeIndex());
       var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
       var boardTime = trip.departure(boarding.stopPositionInPattern());
 
       if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
-        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime);
+        transitWorker.addStartOnBoardAccessStopArrival(accessPath, boardTime);
       }
     }
   }
@@ -194,7 +194,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
       // Access must be available after the iteration departure time
       if (departureTime != RaptorConstants.TIME_NOT_SET) {
-        transitWorker.setAccessToStop(it, departureTime);
+        transitWorker.addAccessStopArrival(it, departureTime);
       }
     }
   }
@@ -214,7 +214,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
     transitWorker.prepareForTransitWith(route);
 
-    var onBoardArrivals = transitWorker.consumeOnTripStopArrivalsForRoute(routeIndex);
+    var onBoardArrivals = transitWorker.consumeStartOnBoardStopArrivalsForRoute(routeIndex);
 
     while (stopPositions.hasNext()) {
       int stopPos = stopPositions.next();
@@ -234,7 +234,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
         for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
           var boarding = arrival.boardingConstrant();
           var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
-          transitWorker.boardOnTripAccess(arrival.accessStopArrival(), trip, stopPos);
+          transitWorker.boardWithStartOnBoardAccess(arrival.accessStopArrival(), trip, stopPos);
         }
       }
 

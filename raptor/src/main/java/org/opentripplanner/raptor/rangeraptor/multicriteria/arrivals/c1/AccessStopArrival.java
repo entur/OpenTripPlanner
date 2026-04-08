@@ -49,7 +49,7 @@ final class AccessStopArrival<T extends RaptorTripSchedule> extends McStopArriva
 
   @Override
   public boolean arrivedOnBoard() {
-    return access.stopReachedOnBoard();
+    return access.arrivedOnBoard();
   }
 
   @Override

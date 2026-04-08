@@ -46,7 +46,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
 
   /**
    * @param nStops             total number of stops in the transit network.
-   * @param onBoardArrivalStops stops where on-board arrivals is better than on-street arrivals; 
+   * @param onBoardArrivalStops stops where on-board arrivals is better than on-street arrivals;
    *                           these stops need a pareto comparator that also considers whether the
    *                           traveller arrived on board.
    * @param arrivalListeners   per-stop listeners (via, egress, debug), keyed by stop index.

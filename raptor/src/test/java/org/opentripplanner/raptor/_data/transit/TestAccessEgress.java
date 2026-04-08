@@ -23,15 +23,15 @@ import org.opentripplanner.utils.time.TimeUtils;
 public class TestAccessEgress implements RaptorAccessEgress {
 
   public static final int DEFAULT_NUMBER_OF_RIDES = 0;
-  public static final boolean STOP_REACHED_ON_BOARD = true;
-  public static final boolean STOP_REACHED_ON_FOOT = false;
+  public static final boolean STOP_ARRIVED_ON_BOARD = true;
+  public static final boolean STOP_ARRIVED_ON_FOOT = false;
   public static final double DEFAULT_WALK_RELUCTANCE = 2.0;
 
   private final int stop;
   private final int durationInSeconds;
   private final int c1;
   private final int numberOfRides;
-  private final boolean stopReachedOnBoard;
+  private final boolean arrivedOnBoard;
   private final boolean free;
   private final int openFrom;
   private final int openUntil;
@@ -43,7 +43,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     this.stop = builder.stop;
     this.durationInSeconds = builder.durationInSeconds;
     this.numberOfRides = builder.numberOfRides;
-    this.stopReachedOnBoard = builder.stopReachedOnBoard;
+    this.arrivedOnBoard = builder.arrivedOnBoard;
     this.free = builder.free;
     this.openFrom = builder.openFrom;
     this.openUntil = builder.openUntil;
@@ -111,7 +111,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
   public static TestAccessEgress flex(int stop, int durationInSeconds, int nRides, int cost) {
     assert nRides > DEFAULT_NUMBER_OF_RIDES;
     return new Builder(stop, durationInSeconds)
-      .stopReachedOnBoard()
+      .arrivedOnBoard()
       .withNRides(nRides)
       .withCost(cost)
       .build();
@@ -273,8 +273,8 @@ public class TestAccessEgress implements RaptorAccessEgress {
   }
 
   @Override
-  public boolean stopReachedOnBoard() {
-    return stopReachedOnBoard;
+  public boolean arrivedOnBoard() {
+    return arrivedOnBoard;
   }
 
   @Override
@@ -293,7 +293,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       durationInSeconds == that.durationInSeconds &&
       c1 == that.c1 &&
       numberOfRides == that.numberOfRides &&
-      stopReachedOnBoard == that.stopReachedOnBoard &&
+      arrivedOnBoard == that.arrivedOnBoard &&
       timePenalty == that.timePenalty &&
       closed == that.closed &&
       openUntil == that.openUntil &&
@@ -308,7 +308,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       durationInSeconds,
       c1,
       numberOfRides,
-      stopReachedOnBoard,
+      arrivedOnBoard,
       timePenalty,
       closed,
       openUntil,
@@ -331,7 +331,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     int durationInSeconds;
     int c1 = RaptorConstants.NOT_SET;
     int numberOfRides = DEFAULT_NUMBER_OF_RIDES;
-    boolean stopReachedOnBoard = STOP_REACHED_ON_FOOT;
+    boolean arrivedOnBoard = STOP_ARRIVED_ON_FOOT;
     int openFrom = RaptorConstants.TIME_NOT_SET;
     int openUntil = RaptorConstants.TIME_NOT_SET;
     private boolean free = false;
@@ -349,7 +349,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
       this.free = original.free;
       this.stop = original.stop;
       this.durationInSeconds = original.durationInSeconds;
-      this.stopReachedOnBoard = original.stopReachedOnBoard;
+      this.arrivedOnBoard = original.arrivedOnBoard;
       this.c1 = original.c1;
       this.numberOfRides = original.numberOfRides;
       this.openFrom = original.openFrom;
@@ -362,7 +362,7 @@ public class TestAccessEgress implements RaptorAccessEgress {
     public Builder(RaptorAccessEgressToStringParser data) {
       this.stop = data.stopIndex();
       this.durationInSeconds = data.duration();
-      this.stopReachedOnBoard = data.isStopReachedOnBoard();
+      this.arrivedOnBoard = data.arrivedOnBoard();
       this.free = data.isFree();
       this.closed = data.isClosed();
       this.openFrom = data.openFrom();
@@ -403,8 +403,8 @@ public class TestAccessEgress implements RaptorAccessEgress {
       return this;
     }
 
-    Builder stopReachedOnBoard() {
-      this.stopReachedOnBoard = STOP_REACHED_ON_BOARD;
+    Builder arrivedOnBoard() {
+      this.arrivedOnBoard = STOP_ARRIVED_ON_BOARD;
       return this;
     }
 
