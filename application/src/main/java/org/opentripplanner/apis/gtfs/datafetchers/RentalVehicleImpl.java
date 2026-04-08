@@ -32,7 +32,7 @@ public class RentalVehicleImpl implements GraphQLDataFetchers.GraphQLRentalVehic
     return environment -> {
       var timeZone = getTransitService(environment).getTimeZone();
       var availableUntil = getSource(environment).availableUntil();
-      return availableUntil != null ? OffsetDateTime.ofInstant(availableUntil, timeZone) : null;
+      return availableUntil.map(a -> OffsetDateTime.ofInstant(a, timeZone)).orElse(null);
     };
   }
 
