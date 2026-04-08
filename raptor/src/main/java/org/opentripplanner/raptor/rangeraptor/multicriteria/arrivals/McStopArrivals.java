@@ -195,12 +195,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
    */
   @Nullable
   public OnTripAccessArrivals<T> consumeOnTripStopArrivalsForRoute(int routeIndex) {
-    OnTripAccessArrivals<T> arrivals = null;
-    if (onBoardTripArrivalsByRouteQueue.containsKey(routeIndex)) {
-      arrivals = onBoardTripArrivalsByRouteQueue.get(routeIndex);
-      onBoardTripArrivalsByRouteQueue.remove(routeIndex);
-    }
-    return arrivals;
+    return onBoardTripArrivalsByRouteQueue.remove(routeIndex);
   }
 
   /**
