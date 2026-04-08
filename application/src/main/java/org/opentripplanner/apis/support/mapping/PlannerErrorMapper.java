@@ -18,8 +18,10 @@ public class PlannerErrorMapper {
     switch (domain.code) {
       case NO_TRANSIT_CONNECTION:
       case NO_TRANSIT_CONNECTION_IN_SEARCH_WINDOW:
-      case NO_DIRECT_MODE_CONNECTION:
         api = new PlannerError(Message.PATH_NOT_FOUND);
+        break;
+      case NO_DIRECT_MODE_CONNECTION:
+        api = new PlannerError(Message.NO_DIRECT_MODE_CONNECTION);
         break;
       case OUTSIDE_BOUNDS:
         api = new PlannerError(Message.OUTSIDE_BOUNDS);
