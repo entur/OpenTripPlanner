@@ -5,7 +5,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
  * This class contain information to identify a given stop in a stop pattern for a given trip
- * schedule in a route. This can for example be used to identify where a bording or alithing
+ * schedule in a route. This can for example be used to identify where a bording or alighting
  * happens.
  */
 public final class RaptorTripScheduleStopPosition {
