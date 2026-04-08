@@ -60,7 +60,6 @@
   <logger name="com.amazonaws" level="info"/>
   <logger name="org.apache.http" level="info" />
   <logger name="com.conveyal" level="info"/>
-  <logger name="notprivacysafe.graphql" level="warn" />
 
   <logger name="org.opentripplanner.graph_builder.module.DirectTransferGenerator" level="info" />
   <logger name="org.opentripplanner" level="info" />
@@ -79,8 +78,5 @@
   <logger name="com.sun.jersey" level="warn" />
   <!-- Suppress an inconsequential IOException that is logged at debug level. -->
   <logger name="org.glassfish.grizzly" level="info" />
-
-   <!--TODO temporary logging of SIRI java model to investigate the use of timestamps in input SIRI data-->
-  <logger name="org.entur.siri.adapter.ZonedDateTimeAdapter" level="trace" />
 
 </configuration>
