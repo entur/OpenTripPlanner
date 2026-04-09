@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
  * This is a fast pre-filter that checks if the trip has any capacity at all.
  * More detailed per-position capacity checking happens during insertion validation.
  */
-public class CapacityFilter implements TripFilter, AccessEgressTripFilter {
+public class CapacityFilter implements TripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(CapacityFilter.class);
 

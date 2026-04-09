@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  * passengers to join trips where they share a segment of the driver's journey,
  * while rejecting passengers whose journey is far off any part of the driver's path.
  */
-public class DistanceBasedFilter implements TripFilter, AccessEgressTripFilter {
+public class DistanceBasedFilter implements TripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(DistanceBasedFilter.class);
 

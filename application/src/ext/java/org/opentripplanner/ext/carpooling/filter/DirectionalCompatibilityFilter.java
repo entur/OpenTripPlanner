@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * analysis to handle routes that take detours (e.g., driving around a lake).
  * <p>
  */
-public class DirectionalCompatibilityFilter implements TripFilter, AccessEgressTripFilter {
+public class DirectionalCompatibilityFilter implements TripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(DirectionalCompatibilityFilter.class);
 

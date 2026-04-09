@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * requested departure time. This prevents matching passengers with trips
  * that have already departed or won't depart for hours.
  */
-public class TimeBasedFilter implements TripFilter, AccessEgressTripFilter {
+public class TimeBasedFilter implements TripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(TimeBasedFilter.class);
 
