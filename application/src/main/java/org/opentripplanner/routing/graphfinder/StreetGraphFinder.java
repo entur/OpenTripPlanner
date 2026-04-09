@@ -107,7 +107,7 @@ public class StreetGraphFinder implements GraphFinder {
         .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
         .withSkipEdgeStrategy(skipEdgeStrategy)
         .withTraverseVisitor(visitor)
-        .withDominanceFunction(new DominanceFunctions.LeastWalk())
+        .withDominanceFunction(new DominanceFunctions.ShortestDistance())
         .withRequest(request)
         .withFrom(linkerContext.findVertices(from))
         .getShortestPathTree();
