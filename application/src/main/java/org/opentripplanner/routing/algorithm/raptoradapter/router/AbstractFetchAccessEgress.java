@@ -13,11 +13,14 @@ import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.FlexAccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingOnBoardAccess;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.AccessEgressMapper;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.linking.LinkingContext;
@@ -34,6 +37,7 @@ class AbstractFetchAccessEgress {
   private final AccessEgressRouter accessEgressRouter;
   private final TransitServiceResolver transitServiceResolver;
   private final CarpoolingService carpoolingService;
+  private final RaptorRoutingRequestTransitData requestTransitDataProvider;
 
   public AbstractFetchAccessEgress(
     RouteRequest request,
@@ -41,7 +45,8 @@ class AbstractFetchAccessEgress {
     ZonedDateTime transitSearchTimeZero,
     AdditionalSearchDays additionalSearchDays,
     LinkingContext linkingContext,
-    CarpoolingService carpoolingService
+    CarpoolingService carpoolingService,
+    RaptorRoutingRequestTransitData requestTransitDataProvider
   ) {
     this.request = request;
     this.serverContext = serverContext;
@@ -50,15 +55,32 @@ class AbstractFetchAccessEgress {
     this.linkingContext = linkingContext;
     this.carpoolingService = carpoolingService;
     this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
+    this.requestTransitDataProvider = requestTransitDataProvider;
     this.accessEgressRouter = new AccessEgressRouter(transitServiceResolver);
   }
 
   Collection<? extends RoutingAccessEgress> fetchAccess() {
+    if (request.isOnBoardAccessRequest()) {
+      return List.of(fetchStartOnBoardAccess());
+    }
     return fetchAccessEgresses(ACCESS);
   }
 
   Collection<? extends RoutingAccessEgress> fetchEgress() {
     return fetchAccessEgresses(EGRESS);
+  }
+
+  RoutingOnBoardAccess fetchStartOnBoardAccess() {
+    var from = request.from();
+    var onBoardTripLocation = from != null ? from.tripLocation : null;
+    if (onBoardTripLocation == null) {
+      throw new IllegalArgumentException(
+        "Cannot fetch start-on-board-access for a request without an on-board trip location"
+      );
+    }
+
+    var resolver = new StartOnBoardAccessResolver(serverContext.transitService());
+    return resolver.resolve(onBoardTripLocation, requestTransitDataProvider);
   }
 
   private Collection<? extends RoutingAccessEgress> fetchAccessEgresses(AccessEgressType type) {
