@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.model;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +14,6 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
   private ZonedDateTime startTime;
   private ZonedDateTime endTime;
   private String provider;
-  private Duration deviationBudget = Duration.ofMinutes(15);
   private int totalCapacity = CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
   private List<CarpoolStop> stops = new ArrayList<>();
 
@@ -28,7 +26,6 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
     this.startTime = original.startTime();
     this.endTime = original.endTime();
     this.provider = original.provider();
-    this.deviationBudget = original.deviationBudget();
     this.totalCapacity = original.totalCapacity();
     this.stops = new ArrayList<>(original.stops());
   }
@@ -48,11 +45,6 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
     return this;
   }
 
-  public CarpoolTripBuilder withDeviationBudget(Duration deviationBudget) {
-    this.deviationBudget = deviationBudget;
-    return this;
-  }
-
   public CarpoolTripBuilder withTotalCapacity(int totalCapacity) {
     this.totalCapacity = totalCapacity;
     return this;
@@ -68,10 +60,6 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
 
   public String provider() {
     return provider;
-  }
-
-  public Duration deviationBudget() {
-    return deviationBudget;
   }
 
   public int totalCapacity() {

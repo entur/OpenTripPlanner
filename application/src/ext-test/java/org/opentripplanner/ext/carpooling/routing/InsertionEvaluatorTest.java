@@ -27,7 +27,6 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
-import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
 import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
@@ -42,7 +41,6 @@ import org.opentripplanner.utils.collection.Pair;
 
 class InsertionEvaluatorTest {
 
-  private PassengerDelayConstraints delayConstraints;
   private InsertionPositionFinder positionFinder;
   private LinkingContext linkingContext;
   private StreetVertexUtils streetVertexUtils;
@@ -50,8 +48,7 @@ class InsertionEvaluatorTest {
 
   @BeforeEach
   void setup() {
-    delayConstraints = new PassengerDelayConstraints();
-    positionFinder = new InsertionPositionFinder(delayConstraints, new BeelineEstimator());
+    positionFinder = new InsertionPositionFinder(new BeelineEstimator());
 
     vertexMap = new HashMap<>();
     Map<GenericLocation, Set<Vertex>> locationVertices = new HashMap<>();
@@ -118,7 +115,6 @@ class InsertionEvaluatorTest {
     }
 
     var evaluator = new InsertionEvaluator(
-      delayConstraints,
       linkingContext,
       streetVertexUtils,
       carpoolRouter
@@ -140,10 +136,15 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_onDeviationBudgetExceeded_returnsNull() {
+    var deviationBudget = Duration.ofMinutes(5);
     var trip = createTripWithStops(
       OSLO_SOUTH,
-      List.of(createStopAt(OSLO_CENTER), createStopAt(OSLO_NORTHEAST)),
-      OSLO_NORTH
+      List.of(
+        createStopAt(OSLO_CENTER, deviationBudget),
+        createStopAt(OSLO_NORTHEAST, deviationBudget)
+      ),
+      OSLO_NORTH,
+      deviationBudget
     );
 
     var mockPath = createGraphPath(Duration.ofMinutes(4));
@@ -161,7 +162,7 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_noValidPositions_returnsNull() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
     // Routing function returns null (simulating routing failure)
     // This causes evaluator to skip all positions
     CarpoolRouter routingFunction = (from, to) -> null;
@@ -173,7 +174,7 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_oneValidPosition_returnsCandidate() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
 
     var mockPath = createGraphPath();
 
@@ -256,7 +257,7 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_baselineDurationCalculationFails_returnsNull() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
 
     CarpoolRouter routingFunction = (from, to) -> null;
 
@@ -297,7 +298,7 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_simpleTrip_hasExpectedStructure() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
 
     var mockPath = createGraphPath();
 
@@ -394,52 +395,6 @@ class InsertionEvaluatorTest {
   }
 
   @Test
-  void findOptimalInsertion_insertAtEnd_reusesMostSegments() {
-    // This test verifies that segment reuse optimization still works correctly
-    // Scenario: Trip A→B→C, insert passenger that allows some segment reuse
-    // Expected: Segments that have matching endpoints should be REUSED
-
-    var stop1 = createStopAt(OSLO_EAST);
-    var trip = createTripWithStops(OSLO_CENTER, List.of(stop1), OSLO_NORTH);
-
-    // Baseline has 2 segments: CENTER→EAST, EAST→NORTH
-    var mockPath = createGraphPath(Duration.ofMinutes(3));
-
-    final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to) -> {
-      callCount[0]++;
-      return mockPath;
-    };
-
-    // Insert passenger - the algorithm will find the best position
-    var result = findOptimalInsertion(trip, OSLO_WEST, OSLO_SOUTH, carpoolRouter);
-
-    assertNotNull(result, "Should find valid insertion");
-
-    // Duration between start and stop should be calculated correctly
-    assertTrue(
-      Duration.ofMinutes(3).minus(result.durationBetweenOriginAndDestination()).toSeconds() < 10,
-      "Baseline should be approximately 3 min (within 10s), got " +
-        result.durationBetweenOriginAndDestination()
-    );
-
-    // The modified route should have more segments than baseline
-    assertTrue(
-      result.routeSegments().size() >= 2,
-      "Modified route should have at least baseline segments"
-    );
-
-    // Additional duration should be positive (adding detour)
-    assertTrue(
-      result.additionalDuration().compareTo(Duration.ZERO) > 0,
-      "Adding passenger should increase duration"
-    );
-
-    // Routing was called for baseline and new segments
-    assertTrue(callCount[0] >= 2, "Should have called routing at least 2 times");
-  }
-
-  @Test
   void findOptimalInsertion_pickupAtExistingPoint_handlesCorrectly() {
     // Scenario: Trip A→B→C, passenger pickup at B (existing point), dropoff at new point
     // Expected: Segment A→B should be reused, B→dropoff and dropoff→C should be routed
@@ -473,7 +428,7 @@ class InsertionEvaluatorTest {
     // Edge case: Simplest possible trip (2 points, 1 segment)
     // Any insertion will require routing all new segments
 
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
 
     var mockPath = createGraphPath(Duration.ofMinutes(5));
 

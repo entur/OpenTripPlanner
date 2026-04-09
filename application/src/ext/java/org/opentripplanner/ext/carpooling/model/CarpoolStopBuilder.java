@@ -1,6 +1,8 @@
 package org.opentripplanner.ext.carpooling.model;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
+import java.util.Objects;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;
@@ -18,6 +20,8 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   private ZonedDateTime aimedDepartureTime;
   private int onboardCount = CarpoolStop.DEFAULT_ONBOARD_COUNT;
 
+  private Duration deviationBudget = CarpoolStop.DEFAULT_DEVIATION_BUDGET;
+
   CarpoolStopBuilder(FeedScopedId id) {
     super(id);
   }
@@ -30,6 +34,7 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     this.expectedDepartureTime = original.getExpectedDepartureTime();
     this.aimedDepartureTime = original.getAimedDepartureTime();
     this.onboardCount = original.getOnboardCount();
+    this.deviationBudget = original.getDeviationBudget();
   }
 
   @Override
@@ -67,6 +72,20 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     return this;
   }
 
+  /**
+   * Sets the per-stop deviation budget. See {@link CarpoolStop#getDeviationBudget()} for the
+   * semantics of the value.
+   *
+   * @param deviationBudget remaining slack at this stop; must be non-null. Use
+   *                        {@link Duration#ZERO} for stops where no further deviation is
+   *                        acceptable (always for the trip origin).
+   * @throws NullPointerException if {@code deviationBudget} is null
+   */
+  public CarpoolStopBuilder withDeviationBudget(Duration deviationBudget) {
+    this.deviationBudget = Objects.requireNonNull(deviationBudget);
+    return this;
+  }
+
   public WgsCoordinate coordinate() {
     return coordinate;
   }
@@ -89,5 +108,9 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   public int onboardCount() {
     return onboardCount;
+  }
+
+  public Duration deviationBudget() {
+    return deviationBudget;
   }
 }

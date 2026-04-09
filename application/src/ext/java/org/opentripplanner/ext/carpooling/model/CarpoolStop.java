@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling.model;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -16,12 +17,19 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   /** Default onboard count per stop (1 = driver only) when no occupancy information is provided. */
   public static final int DEFAULT_ONBOARD_COUNT = 1;
 
+  /**
+   * Default per-stop deviation budget used when the SIRI feed does not supply a
+   * {@code latestExpectedArrivalTime} for the stop.
+   */
+  public static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
+
   private final WgsCoordinate coordinate;
   private final ZonedDateTime expectedArrivalTime;
   private final ZonedDateTime aimedArrivalTime;
   private final ZonedDateTime expectedDepartureTime;
   private final ZonedDateTime aimedDepartureTime;
   private final int onboardCount;
+  private final Duration deviationBudget;
 
   public CarpoolStop(CarpoolStopBuilder builder) {
     super(builder.getId());
@@ -31,6 +39,7 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
     this.expectedDepartureTime = builder.expectedDepartureTime();
     this.aimedDepartureTime = builder.aimedDepartureTime();
     this.onboardCount = builder.onboardCount();
+    this.deviationBudget = builder.deviationBudget();
   }
 
   public static CarpoolStopBuilder of(FeedScopedId id) {
@@ -82,6 +91,17 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
    */
   public int getOnboardCount() {
     return onboardCount;
+  }
+
+  /**
+   * Returns the remaining slack the carpool may consume before this stop without breaking the
+   * driver's commitment to passengers already onboard. This is <em>not</em> the original
+   * commitment from the SIRI feed: as the trip is updated with additional SIRI messages,
+   * the budget shrinks as prior detours eat into it.
+   * A value of {@link Duration#ZERO} means no further deviation is acceptable here.
+   */
+  public Duration getDeviationBudget() {
+    return deviationBudget;
   }
 
   @Override
