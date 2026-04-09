@@ -13,6 +13,7 @@ import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
+import org.opentripplanner.ext.carpooling.model.CarpoolStopBuilder;
 import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
@@ -31,7 +32,8 @@ public class CarpoolSiriMapper {
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
   private static final int DEFAULT_AVAILABLE_SEATS = 5;
-  private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
+  private static final Duration DEFAULT_DEVIATION_BUDGET =
+    CarpoolStopBuilder.DEFAULT_DEVIATION_BUDGET;
   // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
   // run-away memory use if it by error ends up in global repositories.
   public static final int CARPOOLING_DUMMY_INDEX = -9_999;
@@ -74,8 +76,6 @@ public class CarpoolSiriMapper {
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withProvider(journey.getOperatorRef().getValue())
-      // TODO: Find a better way to exchange deviation budget with providers.
-      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       // TODO: Make available seats dynamic based on EstimatedVehicleJourney data
       .withAvailableSeats(DEFAULT_AVAILABLE_SEATS)
       .withStops(stops)
@@ -232,6 +232,8 @@ public class CarpoolSiriMapper {
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
       .withPassengerDelta(isLast ? 0 : calculatePassengerDelta(call, stopType))
+      // TODO: Find a better way to exchange deviation budget with providers.
+      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       .build();
   }
 

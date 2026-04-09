@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling.model;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -35,6 +36,7 @@ public class CarpoolStop
   private final ZonedDateTime aimedDepartureTime;
   private final int sequenceNumber;
   private final int passengerDelta;
+  private final Duration deviationBudget;
 
   public CarpoolStop(CarpoolStopBuilder builder) {
     super(builder.getId());
@@ -56,6 +58,7 @@ public class CarpoolStop
     this.aimedDepartureTime = builder.aimedDepartureTime();
     this.sequenceNumber = builder.sequenceNumber();
     this.passengerDelta = builder.passengerDelta();
+    this.deviationBudget = builder.deviationBudget();
   }
 
   public static CarpoolStopBuilder of(FeedScopedId id, IntSupplier indexCounter) {
@@ -187,6 +190,10 @@ public class CarpoolStop
 
   public int getPassengerDelta() {
     return passengerDelta;
+  }
+
+  public Duration getDeviationBudget() {
+    return deviationBudget;
   }
 
   @Override

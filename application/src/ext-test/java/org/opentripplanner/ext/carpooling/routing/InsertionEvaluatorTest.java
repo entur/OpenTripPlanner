@@ -51,7 +51,7 @@ class InsertionEvaluatorTest {
   @BeforeEach
   void setup() {
     delayConstraints = new PassengerDelayConstraints();
-    positionFinder = new InsertionPositionFinder(delayConstraints, new BeelineEstimator());
+    positionFinder = new InsertionPositionFinder(new BeelineEstimator());
 
     vertexMap = new HashMap<>();
     Map<GenericLocation, Set<Vertex>> locationVertices = new HashMap<>();
@@ -140,10 +140,15 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_onDeviationBudgetExceeded_returnsNull() {
+    var deviationBudget = Duration.ofMinutes(5);
     var trip = createTripWithStops(
       OSLO_SOUTH,
-      List.of(createStopAt(0, OSLO_CENTER), createStopAt(0, OSLO_NORTHEAST)),
-      OSLO_NORTH
+      List.of(
+        createStopAt(0, OSLO_CENTER, deviationBudget),
+        createStopAt(0, OSLO_NORTHEAST, deviationBudget)
+      ),
+      OSLO_NORTH,
+      deviationBudget
     );
 
     var mockPath = createGraphPath(Duration.ofMinutes(4));
@@ -391,52 +396,6 @@ class InsertionEvaluatorTest {
 
     // Routing was called at least 4 times (1 baseline + 3 new segments minimum)
     assertTrue(callCount[0] >= 4, "Should have called routing at least 4 times");
-  }
-
-  @Test
-  void findOptimalInsertion_insertAtEnd_reusesMostSegments() {
-    // This test verifies that segment reuse optimization still works correctly
-    // Scenario: Trip A→B→C, insert passenger that allows some segment reuse
-    // Expected: Segments that have matching endpoints should be REUSED
-
-    var stop1 = createStopAt(0, OSLO_EAST);
-    var trip = createTripWithStops(OSLO_CENTER, List.of(stop1), OSLO_NORTH);
-
-    // Baseline has 2 segments: CENTER→EAST, EAST→NORTH
-    var mockPath = createGraphPath(Duration.ofMinutes(3));
-
-    final int[] callCount = { 0 };
-    CarpoolRouter carpoolRouter = (from, to) -> {
-      callCount[0]++;
-      return mockPath;
-    };
-
-    // Insert passenger - the algorithm will find the best position
-    var result = findOptimalInsertion(trip, OSLO_WEST, OSLO_SOUTH, carpoolRouter);
-
-    assertNotNull(result, "Should find valid insertion");
-
-    // Duration between start and stop should be calculated correctly
-    assertTrue(
-      Duration.ofMinutes(3).minus(result.durationBetweenOriginAndDestination()).toSeconds() < 10,
-      "Baseline should be approximately 3 min (within 10s), got " +
-        result.durationBetweenOriginAndDestination()
-    );
-
-    // The modified route should have more segments than baseline
-    assertTrue(
-      result.routeSegments().size() >= 2,
-      "Modified route should have at least baseline segments"
-    );
-
-    // Additional duration should be positive (adding detour)
-    assertTrue(
-      result.additionalDuration().compareTo(Duration.ZERO) > 0,
-      "Adding passenger should increase duration"
-    );
-
-    // Routing was called for baseline and new segments
-    assertTrue(callCount[0] >= 2, "Should have called routing at least 2 times");
   }
 
   @Test

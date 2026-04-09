@@ -35,13 +35,6 @@ public record InsertionCandidate(
   }
 
   /**
-   * Checks if this insertion is within the trip's deviation budget.
-   */
-  public boolean isWithinDeviationBudget() {
-    return additionalDuration().compareTo(trip.deviationBudget()) <= 0;
-  }
-
-  /**
    * Gets the pickup route segment(s) - from boarding to passenger pickup.
    * Returns all segments before the pickup position.
    */

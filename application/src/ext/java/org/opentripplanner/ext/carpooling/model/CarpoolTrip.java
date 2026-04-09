@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.model;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +22,6 @@ import org.opentripplanner.transit.model.framework.TransitBuilder;
  *   <li><strong>Origin/Destination Areas:</strong> Start and end zones for the driver's journey</li>
  *   <li><strong>Stops:</strong> Ordered sequence of waypoints along the route where passengers
  *       can be picked up or dropped off. Stops are dynamically updated as bookings occur.</li>
- *   <li><strong>Deviation Budget:</strong> Maximum additional time the driver is willing to spend
- *       to pick up/drop off passengers (e.g., 5 minutes). This represents the driver's flexibility.</li>
  *   <li><strong>Available Seats:</strong> Current passenger capacity remaining in the vehicle</li>
  * </ul>
  *
@@ -60,10 +57,6 @@ public class CarpoolTrip
   private final ZonedDateTime startTime;
   private final ZonedDateTime endTime;
   private final String provider;
-
-  // The amount of time the trip can deviate from the scheduled time in order to pick up or drop off
-  // a passenger.
-  private final Duration deviationBudget;
   private final int availableSeats;
 
   // Ordered list of stops along the carpool route where passengers can be picked up or dropped off
@@ -75,7 +68,6 @@ public class CarpoolTrip
     this.endTime = builder.endTime();
     this.provider = builder.provider();
     this.availableSeats = builder.availableSeats();
-    this.deviationBudget = builder.deviationBudget();
     this.stops = Collections.unmodifiableList(builder.stops());
   }
 
@@ -115,10 +107,6 @@ public class CarpoolTrip
 
   public String provider() {
     return provider;
-  }
-
-  public Duration deviationBudget() {
-    return deviationBudget;
   }
 
   public int availableSeats() {

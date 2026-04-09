@@ -17,10 +17,15 @@ import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createTripW
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
-import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.carpooling.model.CarpoolStop;
+import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
+import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
  * Tests for {@link InsertionPositionFinder}.
@@ -39,24 +44,20 @@ class InsertionPositionFinderTest {
   void findViablePositions_simpleTrip_findsPositions() {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
-    var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_WEST);
+    // Passenger picked up east of route, dropped off at destination — small compatible detour
+    var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_NORTH);
 
     assertFalse(viablePositions.isEmpty());
-    // Simple trip (2 points) allows insertions at positions (1,2) and (1,3)
-    assertTrue(viablePositions.size() >= 1);
   }
 
   @Test
   void findViablePositions_incompatibleDirection_rejectsPosition() {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
-    // Passenger going perpendicular (EAST to WEST when trip is CENTER to NORTH)
-    // This should result in some positions being rejected by directional checks
+    // Passenger going opposite direction (SOUTH→CENTER) when trip is CENTER→NORTH
     var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_CENTER);
 
-    // May not be completely empty, but should have fewer positions than compatible directions
-    // The directional check filters out positions that cause too much backtracking
-    assertNotNull(viablePositions);
+    assertTrue(viablePositions.isEmpty());
   }
 
   @Test
@@ -73,25 +74,63 @@ class InsertionPositionFinderTest {
 
   @Test
   void findViablePositions_exceedsBeelineDelay_rejectsPosition() {
-    // Create finder with very restrictive delay constraints
-    var restrictiveConstraints = new PassengerDelayConstraints(Duration.ofSeconds(1));
-    var restrictiveFinder = new InsertionPositionFinder(
-      restrictiveConstraints,
-      new BeelineEstimator()
+    // Create stops with very restrictive deviation budgets (1 second)
+    var restrictiveBudget = Duration.ofSeconds(1);
+    var trip = createTripWithRestrictiveBudget(
+      OSLO_CENTER,
+      OSLO_EAST,
+      OSLO_NORTH,
+      restrictiveBudget
     );
 
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStopAt(0, OSLO_EAST)), OSLO_NORTH);
+    // Passenger going opposite direction (WEST→SOUTH) with 1s budget — all positions should be rejected
+    var viablePositions = finder.findViablePositions(trip, OSLO_WEST, OSLO_SOUTH);
 
-    // Try to insert passenger that would cause significant detour
-    // Far from route
-    // Even farther
-    var viablePositions = restrictiveFinder.findViablePositions(trip, OSLO_WEST, OSLO_SOUTH);
+    assertTrue(viablePositions.isEmpty());
+  }
 
-    // With very restrictive constraints, positions causing significant detours should be rejected
-    // However, the beeline check only applies if there are existing stops (routePoints.size() > 2)
-    // With CENTER, EAST, NORTH we have 3 points, so the check should apply
-    // The result depends on the actual distances and heuristics
-    assertNotNull(viablePositions);
+  private static final AtomicInteger COUNTER = new AtomicInteger(0);
+
+  private static CarpoolTrip createTripWithRestrictiveBudget(
+    WgsCoordinate origin,
+    WgsCoordinate intermediate,
+    WgsCoordinate destination,
+    Duration budget
+  ) {
+    var originStop = CarpoolStop.of(
+      FeedScopedId.ofNullable("TEST", "area-" + COUNTER.incrementAndGet()),
+      COUNTER::getAndIncrement
+    )
+      .withCoordinate(origin)
+      .withDeviationBudget(budget)
+      .build();
+
+    var midStop = CarpoolStop.of(
+      FeedScopedId.ofNullable("TEST", "area-" + COUNTER.incrementAndGet()),
+      COUNTER::getAndIncrement
+    )
+      .withCoordinate(intermediate)
+      .withSequenceNumber(1)
+      .withDeviationBudget(budget)
+      .build();
+
+    var destStop = CarpoolStop.of(
+      FeedScopedId.ofNullable("TEST", "area-" + COUNTER.incrementAndGet()),
+      COUNTER::getAndIncrement
+    )
+      .withCoordinate(destination)
+      .withCarpoolStopType(CarpoolStopType.DROP_OFF_ONLY)
+      .withSequenceNumber(2)
+      .withDeviationBudget(budget)
+      .build();
+
+    return new CarpoolTripBuilder(
+      FeedScopedId.ofNullable("TEST", "trip-" + COUNTER.incrementAndGet())
+    )
+      .withStops(List.of(originStop, midStop, destStop))
+      .withAvailableSeats(4)
+      .withStartTime(java.time.ZonedDateTime.now())
+      .build();
   }
 
   @Test

@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling.model;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.function.IntSupplier;
@@ -28,6 +29,9 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   private int sequenceNumber;
   private int passengerDelta;
 
+  public static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
+  private Duration deviationBudget = DEFAULT_DEVIATION_BUDGET;
+
   CarpoolStopBuilder(FeedScopedId id, IntSupplier indexCounter) {
     super(id);
     this.indexCounter = Objects.requireNonNull(indexCounter);
@@ -50,6 +54,7 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     this.expectedDepartureTime = original.getExpectedDepartureTime();
     this.aimedDepartureTime = original.getAimedDepartureTime();
     this.passengerDelta = original.getPassengerDelta();
+    this.deviationBudget = original.getDeviationBudget();
   }
 
   @Override
@@ -113,6 +118,11 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     return this;
   }
 
+  public CarpoolStopBuilder withDeviationBudget(Duration deviationBudget) {
+    this.deviationBudget = Objects.requireNonNull(deviationBudget);
+    return this;
+  }
+
   int createIndex() {
     return indexCounter.getAsInt();
   }
@@ -163,6 +173,10 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   public int passengerDelta() {
     return passengerDelta;
+  }
+
+  public Duration deviationBudget() {
+    return deviationBudget;
   }
 
   private Geometry toGeometry(WgsCoordinate coordinate) {
