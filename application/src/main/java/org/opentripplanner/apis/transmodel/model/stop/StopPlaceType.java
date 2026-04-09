@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
+import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.apis.transmodel.mapping.TripTimeOnDateFilterMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.TransmodelTransportSubmode;
@@ -517,7 +518,7 @@ public class StopPlaceType {
       });
       return result;
     } else {
-      throw new IllegalArgumentException("Unexpected multiModalMode: " + multiModalMode);
+      throw new InvalidInputException("Unexpected multiModalMode: " + multiModalMode);
     }
   }
 
