@@ -4,11 +4,11 @@ horizontalPodAutoscaler:
   enabled: true
   maxReplicas: 10
   minReplicas: 2
-  targetCPUUtilizationPercentage: 80
+  targetCPUUtilizationPercentage: 75
 
 rollingUpdate:
-  maxSurge: 50%
-  maxUnavailable: 1
+  maxSurge: 25%
+  maxUnavailable: 0
 
 resources:
   cpuLimit: "8"
