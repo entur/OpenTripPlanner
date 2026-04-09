@@ -4,7 +4,7 @@ import java.util.Objects;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * This class contain information to identify a given stop in a stop pattern for a given trip
+ * This class contains information to identify a given stop in a stop pattern for a given trip
  * schedule in a route. This can for example be used to identify where a bording or alighting
  * happens.
  */
@@ -35,8 +35,8 @@ public final class RaptorTripScheduleStopPosition {
   }
 
   /// The stop position in the route stop-pattern. Knowing the stop index is not enough to identify
-  /// a stop, a stop may occour multiple times in a stop pattern, in other word a circular stop
-  /// pattern visit some of the same stops multiple times.
+  /// a stop, a stop may occour multiple times in a stop pattern, in other words a circular stop
+  /// pattern visits some of the same stops multiple times.
   public int stopPositionInPattern() {
     return stopPositionInPattern;
   }
@@ -61,7 +61,7 @@ public final class RaptorTripScheduleStopPosition {
 
   @Override
   public String toString() {
-    // The field labels are shorthen to improve reading - should be easy to get in the context
+    // The field labels are shortened to improve reading - should be easy to get in the context
     return ToStringBuilder.of(RaptorTripScheduleStopPosition.class)
       .addNum("route", routeIndex)
       .addNum("tripSchedule", tripScheduleIndex)

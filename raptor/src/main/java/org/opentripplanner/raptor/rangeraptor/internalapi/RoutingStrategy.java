@@ -82,8 +82,8 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
   }
 
   /**
-   * @return all on-board trip access arrival for the given {@code routeIndex}. The arrivals are
-   * removed from state and can only be fetched once. The method return {@code null} if no
+   * @return all on-board trip access arrivals for the given {@code routeIndex}. The arrivals are
+   * removed from state and can only be fetched once. The method returns {@code null} if no
    * arrivals exist - this should be very efficient to check.
    */
   @Nullable

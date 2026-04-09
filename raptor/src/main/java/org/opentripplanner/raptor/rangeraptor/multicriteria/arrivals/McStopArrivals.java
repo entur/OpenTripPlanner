@@ -159,7 +159,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     access.add(arrival);
 
     // Then update the state, both touchedStops and init the pareto-set for the given stop to
-    // prevent NPE when the state is fetched later. The set is empty, witch is ok.
+    // prevent NPE when the state is fetched later. The set is empty, which is ok.
     findOrCreateSet(arrival.stop());
     touchedStops.set(arrival.stop());
   }
