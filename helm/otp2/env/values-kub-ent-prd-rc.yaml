@@ -1,0 +1,11 @@
+otpFeatures:
+  costlyAssertions: false
+  emission: true
+  empiricalDelay: true
+journeyPlanner:
+  enabled: false
+cronjobRedeployGraphBuilder:
+    releaseCandidateGraphBuilderEnabled: true
+    mardukBucket: marduk-production
+    mardukInternalBucket: ror-marduk-internal-production
+    ignoreFareFrame: false
