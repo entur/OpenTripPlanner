@@ -41,8 +41,6 @@ class AbstractFetchAccessEgress {
     ZonedDateTime transitSearchTimeZero,
     AdditionalSearchDays additionalSearchDays,
     LinkingContext linkingContext,
-    AccessEgressRouter accessEgressRouter,
-    TransitServiceResolver transitServiceResolver,
     CarpoolingService carpoolingService
   ) {
     this.request = request;
@@ -50,9 +48,9 @@ class AbstractFetchAccessEgress {
     this.transitSearchTimeZero = transitSearchTimeZero;
     this.additionalSearchDays = additionalSearchDays;
     this.linkingContext = linkingContext;
-    this.accessEgressRouter = accessEgressRouter;
-    this.transitServiceResolver = transitServiceResolver;
     this.carpoolingService = carpoolingService;
+    this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
+    this.accessEgressRouter = new AccessEgressRouter(transitServiceResolver);
   }
 
   Collection<? extends RoutingAccessEgress> fetchAccess() {
@@ -89,7 +87,7 @@ class AbstractFetchAccessEgress {
 
     var nearbyStops = accessEgressRouter.findAccessEgresses(
       accessRequest,
-      streetRequest.mode(),
+      mode,
       serverContext.listExtensionRequestContexts(accessRequest),
       type,
       durationLimit,
@@ -157,5 +155,4 @@ class AbstractFetchAccessEgress {
       Instant.now()
     );
   }
-
 }
