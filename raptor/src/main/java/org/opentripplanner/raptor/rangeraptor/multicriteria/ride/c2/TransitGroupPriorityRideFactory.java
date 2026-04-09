@@ -1,7 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2;
 
 import org.opentripplanner.raptor.api.request.RaptorTransitGroupPriorityCalculator;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
 import org.opentripplanner.raptor.spi.RaptorTripPattern;

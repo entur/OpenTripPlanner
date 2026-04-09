@@ -5,7 +5,7 @@ import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 import org.opentripplanner.raptor.api.view.PathLegType;
 import org.opentripplanner.raptor.api.view.TransitArrival;
 import org.opentripplanner.raptor.api.view.TransitPathView;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
 /**

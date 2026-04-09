@@ -8,7 +8,6 @@ import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.view.PatternRideView;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c1.PatternRideC1;
 import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.utils.time.DurationUtils;

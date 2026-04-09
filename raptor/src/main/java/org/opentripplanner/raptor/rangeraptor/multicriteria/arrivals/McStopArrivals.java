@@ -14,6 +14,8 @@ import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.ArrivalParetoSetComparatorFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrival;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.raptor.util.BitSetIterator;

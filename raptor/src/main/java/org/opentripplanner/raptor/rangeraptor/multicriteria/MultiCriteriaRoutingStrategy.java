@@ -10,7 +10,7 @@ import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
 import org.opentripplanner.raptor.rangeraptor.support.TimeBasedBoardingSupport;
