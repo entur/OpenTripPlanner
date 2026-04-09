@@ -51,6 +51,16 @@ public final class TripScheduleWithOffset implements TripSchedule {
   }
 
   @Override
+  public int relativeTravelTime(int boardTime) {
+    // sortIndex is the arrival time at stop 0, which is fixed per trip. Since all trips in the
+    // same pattern have the same travel-time structure, (sortIndex - boardTime) satisfies both
+    // invariants of relativeTravelTime: the difference between two boardings equals the actual
+    // transit time between the stops, and the value is identical across trips for the same
+    // boarding position.
+    return sortIndex - boardTime;
+  }
+
+  @Override
   public RaptorTripPattern pattern() {
     return pattern;
   }

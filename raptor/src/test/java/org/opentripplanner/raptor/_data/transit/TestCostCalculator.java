@@ -68,12 +68,8 @@ public final class TestCostCalculator implements RaptorCostCalculator<TestTripSc
   }
 
   @Override
-  public int onTripRelativeRidingCost(int boardTime, TestTripSchedule tripScheduledBoarded) {
-    // The relative-transit-time is time spent on transit. We do not know the alight-stop, so
-    // it is impossible to calculate the "correct" time. But the only thing that maters is that
-    // the relative difference between to boardings are correct, assuming riding the same trip.
-    // So, we can use the negative board time as relative-transit-time.
-    return -boardTime * TRANSIT_RELUCTANCE;
+  public int transitCost(int transitTime, TestTripSchedule tripScheduledBoarded) {
+    return transitTime * TRANSIT_RELUCTANCE;
   }
 
   @Override
@@ -84,7 +80,7 @@ public final class TestCostCalculator implements RaptorCostCalculator<TestTripSc
     TestTripSchedule trip,
     int toStopIndex
   ) {
-    int cost = boardCost + TRANSIT_RELUCTANCE * transitTime + waitFactor * alightSlack;
+    int cost = boardCost + transitCost(transitTime, trip) + waitFactor * alightSlack;
 
     // Add transfer cost on all alighting events.
     // If it turns out to be the last one this cost will be removed during costEgress phase.

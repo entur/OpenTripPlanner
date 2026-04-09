@@ -57,6 +57,24 @@ public interface RaptorTripSchedule {
     return departure(pattern().findStopPositionAfter(startStopPos, stopIndex));
   }
 
+  /// The relative-travel-time is a proxy for time spent on transit from the boarding stop to the
+  /// last stop in the pattern. We do not know the alight-stop, so it is impossible to calculate
+  /// the "correct" time. But the only thing that matters is that the relative difference between
+  /// two boardings is correct. Compute a "relative-time" which can be used to compare the
+  /// travel-time cost for any two boardings in the same pattern.
+  ///
+  /// Two invariants must hold:
+  ///
+  /// - For two boardings at stops i and j on the same trip (where i comes before j in the
+  ///   pattern), `relativeTravelTime(boardAtI) - relativeTravelTime(boardAtJ)` must equal the
+  ///   actual transit time from stop i to stop j. If the board time at position 3 is 10:00 and at
+  ///   the next stop is 10:05, then the value at position 3 is larger by 5*60s = 300 than at the
+  ///   next stop.
+  /// - All trips in the same pattern must return the same value for the last arrival stop. If the
+  ///   value for one trip at the last stop is 56_000, then it must be 56_000 for the last stop in
+  ///   all other trips in the same pattern.
+  int relativeTravelTime(int boardTime);
+
   /**
    * Return the pattern for this trip.
    */
