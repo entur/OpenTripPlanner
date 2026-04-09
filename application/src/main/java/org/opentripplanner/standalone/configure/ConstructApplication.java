@@ -36,6 +36,7 @@ import org.opentripplanner.standalone.config.OtpConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.server.GrizzlyServer;
 import org.opentripplanner.standalone.server.OTPWebApplication;
+import org.opentripplanner.standalone.server.warmup.WarmupWorker;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
@@ -210,6 +211,13 @@ public class ConstructApplication {
       carpoolingRepository(),
       snapshotManager(),
       routerConfig().updaterConfig()
+    );
+
+    // Start application warmup — runs routing queries to warm up the application
+    WarmupWorker.start(
+      routerConfig().warmupConfig(),
+      () -> factory.createServerContext(),
+      () -> timetableRepository().getUpdaterManager()
     );
 
     initEllipsoidToGeoidDifference();
