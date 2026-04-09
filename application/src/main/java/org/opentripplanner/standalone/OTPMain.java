@@ -185,41 +185,37 @@ public class OTPMain {
   }
 
   private static void startOtpWebServer(CommandLineParameters params, ConstructApplication app) {
+    // Publish config versions (lightweight, no dependencies)
+    setOtpConfigVersionsOnServerInfo(app);
+
+    // Create and start HTTP server early — before heavy indexing.
+    // API requests will get 503 until markReady() is called.
+    GrizzlyServer grizzlyServer = app.createGrizzlyServer();
+    registerShutdownHookToGracefullyShutDownServer(app.timetableRepository(), app.raptorConfig());
+    grizzlyServer.start();
+
     // Index graph for travel search
     app.timetableRepository().index();
     app.transferRepository().index();
     app.graph().index();
 
-    // publishing the config version info make it available to the APIs
-    setOtpConfigVersionsOnServerInfo(app);
-
-    /* Start visualizer if requested. */
+    // Start visualizer if requested
     if (params.visualize) {
       app.graphVisualizer().run();
     }
 
-    /* Start web server if requested. */
-    // We could start the server first so it can report build/load progress to a load balancer.
-    // This would also avoid the awkward call to set the router on the appConstruction after it's constructed.
-    // However, currently the server runs in a blocking way and waits for shutdown, so has to run last.
-    if (params.doServe()) {
-      GrizzlyServer grizzlyServer = app.createGrizzlyServer();
+    // Setup transit routing (Raptor data, updaters, warmup, caches)
+    app.setupTransitRoutingServer();
 
-      registerShutdownHookToGracefullyShutDownServer(app.timetableRepository(), app.raptorConfig());
+    // Server is now ready to handle API requests
+    app.markReady();
 
-      // Loop to restart server on uncaught fatal exceptions.
-      while (true) {
-        try {
-          grizzlyServer.run();
-          return;
-        } catch (Throwable throwable) {
-          LOG.error(
-            "An uncaught error occurred inside OTP. Restarting server. Error was: {}",
-            throwable.getMessage(),
-            throwable
-          );
-        }
-      }
+    // Block main thread until shutdown
+    try {
+      Thread.currentThread().join();
+    } catch (InterruptedException e) {
+      LOG.info("Main thread interrupted, shutting down.");
+      Thread.currentThread().interrupt();
     }
   }
 

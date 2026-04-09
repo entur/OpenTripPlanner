@@ -1,6 +1,9 @@
 package org.opentripplanner.standalone.configure;
 
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Application;
+import jakarta.ws.rs.core.Response;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.datastore.api.DataSource;
@@ -68,6 +71,7 @@ public class ConstructApplication {
 
   private static final Logger LOG = LoggerFactory.getLogger(ConstructApplication.class);
 
+  private final AtomicBoolean ready = new AtomicBoolean(false);
   private final CommandLineParameters cli;
   private final GraphBuilderDataSources graphBuilderDataSources;
   /**
@@ -131,6 +135,14 @@ public class ConstructApplication {
   }
 
   /**
+   * Mark the application as ready to accept API requests. Before this is called, all API
+   * requests will receive a 503 Service Unavailable response.
+   */
+  public void markReady() {
+    ready.set(true);
+  }
+
+  /**
    * Create a new Grizzly server - call this method once, the new instance is created every time
    * this method is called.
    */
@@ -184,14 +196,26 @@ public class ConstructApplication {
 
   private Application createApplication() {
     LOG.info("Wiring up and configuring server.");
-    setupTransitRoutingServer();
-    return new OTPWebApplication(routerConfig().server(), this::createServerContext);
-  }
-
-  private void setupTransitRoutingServer() {
     enableRequestTraceLogging();
     createMetricsLogging();
+    return new OTPWebApplication(
+      routerConfig().server(),
+      () -> {
+        if (!ready.get()) {
+          throw new WebApplicationException(
+            Response
+              .status(Response.Status.SERVICE_UNAVAILABLE)
+              .entity("OTP is starting up and is not yet ready to accept requests.\n")
+              .type("text/plain")
+              .build()
+          );
+        }
+        return createServerContext();
+      }
+    );
+  }
 
+  public void setupTransitRoutingServer() {
     createRaptorTransitData(
       timetableRepository(),
       transferRepository(),

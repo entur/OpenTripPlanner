@@ -1,7 +1,6 @@
 package org.opentripplanner.standalone.server;
 
 import static org.opentripplanner.framework.application.ApplicationShutdownSupport.addShutdownHook;
-import static org.opentripplanner.framework.application.ApplicationShutdownSupport.removeShutdownHook;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import jakarta.ws.rs.core.Application;
@@ -9,7 +8,6 @@ import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.BindException;
 import java.time.Duration;
-import java.util.Optional;
 import org.glassfish.grizzly.http.CompressionConfig;
 import org.glassfish.grizzly.http.server.CLStaticHttpHandler;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -33,6 +31,7 @@ public class GrizzlyServer {
   private final CommandLineParameters params;
   private final Application app;
   private final Duration httpTransactionTimeout;
+  private HttpServer httpServer;
 
   static {
     // Remove existing handlers attached to the j.u.l root logger (since SLF4J 1.6.5)
@@ -53,18 +52,18 @@ public class GrizzlyServer {
   }
 
   /**
-   * This function goes through roughly the same steps as Jersey's GrizzlyServerFactory, but we
-   * instead construct an HttpServer and NetworkListener manually so we can set the number of
-   * threads and other details.
+   * Start the Grizzly server without blocking the calling thread. The server begins accepting
+   * HTTP connections immediately, but the application may return 503 until initialization
+   * completes. Call this early in the startup sequence so that K8s probes can connect.
    */
-  public void run() {
+  public void start() {
     LOG.info(
       "Starting OTP Grizzly server on port {} of interface {}",
       params.port,
       params.bindAddress
     );
     LOG.info("OTP server base directory is: {}", params.baseDirectory);
-    HttpServer httpServer = new HttpServer();
+    httpServer = new HttpServer();
 
     // Set up a pool of threads to handle incoming HTTP requests.
     // According to the Grizzly docs, setting the core and max pool size equal with no queue limit
@@ -125,32 +124,35 @@ public class GrizzlyServer {
       httpServer.getServerConfiguration().addHttpHandler(localHandler, "/local");
     }
 
-    /* 3. Test alternate HTTP handling without Jersey. */
-    // As in servlets, * is needed in base path to identify the "rest" of the path.
-    // GraphService gs = (GraphService) iocFactory.getComponentProvider(GraphService.class).getInstance();
-    // Graph graph = gs.getGraph();
-    // httpServer.getServerConfiguration().addHttpHandler(new OTPHttpHandler(graph), "/test/*");
+    // Add shutdown hook to gracefully shut down Grizzly.
+    // If no thread is returned then shutdown is already in progress.
+    addShutdownHook("grizzly-shutdown", httpServer::shutdown);
 
-    // Add shutdown hook to gracefully shut down Grizzly. If no thread is returned then shutdown is already in progress.
-    Optional<Thread> shutdownThread = addShutdownHook("grizzly-shutdown", httpServer::shutdown);
-    if (!shutdownThread.isPresent()) {
-      return;
-    }
-
-    /* RELINQUISH CONTROL TO THE SERVER THREAD */
     try {
       httpServer.start();
       LOG.info("Grizzly server running.");
-      Thread.currentThread().join();
     } catch (BindException be) {
       LOG.error("Cannot bind to port {}. Is it already in use?", params.port);
     } catch (IOException ioe) {
       LOG.error("IO exception while starting server.");
+    }
+  }
+
+  /**
+   * This function goes through roughly the same steps as Jersey's GrizzlyServerFactory, but we
+   * instead construct an HttpServer and NetworkListener manually so we can set the number of
+   * threads and other details. This method blocks the calling thread until the server shuts down.
+   */
+  public void run() {
+    start();
+
+    /* RELINQUISH CONTROL TO THE SERVER THREAD */
+    try {
+      Thread.currentThread().join();
     } catch (InterruptedException ie) {
       LOG.info("Interrupted, shutting down.");
     }
 
-    shutdownThread.ifPresent(thread -> removeShutdownHook(thread));
     httpServer.shutdown();
   }
 
