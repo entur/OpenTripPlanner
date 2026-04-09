@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling.model;
 
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -16,12 +17,15 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   /** Default onboard count per stop (1 = driver only) when no occupancy information is provided. */
   public static final int DEFAULT_ONBOARD_COUNT = 1;
 
+  public static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
+
   private final WgsCoordinate coordinate;
   private final ZonedDateTime expectedArrivalTime;
   private final ZonedDateTime aimedArrivalTime;
   private final ZonedDateTime expectedDepartureTime;
   private final ZonedDateTime aimedDepartureTime;
   private final int onboardCount;
+  private final Duration deviationBudget;
 
   public CarpoolStop(CarpoolStopBuilder builder) {
     super(builder.getId());
@@ -31,6 +35,7 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
     this.expectedDepartureTime = builder.expectedDepartureTime();
     this.aimedDepartureTime = builder.aimedDepartureTime();
     this.onboardCount = builder.onboardCount();
+    this.deviationBudget = builder.deviationBudget();
   }
 
   public static CarpoolStopBuilder of(FeedScopedId id) {
@@ -93,6 +98,10 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
    */
   public int getOnboardCount() {
     return onboardCount;
+  }
+
+  public Duration getDeviationBudget() {
+    return deviationBudget;
   }
 
   @Override

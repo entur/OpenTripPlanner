@@ -36,26 +36,20 @@ public class InsertionEvaluator {
 
   private static final Logger LOG = LoggerFactory.getLogger(InsertionEvaluator.class);
 
-  private static final Duration INITIAL_ADDITIONAL_DURATION = Duration.ofDays(1);
-
-  private final PassengerDelayConstraints delayConstraints;
   private final LinkingContext linkingContext;
   private final StreetVertexUtils streetVertexUtils;
   private final CarpoolRouter carpoolRouter;
 
   /**
-   * Creates an evaluator with the specified routing function, delay constraints, and linking context.
+   * Creates an evaluator with the specified routing function and linking context.
    *
-   * @param delayConstraints Constraints for acceptable passenger delays
    * @param linkingContext Linking context with pre-linked vertices for routing
    */
   public InsertionEvaluator(
-    PassengerDelayConstraints delayConstraints,
     LinkingContext linkingContext,
     StreetVertexUtils streetVertexUtils,
     CarpoolRouter carpoolRouter
   ) {
-    this.delayConstraints = delayConstraints;
     this.linkingContext = linkingContext;
     this.streetVertexUtils = streetVertexUtils;
     this.carpoolRouter = carpoolRouter;
@@ -224,7 +218,7 @@ public class InsertionEvaluator {
     NearbyStop transitStop
   ) {
     InsertionCandidate bestCandidate = null;
-    Duration minAdditionalDuration = INITIAL_ADDITIONAL_DURATION;
+    Duration minAdditionalDuration = Duration.ofDays(1);
 
     for (InsertionPosition position : viablePositions) {
       InsertionCandidate candidate = evaluateInsertion(
@@ -245,11 +239,8 @@ public class InsertionEvaluator {
 
       Duration additionalDuration = candidate.additionalDuration();
 
-      // Check if this is the best so far and within deviation budget
-      if (
-        additionalDuration.compareTo(minAdditionalDuration) < 0 &&
-        additionalDuration.compareTo(tripWithVertices.trip().deviationBudget()) <= 0
-      ) {
+      // Check if this is the best so far
+      if (additionalDuration.compareTo(minAdditionalDuration) < 0) {
         minAdditionalDuration = additionalDuration;
         bestCandidate = candidate;
         LOG.debug(
@@ -301,14 +292,16 @@ public class InsertionEvaluator {
     }
 
     // Check passenger delay constraints
+    Duration[] modifiedCumulativeDurations = calculateCumulativeDurations(
+      modifiedSegments.toArray(new GraphPath[modifiedSegments.size()])
+    );
     if (
-      !delayConstraints.satisfiesConstraints(
+      !PassengerDelayConstraints.satisfiesConstraints(
         originalCumulativeDurations,
-        calculateCumulativeDurations(
-          modifiedSegments.toArray(new GraphPath[modifiedSegments.size()])
-        ),
+        modifiedCumulativeDurations,
         pickupPos,
-        dropoffPos
+        dropoffPos,
+        tripWithVertices.trip().stops()
       )
     ) {
       LOG.trace(

@@ -6,9 +6,7 @@ import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NOR
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createSimpleTrip;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createStopAt;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -25,7 +23,6 @@ public class CarpoolTripBuilderTest {
     var trip = builder
       .withTotalCapacity(2)
       .withProvider("UNIT")
-      .withDeviationBudget(Duration.of(8, ChronoUnit.MINUTES))
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withStops(List.of(stop))
@@ -33,7 +30,6 @@ public class CarpoolTripBuilderTest {
 
     assertEquals(2, trip.totalCapacity());
     assertEquals("UNIT", trip.provider());
-    assertEquals(Duration.of(8, ChronoUnit.MINUTES), trip.deviationBudget());
     assertEquals(startTime, trip.startTime());
     assertEquals(endTime, trip.endTime());
     assertEquals(stop, trip.stops().getFirst());
@@ -48,7 +44,6 @@ public class CarpoolTripBuilderTest {
 
     assertEquals(original.totalCapacity(), trip.totalCapacity());
     assertEquals(original.provider(), trip.provider());
-    assertEquals(original.deviationBudget(), trip.deviationBudget());
     assertEquals(original.startTime(), trip.startTime());
     assertEquals(original.endTime(), trip.endTime());
     assertEquals(original.stops().getFirst(), trip.stops().getFirst());

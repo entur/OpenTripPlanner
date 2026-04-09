@@ -11,7 +11,6 @@ import java.util.Set;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
-import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
@@ -116,7 +115,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final StreetLimitationParametersService streetLimitationParametersService;
   private final FilterChain preFilters;
   private final CarpoolItineraryMapper itineraryMapper;
-  private final PassengerDelayConstraints delayConstraints;
   private final InsertionPositionFinder positionFinder;
   private final VertexLinker vertexLinker;
 
@@ -143,8 +141,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
     this.itineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
-    this.delayConstraints = new PassengerDelayConstraints();
-    this.positionFinder = new InsertionPositionFinder(delayConstraints, new BeelineEstimator());
+    this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
     this.vertexLinker = vertexLinker;
   }
 
@@ -227,7 +224,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var streetVertexUtils = new StreetVertexUtils(this.vertexLinker, temporaryVerticesContainer);
 
       var insertionEvaluator = new InsertionEvaluator(
-        delayConstraints,
         linkingContext,
         streetVertexUtils,
         router
@@ -450,7 +446,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
       });
 
       var insertionEvaluator = new InsertionEvaluator(
-        delayConstraints,
         linkingContext,
         streetVertexUtils,
         carpoolTreeVertexRouter

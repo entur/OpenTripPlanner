@@ -78,8 +78,6 @@ public class CarpoolSiriMapper {
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withProvider(journey.getOperatorRef().getValue())
-      // TODO: Find a better way to exchange deviation budget with providers.
-      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       .withTotalCapacity(totalCapacity)
       .withStops(stops)
       .build();
@@ -263,6 +261,8 @@ public class CarpoolSiriMapper {
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
       .withOnboardCount(extractOnboardCount(tripId, call))
+      // TODO: Find a better way to exchange deviation budget with providers.
+      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       .build();
   }
 
