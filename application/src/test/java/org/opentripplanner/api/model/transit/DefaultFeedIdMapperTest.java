@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
 class DefaultFeedIdMapperTest {
@@ -31,7 +32,7 @@ class DefaultFeedIdMapperTest {
 
   @Test
   void parseStrictFail() {
-    var e = assertThrows(IllegalArgumentException.class, () -> SUBJECT.parseStrict("invalid"));
+    var e = assertThrows(InvalidInputException.class, () -> SUBJECT.parseStrict("invalid"));
     assertEquals("invalid feed-scoped-id: invalid", e.getMessage());
   }
 
