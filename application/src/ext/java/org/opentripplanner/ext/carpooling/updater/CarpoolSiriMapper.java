@@ -14,7 +14,6 @@ import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
-import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
 import org.opentripplanner.street.geometry.WgsCoordinate;
@@ -115,26 +114,6 @@ public class CarpoolSiriMapper {
         : tripId + "_stop_" + sequenceNumber;
 
     return toCarpoolStop(call, stopId, tripId, isFirst, isLast);
-  }
-
-  /**
-   * Determine the carpool stop type from the EstimatedCall data.
-   */
-  private CarpoolStopType determineCarpoolStopType(EstimatedCall call) {
-    boolean hasArrival =
-      call.getExpectedArrivalTime() != null || call.getAimedArrivalTime() != null;
-    boolean hasDeparture =
-      call.getExpectedDepartureTime() != null || call.getAimedDepartureTime() != null;
-
-    if (hasArrival && hasDeparture) {
-      return CarpoolStopType.PICKUP_AND_DROP_OFF;
-    } else if (hasDeparture) {
-      return CarpoolStopType.PICKUP_ONLY;
-    } else if (hasArrival) {
-      return CarpoolStopType.DROP_OFF_ONLY;
-    } else {
-      return CarpoolStopType.PICKUP_AND_DROP_OFF;
-    }
   }
 
   /**
@@ -282,19 +261,9 @@ public class CarpoolSiriMapper {
       ? toWgsCoordinate(toPolygon(legacyGeometry))
       : toWgsCoordinate(circleLocation);
 
-    CarpoolStopType stopType;
-    if (isFirst) {
-      stopType = CarpoolStopType.PICKUP_ONLY;
-    } else if (isLast) {
-      stopType = CarpoolStopType.DROP_OFF_ONLY;
-    } else {
-      stopType = determineCarpoolStopType(call);
-    }
-
     return CarpoolStop.of(new FeedScopedId(FEED_ID, id), () -> CARPOOLING_DUMMY_INDEX)
       .withName(I18NString.of(call.getStopPointNames().getFirst().getValue()))
       .withCoordinate(centroid)
-      .withCarpoolStopType(stopType)
       .withAimedDepartureTime(isLast ? null : call.getAimedDepartureTime())
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
