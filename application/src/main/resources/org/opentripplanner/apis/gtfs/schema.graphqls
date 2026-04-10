@@ -3231,15 +3231,6 @@ enum BikesAllowed {
   NO_INFORMATION
 }
 
-enum BooleanFeatureRequirement {
-  "The feature must be off."
-  FORBIDDEN
-  "It does not matter if the feature is on or off."
-  IGNORED
-  "The feature must be on."
-  REQUIRED
-}
-
 enum CarsAllowed {
   "The vehicle being used on this particular trip can accommodate at least one car."
   ALLOWED
@@ -3837,6 +3828,16 @@ enum RelativeDirection {
   SLIGHTLY_RIGHT
   UTURN_LEFT
   UTURN_RIGHT
+}
+
+"How does a trip's replacement feature affect whether a it is considered for use in routing?"
+enum ReplacementRequirement {
+  "Consider all trips ignoring their replacement feature."
+  REPLACEMENT_FEATURE_IGNORED
+  "Only consider trips which don't have the replacement feature."
+  REPLACEMENT_FORBIDDEN
+  "Only consider trips which have the replacement feature."
+  REPLACEMENT_REQUIRED
 }
 
 "Entities that are relevant for routes that can contain alerts"
@@ -4749,12 +4750,12 @@ input PlanTransitModePreferenceInput {
   """
   If present and not null, further limits the transit mode selection.  A transit trip matches
   a PlanTransitModePreferenceInput if the mandatory TransitMode field mode matches. If replacement
-  is REQUIRED, the trip must also be a replacement. If replacement is FORBIDDEN, the trip must not
-  be a replacement. If replacement is IGNORED or missing, it does not matter if the trip is
-  a replacement or not. Whether a leg is a replacement is recognized both by the NeTEx submode
-  and the GTFS extended type, depending on the data source.
+  is REPLACEMENT_REQUIRED, the trip must also be a replacement. If replacement is REPLACEMENT_FORBIDDEN,
+  the trip must not be a replacement. If replacement is REPLACEMENT_FEATURE_IGNORED or missing, it
+  does not matter if the trip is a replacement or not. Whether a leg is a replacement is recognized
+  both by the NeTEx submode and the GTFS extended type, depending on the data source.
   """
-  replacement: BooleanFeatureRequirement
+  replacement: ReplacementRequirement
 }
 
 """

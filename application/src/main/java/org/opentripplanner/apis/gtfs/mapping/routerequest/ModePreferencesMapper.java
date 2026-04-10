@@ -99,19 +99,25 @@ public class ModePreferencesMapper {
   }
 
   private static NarrowedTransitMode.ReplacementRequirement map(
-    @Nullable GraphQLTypes.GraphQLBooleanFeatureRequirement requirement
+    @Nullable GraphQLTypes.GraphQLReplacementRequirement requirement
   ) {
     if (
       requirement == null ||
-      requirement.equals(GraphQLTypes.GraphQLBooleanFeatureRequirement.IGNORED)
+      requirement.equals(GraphQLTypes.GraphQLReplacementRequirement.REPLACEMENT_FEATURE_IGNORED)
     ) {
       return NarrowedTransitMode.ReplacementRequirement.IGNORED;
-    } else if (requirement.equals(GraphQLTypes.GraphQLBooleanFeatureRequirement.REQUIRED)) {
+    } else if (
+      requirement.equals(GraphQLTypes.GraphQLReplacementRequirement.REPLACEMENT_REQUIRED)
+    ) {
       return NarrowedTransitMode.ReplacementRequirement.REQUIRED;
-    } else if (requirement.equals(GraphQLTypes.GraphQLBooleanFeatureRequirement.FORBIDDEN)) {
+    } else if (
+      requirement.equals(GraphQLTypes.GraphQLReplacementRequirement.REPLACEMENT_FORBIDDEN)
+    ) {
       return NarrowedTransitMode.ReplacementRequirement.FORBIDDEN;
     } else {
-      return null;
+      // As of the time of writing, this cannot happen, but it is included as a guard against bad
+      // code changes.
+      throw new IllegalArgumentException("Unsupported replacement requirement: " + requirement);
     }
   }
 
