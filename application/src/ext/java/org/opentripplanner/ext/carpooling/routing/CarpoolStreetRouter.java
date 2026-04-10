@@ -1,9 +1,7 @@
 package org.opentripplanner.ext.carpooling.routing;
 
-import java.util.List;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
-import org.opentripplanner.astar.strategy.PathComparator;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.street.model.StreetMode;
