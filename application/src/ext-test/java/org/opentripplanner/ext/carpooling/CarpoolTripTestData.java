@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
-import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
 import org.opentripplanner.ext.carpooling.updater.CarpoolSiriMapper;
@@ -63,7 +62,6 @@ public class CarpoolTripTestData {
       allStops.add(
         CarpoolStop.of(intermediate.getId(), () -> intermediate.getIndex() + 1)
           .withCoordinate(intermediate.getCoordinate())
-          .withCarpoolStopType(intermediate.getCarpoolStopType())
           .withExpectedDepartureTime(intermediate.getExpectedDepartureTime())
           .withAimedDepartureTime(intermediate.getAimedDepartureTime())
           .withExpectedArrivalTime(intermediate.getExpectedArrivalTime())
@@ -168,7 +166,6 @@ public class CarpoolTripTestData {
       AREA_STOP_COUNTER::getAndIncrement
     )
       .withCoordinate(location)
-      .withCarpoolStopType(CarpoolStopType.DROP_OFF_ONLY)
       .withSequenceNumber(sequenceNumber)
       .withOnboardCount(1)
       .withExpectedArrivalTime(expectedArrivalTime)
