@@ -2281,7 +2281,7 @@ public class GraphQLTypes {
 
     private GraphQLTransitModePreferenceCostInput cost;
     private GraphQLTransitMode mode;
-    private GraphQLReplacementRequirement replacement;
+    private GraphQLReplacementFilterInput replacement;
 
     public GraphQLPlanTransitModePreferenceInput(Map<String, Object> args) {
       if (args != null) {
@@ -2293,13 +2293,9 @@ public class GraphQLTypes {
         } else if (args.get("mode") != null) {
           this.mode = GraphQLTransitMode.valueOf((String) args.get("mode"));
         }
-        if (args.get("replacement") instanceof GraphQLReplacementRequirement) {
-          this.replacement = (GraphQLReplacementRequirement) args.get("replacement");
-        } else if (args.get("replacement") != null) {
-          this.replacement = GraphQLReplacementRequirement.valueOf(
-            (String) args.get("replacement")
-          );
-        }
+        this.replacement = new GraphQLReplacementFilterInput(
+          (Map<String, Object>) args.get("replacement")
+        );
       }
     }
 
@@ -2311,7 +2307,7 @@ public class GraphQLTypes {
       return this.mode;
     }
 
-    public GraphQLReplacementRequirement getGraphQLReplacement() {
+    public GraphQLReplacementFilterInput getGraphQLReplacement() {
       return this.replacement;
     }
 
@@ -2323,7 +2319,7 @@ public class GraphQLTypes {
       this.mode = mode;
     }
 
-    public void setGraphQLReplacement(GraphQLReplacementRequirement replacement) {
+    public void setGraphQLReplacement(GraphQLReplacementFilterInput replacement) {
       this.replacement = replacement;
     }
   }
@@ -4612,11 +4608,36 @@ public class GraphQLTypes {
     UTURN_RIGHT,
   }
 
+  public static class GraphQLReplacementFilterInput {
+
+    private GraphQLReplacementRequirementInput replacement;
+
+    public GraphQLReplacementFilterInput(Map<String, Object> args) {
+      if (args != null) {
+        if (args.get("replacement") instanceof GraphQLReplacementRequirementInput) {
+          this.replacement = (GraphQLReplacementRequirementInput) args.get("replacement");
+        } else if (args.get("replacement") != null) {
+          this.replacement = GraphQLReplacementRequirementInput.valueOf(
+            (String) args.get("replacement")
+          );
+        }
+      }
+    }
+
+    public GraphQLReplacementRequirementInput getGraphQLReplacement() {
+      return this.replacement;
+    }
+
+    public void setGraphQLReplacement(GraphQLReplacementRequirementInput replacement) {
+      this.replacement = replacement;
+    }
+  }
+
   /** How does a trip's replacement feature affect whether a it is considered for use in routing? */
-  public enum GraphQLReplacementRequirement {
-    REPLACEMENT_FEATURE_IGNORED,
-    REPLACEMENT_FORBIDDEN,
-    REPLACEMENT_REQUIRED,
+  public enum GraphQLReplacementRequirementInput {
+    FEATURE_IGNORED,
+    FORBIDDEN,
+    REQUIRED,
   }
 
   public static class GraphQLRouteAlertsArgs {

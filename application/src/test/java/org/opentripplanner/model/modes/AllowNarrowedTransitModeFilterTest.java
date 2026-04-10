@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
+import org.opentripplanner.transit.model.basic.ReplacementRequirement;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 
@@ -16,31 +17,19 @@ public class AllowNarrowedTransitModeFilterTest {
   );
 
   private final AllowNarrowedTransitModeFilter fullFilter = new AllowNarrowedTransitModeFilter(
-    new NarrowedTransitMode(
-      TransitMode.BUS,
-      LOCAL_BUS,
-      NarrowedTransitMode.ReplacementRequirement.REQUIRED
-    )
+    new NarrowedTransitMode(TransitMode.BUS, LOCAL_BUS, ReplacementRequirement.REQUIRED)
   );
   private final AllowNarrowedTransitModeFilter nullSubmodeFilter =
     new AllowNarrowedTransitModeFilter(
-      new NarrowedTransitMode(
-        TransitMode.BUS,
-        null,
-        NarrowedTransitMode.ReplacementRequirement.REQUIRED
-      )
+      new NarrowedTransitMode(TransitMode.BUS, null, ReplacementRequirement.REQUIRED)
     );
   private final AllowNarrowedTransitModeFilter nullReplacementFilter =
     new AllowNarrowedTransitModeFilter(
-      new NarrowedTransitMode(
-        TransitMode.BUS,
-        LOCAL_BUS,
-        NarrowedTransitMode.ReplacementRequirement.IGNORED
-      )
+      new NarrowedTransitMode(TransitMode.BUS, LOCAL_BUS, ReplacementRequirement.IGNORED)
     );
 
   @Test
-  void allows() {
+  void match() {
     // filter.match will always be called with either netexSubmode == SubMode.UNKNOWN or gtfsExtendedType == null
     // depending on the data source type. Both can be true if the data is from a GTFS source and the extended
     // type just happens to be not set.

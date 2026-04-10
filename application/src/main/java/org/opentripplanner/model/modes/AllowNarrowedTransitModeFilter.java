@@ -3,6 +3,7 @@ package org.opentripplanner.model.modes;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
+import org.opentripplanner.transit.model.basic.ReplacementRequirement;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.service.ReplacementHelper;
@@ -41,22 +42,18 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
     //                 F | T  F  F
     //  subModeIgnored x | T  F  T
     var subModeIgnored = mode.getSubMode() == null;
-    var replacementIgnored = mode
-      .isReplacement()
-      .equals(NarrowedTransitMode.ReplacementRequirement.IGNORED);
+    var replacementIgnored = mode.getReplacement() == ReplacementRequirement.IGNORED;
     if (subModeIgnored && replacementIgnored) {
       return true;
     }
     var subModeMatches = netexSubmode.equals(mode.getSubMode());
     var isTripReplacement = isTripReplacement(netexSubmode, gtfsExtendedType);
-    var replacementMatches = mode.isReplacement().equals(mapReplacement(isTripReplacement));
+    var replacementMatches = mode.getReplacement() == mapReplacement(isTripReplacement);
     return subModeMatches || replacementMatches;
   }
 
-  private static NarrowedTransitMode.ReplacementRequirement mapReplacement(boolean replacement) {
-    return replacement
-      ? NarrowedTransitMode.ReplacementRequirement.REQUIRED
-      : NarrowedTransitMode.ReplacementRequirement.FORBIDDEN;
+  private static ReplacementRequirement mapReplacement(boolean replacement) {
+    return replacement ? ReplacementRequirement.REQUIRED : ReplacementRequirement.FORBIDDEN;
   }
 
   /**
@@ -64,9 +61,6 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
    * up to date in the model. That will enable us to do much faster selection of matching trips and/or
    * patterns with bitfields and logical operations, at which point this entire filter mechanism
    * will be removed as unnecessary. This will also simplify the IGNORED logic by quite a bit.
-   * @param netexSubmode
-   * @param gtfsExtendedType
-   * @return
    */
   private static boolean isTripReplacement(
     SubMode netexSubmode,
@@ -77,7 +71,7 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
 
   @Override
   public int hashCode() {
-    return Objects.hash(mode.getMode(), mode.getSubMode(), mode.isReplacement());
+    return Objects.hash(mode.getMode(), mode.getSubMode(), mode.getReplacement());
   }
 
   @Override
@@ -92,7 +86,7 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
     return (
       Objects.equals(mode.getMode(), that.mode.getMode()) &&
       Objects.equals(mode.getSubMode(), that.mode.getSubMode()) &&
-      Objects.equals(mode.isReplacement(), that.mode.isReplacement())
+      Objects.equals(mode.getReplacement(), that.mode.getReplacement())
     );
   }
 
@@ -101,7 +95,7 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
     return ToStringBuilder.of(AllowNarrowedTransitModeFilter.class)
       .addEnum("mode", mode.getMode())
       .addObj("subMode", mode.getSubMode())
-      .addObj("isReplacement", mode.isReplacement())
+      .addEnum("isReplacement", mode.getReplacement())
       .toString();
   }
 }

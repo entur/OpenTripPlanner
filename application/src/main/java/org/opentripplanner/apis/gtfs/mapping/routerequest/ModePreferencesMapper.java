@@ -19,6 +19,7 @@ import org.opentripplanner.routing.api.request.request.filter.TransitFilterReque
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
+import org.opentripplanner.transit.model.basic.ReplacementRequirement;
 import org.opentripplanner.utils.collection.CollectionUtils;
 import org.opentripplanner.utils.time.DurationUtils;
 
@@ -98,27 +99,17 @@ public class ModePreferencesMapper {
     }
   }
 
-  private static NarrowedTransitMode.ReplacementRequirement map(
-    @Nullable GraphQLTypes.GraphQLReplacementRequirement requirement
+  private static ReplacementRequirement map(
+    @Nullable GraphQLTypes.GraphQLReplacementFilterInput input
   ) {
-    if (
-      requirement == null ||
-      requirement.equals(GraphQLTypes.GraphQLReplacementRequirement.REPLACEMENT_FEATURE_IGNORED)
-    ) {
-      return NarrowedTransitMode.ReplacementRequirement.IGNORED;
-    } else if (
-      requirement.equals(GraphQLTypes.GraphQLReplacementRequirement.REPLACEMENT_REQUIRED)
-    ) {
-      return NarrowedTransitMode.ReplacementRequirement.REQUIRED;
-    } else if (
-      requirement.equals(GraphQLTypes.GraphQLReplacementRequirement.REPLACEMENT_FORBIDDEN)
-    ) {
-      return NarrowedTransitMode.ReplacementRequirement.FORBIDDEN;
-    } else {
-      // As of the time of writing, this cannot happen, but it is included as a guard against bad
-      // code changes.
-      throw new IllegalArgumentException("Unsupported replacement requirement: " + requirement);
+    if (input == null || input.getGraphQLReplacement() == null) {
+      return ReplacementRequirement.IGNORED;
     }
+    return switch (input.getGraphQLReplacement()) {
+      case REQUIRED -> ReplacementRequirement.REQUIRED;
+      case FORBIDDEN -> ReplacementRequirement.FORBIDDEN;
+      case FEATURE_IGNORED -> ReplacementRequirement.IGNORED;
+    };
   }
 
   private static NarrowedTransitMode map(GraphQLTypes.GraphQLPlanTransitModePreferenceInput input) {

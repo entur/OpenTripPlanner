@@ -3831,13 +3831,13 @@ enum RelativeDirection {
 }
 
 "How does a trip's replacement feature affect whether a it is considered for use in routing?"
-enum ReplacementRequirement {
+enum ReplacementRequirementInput {
   "Consider all trips ignoring their replacement feature."
-  REPLACEMENT_FEATURE_IGNORED
+  FEATURE_IGNORED
   "Only consider trips which don't have the replacement feature."
-  REPLACEMENT_FORBIDDEN
+  FORBIDDEN
   "Only consider trips which have the replacement feature."
-  REPLACEMENT_REQUIRED
+  REQUIRED
 }
 
 "Entities that are relevant for routes that can contain alerts"
@@ -4750,12 +4750,16 @@ input PlanTransitModePreferenceInput {
   """
   If present and not null, further limits the transit mode selection.  A transit trip matches
   a PlanTransitModePreferenceInput if the mandatory TransitMode field mode matches. If replacement
-  is REPLACEMENT_REQUIRED, the trip must also be a replacement. If replacement is REPLACEMENT_FORBIDDEN,
-  the trip must not be a replacement. If replacement is REPLACEMENT_FEATURE_IGNORED or missing, it
+  is REQUIRED, the trip must also be a replacement. If replacement is FORBIDDEN,
+  the trip must not be a replacement. If replacement is FEATURE_IGNORED or missing, it
   does not matter if the trip is a replacement or not. Whether a leg is a replacement is recognized
   both by the NeTEx submode and the GTFS extended type, depending on the data source.
+  Note that a bus replacing a train has mode: BUS, replacement: true, so it matches a query with
+  mode: BUS, replacement: REQUIRED and mode: BUS, replacement: FEATURE_IGNORED, but it does not
+  match mode: TRAIN with any replacement options. So to get both trains and buses replacing them,
+  but no other buses, query [(mode: TRAIN), (mode: BUS, replacement: REQUIRED)].
   """
-  replacement: ReplacementRequirement
+  replacement: ReplacementFilterInput
 }
 
 """
@@ -4825,6 +4829,12 @@ input PlanVisitViaLocationInput {
   It is enough to visit ONE of the locations listed.
   """
   stopLocationIds: [String!]
+}
+
+"Contains details on how to filter trips based on replacement when considering them for routing."
+input ReplacementFilterInput {
+  "Allow or require the trip to be a replacement, or ignore whether it is a requirement."
+  replacement: ReplacementRequirementInput
 }
 
 "What criteria should be used when optimizing a scooter route."

@@ -15,25 +15,16 @@ import javax.annotation.Nullable;
  */
 public class NarrowedTransitMode {
 
-  TransitMode mode;
-
-  /**
-   * null here means that we don't care about what SubMode the trip has
-   */
-  @Nullable
-  SubMode subMode;
-
-  ReplacementRequirement replacement;
-
-  public enum ReplacementRequirement {
-    REQUIRED,
-    FORBIDDEN,
-    IGNORED,
-  }
-
   private static final List<NarrowedTransitMode> ALL = Stream.of(TransitMode.values())
     .map(mode -> new NarrowedTransitMode(mode, null, ReplacementRequirement.IGNORED))
     .toList();
+
+  private TransitMode mode;
+
+  @Nullable
+  private SubMode subMode;
+
+  private ReplacementRequirement replacement;
 
   public NarrowedTransitMode(
     TransitMode mode,
@@ -54,11 +45,11 @@ public class NarrowedTransitMode {
   }
 
   public boolean isMainModeOnly() {
-    return (this.subMode == null && this.replacement.equals(ReplacementRequirement.IGNORED));
+    return (this.subMode == null && this.replacement == ReplacementRequirement.IGNORED);
   }
 
   public MainAndSubMode toMainAndSubMode() {
-    if (!this.replacement.equals(ReplacementRequirement.IGNORED)) {
+    if (this.replacement != ReplacementRequirement.IGNORED) {
       throw new IllegalArgumentException("Not convertible to MainAndSubMode");
     }
     return new MainAndSubMode(this.mode, this.subMode);
@@ -68,17 +59,20 @@ public class NarrowedTransitMode {
     return mode;
   }
 
+  /**
+   * null here means that we don't care about what SubMode the trip has
+   */
   @Nullable
   public SubMode getSubMode() {
     return subMode;
   }
 
-  public ReplacementRequirement isReplacement() {
+  public ReplacementRequirement getReplacement() {
     return replacement;
   }
 
   public String toString() {
-    if (!replacement.equals(ReplacementRequirement.IGNORED)) {
+    if (replacement != ReplacementRequirement.IGNORED) {
       return mode.name() + "::" + (subMode == null ? "" : subMode.name()) + "::" + replacement;
     }
     if (subMode == null) {
