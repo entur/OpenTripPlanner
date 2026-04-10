@@ -23,7 +23,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   private WgsCoordinate coordinate;
   private Geometry geometry;
 
-  private CarpoolStopType carpoolStopType;
   private ZonedDateTime expectedArrivalTime;
   private ZonedDateTime aimedArrivalTime;
   private ZonedDateTime expectedDepartureTime;
@@ -47,7 +46,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     this.geometry = original.getGeometry();
     this.sequenceNumber = original.getSequenceNumber();
 
-    this.carpoolStopType = original.getCarpoolStopType();
     this.expectedArrivalTime = original.getExpectedArrivalTime();
     this.aimedArrivalTime = original.getAimedArrivalTime();
     this.expectedDepartureTime = original.getExpectedDepartureTime();
@@ -78,11 +76,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   public CarpoolStopBuilder withCoordinate(WgsCoordinate coordinate) {
     this.coordinate = coordinate;
     this.geometry = toGeometry(coordinate);
-    return this;
-  }
-
-  public CarpoolStopBuilder withCarpoolStopType(CarpoolStopType carpoolStopType) {
-    this.carpoolStopType = carpoolStopType;
     return this;
   }
 
@@ -138,10 +131,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   public Geometry geometry() {
     return geometry;
-  }
-
-  public CarpoolStopType carpoolStopType() {
-    return carpoolStopType;
   }
 
   public ZonedDateTime expectedArrivalTime() {
