@@ -12,6 +12,7 @@ import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
 import org.opentripplanner.astar.spi.SearchTerminationStrategy;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
+import org.opentripplanner.astar.spi.StatisticsCallback;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ public abstract class AStarBuilder<
   private Set<Vertex> toVertices;
   private SearchTerminationStrategy<State> terminationStrategy;
   private DominanceFunction<State> dominanceFunction;
+  private StatisticsCallback<Vertex> statisticsCallback = StatisticsCallback.NOOP;
 
   protected AStarBuilder() {}
 
@@ -64,6 +66,11 @@ public abstract class AStarBuilder<
 
   public Builder withTraverseVisitor(TraverseVisitor<State, Edge> traverseVisitor) {
     this.traverseVisitor = traverseVisitor;
+    return builder;
+  }
+
+  public Builder withStatisticsCallback(StatisticsCallback<Vertex> statisticsCallback) {
+    this.statisticsCallback = statisticsCallback;
     return builder;
   }
 
@@ -128,7 +135,8 @@ public abstract class AStarBuilder<
       terminationStrategy,
       Optional.ofNullable(dominanceFunction).orElseGet(this::createDefaultDominanceFunction),
       streetRoutingTimeout(),
-      initialStates
+      initialStates,
+      statisticsCallback
     );
   }
 
