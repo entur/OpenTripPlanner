@@ -5,6 +5,7 @@ import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_CEN
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NORTH;
 import static org.opentripplanner.ext.carpooling.model.CarpoolStopType.DROP_OFF_ONLY;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -69,7 +70,8 @@ public class CarpoolStopBuilderTest {
       .withExpectedDepartureTime(EXPECTED_DEPARTURE_TIME)
       .withName(new NonLocalizedString("name"))
       .withDescription(new NonLocalizedString("description"))
-      .withUrl(new NonLocalizedString("http://url.value"));
+      .withUrl(new NonLocalizedString("http://url.value"))
+      .withDeviationBudget(Duration.ofMinutes(7));
     var stop = builder.buildFromValues();
 
     assertEquals(-1, stop.getIndex());
@@ -84,6 +86,7 @@ public class CarpoolStopBuilderTest {
     assertEquals("name", stop.getName().toString());
     assertEquals("description", stop.getDescription().toString());
     assertEquals("http://url.value", stop.getUrl().toString());
+    assertEquals(Duration.ofMinutes(7), stop.getDeviationBudget());
   }
 
   @Test
@@ -104,23 +107,25 @@ public class CarpoolStopBuilderTest {
       .withExpectedDepartureTime(EXPECTED_DEPARTURE_TIME)
       .withName(new NonLocalizedString("name value"))
       .withDescription(new NonLocalizedString("description value"))
-      .withUrl(new NonLocalizedString("http://url.value"));
+      .withUrl(new NonLocalizedString("http://url.value"))
+      .withDeviationBudget(Duration.ofMinutes(7));
     var original = originalBuilder.buildFromValues();
 
     var copyBuilder = new CarpoolStopBuilder(original);
-    var copy = copyBuilder.buildFromValues();
+    var carpoolStop = copyBuilder.buildFromValues();
 
-    assertEquals(1, copy.getIndex());
-    assertEquals(original.getSequenceNumber(), copy.getSequenceNumber());
-    assertEquals(original.getPassengerDelta(), copy.getPassengerDelta());
-    assertEquals(original.getCoordinate(), copy.getCoordinate());
-    assertEquals(original.getCarpoolStopType(), copy.getCarpoolStopType());
-    assertEquals(original.getAimedArrivalTime(), copy.getAimedArrivalTime());
-    assertEquals(original.getExpectedArrivalTime(), copy.getExpectedArrivalTime());
-    assertEquals(original.getAimedDepartureTime(), copy.getAimedDepartureTime());
-    assertEquals(original.getExpectedDepartureTime(), copy.getExpectedDepartureTime());
-    assertEquals(original.getName(), copy.getName());
-    assertEquals(original.getDescription(), copy.getDescription());
-    assertEquals(original.getUrl(), copy.getUrl());
+    assertEquals(1, carpoolStop.getIndex());
+    assertEquals(original.getSequenceNumber(), carpoolStop.getSequenceNumber());
+    assertEquals(original.getPassengerDelta(), carpoolStop.getPassengerDelta());
+    assertEquals(original.getCoordinate(), carpoolStop.getCoordinate());
+    assertEquals(original.getCarpoolStopType(), carpoolStop.getCarpoolStopType());
+    assertEquals(original.getAimedArrivalTime(), carpoolStop.getAimedArrivalTime());
+    assertEquals(original.getExpectedArrivalTime(), carpoolStop.getExpectedArrivalTime());
+    assertEquals(original.getAimedDepartureTime(), carpoolStop.getAimedDepartureTime());
+    assertEquals(original.getExpectedDepartureTime(), carpoolStop.getExpectedDepartureTime());
+    assertEquals(original.getName(), carpoolStop.getName());
+    assertEquals(original.getDescription(), carpoolStop.getDescription());
+    assertEquals(original.getUrl(), carpoolStop.getUrl());
+    assertEquals(original.getDeviationBudget(), carpoolStop.getDeviationBudget());
   }
 }

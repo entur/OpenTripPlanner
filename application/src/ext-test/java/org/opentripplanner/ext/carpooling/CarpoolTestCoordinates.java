@@ -20,7 +20,7 @@ public class CarpoolTestCoordinates {
   public static final WgsCoordinate OSLO_WEST = new WgsCoordinate(59.9139, 10.7122);
 
   // Coordinates for testing routes around obstacles (e.g., lake)
-  public static final WgsCoordinate LAKE_NORTH = new WgsCoordinate(59.9439, 10.7522);
+  public static final WgsCoordinate LAKE_NORTH = new WgsCoordinate(59.9400, 10.7522);
   public static final WgsCoordinate LAKE_EAST = new WgsCoordinate(59.9239, 10.7922);
   public static final WgsCoordinate LAKE_SOUTH = new WgsCoordinate(59.9039, 10.7522);
   public static final WgsCoordinate LAKE_WEST = new WgsCoordinate(59.9239, 10.7122);

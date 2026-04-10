@@ -57,25 +57,7 @@ public class CarpoolTripTestData {
   ) {
     List<CarpoolStop> allStops = new ArrayList<>();
     allStops.add(createOriginStop(boarding));
-
-    // Renumber intermediate stops to account for origin at position 0
-    for (int i = 0; i < intermediateStops.size(); i++) {
-      CarpoolStop intermediate = intermediateStops.get(i);
-      allStops.add(
-        CarpoolStop.of(intermediate.getId(), () -> intermediate.getIndex() + 1)
-          .withCoordinate(intermediate.getCoordinate())
-          .withCarpoolStopType(intermediate.getCarpoolStopType())
-          .withExpectedDepartureTime(intermediate.getExpectedDepartureTime())
-          .withAimedArrivalTime(intermediate.getAimedArrivalTime())
-          .withExpectedArrivalTime(intermediate.getExpectedArrivalTime())
-          .withAimedArrivalTime(intermediate.getAimedDepartureTime())
-          .withSequenceNumber(intermediate.getSequenceNumber() + 1)
-          .withPassengerDelta(intermediate.getPassengerDelta())
-          .withDeviationBudget(intermediate.getDeviationBudget())
-          .build()
-      );
-    }
-
+    renumberIntermediateStops(intermediateStops, allStops);
     allStops.add(createDestinationStop(alighting, allStops.size()));
     return createTripWithCapacity(4, allStops);
   }
@@ -92,7 +74,15 @@ public class CarpoolTripTestData {
   ) {
     List<CarpoolStop> allStops = new ArrayList<>();
     allStops.add(createOriginStopWithDeviationBudget(boarding, deviationBudget));
+    renumberIntermediateStops(intermediateStops, allStops);
+    allStops.add(createDestinationStopWithDeviationBudget(alighting, allStops.size(), deviationBudget));
+    return createTripWithCapacity(4, allStops);
+  }
 
+  private static void renumberIntermediateStops(
+    List<CarpoolStop> intermediateStops,
+    List<CarpoolStop> allStops
+  ) {
     for (int i = 0; i < intermediateStops.size(); i++) {
       CarpoolStop intermediate = intermediateStops.get(i);
       allStops.add(
@@ -102,16 +92,13 @@ public class CarpoolTripTestData {
           .withExpectedDepartureTime(intermediate.getExpectedDepartureTime())
           .withAimedArrivalTime(intermediate.getAimedArrivalTime())
           .withExpectedArrivalTime(intermediate.getExpectedArrivalTime())
-          .withAimedArrivalTime(intermediate.getAimedDepartureTime())
+          .withAimedDepartureTime(intermediate.getAimedDepartureTime())
           .withSequenceNumber(intermediate.getSequenceNumber() + 1)
           .withPassengerDelta(intermediate.getPassengerDelta())
           .withDeviationBudget(intermediate.getDeviationBudget())
           .build()
       );
     }
-
-    allStops.add(createDestinationStopWithDeviationBudget(alighting, allStops.size(), deviationBudget));
-    return createTripWithCapacity(4, allStops);
   }
 
   /**

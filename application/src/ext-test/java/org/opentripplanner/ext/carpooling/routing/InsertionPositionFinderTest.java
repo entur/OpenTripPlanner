@@ -141,8 +141,12 @@ class InsertionPositionFinderTest {
 
     var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_NORTH);
 
-    // Should evaluate multiple pickup/dropoff combinations
-    // Exact count depends on directional and beeline filtering
-    assertNotNull(viablePositions);
+    assertFalse(viablePositions.isEmpty(), "Should find at least one viable position");
+    for (var pos : viablePositions) {
+      assertTrue(
+        pos.dropoffPos() > pos.pickupPos(),
+        "Dropoff position must be after pickup position"
+      );
+    }
   }
 }

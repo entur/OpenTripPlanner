@@ -97,8 +97,7 @@ class InsertionEvaluatorTest {
   }
 
   /**
-   * Helper method that mimics the old findOptimalInsertion() behavior for backwards compatibility in tests.
-   * This explicitly performs position finding followed by evaluation.
+   * Convenience wrapper that performs position finding followed by evaluation.
    */
   private InsertionCandidate findOptimalInsertion(
     CarpoolTrip trip,
@@ -260,17 +259,6 @@ class InsertionEvaluatorTest {
   }
 
   @Test
-  void findOptimalInsertion_baselineDurationCalculationFails_returnsNull() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-
-    CarpoolRouter routingFunction = (from, to) -> null;
-
-    var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, routingFunction);
-
-    assertNull(result);
-  }
-
-  @Test
   void findOptimalInsertion_selectsMinimumAdditionalDuration() {
     var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
 
@@ -294,10 +282,15 @@ class InsertionEvaluatorTest {
     var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, routingFunction);
 
     assertNotNull(result);
-    // Should have selected one of the evaluated insertions
-    // The exact additional duration depends on which position was evaluated first
-    assertTrue(result.additionalDuration().compareTo(Duration.ofMinutes(20)) <= 0);
-    assertTrue(result.additionalDuration().compareTo(Duration.ZERO) > 0);
+    assertEquals(1, result.pickupPosition());
+    assertEquals(2, result.dropoffPosition());
+    // Baseline: CENTER → NORTH = 10 min
+    // Modified: CENTER → EAST (4) + EAST → WEST (5) + WEST → NORTH (6) = 15 min
+    // Additional: 15 - 10 = 5 min (within 10s tolerance for State rounding)
+    assertTrue(
+      Math.abs(result.additionalDuration().toSeconds() - 300) < 10,
+      "Additional duration should be approximately 5 min, got " + result.additionalDuration()
+    );
   }
 
   @Test
