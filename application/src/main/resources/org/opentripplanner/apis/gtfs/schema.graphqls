@@ -3831,7 +3831,7 @@ enum RelativeDirection {
 }
 
 "How does a trip's replacement feature affect whether a it is considered for use in routing?"
-enum ReplacementRequirementInput {
+enum ReplacementRequirement {
   "Consider all trips ignoring their replacement feature."
   FEATURE_IGNORED
   "Only consider trips which don't have the replacement feature."
@@ -4834,7 +4834,7 @@ input PlanVisitViaLocationInput {
 "Contains details on how to filter trips based on replacement when considering them for routing."
 input ReplacementFilterInput {
   "Allow or require the trip to be a replacement, or ignore whether it is a requirement."
-  replacement: ReplacementRequirementInput
+  replacement: ReplacementRequirement
 }
 
 "What criteria should be used when optimizing a scooter route."

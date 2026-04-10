@@ -4610,31 +4610,31 @@ public class GraphQLTypes {
 
   public static class GraphQLReplacementFilterInput {
 
-    private GraphQLReplacementRequirementInput replacement;
+    private GraphQLReplacementRequirement replacement;
 
     public GraphQLReplacementFilterInput(Map<String, Object> args) {
       if (args != null) {
-        if (args.get("replacement") instanceof GraphQLReplacementRequirementInput) {
-          this.replacement = (GraphQLReplacementRequirementInput) args.get("replacement");
+        if (args.get("replacement") instanceof GraphQLReplacementRequirement) {
+          this.replacement = (GraphQLReplacementRequirement) args.get("replacement");
         } else if (args.get("replacement") != null) {
-          this.replacement = GraphQLReplacementRequirementInput.valueOf(
+          this.replacement = GraphQLReplacementRequirement.valueOf(
             (String) args.get("replacement")
           );
         }
       }
     }
 
-    public GraphQLReplacementRequirementInput getGraphQLReplacement() {
+    public GraphQLReplacementRequirement getGraphQLReplacement() {
       return this.replacement;
     }
 
-    public void setGraphQLReplacement(GraphQLReplacementRequirementInput replacement) {
+    public void setGraphQLReplacement(GraphQLReplacementRequirement replacement) {
       this.replacement = replacement;
     }
   }
 
   /** How does a trip's replacement feature affect whether a it is considered for use in routing? */
-  public enum GraphQLReplacementRequirementInput {
+  public enum GraphQLReplacementRequirement {
     FEATURE_IGNORED,
     FORBIDDEN,
     REQUIRED,
