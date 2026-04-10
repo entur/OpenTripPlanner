@@ -27,7 +27,6 @@ public class CarpoolStop
   private final I18NString url;
   private final WgsCoordinate coordinate;
   private final Geometry geometry;
-  private final CarpoolStopType carpoolStopType;
   private final ZonedDateTime expectedArrivalTime;
   private final ZonedDateTime aimedArrivalTime;
   private final ZonedDateTime expectedDepartureTime;
@@ -48,7 +47,6 @@ public class CarpoolStop
     this.url = builder.url();
     this.coordinate = Objects.requireNonNull(builder.coordinate());
     this.geometry = builder.geometry();
-    this.carpoolStopType = builder.carpoolStopType();
     this.expectedArrivalTime = builder.expectedArrivalTime();
     this.aimedArrivalTime = builder.aimedArrivalTime();
     this.expectedDepartureTime = builder.expectedDepartureTime();
@@ -129,13 +127,6 @@ public class CarpoolStop
   }
 
   // Carpool-specific methods
-
-  /**
-   * @return The type of carpool operation allowed at this stop
-   */
-  public CarpoolStopType getCarpoolStopType() {
-    return carpoolStopType;
-  }
 
   /**
    * @return The expected arrival time, or null if not applicable (e.g., origin stop)
