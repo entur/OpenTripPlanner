@@ -13,7 +13,7 @@ import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateData;
 
-public class DominanceFunctionTest {
+class DominanceFunctionTest {
 
   @Test
   public void testGeneralDominanceFunction() {
@@ -55,7 +55,6 @@ public class DominanceFunctionTest {
     var editor = outsideZone.edit(edge);
     editor.enterNoRentalDropOffArea();
     var insideZone = editor.makeState();
-    //insideZone.weight = 1;
 
     assertFalse(dominanceF.betterOrEqualAndComparable(insideZone, outsideZone));
     assertFalse(dominanceF.betterOrEqualAndComparable(outsideZone, insideZone));
