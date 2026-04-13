@@ -182,10 +182,12 @@ public class VehicleRentalEdge extends Edge {
     if (s0.getRequest().rentalPeriod() != null && place.isCarStation()) {
       var vehicleRentalVehicle = (VehicleRentalVehicle) place;
       var availableUntil = vehicleRentalVehicle.availableUntil();
-      return availableUntil.map(instant -> {
-        Instant rentalEndTime = s0.getRequest().rentalPeriod().end();
-        return !instant.isBefore(rentalEndTime);
-      }).orElse(true);
+      return availableUntil
+        .map(instant -> {
+          Instant rentalEndTime = s0.getRequest().rentalPeriod().end();
+          return !instant.isBefore(rentalEndTime);
+        })
+        .orElse(true);
     }
     return true;
   }
