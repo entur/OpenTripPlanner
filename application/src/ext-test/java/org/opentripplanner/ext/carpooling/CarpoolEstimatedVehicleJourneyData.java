@@ -199,7 +199,7 @@ public class CarpoolEstimatedVehicleJourneyData {
     var journey = minimalCompleteJourney();
     var calls = journey.getEstimatedCalls().getEstimatedCalls();
     for (int i = 0; i < Math.min(onboardCounts.length, calls.size()); i++) {
-      setOnboardCount(calls.get(i), onboardCounts[i]);
+      addOnboardCount(calls.get(i), onboardCounts[i]);
     }
     return journey;
   }
@@ -210,7 +210,7 @@ public class CarpoolEstimatedVehicleJourneyData {
     call.getExpectedDepartureCapacities().add(capacity);
   }
 
-  private static void setOnboardCount(EstimatedCall call, int onboardCount) {
+  private static void addOnboardCount(EstimatedCall call, int onboardCount) {
     var occupancy = new VehicleOccupancyStructure();
     occupancy.setOnboardCount(BigInteger.valueOf(onboardCount));
     call.getExpectedDepartureOccupancies().add(occupancy);
