@@ -4831,9 +4831,9 @@ input PlanVisitViaLocationInput {
   stopLocationIds: [String!]
 }
 
-"Contains details on how to filter trips based on replacement when considering them for routing."
+"Contains details on how to filter trips based on the replacement feature when considering them for routing."
 input ReplacementFilterInput {
-  "Allow or require the trip to be a replacement, or ignore whether it is a requirement."
+  "One of three choices: must be replacement, cannot be a replacement, can either be or not be a replacement"
   requirement: ReplacementRequirement
 }
 
