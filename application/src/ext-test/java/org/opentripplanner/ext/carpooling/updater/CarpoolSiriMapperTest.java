@@ -24,14 +24,14 @@ public class CarpoolSiriMapperTest {
   private final CarpoolSiriMapper mapper = new CarpoolSiriMapper();
 
   @Test
-  void mapSiriToCarpoolTrip_arrivalIsAfterDepartureTime_trowsIllegalArgumentException() {
+  void mapSiriToCarpoolTrip_arrivalIsAfterDepartureTime_throwsIllegalArgumentException() {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(arrivalIsAfterDepartureTime())
     );
   }
 
   @Test
-  void mapSiriToCarpoolTrip_lessThanTwoStops_trowsIllegalArgumentException() {
+  void mapSiriToCarpoolTrip_lessThanTwoStops_throwsIllegalArgumentException() {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(lessThanTwoStops())
     );
@@ -108,7 +108,7 @@ public class CarpoolSiriMapperTest {
   }
 
   @Test
-  void mapSiriToCarpoolTrip_stopTimesAreOutOfOrder_trowsIllegalArgumentException() {
+  void mapSiriToCarpoolTrip_stopTimesAreOutOfOrder_throwsIllegalArgumentException() {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(stopTimesAreOutOfOrder())
     );
