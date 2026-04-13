@@ -389,7 +389,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
       for (NearbyStop sd : nearbyStops) {
         // Skip the origin stop, loop transfers are not needed.
         var nearbyStop = repository.getStopLocation(sd.stopId);
-        if (nearbyStop == stop) {
+        if (nearbyStop.equals(stop)) {
           continue;
         }
         createPathTransfer(stop, nearbyStop, sd, distinctTransfers, mode);
