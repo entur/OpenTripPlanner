@@ -142,7 +142,7 @@ class InsertionEvaluatorTest {
   void findOptimalInsertion_onDeviationBudgetExceeded_returnsNull() {
     var trip = createTripWithStops(
       OSLO_SOUTH,
-      List.of(createStopAt(0, OSLO_CENTER), createStopAt(0, OSLO_NORTHEAST)),
+      List.of(createStopAt(OSLO_CENTER), createStopAt(OSLO_NORTHEAST)),
       OSLO_NORTH
     );
 
@@ -189,7 +189,7 @@ class InsertionEvaluatorTest {
   @Test
   void findOptimalInsertion_routingFails_skipsPosition() {
     // Use a trip with one stop to have multiple viable insertion positions
-    var stop1 = createStopAt(0, OSLO_EAST);
+    var stop1 = createStopAt(OSLO_EAST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1), OSLO_NORTH);
 
     var mockPath = createGraphPath(Duration.ofMinutes(3));
@@ -241,8 +241,8 @@ class InsertionEvaluatorTest {
 
   @Test
   void findOptimalInsertion_tripWithStops_evaluatesAllPositions() {
-    var stop1 = createStopAt(0, OSLO_EAST);
-    var stop2 = createStopAt(1, OSLO_WEST);
+    var stop1 = createStopAt(OSLO_EAST);
+    var stop2 = createStopAt(OSLO_WEST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1, stop2), OSLO_NORTH);
 
     var mockPath = createGraphPath();
@@ -399,7 +399,7 @@ class InsertionEvaluatorTest {
     // Scenario: Trip A→B→C, insert passenger that allows some segment reuse
     // Expected: Segments that have matching endpoints should be REUSED
 
-    var stop1 = createStopAt(0, OSLO_EAST);
+    var stop1 = createStopAt(OSLO_EAST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1), OSLO_NORTH);
 
     // Baseline has 2 segments: CENTER→EAST, EAST→NORTH
@@ -444,7 +444,7 @@ class InsertionEvaluatorTest {
     // Scenario: Trip A→B→C, passenger pickup at B (existing point), dropoff at new point
     // Expected: Segment A→B should be reused, B→dropoff and dropoff→C should be routed
 
-    var stop1 = createStopAt(0, OSLO_EAST);
+    var stop1 = createStopAt(OSLO_EAST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1), OSLO_NORTHEAST);
 
     var mockPath = createGraphPath(Duration.ofMinutes(3));

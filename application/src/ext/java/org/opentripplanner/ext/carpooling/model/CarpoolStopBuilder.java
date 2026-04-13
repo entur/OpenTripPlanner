@@ -16,7 +16,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   private ZonedDateTime aimedArrivalTime;
   private ZonedDateTime expectedDepartureTime;
   private ZonedDateTime aimedDepartureTime;
-  private int sequenceNumber;
   private int onboardCount;
 
   CarpoolStopBuilder(FeedScopedId id) {
@@ -26,8 +25,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   CarpoolStopBuilder(CarpoolStop original) {
     super(original);
     this.coordinate = original.getCoordinate();
-    this.sequenceNumber = original.getSequenceNumber();
-
     this.expectedArrivalTime = original.getExpectedArrivalTime();
     this.aimedArrivalTime = original.getAimedArrivalTime();
     this.expectedDepartureTime = original.getExpectedDepartureTime();
@@ -65,11 +62,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     return this;
   }
 
-  public CarpoolStopBuilder withSequenceNumber(int sequenceNumber) {
-    this.sequenceNumber = sequenceNumber;
-    return this;
-  }
-
   public CarpoolStopBuilder withOnboardCount(int onboardCount) {
     this.onboardCount = onboardCount;
     return this;
@@ -93,10 +85,6 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   public ZonedDateTime aimedDepartureTime() {
     return aimedDepartureTime;
-  }
-
-  public int sequenceNumber() {
-    return sequenceNumber;
   }
 
   public int onboardCount() {

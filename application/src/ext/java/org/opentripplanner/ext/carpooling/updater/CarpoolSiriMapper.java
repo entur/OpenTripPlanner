@@ -91,7 +91,7 @@ public class CarpoolSiriMapper {
    *
    * @param call The SIRI EstimatedCall containing stop information
    * @param tripId The trip ID for generating unique stop IDs
-   * @param sequenceNumber The 0-based sequence number of this stop
+   * @param stopIndex The 0-based index of this stop in the call list
    * @param isFirst true if this is the first stop (origin)
    * @param isLast true if this is the last stop (destination)
    * @return A CarpoolStop representing the stop
@@ -99,7 +99,7 @@ public class CarpoolSiriMapper {
   private CarpoolStop buildCarpoolStopForPosition(
     EstimatedCall call,
     String tripId,
-    int sequenceNumber,
+    int stopIndex,
     boolean isFirst,
     boolean isLast
   ) {
@@ -107,7 +107,7 @@ public class CarpoolSiriMapper {
       ? tripId + "_trip_origin"
       : isLast
         ? tripId + "_trip_destination"
-        : tripId + "_stop_" + sequenceNumber;
+        : tripId + "_stop_" + stopIndex;
 
     return toCarpoolStop(call, stopId, tripId, isFirst, isLast);
   }

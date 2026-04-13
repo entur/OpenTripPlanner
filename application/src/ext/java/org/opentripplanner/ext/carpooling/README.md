@@ -304,7 +304,6 @@ Represents a driver's journey offering carpool seats:
 Waypoint along a carpool route:
 
 - **coordinate**: Geographic location
-- **sequenceNumber**: Order in route (0-indexed)
 - **estimatedArrivalTime**: When driver expects to arrive
 - **stopType**: PICKUP or DROPOFF
 - **passengerDelta**: Change in passenger count (+1 for pickup, -1 for dropoff)

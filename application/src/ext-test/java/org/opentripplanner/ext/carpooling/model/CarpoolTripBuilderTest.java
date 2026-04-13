@@ -19,7 +19,7 @@ public class CarpoolTripBuilderTest {
   void buildFromValues_fromId_buildToCorrectValues() {
     var startTime = ZonedDateTime.now();
     var endTime = ZonedDateTime.now().plusMinutes(45);
-    var stop = createStopAt(1, OSLO_EAST);
+    var stop = createStopAt(OSLO_EAST);
 
     var builder = new CarpoolTripBuilder(new FeedScopedId("feed", "id"));
     var trip = builder

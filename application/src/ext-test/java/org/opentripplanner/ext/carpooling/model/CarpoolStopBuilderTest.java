@@ -56,7 +56,6 @@ public class CarpoolStopBuilderTest {
   void buildFromValues_usingWith_buildToCorrectValues() {
     var builder = new CarpoolStopBuilder(new FeedScopedId("feed", "id"));
     builder
-      .withSequenceNumber(1)
       .withOnboardCount(2)
       .withCoordinate(OSLO_NORTH)
       .withAimedArrivalTime(AIMED_ARRIVAL_TIME)
@@ -65,7 +64,6 @@ public class CarpoolStopBuilderTest {
       .withExpectedDepartureTime(EXPECTED_DEPARTURE_TIME);
     var stop = builder.buildFromValues();
 
-    assertEquals(1, stop.getSequenceNumber());
     assertEquals(2, stop.getOnboardCount());
     assertEquals(OSLO_NORTH, stop.getCoordinate());
     assertEquals(AIMED_ARRIVAL_TIME, stop.getAimedArrivalTime());
@@ -78,7 +76,6 @@ public class CarpoolStopBuilderTest {
   void buildFromValues_usingCarPoolStop_buildsCorrectValues() {
     var originalBuilder = new CarpoolStopBuilder(new FeedScopedId("feed", "id"));
     originalBuilder
-      .withSequenceNumber(2)
       .withOnboardCount(3)
       .withCoordinate(OSLO_CENTER)
       .withAimedArrivalTime(AIMED_ARRIVAL_TIME)
@@ -90,7 +87,6 @@ public class CarpoolStopBuilderTest {
     var copyBuilder = new CarpoolStopBuilder(original);
     var copy = copyBuilder.buildFromValues();
 
-    assertEquals(original.getSequenceNumber(), copy.getSequenceNumber());
     assertEquals(original.getOnboardCount(), copy.getOnboardCount());
     assertEquals(original.getCoordinate(), copy.getCoordinate());
     assertEquals(original.getAimedArrivalTime(), copy.getAimedArrivalTime());

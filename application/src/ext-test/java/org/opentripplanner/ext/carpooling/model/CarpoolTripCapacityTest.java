@@ -41,7 +41,7 @@ class CarpoolTripCapacityTest {
     // Stops: [Origin(1), A(2), B(1), Destination(1)]
     var trip = createTripWithStops(
       OSLO_CENTER,
-      List.of(createStop(0, 2), createStop(1, 1)),
+      List.of(createStop(2), createStop(1)),
       OSLO_NORTH
     );
 
@@ -67,7 +67,7 @@ class CarpoolTripCapacityTest {
   @Test
   void adjacentPositions_onlyChecksStopBeforePickup() {
     // Original stops: [Origin(1), A(5), Destination(1)]   totalCapacity=5
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 5)), OSLO_NORTH);
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(5)), OSLO_NORTH);
 
     // Modified route: [Origin, Pickup, Dropoff, A, Destination]
     //                     0       1       2     3      4
@@ -78,7 +78,7 @@ class CarpoolTripCapacityTest {
   @Test
   void adjacentPositions_fullAtStopBeforePickup() {
     // Original stops: [Origin(1), A(5), Destination(1)]   totalCapacity=5
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 5)), OSLO_NORTH);
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(5)), OSLO_NORTH);
 
     // Modified route: [Origin, A, Pickup, Dropoff, Destination]
     //                     0     1    2       3        4
@@ -91,7 +91,7 @@ class CarpoolTripCapacityTest {
     // Original stops: [Origin(1), A(2), B(4), C(1), Destination(1)]   totalCapacity=5
     var trip = createTripWithStops(
       OSLO_CENTER,
-      List.of(createStop(0, 2), createStop(1, 4), createStop(2, 1)),
+      List.of(createStop(2), createStop(4), createStop(1)),
       OSLO_NORTH
     );
 
@@ -108,7 +108,7 @@ class CarpoolTripCapacityTest {
     // B is full, but the passenger is dropped off before B.
     var trip = createTripWithStops(
       OSLO_CENTER,
-      List.of(createStop(0, 1), createStop(1, 5)),
+      List.of(createStop(1), createStop(5)),
       OSLO_NORTH
     );
 
@@ -121,7 +121,7 @@ class CarpoolTripCapacityTest {
   @Test
   void pickupNearEnd_limitedByStopBeforePickup() {
     // Original stops: [Origin(1), A(4), Destination(1)]   totalCapacity=5
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 4)), OSLO_NORTH);
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(4)), OSLO_NORTH);
 
     // Modified route: [Origin, A, Pickup, Dropoff, Destination]
     //                     0     1    2       3        4
@@ -133,7 +133,7 @@ class CarpoolTripCapacityTest {
   @Test
   void fullRangeInsertion_checksAllOriginalStops() {
     // Original stops: [Origin(2), A(2), Destination(2)]   totalCapacity=5
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(0, 2)), OSLO_NORTH);
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStop(2)), OSLO_NORTH);
 
     // Modified route: [Origin, Pickup, A, Dropoff, Destination]
     //                     0       1    2     3        4
@@ -147,7 +147,7 @@ class CarpoolTripCapacityTest {
     // Original stops: [Origin(1), A(1), B(4), C(1), D(1), Destination(1)]   totalCapacity=5
     var trip = createTripWithStops(
       OSLO_CENTER,
-      List.of(createStop(0, 1), createStop(1, 4), createStop(2, 1), createStop(3, 1)),
+      List.of(createStop(1), createStop(4), createStop(1), createStop(1)),
       OSLO_NORTH
     );
 
