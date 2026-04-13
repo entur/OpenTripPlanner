@@ -2,34 +2,21 @@ package org.opentripplanner.ext.carpooling.model;
 
 import java.time.ZonedDateTime;
 import java.util.Objects;
-import java.util.function.IntSupplier;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Geometry;
-import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
-import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.site.StopType;
 
 /**
  * Represents a stop along a carpool trip route with occupancy and timing information.
  * Stops are ordered sequentially along the route.
  */
-public class CarpoolStop
-  extends AbstractTransitEntity<CarpoolStop, CarpoolStopBuilder>
-  implements StopLocation {
+public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopBuilder> {
 
   /** Default onboard count per stop (1 = driver only) when no occupancy information is provided. */
   public static final int DEFAULT_ONBOARD_COUNT = 1;
 
-  private final int index;
-  private final I18NString name;
-  private final I18NString description;
-  private final I18NString url;
   private final WgsCoordinate coordinate;
-  private final Geometry geometry;
   private final ZonedDateTime expectedArrivalTime;
   private final ZonedDateTime aimedArrivalTime;
   private final ZonedDateTime expectedDepartureTime;
@@ -39,17 +26,7 @@ public class CarpoolStop
 
   public CarpoolStop(CarpoolStopBuilder builder) {
     super(builder.getId());
-    this.index = builder.createIndex();
-    // According to the spec, stop location names are optional for flex zones, so we set the ID as the dummy name.
-    if (builder.name() == null) {
-      this.name = new NonLocalizedString(builder.getId().toString());
-    } else {
-      this.name = builder.name();
-    }
-    this.description = builder.description();
-    this.url = builder.url();
     this.coordinate = Objects.requireNonNull(builder.coordinate());
-    this.geometry = builder.geometry();
     this.expectedArrivalTime = builder.expectedArrivalTime();
     this.aimedArrivalTime = builder.aimedArrivalTime();
     this.expectedDepartureTime = builder.expectedDepartureTime();
@@ -58,78 +35,17 @@ public class CarpoolStop
     this.onboardCount = builder.onboardCount();
   }
 
-  public static CarpoolStopBuilder of(FeedScopedId id, IntSupplier indexCounter) {
-    return new CarpoolStopBuilder(id, indexCounter);
+  public static CarpoolStopBuilder of(FeedScopedId id) {
+    return new CarpoolStopBuilder(id);
   }
 
   public static CarpoolStopBuilder of(CarpoolStop carpoolStop) {
     return new CarpoolStopBuilder(carpoolStop);
   }
 
-  // StopLocation interface implementation - delegate to the underlying AreaStop
-
-  @Override
-  public int getIndex() {
-    return index;
-  }
-
-  @Override
-  @Nullable
-  public I18NString getName() {
-    return name;
-  }
-
-  @Override
-  @Nullable
-  public I18NString getDescription() {
-    return description;
-  }
-
-  @Override
-  @Nullable
-  public I18NString getUrl() {
-    return url;
-  }
-
-  @Override
-  public StopType getStopType() {
-    return StopType.REGULAR;
-  }
-
-  @Override
-  @Nullable
-  public String getCode() {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getPlatformCode() {
-    return null;
-  }
-
-  @Override
   public WgsCoordinate getCoordinate() {
     return coordinate;
   }
-
-  @Override
-  @Nullable
-  public Geometry getGeometry() {
-    return geometry;
-  }
-
-  @Override
-  public boolean isPartOfStation() {
-    return false;
-  }
-
-  @Override
-  public boolean isPartOfSameStationAs(StopLocation alternativeStop) {
-    return false;
-  }
-
-  // Carpool-specific methods
 
   /**
    * @return The expected arrival time, or null if not applicable (e.g., origin stop)
