@@ -126,7 +126,7 @@ public class OsmModule implements GraphBuilderModule {
       osmdb,
       graph,
       params.boardingAreaRefTags(),
-      params.includeOsmSubwayEntrances(),
+      params.includeOsmStationEntrances(),
       issueStore
     );
     for (var provider : providers) {

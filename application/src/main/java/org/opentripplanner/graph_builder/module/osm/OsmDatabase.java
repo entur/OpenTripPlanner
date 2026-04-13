@@ -988,10 +988,7 @@ public class OsmDatabase {
       switch (member.getType()) {
         case NODE -> {
           var node = nodesById.get(member.getRef());
-          if (
-            node != null &&
-            (node.isEntrance() || node.isBoardingLocation() || node.isTag("highway", "elevator"))
-          ) {
+          if (node != null && node.isPlatformAccess()) {
             platformNodes.add(node);
             if (node.isEntrance()) {
               // mark it as a station entrance so it can be returned in walk step descriptions.

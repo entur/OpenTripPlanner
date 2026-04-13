@@ -106,7 +106,7 @@ public class GraphBuilderModules {
       .withIncludeInclinedEdgeLevelInfo(config.includeInclinedEdgeLevelInfo)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
-      .withIncludeOsmSubwayEntrances(config.osmDefaults.includeOsmSubwayEntrances())
+      .withIncludeOsmStationEntrances(config.osmDefaults.includeOsmStationEntrances())
       .withIssueStore(issueStore)
       .build();
   }
