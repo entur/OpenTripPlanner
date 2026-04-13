@@ -210,6 +210,29 @@ public class CarpoolEstimatedVehicleJourneyData {
     call.getExpectedDepartureCapacities().add(capacity);
   }
 
+  public static EstimatedVehicleJourney journeyWithLatestExpectedArrivalTime(
+    int expectedArrivalMinutes,
+    int latestExpectedArrivalMinutes
+  ) {
+    var journey = minimalCompleteJourney();
+    var lastStop = journey.getEstimatedCalls().getEstimatedCalls().getLast();
+    var base = lastStop.getAimedArrivalTime();
+    lastStop.setExpectedArrivalTime(base.plusMinutes(expectedArrivalMinutes));
+    lastStop.setLatestExpectedArrivalTime(base.plusMinutes(latestExpectedArrivalMinutes));
+    return journey;
+  }
+
+  public static EstimatedVehicleJourney journeyWithLatestExpectedArrivalTimeAimedOnly(
+    int latestExpectedArrivalMinutes
+  ) {
+    var journey = minimalCompleteJourney();
+    var lastStop = journey.getEstimatedCalls().getEstimatedCalls().getLast();
+    var base = lastStop.getAimedArrivalTime();
+    lastStop.setExpectedArrivalTime(null);
+    lastStop.setLatestExpectedArrivalTime(base.plusMinutes(latestExpectedArrivalMinutes));
+    return journey;
+  }
+
   private static void addOnboardCount(EstimatedCall call, int onboardCount) {
     var occupancy = new VehicleOccupancyStructure();
     occupancy.setOnboardCount(BigInteger.valueOf(onboardCount));

@@ -36,8 +36,6 @@ public class CarpoolSiriMapper {
   private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
-  private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
-
   public CarpoolTrip mapSiriToCarpoolTrip(EstimatedVehicleJourney journey) {
     var calls = journey.getEstimatedCalls().getEstimatedCalls();
     if (calls.size() < 2) {
@@ -188,6 +186,34 @@ public class CarpoolSiriMapper {
   }
 
   /**
+   * Extracts the deviation budget from the EstimatedCall by computing the difference between
+   * {@code latestExpectedArrivalTime} and the arrival time ({@code expectedArrivalTime} if
+   * present, otherwise {@code aimedArrivalTime}).
+   * Returns {@link CarpoolStop#DEFAULT_DEVIATION_BUDGET} if either value is missing.
+   */
+  private Duration extractDeviationBudget(EstimatedCall call) {
+    var latestExpected = call.getLatestExpectedArrivalTime();
+    var arrivalTime = call.getExpectedArrivalTime() != null
+      ? call.getExpectedArrivalTime()
+      : call.getAimedArrivalTime();
+
+    if (latestExpected == null || arrivalTime == null) {
+      return CarpoolStop.DEFAULT_DEVIATION_BUDGET;
+    }
+
+    Duration budget = Duration.between(arrivalTime, latestExpected);
+    if (budget.isNegative()) {
+      LOG.warn(
+        "latestExpectedArrivalTime ({}) is before arrivalTime ({}), using default deviation budget",
+        latestExpected,
+        arrivalTime
+      );
+      return CarpoolStop.DEFAULT_DEVIATION_BUDGET;
+    }
+    return budget;
+  }
+
+  /**
    * Validates that the EstimatedCalls are properly ordered in time.
    * Ensures intermediate stops occur between the first (boarding) and last (alighting) calls.
    */
@@ -260,9 +286,9 @@ public class CarpoolSiriMapper {
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
+      .withLatestExpectedArrivalTime(isFirst ? null : call.getLatestExpectedArrivalTime())
       .withOnboardCount(extractOnboardCount(tripId, call))
-      // TODO: Find a better way to exchange deviation budget with providers.
-      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
+      .withDeviationBudget(isFirst ? Duration.ZERO : extractDeviationBudget(call))
       .build();
   }
 

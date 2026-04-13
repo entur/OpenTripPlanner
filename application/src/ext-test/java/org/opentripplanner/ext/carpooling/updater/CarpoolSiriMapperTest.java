@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.arrivalIsAfterDepartureTime;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithDifferentCapacitiesPerCall;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithLatestExpectedArrivalTime;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithLatestExpectedArrivalTimeAimedOnly;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithOnboardCounts;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithTotalCapacity;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.lessThanTwoStops;
@@ -13,9 +15,11 @@ import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyD
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.stopTimesAreOutOfOrder;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasAimedTimesOnly;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasExpectedTimesOnly;
+import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_DEVIATION_BUDGET;
 import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_ONBOARD_COUNT;
 import static org.opentripplanner.ext.carpooling.model.CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import uk.org.siri.siri21.EstimatedCall;
 
@@ -183,5 +187,42 @@ public class CarpoolSiriMapperTest {
     for (var stop : mapped.stops()) {
       assertEquals(DEFAULT_ONBOARD_COUNT, stop.getOnboardCount());
     }
+  }
+
+  // -- extractDeviationBudget tests --
+
+  @Test
+  void mapSiriToCarpoolTrip_noLatestExpectedArrivalTime_returnsDefaultDeviationBudget() {
+    var mapped = mapper.mapSiriToCarpoolTrip(minimalCompleteJourney());
+    assertEquals(Duration.ZERO, mapped.stops().getFirst().getDeviationBudget());
+    assertEquals(DEFAULT_DEVIATION_BUDGET, mapped.stops().getLast().getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withLatestExpectedArrivalTime_computesDeviationBudget() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTime(0, 10));
+    var lastStop = mapped.stops().getLast();
+    assertEquals(Duration.ofMinutes(10), lastStop.getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withLatestExpectedArrivalTimeNoExpected_usesAimedArrivalTime() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTimeAimedOnly(20));
+    var lastStop = mapped.stops().getLast();
+    assertEquals(Duration.ofMinutes(20), lastStop.getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_originStop_hasZeroDeviationBudget() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTime(0, 10));
+    assertEquals(Duration.ZERO, mapped.stops().getFirst().getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_latestBeforeExpected_returnsDefaultDeviationBudget() {
+    // latestExpectedArrival is before expectedArrival — bad data falls back to default
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTime(10, 5));
+    var lastStop = mapped.stops().getLast();
+    assertEquals(DEFAULT_DEVIATION_BUDGET, lastStop.getDeviationBudget());
   }
 }
