@@ -4610,26 +4610,26 @@ public class GraphQLTypes {
 
   public static class GraphQLReplacementFilterInput {
 
-    private GraphQLReplacementRequirement replacement;
+    private GraphQLReplacementRequirement requirement;
 
     public GraphQLReplacementFilterInput(Map<String, Object> args) {
       if (args != null) {
-        if (args.get("replacement") instanceof GraphQLReplacementRequirement) {
-          this.replacement = (GraphQLReplacementRequirement) args.get("replacement");
-        } else if (args.get("replacement") != null) {
-          this.replacement = GraphQLReplacementRequirement.valueOf(
-            (String) args.get("replacement")
+        if (args.get("requirement") instanceof GraphQLReplacementRequirement) {
+          this.requirement = (GraphQLReplacementRequirement) args.get("requirement");
+        } else if (args.get("requirement") != null) {
+          this.requirement = GraphQLReplacementRequirement.valueOf(
+            (String) args.get("requirement")
           );
         }
       }
     }
 
-    public GraphQLReplacementRequirement getGraphQLReplacement() {
-      return this.replacement;
+    public GraphQLReplacementRequirement getGraphQLRequirement() {
+      return this.requirement;
     }
 
-    public void setGraphQLReplacement(GraphQLReplacementRequirement replacement) {
-      this.replacement = replacement;
+    public void setGraphQLRequirement(GraphQLReplacementRequirement requirement) {
+      this.requirement = requirement;
     }
   }
 

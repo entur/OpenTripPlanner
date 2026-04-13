@@ -102,10 +102,10 @@ public class ModePreferencesMapper {
   private static ReplacementRequirement map(
     @Nullable GraphQLTypes.GraphQLReplacementFilterInput input
   ) {
-    if (input == null || input.getGraphQLReplacement() == null) {
+    if (input == null || input.getGraphQLRequirement() == null) {
       return ReplacementRequirement.IGNORED;
     }
-    return switch (input.getGraphQLReplacement()) {
+    return switch (input.getGraphQLRequirement()) {
       case REQUIRED -> ReplacementRequirement.REQUIRED;
       case FORBIDDEN -> ReplacementRequirement.FORBIDDEN;
       case FEATURE_IGNORED -> ReplacementRequirement.IGNORED;
