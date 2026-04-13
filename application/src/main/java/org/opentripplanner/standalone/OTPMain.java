@@ -4,6 +4,8 @@ import static org.opentripplanner.model.projectinfo.OtpProjectInfo.projectInfo;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import org.geotools.referencing.factory.DeferredAuthorityFactory;
 import org.geotools.util.WeakCollectionCleaner;
 import org.opentripplanner.framework.application.ApplicationShutdownSupport;
@@ -185,10 +187,28 @@ public class OTPMain {
   }
 
   private static void startOtpWebServer(CommandLineParameters params, ConstructApplication app) {
-    // Index graph for travel search
-    app.timetableRepository().index();
+    // Post-deserialization indexing: build the indexes that are not serialized.
+    // Site and timetable indexes are independent and can be built in parallel.
+    var siteIndex = CompletableFuture.runAsync(() ->
+      app.timetableRepository().getSiteRepository().reindexAfterDeserialization()
+    );
+    var timetableIndex = CompletableFuture.runAsync(() -> app.timetableRepository().index());
     app.transferRepository().index();
-    app.graph().index();
+
+    // Street index and Raptor transit data creation are the two most expensive
+    // post-deserialization tasks. They are independent of each other:
+    // - Street index needs only the graph with reconstructed edge lists
+    // - Raptor data needs the timetable + site indexes
+    var streetIndex = CompletableFuture.runAsync(() -> app.graph().index());
+    var raptorData = CompletableFuture.allOf(siteIndex, timetableIndex).thenRunAsync(() ->
+      app.createRaptorTransitData()
+    );
+
+    try {
+      CompletableFuture.allOf(streetIndex, raptorData).join();
+    } catch (CompletionException e) {
+      throw e.getCause() instanceof RuntimeException re ? re : new RuntimeException(e.getCause());
+    }
 
     // publishing the config version info make it available to the APIs
     setOtpConfigVersionsOnServerInfo(app);

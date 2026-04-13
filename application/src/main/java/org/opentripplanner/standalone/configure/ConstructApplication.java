@@ -188,15 +188,22 @@ public class ConstructApplication {
     return new OTPWebApplication(routerConfig().server(), this::createServerContext);
   }
 
-  private void setupTransitRoutingServer() {
-    enableRequestTraceLogging();
-    createMetricsLogging();
-
+  /**
+   * Create transit layer for Raptor routing using the current timetable, transfer, and tuning
+   * configuration. This is called separately from {@link #setupTransitRoutingServer()} to allow
+   * parallel execution with street index construction.
+   */
+  public void createRaptorTransitData() {
     createRaptorTransitData(
       timetableRepository(),
       transferRepository(),
       routerConfig().transitTuningConfig()
     );
+  }
+
+  private void setupTransitRoutingServer() {
+    enableRequestTraceLogging();
+    createMetricsLogging();
 
     /* Create updater modules from JSON config. */
     UpdaterConfigurator.configure(

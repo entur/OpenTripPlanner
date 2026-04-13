@@ -212,8 +212,6 @@ public class SerializedGraphObject implements Serializable {
       );
       LOG.debug("Graph read.");
       serObj.reconstructEdgeLists();
-      serObj.timetableRepository.getSiteRepository().reindexAfterDeserialization();
-      serObj.timetableRepository.index();
       logSerializationCompleteStatus(serObj.graph, serObj.timetableRepository);
       return serObj;
     } catch (IOException e) {
