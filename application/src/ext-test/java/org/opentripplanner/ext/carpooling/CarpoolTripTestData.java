@@ -24,7 +24,7 @@ public class CarpoolTripTestData {
    * Creates a simple trip with origin and destination stops.
    */
   public static CarpoolTrip createSimpleTrip(WgsCoordinate boarding, WgsCoordinate alighting) {
-    var stops = List.of(createOriginStop(boarding), createDestinationStop(alighting, 1));
+    var stops = List.of(createOriginStop(boarding), createDestinationStop(alighting));
     return buildTrip(DEFAULT_TOTAL_CAPACITY, DEFAULT_DEVIATION_BUDGET, null, stops);
   }
 
@@ -38,7 +38,7 @@ public class CarpoolTripTestData {
   ) {
     var stops = List.of(
       createOriginStopWithTime(boarding, startTime, startTime),
-      createDestinationStopWithTime(alighting, 1, startTime.plusHours(1), startTime.plusHours(1))
+      createDestinationStopWithTime(alighting, startTime.plusHours(1), startTime.plusHours(1))
     );
     return buildTrip(DEFAULT_TOTAL_CAPACITY, DEFAULT_DEVIATION_BUDGET, startTime, stops);
   }
@@ -63,13 +63,12 @@ public class CarpoolTripTestData {
           .withAimedDepartureTime(intermediate.getAimedDepartureTime())
           .withExpectedArrivalTime(intermediate.getExpectedArrivalTime())
           .withAimedArrivalTime(intermediate.getAimedArrivalTime())
-          .withSequenceNumber(intermediate.getSequenceNumber() + 1)
           .withOnboardCount(intermediate.getOnboardCount())
           .build()
       );
     }
 
-    allStops.add(createDestinationStop(alighting, allStops.size()));
+    allStops.add(createDestinationStop(alighting));
     return buildTrip(DEFAULT_TOTAL_CAPACITY, DEFAULT_DEVIATION_BUDGET, null, allStops);
   }
 
@@ -88,7 +87,7 @@ public class CarpoolTripTestData {
     WgsCoordinate boarding,
     WgsCoordinate alighting
   ) {
-    var stops = List.of(createOriginStop(boarding), createDestinationStop(alighting, 1));
+    var stops = List.of(createOriginStop(boarding), createDestinationStop(alighting));
     return buildTrip(DEFAULT_TOTAL_CAPACITY, deviationBudget, null, stops);
   }
 
@@ -104,26 +103,25 @@ public class CarpoolTripTestData {
   }
 
   /**
-   * Creates a CarpoolStop with specified sequence (0-based) and onboard count.
+   * Creates a CarpoolStop with specified onboard count.
    */
-  public static CarpoolStop createStop(int zeroBasedSequence, int onboardCount) {
-    return createStopAt(zeroBasedSequence, onboardCount, CarpoolTestCoordinates.OSLO_CENTER);
+  public static CarpoolStop createStop(int onboardCount) {
+    return createStopAt(onboardCount, CarpoolTestCoordinates.OSLO_CENTER);
   }
 
   /**
    * Creates a CarpoolStop at a specific location with onboardCount=1 (driver only).
    */
-  public static CarpoolStop createStopAt(int sequence, WgsCoordinate location) {
-    return createStopAt(sequence, 1, location);
+  public static CarpoolStop createStopAt(WgsCoordinate location) {
+    return createStopAt(1, location);
   }
 
   /**
    * Creates a CarpoolStop with all parameters.
    */
-  public static CarpoolStop createStopAt(int sequence, int onboardCount, WgsCoordinate location) {
+  public static CarpoolStop createStopAt(int onboardCount, WgsCoordinate location) {
     return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-" + ++idCounter))
       .withCoordinate(location)
-      .withSequenceNumber(sequence)
       .withOnboardCount(onboardCount)
       .build();
   }
@@ -145,19 +143,17 @@ public class CarpoolTripTestData {
       .build();
   }
 
-  public static CarpoolStop createDestinationStop(WgsCoordinate location, int sequenceNumber) {
-    return createDestinationStopWithTime(location, sequenceNumber, null, null);
+  public static CarpoolStop createDestinationStop(WgsCoordinate location) {
+    return createDestinationStopWithTime(location, null, null);
   }
 
   public static CarpoolStop createDestinationStopWithTime(
     WgsCoordinate location,
-    int sequenceNumber,
     ZonedDateTime expectedArrivalTime,
     ZonedDateTime aimedArrivalTime
   ) {
     return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-" + ++idCounter))
       .withCoordinate(location)
-      .withSequenceNumber(sequenceNumber)
       .withOnboardCount(1)
       .withExpectedArrivalTime(expectedArrivalTime)
       .withAimedArrivalTime(aimedArrivalTime)

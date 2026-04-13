@@ -502,11 +502,10 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
       4,
       List.of(
         CarpoolTripTestData.createOriginStopWithTime(coordA, departureTime, departureTime),
-        CarpoolTripTestData.createStopAt(1, coordB),
-        CarpoolTripTestData.createStopAt(2, coordC),
+        CarpoolTripTestData.createStopAt(coordB),
+        CarpoolTripTestData.createStopAt(coordC),
         CarpoolTripTestData.createDestinationStopWithTime(
           coordD,
-          3,
           departureTime.plusHours(1),
           departureTime.plusHours(1)
         )

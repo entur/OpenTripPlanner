@@ -135,11 +135,11 @@ public class CarpoolTrip
    * Returns the ordered sequence of stops along the carpool route.
    * <p>
    * Stops include both the driver's originally planned stops and any dynamically added stops
-   * for passenger pickups and dropoffs. The list is ordered by sequence number, representing
-   * the order in which stops are visited along the route.
+   * for passenger pickups and dropoffs. The list is ordered by visit order along the route:
+   * the first element is the origin and the last is the destination.
    *
-   * @return an immutable list of stops along the carpool route, ordered by sequence number,
-   *         never null but may be empty for trips with no intermediate stops
+   * @return an immutable list of stops along the carpool route, in visit order; never null,
+   *         and always contains at least the origin and destination
    */
   public List<CarpoolStop> stops() {
     return stops;
