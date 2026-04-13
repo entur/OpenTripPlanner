@@ -49,7 +49,7 @@ public class GeometryUtils {
   }
 
   public static LineString makeLineString(double... coords) {
-    var seq= CSF.create(coords, 2);
+    var seq = CSF.create(coords, 2);
     return GF.createLineString(seq);
   }
 

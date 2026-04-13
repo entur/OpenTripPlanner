@@ -24,9 +24,7 @@ public class ElevatorBoardEdge extends Edge implements BikeWalkableEdge, Elevato
 
   private ElevatorBoardEdge(Vertex from, ElevatorHopVertex to) {
     super(from, to);
-    geometry = GeometryUtils.makeLineString(
-      from.getX(), from.getY(), to.getX(), to.getY()
-    );
+    geometry = GeometryUtils.makeLineString(from.getX(), from.getY(), to.getX(), to.getY());
   }
 
   public static ElevatorBoardEdge createElevatorBoardEdge(Vertex from, ElevatorHopVertex to) {
