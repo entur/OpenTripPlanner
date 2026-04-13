@@ -72,8 +72,8 @@ public class GeometryUtils {
     return makeLineString(Arrays.stream(coordinates).map(WgsCoordinate::asJtsCoordinate).toList());
   }
 
-  /// Convert an iterable of T by applying a mapping function to each element and concatenate the
-  /// resulting LineStrings.
+  /// Convert an iterable of T by applying a mapping function to each element and concatenating the
+  /// resulting [LineString]s.
   ///
   /// For the best performance and lowest number of allocations pass in an [Iterable] rather
   /// than a materialized [Collection].
@@ -84,8 +84,7 @@ public class GeometryUtils {
     return concatenateLineStrings(Iterables.transform(inputObjects, mapper::apply));
   }
 
-  /// Convert an [Iterable] of [LineString] by applying a mapping function to each element and
-  /// concatenate the resulting LineStrings.
+  /// Concatenate a number of [LineString]s.
   ///
   /// For the best performance and lowest number of allocations pass in an [Iterable] rather
   /// than a materialized [Collection].

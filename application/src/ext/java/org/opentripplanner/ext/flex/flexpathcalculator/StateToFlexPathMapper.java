@@ -26,17 +26,9 @@ class StateToFlexPathMapper {
    * up the distance along the way.
    */
   static FlexPath map(State state) {
-    double distance_m = 0.0;
-
-    // TODO: compute this during traversal of the edges in a follow up PR
-    for (var backEdge : state.listBackEdges()) {
-      distance_m += backEdge.getDistanceMeters();
-    }
-
     // computing the linestring from the graph path is a surprisingly expensive operation
     // so we delay it until it's actually needed. since most flex paths are never shown to the user
     // this improves performance quite a bit.
-
     Supplier<LineString> geometrySupplier = () -> {
       if (state.getRequest().arriveBy()) {
         var geometries = Iterables.transform(state.listBackEdges(), Edge::getGeometry);
@@ -47,7 +39,11 @@ class StateToFlexPathMapper {
       }
     };
 
-    return new FlexPath((int) distance_m, (int) state.getElapsedTimeSeconds(), geometrySupplier);
+    return new FlexPath(
+      (int) state.getTraversalDistanceMeters(),
+      (int) state.getElapsedTimeSeconds(),
+      geometrySupplier
+    );
   }
 
   private static LineString reverse(Edge e) {
