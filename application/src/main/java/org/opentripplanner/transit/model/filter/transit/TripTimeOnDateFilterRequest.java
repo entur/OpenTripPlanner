@@ -3,6 +3,7 @@ package org.opentripplanner.transit.model.filter.transit;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.opentripplanner.transit.model.filter.selector.SelectorBasedFilterRequest;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -12,7 +13,8 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * Not: a TripTimeOnDate is excluded if it matches any not criterion.
  * A filter with no select and no not matches everything.
  */
-public class TripTimeOnDateFilterRequest {
+public class TripTimeOnDateFilterRequest
+  implements SelectorBasedFilterRequest<TripTimeOnDateSelectRequest> {
 
   @Nullable
   private final List<TripTimeOnDateSelectRequest> select;

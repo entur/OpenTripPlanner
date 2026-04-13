@@ -1,9 +1,12 @@
 package org.opentripplanner.transit.api.request;
 
 import java.time.LocalDate;
+import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.api.model.FilterValues;
+import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateFilterRequest;
 import org.opentripplanner.transit.model.timetable.TripAlteration;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
@@ -22,8 +25,7 @@ public class TripOnServiceDateRequest {
   private final FilterValues<FeedScopedId> includeReplacementFor;
   private final FilterValues<String> includeNetexInternalPlanningCodes;
   private final FilterValues<TripAlteration> includeAlterations;
-  private final FilterValues<TransitMode> includeModes;
-  private final FilterValues<TransitMode> excludeModes;
+  private final List<TripOnServiceDateFilterRequest> filters;
 
   TripOnServiceDateRequest(
     FilterValues<LocalDate> includeServiceDates,
@@ -33,8 +35,7 @@ public class TripOnServiceDateRequest {
     FilterValues<FeedScopedId> includeReplacementFor,
     FilterValues<String> includeNetexInternalPlanningCodes,
     FilterValues<TripAlteration> includeAlterations,
-    FilterValues<TransitMode> includeModes,
-    FilterValues<TransitMode> excludeModes
+    List<TripOnServiceDateFilterRequest> filters
   ) {
     this.includeServiceDates = includeServiceDates;
     this.includeAgencies = includeAgencies;
@@ -43,8 +44,7 @@ public class TripOnServiceDateRequest {
     this.includeReplacementFor = includeReplacementFor;
     this.includeNetexInternalPlanningCodes = includeNetexInternalPlanningCodes;
     this.includeAlterations = includeAlterations;
-    this.includeModes = includeModes;
-    this.excludeModes = excludeModes;
+    this.filters = filters;
   }
 
   public static TripOnServiceDateRequestBuilder of() {
@@ -80,10 +80,41 @@ public class TripOnServiceDateRequest {
   }
 
   public FilterValues<TransitMode> includeModes() {
-    return includeModes;
+    List<TransitMode> modesToInclude = null;
+    if (!filters.isEmpty()) {
+      var includes = filters.getFirst().select();
+      if (includes != null && !includes.getFirst().transportModes().includeEverything()) {
+        modesToInclude = includes
+          .getFirst()
+          .transportModes()
+          .get()
+          .stream()
+          .map(MainAndSubMode::mainMode)
+          .toList();
+      }
+    }
+    return FilterValues.ofNullIsEverything("modesToInclude", modesToInclude);
   }
 
   public FilterValues<TransitMode> excludeModes() {
-    return excludeModes;
+    List<TransitMode> modesToExclude = null;
+    if (!filters.isEmpty()) {
+      var excludes = filters.getFirst().not();
+
+      if (excludes != null && !excludes.getFirst().transportModes().includeEverything()) {
+        modesToExclude = excludes
+          .getFirst()
+          .transportModes()
+          .get()
+          .stream()
+          .map(MainAndSubMode::mainMode)
+          .toList();
+      }
+    }
+    return FilterValues.ofNullIsEverything("modesToExclude", modesToExclude);
+  }
+
+  public List<TripOnServiceDateFilterRequest> filters() {
+    return filters;
   }
 }

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.api.model.FilterValues;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
+import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
 import org.opentripplanner.transit.model.network.Route;
@@ -119,7 +120,17 @@ class TripOnServiceDateMatcherFactoryTest {
           List.of(new FeedScopedId("F", "RUT:route:trip:1"))
         )
       )
-      .withIncludeModes(FilterValues.ofEmptyIsEverything("modes", List.of(TransitMode.BUS)))
+      .withFilters(
+        List.of(
+          TripOnServiceDateFilterRequest.of()
+            .addSelect(
+              TripOnServiceDateSelectRequest.of()
+                .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
+                .build()
+            )
+            .build()
+        )
+      )
       .build();
 
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
@@ -167,13 +178,20 @@ class TripOnServiceDateMatcherFactoryTest {
 
   @Test
   void testIncludeExcludeOrder() {
-    // Exclude should negate include
+    // Exclude should negate include, so when same selector is applied both as select and not,
+    // the not wins.
+    var busSelector = TripOnServiceDateSelectRequest.of()
+      .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
+      .build();
+    var filter = TripOnServiceDateFilterRequest.of()
+      .addSelect(busSelector)
+      .addNot(busSelector)
+      .build();
     TripOnServiceDateRequest request = TripOnServiceDateRequest.of()
       .withIncludeServiceDates(
         FilterValues.ofRequired("serviceDates", List.of(LocalDate.of(2024, 2, 22)))
       )
-      .withIncludeModes(FilterValues.ofEmptyIsEverything("modes", List.of(TransitMode.BUS)))
-      .withExcludeModes(FilterValues.ofEmptyIsEverything("excludeModes", List.of(TransitMode.BUS)))
+      .withFilters(List.of(filter))
       .build();
 
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
@@ -181,5 +199,115 @@ class TripOnServiceDateMatcherFactoryTest {
     assertFalse(matcher.match(tripOnServiceDateRut));
     assertFalse(matcher.match(tripOnServiceDateRut2));
     assertFalse(matcher.match(tripOnServiceDateAkt));
+  }
+
+  @Test
+  void compositeFilterSelectByAgency() {
+    var filter = TripOnServiceDateFilterRequest.of()
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "RUT:1")))
+          .build()
+      )
+      .build();
+    var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
+    Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
+
+    assertTrue(matcher.match(tripOnServiceDateRut));
+    assertFalse(matcher.match(tripOnServiceDateRut2));
+    assertFalse(matcher.match(tripOnServiceDateAkt));
+  }
+
+  @Test
+  void compositeFilterNotByAgency() {
+    var filter = TripOnServiceDateFilterRequest.of()
+      .addNot(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "RUT:1")))
+          .build()
+      )
+      .build();
+    var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
+    Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
+
+    assertFalse(matcher.match(tripOnServiceDateRut));
+    assertTrue(matcher.match(tripOnServiceDateRut2));
+    assertTrue(matcher.match(tripOnServiceDateAkt));
+  }
+
+  @Test
+  void compositeFilterSelectIsOrBetweenSelectors() {
+    // Two selectors in select — a trip matching either one should pass
+    var filter = TripOnServiceDateFilterRequest.of()
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "RUT:1")))
+          .build()
+      )
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "AKT:1")))
+          .build()
+      )
+      .build();
+    var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
+    Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
+
+    assertTrue(matcher.match(tripOnServiceDateRut));
+    assertFalse(matcher.match(tripOnServiceDateRut2));
+    assertTrue(matcher.match(tripOnServiceDateAkt));
+  }
+
+  @Test
+  void compositeFilterNotOverridesSelect() {
+    // select RUT:1 and AKT:1, but not AKT:1 — AKT:1 should be excluded despite being selected
+    var filter = TripOnServiceDateFilterRequest.of()
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "RUT:1")))
+          .build()
+      )
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "AKT:1")))
+          .build()
+      )
+      .addNot(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "AKT:1")))
+          .build()
+      )
+      .build();
+    var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
+    Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
+
+    assertTrue(matcher.match(tripOnServiceDateRut));
+    assertFalse(matcher.match(tripOnServiceDateRut2));
+    assertFalse(matcher.match(tripOnServiceDateAkt));
+  }
+
+  @Test
+  void multipleFiltersAreOred() {
+    // Two separate filters — a trip matching either filter should pass
+    var filterRut = TripOnServiceDateFilterRequest.of()
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "RUT:1")))
+          .build()
+      )
+      .build();
+    var filterAkt = TripOnServiceDateFilterRequest.of()
+      .addSelect(
+        TripOnServiceDateSelectRequest.of()
+          .withAgencies(List.of(new FeedScopedId("F", "AKT:1")))
+          .build()
+      )
+      .build();
+    var request = TripOnServiceDateRequest.of().withFilters(List.of(filterRut, filterAkt)).build();
+    Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
+
+    assertTrue(matcher.match(tripOnServiceDateRut));
+    assertFalse(matcher.match(tripOnServiceDateRut2));
+    assertTrue(matcher.match(tripOnServiceDateAkt));
   }
 }
