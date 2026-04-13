@@ -21,7 +21,6 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   private final ZonedDateTime aimedArrivalTime;
   private final ZonedDateTime expectedDepartureTime;
   private final ZonedDateTime aimedDepartureTime;
-  private final int sequenceNumber;
   private final int onboardCount;
 
   public CarpoolStop(CarpoolStopBuilder builder) {
@@ -31,7 +30,6 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
     this.aimedArrivalTime = builder.aimedArrivalTime();
     this.expectedDepartureTime = builder.expectedDepartureTime();
     this.aimedDepartureTime = builder.aimedDepartureTime();
-    this.sequenceNumber = builder.sequenceNumber();
     this.onboardCount = builder.onboardCount();
   }
 
@@ -69,13 +67,6 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   @Nullable
   public ZonedDateTime getExpectedDepartureTime() {
     return expectedDepartureTime;
-  }
-
-  /**
-   * @return The 0-based position of this stop in the trip's stop sequence
-   */
-  public int getSequenceNumber() {
-    return sequenceNumber;
   }
 
   /**

@@ -62,7 +62,7 @@ class InsertionPositionFinderTest {
   @Test
   void findViablePositions_noCapacity_rejectsPosition() {
     // Create a trip with 0 available seats
-    var stops = List.of(createOriginStop(OSLO_CENTER), createDestinationStop(OSLO_NORTH, 1));
+    var stops = List.of(createOriginStop(OSLO_CENTER), createDestinationStop(OSLO_NORTH));
     var trip = createTripWithCapacity(0, stops);
 
     var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_WEST);
@@ -80,7 +80,7 @@ class InsertionPositionFinderTest {
       new BeelineEstimator()
     );
 
-    var trip = createTripWithStops(OSLO_CENTER, List.of(createStopAt(0, OSLO_EAST)), OSLO_NORTH);
+    var trip = createTripWithStops(OSLO_CENTER, List.of(createStopAt(OSLO_EAST)), OSLO_NORTH);
 
     // Try to insert passenger that would cause significant detour
     // Far from route
@@ -96,8 +96,8 @@ class InsertionPositionFinderTest {
 
   @Test
   void findViablePositions_multipleStops_checksAllCombinations() {
-    var stop1 = createStopAt(0, OSLO_EAST);
-    var stop2 = createStopAt(1, OSLO_WEST);
+    var stop1 = createStopAt(OSLO_EAST);
+    var stop2 = createStopAt(OSLO_WEST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1, stop2), OSLO_NORTH);
 
     var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_NORTH);

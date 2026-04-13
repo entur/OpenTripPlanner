@@ -3,7 +3,6 @@ package org.opentripplanner.ext.carpooling.model;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.AbstractEntityBuilder;
@@ -81,18 +80,6 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
 
   public CarpoolTripBuilder withStops(List<CarpoolStop> stops) {
     this.stops = new ArrayList<>(stops);
-    return this;
-  }
-
-  public CarpoolTripBuilder addStop(CarpoolStop stop) {
-    this.stops.add(stop);
-    // Sort stops by sequence number to maintain order
-    this.stops.sort(Comparator.comparingInt(CarpoolStop::getSequenceNumber));
-    return this;
-  }
-
-  public CarpoolTripBuilder clearStops() {
-    this.stops.clear();
     return this;
   }
 
