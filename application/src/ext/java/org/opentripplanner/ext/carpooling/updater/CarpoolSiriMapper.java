@@ -36,8 +36,6 @@ public class CarpoolSiriMapper {
   private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
-  private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
-
   public CarpoolTrip mapSiriToCarpoolTrip(EstimatedVehicleJourney journey) {
     var calls = journey.getEstimatedCalls().getEstimatedCalls();
     if (calls.size() < 2) {
@@ -188,6 +186,49 @@ public class CarpoolSiriMapper {
   }
 
   /**
+   * Extracts the deviation budget from the EstimatedCall by computing the difference between
+   * {@code latestExpectedArrivalTime} and the arrival time ({@code expectedArrivalTime} if
+   * present, otherwise {@code aimedArrivalTime}).
+   * <p>
+   * The result is the <em>remaining</em> slack at this stop, not an initial contract:
+   * {@code expectedArrivalTime} already reflects detours committed by prior passenger
+   * insertions, and {@code latestExpectedArrivalTime} is the unchanged commitment to the
+   * passenger at this stop. Each time this mapper runs against a fresh SIRI snapshot, the
+   * extracted value therefore shrinks in step with the consumed slack.
+   * <p>
+   * Fallbacks:
+   * <ul>
+   *   <li>Returns {@link CarpoolStop#DEFAULT_DEVIATION_BUDGET} if either timestamp is missing.
+   *       This is intentionally permissive — the absence of a commitment should not block
+   *       insertions.</li>
+   *   <li>Returns {@link Duration#ZERO} (and logs a warning) if {@code latestExpectedArrivalTime}
+   *       is before the arrival time — the schedule has slipped past the commitment, so no
+   *       further deviation is acceptable.</li>
+   * </ul>
+   */
+  private Duration extractDeviationBudget(EstimatedCall call) {
+    var latestExpected = call.getLatestExpectedArrivalTime();
+    var arrivalTime = call.getExpectedArrivalTime() != null
+      ? call.getExpectedArrivalTime()
+      : call.getAimedArrivalTime();
+
+    if (latestExpected == null || arrivalTime == null) {
+      return CarpoolStop.DEFAULT_DEVIATION_BUDGET;
+    }
+
+    Duration budget = Duration.between(arrivalTime, latestExpected);
+    if (budget.isNegative()) {
+      LOG.warn(
+        "latestExpectedArrivalTime ({}) is before arrivalTime ({}), using zero deviation budget",
+        latestExpected,
+        arrivalTime
+      );
+      return Duration.ZERO;
+    }
+    return budget;
+  }
+
+  /**
    * Validates that the EstimatedCalls are properly ordered in time.
    * Ensures intermediate stops occur between the first (boarding) and last (alighting) calls.
    */
@@ -240,6 +281,11 @@ public class CarpoolSiriMapper {
     }
   }
 
+  /**
+   * Builds a {@link CarpoolStop} from a SIRI call. The origin (when {@code isFirst} is true)
+   * always gets {@link Duration#ZERO} as its deviation budget — the trip cannot start later
+   * than scheduled — regardless of any value extracted from the call.
+   */
   private CarpoolStop toCarpoolStop(
     EstimatedCall call,
     String id,
@@ -260,9 +306,9 @@ public class CarpoolSiriMapper {
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
+      .withLatestExpectedArrivalTime(isFirst ? null : call.getLatestExpectedArrivalTime())
       .withOnboardCount(extractOnboardCount(tripId, call))
-      // TODO: Find a better way to exchange deviation budget with providers.
-      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
+      .withDeviationBudget(isFirst ? Duration.ZERO : extractDeviationBudget(call))
       .build();
   }
 

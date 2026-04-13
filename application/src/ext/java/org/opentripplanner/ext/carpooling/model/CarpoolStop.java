@@ -24,10 +24,11 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   public static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
 
   private final WgsCoordinate coordinate;
-  private final ZonedDateTime expectedArrivalTime;
   private final ZonedDateTime aimedArrivalTime;
-  private final ZonedDateTime expectedDepartureTime;
+  private final ZonedDateTime expectedArrivalTime;
+  private final ZonedDateTime latestExpectedArrivalTime;
   private final ZonedDateTime aimedDepartureTime;
+  private final ZonedDateTime expectedDepartureTime;
   private final int onboardCount;
   private final Duration deviationBudget;
 
@@ -36,6 +37,7 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
     this.coordinate = Objects.requireNonNull(builder.coordinate());
     this.expectedArrivalTime = builder.expectedArrivalTime();
     this.aimedArrivalTime = builder.aimedArrivalTime();
+    this.latestExpectedArrivalTime = builder.latestExpectedArrivalTime();
     this.expectedDepartureTime = builder.expectedDepartureTime();
     this.aimedDepartureTime = builder.aimedDepartureTime();
     this.onboardCount = builder.onboardCount();
@@ -55,14 +57,6 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   }
 
   /**
-   * @return The expected arrival time, or null if not applicable (e.g., origin stop)
-   */
-  @Nullable
-  public ZonedDateTime getExpectedArrivalTime() {
-    return expectedArrivalTime;
-  }
-
-  /**
    * @return The aimed arrival time, or null if not applicable (e.g., origin stop)
    */
   @Nullable
@@ -71,11 +65,19 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   }
 
   /**
-   * @return The expected departure time, or null if not applicable (e.g., destination stop)
+   * @return The expected arrival time, or null if not applicable (e.g., origin stop)
    */
   @Nullable
-  public ZonedDateTime getExpectedDepartureTime() {
-    return expectedDepartureTime;
+  public ZonedDateTime getExpectedArrivalTime() {
+    return expectedArrivalTime;
+  }
+
+  /**
+   * @return The latest expected arrival time, or null if not provided
+   */
+  @Nullable
+  public ZonedDateTime getLatestExpectedArrivalTime() {
+    return latestExpectedArrivalTime;
   }
 
   /**
@@ -84,6 +86,14 @@ public class CarpoolStop extends AbstractTransitEntity<CarpoolStop, CarpoolStopB
   @Nullable
   public ZonedDateTime getAimedDepartureTime() {
     return aimedDepartureTime;
+  }
+
+  /**
+   * @return The expected departure time, or null if not applicable (e.g., destination stop)
+   */
+  @Nullable
+  public ZonedDateTime getExpectedDepartureTime() {
+    return expectedDepartureTime;
   }
 
   /**

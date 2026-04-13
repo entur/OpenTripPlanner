@@ -16,6 +16,7 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   private ZonedDateTime expectedArrivalTime;
   private ZonedDateTime aimedArrivalTime;
+  private ZonedDateTime latestExpectedArrivalTime;
   private ZonedDateTime expectedDepartureTime;
   private ZonedDateTime aimedDepartureTime;
   private int onboardCount = CarpoolStop.DEFAULT_ONBOARD_COUNT;
@@ -31,6 +32,7 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
     this.coordinate = original.getCoordinate();
     this.expectedArrivalTime = original.getExpectedArrivalTime();
     this.aimedArrivalTime = original.getAimedArrivalTime();
+    this.latestExpectedArrivalTime = original.getLatestExpectedArrivalTime();
     this.expectedDepartureTime = original.getExpectedDepartureTime();
     this.aimedDepartureTime = original.getAimedDepartureTime();
     this.onboardCount = original.getOnboardCount();
@@ -54,6 +56,11 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   public CarpoolStopBuilder withAimedArrivalTime(ZonedDateTime aimedArrivalTime) {
     this.aimedArrivalTime = aimedArrivalTime;
+    return this;
+  }
+
+  public CarpoolStopBuilder withLatestExpectedArrivalTime(ZonedDateTime latestExpectedArrivalTime) {
+    this.latestExpectedArrivalTime = latestExpectedArrivalTime;
     return this;
   }
 
@@ -96,6 +103,10 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
 
   public ZonedDateTime aimedArrivalTime() {
     return aimedArrivalTime;
+  }
+
+  public ZonedDateTime latestExpectedArrivalTime() {
+    return latestExpectedArrivalTime;
   }
 
   public ZonedDateTime expectedDepartureTime() {
