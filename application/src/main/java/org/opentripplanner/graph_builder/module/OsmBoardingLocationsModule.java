@@ -74,7 +74,7 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
   private final VertexFactory vertexFactory;
   private final VertexLinker linker;
 
-  private final Map<Area, OsmBoardingLocationVertex> existingBoardingLocationsAtAreas;
+  private final Map<Platform, OsmBoardingLocationVertex> existingBoardingLocationsAtAreas;
 
   /**
    * @param timetableRepository This module requires the timetable repository because at the time
@@ -172,7 +172,11 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
         if (platOpt.isPresent()) {
           var platform = platOpt.get();
           if (matchesReference(stop, platform.references())) {
-            var boardingLocation = makeBoardingLocationForArea(stop, area, platform);
+            var boardingLocation = getOrMakeBoardingLocationForPlatform(
+              stop,
+              platform,
+              area.getName()
+            );
             linker.addPermanentAreaVertex(boardingLocation, areaGroup);
             linkBoardingLocationToStop(ts, stop.getCode(), boardingLocation);
             return true;
@@ -203,26 +207,32 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
         });
     }
 
-    for (var platformEdgeList : nearbyEdges.entrySet()) {
-      Platform platform = platformEdgeList.getKey();
-      var name = platform.name();
-      var boardingLocation = makeBoardingLocation(
-        stop,
-        platform.geometry().getCentroid(),
-        platform.references(),
-        name
-      );
-      for (var vertex : linker.linkToSpecificStreetEdgesPermanently(
-        boardingLocation,
-        new TraverseModeSet(TraverseMode.WALK),
-        LinkingDirection.BIDIRECTIONAL,
-        platformEdgeList.getValue().stream().map(StreetEdge.class::cast).collect(Collectors.toSet())
-      )) {
-        linkBoardingLocationToStop(ts, stop.getCode(), vertex);
-      }
-      return true;
-    }
-    return false;
+    return nearbyEdges
+      .entrySet()
+      .stream()
+      .findFirst()
+      .map(platformEdgeList -> {
+        Platform platform = platformEdgeList.getKey();
+        var boardingLocation = getOrMakeBoardingLocationForPlatform(
+          stop,
+          platform,
+          platform.name()
+        );
+        for (var vertex : linker.linkToSpecificStreetEdgesPermanently(
+          boardingLocation,
+          new TraverseModeSet(TraverseMode.WALK),
+          LinkingDirection.BIDIRECTIONAL,
+          platformEdgeList
+            .getValue()
+            .stream()
+            .map(StreetEdge.class::cast)
+            .collect(Collectors.toSet())
+        )) {
+          linkBoardingLocationToStop(ts, stop.getCode(), vertex);
+        }
+        return true;
+      })
+      .orElse(false);
   }
 
   /**
@@ -259,21 +269,16 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
   }
 
   /*
-   * when two stops reference the same OSM platform area, only one
-   * OsmBoardingLocationVertex centroid is created for that area and both stops are linked to it.
+   * when two or more stops reference the same OSM platform, only one
+   * OsmBoardingLocationVertex is created for that platform and both stops are linked to it.
    */
-  private OsmBoardingLocationVertex makeBoardingLocationForArea(
+  private OsmBoardingLocationVertex getOrMakeBoardingLocationForPlatform(
     RegularStop stop,
-    Area area,
-    Platform platform
+    Platform platform,
+    I18NString name
   ) {
-    return existingBoardingLocationsAtAreas.computeIfAbsent(area, _ ->
-      makeBoardingLocation(
-        stop,
-        platform.geometry().getCentroid(),
-        platform.references(),
-        area.getName()
-      )
+    return existingBoardingLocationsAtAreas.computeIfAbsent(platform, _ ->
+      makeBoardingLocation(stop, platform.geometry().getCentroid(), platform.references(), name)
     );
   }
 
