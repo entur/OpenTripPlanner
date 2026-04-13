@@ -83,13 +83,6 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     // Adding a vehicle rental station service needs a graph writer runnable
     this.service = repository;
 
-    try {
-      // Do any setup if needed
-      source.setup();
-    } catch (UpdaterConstructionException e) {
-      LOG.warn("Unable to setup updater: {}", nameForLogging, e);
-    }
-
     if (runOnlyOnce()) {
       LOG.info(
         "Creating vehicle-rental updater running once only (non-polling): {}",
@@ -101,6 +94,15 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         DurationUtils.durationToStr(pollingPeriod()),
         nameForLogging
       );
+    }
+  }
+
+  @Override
+  public void preInitialize() {
+    try {
+      source.setup();
+    } catch (UpdaterConstructionException e) {
+      LOG.warn("Unable to setup updater: {}", nameForLogging, e);
     }
   }
 

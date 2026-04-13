@@ -90,6 +90,33 @@ public class GraphUpdaterManager implements WriteToGraphCallback, GraphUpdaterSt
   }
 
   /**
+   * Run {@link GraphUpdater#preInitialize()} for all updaters concurrently on virtual threads.
+   * This allows I/O-bound setup (e.g. GBFS feed discovery HTTP calls) to execute in parallel,
+   * reducing total startup time. Blocks until all pre-initialization tasks complete.
+   * <p>
+   * Must be called after construction and before {@link #startUpdaters()}.
+   */
+  public void preInitialize() {
+    LOG.info("Pre-initializing {} updaters concurrently.", updaterList.size());
+    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+      for (GraphUpdater updater : updaterList) {
+        executor.submit(() -> {
+          try {
+            updater.preInitialize();
+          } catch (Exception e) {
+            LOG.error(
+              "Pre-initialization failed for updater {}",
+              updater.getConfigRef(),
+              e
+            );
+          }
+        });
+      }
+    }
+    LOG.info("Pre-initialization of updaters complete.");
+  }
+
+  /**
    * This should be called only once at startup to kick off every updater in its own thread, and
    * only after all the updaters have had their setup methods called.
    */

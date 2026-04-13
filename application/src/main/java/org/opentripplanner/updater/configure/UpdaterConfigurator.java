@@ -128,6 +128,8 @@ public class UpdaterConfigurator {
       updaters
     );
 
+    updaterManager.preInitialize();
+
     configureTimetableSnapshotFlush(updaterManager, snapshotManager);
 
     updaterManager.startUpdaters();

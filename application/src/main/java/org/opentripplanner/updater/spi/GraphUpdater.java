@@ -29,6 +29,17 @@ public interface GraphUpdater {
   void setup(WriteToGraphCallback writeToGraphCallback);
 
   /**
+   * Optional lifecycle hook for I/O-bound initialization that can run concurrently across
+   * updaters. Called after {@link #setup(WriteToGraphCallback)} but before {@link #run()}.
+   * Implementations should perform network fetches or other blocking I/O here rather than in the
+   * constructor, enabling the {@link org.opentripplanner.updater.GraphUpdaterManager} to run
+   * them in parallel on virtual threads.
+   * <p>
+   * The default implementation is a no-op.
+   */
+  default void preInitialize() {}
+
+  /**
    * The GraphUpdaterManager will run this method in its own long-running thread. This method then
    * pulls or receives updates and applies them to the graph. It must perform any writes to the
    * graph by passing GraphWriterRunnables to the WriteToGraphCallback, which queues up the write
