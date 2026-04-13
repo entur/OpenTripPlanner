@@ -14,7 +14,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
@@ -38,9 +37,6 @@ public class CarpoolSiriMapper {
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
-  // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
-  // run-away memory use if it by error ends up in global repositories.
-  public static final int CARPOOLING_DUMMY_INDEX = -9_999;
 
   public CarpoolTrip mapSiriToCarpoolTrip(EstimatedVehicleJourney journey) {
     var calls = journey.getEstimatedCalls().getEstimatedCalls();
@@ -260,8 +256,7 @@ public class CarpoolSiriMapper {
       ? toWgsCoordinate(toPolygon(legacyGeometry))
       : toWgsCoordinate(circleLocation);
 
-    return CarpoolStop.of(new FeedScopedId(FEED_ID, id), () -> CARPOOLING_DUMMY_INDEX)
-      .withName(I18NString.of(call.getStopPointNames().getFirst().getValue()))
+    return CarpoolStop.of(new FeedScopedId(FEED_ID, id))
       .withCoordinate(centroid)
       .withAimedDepartureTime(isLast ? null : call.getAimedDepartureTime())
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())

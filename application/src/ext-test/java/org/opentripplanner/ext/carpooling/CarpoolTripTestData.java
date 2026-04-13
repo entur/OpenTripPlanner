@@ -4,7 +4,6 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
@@ -16,8 +15,7 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
  */
 public class CarpoolTripTestData {
 
-  private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
-  private static final AtomicInteger AREA_STOP_COUNTER = new AtomicInteger(0);
+  private static int idCounter = 0;
 
   private static final int DEFAULT_TOTAL_CAPACITY = CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(10);
@@ -59,7 +57,7 @@ public class CarpoolTripTestData {
     for (int i = 0; i < intermediateStops.size(); i++) {
       CarpoolStop intermediate = intermediateStops.get(i);
       allStops.add(
-        CarpoolStop.of(intermediate.getId(), () -> intermediate.getIndex() + 1)
+        CarpoolStop.of(intermediate.getId())
           .withCoordinate(intermediate.getCoordinate())
           .withExpectedDepartureTime(intermediate.getExpectedDepartureTime())
           .withAimedDepartureTime(intermediate.getAimedDepartureTime())
@@ -123,10 +121,7 @@ public class CarpoolTripTestData {
    * Creates a CarpoolStop with all parameters.
    */
   public static CarpoolStop createStopAt(int sequence, int onboardCount, WgsCoordinate location) {
-    return CarpoolStop.of(
-      FeedScopedId.ofNullable("TEST", "area-" + AREA_STOP_COUNTER.incrementAndGet()),
-      AREA_STOP_COUNTER::getAndIncrement
-    )
+    return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-" + ++idCounter))
       .withCoordinate(location)
       .withSequenceNumber(sequence)
       .withOnboardCount(onboardCount)
@@ -142,7 +137,7 @@ public class CarpoolTripTestData {
     ZonedDateTime expectedDepartureTime,
     ZonedDateTime aimedDepartureTime
   ) {
-    return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-0"), () -> 0)
+    return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-0"))
       .withCoordinate(location)
       .withOnboardCount(1)
       .withExpectedDepartureTime(expectedDepartureTime)
@@ -160,10 +155,7 @@ public class CarpoolTripTestData {
     ZonedDateTime expectedArrivalTime,
     ZonedDateTime aimedArrivalTime
   ) {
-    return CarpoolStop.of(
-      FeedScopedId.ofNullable("TEST", "area-" + AREA_STOP_COUNTER.incrementAndGet()),
-      AREA_STOP_COUNTER::getAndIncrement
-    )
+    return CarpoolStop.of(FeedScopedId.ofNullable("TEST", "area-" + ++idCounter))
       .withCoordinate(location)
       .withSequenceNumber(sequenceNumber)
       .withOnboardCount(1)
@@ -179,9 +171,7 @@ public class CarpoolTripTestData {
     List<CarpoolStop> stops
   ) {
     var actualStartTime = startTime != null ? startTime : ZonedDateTime.now();
-    var builder = new CarpoolTripBuilder(
-      FeedScopedId.ofNullable("TEST", "trip-" + ID_COUNTER.incrementAndGet())
-    )
+    var builder = new CarpoolTripBuilder(FeedScopedId.ofNullable("TEST", "trip-" + ++idCounter))
       .withStops(stops)
       .withTotalCapacity(capacity)
       .withStartTime(actualStartTime)
