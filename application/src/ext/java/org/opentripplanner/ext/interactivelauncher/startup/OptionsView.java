@@ -16,7 +16,6 @@ class OptionsView {
   private final JCheckBox buildTransitGraphChk;
   private final JCheckBox saveGraphChk;
   private final JCheckBox startOptServerChk;
-  private final JCheckBox startOptVisualizerChk;
   private final StartupModel model;
 
   OptionsView(StartupModel model) {
@@ -25,7 +24,6 @@ class OptionsView {
     this.buildTransitGraphChk = new JCheckBox("Transit graph", model.isBuildTransit());
     this.saveGraphChk = new JCheckBox("Save graph", model.isSaveGraph());
     this.startOptServerChk = new JCheckBox("Serve graph", model.isServeGraph());
-    this.startOptVisualizerChk = new JCheckBox("Visualizer", model.isVisualizer());
 
     panel.add(Box.createGlue());
     addComp(createBuildBox(), panel);
@@ -58,7 +56,6 @@ class OptionsView {
     addVerticalSectionSpace(actionBox);
     addComp(saveGraphChk, actionBox);
     addComp(startOptServerChk, actionBox);
-    addComp(startOptVisualizerChk, actionBox);
     return actionBox;
   }
 
@@ -79,7 +76,6 @@ class OptionsView {
     bind(buildTransitGraphChk, model::setBuildTransit);
     bind(saveGraphChk, model::setSaveGraph);
     bind(startOptServerChk, model::setServeGraph);
-    bind(startOptVisualizerChk, model::setVisualizer);
   }
 
   private boolean buildStreet() {
@@ -93,12 +89,7 @@ class OptionsView {
   private void onBuildGraphChkChanged() {
     saveGraphChk.setEnabled(buildStreet() || buildTransit());
     startOptServerChk.setEnabled(buildTransit() || !buildStreet());
-    startOptVisualizerChk.setEnabled(buildTransit() || !buildStreet());
   }
 
-  private void onStartOptServerChkChanged() {
-    startOptVisualizerChk.setEnabled(
-      startOptServerChk.isEnabled() && startOptServerChk.isSelected()
-    );
-  }
+  private void onStartOptServerChkChanged() {}
 }
