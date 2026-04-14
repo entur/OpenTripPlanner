@@ -57,10 +57,7 @@ class OsmWayTest {
     OsmWay indoorArea = getClosedPolygon().copy().addTag("indoor", "area").build();
     assertTrue(indoorArea.isRoutableArea());
 
-    OsmWay bikeParking = getClosedPolygon()
-      .copy()
-      .addTag("amenity", "bicycle_parking")
-      .build();
+    OsmWay bikeParking = getClosedPolygon().copy().addTag("amenity", "bicycle_parking").build();
     assertTrue(bikeParking.isRoutableArea());
 
     OsmWay corridor = getClosedPolygon().copy().addTag("indoor", "corridor").build();
@@ -126,10 +123,7 @@ class OsmWayTest {
       Optional.empty(),
       OsmWay.of().addTag("oneway", "notatagvalue").build().isOneWay("motorcar")
     );
-    assertEquals(
-      Optional.empty(),
-      OsmWay.of().addTag("oneway", "no").build().isOneWay("motorcar")
-    );
+    assertEquals(Optional.empty(), OsmWay.of().addTag("oneway", "no").build().isOneWay("motorcar"));
     assertEquals(
       Optional.of(FORWARD),
       OsmWay.of().addTag("oneway", "1").build().isOneWay("motorcar")
@@ -159,10 +153,7 @@ class OsmWayTest {
       Optional.empty(),
       OsmWay.of().addTag("oneway", "notatagvalue").build().isOneWay("bicycle")
     );
-    assertEquals(
-      Optional.empty(),
-      OsmWay.of().addTag("oneway", "no").build().isOneWay("bicycle")
-    );
+    assertEquals(Optional.empty(), OsmWay.of().addTag("oneway", "no").build().isOneWay("bicycle"));
     assertEquals(
       Optional.of(FORWARD),
       OsmWay.of().addTag("oneway", "1").build().isOneWay("bicycle")
@@ -182,19 +173,11 @@ class OsmWayTest {
 
     assertEquals(
       Optional.empty(),
-      OsmWay.of()
-        .addTag("oneway", "yes")
-        .addTag("oneway:bicycle", "no")
-        .build()
-        .isOneWay("bicycle")
+      OsmWay.of().addTag("oneway", "yes").addTag("oneway:bicycle", "no").build().isOneWay("bicycle")
     );
     assertEquals(
       Optional.of(FORWARD),
-      OsmWay.of()
-        .addTag("oneway", "no")
-        .addTag("oneway:bicycle", "yes")
-        .build()
-        .isOneWay("bicycle")
+      OsmWay.of().addTag("oneway", "no").addTag("oneway:bicycle", "yes").build().isOneWay("bicycle")
     );
     assertEquals(
       Optional.empty(),
@@ -206,11 +189,7 @@ class OsmWayTest {
     );
     assertEquals(
       Optional.empty(),
-      OsmWay.of()
-        .addTag("oneway", "yes")
-        .addTag("cycleway", "opposite")
-        .build()
-        .isOneWay("bicycle")
+      OsmWay.of().addTag("oneway", "yes").addTag("cycleway", "opposite").build().isOneWay("bicycle")
     );
     assertEquals(
       Optional.empty(),
@@ -229,19 +208,10 @@ class OsmWayTest {
       Optional.empty(),
       OsmWay.of().addTag("oneway", "notatagvalue").build().isOneWay("foot")
     );
-    assertEquals(
-      Optional.empty(),
-      OsmWay.of().addTag("oneway", "no").build().isOneWay("foot")
-    );
+    assertEquals(Optional.empty(), OsmWay.of().addTag("oneway", "no").build().isOneWay("foot"));
     assertEquals(Optional.empty(), OsmWay.of().addTag("oneway", "1").build().isOneWay("foot"));
-    assertEquals(
-      Optional.empty(),
-      OsmWay.of().addTag("oneway", "true").build().isOneWay("foot")
-    );
-    assertEquals(
-      Optional.empty(),
-      OsmWay.of().addTag("oneway", "-1").build().isOneWay("foot")
-    );
+    assertEquals(Optional.empty(), OsmWay.of().addTag("oneway", "true").build().isOneWay("foot"));
+    assertEquals(Optional.empty(), OsmWay.of().addTag("oneway", "-1").build().isOneWay("foot"));
     assertEquals(
       Optional.empty(),
       OsmWay.of().addTag("junction", "roundabout").build().isOneWay("foot")
@@ -279,10 +249,7 @@ class OsmWayTest {
     way = OsmWay.of().addTag("cycleway", "opposite").build();
     assertTrue(way.isOpposableCycleway());
 
-    way = OsmWay.of()
-      .addTag("cycleway", "nope")
-      .addTag("cycleway:left", "opposite_side")
-      .build();
+    way = OsmWay.of().addTag("cycleway", "nope").addTag("cycleway:left", "opposite_side").build();
     assertTrue(way.isOpposableCycleway());
   }
 

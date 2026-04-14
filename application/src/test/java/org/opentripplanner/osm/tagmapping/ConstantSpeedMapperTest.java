@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.osm.model.OsmEntityForTest;
+import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.model.TraverseDirection;
 
 public class ConstantSpeedMapperTest {
@@ -13,16 +13,13 @@ public class ConstantSpeedMapperTest {
   public void constantSpeedCarRouting() {
     OsmTagMapper osmTagMapper = new ConstantSpeedMapper(20f);
 
-    var slowWay = new OsmEntityForTest();
-    slowWay.addTag("highway", "residential");
+    var slowWay = OsmWay.of().addTag("highway", "residential").build();
     assertEquals(
       20f,
       osmTagMapper.getCarSpeedForWay(slowWay, TraverseDirection.BACKWARD, DataImportIssueStore.NOOP)
     );
 
-    var fastWay = new OsmEntityForTest();
-    fastWay.addTag("highway", "motorway");
-    fastWay.addTag("maxspeed", "120 kmph");
+    var fastWay = OsmWay.of().addTag("highway", "motorway").addTag("maxspeed", "120 kmph").build();
     assertEquals(
       20f,
       osmTagMapper.getCarSpeedForWay(fastWay, TraverseDirection.BACKWARD, DataImportIssueStore.NOOP)

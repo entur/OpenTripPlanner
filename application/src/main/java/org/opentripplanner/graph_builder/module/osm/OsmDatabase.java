@@ -29,6 +29,7 @@ import org.opentripplanner.graph_builder.issues.TurnRestrictionBad;
 import org.opentripplanner.graph_builder.issues.TurnRestrictionException;
 import org.opentripplanner.graph_builder.issues.TurnRestrictionUnknown;
 import org.opentripplanner.graph_builder.module.osm.TurnRestrictionTag.Direction;
+import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelFactory;
@@ -564,7 +565,7 @@ public class OsmDatabase {
             break;
           } else {
             // create a node
-            splitNode = createVirtualNode(p.getCoordinate());
+            splitNode = createVirtualNode(way.getOsmProvider(), p.getCoordinate());
             nCreatedNodes++;
             LOG.debug(
               "Adding virtual {}, intersection of {} ({}--{}) and area {} ({}--{}) at {}.",
@@ -664,8 +665,13 @@ public class OsmDatabase {
    * @param c The location of the node to create.
    * @return The created node.
    */
-  private OsmNode createVirtualNode(Coordinate c) {
-    OsmNode node = OsmNode.builder().withId(virtualNodeId).withLon(c.x).withLat(c.y).build();
+  private OsmNode createVirtualNode(OsmProvider osmProvider, Coordinate c) {
+    OsmNode node = OsmNode.builder()
+      .withId(virtualNodeId)
+      .withLon(c.x)
+      .withLat(c.y)
+      .withOsmProvider(osmProvider)
+      .build();
     virtualNodeId--;
     waysNodeIds.add(node.getId());
     nodesById.put(node.getId(), node);

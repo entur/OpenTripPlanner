@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmLevel;
 import org.opentripplanner.osm.model.OsmLevelSource;
@@ -48,6 +47,7 @@ class OsmAreaGroupTest {
     .addNodeRef(3)
     .addNodeRef(4)
     .addNodeRef(1)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_5_2_1_5 = OsmWay.of()
@@ -56,6 +56,7 @@ class OsmAreaGroupTest {
     .addNodeRef(2)
     .addNodeRef(1)
     .addNodeRef(5)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_1_5_6_1 = OsmWay.of()
@@ -64,6 +65,7 @@ class OsmAreaGroupTest {
     .addNodeRef(5)
     .addNodeRef(6)
     .addNodeRef(1)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_1_2_3_7_8_9_1 = OsmWay.of()
@@ -75,6 +77,7 @@ class OsmAreaGroupTest {
     .addNodeRef(8)
     .addNodeRef(9)
     .addNodeRef(1)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_2_10_7_11_6_2 = OsmWay.of()
@@ -85,6 +88,7 @@ class OsmAreaGroupTest {
     .addNodeRef(11)
     .addNodeRef(6)
     .addNodeRef(2)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L1_1_2_5_1 = OsmWay.of()
@@ -94,6 +98,7 @@ class OsmAreaGroupTest {
     .addNodeRef(2)
     .addNodeRef(5)
     .addNodeRef(1)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay PEDESTRIAN_1_2_3_4_1 = OsmWay.of()
@@ -105,6 +110,7 @@ class OsmAreaGroupTest {
     .addNodeRef(3)
     .addNodeRef(4)
     .addNodeRef(1)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay PEDESTRIAN_5_2_1_5 = OsmWay.of()
@@ -115,6 +121,7 @@ class OsmAreaGroupTest {
     .addNodeRef(2)
     .addNodeRef(1)
     .addNodeRef(5)
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_3_2_1 = OsmWay.of()
@@ -122,18 +129,21 @@ class OsmAreaGroupTest {
     .addNodeRef(2)
     .addNodeRef(1)
     .addTag("barrier", "wall")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_1_4 = OsmWay.of()
     .addNodeRef(1)
     .addNodeRef(4)
     .addTag("barrier", "wall")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_2_3 = OsmWay.of()
     .addNodeRef(2)
     .addNodeRef(3)
     .addTag("barrier", "wall")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_5_1_4 = OsmWay.of()
@@ -141,6 +151,7 @@ class OsmAreaGroupTest {
     .addNodeRef(1)
     .addNodeRef(4)
     .addTag("barrier", "wall")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_1_3_2 = OsmWay.of()
@@ -148,12 +159,14 @@ class OsmAreaGroupTest {
     .addNodeRef(3)
     .addNodeRef(2)
     .addTag("barrier", "wall")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_3_1 = OsmWay.of()
     .addNodeRef(3)
     .addNodeRef(1)
     .addTag("barrier", "wall")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BOLLARD_1_2_3 = OsmWay.of()
@@ -161,29 +174,8 @@ class OsmAreaGroupTest {
     .addNodeRef(2)
     .addNodeRef(3)
     .addTag("barrier", "bollard")
+    .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-
-  private static final OsmProvider OSM_PROVIDER = new TestOsmProvider(
-    List.of(),
-    List.of(
-      L0_1_2_3_4_1,
-      L0_5_2_1_5,
-      L0_1_5_6_1,
-      L0_1_2_3_7_8_9_1,
-      L0_2_10_7_11_6_2,
-      L1_1_2_5_1,
-      PEDESTRIAN_1_2_3_4_1,
-      PEDESTRIAN_5_2_1_5,
-      BARRIER_3_2_1,
-      BARRIER_1_4,
-      BARRIER_2_3,
-      BARRIER_5_1_4,
-      BARRIER_1_3_2,
-      BARRIER_3_1,
-      BOLLARD_1_2_3
-    ),
-    NODES.valueCollection().stream().toList()
-  );
 
   @Test
   void shouldGroupWithTwoConsecutiveNodes() {

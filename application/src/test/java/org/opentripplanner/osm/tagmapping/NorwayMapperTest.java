@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.osm.model.OsmEntity;
-import org.opentripplanner.osm.model.OsmEntityForTest;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.WayPropertySet;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
@@ -63,8 +62,7 @@ public class NorwayMapperTest {
     for (int i = 0; i < expectedHighways.length; i++) {
       var highway = expectedHighways[i];
       var expectedSafety = expectedBicycleSafety[i];
-      var way = new OsmEntityForTest();
-      way.addTag("highway", highway);
+      var way = OsmWay.of().addTag("highway", highway).build();
       argumentsList.add(Arguments.of(way, expectedSafety));
     }
     return argumentsList;
@@ -112,8 +110,7 @@ public class NorwayMapperTest {
 
   @Test
   public void testTrunkIsWalkable() {
-    var way = new OsmEntityForTest();
-    way.addTag("highway", "trunk");
+    var way = OsmWay.of().addTag("highway", "trunk").build();
 
     assertEquals(StreetTraversalPermission.ALL, WPS.getDataForEntity(way).getPermission());
   }
@@ -121,45 +118,33 @@ public class NorwayMapperTest {
   @Test
   public void testMtbScaleNone() {
     // https://www.openstreetmap.org/way/302610220
-    var way1 = new OsmEntityForTest();
-    way1.addTag("highway", "path");
-    way1.addTag("mtb:scale", "3");
+    var way1 = OsmWay.of().addTag("highway", "path").addTag("mtb:scale", "3").build();
 
     assertEquals(StreetTraversalPermission.NONE, WPS.getDataForEntity(way1).getPermission());
 
-    var way2 = new OsmEntityForTest();
-    way2.addTag("highway", "track");
-    way2.addTag("mtb:scale", "3");
+    var way2 = OsmWay.of().addTag("highway", "track").addTag("mtb:scale", "3").build();
 
     assertEquals(StreetTraversalPermission.NONE, WPS.getDataForEntity(way2).getPermission());
   }
 
   @Test
   public void testMtbScalePedestrian() {
-    var way1 = new OsmEntityForTest();
-    way1.addTag("highway", "path");
-    way1.addTag("mtb:scale", "1");
+    var way1 = OsmWay.of().addTag("highway", "path").addTag("mtb:scale", "1").build();
 
     assertEquals(StreetTraversalPermission.PEDESTRIAN, WPS.getDataForEntity(way1).getPermission());
 
-    var way2 = new OsmEntityForTest();
-    way2.addTag("highway", "track");
-    way2.addTag("mtb:scale", "1");
+    var way2 = OsmWay.of().addTag("highway", "track").addTag("mtb:scale", "1").build();
 
     assertEquals(StreetTraversalPermission.PEDESTRIAN, WPS.getDataForEntity(way2).getPermission());
   }
 
   @Test
   public void testMotorroad() {
-    var way1 = new OsmEntityForTest();
-    way1.addTag("highway", "trunk");
-    way1.addTag("motorroad", "yes");
+    var way1 = OsmWay.of().addTag("highway", "trunk").addTag("motorroad", "yes").build();
 
     assertEquals(StreetTraversalPermission.CAR, WPS.getDataForEntity(way1).getPermission());
 
-    var way2 = new OsmEntityForTest();
-    way2.addTag("highway", "primary");
-    way2.addTag("motorroad", "yes");
+    var way2 = OsmWay.of().addTag("highway", "primary").addTag("motorroad", "yes").build();
 
     assertEquals(StreetTraversalPermission.CAR, WPS.getDataForEntity(way2).getPermission());
   }

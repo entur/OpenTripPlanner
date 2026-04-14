@@ -93,17 +93,11 @@ public class WayTestData {
   }
 
   public static OsmWay cyclewayLeft() {
-    return OsmWay.of()
-      .addTag("highway", "residential")
-      .addTag("cycleway:left", "lane")
-      .build();
+    return OsmWay.of().addTag("highway", "residential").addTag("cycleway:left", "lane").build();
   }
 
   public static OsmWay cyclewayBoth() {
-    return OsmWay.of()
-      .addTag("highway", "residential")
-      .addTag("cycleway:both", "lane")
-      .build();
+    return OsmWay.of().addTag("highway", "residential").addTag("cycleway:both", "lane").build();
   }
 
   public static OsmWay footway() {
@@ -227,10 +221,7 @@ public class WayTestData {
   }
 
   public static OsmWay cobblestones() {
-    return OsmWay.of()
-      .addTag("highway", "residential")
-      .addTag("surface", "cobblestones")
-      .build();
+    return OsmWay.of().addTag("highway", "residential").addTag("surface", "cobblestones").build();
   }
 
   public static OsmWay cyclewayLaneTrack() {
@@ -270,10 +261,7 @@ public class WayTestData {
 
   public static OsmWay zooPlatform() {
     // https://www.openstreetmap.org/way/119108622
-    return OsmWay.of()
-      .addTag("public_transport", "platform")
-      .addTag("usage", "tourism")
-      .build();
+    return OsmWay.of().addTag("public_transport", "platform").addTag("usage", "tourism").build();
   }
 
   public static OsmWay indoor(String value) {

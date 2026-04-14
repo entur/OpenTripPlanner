@@ -85,12 +85,7 @@ public class BarrierTest {
     var n5 = OsmNode.builder().withId(5).withLat(-0.001).withLon(0.001).build();
     var n6 = OsmNode.builder().withId(6).withLat(-0.001).withLon(-0.001).build();
 
-    var path = OsmWay.of()
-      .withId(1)
-      .addTag("highway", "path")
-      .addNodeRef(1)
-      .addNodeRef(2)
-      .build();
+    var path = OsmWay.of().withId(1).addTag("highway", "path").addNodeRef(1).addNodeRef(2).build();
 
     var chain = OsmWay.of()
       .withId(2)

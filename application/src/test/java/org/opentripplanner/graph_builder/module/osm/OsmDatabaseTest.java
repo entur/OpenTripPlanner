@@ -69,12 +69,7 @@ public class OsmDatabaseTest {
       .addNodeRef(2)
       .build();
 
-    var path = OsmWay.of()
-      .withId(1)
-      .addTag("highway", "path")
-      .addNodeRef(2)
-      .addNodeRef(3)
-      .build();
+    var path = OsmWay.of().withId(1).addTag("highway", "path").addNodeRef(2).addNodeRef(3).build();
 
     osmdb.addWay(chain);
     osmdb.addWay(path);

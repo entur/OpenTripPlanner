@@ -27,22 +27,22 @@ public class OsmEntityTest {
 
   @Test
   void testHasTag() {
-    OsmEntityForTest o = new OsmEntityForTest();
+    var o = new OsmEntityForTest();
     assertFalse(o.hasTag("foo"));
     assertFalse(o.hasTag("FOO"));
-    o.addTag("foo", "bar");
 
+    o = new OsmEntityForTest(Map.of("foo", "bar"));
     assertTrue(o.hasTag("foo"));
     assertTrue(o.hasTag("FOO"));
   }
 
   @Test
   void testGetTag() {
-    OsmEntityForTest o = new OsmEntityForTest();
+    var o = new OsmEntityForTest();
     assertNull(o.getTag("foo"));
     assertNull(o.getTag("FOO"));
 
-    o.addTag("foo", "bar");
+    o = new OsmEntityForTest(Map.of("foo", "bar"));
     assertEquals("bar", o.getTag("foo"));
     assertEquals("bar", o.getTag("FOO"));
   }
@@ -77,19 +77,19 @@ public class OsmEntityTest {
 
   @Test
   void testIsTagFalseOrTrue() {
-    OsmEntityForTest o = new OsmEntityForTest();
+    var o = new OsmEntityForTest();
     assertFalse(o.isTagFalse("foo"));
     assertFalse(o.isTagFalse("FOO"));
     assertFalse(o.isTagTrue("foo"));
     assertFalse(o.isTagTrue("FOO"));
 
-    o.addTag("foo", "true");
+    o = new OsmEntityForTest(Map.of("foo", "true"));
     assertFalse(o.isTagFalse("foo"));
     assertFalse(o.isTagFalse("FOO"));
     assertTrue(o.isTagTrue("foo"));
     assertTrue(o.isTagTrue("FOO"));
 
-    o.addTag("foo", "no");
+    o = new OsmEntityForTest(Map.of("foo", "no"));
     assertTrue(o.isTagFalse("foo"));
     assertTrue(o.isTagFalse("FOO"));
     assertFalse(o.isTagTrue("foo"));
@@ -99,8 +99,7 @@ public class OsmEntityTest {
   @Test
   void isTag() {
     var name = "Brendan";
-    var osm = new OsmEntityForTest();
-    osm.addTag("NAME", name);
+    var osm = new OsmEntityForTest(Map.of("name", name));
 
     assertTrue(osm.isTag("name", name));
     assertTrue(osm.isTag("NAME", name));
@@ -109,47 +108,43 @@ public class OsmEntityTest {
 
   @Test
   void testDoesAllowTagAccess() {
-    OsmEntityForTest o = new OsmEntityForTest();
+    var o = new OsmEntityForTest();
     assertFalse(o.isExplicitlyAllowed("foo"));
 
-    o.addTag("foo", "bar");
+    o = new OsmEntityForTest(Map.of("foo", "bar"));
     assertFalse(o.isExplicitlyAllowed("foo"));
 
-    o.addTag("foo", "designated");
+    o = new OsmEntityForTest(Map.of("foo", "designated"));
     assertTrue(o.isExplicitlyAllowed("foo"));
 
-    o.addTag("foo", "official");
+    o = new OsmEntityForTest(Map.of("foo", "official"));
     assertTrue(o.isExplicitlyAllowed("foo"));
   }
 
   @Test
   void testIsGeneralAccessDenied() {
-    OsmEntityForTest o = new OsmEntityForTest();
+    var o = new OsmEntityForTest();
     assertFalse(o.isGeneralAccessDenied());
 
-    o.addTag("access", "something");
+    o = new OsmEntityForTest(Map.of("access", "something"));
     assertFalse(o.isGeneralAccessDenied());
 
-    o.addTag("access", "license");
+    o = new OsmEntityForTest(Map.of("access", "license"));
     assertTrue(o.isGeneralAccessDenied());
 
-    o.addTag("access", "no");
+    o = new OsmEntityForTest(Map.of("access", "no"));
     assertTrue(o.isGeneralAccessDenied());
   }
 
   @Test
   void testIsDirectionalGeneralAccessDenied() {
-    OsmEntityForTest o = new OsmEntityForTest();
-    o.addTag("access", "yes");
-    o.addTag("access:backward", "no");
+    var o = new OsmEntityForTest(Map.of("access", "yes", "access:backward", "no"));
     assertFalse(o.isGeneralAccessDenied(DIRECTIONLESS));
     assertFalse(o.isGeneralAccessDenied());
     assertTrue(o.isGeneralAccessDenied(BACKWARD));
     assertFalse(o.isGeneralAccessDenied(FORWARD));
 
-    OsmEntityForTest p = new OsmEntityForTest();
-    p.addTag("access", "no");
-    p.addTag("access:backward", "yes");
+    var p = new OsmEntityForTest(Map.of("access", "no", "access:backward", "yes"));
     assertTrue(p.isGeneralAccessDenied(DIRECTIONLESS));
     assertTrue(p.isGeneralAccessDenied());
     assertFalse(p.isGeneralAccessDenied(BACKWARD));
@@ -158,33 +153,31 @@ public class OsmEntityTest {
 
   @Test
   void testBicycleDenied() {
-    OsmEntityForTest tags = new OsmEntityForTest();
+    var tags = new OsmEntityForTest();
     assertFalse(tags.isBicycleDenied());
 
     for (var allowedValue : List.of("yes", "unknown", "somevalue")) {
-      tags.addTag("bicycle", allowedValue);
+      tags = new OsmEntityForTest(Map.of("bicycle", allowedValue));
       assertFalse(tags.isBicycleDenied(), "bicycle=" + allowedValue);
     }
 
     for (var deniedValue : List.of("no", "dismount", "license")) {
-      tags.addTag("bicycle", deniedValue);
+      tags = new OsmEntityForTest(Map.of("bicycle", deniedValue));
       assertTrue(tags.isBicycleDenied(), "bicycle=" + deniedValue);
     }
   }
 
   @Test
   void testBicycleDeniedOnVehicleDenied() {
-    OsmEntityForTest noVehicle = new OsmEntityForTest();
-    noVehicle.addTag("vehicle", "no");
+    var noVehicle = new OsmEntityForTest(Map.of("vehicle", "no"));
     assertTrue(noVehicle.isBicycleDenied());
-    noVehicle.addTag("bicycle", "yes");
+    noVehicle = new OsmEntityForTest(Map.of("vehicle", "no", "bicycle", "yes"));
     assertFalse(noVehicle.isBicycleDenied());
   }
 
   @Test
   void getReferenceTags() {
-    var osm = new OsmEntityForTest();
-    osm.addTag("ref", "A");
+    var osm = new OsmEntityForTest(Map.of("ref", "A"));
 
     assertEquals(Set.of("A"), osm.getMultiTagValues(Set.of("ref", "test")));
     assertEquals(Set.of(), osm.getMultiTagValues(Set.of("test")));
@@ -192,33 +185,28 @@ public class OsmEntityTest {
 
   @Test
   void getEmptyRefList() {
-    var osm = new OsmEntityForTest();
-    osm.addTag("ref", "A");
+    var osm = new OsmEntityForTest(Map.of("ref", "A"));
 
     assertEquals(Set.of(), osm.getMultiTagValues(Set.of()));
   }
 
   @Test
   void ignoreRefCase() {
-    var osm = new OsmEntityForTest();
-    osm.addTag("ref:IFOPT", "A");
+    var osm = new OsmEntityForTest(Map.of("ref:ifopt", "A"));
 
     assertEquals(Set.of("A"), osm.getMultiTagValues(Set.of("ref:ifopt")));
   }
 
   @Test
   void readSemicolonSeparated() {
-    var osm = new OsmEntityForTest();
-    osm.addTag("ref:A", "A;A;B");
+    var osm = new OsmEntityForTest(Map.of("ref:a", "A;A;B"));
 
     assertEquals(Set.of("A", "B"), osm.getMultiTagValues(Set.of("ref:A")));
   }
 
   @Test
   void removeBlankRef() {
-    var osm = new OsmEntityForTest();
-    osm.addTag("ref1", " ");
-    osm.addTag("ref2", "");
+    var osm = new OsmEntityForTest(Map.of("ref1", " ", "ref2", ""));
 
     assertEquals(Set.of(), osm.getMultiTagValues(Set.of("ref1")));
     assertEquals(Set.of(), osm.getMultiTagValues(Set.of("ref2")));
@@ -226,9 +214,7 @@ public class OsmEntityTest {
 
   @Test
   void shouldNotReturnNull() {
-    var osm = new OsmEntityForTest();
-    osm.addTag("ref1", " ");
-    osm.addTag("ref2", "");
+    var osm = new OsmEntityForTest(Map.of("ref1", " ", "ref2", ""));
 
     assertEquals(Set.of(), osm.getMultiTagValues(Set.of()));
     assertEquals(Set.of(), osm.getMultiTagValues(Set.of("ref3")));
@@ -239,12 +225,10 @@ public class OsmEntityTest {
     var osm1 = new OsmEntityForTest();
     assertTrue(osm1.isWheelchairAccessible());
 
-    var osm2 = new OsmEntityForTest();
-    osm2.addTag("wheelchair", "no");
+    var osm2 = new OsmEntityForTest(Map.of("wheelchair", "no"));
     assertFalse(osm2.isWheelchairAccessible());
 
-    var osm3 = new OsmEntityForTest();
-    osm3.addTag("wheelchair", "yes");
+    var osm3 = new OsmEntityForTest(Map.of("wheelchair", "yes"));
     assertTrue(osm3.isWheelchairAccessible());
   }
 
@@ -289,12 +273,10 @@ public class OsmEntityTest {
     var osm1 = new OsmEntityForTest();
     assertEquals(Accessibility.NO_INFORMATION, osm1.explicitWheelchairAccessibility());
 
-    var osm2 = new OsmEntityForTest();
-    osm2.addTag("wheelchair", "no");
+    var osm2 = new OsmEntityForTest(Map.of("wheelchair", "no"));
     assertEquals(Accessibility.NOT_POSSIBLE, osm2.explicitWheelchairAccessibility());
 
-    var osm3 = new OsmEntityForTest();
-    osm3.addTag("wheelchair", "yes");
+    var osm3 = new OsmEntityForTest(Map.of("wheelchair", "yes"));
     assertEquals(Accessibility.POSSIBLE, osm3.explicitWheelchairAccessibility());
   }
 
@@ -319,7 +301,7 @@ public class OsmEntityTest {
 
   @Test
   void platformEdge() {
-    var w = new OsmEntityForTest().addTag("railway", "platform_edge");
+    var w = new OsmEntityForTest(Map.of("railway", "platform_edge"));
     assertTrue(w.isRoutable());
     assertTrue(w.isBoardingLocation());
     assertTrue(w.isPlatform());
@@ -327,11 +309,18 @@ public class OsmEntityTest {
 
   @Test
   void testGenerateI18NForPattern() {
-    OsmEntityForTest osmTags = new OsmEntityForTest();
-    osmTags.addTag("note", "Note EN");
-    osmTags.addTag("description:fr", "Description FR");
-    osmTags.addTag("wheelchair:description", "Wheelchair description EN");
-    osmTags.addTag("wheelchair:description:fr", "Wheelchair description FR");
+    var osmTags = new OsmEntityForTest(
+      Map.of(
+        "note",
+        "Note EN",
+        "description:fr",
+        "Description FR",
+        "wheelchair:description",
+        "Wheelchair description EN",
+        "wheelchair:description:fr",
+        "Wheelchair description FR"
+      )
+    );
 
     Map<String, String> expected = new HashMap<>();
 
@@ -392,9 +381,8 @@ public class OsmEntityTest {
   @ParameterizedTest
   @MethodSource("parseIntOrBooleanCases")
   void parseIntOrBoolean(String value, OptionalInt expected) {
-    var way = new OsmEntityForTest();
     var key = "capacity:disabled";
-    way.addTag(key, value);
+    var way = new OsmEntityForTest(Map.of(key, value));
     var maybeInt = way.parseIntOrBoolean(key, i -> {});
     assertEquals(expected, maybeInt);
   }
@@ -420,9 +408,8 @@ public class OsmEntityTest {
   @ParameterizedTest
   @MethodSource("parseTagAsDurationCases")
   void parseTagAsDuration(String value, Optional<Duration> expected) {
-    var way = new OsmEntityForTest();
     var key = "duration";
-    way.addTag(key, value);
+    var way = new OsmEntityForTest(Map.of(key, value));
     var duration = way.getTagValueAsDuration(key, i -> {});
     assertEquals(expected, duration);
   }

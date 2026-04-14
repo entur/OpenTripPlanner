@@ -1,7 +1,7 @@
 package org.opentripplanner.osm.wayproperty;
 
+import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.osm.model.TraverseDirection.BACKWARD;
 import static org.opentripplanner.osm.model.TraverseDirection.FORWARD;
 import static org.opentripplanner.osm.wayproperty.MixinPropertiesBuilder.ofBicycleSafety;
@@ -27,14 +27,11 @@ class WayPropertySetTest {
     builder.setMixinProperties("foo=bar", ofBicycleSafety(0.5));
     var wps = builder.build();
 
-    var withoutFoo = new OsmEntityForTest();
-    withoutFoo.addTag("tag", "imaginary");
+    var withoutFoo = new OsmEntityForTest("tag", "imaginary");
     assertEquals(2, wps.getDataForEntity(withoutFoo).bicycleSafety());
 
     // the mixin for foo=bar reduces the bike safety factor
-    var withFoo = new OsmEntityForTest();
-    withFoo.addTag("tag", "imaginary");
-    withFoo.addTag("foo", "bar");
+    var withFoo = new OsmEntityForTest(entry("tag", "imaginary"), entry("foo", "bar"));
     assertEquals(1, wps.getDataForEntity(withFoo).bicycleSafety());
   }
 
@@ -51,28 +48,25 @@ class WayPropertySetTest {
     var way = new OsmEntityForTest();
 
     // test default speeds
-    assertTrue(within(kmhAsMs(25), wps.getCarSpeedForWay(way, FORWARD)));
-    assertTrue(within(kmhAsMs(25), wps.getCarSpeedForWay(way, BACKWARD)));
+    assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(way, FORWARD), EPSILON);
+    assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(way, BACKWARD), EPSILON);
 
-    way.addTag("highway", "tertiary");
-    assertTrue(within(kmhAsMs(35), wps.getCarSpeedForWay(way, FORWARD)));
-    assertTrue(within(kmhAsMs(35), wps.getCarSpeedForWay(way, BACKWARD)));
+    var tertiary = new OsmEntityForTest("highway", "tertiary");
+    assertEquals(kmhAsMs(35), wps.getCarSpeedForWay(tertiary, FORWARD), EPSILON);
+    assertEquals(kmhAsMs(35), wps.getCarSpeedForWay(tertiary, BACKWARD), EPSILON);
 
-    way = new OsmEntityForTest();
-    way.addTag("surface", "gravel");
-    assertTrue(within(kmhAsMs(10), wps.getCarSpeedForWay(way, FORWARD)));
-    assertTrue(within(kmhAsMs(10), wps.getCarSpeedForWay(way, BACKWARD)));
+    var gravel = new OsmEntityForTest(entry("highway", "tertiary"), entry("surface", "gravel"));
+    assertEquals(kmhAsMs(10), wps.getCarSpeedForWay(gravel, FORWARD), EPSILON);
+    assertEquals(kmhAsMs(10), wps.getCarSpeedForWay(gravel, BACKWARD), EPSILON);
 
-    way = new OsmEntityForTest();
-    way.addTag("highway", "motorway");
-    assertTrue(within(kmhAsMs(100), wps.getCarSpeedForWay(way, FORWARD)));
-    assertTrue(within(kmhAsMs(100), wps.getCarSpeedForWay(way, BACKWARD)));
+    var motorway = new OsmEntityForTest("highway", "motorway");
+    assertEquals(kmhAsMs(100), wps.getCarSpeedForWay(motorway, FORWARD), EPSILON);
+    assertEquals(kmhAsMs(100), wps.getCarSpeedForWay(motorway, BACKWARD), EPSILON);
 
     // make sure that 0-speed ways can't exist
-    way = new OsmEntityForTest();
-    way.addTag("maxspeed", "0");
-    assertTrue(within(kmhAsMs(25), wps.getCarSpeedForWay(way, FORWARD)));
-    assertTrue(within(kmhAsMs(25), wps.getCarSpeedForWay(way, BACKWARD)));
+    var zeroSpeed = new OsmEntityForTest("maxspeed", "0");
+    assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(zeroSpeed, FORWARD), EPSILON);
+    assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(zeroSpeed, BACKWARD), EPSILON);
   }
 
   @Test
@@ -172,13 +166,6 @@ class WayPropertySetTest {
     builder2.addCreativeNamer(new BestMatchSpecifier("highway=footway;footway=sidewalk"), namer);
     WayPropertySet propset = builder2.build();
     assertEquals("sidewalk", propset.getCreativeName(way).toString());
-  }
-
-  /**
-   * Test that two values are within epsilon of each other.
-   */
-  private boolean within(float val1, float val2) {
-    return (Math.abs(val1 - val2) < EPSILON);
   }
 
   /**

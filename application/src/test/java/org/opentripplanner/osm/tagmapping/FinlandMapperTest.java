@@ -28,10 +28,7 @@ class FinlandMapperTest {
     var primaryWay = OsmWay.of().addTag("highway", "primary").addTag("oneway", "no").build();
     var livingStreetWay = OsmWay.of().addTag("highway", "living_street").build();
     var footway = OsmWay.of().addTag("highway", "footway").build();
-    var sidewalk = OsmWay.of()
-      .addTag("footway", "sidewalk")
-      .addTag("highway", "footway")
-      .build();
+    var sidewalk = OsmWay.of().addTag("footway", "sidewalk").addTag("highway", "footway").build();
     var segregatedCycleway = OsmWay.of()
       .addTag("segregated", "yes")
       .addTag("highway", "cycleway")
@@ -189,10 +186,7 @@ class FinlandMapperTest {
   void testTagMapping() {
     WayProperties wayData;
 
-    var way = OsmWay.of()
-      .addTag("highway", "unclassified")
-      .addTag("seasonal", "winter")
-      .build();
+    var way = OsmWay.of().addTag("highway", "unclassified").addTag("seasonal", "winter").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(wayData.getPermission(), NONE);
 
@@ -242,10 +236,7 @@ class FinlandMapperTest {
 
   @Test
   void serviceNoThroughTraffic() {
-    var way = OsmWay.of()
-      .addTag("highway", "residential")
-      .addTag("service", "driveway")
-      .build();
+    var way = OsmWay.of().addTag("highway", "residential").addTag("service", "driveway").build();
     assertTrue(mapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(way));
   }
 

@@ -18,6 +18,7 @@ import org.opentripplanner.osm.wayproperty.WayPropertySet;
 
 public class TestOsmProvider implements OsmProvider {
 
+  public static final TestOsmProvider EMPTY = new TestOsmProvider(List.of(), List.of(), List.of());
   private final List<OsmWay> ways;
   private final List<OsmNode> nodes;
   private final List<OsmRelation> relations;

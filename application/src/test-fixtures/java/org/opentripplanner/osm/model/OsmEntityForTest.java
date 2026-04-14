@@ -1,32 +1,27 @@
 package org.opentripplanner.osm.model;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Mutable test version of OsmEntity for use in tests.
- * Allows adding tags after construction for convenience in test setup.
+ * Test version of OsmEntity for use in tests.
+ * All tags must be passed into the constructor.
  */
 public class OsmEntityForTest extends OsmEntity {
 
-  private final Map<String, String> mutableTags = new HashMap<>();
-
   public OsmEntityForTest() {
-    super(0, Map.of(), null, null);
+    this(Map.of());
   }
 
-  @Override
-  public Map<String, String> getTags() {
-    return mutableTags;
+  public OsmEntityForTest(Map<String, String> tags) {
+    super(0, tags, null, null);
   }
 
-  /**
-   * Adds a tag (test-only mutable method).
-   */
-  public OsmEntityForTest addTag(String key, String value) {
-    if (key != null && value != null) {
-      mutableTags.put(key.toLowerCase(), value);
-    }
-    return this;
+  public OsmEntityForTest(String key, String value) {
+    this(Map.of(key, value));
+  }
+
+  @SafeVarargs
+  public OsmEntityForTest(Map.Entry<String, String>... entries) {
+    this(Map.ofEntries(entries));
   }
 }

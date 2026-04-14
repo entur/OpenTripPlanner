@@ -8,7 +8,7 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.CAR;
 import static org.opentripplanner.street.model.StreetTraversalPermission.NONE;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.osm.model.OsmEntityForTest;
+import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.specifier.ExactMatchSpecifier;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 
@@ -34,25 +34,28 @@ class ConditionSpecificityTest {
     assertEquals(38f, wps.maxPossibleCarSpeed(), EPSILON);
 
     // Speed limit that is within limits should be used as the max used car speed
-    var streetWithSpeedLimit = new OsmEntityForTest();
-    streetWithSpeedLimit.addTag("highway", "motorway");
-    streetWithSpeedLimit.addTag("maxspeed", "120");
+    var streetWithSpeedLimit = OsmWay.of()
+      .addTag("highway", "motorway")
+      .addTag("maxspeed", "120")
+      .build();
     var waySpeed = wps.getCarSpeedForWay(streetWithSpeedLimit, FORWARD);
     assertEquals(33.33336, waySpeed, EPSILON);
 
     // Speed limit that is higher than maxPossibleCarSpeed should be ignored and regular motorway
     // speed limit should be used instead
-    var streetWithTooHighSpeedLimit = new OsmEntityForTest();
-    streetWithTooHighSpeedLimit.addTag("highway", "motorway");
-    streetWithTooHighSpeedLimit.addTag("maxspeed", "200");
+    var streetWithTooHighSpeedLimit = OsmWay.of()
+      .addTag("highway", "motorway")
+      .addTag("maxspeed", "200")
+      .build();
     waySpeed = wps.getCarSpeedForWay(streetWithTooHighSpeedLimit, FORWARD);
     assertEquals(motorWaySpeed, waySpeed, EPSILON);
 
     // Speed limit that is too low should be ignored and regular motorway speed limit should
     // be used instead
-    var streetWithTooLowSpeedLimit = new OsmEntityForTest();
-    streetWithTooLowSpeedLimit.addTag("highway", "motorway");
-    streetWithTooLowSpeedLimit.addTag("maxspeed", "0");
+    var streetWithTooLowSpeedLimit = OsmWay.of()
+      .addTag("highway", "motorway")
+      .addTag("maxspeed", "0")
+      .build();
     waySpeed = wps.getCarSpeedForWay(streetWithTooLowSpeedLimit, FORWARD);
     assertEquals(motorWaySpeed, waySpeed, EPSILON);
   }

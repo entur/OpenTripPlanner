@@ -505,8 +505,10 @@ public abstract class OsmEntity {
     if (tags.containsKey("otp:route_name")) {
       return new NonLocalizedString(tags.get("otp:route_name"));
     }
-    if (this.creativeName != null) {
-      return this.creativeName;
+
+    var creativeName = getOsmProvider().getWayPropertySet().getCreativeName(this);
+    if (creativeName != null) {
+      return creativeName;
     }
     if (tags.containsKey("otp:route_ref")) {
       return new NonLocalizedString(tags.get("otp:route_ref"));

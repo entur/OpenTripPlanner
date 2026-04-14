@@ -232,10 +232,7 @@ public class GermanyMapperTest {
     assertEquals(PEDESTRIAN, WPS.getDataForWay(residential).backward().getPermission());
 
     //https://www.openstreetmap.org/way/31109939
-    var primary = OsmWay.of()
-      .addTag("highway", "primary")
-      .addTag("junction", "roundabout")
-      .build();
+    var primary = OsmWay.of().addTag("highway", "primary").addTag("junction", "roundabout").build();
     assertEquals(BICYCLE_AND_CAR, WPS.getDataForWay(primary).forward().getPermission());
     assertEquals(NONE, WPS.getDataForWay(primary).backward().getPermission());
   }
@@ -280,10 +277,7 @@ public class GermanyMapperTest {
       epsilon
     );
 
-    var autobahn = OsmWay.of()
-      .addTag("highway", "motorway")
-      .addTag("maxspeed", "none")
-      .build();
+    var autobahn = OsmWay.of().addTag("highway", "motorway").addTag("maxspeed", "none").build();
     assertEquals(
       33.33000183105469,
       WPS.getCarSpeedForWay(autobahn, TraverseDirection.FORWARD),
