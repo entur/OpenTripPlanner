@@ -11,6 +11,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.mapping.TransitModeMapper;
+import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.routing.api.request.request.JourneyRequestBuilder;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.api.request.request.TransitRequestBuilder;
@@ -39,7 +40,7 @@ public class ModePreferencesMapper {
       journey.withDirect(new StreetRequest(StreetMode.NOT_SET));
     } else if (direct != null) {
       if (direct.isEmpty()) {
-        throw new IllegalArgumentException("Direct modes must not be empty.");
+        throw new InvalidInputException("Direct modes must not be empty.");
       }
       var streetModes = direct.stream().map(DirectModeMapper::map).toList();
       var rentalDuration = getRentalDurationByQueryArgs(args);
@@ -57,7 +58,7 @@ public class ModePreferencesMapper {
       var access = transit.getGraphQLAccess();
       if (access != null) {
         if (access.isEmpty()) {
-          throw new IllegalArgumentException("Access modes must not be empty.");
+          throw new InvalidInputException("Access modes must not be empty.");
         }
         var streetModes = access.stream().map(AccessModeMapper::map).toList();
         journey.withAccess(new StreetRequest(getStreetModeForRouting(streetModes)));
@@ -66,7 +67,7 @@ public class ModePreferencesMapper {
       var egress = transit.getGraphQLEgress();
       if (egress != null) {
         if (egress.isEmpty()) {
-          throw new IllegalArgumentException("Egress modes must not be empty.");
+          throw new InvalidInputException("Egress modes must not be empty.");
         }
         var streetModes = egress.stream().map(EgressModeMapper::map).toList();
         journey.withEgress(new StreetRequest(getStreetModeForRouting(streetModes)));
@@ -75,7 +76,7 @@ public class ModePreferencesMapper {
       var transfer = transit.getGraphQLTransfer();
       if (transfer != null) {
         if (transfer.isEmpty()) {
-          throw new IllegalArgumentException("Transfer modes must not be empty.");
+          throw new InvalidInputException("Transfer modes must not be empty.");
         }
         var streetModes = transfer.stream().map(TransferModeMapper::map).toList();
         journey.withTransfer(new StreetRequest(getStreetModeForRouting(streetModes)));
@@ -91,7 +92,7 @@ public class ModePreferencesMapper {
         setTransitFilters(journey, NarrowedTransitMode.all(), args);
       } else {
         if (planTransitModes.isEmpty()) {
-          throw new IllegalArgumentException("Transit modes must not be empty.");
+          throw new InvalidInputException("Transit modes must not be empty.");
         }
         var narrowedModes = planTransitModes.stream().map(ModePreferencesMapper::map).toList();
         setTransitFilters(journey, narrowedModes, args);
