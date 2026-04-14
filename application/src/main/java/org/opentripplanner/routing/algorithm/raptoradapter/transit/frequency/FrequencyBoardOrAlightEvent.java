@@ -64,7 +64,7 @@ abstract class FrequencyBoardOrAlightEvent<T extends DefaultTripSchedule>
   /* RaptorTripScheduleBoardOrAlightEvent implementation */
 
   @Override
-  public int tripIndex() {
+  public int tripScheduleIndex() {
     return tripTimes.getDepartureTime(0) + offset;
   }
 

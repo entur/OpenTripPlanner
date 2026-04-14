@@ -16,6 +16,7 @@ import org.opentripplanner.raptor.spi.RaptorSlackProvider;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
+import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultSlackProvider;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
@@ -259,5 +260,10 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       return ConstrainedBoardingSearch.NOOP_SEARCH;
     }
     return new ConstrainedBoardingSearch(false, toStopTransfers, fromStopTransfers);
+  }
+
+  @Override
+  public RaptorTripScheduleReference tripScheduleReference(TripSchedule trip) {
+    return new RaptorTripScheduleReference(trip.pattern().patternIndex(), trip.tripScheduleIndex());
   }
 }

@@ -183,10 +183,6 @@ public class TripPatternForDates
     return priorityGroupId;
   }
 
-  public int transitReluctanceFactorIndex() {
-    return tripPattern.transitReluctanceFactorIndex();
-  }
-
   @Override
   public String debugInfo() {
     return tripPattern.debugInfo();
@@ -220,6 +216,10 @@ public class TripPatternForDates
   @Override
   public int numberOfTripSchedules() {
     return numberOfTripSchedules;
+  }
+
+  public int transitReluctanceFactorIndex() {
+    return tripPattern.transitReluctanceFactorIndex();
   }
 
   public Route route() {

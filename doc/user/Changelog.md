@@ -17,6 +17,8 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Expose GTFS feed version in the GTFS GraphQL API [#7445](https://github.com/opentripplanner/OpenTripPlanner/pull/7445)
 - Fix MC Raptor Pareto comparator performance regression [#7440](https://github.com/opentripplanner/OpenTripPlanner/pull/7440)
 - Use A* traversal distance for flex access/egress [#7490](https://github.com/opentripplanner/OpenTripPlanner/pull/7490)
+- Fix NullPointerException when loading availableUntil for a rental bike [#7388](https://github.com/opentripplanner/OpenTripPlanner/pull/7388)
+- Add replacement mode filter to the GTFS API's planConnection query [#7437](https://github.com/opentripplanner/OpenTripPlanner/pull/7437)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)

@@ -24,6 +24,7 @@ import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripPattern;
+import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.raptor.spi.TestSlackProvider;
 import org.opentripplanner.raptor.util.BitSetIterator;
 
@@ -208,6 +209,19 @@ public class TestTransitData
     return getRoute(routeIndex).transferConstraintsReverseSearch();
   }
 
+  @Override
+  public RaptorTripScheduleReference tripScheduleReference(TestTripSchedule trip) {
+    for (int routeIndex = 0; routeIndex < routes.size(); ++routeIndex) {
+      var route = routes.get(routeIndex);
+      for (int tripIndex = 0; tripIndex < route.numberOfTripSchedules(); ++tripIndex) {
+        if (trip == route.getTripSchedule(tripIndex)) {
+          return new RaptorTripScheduleReference(routeIndex, tripIndex);
+        }
+      }
+    }
+    throw new IllegalArgumentException("Trip not found: " + trip);
+  }
+
   public RaptorRequestBuilder<TestTripSchedule> requestBuilder() {
     return requestBuilder;
   }
@@ -252,8 +266,8 @@ public class TestTransitData
   }
 
   public TestTransitData withRoute(TestRoute route) {
+    int routeIndex = routes.size();
     this.routes.add(route);
-    int routeIndex = this.routes.indexOf(route);
     var pattern = route.pattern();
     for (int i = 0; i < pattern.numberOfStopsInPattern(); ++i) {
       int stopIndex = pattern.stopIndex(i);
