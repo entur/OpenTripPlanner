@@ -638,9 +638,12 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
 
     assertFalse(results.isEmpty(), "Should find access results");
 
+    // Departure time of the passenger is when the car departs from the pickup with the
+    // passenger onboard, i.e. trip start + driving to P2 + boarding dwell at P2.
+    var pickupTime = RouteRequest.defaultValue().preferences().car().pickupTime();
     var expectedDeparture = (int) Duration.between(
       transitSearchTimeZero.toInstant(),
-      departureTime.plus(drivingDurationAToP2).toInstant()
+      departureTime.plus(drivingDurationAToP2).plus(pickupTime).toInstant()
     ).getSeconds();
 
     int stopT3Index = stopResolver.getRegularStop(stopT3.getId()).getIndex();
@@ -680,15 +683,13 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
       );
 
       var drivingP2ToStop = expectedDrivingP2ToStop.get(accessEgress.stop());
-      // The service adds CARPOOL_STOP_DURATION (1 min) for the passenger pickup at P2
-      var expectedArrival =
-        expectedDeparture +
-        (int) drivingP2ToStop.getSeconds() +
-        (int) DefaultCarpoolingService.CARPOOL_STOP_DURATION.getSeconds();
+      // Boarding dwell is already part of the passenger's departure time, so arrival is
+      // simply departure plus driving time from P2 to the transit stop.
+      var expectedArrival = expectedDeparture + (int) drivingP2ToStop.getSeconds();
       assertEquals(
         expectedArrival,
         accessEgress.getArrivalTimeOfPassenger(),
-        "Arrival time should equal passenger departure plus driving time from P2 to stop plus pickup duration"
+        "Arrival time should equal passenger departure plus driving time from P2 to stop"
       );
     }
   }

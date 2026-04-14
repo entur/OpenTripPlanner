@@ -49,7 +49,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -77,7 +77,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -105,7 +105,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -134,7 +134,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -170,7 +170,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -204,7 +204,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -233,7 +233,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -260,7 +260,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -288,7 +288,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -312,7 +312,7 @@ class PassengerDelayConstraintsTest {
       CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(5)),
       CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(5)),
     };
-    Duration[] cumulativeDurations = calculateCumulativeDurations(modifiedSegments);
+    Duration[] cumulativeDurations = calculateCumulativeDurations(modifiedSegments, Duration.ZERO);
 
     // originalTimes = modified times at the original stop positions
     // With pickup=1, dropoff=3: original indices [0,1,2] map to modified [0,2,4]
@@ -353,7 +353,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -383,7 +383,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -421,9 +421,67 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         2,
+        stops
+      )
+    );
+  }
+
+  @Test
+  void satisfiesConstraints_nonZeroStopDuration_countsDwellAtIntermediateStops() {
+    // Uses a non-zero stopDuration to verify dwell at intermediate stops is included in the
+    // budget check. The modified route has 2 extra dwells vs. the baseline (4 segments vs. 2),
+    // which alone accounts for 2 of the 6-minute destination delay that pushes it over budget.
+    Duration stopDuration = Duration.ofMinutes(1);
+    var stops = List.of(
+      stopWithBudget(FIVE_MINUTES),
+      stopWithBudget(FIVE_MINUTES),
+      stopWithBudget(FIVE_MINUTES)
+    );
+
+    // Baseline: 2 segments of 10min. With 1-min dwell: cumulative = [0, 10, 21]
+    GraphPath<State, Edge, Vertex>[] baselineSegments = new GraphPath[] {
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(10)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(10)),
+    };
+    Duration[] originalTimes = calculateCumulativeDurations(baselineSegments, stopDuration);
+
+    // Modified (pickup=1, dropoff=3): 4 segments of 6min. With 1-min dwell: cumulative = [0, 6, 13, 20, 27]
+    // Destination delay: 27 - 21 = 6min, exceeds 5min budget.
+    GraphPath<State, Edge, Vertex>[] overBudgetSegments = new GraphPath[] {
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+    };
+
+    assertFalse(
+      PassengerDelayConstraints.satisfiesConstraints(
+        originalTimes,
+        calculateCumulativeDurations(overBudgetSegments, stopDuration),
+        1,
+        3,
+        stops
+      )
+    );
+
+    // Shortening one segment to 5min: cumulative = [0, 6, 12, 19, 26]
+    // Destination delay: 26 - 21 = 5min, exactly at budget → accepts.
+    GraphPath<State, Edge, Vertex>[] atBudgetSegments = new GraphPath[] {
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(5)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+      CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(6)),
+    };
+
+    assertTrue(
+      PassengerDelayConstraints.satisfiesConstraints(
+        originalTimes,
+        calculateCumulativeDurations(atBudgetSegments, stopDuration),
+        1,
+        3,
         stops
       )
     );
@@ -459,7 +517,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         2,
         3,
         stops

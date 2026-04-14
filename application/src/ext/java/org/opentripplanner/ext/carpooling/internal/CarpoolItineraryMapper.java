@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.internal;
 
-import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -45,7 +44,7 @@ import org.opentripplanner.street.model.vertex.Vertex;
  * The passenger's start time is the later of:
  * <ol>
  *   <li>The passenger's requested departure time</li>
- *   <li>When the driver arrives at the pickup location</li>
+ *   <li>When the car departs with the passenger (driver arrival + boarding time)</li>
  * </ol>
  * <p>
  * This ensures the itinerary reflects realistic timing: passengers can't board before the
@@ -103,8 +102,8 @@ public class CarpoolItineraryMapper {
    * <p>
    * The method calculates three key times:
    * <ol>
-   *   <li><strong>Driver pickup arrival:</strong> Driver's start time + pickup segment durations</li>
-   *   <li><strong>Passenger start:</strong> max(requested time, driver arrival time)</li>
+   *   <li><strong>Departure with passenger:</strong> Driver's start time + pickup travel + boarding time</li>
+   *   <li><strong>Passenger start:</strong> max(requested time, departure with passenger time)</li>
    *   <li><strong>Passenger end:</strong> start time + shared segment durations</li>
    * </ol>
    *
@@ -125,29 +124,16 @@ public class CarpoolItineraryMapper {
       return null;
     }
 
-    var pickupSegments = candidate.getPickupSegments();
-    Duration pickupDuration = Duration.ZERO;
-    for (var segment : pickupSegments) {
-      pickupDuration = pickupDuration.plus(
-        Duration.between(segment.states.getFirst().getTime(), segment.states.getLast().getTime())
-      );
-    }
-
-    var driverPickupTime = candidate.trip().startTime().plus(pickupDuration);
+    var driverPickupTime = candidate
+      .trip()
+      .startTime()
+      .plus(candidate.getDurationUntilDepartureWithPassenger());
 
     var startTime = request.dateTime().isAfter(driverPickupTime.toInstant())
       ? request.dateTime().atZone(timeZone)
       : driverPickupTime;
 
-    // Calculate shared journey duration
-    Duration carpoolDuration = Duration.ZERO;
-    for (var segment : sharedSegments) {
-      carpoolDuration = carpoolDuration.plus(
-        Duration.between(segment.states.getFirst().getTime(), segment.states.getLast().getTime())
-      );
-    }
-
-    var endTime = startTime.plus(carpoolDuration);
+    var endTime = startTime.plus(candidate.getPassengerRideDuration());
 
     var firstSegment = sharedSegments.getFirst();
     var lastSegment = sharedSegments.getLast();

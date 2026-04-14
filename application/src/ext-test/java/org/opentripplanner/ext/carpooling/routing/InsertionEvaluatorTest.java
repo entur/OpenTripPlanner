@@ -107,7 +107,8 @@ class InsertionEvaluatorTest {
     List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
       trip,
       passengerPickup,
-      passengerDropoff
+      passengerDropoff,
+      Duration.ZERO
     );
 
     if (viablePositions.isEmpty()) {
@@ -117,7 +118,8 @@ class InsertionEvaluatorTest {
     var evaluator = new InsertionEvaluator(
       linkingContext,
       streetVertexUtils,
-      carpoolRouter
+      carpoolRouter,
+      Duration.ZERO
     );
     return evaluator.findBestInsertion(
       tripWithVertices,
