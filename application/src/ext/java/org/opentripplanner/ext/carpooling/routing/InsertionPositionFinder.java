@@ -61,11 +61,12 @@ public class InsertionPositionFinder {
   public List<InsertionPosition> findViablePositions(
     CarpoolTrip trip,
     WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
+    WgsCoordinate passengerDropoff,
+    Duration stopDuration
   ) {
     List<WgsCoordinate> routePoints = trip.routePoints();
 
-    Duration[] beelineTimes = beelineEstimator.calculateCumulativeTimes(routePoints);
+    Duration[] beelineTimes = beelineEstimator.calculateCumulativeTimes(routePoints, stopDuration);
 
     List<InsertionPosition> viable = new ArrayList<>();
 
@@ -108,7 +109,8 @@ public class InsertionPositionFinder {
             passengerDropoff,
             pickupPos,
             dropoffPos,
-            trip
+            trip,
+            stopDuration
           )
         ) {
           LOG.trace(
@@ -237,7 +239,8 @@ public class InsertionPositionFinder {
     WgsCoordinate passengerDropoff,
     int pickupPos,
     int dropoffPos,
-    CarpoolTrip trip
+    CarpoolTrip trip,
+    Duration stopDuration
   ) {
     // Build modified coordinate list with passenger stops inserted
     List<WgsCoordinate> modifiedCoords = new ArrayList<>(originalCoords);
@@ -245,7 +248,10 @@ public class InsertionPositionFinder {
     modifiedCoords.add(dropoffPos, passengerDropoff);
 
     // Calculate beeline times for modified route
-    Duration[] modifiedBeelineTimes = beelineEstimator.calculateCumulativeTimes(modifiedCoords);
+    Duration[] modifiedBeelineTimes = beelineEstimator.calculateCumulativeTimes(
+      modifiedCoords,
+      stopDuration
+    );
 
     // Check delays at each existing stop (exclude origin at index 0)
     for (int originalIndex = 1; originalIndex < originalCoords.size(); originalIndex++) {

@@ -39,20 +39,24 @@ public class InsertionEvaluator {
   private final LinkingContext linkingContext;
   private final StreetVertexUtils streetVertexUtils;
   private final CarpoolRouter carpoolRouter;
+  private final Duration stopDuration;
 
   /**
    * Creates an evaluator with the specified routing function and linking context.
    *
    * @param linkingContext Linking context with pre-linked vertices for routing
+   * @param stopDuration Duration added at each intermediate stop (from car pickupTime preference)
    */
   public InsertionEvaluator(
     LinkingContext linkingContext,
     StreetVertexUtils streetVertexUtils,
-    CarpoolRouter carpoolRouter
+    CarpoolRouter carpoolRouter,
+    Duration stopDuration
   ) {
     this.linkingContext = linkingContext;
     this.streetVertexUtils = streetVertexUtils;
     this.carpoolRouter = carpoolRouter;
+    this.stopDuration = stopDuration;
   }
 
   /**
@@ -96,7 +100,7 @@ public class InsertionEvaluator {
       return List.of();
     }
 
-    Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
+    Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments, stopDuration);
 
     GraphPath<State, Edge, Vertex> pathBetweenOriginAndDestination = carpoolRouter.route(
       tripWithVertices.vertices().getFirst(),
@@ -176,7 +180,7 @@ public class InsertionEvaluator {
       linkingContext
     );
 
-    Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments);
+    Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments, stopDuration);
 
     GraphPath<State, Edge, Vertex> pathBetweenOriginAndDestination = carpoolRouter.route(
       tripWithVertices.vertices().getFirst(),
@@ -293,7 +297,8 @@ public class InsertionEvaluator {
 
     // Check passenger delay constraints
     Duration[] modifiedCumulativeDurations = calculateCumulativeDurations(
-      modifiedSegments.toArray(new GraphPath[modifiedSegments.size()])
+      modifiedSegments.toArray(new GraphPath[modifiedSegments.size()]),
+      stopDuration
     );
     if (
       !PassengerDelayConstraints.satisfiesConstraints(
@@ -319,6 +324,7 @@ public class InsertionEvaluator {
       modifiedSegments,
       durationBetweenOriginAndDestination,
       totalDuration,
+      stopDuration,
       transitStop
     );
   }

@@ -423,10 +423,15 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       pathToDropoff.states.getLast().getTime()
     );
 
-    var expectedStartTime = departureTime.plus(drivingToPickup);
-    var expectedEndTime = departureTime.plus(drivingToDropoff);
-
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
+    var stopDuration = request.preferences().car().pickupTime();
+    // Start time is when the car departs from the pickup with the passenger onboard,
+    // i.e. after the boarding dwell at the pickup.
+    var expectedStartTime = departureTime.plus(drivingToPickup).plus(stopDuration);
+    // End time is start time plus the passenger ride duration. Since the direct route
+    // from trip start to dropoff goes via pickup, drivingToDropoff == drivingToPickup
+    // + drivingPickupToDropoff, so end time = departureTime + drivingToDropoff + stopDuration.
+    var expectedEndTime = departureTime.plus(drivingToDropoff).plus(stopDuration);
 
     var results = service.routeDirect(request, linkingContext);
 
@@ -439,12 +444,12 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       assertEquals(
         expectedStartTime.toInstant(),
         itinerary.startTime().toInstant(),
-        "Start time should equal trip departure plus driving time to pickup"
+        "Start time should equal trip departure plus driving time to pickup plus boarding time"
       );
       assertEquals(
         expectedEndTime.toInstant(),
         itinerary.endTime().toInstant(),
-        "End time should equal trip departure plus driving time to dropoff"
+        "End time should equal trip departure plus driving time to dropoff plus stop duration at pickup"
       );
     }
   }

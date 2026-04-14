@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -29,8 +30,44 @@ public record InsertionCandidate(
   List<GraphPath<State, Edge, Vertex>> routeSegments,
   Duration durationBetweenOriginAndDestination,
   Duration totalDuration,
-  NearbyStop transitStop
+  Duration stopDuration,
+  NearbyStop transitStop,
+  Duration totalTripDuration
 ) {
+  public InsertionCandidate(
+    CarpoolTrip trip,
+    int pickupPosition,
+    int dropoffPosition,
+    List<GraphPath<State, Edge, Vertex>> routeSegments,
+    Duration durationBetweenOriginAndDestination,
+    Duration totalDuration,
+    Duration stopDuration,
+    NearbyStop transitStop
+  ) {
+    this(
+      trip,
+      pickupPosition,
+      dropoffPosition,
+      routeSegments,
+      durationBetweenOriginAndDestination,
+      totalDuration,
+      stopDuration,
+      transitStop,
+      computeTotalTripDuration(routeSegments, stopDuration)
+    );
+  }
+
+  private static Duration computeTotalTripDuration(
+    List<GraphPath<State, Edge, Vertex>> routeSegments,
+    Duration stopDuration
+  ) {
+    Duration[] cumulativeDurations = GraphPathUtils.calculateCumulativeDurations(
+      routeSegments.toArray(new GraphPath[0]),
+      stopDuration
+    );
+    return cumulativeDurations[cumulativeDurations.length - 1];
+  }
+
   /**
    * Calculates the additional duration caused by inserting this passenger.
    */
@@ -66,6 +103,40 @@ public record InsertionCandidate(
       return List.of();
     }
     return routeSegments.subList(dropoffPosition, routeSegments.size());
+  }
+
+  /**
+   * Calculates the duration from trip start until the car departs with the passenger onboard.
+   * Includes travel time through pickup segments, intermediate stop delays, and boarding time
+   * at the pickup point.
+   * Returns {@link Duration#ZERO} when the passenger boards at the trip origin (no pickup segments).
+   */
+  public Duration getDurationUntilDepartureWithPassenger() {
+    var pickupSegments = getPickupSegments();
+    if (pickupSegments.isEmpty()) {
+      return Duration.ZERO;
+    }
+    return totalSegmentDuration(pickupSegments, stopDuration).plus(stopDuration);
+  }
+
+  /**
+   * Calculates the duration of the passenger's ride from pickup to dropoff.
+   * Includes travel time through shared segments and stop delays at intermediate stops.
+   * For a single shared segment (direct ride), no stop delays are added.
+   */
+  public Duration getPassengerRideDuration() {
+    return totalSegmentDuration(getSharedSegments(), stopDuration);
+  }
+
+  private static Duration totalSegmentDuration(
+    List<GraphPath<State, Edge, Vertex>> segments,
+    Duration stopDuration
+  ) {
+    return segments
+      .stream()
+      .map(GraphPathUtils::calculateDuration)
+      .reduce(Duration.ZERO, Duration::plus)
+      .plus(stopDuration.multipliedBy(Math.max(0, segments.size() - 1)));
   }
 
   @Override

@@ -44,7 +44,7 @@ class InsertionPositionFinderTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
     // Passenger picked up east of route, dropped off at destination — small compatible detour
-    var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_NORTH);
+    var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_NORTH, Duration.ZERO);
 
     assertFalse(viablePositions.isEmpty());
   }
@@ -54,7 +54,7 @@ class InsertionPositionFinderTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
     // Passenger going opposite direction (SOUTH→CENTER) when trip is CENTER→NORTH
-    var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_CENTER);
+    var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_CENTER, Duration.ZERO);
 
     assertTrue(viablePositions.isEmpty());
   }
@@ -65,7 +65,7 @@ class InsertionPositionFinderTest {
     var stops = List.of(createOriginStop(OSLO_CENTER), createDestinationStop(OSLO_NORTH));
     var trip = createTripWithCapacity(0, stops);
 
-    var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_WEST);
+    var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_WEST, Duration.ZERO);
 
     // Should reject all positions due to capacity
     assertTrue(viablePositions.isEmpty());
@@ -83,7 +83,7 @@ class InsertionPositionFinderTest {
     );
 
     // Passenger going opposite direction (WEST→SOUTH) with 1s budget — all positions should be rejected
-    var viablePositions = finder.findViablePositions(trip, OSLO_WEST, OSLO_SOUTH);
+    var viablePositions = finder.findViablePositions(trip, OSLO_WEST, OSLO_SOUTH, Duration.ZERO);
 
     assertTrue(viablePositions.isEmpty());
   }
@@ -135,7 +135,7 @@ class InsertionPositionFinderTest {
     var stop2 = createStopAt(OSLO_WEST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1, stop2), OSLO_NORTH);
 
-    var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_NORTH);
+    var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_NORTH, Duration.ZERO);
 
     // Should evaluate multiple pickup/dropoff combinations
     // Exact count depends on directional and beeline filtering

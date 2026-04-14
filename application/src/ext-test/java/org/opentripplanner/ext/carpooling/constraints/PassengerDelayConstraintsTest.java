@@ -49,7 +49,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -77,7 +77,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -105,7 +105,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -134,7 +134,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -170,7 +170,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -204,7 +204,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -233,7 +233,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -260,7 +260,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -288,7 +288,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -312,7 +312,7 @@ class PassengerDelayConstraintsTest {
       CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(5)),
       CarpoolGraphPathBuilder.createGraphPath(Duration.ofMinutes(5)),
     };
-    Duration[] cumulativeDurations = calculateCumulativeDurations(modifiedSegments);
+    Duration[] cumulativeDurations = calculateCumulativeDurations(modifiedSegments, Duration.ZERO);
 
     // originalTimes = modified times at the original stop positions
     // With pickup=1, dropoff=3: original indices [0,1,2] map to modified [0,2,4]
@@ -353,7 +353,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -383,7 +383,7 @@ class PassengerDelayConstraintsTest {
     assertTrue(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         3,
         stops
@@ -421,7 +421,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         1,
         2,
         stops
@@ -459,7 +459,7 @@ class PassengerDelayConstraintsTest {
     assertFalse(
       PassengerDelayConstraints.satisfiesConstraints(
         originalTimes,
-        calculateCumulativeDurations(modifiedSegments),
+        calculateCumulativeDurations(modifiedSegments, Duration.ZERO),
         2,
         3,
         stops
