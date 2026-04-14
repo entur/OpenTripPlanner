@@ -18,23 +18,6 @@ import org.opentripplanner.osm.model.OsmWay;
 
 class OsmAreaGroupTest {
 
-  private static final OsmWay L0_1_2_3_4_1 = new OsmWay();
-  private static final OsmWay L0_5_2_1_5 = new OsmWay();
-  private static final OsmWay L0_1_5_6_1 = new OsmWay();
-  private static final OsmWay L0_1_2_3_7_8_9_1 = new OsmWay();
-  private static final OsmWay L0_2_10_7_11_6_2 = new OsmWay();
-  private static final OsmWay L1_1_2_5_1 = new OsmWay();
-
-  private static final OsmWay PEDESTRIAN_1_2_3_4_1 = new OsmWay();
-  private static final OsmWay PEDESTRIAN_5_2_1_5 = new OsmWay();
-  private static final OsmWay BARRIER_3_2_1 = new OsmWay();
-  private static final OsmWay BARRIER_1_4 = new OsmWay();
-  private static final OsmWay BARRIER_2_3 = new OsmWay();
-  private static final OsmWay BARRIER_5_1_4 = new OsmWay();
-  private static final OsmWay BARRIER_1_3_2 = new OsmWay();
-  private static final OsmWay BARRIER_3_1 = new OsmWay();
-  private static final OsmWay BOLLARD_1_2_3 = new OsmWay();
-
   private static final Set<OsmLevel> LEVEL_0_SET = Set.of(
     new OsmLevel(0.0, "0", OsmLevelSource.LEVEL_TAG)
   );
@@ -45,114 +28,140 @@ class OsmAreaGroupTest {
   private static final TLongObjectHashMap<OsmNode> NODES = new TLongObjectHashMap<>();
 
   static {
-    NODES.put(1, new OsmNode(0, 0));
-    NODES.put(2, new OsmNode(0, 1));
-    NODES.put(3, new OsmNode(1, 1));
-    NODES.put(4, new OsmNode(1, 0));
-    NODES.put(5, new OsmNode(-0.5, -1));
-    NODES.put(6, new OsmNode(-1, 0));
-    NODES.put(7, new OsmNode(1, 2));
-    NODES.put(8, new OsmNode(2, 2));
-    NODES.put(9, new OsmNode(2, 0));
-    NODES.put(10, new OsmNode(0, 2));
-    NODES.put(11, new OsmNode(-1, 3));
-
-    for (var key : NODES.keys()) {
-      NODES.get(key).setId(key);
-    }
-
-    L0_1_2_3_4_1.addTag("highway", "living_street");
-    L0_1_2_3_4_1.addNodeRef(1);
-    L0_1_2_3_4_1.addNodeRef(2);
-    L0_1_2_3_4_1.addNodeRef(3);
-    L0_1_2_3_4_1.addNodeRef(4);
-    L0_1_2_3_4_1.addNodeRef(1);
-
-    L0_5_2_1_5.addTag("highway", "living_street");
-    L0_5_2_1_5.addNodeRef(5);
-    L0_5_2_1_5.addNodeRef(2);
-    L0_5_2_1_5.addNodeRef(1);
-    L0_5_2_1_5.addNodeRef(5);
-
-    L0_1_5_6_1.addTag("highway", "living_street");
-    L0_1_5_6_1.addNodeRef(1);
-    L0_1_5_6_1.addNodeRef(5);
-    L0_1_5_6_1.addNodeRef(6);
-    L0_1_5_6_1.addNodeRef(1);
-
-    L0_1_2_3_7_8_9_1.addTag("highway", "living_street");
-    L0_1_2_3_7_8_9_1.addNodeRef(1);
-    L0_1_2_3_7_8_9_1.addNodeRef(2);
-    L0_1_2_3_7_8_9_1.addNodeRef(3);
-    L0_1_2_3_7_8_9_1.addNodeRef(7);
-    L0_1_2_3_7_8_9_1.addNodeRef(8);
-    L0_1_2_3_7_8_9_1.addNodeRef(9);
-    L0_1_2_3_7_8_9_1.addNodeRef(1);
-
-    L0_2_10_7_11_6_2.addTag("highway", "living_street");
-    L0_2_10_7_11_6_2.addNodeRef(2);
-    L0_2_10_7_11_6_2.addNodeRef(10);
-    L0_2_10_7_11_6_2.addNodeRef(7);
-    L0_2_10_7_11_6_2.addNodeRef(11);
-    L0_2_10_7_11_6_2.addNodeRef(6);
-    L0_2_10_7_11_6_2.addNodeRef(2);
-
-    L1_1_2_5_1.addTag("highway", "living_street");
-    L1_1_2_5_1.addTag("level", "1");
-    L1_1_2_5_1.addNodeRef(1);
-    L1_1_2_5_1.addNodeRef(2);
-    L1_1_2_5_1.addNodeRef(5);
-    L1_1_2_5_1.addNodeRef(1);
-
-    PEDESTRIAN_1_2_3_4_1.addTag("highway", "pedestrian");
-    PEDESTRIAN_1_2_3_4_1.addTag("access", "no");
-    PEDESTRIAN_1_2_3_4_1.addTag("foot", "yes");
-    PEDESTRIAN_1_2_3_4_1.addNodeRef(1);
-    PEDESTRIAN_1_2_3_4_1.addNodeRef(2);
-    PEDESTRIAN_1_2_3_4_1.addNodeRef(3);
-    PEDESTRIAN_1_2_3_4_1.addNodeRef(4);
-    PEDESTRIAN_1_2_3_4_1.addNodeRef(1);
-
-    PEDESTRIAN_5_2_1_5.addTag("highway", "pedestrian");
-    PEDESTRIAN_5_2_1_5.addTag("access", "no");
-    PEDESTRIAN_5_2_1_5.addTag("foot", "yes");
-    PEDESTRIAN_5_2_1_5.addNodeRef(5);
-    PEDESTRIAN_5_2_1_5.addNodeRef(2);
-    PEDESTRIAN_5_2_1_5.addNodeRef(1);
-    PEDESTRIAN_5_2_1_5.addNodeRef(5);
-
-    BARRIER_3_2_1.addNodeRef(3);
-    BARRIER_3_2_1.addNodeRef(2);
-    BARRIER_3_2_1.addNodeRef(1);
-    BARRIER_3_2_1.addTag("barrier", "wall");
-
-    BARRIER_1_4.addNodeRef(1);
-    BARRIER_1_4.addNodeRef(4);
-    BARRIER_1_4.addTag("barrier", "wall");
-
-    BARRIER_2_3.addNodeRef(2);
-    BARRIER_2_3.addNodeRef(3);
-    BARRIER_2_3.addTag("barrier", "wall");
-
-    BARRIER_5_1_4.addNodeRef(5);
-    BARRIER_5_1_4.addNodeRef(1);
-    BARRIER_5_1_4.addNodeRef(4);
-    BARRIER_5_1_4.addTag("barrier", "wall");
-
-    BARRIER_1_3_2.addNodeRef(1);
-    BARRIER_1_3_2.addNodeRef(3);
-    BARRIER_1_3_2.addNodeRef(2);
-    BARRIER_1_3_2.addTag("barrier", "wall");
-
-    BARRIER_3_1.addNodeRef(3);
-    BARRIER_3_1.addNodeRef(1);
-    BARRIER_3_1.addTag("barrier", "wall");
-
-    BOLLARD_1_2_3.addNodeRef(1);
-    BOLLARD_1_2_3.addNodeRef(2);
-    BOLLARD_1_2_3.addNodeRef(3);
-    BOLLARD_1_2_3.addTag("barrier", "bollard");
+    NODES.put(1, OsmNode.builder().withId(1).withLat(0).withLon(0).build());
+    NODES.put(2, OsmNode.builder().withId(2).withLat(0).withLon(1).build());
+    NODES.put(3, OsmNode.builder().withId(3).withLat(1).withLon(1).build());
+    NODES.put(4, OsmNode.builder().withId(4).withLat(1).withLon(0).build());
+    NODES.put(5, OsmNode.builder().withId(5).withLat(-0.5).withLon(-1).build());
+    NODES.put(6, OsmNode.builder().withId(6).withLat(-1).withLon(0).build());
+    NODES.put(7, OsmNode.builder().withId(7).withLat(1).withLon(2).build());
+    NODES.put(8, OsmNode.builder().withId(8).withLat(2).withLon(2).build());
+    NODES.put(9, OsmNode.builder().withId(9).withLat(2).withLon(0).build());
+    NODES.put(10, OsmNode.builder().withId(10).withLat(0).withLon(2).build());
+    NODES.put(11, OsmNode.builder().withId(11).withLat(-1).withLon(3).build());
   }
+
+  private static final OsmWay L0_1_2_3_4_1 = OsmWay.of()
+    .addTag("highway", "living_street")
+    .addNodeRef(1)
+    .addNodeRef(2)
+    .addNodeRef(3)
+    .addNodeRef(4)
+    .addNodeRef(1)
+    .build();
+
+  private static final OsmWay L0_5_2_1_5 = OsmWay.of()
+    .addTag("highway", "living_street")
+    .addNodeRef(5)
+    .addNodeRef(2)
+    .addNodeRef(1)
+    .addNodeRef(5)
+    .build();
+
+  private static final OsmWay L0_1_5_6_1 = OsmWay.of()
+    .addTag("highway", "living_street")
+    .addNodeRef(1)
+    .addNodeRef(5)
+    .addNodeRef(6)
+    .addNodeRef(1)
+    .build();
+
+  private static final OsmWay L0_1_2_3_7_8_9_1 = OsmWay.of()
+    .addTag("highway", "living_street")
+    .addNodeRef(1)
+    .addNodeRef(2)
+    .addNodeRef(3)
+    .addNodeRef(7)
+    .addNodeRef(8)
+    .addNodeRef(9)
+    .addNodeRef(1)
+    .build();
+
+  private static final OsmWay L0_2_10_7_11_6_2 = OsmWay.of()
+    .addTag("highway", "living_street")
+    .addNodeRef(2)
+    .addNodeRef(10)
+    .addNodeRef(7)
+    .addNodeRef(11)
+    .addNodeRef(6)
+    .addNodeRef(2)
+    .build();
+
+  private static final OsmWay L1_1_2_5_1 = OsmWay.of()
+    .addTag("highway", "living_street")
+    .addTag("level", "1")
+    .addNodeRef(1)
+    .addNodeRef(2)
+    .addNodeRef(5)
+    .addNodeRef(1)
+    .build();
+
+  private static final OsmWay PEDESTRIAN_1_2_3_4_1 = OsmWay.of()
+    .addTag("highway", "pedestrian")
+    .addTag("access", "no")
+    .addTag("foot", "yes")
+    .addNodeRef(1)
+    .addNodeRef(2)
+    .addNodeRef(3)
+    .addNodeRef(4)
+    .addNodeRef(1)
+    .build();
+
+  private static final OsmWay PEDESTRIAN_5_2_1_5 = OsmWay.of()
+    .addTag("highway", "pedestrian")
+    .addTag("access", "no")
+    .addTag("foot", "yes")
+    .addNodeRef(5)
+    .addNodeRef(2)
+    .addNodeRef(1)
+    .addNodeRef(5)
+    .build();
+
+  private static final OsmWay BARRIER_3_2_1 = OsmWay.of()
+    .addNodeRef(3)
+    .addNodeRef(2)
+    .addNodeRef(1)
+    .addTag("barrier", "wall")
+    .build();
+
+  private static final OsmWay BARRIER_1_4 = OsmWay.of()
+    .addNodeRef(1)
+    .addNodeRef(4)
+    .addTag("barrier", "wall")
+    .build();
+
+  private static final OsmWay BARRIER_2_3 = OsmWay.of()
+    .addNodeRef(2)
+    .addNodeRef(3)
+    .addTag("barrier", "wall")
+    .build();
+
+  private static final OsmWay BARRIER_5_1_4 = OsmWay.of()
+    .addNodeRef(5)
+    .addNodeRef(1)
+    .addNodeRef(4)
+    .addTag("barrier", "wall")
+    .build();
+
+  private static final OsmWay BARRIER_1_3_2 = OsmWay.of()
+    .addNodeRef(1)
+    .addNodeRef(3)
+    .addNodeRef(2)
+    .addTag("barrier", "wall")
+    .build();
+
+  private static final OsmWay BARRIER_3_1 = OsmWay.of()
+    .addNodeRef(3)
+    .addNodeRef(1)
+    .addTag("barrier", "wall")
+    .build();
+
+  private static final OsmWay BOLLARD_1_2_3 = OsmWay.of()
+    .addNodeRef(1)
+    .addNodeRef(2)
+    .addNodeRef(3)
+    .addTag("barrier", "bollard")
+    .build();
 
   private static final OsmProvider OSM_PROVIDER = new TestOsmProvider(
     List.of(),

@@ -34,9 +34,7 @@ class ElevatorTest {
 
   @Test
   void testDuration() {
-    var way = new OsmWay();
-    way.addTag("duration", "00:01:02");
-    way.addTag("highway", "elevator");
+    var way = OsmWay.of().addTag("duration", "00:01:02").addTag("highway", "elevator").build();
     var provider = TestOsmProvider.of().addWay(way).build();
     var graph = new Graph();
     var osmModule = OsmModuleTestFactory.of(provider).withGraph(graph).builder().build();
@@ -54,10 +52,12 @@ class ElevatorTest {
   void testMultilevelNodeDuration() {
     var node0 = node(0, new WgsCoordinate(0, 0));
     var node1 = node(1, new WgsCoordinate(2, 0));
-    var elevatorNode = node(2, new WgsCoordinate(1, 0));
-    elevatorNode.addTag("duration", "00:01:02");
-    elevatorNode.addTag("highway", "elevator");
-    elevatorNode.addTag("level", "1;2");
+    var elevatorNode = node(2, new WgsCoordinate(1, 0))
+      .toBuilder()
+      .addTag("duration", "00:01:02")
+      .addTag("highway", "elevator")
+      .addTag("level", "1;2")
+      .build();
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("level", "1"), node0, elevatorNode)
       .addWayFromNodes(way -> way.addTag("level", "2"), node1, elevatorNode)
@@ -77,8 +77,10 @@ class ElevatorTest {
   void testMultilevelNodeWithWaysOnSameLevel() {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = node(3, new WgsCoordinate(0, 3));
-    elevatorNode.addTag("highway", "elevator");
+    var elevatorNode = node(3, new WgsCoordinate(0, 3))
+      .toBuilder()
+      .addTag("highway", "elevator")
+      .build();
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("level", "1"), n1, elevatorNode)
       .addWayFromNodes(way -> way.addTag("level", "1"), n2, elevatorNode)
@@ -100,33 +102,39 @@ class ElevatorTest {
     var n2 = node(2, new WgsCoordinate(0, 2));
     var n3 = node(3, new WgsCoordinate(0, 3));
     var n4 = node(4, new WgsCoordinate(0, 4));
-    var elevatorNode = node(5, new WgsCoordinate(0, 5));
-    elevatorNode.addTag("highway", "elevator");
+    var elevatorNode = node(5, new WgsCoordinate(0, 5))
+      .toBuilder()
+      .addTag("highway", "elevator")
+      .build();
 
-    var way1 = new OsmWay();
-    way1.setId(1);
-    way1.addTag("highway", "corridor");
-    way1.addTag("level", "0");
-    way1.addNodeRef(1);
-    way1.addNodeRef(5);
-    var way2 = new OsmWay();
-    way2.setId(2);
-    way2.addTag("highway", "corridor");
-    way2.addTag("level", "2");
-    way2.addNodeRef(2);
-    way2.addNodeRef(5);
-    var way3 = new OsmWay();
-    way3.setId(3);
-    way3.addTag("highway", "corridor");
-    way3.addTag("level", "2");
-    way3.addNodeRef(3);
-    way3.addNodeRef(5);
-    var way4 = new OsmWay();
-    way4.setId(4);
-    way4.addTag("highway", "corridor");
-    way4.addTag("level", "3");
-    way4.addNodeRef(4);
-    way4.addNodeRef(5);
+    var way1 = OsmWay.of()
+      .withId(1)
+      .addTag("highway", "corridor")
+      .addTag("level", "0")
+      .addNodeRef(1)
+      .addNodeRef(5)
+      .build();
+    var way2 = OsmWay.of()
+      .withId(2)
+      .addTag("highway", "corridor")
+      .addTag("level", "2")
+      .addNodeRef(2)
+      .addNodeRef(5)
+      .build();
+    var way3 = OsmWay.of()
+      .withId(3)
+      .addTag("highway", "corridor")
+      .addTag("level", "2")
+      .addNodeRef(3)
+      .addNodeRef(5)
+      .build();
+    var way4 = OsmWay.of()
+      .withId(4)
+      .addTag("highway", "corridor")
+      .addTag("level", "3")
+      .addNodeRef(4)
+      .addNodeRef(5)
+      .build();
 
     var provider = new TestOsmProvider(
       List.of(),
@@ -225,12 +233,13 @@ class ElevatorTest {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
 
-    var elevatorWay = new OsmWay();
-    elevatorWay.setId(1);
-    elevatorWay.addTag("highway", "elevator");
-    elevatorWay.addTag("level", "1;3.5");
-    elevatorWay.addNodeRef(1);
-    elevatorWay.addNodeRef(2);
+    var elevatorWay = OsmWay.of()
+      .withId(1)
+      .addTag("highway", "elevator")
+      .addTag("level", "1;3.5")
+      .addNodeRef(1)
+      .addNodeRef(2)
+      .build();
 
     var provider = new TestOsmProvider(List.of(), List.of(elevatorWay), List.of(n1, n2));
     var graph = new Graph();
@@ -273,11 +282,12 @@ class ElevatorTest {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
 
-    var elevatorWay = new OsmWay();
-    elevatorWay.setId(1);
-    elevatorWay.addTag("highway", "elevator");
-    elevatorWay.addNodeRef(1);
-    elevatorWay.addNodeRef(2);
+    var elevatorWay = OsmWay.of()
+      .withId(1)
+      .addTag("highway", "elevator")
+      .addNodeRef(1)
+      .addNodeRef(2)
+      .build();
 
     var provider = new TestOsmProvider(List.of(), List.of(elevatorWay), List.of(n1, n2));
     var graph = new Graph();
@@ -325,8 +335,10 @@ class ElevatorTest {
   void testOsmElevatorNodeUniqueLabels(String level1, String ref1, String level2, String ref2) {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = node(3, new WgsCoordinate(0, 3));
-    elevatorNode.addTag("highway", "elevator");
+    var elevatorNode = node(3, new WgsCoordinate(0, 3))
+      .toBuilder()
+      .addTag("highway", "elevator")
+      .build();
     var provider = TestOsmProvider.of()
       .addWayFromNodes(
         way -> {
@@ -396,10 +408,8 @@ class ElevatorTest {
    */
   @Test
   void elevatorWayWithFewerThanTwoIntersectionNodes() {
-    var n1 = node(1, new WgsCoordinate(1, 1));
-    n1.addTag("highway", "elevator");
-    var n2 = node(2, new WgsCoordinate(2, 2));
-    n2.addTag("highway", "elevator");
+    var n1 = node(1, new WgsCoordinate(1, 1)).toBuilder().addTag("highway", "elevator").build();
+    var n2 = node(2, new WgsCoordinate(2, 2)).toBuilder().addTag("highway", "elevator").build();
 
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("highway", "elevator"), n1, n2)

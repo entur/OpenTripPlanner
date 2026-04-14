@@ -30,52 +30,50 @@ class VertexGeneratorTest {
     Graph graph = new Graph();
     OsmDatabase osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
 
-    var n1 = new OsmNode(0, 0);
-    n1.setId(1);
-    var n2 = new OsmNode(0, 1);
-    n2.setId(2);
-    var n3 = new OsmNode(0, 2);
-    n3.setId(3);
-    var n4 = new OsmNode(1, 2);
-    n4.setId(4);
-    var n5 = new OsmNode(1, 1);
-    n5.setId(5);
-    var n10 = new OsmNode(2, 2);
-    n10.setId(10);
+    var n1 = OsmNode.builder().withId(1).withLat(0).withLon(0).build();
+    var n2 = OsmNode.builder().withId(2).withLat(0).withLon(1).build();
+    var n3 = OsmNode.builder().withId(3).withLat(0).withLon(2).build();
+    var n4 = OsmNode.builder().withId(4).withLat(1).withLon(2).build();
+    var n5 = OsmNode.builder().withId(5).withLat(1).withLon(1).build();
+    var n10 = OsmNode.builder().withId(10).withLat(2).withLon(2).build();
 
-    var chain = new OsmWay();
-    chain.addTag("barrier", "chain");
-    chain.setId(999);
-    chain.addNodeRef(1);
-    chain.addNodeRef(2);
-    chain.addNodeRef(3);
+    var chain = OsmWay.of()
+      .withId(999)
+      .addTag("barrier", "chain")
+      .addNodeRef(1)
+      .addNodeRef(2)
+      .addNodeRef(3)
+      .build();
 
-    var circularChain = new OsmWay();
-    circularChain.addTag("barrier", "chain");
-    circularChain.setId(998);
-    circularChain.addNodeRef(3);
-    circularChain.addNodeRef(4);
-    circularChain.addNodeRef(5);
-    circularChain.addNodeRef(3);
+    var circularChain = OsmWay.of()
+      .withId(998)
+      .addTag("barrier", "chain")
+      .addNodeRef(3)
+      .addNodeRef(4)
+      .addNodeRef(5)
+      .addNodeRef(3)
+      .build();
 
-    var w1 = new OsmWay();
-    w1.setId(1);
-    w1.addTag("highway", "pedestrian");
-    w1.addTag("level", "0");
-    w1.addNodeRef(4);
-    w1.addNodeRef(10);
-    w1.addNodeRef(3);
-    w1.addNodeRef(4);
+    var w1 = OsmWay.of()
+      .withId(1)
+      .addTag("highway", "pedestrian")
+      .addTag("level", "0")
+      .addNodeRef(4)
+      .addNodeRef(10)
+      .addNodeRef(3)
+      .addNodeRef(4)
+      .build();
 
-    var w2 = new OsmWay();
-    w2.setId(2);
-    w2.addTag("highway", "pedestrian");
-    w2.addTag("level", "1");
-    w2.addTag("area", "yes");
-    w2.addNodeRef(30);
-    w2.addNodeRef(3);
-    w2.addNodeRef(10);
-    w2.addNodeRef(30);
+    var w2 = OsmWay.of()
+      .withId(2)
+      .addTag("highway", "pedestrian")
+      .addTag("level", "1")
+      .addTag("area", "yes")
+      .addNodeRef(30)
+      .addNodeRef(3)
+      .addNodeRef(10)
+      .addNodeRef(30)
+      .build();
 
     osmdb.addWay(chain);
     osmdb.addWay(circularChain);

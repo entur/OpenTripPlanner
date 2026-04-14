@@ -6,359 +6,289 @@ public class WayTestData {
 
   public static OsmWay carTunnel() {
     // https://www.openstreetmap.org/way/598694756
-    OsmWay tunnel = new OsmWay();
-    tunnel.addTag("highway", "primary");
-    tunnel.addTag("hov", "lane");
-    tunnel.addTag("lanes", "4");
-    tunnel.addTag("layer", "-1");
-    tunnel.addTag("lit", "yes");
-    tunnel.addTag("maxspeed", "30 mph");
-    tunnel.addTag("name", "San Jacinto Street");
-    tunnel.addTag("note:lanes", "right lane is hov");
-    tunnel.addTag("oneway", "yes");
-    tunnel.addTag("surface", "concrete");
-    tunnel.addTag("tunnel", "yes");
-    return tunnel;
+    return OsmWay.of()
+      .addTag("highway", "primary")
+      .addTag("hov", "lane")
+      .addTag("lanes", "4")
+      .addTag("layer", "-1")
+      .addTag("lit", "yes")
+      .addTag("maxspeed", "30 mph")
+      .addTag("name", "San Jacinto Street")
+      .addTag("note:lanes", "right lane is hov")
+      .addTag("oneway", "yes")
+      .addTag("surface", "concrete")
+      .addTag("tunnel", "yes")
+      .build();
   }
 
   public static OsmWay pedestrianTunnel() {
     // https://www.openstreetmap.org/way/127288293
-    OsmWay tunnel = new OsmWay();
-    tunnel.addTag("highway", "footway");
-    tunnel.addTag("indoor", "yes");
-    tunnel.addTag("layer", "-1");
-    tunnel.addTag("lit", "yes");
-    tunnel.addTag("name", "Lamar Tunnel");
-    tunnel.addTag("tunnel", "yes");
-    return tunnel;
+    return OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("indoor", "yes")
+      .addTag("layer", "-1")
+      .addTag("lit", "yes")
+      .addTag("name", "Lamar Tunnel")
+      .addTag("tunnel", "yes")
+      .build();
   }
 
   public static OsmWay streetOnBikeRoute() {
     // https://www.openstreetmap.org/way/26443041 is part of both an lcn relation
-
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("lit", "yes");
-    way.addTag("maxspeed", "30");
-    way.addTag("name", "Schulstraße");
-    way.addTag("oneway", "no");
-    way.addTag("surface", "sett");
-    way.addTag("rcn", "yes");
-    way.addTag("lcn", "yes");
-
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("lit", "yes")
+      .addTag("maxspeed", "30")
+      .addTag("name", "Schulstraße")
+      .addTag("oneway", "no")
+      .addTag("surface", "sett")
+      .addTag("rcn", "yes")
+      .addTag("lcn", "yes")
+      .build();
   }
 
   public static OsmWay stairs() {
     // https://www.openstreetmap.org/way/1058669389
-    var way = new OsmWay();
-    way.addTag("handrail", "yes");
-    way.addTag("highway", "steps");
-    way.addTag("incline", "down");
-    way.addTag("ramp", "yes");
-    way.addTag("ramp:bicycle", "yes");
-    way.addTag("oneway", "no");
-    way.addTag("step_count", "38");
-    way.addTag("surface", "metal");
-
-    return way;
+    return OsmWay.of()
+      .addTag("handrail", "yes")
+      .addTag("highway", "steps")
+      .addTag("incline", "down")
+      .addTag("ramp", "yes")
+      .addTag("ramp:bicycle", "yes")
+      .addTag("oneway", "no")
+      .addTag("step_count", "38")
+      .addTag("surface", "metal")
+      .build();
   }
 
   public static OsmWay southeastLaBonitaWay() {
     // https://www.openstreetmap.org/way/5302874
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("name", "Southeast la Bonita Way");
-    way.addTag("sidewalk", "both");
-
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("name", "Southeast la Bonita Way")
+      .addTag("sidewalk", "both")
+      .build();
   }
 
   public static OsmWay southwestMayoStreet() {
     //https://www.openstreetmap.org/way/425004690
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("name", "Southwest Mayo Street");
-    way.addTag("maxspeed", "25 mph");
-    way.addTag("sidewalk", "left");
-
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("name", "Southwest Mayo Street")
+      .addTag("maxspeed", "25 mph")
+      .addTag("sidewalk", "left")
+      .build();
   }
 
   public static OsmWay fiveLanes() {
-    var way = new OsmWay();
-    way.addTag("highway", "primary");
-    way.addTag("lanes", "5");
-    return way;
+    return OsmWay.of().addTag("highway", "primary").addTag("lanes", "5").build();
   }
 
   public static OsmWay threeLanes() {
-    var way = new OsmWay();
-    way.addTag("highway", "primary");
-    way.addTag("lanes", "3");
-    return way;
+    return OsmWay.of().addTag("highway", "primary").addTag("lanes", "3").build();
   }
 
   public static OsmWay highwayWithCycleLane() {
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("cycleway", "lane");
-    return way;
+    return OsmWay.of().addTag("highway", "residential").addTag("cycleway", "lane").build();
   }
 
   public static OsmWay cyclewayLeft() {
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("cycleway:left", "lane");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("cycleway:left", "lane")
+      .build();
   }
 
   public static OsmWay cyclewayBoth() {
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("cycleway:both", "lane");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("cycleway:both", "lane")
+      .build();
   }
 
   public static OsmWay footway() {
-    var way = new OsmWay();
-    way.addTag("highway", "footway");
-    return way;
+    return OsmWay.of().addTag("highway", "footway").build();
   }
 
   public static OsmWay footwaySharedWithBicycle() {
-    var way = new OsmWay();
-    way.addTag("highway", "footway");
-    way.addTag("foot", "designated");
-    way.addTag("bicycle", "designated");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("foot", "designated")
+      .addTag("bicycle", "designated")
+      .build();
   }
 
   public static OsmWay cycleway() {
-    var way = new OsmWay();
-    way.addTag("highway", "cycleway");
-    return way;
+    return OsmWay.of().addTag("highway", "cycleway").build();
   }
 
   public static OsmWay cyclewaySharedWithFoot() {
-    var way = new OsmWay();
-    way.addTag("highway", "cycleway");
-    way.addTag("foot", "designated");
-    way.addTag("bicycle", "designated");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "cycleway")
+      .addTag("foot", "designated")
+      .addTag("bicycle", "designated")
+      .build();
   }
 
   public static OsmWay footwaySidewalk() {
-    var way = new OsmWay();
-    way.addTag("footway", "sidewalk");
-    way.addTag("highway", "footway");
-    return way;
+    return OsmWay.of().addTag("footway", "sidewalk").addTag("highway", "footway").build();
   }
 
   public static OsmWay bridleway() {
-    var way = new OsmWay();
-    way.addTag("highway", "bridleway");
-    return way;
+    return OsmWay.of().addTag("highway", "bridleway").build();
   }
 
   public static OsmWay bridlewaySharedWithFootAndBicycle() {
-    var way = new OsmWay();
-    way.addTag("highway", "bridleway");
-    way.addTag("foot", "designated");
-    way.addTag("bicycle", "designated");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "bridleway")
+      .addTag("foot", "designated")
+      .addTag("bicycle", "designated")
+      .build();
   }
 
   public static OsmWay pedestrianArea() {
-    var way = new OsmWay();
-    way.addTag("area", "yes");
-    way.addTag("highway", "pedestrian");
-    return way;
+    return OsmWay.of().addTag("area", "yes").addTag("highway", "pedestrian").build();
   }
 
   public static OsmWay sidewalkBoth() {
-    var way = new OsmWay();
-    way.addTag("highway", "primary");
-    way.addTag("sidewalk", "both");
-    return way;
+    return OsmWay.of().addTag("highway", "primary").addTag("sidewalk", "both").build();
   }
 
   public static OsmWay noSidewalk() {
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("sidewalk", "no");
-    return way;
+    return OsmWay.of().addTag("highway", "residential").addTag("sidewalk", "no").build();
   }
 
   public static OsmWay noSidewalkHighSpeed() {
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("sidewalk", "no");
-    way.addTag("maxspeed", "55 mph");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("sidewalk", "no")
+      .addTag("maxspeed", "55 mph")
+      .build();
   }
 
   public static OsmWay path() {
-    var way = new OsmWay();
-    way.addTag("highway", "path");
-    return way;
+    return OsmWay.of().addTag("highway", "path").build();
   }
 
   public static OsmWay motorway() {
-    var way = new OsmWay();
-    way.addTag("highway", "motorway");
-    return way;
+    return OsmWay.of().addTag("highway", "motorway").build();
   }
 
   public static OsmWay motorwayWithBicycleAllowed() {
-    var way = new OsmWay();
-    way.addTag("highway", "motorway");
-    way.addTag("bicycle", "yes");
-    return way;
+    return OsmWay.of().addTag("highway", "motorway").addTag("bicycle", "yes").build();
   }
 
   public static OsmWay motorwayRamp() {
-    var way = new OsmWay();
-    way.addTag("highway", "motorway_link");
-    return way;
+    return OsmWay.of().addTag("highway", "motorway_link").build();
   }
 
   public static OsmWay highwayTrunk() {
-    var way = new OsmWay();
-    way.addTag("highway", "trunk");
-    return way;
+    return OsmWay.of().addTag("highway", "trunk").build();
   }
 
   public static OsmWay highwayTrunkWithMotorroad() {
-    var way = new OsmWay();
-    way.addTag("highway", "trunk");
-    way.addTag("motorroad", "yes");
-    return way;
+    return OsmWay.of().addTag("highway", "trunk").addTag("motorroad", "yes").build();
   }
 
   public static OsmWay highwayPrimary() {
-    var way = new OsmWay();
-    way.addTag("highway", "primary");
-    return way;
+    return OsmWay.of().addTag("highway", "primary").build();
   }
 
   public static OsmWay highwayPrimaryWithMotorroad() {
-    var way = highwayPrimary();
-    way.addTag("motorroad", "yes");
-    return way;
+    return highwayPrimary().copy().addTag("motorroad", "yes").build();
   }
 
   public static OsmWay highwayTertiary() {
-    var way = new OsmWay();
-    way.addTag("highway", "tertiary");
-    return way;
+    return OsmWay.of().addTag("highway", "tertiary").build();
   }
 
   public static OsmWay highwaySecondary() {
-    var way = new OsmWay();
-    way.addTag("highway", "secondary");
-    return way;
+    return OsmWay.of().addTag("highway", "secondary").build();
   }
 
   public static OsmWay highwayService() {
-    var way = new OsmWay();
-    way.addTag("highway", "service");
-    return way;
+    return OsmWay.of().addTag("highway", "service").build();
   }
 
   public static OsmWay highwayServiceWithSidewalk() {
-    var way = highwayService();
-    way.addTag("sidewalk", "both");
-    return way;
+    return highwayService().copy().addTag("sidewalk", "both").build();
   }
 
   public static OsmWay highwayPedestrian() {
-    var way = new OsmWay();
-    way.addTag("highway", "pedestrian");
-    return way;
+    return OsmWay.of().addTag("highway", "pedestrian").build();
   }
 
   public static OsmWay highwayPedestrianWithSidewalk() {
-    var way = highwayPedestrian();
-    way.addTag("sidewalk", "both");
-    return way;
+    return highwayPedestrian().copy().addTag("sidewalk", "both").build();
   }
 
   public static OsmWay highwayTertiaryWithSidewalk() {
-    var way = new OsmWay();
-    way.addTag("highway", "tertiary");
-    way.addTag("sidewalk", "both");
-    return way;
+    return OsmWay.of().addTag("highway", "tertiary").addTag("sidewalk", "both").build();
   }
 
   public static OsmWay cobblestones() {
-    var way = new OsmWay();
-    way.addTag("highway", "residential");
-    way.addTag("surface", "cobblestones");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "residential")
+      .addTag("surface", "cobblestones")
+      .build();
   }
 
   public static OsmWay cyclewayLaneTrack() {
-    var way = new OsmWay();
-    way.addTag("highway", "footway");
-    way.addTag("cycleway", "lane");
-    way.addTag("cycleway:right", "track");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("cycleway", "lane")
+      .addTag("cycleway:right", "track")
+      .build();
   }
 
   public static OsmWay tramsForward() {
     // https://www.openstreetmap.org/way/108037345
-    var way = new OsmWay();
-    way.addTag("highway", "tertiary");
-    way.addTag("embedded_rails:forward", "tram");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "tertiary")
+      .addTag("embedded_rails:forward", "tram")
+      .build();
   }
 
   public static OsmWay veryBadSmoothness() {
     // https://www.openstreetmap.org/way/11402648
-    var way = new OsmWay();
-    way.addTag("highway", "footway");
-    way.addTag("surface", "sett");
-    way.addTag("smoothness", "very_bad");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("surface", "sett")
+      .addTag("smoothness", "very_bad")
+      .build();
   }
 
   public static OsmWay excellentSmoothness() {
     // https://www.openstreetmap.org/way/437167371
-    var way = new OsmWay();
-    way.addTag("highway", "cycleway");
-    way.addTag("segregated", "no");
-    way.addTag("surface", "asphalt");
-    way.addTag("smoothness", "excellent");
-    return way;
+    return OsmWay.of()
+      .addTag("highway", "cycleway")
+      .addTag("segregated", "no")
+      .addTag("surface", "asphalt")
+      .addTag("smoothness", "excellent")
+      .build();
   }
 
   public static OsmWay zooPlatform() {
     // https://www.openstreetmap.org/way/119108622
-    var way = new OsmWay();
-    way.addTag("public_transport", "platform");
-    way.addTag("usage", "tourism");
-    return way;
+    return OsmWay.of()
+      .addTag("public_transport", "platform")
+      .addTag("usage", "tourism")
+      .build();
   }
 
   public static OsmWay indoor(String value) {
-    var way = new OsmWay();
-    way.addTag("indoor", value);
-    return way;
+    return OsmWay.of().addTag("indoor", value).build();
   }
 
   public static OsmWay parkAndRide() {
-    var way = new OsmWay();
-    way.addTag("amenity", "parking");
-    way.addTag("park_ride", "yes");
-    way.addTag("capacity", "10");
-    return way;
+    return OsmWay.of()
+      .addTag("amenity", "parking")
+      .addTag("park_ride", "yes")
+      .addTag("capacity", "10")
+      .build();
   }
 
   public static OsmWay platform() {
-    var way = new OsmWay();
-    way.addTag("public_transport", "platform");
-    way.addTag("ref", "123");
-    return way;
+    return OsmWay.of().addTag("public_transport", "platform").addTag("ref", "123").build();
   }
 }

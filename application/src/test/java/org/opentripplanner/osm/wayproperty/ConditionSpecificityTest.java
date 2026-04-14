@@ -8,7 +8,6 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.CAR;
 import static org.opentripplanner.street.model.StreetTraversalPermission.NONE;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmEntityForTest;
 import org.opentripplanner.osm.wayproperty.specifier.ExactMatchSpecifier;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
@@ -35,7 +34,7 @@ class ConditionSpecificityTest {
     assertEquals(38f, wps.maxPossibleCarSpeed(), EPSILON);
 
     // Speed limit that is within limits should be used as the max used car speed
-    OsmEntity streetWithSpeedLimit = new OsmEntityForTest();
+    var streetWithSpeedLimit = new OsmEntityForTest();
     streetWithSpeedLimit.addTag("highway", "motorway");
     streetWithSpeedLimit.addTag("maxspeed", "120");
     var waySpeed = wps.getCarSpeedForWay(streetWithSpeedLimit, FORWARD);
@@ -43,7 +42,7 @@ class ConditionSpecificityTest {
 
     // Speed limit that is higher than maxPossibleCarSpeed should be ignored and regular motorway
     // speed limit should be used instead
-    OsmEntity streetWithTooHighSpeedLimit = new OsmEntityForTest();
+    var streetWithTooHighSpeedLimit = new OsmEntityForTest();
     streetWithTooHighSpeedLimit.addTag("highway", "motorway");
     streetWithTooHighSpeedLimit.addTag("maxspeed", "200");
     waySpeed = wps.getCarSpeedForWay(streetWithTooHighSpeedLimit, FORWARD);
@@ -51,7 +50,7 @@ class ConditionSpecificityTest {
 
     // Speed limit that is too low should be ignored and regular motorway speed limit should
     // be used instead
-    OsmEntity streetWithTooLowSpeedLimit = new OsmEntityForTest();
+    var streetWithTooLowSpeedLimit = new OsmEntityForTest();
     streetWithTooLowSpeedLimit.addTag("highway", "motorway");
     streetWithTooLowSpeedLimit.addTag("maxspeed", "0");
     waySpeed = wps.getCarSpeedForWay(streetWithTooLowSpeedLimit, FORWARD);

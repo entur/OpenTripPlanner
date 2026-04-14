@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.osm.DefaultOsmProvider;
@@ -17,7 +16,6 @@ import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.test.support.ResourceLoader;
-import org.opentripplanner.utils.collection.ListUtils;
 
 public class OsmDatabaseTest {
 
@@ -64,24 +62,19 @@ public class OsmDatabaseTest {
   void isNodeBelongsToWayShouldNotReturnTrueForNodesSolelyOnBarriers() {
     var osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
 
-    var n1 = new OsmNode(0, 0);
-    n1.setId(1);
-    var n2 = new OsmNode(0, 1);
-    n2.setId(2);
-    var n3 = new OsmNode(0, 2);
-    n3.setId(3);
+    var chain = OsmWay.of()
+      .withId(999)
+      .addTag("barrier", "chain")
+      .addNodeRef(1)
+      .addNodeRef(2)
+      .build();
 
-    var chain = new OsmWay();
-    chain.addTag("barrier", "chain");
-    chain.setId(999);
-    chain.addNodeRef(1);
-    chain.addNodeRef(2);
-
-    var path = new OsmWay();
-    path.setId(1);
-    path.addTag("highway", "path");
-    path.addNodeRef(2);
-    path.addNodeRef(3);
+    var path = OsmWay.of()
+      .withId(1)
+      .addTag("highway", "path")
+      .addNodeRef(2)
+      .addNodeRef(3)
+      .build();
 
     osmdb.addWay(chain);
     osmdb.addWay(path);
@@ -94,73 +87,58 @@ public class OsmDatabaseTest {
 
   @Test
   void testWayIsntKeptForAreas() {
-    var n1 = new OsmNode(0, 0);
-    n1.setId(1);
-    var n2 = new OsmNode(0, 3);
-    n2.setId(2);
-    var n3 = new OsmNode(3, 3);
-    n3.setId(3);
-    var n4 = new OsmNode(3, 0);
-    n4.setId(4);
-    var n5 = new OsmNode(0.3, 1);
-    n5.setId(5);
-    var n6 = new OsmNode(0.3, 1.5);
-    n6.setId(6);
-    var n7 = new OsmNode(0.7, 1.5);
-    n7.setId(7);
-    var n8 = new OsmNode(0.7, 1);
-    n8.setId(8);
-    var n9 = new OsmNode(0.3, 2);
-    n9.setId(9);
-    var n10 = new OsmNode(0.3, 2.5);
-    n10.setId(10);
-    var n11 = new OsmNode(0.7, 2.5);
-    n11.setId(11);
-    var n12 = new OsmNode(0.7, 2);
-    n12.setId(12);
-    var n13 = new OsmNode(3, 3);
-    n13.setId(13);
-    var n14 = new OsmNode(3, 4);
-    n14.setId(14);
-    var n15 = new OsmNode(4, 3);
-    n15.setId(15);
+    var n1 = OsmNode.builder().withId(1).withLat(0).withLon(0).build();
+    var n2 = OsmNode.builder().withId(2).withLat(0).withLon(3).build();
+    var n3 = OsmNode.builder().withId(3).withLat(3).withLon(3).build();
+    var n4 = OsmNode.builder().withId(4).withLat(3).withLon(0).build();
+    var n5 = OsmNode.builder().withId(5).withLat(0.3).withLon(1).build();
+    var n6 = OsmNode.builder().withId(6).withLat(0.3).withLon(1.5).build();
+    var n7 = OsmNode.builder().withId(7).withLat(0.7).withLon(1.5).build();
+    var n8 = OsmNode.builder().withId(8).withLat(0.7).withLon(1).build();
+    var n9 = OsmNode.builder().withId(9).withLat(0.3).withLon(2).build();
+    var n10 = OsmNode.builder().withId(10).withLat(0.3).withLon(2.5).build();
+    var n11 = OsmNode.builder().withId(11).withLat(0.7).withLon(2.5).build();
+    var n12 = OsmNode.builder().withId(12).withLat(0.7).withLon(2).build();
+    var n13 = OsmNode.builder().withId(13).withLat(3).withLon(3).build();
+    var n14 = OsmNode.builder().withId(14).withLat(3).withLon(4).build();
+    var n15 = OsmNode.builder().withId(15).withLat(4).withLon(3).build();
 
-    var simpleArea = new OsmWay();
-    simpleArea.addTag("public_transport", "platform");
-    simpleArea.addNodeRef(13);
-    simpleArea.addNodeRef(14);
-    simpleArea.addNodeRef(15);
-    simpleArea.addNodeRef(13);
+    var simpleArea = OsmWay.of()
+      .addTag("public_transport", "platform")
+      .addNodeRef(13)
+      .addNodeRef(14)
+      .addNodeRef(15)
+      .addNodeRef(13)
+      .build();
 
-    var outerRing = new OsmWay();
-    outerRing.setId(1);
-    outerRing.addNodeRef(1);
-    outerRing.addNodeRef(2);
-    outerRing.addNodeRef(3);
-    outerRing.addNodeRef(4);
-    outerRing.addNodeRef(1);
-    outerRing.addTag("highway", "residential");
+    var outerRing = OsmWay.of()
+      .withId(1)
+      .addNodeRef(1)
+      .addNodeRef(2)
+      .addNodeRef(3)
+      .addNodeRef(4)
+      .addNodeRef(1)
+      .addTag("highway", "residential")
+      .build();
 
-    var innerRing = new OsmWay();
-    innerRing.setId(2);
-    innerRing.addNodeRef(5);
-    innerRing.addNodeRef(6);
-    innerRing.addNodeRef(7);
-    innerRing.addNodeRef(8);
-    innerRing.addNodeRef(5);
+    var innerRing = OsmWay.of()
+      .withId(2)
+      .addNodeRef(5)
+      .addNodeRef(6)
+      .addNodeRef(7)
+      .addNodeRef(8)
+      .addNodeRef(5)
+      .build();
 
-    var innerRingWithBarrier = new OsmWay();
-    innerRingWithBarrier.setId(3);
-    innerRingWithBarrier.addNodeRef(9);
-    innerRingWithBarrier.addNodeRef(10);
-    innerRingWithBarrier.addNodeRef(11);
-    innerRingWithBarrier.addNodeRef(12);
-    innerRingWithBarrier.addNodeRef(9);
-    innerRingWithBarrier.addTag("barrier", "chain");
-
-    var multipolygon = new OsmRelation();
-    multipolygon.addTag("type", "multipolygon");
-    multipolygon.addTag("highway", "pedestrian");
+    var innerRingWithBarrier = OsmWay.of()
+      .withId(3)
+      .addNodeRef(9)
+      .addNodeRef(10)
+      .addNodeRef(11)
+      .addNodeRef(12)
+      .addNodeRef(9)
+      .addTag("barrier", "chain")
+      .build();
 
     var outerMember = new OsmRelationMember();
     outerMember.setRole("outer");
@@ -177,16 +155,37 @@ public class OsmDatabaseTest {
     innerBarrierMember.setType(OsmMemberType.WAY);
     innerBarrierMember.setRef(3);
 
-    multipolygon.addMember(outerMember);
-    multipolygon.addMember(innerMember);
-    multipolygon.addMember(innerBarrierMember);
+    var multipolygon = OsmRelation.builder()
+      .addTag("type", "multipolygon")
+      .addTag("highway", "pedestrian")
+      .addMember(outerMember)
+      .addMember(innerMember)
+      .addMember(innerBarrierMember)
+      .build();
 
     var provider = TestOsmProvider.of().build();
-    ListUtils.combine(
-      List.of(multipolygon),
-      List.of(simpleArea, outerRing, innerRing, innerRingWithBarrier),
-      List.of(n1, n2, n3, n4, n5, n6, n7, n8, n9, n10, n11, n12, n13, n14, n15)
-    ).forEach(e -> e.setOsmProvider(provider));
+
+    // Set OsmProvider on all entities
+    multipolygon = multipolygon.toBuilder().withOsmProvider(provider).build();
+    simpleArea = simpleArea.copy().withOsmProvider(provider).build();
+    outerRing = outerRing.copy().withOsmProvider(provider).build();
+    innerRing = innerRing.copy().withOsmProvider(provider).build();
+    innerRingWithBarrier = innerRingWithBarrier.copy().withOsmProvider(provider).build();
+    n1 = n1.toBuilder().withOsmProvider(provider).build();
+    n2 = n2.toBuilder().withOsmProvider(provider).build();
+    n3 = n3.toBuilder().withOsmProvider(provider).build();
+    n4 = n4.toBuilder().withOsmProvider(provider).build();
+    n5 = n5.toBuilder().withOsmProvider(provider).build();
+    n6 = n6.toBuilder().withOsmProvider(provider).build();
+    n7 = n7.toBuilder().withOsmProvider(provider).build();
+    n8 = n8.toBuilder().withOsmProvider(provider).build();
+    n9 = n9.toBuilder().withOsmProvider(provider).build();
+    n10 = n10.toBuilder().withOsmProvider(provider).build();
+    n11 = n11.toBuilder().withOsmProvider(provider).build();
+    n12 = n12.toBuilder().withOsmProvider(provider).build();
+    n13 = n13.toBuilder().withOsmProvider(provider).build();
+    n14 = n14.toBuilder().withOsmProvider(provider).build();
+    n15 = n15.toBuilder().withOsmProvider(provider).build();
 
     var osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
     osmdb.addRelation(multipolygon);

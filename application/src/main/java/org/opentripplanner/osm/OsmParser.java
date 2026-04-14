@@ -13,6 +13,7 @@ import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.OsmTag;
 import org.opentripplanner.osm.model.OsmWay;
+import org.opentripplanner.osm.model.OsmWayBuilder;
 
 /**
  * Parser for the OpenStreetMap PBF Format.
@@ -63,9 +64,9 @@ class OsmParser extends BinaryParser {
     }
 
     for (Osmformat.Relation i : rels) {
-      OsmRelation tmp = new OsmRelation();
-      tmp.setId(i.getId());
-      tmp.setOsmProvider(provider);
+      OsmRelation.Builder builder = OsmRelation.builder()
+        .withId(i.getId())
+        .withOsmProvider(provider);
 
       for (int j = 0; j < i.getKeysCount(); j++) {
         OsmTag tag = new OsmTag();
@@ -73,7 +74,7 @@ class OsmParser extends BinaryParser {
         String value = internalize(getStringById(i.getVals(j)));
         tag.setK(key);
         tag.setV(value);
-        tmp.addTag(tag);
+        builder.addTag(tag);
       }
 
       long lastMid = 0;
@@ -97,10 +98,10 @@ class OsmParser extends BinaryParser {
           assert false;
         }
 
-        tmp.addMember(relMember);
+        builder.addMember(relMember);
       }
 
-      osmdb.addRelation(tmp);
+      osmdb.addRelation(builder.build());
     }
   }
 
@@ -117,8 +118,6 @@ class OsmParser extends BinaryParser {
     }
 
     for (int i = 0; i < nodes.getIdCount(); i++) {
-      OsmNode tmp = new OsmNode();
-
       long lat = nodes.getLat(i) + lastLat;
       lastLat = lat;
       long lon = nodes.getLon(i) + lastLon;
@@ -128,10 +127,11 @@ class OsmParser extends BinaryParser {
       double latf = parseLat(lat);
       double lonf = parseLon(lon);
 
-      tmp.setId(id);
-      tmp.setOsmProvider(provider);
-      tmp.lat = latf;
-      tmp.lon = lonf;
+      OsmNode.Builder builder = OsmNode.builder()
+        .withId(id)
+        .withOsmProvider(provider)
+        .withLat(latf)
+        .withLon(lonf);
 
       // If empty, assume that nothing here has keys or vals.
       if (nodes.getKeysValsCount() > 0) {
@@ -144,13 +144,13 @@ class OsmParser extends BinaryParser {
           String value = internalize(getStringById(valid));
           tag.setK(key);
           tag.setV(value);
-          tmp.addTag(tag);
+          builder.addTag(tag);
         }
         // Skip over the '0' delimiter.
         j++;
       }
 
-      osmdb.addNode(tmp);
+      osmdb.addNode(builder.build());
     }
   }
 
@@ -161,11 +161,11 @@ class OsmParser extends BinaryParser {
     }
 
     for (Osmformat.Node i : nodes) {
-      OsmNode tmp = new OsmNode();
-      tmp.setId(i.getId());
-      tmp.setOsmProvider(provider);
-      tmp.lat = parseLat(i.getLat());
-      tmp.lon = parseLon(i.getLon());
+      OsmNode.Builder builder = OsmNode.builder()
+        .withId(i.getId())
+        .withOsmProvider(provider)
+        .withLat(parseLat(i.getLat()))
+        .withLon(parseLon(i.getLon()));
 
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
@@ -174,10 +174,10 @@ class OsmParser extends BinaryParser {
         OsmTag tag = new OsmTag();
         tag.setK(key);
         tag.setV(value);
-        tmp.addTag(tag);
+        builder.addTag(tag);
       }
 
-      osmdb.addNode(tmp);
+      osmdb.addNode(builder.build());
     }
   }
 
@@ -188,9 +188,7 @@ class OsmParser extends BinaryParser {
     }
 
     for (Osmformat.Way i : ways) {
-      OsmWay tmp = new OsmWay();
-      tmp.setId(i.getId());
-      tmp.setOsmProvider(provider);
+      OsmWayBuilder builder = OsmWay.of().withId(i.getId()).withOsmProvider(provider);
 
       for (int j = 0; j < i.getKeysCount(); j++) {
         OsmTag tag = new OsmTag();
@@ -198,16 +196,16 @@ class OsmParser extends BinaryParser {
         String value = internalize(getStringById(i.getVals(j)));
         tag.setK(key);
         tag.setV(value);
-        tmp.addTag(tag);
+        builder.addTag(tag);
       }
 
       long lastId = 0;
       for (long j : i.getRefsList()) {
-        tmp.addNodeRef(j + lastId);
+        builder.addNodeRef(j + lastId);
         lastId = j + lastId;
       }
 
-      osmdb.addWay(tmp);
+      osmdb.addWay(builder.build());
     }
   }
 

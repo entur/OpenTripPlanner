@@ -42,8 +42,7 @@ class ParkingProcessorTest {
 
   @Test
   void wheelchairParking() {
-    var entity = WayTestData.parkAndRide();
-    entity.addTag("capacity:disabled", "yes");
+    var entity = WayTestData.parkAndRide().copy().addTag("capacity:disabled", "yes").build();
     var parking = PROCESSOR.createVehicleParkingObjectFromOsmEntity(
       true,
       Coordinates.BERLIN,

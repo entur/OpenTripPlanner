@@ -1,9 +1,13 @@
 package org.opentripplanner.osm.model;
 
+import gnu.trove.TCollections;
 import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.osm.OsmProvider;
 
 public class OsmWay extends OsmEntity {
 
@@ -14,14 +18,25 @@ public class OsmWay extends OsmEntity {
     "reversible"
   );
 
-  private final TLongList nodes = new TLongArrayList();
+  private final TLongList nodes;
 
-  public void addNodeRef(long nodeRef) {
-    nodes.add(nodeRef);
+  OsmWay(
+    long id,
+    Map<String, String> tags,
+    I18NString creativeName,
+    OsmProvider osmProvider,
+    TLongList nodes
+  ) {
+    super(id, tags, creativeName, osmProvider);
+    this.nodes = TCollections.unmodifiableList(new TLongArrayList(nodes));
   }
 
-  public void addNodeRef(long nodeRef, int index) {
-    nodes.insert(index, nodeRef);
+  public static OsmWayBuilder of() {
+    return new OsmWayBuilder();
+  }
+
+  public OsmWayBuilder copy() {
+    return new OsmWayBuilder(this);
   }
 
   public TLongList getNodeRefs() {

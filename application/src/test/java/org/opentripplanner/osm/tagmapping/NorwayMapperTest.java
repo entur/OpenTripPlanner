@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmEntityForTest;
+import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.WayPropertySet;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 import org.opentripplanner.street.model.StreetTraversalPermission;
@@ -46,10 +47,10 @@ public class NorwayMapperTest {
         var expectedSafety = expectedBicycleSafetyMatrix[i][j];
         if (!Double.isNaN(expectedSafety)) {
           var maxspeed = expectedMaxspeeds[j];
-          var way = new OsmEntityForTest();
+          var way = OsmWay.of();
           way.addTag("highway", highway);
           way.addTag("maxspeed", String.valueOf(maxspeed));
-          argumentsList.add(Arguments.of(way, expectedSafety));
+          argumentsList.add(Arguments.of(way.build(), expectedSafety));
         }
       }
     }
@@ -74,13 +75,13 @@ public class NorwayMapperTest {
     for (var i = 0; i < 4; i++) {
       var highway = expectedHighways[i];
       for (var maxspeed : expectedMaxspeeds) {
-        var mainRoad = new OsmEntityForTest();
+        var mainRoad = OsmWay.of();
         mainRoad.addTag("highway", highway);
         mainRoad.addTag("maxspeed", String.valueOf(maxspeed));
-        var linkRoad = new OsmEntityForTest();
+        var linkRoad = OsmWay.of();
         linkRoad.addTag("highway", highway.concat("_link"));
         linkRoad.addTag("maxspeed", String.valueOf(maxspeed));
-        argumentsList.add(Arguments.of(mainRoad, linkRoad));
+        argumentsList.add(Arguments.of(mainRoad.build(), linkRoad.build()));
       }
     }
     return argumentsList;

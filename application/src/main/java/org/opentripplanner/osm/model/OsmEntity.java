@@ -156,14 +156,28 @@ public abstract class OsmEntity {
       "foot"
     );
 
-  /* To save memory this is only created when an entity actually has tags. */
-  private Map<String, String> tags;
+  private final Map<String, String> tags;
 
-  protected long id;
+  protected final long id;
 
-  protected I18NString creativeName;
+  protected final I18NString creativeName;
 
-  private OsmProvider osmProvider;
+  private final OsmProvider osmProvider;
+
+  /**
+   * Constructor for immutable OsmEntity
+   */
+  protected OsmEntity(
+    long id,
+    Map<String, String> tags,
+    I18NString creativeName,
+    OsmProvider osmProvider
+  ) {
+    this.id = id;
+    this.tags = Map.copyOf(tags);
+    this.creativeName = creativeName;
+    this.osmProvider = osmProvider;
+  }
 
   public static boolean isFalse(String tagValue) {
     return ("no".equals(tagValue) || "0".equals(tagValue) || "false".equals(tagValue));
@@ -181,44 +195,10 @@ public abstract class OsmEntity {
   }
 
   /**
-   * Sets the id.
-   */
-  public void setId(long id) {
-    this.id = id;
-  }
-
-  /**
-   * Adds a tag.
-   */
-  public void addTag(OsmTag tag) {
-    if (tags == null) {
-      tags = new HashMap<>();
-    }
-
-    tags.put(tag.getK().toLowerCase(), tag.getV());
-  }
-
-  /**
-   * Adds a tag.
-   */
-  public OsmEntity addTag(String key, String value) {
-    if (key == null || value == null) {
-      return this;
-    }
-
-    if (tags == null) {
-      tags = new HashMap<>();
-    }
-
-    tags.put(key.toLowerCase(), value);
-    return this;
-  }
-
-  /**
-   * The tags of an entity.
+   * The tags of an entity (immutable).
    */
   public Map<String, String> getTags() {
-    return Objects.requireNonNullElse(tags, Map.of());
+    return tags;
   }
 
   /**
@@ -316,9 +296,6 @@ public abstract class OsmEntity {
   }
 
   protected boolean isExplicitlyAllowed(String key) {
-    if (tags == null) {
-      return false;
-    }
     if (isTagTrue(key)) {
       return true;
     }
@@ -337,10 +314,8 @@ public abstract class OsmEntity {
    */
   @Nullable
   public String getTag(String tag) {
-    if (tags != null) {
-      return tags.get(tag.toLowerCase());
-    }
-    return null;
+    tag = tag.toLowerCase();
+    return tags.get(tag);
   }
 
   /**
@@ -521,9 +496,6 @@ public abstract class OsmEntity {
    */
   @Nullable
   public I18NString getAssumedName() {
-    if (tags == null) {
-      return null;
-    }
     if (tags.containsKey("name")) {
       return TranslatedString.getDeduplicatedI18NString(
         this.generateI18NForPattern("{name}"),
@@ -788,10 +760,6 @@ public abstract class OsmEntity {
     );
   }
 
-  public void setCreativeName(I18NString creativeName) {
-    this.creativeName = creativeName;
-  }
-
   /**
    * Is this way a roundabout?
    */
@@ -838,10 +806,6 @@ public abstract class OsmEntity {
 
   public OsmProvider getOsmProvider() {
     return osmProvider;
-  }
-
-  public void setOsmProvider(OsmProvider provider) {
-    this.osmProvider = provider;
   }
 
   /**

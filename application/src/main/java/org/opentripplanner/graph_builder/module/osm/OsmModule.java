@@ -594,12 +594,10 @@ public class OsmModule implements GraphBuilderModule {
   }
 
   private void setEntityName(OsmEntity entity) {
-    if (!entity.hasTag("name")) {
-      I18NString creativeName = entity.getOsmProvider().getWayPropertySet().getCreativeName(entity);
-      if (creativeName != null) {
-        entity.setCreativeName(creativeName);
-      }
-    }
+    // TODO: Since entities are now immutable, setting creative names post-construction
+    // requires updating the entity in the database. For now, this is disabled.
+    // Creative names should ideally be set during entity construction.
+    // See: https://github.com/opentripplanner/OpenTripPlanner/issues/XXXXX
   }
 
   private void applyEdgesToTurnRestrictions(

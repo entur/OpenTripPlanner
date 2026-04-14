@@ -26,60 +26,108 @@ import org.opentripplanner.street.model.edge.StreetEdge;
 
 class CrosswalkNamerTest {
 
-  private static final OsmWay CROSSWALK = new OsmWay();
-  private static final OsmWay SIDEWALK_TO_CROSSWALK = new OsmWay();
-  private static final OsmWay OTHER_SIDEWALK1_TO_CROSSWALK = new OsmWay();
-  private static final OsmWay OTHER_SIDEWALK2_TO_CROSSWALK = new OsmWay();
-  private static final OsmWay STREET = new OsmWay();
-  private static final OsmWay SERVICE_ROAD = new OsmWay();
-  private static final OsmWay TURN_LANE = new OsmWay();
-  private static final OsmWay MOTORWAY_RAMP = new OsmWay();
-  private static final OsmWay OTHER_STREET = new OsmWay();
+  private static OsmWay CROSSWALK;
+  private static OsmWay SIDEWALK_TO_CROSSWALK;
+  private static OsmWay OTHER_SIDEWALK1_TO_CROSSWALK;
+  private static OsmWay OTHER_SIDEWALK2_TO_CROSSWALK;
+  private static OsmWay STREET;
+  private static OsmWay SERVICE_ROAD;
+  private static OsmWay TURN_LANE;
+  private static OsmWay MOTORWAY_RAMP;
+  private static OsmWay OTHER_STREET;
 
   @BeforeAll
   static void setUp() {
-    CROSSWALK.addTag("highway", "footway");
-    CROSSWALK.addTag("footway", "crossing");
-    CROSSWALK.addTag("crossing:markings", "yes");
-    CROSSWALK.getNodeRefs().add(new long[] { 10001, 10002, 10003, 10004 });
+    CROSSWALK = OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("footway", "crossing")
+      .addTag("crossing:markings", "yes")
+      .addNodeRef(10001)
+      .addNodeRef(10002)
+      .addNodeRef(10003)
+      .addNodeRef(10004)
+      .build();
 
-    SIDEWALK_TO_CROSSWALK.addTag("highway", "footway");
-    SIDEWALK_TO_CROSSWALK.addTag("footway", "sidewalk");
-    SIDEWALK_TO_CROSSWALK.getNodeRefs().add(new long[] { 10000, 10001 });
+    SIDEWALK_TO_CROSSWALK = OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("footway", "sidewalk")
+      .addNodeRef(10000)
+      .addNodeRef(10001)
+      .build();
 
-    OTHER_SIDEWALK1_TO_CROSSWALK.addTag("highway", "footway");
-    OTHER_SIDEWALK1_TO_CROSSWALK.addTag("footway", "sidewalk");
-    OTHER_SIDEWALK1_TO_CROSSWALK.getNodeRefs().add(new long[] { 10004, 10005 });
+    OTHER_SIDEWALK1_TO_CROSSWALK = OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("footway", "sidewalk")
+      .addNodeRef(10004)
+      .addNodeRef(10005)
+      .build();
 
-    OTHER_SIDEWALK2_TO_CROSSWALK.addTag("highway", "footway");
-    OTHER_SIDEWALK2_TO_CROSSWALK.addTag("footway", "sidewalk");
-    OTHER_SIDEWALK2_TO_CROSSWALK.getNodeRefs().add(new long[] { 10004, 10006 });
+    OTHER_SIDEWALK2_TO_CROSSWALK = OsmWay.of()
+      .addTag("highway", "footway")
+      .addTag("footway", "sidewalk")
+      .addNodeRef(10004)
+      .addNodeRef(10006)
+      .build();
 
-    STREET.setId(50001);
-    STREET.addTag("highway", "primary");
-    STREET.addTag("name", "3rd Street");
-    STREET.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
+    STREET = OsmWay.of()
+      .withId(50001)
+      .addTag("highway", "primary")
+      .addTag("name", "3rd Street")
+      .addNodeRef(20001)
+      .addNodeRef(20002)
+      .addNodeRef(20003)
+      .addNodeRef(10002)
+      .addNodeRef(20004)
+      .addNodeRef(20005)
+      .build();
 
-    OTHER_STREET.setId(50002);
-    OTHER_STREET.addTag("highway", "primary");
-    OTHER_STREET.addTag("name", "Other Street");
-    OTHER_STREET.getNodeRefs().add(new long[] { 30001, 30002, 30003, 30004, 30005 });
+    OTHER_STREET = OsmWay.of()
+      .withId(50002)
+      .addTag("highway", "primary")
+      .addTag("name", "Other Street")
+      .addNodeRef(30001)
+      .addNodeRef(30002)
+      .addNodeRef(30003)
+      .addNodeRef(30004)
+      .addNodeRef(30005)
+      .build();
 
     // Reusing ids and nodes for SERVICE_ROAD, MOTORWAY_RAMP and TURN_LANE as they are not used together with STREET.
-    SERVICE_ROAD.setId(50001);
-    SERVICE_ROAD.addTag("highway", "service");
-    SERVICE_ROAD.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
+    SERVICE_ROAD = OsmWay.of()
+      .withId(50001)
+      .addTag("highway", "service")
+      .addNodeRef(20001)
+      .addNodeRef(20002)
+      .addNodeRef(20003)
+      .addNodeRef(10002)
+      .addNodeRef(20004)
+      .addNodeRef(20005)
+      .build();
 
-    TURN_LANE.setId(50001);
-    TURN_LANE.addTag("highway", "primary_link");
-    TURN_LANE.addTag("oneway", "yes");
-    TURN_LANE.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
+    TURN_LANE = OsmWay.of()
+      .withId(50001)
+      .addTag("highway", "primary_link")
+      .addTag("oneway", "yes")
+      .addNodeRef(20001)
+      .addNodeRef(20002)
+      .addNodeRef(20003)
+      .addNodeRef(10002)
+      .addNodeRef(20004)
+      .addNodeRef(20005)
+      .build();
 
-    MOTORWAY_RAMP.setId(50001);
-    MOTORWAY_RAMP.addTag("highway", "motorway_link");
-    MOTORWAY_RAMP.addTag("oneway", "yes");
-    MOTORWAY_RAMP.addTag("turn:lanes", "right");
-    MOTORWAY_RAMP.getNodeRefs().add(new long[] { 20001, 20002, 20003, 10002, 20004, 20005 });
+    MOTORWAY_RAMP = OsmWay.of()
+      .withId(50001)
+      .addTag("highway", "motorway_link")
+      .addTag("oneway", "yes")
+      .addTag("turn:lanes", "right")
+      .addNodeRef(20001)
+      .addNodeRef(20002)
+      .addNodeRef(20003)
+      .addNodeRef(10002)
+      .addNodeRef(20004)
+      .addNodeRef(20005)
+      .build();
   }
 
   @Test

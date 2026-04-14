@@ -27,7 +27,7 @@ public class OsmEntityTest {
 
   @Test
   void testHasTag() {
-    OsmEntity o = new OsmEntityForTest();
+    OsmEntityForTest o = new OsmEntityForTest();
     assertFalse(o.hasTag("foo"));
     assertFalse(o.hasTag("FOO"));
     o.addTag("foo", "bar");
@@ -38,7 +38,7 @@ public class OsmEntityTest {
 
   @Test
   void testGetTag() {
-    OsmEntity o = new OsmEntityForTest();
+    OsmEntityForTest o = new OsmEntityForTest();
     assertNull(o.getTag("foo"));
     assertNull(o.getTag("FOO"));
 
@@ -77,7 +77,7 @@ public class OsmEntityTest {
 
   @Test
   void testIsTagFalseOrTrue() {
-    OsmEntity o = new OsmEntityForTest();
+    OsmEntityForTest o = new OsmEntityForTest();
     assertFalse(o.isTagFalse("foo"));
     assertFalse(o.isTagFalse("FOO"));
     assertFalse(o.isTagTrue("foo"));
@@ -109,7 +109,7 @@ public class OsmEntityTest {
 
   @Test
   void testDoesAllowTagAccess() {
-    OsmEntity o = new OsmEntityForTest();
+    OsmEntityForTest o = new OsmEntityForTest();
     assertFalse(o.isExplicitlyAllowed("foo"));
 
     o.addTag("foo", "bar");
@@ -124,7 +124,7 @@ public class OsmEntityTest {
 
   @Test
   void testIsGeneralAccessDenied() {
-    OsmEntity o = new OsmEntityForTest();
+    OsmEntityForTest o = new OsmEntityForTest();
     assertFalse(o.isGeneralAccessDenied());
 
     o.addTag("access", "something");
@@ -139,7 +139,7 @@ public class OsmEntityTest {
 
   @Test
   void testIsDirectionalGeneralAccessDenied() {
-    OsmEntity o = new OsmEntityForTest();
+    OsmEntityForTest o = new OsmEntityForTest();
     o.addTag("access", "yes");
     o.addTag("access:backward", "no");
     assertFalse(o.isGeneralAccessDenied(DIRECTIONLESS));
@@ -147,7 +147,7 @@ public class OsmEntityTest {
     assertTrue(o.isGeneralAccessDenied(BACKWARD));
     assertFalse(o.isGeneralAccessDenied(FORWARD));
 
-    OsmEntity p = new OsmEntityForTest();
+    OsmEntityForTest p = new OsmEntityForTest();
     p.addTag("access", "no");
     p.addTag("access:backward", "yes");
     assertTrue(p.isGeneralAccessDenied(DIRECTIONLESS));
@@ -158,7 +158,7 @@ public class OsmEntityTest {
 
   @Test
   void testBicycleDenied() {
-    OsmEntity tags = new OsmEntityForTest();
+    OsmEntityForTest tags = new OsmEntityForTest();
     assertFalse(tags.isBicycleDenied());
 
     for (var allowedValue : List.of("yes", "unknown", "somevalue")) {
@@ -174,7 +174,7 @@ public class OsmEntityTest {
 
   @Test
   void testBicycleDeniedOnVehicleDenied() {
-    OsmEntity noVehicle = new OsmEntityForTest();
+    OsmEntityForTest noVehicle = new OsmEntityForTest();
     noVehicle.addTag("vehicle", "no");
     assertTrue(noVehicle.isBicycleDenied());
     noVehicle.addTag("bicycle", "yes");
@@ -250,16 +250,31 @@ public class OsmEntityTest {
 
   private static Stream<Arguments> barrierWheelchairAccessibilityCases() {
     return Stream.of(
-      Arguments.of(new OsmNode().addTag("barrier", "stile"), false),
-      Arguments.of(new OsmNode().addTag("barrier", "stile").addTag("wheelchair", "yes"), true),
-      Arguments.of(new OsmNode().addTag("barrier", "kerb"), false),
+      Arguments.of(OsmNode.builder().addTag("barrier", "stile").build(), false),
+      Arguments.of(
+        OsmNode.builder().addTag("barrier", "stile").addTag("wheelchair", "yes").build(),
+        true
+      ),
+      Arguments.of(OsmNode.builder().addTag("barrier", "kerb").build(), false),
       // https://wiki.openstreetmap.org/wiki/Key:kerb
-      Arguments.of(new OsmNode().addTag("barrier", "kerb").addTag("kerb", "flush"), true),
-      Arguments.of(new OsmNode().addTag("barrier", "kerb").addTag("kerb", "lowered"), true),
-      Arguments.of(new OsmNode().addTag("barrier", "kerb").addTag("kerb", "no"), true),
-      Arguments.of(new OsmNode().addTag("barrier", "kerb").addTag("kerb", "raised"), false),
-      Arguments.of(new OsmNode().addTag("barrier", "kerb").addTag("kerb", "rolled"), false),
-      Arguments.of(new OsmNode().addTag("barrier", "kerb").addTag("kerb", "yes"), false)
+      Arguments.of(
+        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "flush").build(),
+        true
+      ),
+      Arguments.of(
+        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "lowered").build(),
+        true
+      ),
+      Arguments.of(OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "no").build(), true),
+      Arguments.of(
+        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "raised").build(),
+        false
+      ),
+      Arguments.of(
+        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "rolled").build(),
+        false
+      ),
+      Arguments.of(OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "yes").build(), false)
     );
   }
 
@@ -291,10 +306,10 @@ public class OsmEntityTest {
 
     var highway = WayTestData.highwayWithCycleLane();
     assertTrue(highway.isRoutable());
-    highway.addTag("access", "no");
-    assertFalse(highway.isRoutable());
-    highway.addTag("bicycle", "yes");
-    assertTrue(highway.isRoutable());
+    var modifiedHighway = highway.copy().addTag("access", "no").build();
+    assertFalse(modifiedHighway.isRoutable());
+    var furtherModified = modifiedHighway.copy().addTag("bicycle", "yes").build();
+    assertTrue(furtherModified.isRoutable());
   }
 
   @Test
@@ -312,7 +327,7 @@ public class OsmEntityTest {
 
   @Test
   void testGenerateI18NForPattern() {
-    OsmEntity osmTags = new OsmEntityForTest();
+    OsmEntityForTest osmTags = new OsmEntityForTest();
     osmTags.addTag("note", "Note EN");
     osmTags.addTag("description:fr", "Description FR");
     osmTags.addTag("wheelchair:description", "Wheelchair description EN");
