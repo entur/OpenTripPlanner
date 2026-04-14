@@ -91,19 +91,21 @@ public final class DefaultCostCalculator<T extends DefaultTripSchedule>
   }
 
   @Override
-  public int transitCost(int transitTime, T tripScheduledBoarded) {
-    return transitTime * transitFactors.factor(tripScheduledBoarded.transitReluctanceFactorIndex());
+  public int transitCost(int transitDuration, T tripScheduledBoarded) {
+    return (
+      transitDuration * transitFactors.factor(tripScheduledBoarded.transitReluctanceFactorIndex())
+    );
   }
 
   @Override
   public int transitArrivalCost(
     int boardCost,
     int alightSlack,
-    int transitTime,
+    int transitDuration,
     T trip,
     int toStopIndex
   ) {
-    int cost = boardCost + transitCost(transitTime, trip) + waitFactor * alightSlack;
+    int cost = boardCost + transitCost(transitDuration, trip) + waitFactor * alightSlack;
 
     // Add transfer cost on all alighting events.
     // If it turns out to be the last one this cost will be removed during costEgress phase.
@@ -120,16 +122,20 @@ public final class DefaultCostCalculator<T extends DefaultTripSchedule>
   }
 
   @Override
-  public int calculateRemainingMinCost(int minTravelTime, int minNumTransfers, int fromStopIndex) {
+  public int calculateRemainingMinCost(
+    int minTravelDuration,
+    int minNumTransfers,
+    int fromStopIndex
+  ) {
     if (minNumTransfers > -1) {
       return (
         boardCostOnly +
         boardAndTransferCost * minNumTransfers +
-        transitFactors.minFactor() * minTravelTime
+        transitFactors.minFactor() * minTravelDuration
       );
     } else {
       // Remove cost that was added during alighting similar as we do in the costEgress() method
-      int fixedCost = transitFactors.minFactor() * minTravelTime;
+      int fixedCost = transitFactors.minFactor() * minTravelDuration;
 
       return stopBoardAlightTransferCosts == null
         ? fixedCost

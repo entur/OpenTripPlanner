@@ -252,6 +252,6 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
    * pattern.
    */
   private int calculateOnTripRelativeCost(int boardTime, T tripSchedule) {
-    return c1Calculator.transitCost(tripSchedule.relativeTravelTime(boardTime), tripSchedule);
+    return c1Calculator.transitCost(tripSchedule.relativeTravelDuration(boardTime), tripSchedule);
   }
 }

@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 
 /**
- * Verify that {@link TestTripSchedule} satisfies the {@code relativeTravelTime} contract defined
- * in {@link org.opentripplanner.raptor.spi.RaptorTripSchedule#relativeTravelTime(int)}.
+ * Verify that {@link TestTripSchedule} satisfies the {@code relativeTravelDuration} contract defined
+ * in {@link org.opentripplanner.raptor.spi.RaptorTripSchedule#relativeTravelDuration(int)}.
  */
 class TestTripScheduleTest {
 
@@ -34,23 +34,23 @@ class TestTripScheduleTest {
 
     assertEquals(
       actualTimeBetweenAAndB,
-      trip1.relativeTravelTime(boardAtA) - trip1.relativeTravelTime(boardAtB)
+      trip1.relativeTravelDuration(boardAtA) - trip1.relativeTravelDuration(boardAtB)
     );
   }
 
   @Test
   void relativeTravelTimeIsIdenticalAcrossTripsInTheSamePatternForEquivalentBoardingPositions() {
     assertEquals(
-      trip1.relativeTravelTime(trip1.departure(0)),
-      trip2.relativeTravelTime(trip2.departure(0))
+      trip1.relativeTravelDuration(trip1.departure(0)),
+      trip2.relativeTravelDuration(trip2.departure(0))
     );
     assertEquals(
-      trip1.relativeTravelTime(trip1.departure(1)),
-      trip2.relativeTravelTime(trip2.departure(1))
+      trip1.relativeTravelDuration(trip1.departure(1)),
+      trip2.relativeTravelDuration(trip2.departure(1))
     );
     assertEquals(
-      trip1.relativeTravelTime(trip1.departure(2)),
-      trip2.relativeTravelTime(trip2.departure(2))
+      trip1.relativeTravelDuration(trip1.departure(2)),
+      trip2.relativeTravelDuration(trip2.departure(2))
     );
   }
 }

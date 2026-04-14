@@ -31,28 +31,35 @@ public interface RaptorCostCalculator<T extends RaptorTripSchedule> {
   );
 
   /**
-   * Calculate the cost of riding a trip for the given {@code transitTime}.
+   * Calculate the cost of riding a trip for the given {@code transitDuration} in seconds.
    */
-  int transitCost(int transitTime, T tripScheduledBoarded);
+  int transitCost(int transitDuration, T tripScheduledBoarded);
 
   /**
    * Calculate the value when arriving by transit.
    */
-  int transitArrivalCost(int boardCost, int alightSlack, int transitTime, T trip, int toStopIndex);
+  int transitArrivalCost(
+    int boardCost,
+    int alightSlack,
+    int transitDuration,
+    T trip,
+    int toStopIndex
+  );
 
   /**
-   * Calculate the value, when waiting between the last transit and egress paths
+   * Calculate the cost of waiting, when waiting between two transit legs. The wait duration is
+   * in seconds, and include board and alight slack.
    */
-  int waitCost(int waitTimeInSeconds);
+  int waitCost(int waitDuration);
 
   /**
    * Used for estimating the remaining value for a criteria at a given stop arrival. The calculated
    * value should be an optimistic estimate for the heuristics to work properly. So, to calculate
-   * the generalized cost for given the {@code minTravelTime} and {@code minNumTransfers} returning
-   * the greatest value, which is guaranteed to be less than the
-   * <em>real value</em> would be correct and a good choice.
+   * the generalized cost for given the {@code minTravelDuration} and {@code minNumTransfers}
+   * returning the greatest value, which is guaranteed to be less than the <em>real value</em>
+   * would be correct and a good choice.
    */
-  int calculateRemainingMinCost(int minTravelTime, int minNumTransfers, int fromStopIndex);
+  int calculateRemainingMinCost(int minTravelDuration, int minNumTransfers, int fromStopIndex);
 
   /**
    * This method allows the cost calculator to add cost in addition to the generalized-cost of the
