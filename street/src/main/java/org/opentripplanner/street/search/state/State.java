@@ -21,7 +21,7 @@ import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.utils.lang.DoubleUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
-public class State implements AStarState<State, Edge, Vertex> {
+public final class State implements AStarState<State, Edge, Vertex> {
 
   private static final State[] EMPTY_STATES = {};
   private final StreetSearchRequest request;
