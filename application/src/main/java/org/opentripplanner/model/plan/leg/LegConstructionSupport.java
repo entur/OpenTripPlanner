@@ -14,7 +14,7 @@ public class LegConstructionSupport {
    * Given a pattern, board and alight stop index compute the list of coordinates that this
    * segment of the pattern visits.
    */
-  public static LineString extractTransitLegCoordinates(
+  public static LineString extractSubGeometry(
     TripPattern tripPattern,
     int boardStopIndexInPattern,
     int alightStopIndexInPattern

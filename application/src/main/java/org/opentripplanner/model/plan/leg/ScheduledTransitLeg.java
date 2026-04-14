@@ -119,7 +119,7 @@ public class ScheduledTransitLeg implements TransitLeg {
 
     this.generalizedCost = builder.generalizedCost();
 
-    LineString transitLegCoordinates = LegConstructionSupport.extractTransitLegCoordinates(
+    LineString transitLegCoordinates = LegConstructionSupport.extractSubGeometry(
       tripPattern,
       boardStopPosInPattern,
       alightStopPosInPattern
