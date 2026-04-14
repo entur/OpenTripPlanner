@@ -45,4 +45,15 @@ public class FilterChain implements TripFilter {
   public boolean accepts(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow) {
     return filters.stream().allMatch(filter -> filter.accepts(trip, request, searchWindow));
   }
+
+  @Override
+  public boolean acceptsAccessEgress(
+    CarpoolTrip trip,
+    CarpoolingRequest request,
+    Duration searchWindow
+  ) {
+    return filters
+      .stream()
+      .allMatch(filter -> filter.acceptsAccessEgress(trip, request, searchWindow));
+  }
 }

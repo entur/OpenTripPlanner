@@ -84,6 +84,28 @@ public class DirectionalCompatibilityFilter implements TripFilter {
     return false;
   }
 
+  @Override
+  public boolean acceptsAccessEgress(
+    CarpoolTrip trip,
+    CarpoolingRequest request,
+    Duration searchWindow
+  ) {
+    var tripStartCoordinate = trip.routePoints().getFirst().asJtsCoordinate();
+    var tripEndCoordinate = trip.routePoints().getLast().asJtsCoordinate();
+    var passengerCoordJts = request.getAccessOrEgress().isAccess()
+      ? request.getPassengerPickup().asJtsCoordinate()
+      : request.getPassengerDropoff().asJtsCoordinate();
+
+    var tripBearing = DirectionUtils.getAzimuth(tripStartCoordinate, tripEndCoordinate);
+    var startToPassengerBearing = DirectionUtils.getAzimuth(tripStartCoordinate, passengerCoordJts);
+    var endToPassengerBearing = DirectionUtils.getAzimuth(passengerCoordJts, tripEndCoordinate);
+
+    return (
+      bearingsAreWithinTolerance(tripBearing, startToPassengerBearing) &&
+      bearingsAreWithinTolerance(tripBearing, endToPassengerBearing)
+    );
+  }
+
   double getBearingToleranceDegrees() {
     return bearingToleranceDegrees;
   }
@@ -106,8 +128,11 @@ public class DirectionalCompatibilityFilter implements TripFilter {
       segmentEnd.asJtsCoordinate()
     );
 
-    double bearingDiff = DirectionUtils.bearingDifference(segmentBearing, passengerBearing);
+    return bearingsAreWithinTolerance(segmentBearing, passengerBearing);
+  }
 
+  private boolean bearingsAreWithinTolerance(double bearing1, double bearing2) {
+    double bearingDiff = DirectionUtils.bearingDifference(bearing1, bearing2);
     return bearingDiff <= bearingToleranceDegrees;
   }
 }

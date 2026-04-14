@@ -86,6 +86,29 @@ public class DistanceBasedFilter implements TripFilter {
     return false;
   }
 
+  // length of the trip is longer than the length from the trip to the passenger
+  @Override
+  public boolean acceptsAccessEgress(
+    CarpoolTrip trip,
+    CarpoolingRequest request,
+    Duration searchWindow
+  ) {
+    var tripStart = trip.routePoints().getFirst().asJtsCoordinate();
+    var tripEnd = trip.routePoints().getLast().asJtsCoordinate();
+    var passengerCoordJts = request.getAccessOrEgress().isAccess()
+      ? request.getPassengerPickup().asJtsCoordinate()
+      : request.getPassengerDropoff().asJtsCoordinate();
+
+    var tripLength = SphericalDistanceLibrary.distance(tripStart, tripEnd);
+    var lengthFromTripToPassenger = SphericalDistanceLibrary.fastDistance(
+      passengerCoordJts,
+      tripStart,
+      tripEnd
+    );
+
+    return tripLength > lengthFromTripToPassenger;
+  }
+
   double getMaxDistanceMeters() {
     return maxDistanceMeters;
   }

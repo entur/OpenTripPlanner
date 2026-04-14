@@ -3,11 +3,13 @@ package org.opentripplanner.ext.carpooling.filter;
 import java.time.Instant;
 import java.util.Optional;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 
 public class CarpoolingRequestBuilder {
 
+  private AccessEgressType accessOrEgress;
   private boolean isArriveByRequest;
   private WgsCoordinate passengerDropoff;
   private WgsCoordinate passengerPickup;
@@ -28,6 +30,11 @@ public class CarpoolingRequestBuilder {
       .map(WgsCoordinate::new)
       .orElseThrow();
     this.requestedTimeDate = request.dateTime();
+  }
+
+  public CarpoolingRequestBuilder withAccessOrEgress(AccessEgressType accessOrEgress) {
+    this.accessOrEgress = accessOrEgress;
+    return this;
   }
 
   public CarpoolingRequestBuilder withIsArriveByRequest(boolean isArriveByRequest) {
@@ -52,6 +59,7 @@ public class CarpoolingRequestBuilder {
 
   public CarpoolingRequest build() {
     return new CarpoolingRequest(
+      accessOrEgress,
       isArriveByRequest,
       passengerPickup,
       passengerDropoff,

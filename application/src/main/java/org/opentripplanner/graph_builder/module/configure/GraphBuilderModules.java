@@ -270,9 +270,7 @@ public class GraphBuilderModules {
       timetableRepository,
       transferRepository,
       issueStore,
-      config.maxTransferDuration,
-      config.transferRequests,
-      config.transferParametersForMode
+      config.regularTransferParameters()
     );
   }
 
@@ -290,7 +288,7 @@ public class GraphBuilderModules {
       linker,
       timetableRepository,
       issueStore,
-      config.maxTransferDuration.toSeconds() * WalkPreferences.DEFAULT.speed()
+      config.regularTransferParameters().maxDuration().toSeconds() * WalkPreferences.DEFAULT.speed()
     );
   }
 
@@ -382,7 +380,11 @@ public class GraphBuilderModules {
     awsTileSource.awsSecretKey = config.elevationBucket.secretKey;
     awsTileSource.awsBucketName = config.elevationBucket.bucketName;
 
-    return new NEDGridCoverageFactoryImpl(nedCacheDirectory, awsTileSource);
+    return new NEDGridCoverageFactoryImpl(
+      nedCacheDirectory,
+      config.elevationBucket.datumUrl,
+      awsTileSource
+    );
   }
 
   private static List<ElevationGridCoverageFactory> createDemGeotiffGridCoverageFactories(

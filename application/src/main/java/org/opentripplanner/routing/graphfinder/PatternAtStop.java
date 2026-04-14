@@ -40,10 +40,10 @@ public class PatternAtStop {
   public static PatternAtStop fromId(TransitService transitService, String id) {
     String[] parts = id.split(";", 2);
     Base64.Decoder decoder = Base64.getDecoder();
-    FeedScopedId stopId = FeedScopedId.parse(
+    FeedScopedId stopId = FeedScopedId.parseStrict(
       new String(decoder.decode(parts[0]), StandardCharsets.UTF_8)
     );
-    FeedScopedId patternId = FeedScopedId.parse(
+    FeedScopedId patternId = FeedScopedId.parseStrict(
       new String(decoder.decode(parts[1]), StandardCharsets.UTF_8)
     );
     return new PatternAtStop(
@@ -55,12 +55,13 @@ public class PatternAtStop {
   /**
    * Returns a list of stop times for the specific pattern at the stop.
    *
-   * @param transitService     An instance of the TransitService to be used for the timetable
-   *                           search
-   * @param startTime          Start time for the search.
-   * @param timeRange          Searches forward for timeRange from startTime
+   * @param transitService               An instance of the TransitService to be used for the timetable
+   *                                     search
+   * @param startTime                    Start time for the search.
+   * @param timeRange                    Searches forward for timeRange from startTime
    * @param numberOfDeparturesPerPattern Number of departures to fetch
-   * @param arrivalDeparture   Filter by arrivals, departures, or both
+   * @param arrivalDeparture             Filter by arrivals, departures, or both
+   *
    * @return A list of stop times
    */
   public List<TripTimeOnDate> getStoptimes(

@@ -25,4 +25,13 @@ public class CapacityFilter implements TripFilter {
 
     return hasCapacity;
   }
+
+  @Override
+  public boolean acceptsAccessEgress(
+    CarpoolTrip trip,
+    CarpoolingRequest request,
+    Duration searchWindow
+  ) {
+    return accepts(trip, request, searchWindow);
+  }
 }
