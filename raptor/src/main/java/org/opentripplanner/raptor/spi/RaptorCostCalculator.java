@@ -1,10 +1,13 @@
 package org.opentripplanner.raptor.spi;
 
-/**
- * The responsibility is to calculate multi-criteria value (like the generalized cost).
- * <p/>
- * The implementation should be immutable and thread safe.
- */
+///
+/// The responsibility is to calculate multi-criteria value (like the generalized cost).
+///
+/// The implementation should be immutable and thread safe.
+///
+/// See {@link RaptorCostConverter} for resolution and units for time/duration and
+/// c1(generalized-cost).
+///
 public interface RaptorCostCalculator<T extends RaptorTripSchedule> {
   /**
    * The cost is zero (0) if it's not calculated or if the cost "element" have no cost associated.
