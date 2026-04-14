@@ -419,7 +419,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
       for (NearbyStop sd : nearbyStops) {
         // Skip the origin stop, loop transfers are not needed.
         var nearbyStop = repository.getStopLocation(sd.stopId);
-        if (nearbyStop == stop) {
+        if (nearbyStop.equals(stop)) {
           continue;
         }
         if (nearbyStop instanceof RegularStop) {
@@ -495,7 +495,7 @@ public class DirectTransferGenerator implements GraphBuilderModule {
     for (NearbyStop sd : nearbyStops) {
       var nearbyStop = repository.getStopLocation(sd.stopId);
       // Skip the origin stop, loop transfers are not needed.
-      if (nearbyStop == stop) {
+      if (nearbyStop.equals(stop)) {
         continue;
       }
       if (nearbyStop.transfersNotAllowed()) {
