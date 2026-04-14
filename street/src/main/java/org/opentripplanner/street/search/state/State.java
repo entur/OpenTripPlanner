@@ -29,17 +29,17 @@ public final class State implements AStarState<State, Edge, Vertex> {
   /* Data which is likely to change at most traversals */
 
   // the current time at this state, in milliseconds since UNIX epoch
-  protected final long time_ms;
+  final long time_ms;
 
   // accumulated weight up to this state
   public final double weight;
 
   // associate this state with a vertex in the graph
-  protected final Vertex vertex;
+  final Vertex vertex;
 
   // allow path reconstruction from states
   @Nullable
-  protected final State backState;
+  private final State backState;
 
   @Nullable
   public final Edge backEdge;
