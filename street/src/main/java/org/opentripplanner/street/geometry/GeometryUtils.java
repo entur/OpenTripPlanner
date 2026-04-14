@@ -1,15 +1,15 @@
 package org.opentripplanner.street.geometry;
 
+import static org.opentripplanner.utils.lang.DoubleUtils.doubleEquals;
+
 import com.google.common.collect.Iterables;
+import gnu.trove.list.array.TDoubleArrayList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import org.geojson.GeoJsonObject;
 import org.geojson.LngLatAlt;
 import org.locationtech.jts.algorithm.ConvexHull;
@@ -84,26 +84,36 @@ public class GeometryUtils {
   /// For the best performance and lowest number of allocations pass in an [Iterable] rather
   /// than a materialized [Collection].
   public static LineString concatenateLineStrings(Iterable<LineString> lineStrings) {
-    GeometryFactory factory = getGeometryFactory();
-    Predicate<Coordinate[]> nonZeroLength = coordinates -> coordinates.length != 0;
+    var coordinates = new TDoubleArrayList();
 
-    return factory.createLineString(
-      StreamSupport.stream(lineStrings.spliterator(), false)
-        .filter(Objects::nonNull)
-        .map(LineString::getCoordinates)
-        .filter(nonZeroLength)
-        .<CoordinateArrayListSequence>collect(
-          CoordinateArrayListSequence::new,
-          (acc, segment) -> {
-            if ((acc.size() == 0 || !acc.getCoordinate(acc.size() - 1).equals(segment[0]))) {
-              acc.extend(segment);
-            } else {
-              acc.extend(segment, 1);
-            }
-          },
-          (head, tail) -> head.extend(tail.toCoordinateArray())
-        )
-    );
+    for (var ls : lineStrings) {
+      if (ls == null || ls.isEmpty()) {
+        continue;
+      }
+      var seq = ls.getCoordinateSequence();
+      for (var i = 0; i < seq.size(); i++) {
+        double x = seq.getX(i);
+        double y = seq.getY(i);
+
+        // the very first coordinate is always added
+        // the non-first ones of the following ones, too
+        if (coordinates.isEmpty() || i != 0) {
+          coordinates.add(x);
+          coordinates.add(y);
+        } else {
+          // the first coordinate of each following linestring is checked if it's a duplicate
+          // of the previous one's last one
+          double prevX = coordinates.get(coordinates.size() - 2);
+          double prevY = coordinates.get(coordinates.size() - 1);
+
+          if (!(doubleEquals(prevX, x) && doubleEquals(prevY, y))) {
+            coordinates.add(x);
+            coordinates.add(y);
+          }
+        }
+      }
+    }
+      return makeLineString(coordinates.toArray());
   }
 
   public static LineString addStartEndCoordinatesToLineString(
