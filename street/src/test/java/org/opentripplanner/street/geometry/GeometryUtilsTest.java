@@ -233,7 +233,7 @@ public class GeometryUtilsTest {
 
   @Test
   void sumDistances() {
-    var meters = GeometryUtils.sumDistances(new Coordinate[]{BERLIN, HAMBURG});
+    var meters = GeometryUtils.sumDistances(new Coordinate[] { BERLIN, HAMBURG });
     assertEquals(255_384.0, meters, 0.5);
   }
 

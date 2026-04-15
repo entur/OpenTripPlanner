@@ -49,7 +49,7 @@ public class GeometryUtils {
   }
 
   public static LineString makeLineString(double... coords) {
-    var seq= CSF.create(coords, 2);
+    var seq = CSF.create(coords, 2);
     return GF.createLineString(seq);
   }
 
@@ -70,8 +70,7 @@ public class GeometryUtils {
   /// Convert an iterable of T by applying a mapping function to each element and concatenating the
   /// resulting [LineString]s.
   ///
-  /// For the best performance and lowest number of allocations pass in an [Iterable] rather
-  /// than a materialized [Collection].
+  /// See [GeometryUtils#concatenateLineStrings]
   public static <T> LineString concatenateLineStrings(
     Iterable<T> inputObjects,
     Function<T, LineString> mapper
@@ -80,6 +79,9 @@ public class GeometryUtils {
   }
 
   /// Concatenate a number of [LineString]s.
+  ///
+  /// This method also ensures that if the first coordinate of a consecutive linestring is identical
+  /// with the last one of the previous linestring, it is only added once to the result.
   ///
   /// For the best performance and lowest number of allocations pass in an [Iterable] rather
   /// than a materialized [Collection].
@@ -97,10 +99,7 @@ public class GeometryUtils {
 
         // the very first coordinate is always added
         // the non-first ones of the following ones, too
-        if (coordinates.isEmpty() || i != 0) {
-          coordinates.add(x);
-          coordinates.add(y);
-        } else {
+        if (!coordinates.isEmpty() && i == 0) {
           // the first coordinate of each following linestring is checked if it's a duplicate
           // of the previous one's last one
           double prevX = coordinates.get(coordinates.size() - 2);
@@ -110,13 +109,16 @@ public class GeometryUtils {
             coordinates.add(x);
             coordinates.add(y);
           }
+        } else {
+          coordinates.add(x);
+          coordinates.add(y);
         }
       }
     }
-      return makeLineString(coordinates.toArray());
+    return makeLineString(coordinates.toArray());
   }
 
-  public static LineString addStartEndCoordinatesToLineString(
+  static LineString addStartEndCoordinatesToLineString(
     Coordinate startCoord,
     LineString lineString,
     Coordinate endCoord
