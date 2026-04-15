@@ -4,19 +4,15 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
+    "dev": "npm run codegen && vite",
+    "build": "npm run codegen && npm run lint && npm run check-format && tsc && vite build",
     "test": "vitest --root src/",
     "coverage": "vitest run --root src/ --coverage",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "check-format": "prettier --check \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "preview": "vite preview",
-    "prebuild": "npm run codegen && npm run lint && npm run check-format",
-    "predev": "npm run codegen",
-    "codegen-preprocess": "graphql-codegen --config codegen-preprocess.ts",
-    "precodegen": "npm run codegen-preprocess",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --config codegen-preprocess.ts && graphql-codegen --config codegen.ts"
   },
   "dependencies": {
     "@googlemaps/polyline-codec": "1.0.28",
@@ -53,9 +49,9 @@
     "globals": "17.4.0",
     "jsdom": "29.0.0",
     "prettier": "3.8.1",
-    "typescript": "5.9.3",
-    "typescript-eslint": "8.57.1",
-    "vite": "8.0.1",
+    "typescript": "6.0.2",
+    "typescript-eslint": "8.58.0",
+    "vite": "8.0.5",
     "vitest": "4.1.0"
   }
 }

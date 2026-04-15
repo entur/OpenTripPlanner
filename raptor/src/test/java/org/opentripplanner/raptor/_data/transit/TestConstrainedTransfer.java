@@ -41,7 +41,7 @@ class TestConstrainedTransfer
   }
 
   @Override
-  public int tripIndex() {
+  public int tripScheduleIndex() {
     return targetTripIndex;
   }
 

@@ -1068,9 +1068,7 @@ public class StreetEdge
       weight += modeReluctance * request.turnReluctance() * turnDuration;
     }
 
-    if (!traverseMode.isInCar()) {
-      s1.incrementWalkDistance(getDistanceWithElevation());
-    }
+    s1.incrementTraversalDistanceMeters(getDistanceWithElevation());
 
     if (costExtension != null) {
       weight += costExtension.calculateExtraCost(s0, length_mm, traverseMode);

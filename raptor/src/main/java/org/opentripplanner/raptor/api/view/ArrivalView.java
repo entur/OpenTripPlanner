@@ -5,6 +5,7 @@ import static org.opentripplanner.raptor.api.model.RaptorValueType.C2;
 
 import java.util.function.IntFunction;
 import javax.annotation.Nullable;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
@@ -140,18 +141,13 @@ public interface ArrivalView<T extends RaptorTripSchedule> {
 
   /* Egress */
 
-  /** @return true if destination arrival, otherwise false. */
-  default boolean arrivedAtDestination() {
-    return false;
-  }
-
   default EgressPathView egressPath() {
     throw new UnsupportedOperationException();
   }
 
   boolean arrivedOnBoard();
 
-  default TripScheduleStopPosition subsequentBoardingConstraint() {
+  default RaptorTripScheduleStopPosition subsequentBoardingConstraint() {
     throw new UnsupportedOperationException();
   }
 
