@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.modes.AllowTransitModeFilter;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
+import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.ContainsMatcher;
 import org.opentripplanner.transit.model.filter.expr.EqualityMatcher;
@@ -79,7 +80,7 @@ public class TripOnServiceDateMatcherFactory {
 
     if (!selector.transportModes().includeEverything()) {
       var transportModeFilter = AllowTransitModeFilter.of(
-        selector.transportModes().get().stream().toList()
+        selector.transportModes().get().stream().map(NarrowedTransitMode::of).toList()
       );
       expr.matches(
         new GenericUnaryMatcher<>("transportMode", (TripOnServiceDate tripTime) ->
