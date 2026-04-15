@@ -87,7 +87,9 @@ public class CanceledTripsFilterMapper {
   }
 
   @Nullable
-  public static List<MainAndSubMode> toMainAndSubModes(Collection<TransitMode> transitModes) {
+  public static List<MainAndSubMode> toMainAndSubModes(
+    @Nullable Collection<TransitMode> transitModes
+  ) {
     if (transitModes == null) {
       return null;
     }
