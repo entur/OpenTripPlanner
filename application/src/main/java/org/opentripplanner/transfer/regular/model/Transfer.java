@@ -1,12 +1,11 @@
 package org.opentripplanner.transfer.regular.model;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
@@ -49,17 +48,12 @@ public class Transfer {
     this(toStopIndex, distanceMeters, modes, null);
   }
 
-  public List<Coordinate> getCoordinates() {
-    List<Coordinate> coordinates = new ArrayList<>();
+  public LineString getGeometry() {
     if (edges == null) {
-      return coordinates;
+      return GeometryUtils.getGeometryFactory().createLineString();
+    } else {
+      return GeometryUtils.concatenateLineStrings(edges, Edge::getGeometry);
     }
-    for (Edge edge : edges) {
-      if (edge.getGeometry() != null) {
-        coordinates.addAll((Arrays.asList(edge.getGeometry().getCoordinates())));
-      }
-    }
-    return coordinates;
   }
 
   public int getToStop() {
