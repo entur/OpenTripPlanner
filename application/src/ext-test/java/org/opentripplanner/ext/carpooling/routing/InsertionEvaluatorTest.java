@@ -268,20 +268,44 @@ class InsertionEvaluatorTest {
     assertNull(result);
   }
 
+  /**
+   * Given two viable insertion positions with different total trip durations,
+   * the evaluator should select the one with the shorter total.
+   *
+   * Trip: SOUTH → CENTER → NORTH (baseline: 10 + 10 = 20 min)
+   * Passenger: pickup at EAST, dropoff at WEST
+   *
+   * Position (1,2) modified route: SOUTH → EAST → WEST → CENTER → NORTH
+   *   segments: 8 + 4 + 9 + 10(reused) = 31 min
+   *
+   * Position (2,3) modified route: SOUTH → CENTER → EAST → WEST → NORTH
+   *   segments: 10(reused) + 3 + 4 + 5 = 22 min  ← shorter, should be selected
+   */
   @Test
-  void findOptimalInsertion_selectsMinimumAdditionalDuration() {
-    var trip = createTripWithDeviationBudget(Duration.ofMinutes(20), OSLO_CENTER, OSLO_NORTH);
+  void findBestInsertion_selectsShorterTotalTripDuration() {
+    var stop = createStopAt(OSLO_CENTER, Duration.ofMinutes(30));
+    var trip = createTripWithStops(OSLO_SOUTH, List.of(stop), OSLO_NORTH, Duration.ofMinutes(30));
+    var tripWithVertices = createTripWithVertices(trip);
 
     final Map<Pair<WgsCoordinate>, GraphPath<State, Edge, Vertex>> pathsMap = new HashMap<>(
       Map.of(
+        // Baseline segments
+        new Pair<>(OSLO_SOUTH, OSLO_CENTER),
+        createGraphPath(Duration.ofMinutes(10)),
         new Pair<>(OSLO_CENTER, OSLO_NORTH),
         createGraphPath(Duration.ofMinutes(10)),
-        new Pair<>(OSLO_CENTER, OSLO_EAST),
-        createGraphPath(Duration.ofMinutes(4)),
+        // Position (1,2) new segments
+        new Pair<>(OSLO_SOUTH, OSLO_EAST),
+        createGraphPath(Duration.ofMinutes(8)),
         new Pair<>(OSLO_EAST, OSLO_WEST),
-        createGraphPath(Duration.ofMinutes(5)),
+        createGraphPath(Duration.ofMinutes(4)),
+        new Pair<>(OSLO_WEST, OSLO_CENTER),
+        createGraphPath(Duration.ofMinutes(9)),
+        // Position (2,3) new segments
+        new Pair<>(OSLO_CENTER, OSLO_EAST),
+        createGraphPath(Duration.ofMinutes(3)),
         new Pair<>(OSLO_WEST, OSLO_NORTH),
-        createGraphPath(Duration.ofMinutes(6))
+        createGraphPath(Duration.ofMinutes(5))
       )
     );
 
@@ -289,13 +313,25 @@ class InsertionEvaluatorTest {
     CarpoolRouter routingFunction = (from, to) ->
       pathsMap.get(new Pair<>(getCoordinate(from), getCoordinate(to)));
 
-    var result = findOptimalInsertion(trip, OSLO_EAST, OSLO_WEST, routingFunction);
+    var viablePositions = List.of(new InsertionPosition(1, 2), new InsertionPosition(2, 3));
+
+    var evaluator = new InsertionEvaluator(
+      linkingContext,
+      streetVertexUtils,
+      routingFunction,
+      Duration.ZERO
+    );
+    var result = evaluator.findBestInsertion(
+      tripWithVertices,
+      viablePositions,
+      OSLO_EAST,
+      OSLO_WEST
+    );
 
     assertNotNull(result);
-    // Should have selected one of the evaluated insertions
-    // The exact additional duration depends on which position was evaluated first
-    assertTrue(result.additionalDuration().compareTo(Duration.ofMinutes(20)) <= 0);
-    assertTrue(result.additionalDuration().compareTo(Duration.ZERO) > 0);
+    assertEquals(2, result.pickupPosition());
+    assertEquals(3, result.dropoffPosition());
+    assertEquals(Duration.ofMinutes(22), result.totalTripDuration());
   }
 
   @Test
@@ -369,27 +405,13 @@ class InsertionEvaluatorTest {
 
     // Note: With real State objects, exact durations will have minor rounding differences
     // (typically 1-2 seconds per edge due to millisecond rounding in StreetEdge.doTraverse())
-    // The baseline should be approximately 10 minutes (within 10 seconds tolerance)
-    assertTrue(
-      Math.abs(result.durationBetweenOriginAndDestination().toSeconds() - 600) < 10,
-      "Baseline should be approximately 10 min (within 10s), got " +
-        result.durationBetweenOriginAndDestination()
-    );
-
-    // CRITICAL: Total duration should be sum of NEW segments, NOT baseline duration
+    // CRITICAL: Total driving duration should be sum of NEW segments, NOT baseline duration
     // Total = 3 + 2 + 4 = 9 minutes (approximately, with rounding)
     // If bug exists, segment A→C would incorrectly use baseline (10 min) → total would be wrong
     assertTrue(
-      Math.abs(result.totalDuration().toSeconds() - 540) < 10,
-      "Total duration should be approximately 9 min (within 10s), got " + result.totalDuration()
-    );
-
-    // Additional duration should be negative (this insertion is actually faster!)
-    // This is realistic for insertions that "shortcut" part of the baseline route
-    assertTrue(
-      result.additionalDuration().isNegative(),
-      "Additional duration should be negative (insertion is faster), got " +
-        result.additionalDuration()
+      Math.abs(result.totalTripDuration().toSeconds() - 540) < 10,
+      "Total driving duration should be approximately 9 min (within 10s), got " +
+        result.totalTripDuration()
     );
 
     // Routing was called at least 4 times (1 baseline + 3 new segments minimum)
@@ -448,8 +470,7 @@ class InsertionEvaluatorTest {
     // Routing was called for baseline and new segments
     assertTrue(callCount[0] >= 4, "Should have called routing at least 4 times");
 
-    // Total duration should be positive
-    assertTrue(result.totalDuration().compareTo(Duration.ZERO) > 0);
-    assertTrue(result.durationBetweenOriginAndDestination().compareTo(Duration.ZERO) > 0);
+    // Total driving duration should be positive
+    assertTrue(result.totalTripDuration().compareTo(Duration.ZERO) > 0);
   }
 }
