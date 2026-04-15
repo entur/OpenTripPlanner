@@ -322,9 +322,7 @@ Result of finding optimal passenger insertion:
 - **pickupPosition**: Where to insert passenger pickup (index)
 - **dropoffPosition**: Where to insert passenger dropoff (index)
 - **segments**: Routed path segments for modified route
-- **baselineDuration**: Original trip duration
-- **totalDuration**: Modified trip duration (with passenger)
-- **additionalDuration**: Extra time added (= totalDuration - baselineDuration)
+- **totalTripDuration**: Total trip duration including driving and stop delays, computed from route segments
 
 ## Performance Characteristics
 

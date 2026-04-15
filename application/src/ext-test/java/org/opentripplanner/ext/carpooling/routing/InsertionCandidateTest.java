@@ -18,41 +18,25 @@ class InsertionCandidateTest {
   private static final Duration STOP_DURATION = Duration.ofMinutes(2);
 
   @Test
-  void additionalDuration_calculatesCorrectly() {
+  void totalTripDuration_calculatesFromSegments() {
+    // Simple trip origin → destination, with passenger pickup and dropoff inserted:
+    // origin → pickup (5 min) → dropoff (10 min) → destination (8 min)
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var segments = createGraphPaths(3);
+    var originToPickup = createGraphPath(Duration.ofMinutes(5));
+    var pickupToDropoff = createGraphPath(Duration.ofMinutes(10));
+    var dropoffToDestination = createGraphPath(Duration.ofMinutes(8));
 
     var candidate = new InsertionCandidate(
       trip,
       1,
       2,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
+      List.of(originToPickup, pickupToDropoff, dropoffToDestination),
       STOP_DURATION,
       null
     );
 
-    assertEquals(Duration.ofMinutes(5), candidate.additionalDuration());
-  }
-
-  @Test
-  void additionalDuration_zeroAdditional_returnsZero() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var segments = createGraphPaths(2);
-
-    var candidate = new InsertionCandidate(
-      trip,
-      1,
-      2,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(10),
-      STOP_DURATION,
-      null
-    );
-
-    assertEquals(Duration.ZERO, candidate.additionalDuration());
+    // 5 + 2 (stop) + 10 + 2 (stop) + 8 = 27 minutes
+    assertEquals(Duration.ofMinutes(27), candidate.totalTripDuration());
   }
 
   @Test
@@ -60,16 +44,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(5);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      2,
-      4,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 2, 4, segments, STOP_DURATION, null);
 
     var pickupSegments = candidate.getPickupSegments();
     assertEquals(2, pickupSegments.size());
@@ -81,16 +56,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      0,
-      2,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 0, 2, segments, STOP_DURATION, null);
 
     var pickupSegments = candidate.getPickupSegments();
     assertTrue(pickupSegments.isEmpty());
@@ -101,16 +67,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(5);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      1,
-      3,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null);
 
     var sharedSegments = candidate.getSharedSegments();
     assertEquals(2, sharedSegments.size());
@@ -122,16 +79,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      1,
-      2,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 1, 2, segments, STOP_DURATION, null);
 
     var sharedSegments = candidate.getSharedSegments();
     assertEquals(1, sharedSegments.size());
@@ -142,16 +90,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(5);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      1,
-      3,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null);
 
     var dropoffSegments = candidate.getDropoffSegments();
     assertEquals(2, dropoffSegments.size());
@@ -163,16 +102,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      1,
-      3,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null);
 
     var dropoffSegments = candidate.getDropoffSegments();
     assertTrue(dropoffSegments.isEmpty());
@@ -183,21 +113,12 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(
-      trip,
-      1,
-      2,
-      segments,
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(15),
-      STOP_DURATION,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 1, 2, segments, STOP_DURATION, null);
 
     var str = candidate.toString();
     assertTrue(str.contains("pickup@1"));
     assertTrue(str.contains("dropoff@2"));
-    assertTrue(str.contains("300s"));
+    assertTrue(str.contains("duration="));
     assertTrue(str.contains("segments=3"));
   }
 
@@ -212,16 +133,7 @@ class InsertionCandidateTest {
     var sharedDuration = GraphPathUtils.calculateDuration(sharedPath);
 
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var candidate = new InsertionCandidate(
-      trip,
-      0,
-      1,
-      List.of(sharedPath),
-      Duration.ofMinutes(10),
-      Duration.ofMinutes(10),
-      stopDuration,
-      null
-    );
+    var candidate = new InsertionCandidate(trip, 0, 1, List.of(sharedPath), stopDuration, null);
 
     assertEquals(Duration.ofMinutes(10), sharedDuration);
     assertEquals(Duration.ZERO, candidate.getDurationUntilDepartureWithPassenger());
@@ -247,8 +159,6 @@ class InsertionCandidateTest {
       1,
       2,
       List.of(pickupPath, sharedPath),
-      Duration.ofMinutes(20),
-      Duration.ofMinutes(26),
       stopDuration,
       null
     );
@@ -283,8 +193,6 @@ class InsertionCandidateTest {
       2,
       4,
       List.of(pickup0, pickup1, shared0, shared1),
-      Duration.ofMinutes(30),
-      Duration.ofMinutes(40),
       stopDuration,
       null
     );
@@ -316,8 +224,6 @@ class InsertionCandidateTest {
       0,
       2,
       List.of(shared0, shared1),
-      Duration.ofMinutes(20),
-      Duration.ofMinutes(22),
       Duration.ofMinutes(1),
       null
     );
@@ -326,8 +232,6 @@ class InsertionCandidateTest {
       0,
       2,
       List.of(shared0, shared1),
-      Duration.ofMinutes(20),
-      Duration.ofMinutes(30),
       Duration.ofMinutes(5),
       null
     );

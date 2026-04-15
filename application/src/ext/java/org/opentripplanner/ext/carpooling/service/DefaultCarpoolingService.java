@@ -264,7 +264,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
           );
         })
         .filter(Objects::nonNull)
-        .sorted(Comparator.comparing(InsertionCandidate::additionalDuration))
+        .sorted(Comparator.comparing(InsertionCandidate::totalTripDuration))
         .limit(DEFAULT_MAX_CARPOOL_DIRECT_RESULTS)
         .toList();
 
