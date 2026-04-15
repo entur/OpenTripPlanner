@@ -31,7 +31,6 @@ import org.opentripplanner.street.model.edge.BoardingLocationToStopLink;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
-import org.opentripplanner.street.model.edge.StreetTransitStopLink;
 import org.opentripplanner.street.model.vertex.OsmBoardingLocationVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
@@ -104,11 +103,6 @@ public class OsmBoardingLocationsModule implements GraphBuilderModule {
     int successes = 0;
 
     for (TransitStopVertex ts : graph.getVerticesOfType(TransitStopVertex.class)) {
-      // if the street is already linked there is no need to link it again,
-      // could happen if using the prune isolated island
-      if (ts.getOutgoing().stream().anyMatch(StreetTransitStopLink.class::isInstance)) {
-        continue;
-      }
       // only connect transit stops that are not part of a pathway network
       if (!ts.hasPathways()) {
         var stop = stopResolver.getStop(ts.getId());
