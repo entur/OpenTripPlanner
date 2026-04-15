@@ -1,5 +1,7 @@
 package org.opentripplanner.raptorlegacy._data.transit;
 
+import static org.opentripplanner.raptorlegacy._data.RaptorTestConstants.createDeprecatedUnsupportedFeatureException;
+
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -19,6 +21,7 @@ import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripPattern;
+import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.raptorlegacy._data.RaptorTestConstants;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
@@ -181,6 +184,11 @@ public class TestTransitData
     int routeIndex
   ) {
     return getRoute(routeIndex).transferConstraintsReverseSearch();
+  }
+
+  @Override
+  public RaptorTripScheduleReference tripScheduleReference(TestTripSchedule trip) {
+    throw createDeprecatedUnsupportedFeatureException();
   }
 
   public TestRoute getRoute(int index) {

@@ -82,6 +82,11 @@ public final class TripScheduleWithOffset implements TripSchedule {
   }
 
   @Override
+  public int tripScheduleIndex() {
+    return tripIndexForDates;
+  }
+
+  @Override
   public LocalDate getServiceDate() {
     if (tripTimes == null) {
       this.findTripTimes();

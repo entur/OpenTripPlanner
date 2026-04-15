@@ -3,13 +3,16 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals;
 import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 
 import gnu.trove.map.TIntObjectMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.TIntSet;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
+import org.opentripplanner.raptor.rangeraptor.internalapi.OnBoardTripAccessPathsForRoute;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.raptor.util.BitSetIterator;
@@ -27,6 +30,8 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 public final class McStopArrivals<T extends RaptorTripSchedule> {
 
   private final ParetoSet<McStopArrival<T>>[] arrivals;
+  private final TIntObjectMap<OnBoardTripAccessPathsForRoute<T>> onBoardTripArrivalsByRouteQueue;
+
   private final BitSet touchedStops;
 
   private final DebugHandlerFactory<T> debugHandlerFactory;
@@ -42,6 +47,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
   ) {
     //noinspection unchecked
     this.arrivals = (ParetoSet<McStopArrival<T>>[]) new ParetoSet[nStops];
+    this.onBoardTripArrivalsByRouteQueue = new TIntObjectHashMap<>();
     this.touchedStops = new BitSet(nStops);
     this.comparator = comparatorFactory.compareArrivalTimeRoundAndCost();
     this.debugHandlerFactory = debugHandlerFactory;
@@ -131,6 +137,31 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
       arrivals[it.next()].markAtEndOfSet();
     }
     touchedStops.clear();
+  }
+
+  @Nullable
+  public OnBoardTripAccessPathsForRoute<T> consumeOnBoardStopArrivals(int routeIndex) {
+    OnBoardTripAccessPathsForRoute<T> arrivals = null;
+    if (onBoardTripArrivalsByRouteQueue.containsKey(routeIndex)) {
+      arrivals = onBoardTripArrivalsByRouteQueue.get(routeIndex);
+      onBoardTripArrivalsByRouteQueue.remove(routeIndex);
+    }
+    return arrivals;
+  }
+
+  public void addOnBoardTripArrival(McStopArrival<T> arrival) {
+    var boardingConstraint = arrival.subsequentBoardingConstraint();
+    var access = onBoardTripArrivalsByRouteQueue.get(boardingConstraint.routeIndex());
+    if (access == null) {
+      access = new OnBoardTripAccessPathsForRoute<>();
+      onBoardTripArrivalsByRouteQueue.put(boardingConstraint.routeIndex(), access);
+    }
+    access.add(arrival);
+
+    // Then update the state, both touchedStops and init the pareto-set for the given stop to
+    // prevent NPE when the state is fetched later. The set is empty, which is ok.
+    findOrCreateSet(arrival.stop());
+    touchedStops.set(arrival.stop());
   }
 
   /* private methods */

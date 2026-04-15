@@ -22,7 +22,7 @@ public interface RaptorBoardOrAlightEvent<T extends RaptorTripSchedule> {
    * <p>
    * If not found {@link RaptorConstants#NOT_FOUND} is returned.
    */
-  int tripIndex();
+  int tripScheduleIndex();
 
   /**
    * This i a reference to the trip found.
