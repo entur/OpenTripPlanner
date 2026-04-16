@@ -196,6 +196,13 @@ data:
           "hideFeedId": true,
           "maxNumberOfResultFields": 600000
         },
+        "warmup": {
+          "api": "transmodel",
+          "from": { "lat": 59.9109, "lon": 10.7530 },
+          "to": { "lat": 59.9302, "lon": 10.7127 },
+          "accessModes": ["WALK", "BIKE", "CAR_TO_PARK"],
+          "egressModes": ["WALK", "BIKE", "WALK"]
+        },
         "timetableUpdates": {
           "purgeExpiredData": false,
           "maxSnapshotFrequency": "2s"
