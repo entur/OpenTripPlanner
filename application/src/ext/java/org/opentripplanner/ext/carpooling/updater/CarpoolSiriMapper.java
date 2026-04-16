@@ -1,5 +1,8 @@
 package org.opentripplanner.ext.carpooling.updater;
 
+import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_ONBOARD_COUNT;
+import static org.opentripplanner.ext.carpooling.model.CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
+
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.ZonedDateTime;
@@ -34,10 +37,6 @@ public class CarpoolSiriMapper {
   private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
-  /** Default total capacity (including driver) when SIRI data has no capacity information. */
-  public static final int DEFAULT_TOTAL_CAPACITY = 5;
-  /** Default onboard count per stop (1 = driver only) when SIRI data has no occupancy information. */
-  public static final int DEFAULT_ONBOARD_COUNT = 1;
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
   // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
   // run-away memory use if it by error ends up in global repositories.
@@ -121,7 +120,7 @@ public class CarpoolSiriMapper {
    * Only the first element of each call's capacities list is inspected; additional
    * entries are ignored. Uses the value from the first call that has it. Logs a warning
    * if different calls report different capacity values. Returns
-   * {@link #DEFAULT_TOTAL_CAPACITY} if no call has capacity data or if the value is invalid.
+   * {@link CarpoolTrip#DEFAULT_TOTAL_CAPACITY} if no call has capacity data or if the value is invalid.
    */
   private int extractTotalCapacity(String tripId, List<EstimatedCall> calls) {
     Integer firstCapacity = null;
@@ -171,7 +170,7 @@ public class CarpoolSiriMapper {
   /**
    * Extracts the onboard count from the EstimatedCall's ExpectedDepartureOccupancies.
    * Only the first element of the occupancies list is inspected; additional entries are
-   * ignored. Returns {@link #DEFAULT_ONBOARD_COUNT} if not present or if the value is invalid.
+   * ignored. Returns {@link CarpoolStop#DEFAULT_ONBOARD_COUNT} if not present or if the value is invalid.
    */
   private int extractOnboardCount(String tripId, EstimatedCall call) {
     var occupancies = call.getExpectedDepartureOccupancies();

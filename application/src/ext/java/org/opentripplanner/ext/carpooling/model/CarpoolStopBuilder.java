@@ -28,7 +28,7 @@ public class CarpoolStopBuilder extends AbstractEntityBuilder<CarpoolStop, Carpo
   private ZonedDateTime expectedDepartureTime;
   private ZonedDateTime aimedDepartureTime;
   private int sequenceNumber;
-  private int onboardCount;
+  private int onboardCount = CarpoolStop.DEFAULT_ONBOARD_COUNT;
 
   CarpoolStopBuilder(FeedScopedId id, IntSupplier indexCounter) {
     super(id);
