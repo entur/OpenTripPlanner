@@ -7,21 +7,21 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 public class OnTripAccessArrival<T extends RaptorTripSchedule> {
 
   private final ArrivalView<T> accessStopArrival;
-  private final RaptorTripScheduleStopPosition boardingConstrant;
+  private final RaptorTripScheduleStopPosition boardingConstraint;
 
   public OnTripAccessArrival(
     ArrivalView<T> accessStopArrival,
-    RaptorTripScheduleStopPosition boardingConstrant
+    RaptorTripScheduleStopPosition boardingConstraint
   ) {
     this.accessStopArrival = accessStopArrival;
-    this.boardingConstrant = boardingConstrant;
+    this.boardingConstraint = boardingConstraint;
   }
 
   public ArrivalView<T> accessStopArrival() {
     return accessStopArrival;
   }
 
-  public RaptorTripScheduleStopPosition boardingConstrant() {
-    return boardingConstrant;
+  public RaptorTripScheduleStopPosition boardingConstraint() {
+    return boardingConstraint;
   }
 }

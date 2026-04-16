@@ -99,7 +99,7 @@ public interface RoutingStrategy<T extends RaptorTripSchedule> {
 
   private static RuntimeException createStartOnBoardAccessNotSupportedException() {
     return new UnsupportedOperationException(
-      "On-board trio access is not yet supported for this routing strategy"
+      "On-board trip access is not yet supported for this routing strategy"
     );
   }
 }

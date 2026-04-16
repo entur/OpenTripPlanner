@@ -90,7 +90,7 @@ public class Path<T extends RaptorTripSchedule> implements RaptorPath<T> {
 
   /**
    * Create a "dummy" path without legs. Can be used to test if a path is pareto optimal without
-   * creating the hole path.
+   * creating the whole path.
    */
   public static <T extends RaptorTripSchedule> RaptorPath<T> dummyPath(
     int iteration,

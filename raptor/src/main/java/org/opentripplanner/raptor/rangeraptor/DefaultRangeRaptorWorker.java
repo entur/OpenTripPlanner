@@ -232,7 +232,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
       // attempt to board using on-board trip access
       if (onBoardArrivals != null && onBoardArrivals.arrivalExistForStopPosition(stopPos)) {
         for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
-          var boarding = arrival.boardingConstrant();
+          var boarding = arrival.boardingConstraint();
           var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
           transitWorker.boardWithStartOnBoardAccess(arrival.accessStopArrival(), trip, stopPos);
         }
