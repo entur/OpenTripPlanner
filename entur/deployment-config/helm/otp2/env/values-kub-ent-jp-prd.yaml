@@ -18,7 +18,7 @@ resources:
   xmx: 20g
   xms: 20g
 
-maxConcurrentRoutingRequests: 6
+maxConcurrentRoutingRequests: 5
 
 environmentValues:
   mardukGcpBaseName: "gs://ror-otp-graphs-gcp2-production/"
