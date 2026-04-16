@@ -1,11 +1,55 @@
 package org.opentripplanner.osm.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class OsmNodeTest {
+
+  public static Stream<Arguments> entranceTestCases() {
+    var mainEntrance = new OsmNode();
+    mainEntrance.addTag("entrance", "main");
+
+    var trainStationEntrance = new OsmNode();
+    trainStationEntrance.addTag("railway", "train_station_entrance");
+
+    var subwayEntrance = new OsmNode();
+    subwayEntrance.addTag("railway", "subway_entrance");
+
+    var publicTransportEntrance = new OsmNode();
+    publicTransportEntrance.addTag("public_transport", "entrance");
+
+    var trainStationEntranceWithEntranceTag = new OsmNode();
+    trainStationEntranceWithEntranceTag.addTag("railway", "train_station_entrance");
+    trainStationEntranceWithEntranceTag.addTag("entrance", "main");
+
+    var notAnEntrance = new OsmNode();
+    notAnEntrance.addTag("entrance", "no");
+
+    var emergencyEntrance = new OsmNode();
+    notAnEntrance.addTag("entrance", "emergency");
+
+    return Stream.of(
+      Arguments.argumentSet("main entrance", mainEntrance, true, false),
+      Arguments.argumentSet("train station entrance", trainStationEntrance, true, true),
+      Arguments.argumentSet("subway entrance", subwayEntrance, true, true),
+      Arguments.argumentSet("public transport entrance", publicTransportEntrance, true, true),
+      Arguments.argumentSet(
+        "train station entrance with entrance tag",
+        trainStationEntranceWithEntranceTag,
+        true,
+        true
+      ),
+      Arguments.argumentSet("not an entrance", notAnEntrance, false, false),
+      Arguments.argumentSet("emergency entrance", emergencyEntrance, false, false)
+    );
+  }
 
   @Test
   public void isBarrier() {
@@ -55,28 +99,10 @@ public class OsmNodeTest {
     assertTrue(node.isTaggedBarrierCrossing());
   }
 
-  @Test
-  public void isEntrance() {
-    OsmNode node = new OsmNode();
-    node.addTag("entrance", "main");
-    assertTrue(node.isEntrance());
-    assertFalse(node.isStationEntrance());
-    node.addTag("railway", "train_station_entrance");
-    assertTrue(node.isEntrance());
-
-    node = new OsmNode();
-    node.addTag("railway", "train_station_entrance");
-    assertTrue(node.isEntrance());
-    assertTrue(node.isStationEntrance());
-
-    node = new OsmNode();
-    node.addTag("railway", "subway_entrance");
-    assertTrue(node.isEntrance());
-    assertTrue(node.isStationEntrance());
-
-    node = new OsmNode();
-    node.addTag("public_transport", "entrance");
-    assertTrue(node.isEntrance());
-    assertTrue(node.isStationEntrance());
+  @ParameterizedTest
+  @MethodSource("entranceTestCases")
+  public void isEntrance(OsmNode node, boolean entrance, boolean stationEntrance) {
+    assertEquals(entrance, node.isEntrance());
+    assertEquals(stationEntrance, node.isStationEntrance());
   }
 }
