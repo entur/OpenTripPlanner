@@ -49,27 +49,20 @@ public final class PassengerDelayConstraints {
     ) {
       int modifiedIndex = InsertionPosition.mapOriginalIndex(originalIndex, pickupPos, dropoffPos);
 
-      Duration originalTime = originalCumulativeDurations[originalIndex];
-      Duration modifiedTime = modifiedCumulativeDurations[modifiedIndex];
-      Duration delay = modifiedTime.minus(originalTime);
-
+      Duration delay = modifiedCumulativeDurations[modifiedIndex].minus(
+        originalCumulativeDurations[originalIndex]
+      );
       Duration stopBudget = stops.get(originalIndex).getDeviationBudget();
+
       if (delay.compareTo(stopBudget) > 0) {
         LOG.debug(
-          "Insertion rejected: stop at position {} delayed by {}s (budget: {}s)",
+          "Stop at position {} delayed by {}s exceeds budget of {}s",
           originalIndex,
           delay.getSeconds(),
           stopBudget.getSeconds()
         );
         return false;
       }
-
-      LOG.trace(
-        "Stop at position {} delay: {}s (acceptable, budget: {}s)",
-        originalIndex,
-        delay.getSeconds(),
-        stopBudget.getSeconds()
-      );
     }
 
     return true;
