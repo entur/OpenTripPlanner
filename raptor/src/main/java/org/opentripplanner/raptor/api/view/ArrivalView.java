@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.api.view;
 
 import static org.opentripplanner.raptor.api.model.RaptorValueType.C1;
 import static org.opentripplanner.raptor.api.model.RaptorValueType.C2;
+import static org.opentripplanner.raptor.api.model.RaptorValueType.ROUNDS;
 
 import java.util.function.IntFunction;
 import javax.annotation.Nullable;
@@ -166,40 +167,23 @@ public interface ArrivalView<T extends RaptorTripSchedule> {
    * Use this to create a {@code toString()} implementation.
    */
   default String asString() {
-    String arrival =
-      "[" +
+    String vector =
       TimeUtils.timeToStrCompact(arrivalTime()) +
+      " " +
+      ROUNDS.format(round()) +
       cost(c1(), RaptorCostCalculator.ZERO_COST, C1::format) +
-      cost(c2(), RaptorConstants.NOT_SET, C2::format) +
-      "]";
+      cost(c2(), RaptorConstants.NOT_SET, C2::format);
+
     return switch (arrivedBy()) {
-      case ACCESS -> String.format(
-        "Access { stop: %d, arrival: %s, path: %s }",
-        stop(),
-        arrival,
-        accessPath().access()
-      );
+      case ACCESS -> String.format("Access [%s] (%s)", vector, accessPath().access());
       case TRANSIT -> String.format(
-        "Transit { round: %d, stop: %d, arrival: %s, pattern: %s }",
-        round(),
-        stop(),
-        arrival,
-        transitPath().trip().pattern().debugInfo()
+        "Transit [%s] (%s ~ %s)",
+        vector,
+        transitPath().trip().pattern().debugInfo(),
+        stop()
       );
-      case TRANSFER -> String.format(
-        "Walk { round: %d, stop: %d, arrival: %s, path: %s }",
-        round(),
-        stop(),
-        arrival,
-        transfer()
-      );
-      case EGRESS -> String.format(
-        "Egress { round: %d, from-stop: %d, arrival: %s, path: %s }",
-        round(),
-        egressPath().egress().stop(),
-        arrival,
-        egressPath().egress()
-      );
+      case TRANSFER -> String.format("Transfer [%s] (%s)", vector, transfer());
+      case EGRESS -> String.format("Egress [%s] (%s)", vector, egressPath().egress());
     };
   }
 
