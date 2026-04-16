@@ -22,10 +22,10 @@ class ArrivalParetoSetComparatorFactoryTest {
   private static final int ARRIVAL_TIME_LATE = 13;
 
   private static final ArrivalParetoSetComparatorFactory<A> COMPARATOR_C1 =
-    ArrivalParetoSetComparatorFactory.factory(RelaxFunction.NORMAL, null);
+    ArrivalParetoSetComparatorFactory.of(RelaxFunction.NORMAL, null);
 
   private static final ArrivalParetoSetComparatorFactory<A> COMPARATOR_C1_AND_C2 =
-    ArrivalParetoSetComparatorFactory.factory(RelaxFunction.NORMAL, (left, right) -> left > right);
+    ArrivalParetoSetComparatorFactory.of(RelaxFunction.NORMAL, (left, right) -> left > right);
 
   @Test
   void compareArrivalTimeRoundAndCost() {
@@ -198,7 +198,7 @@ class ArrivalParetoSetComparatorFactoryTest {
       ARRIVED_ON_BOARD
     );
 
-    var subject = ArrivalParetoSetComparatorFactory.factory(relaxC1, null);
+    var subject = ArrivalParetoSetComparatorFactory.of(relaxC1, null);
 
     assertFalse(
       subject

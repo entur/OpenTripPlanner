@@ -216,7 +216,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   }
 
   private ArrivalParetoSetComparatorFactory<McStopArrival<T>> createFactoryParetoComparator() {
-    return ArrivalParetoSetComparatorFactory.factory(mcRequest().relaxC1(), dominanceFunctionC2());
+    return ArrivalParetoSetComparatorFactory.of(mcRequest().relaxC1(), dominanceFunctionC2());
   }
 
   private TIntObjectMap<ParetoSetEventListener<ArrivalView<T>>> createViaConnectionListeners() {

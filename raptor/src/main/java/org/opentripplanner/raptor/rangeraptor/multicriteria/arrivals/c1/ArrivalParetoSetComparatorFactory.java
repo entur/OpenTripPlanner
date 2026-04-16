@@ -22,7 +22,7 @@ public interface ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
    */
   ParetoComparator<T> compareArrivalTimeRoundCostAndOnBoardArrival();
 
-  static <T extends McStopArrival<?>> ArrivalParetoSetComparatorFactory<T> factory(
+  static <T extends McStopArrival<?>> ArrivalParetoSetComparatorFactory<T> of(
     final RelaxFunction relaxC1,
     @Nullable final DominanceFunction c2DominanceFunction
   ) {

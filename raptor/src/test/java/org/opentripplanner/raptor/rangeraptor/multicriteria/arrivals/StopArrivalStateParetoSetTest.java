@@ -64,7 +64,7 @@ public class StopArrivalStateParetoSetTest {
   );
   private static final ArrivalParetoSetComparatorFactory<
     McStopArrival<RaptorTripSchedule>
-  > COMPARATOR_FACTORY = ArrivalParetoSetComparatorFactory.factory(RelaxFunction.NORMAL, null);
+  > COMPARATOR_FACTORY = ArrivalParetoSetComparatorFactory.of(RelaxFunction.NORMAL, null);
 
   private ParetoSet<McStopArrival<RaptorTripSchedule>> subject = ParetoSet.of(
     COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost()
