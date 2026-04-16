@@ -43,13 +43,12 @@ public interface ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
     return new ArrivalParetoSetComparatorFactory<>() {
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundAndCost() {
-        return McStopArrival::compareBase;
+        return ArrivalParetoSetComparatorFactory::compareBase;
       }
 
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundCostAndOnBoardArrival() {
-        return (l, r) ->
-          McStopArrival.compareBase(l, r) || McStopArrival.compareArrivedOnBoard(l, r);
+        return (l, r) -> compareBase(l, r) || compareArrivedOnBoard(l, r);
       }
     };
   }
@@ -60,16 +59,15 @@ public interface ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
     return new ArrivalParetoSetComparatorFactory<>() {
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundAndCost() {
-        return (l, r) ->
-          McStopArrival.compareBase(l, r) || c2DominanceFunction.leftDominateRight(l.c2(), r.c2());
+        return (l, r) -> compareBase(l, r) || c2DominanceFunction.leftDominateRight(l.c2(), r.c2());
       }
 
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundCostAndOnBoardArrival() {
         return (
           (l, r) ->
-            McStopArrival.compareBase(l, r) ||
-            McStopArrival.compareArrivedOnBoard(l, r) ||
+            compareBase(l, r) ||
+            compareArrivedOnBoard(l, r) ||
             c2DominanceFunction.leftDominateRight(l.c2(), r.c2())
         );
       }
@@ -82,13 +80,12 @@ public interface ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
     return new ArrivalParetoSetComparatorFactory<>() {
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundAndCost() {
-        return (l, r) -> McStopArrival.relaxedCompareBase(rc1, l, r);
+        return (l, r) -> relaxedCompareBase(rc1, l, r);
       }
 
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundCostAndOnBoardArrival() {
-        return (l, r) ->
-          McStopArrival.relaxedCompareBase(rc1, l, r) || McStopArrival.compareArrivedOnBoard(l, r);
+        return (l, r) -> relaxedCompareBase(rc1, l, r) || compareArrivedOnBoard(l, r);
       }
     };
   }
@@ -102,18 +99,52 @@ public interface ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
         // If c2 dominates, then a slack is added to arrival-time and cost (c1)
         return (l, r) ->
           c2DominanceFunction.leftDominateRight(l.c2(), r.c2())
-            ? McStopArrival.relaxedCompareBase(relaxC1, l, r)
-            : McStopArrival.compareBase(l, r);
+            ? relaxedCompareBase(relaxC1, l, r)
+            : compareBase(l, r);
       }
 
       @Override
       public ParetoComparator<T> compareArrivalTimeRoundCostAndOnBoardArrival() {
         return (l, r) ->
           (c2DominanceFunction.leftDominateRight(l.c2(), r.c2())
-            ? McStopArrival.relaxedCompareBase(relaxC1, l, r)
-            : McStopArrival.compareBase(l, r)) ||
-          McStopArrival.compareArrivedOnBoard(l, r);
+            ? relaxedCompareBase(relaxC1, l, r)
+            : compareBase(l, r)) ||
+          compareArrivedOnBoard(l, r);
       }
     };
+  }
+
+  /**
+   * Compare arrivalTime, paretoRound and c1.
+   */
+  static boolean compareBase(McStopArrival<?> l, McStopArrival<?> r) {
+    // This is important with respect to performance. Using the short-circuit logical OR(||) is
+    // faster than bitwise inclusive OR(|) (even between boolean expressions)
+    return (
+      l.arrivalTime() < r.arrivalTime() || l.paretoRound() < r.paretoRound() || l.c1() < r.c1()
+    );
+  }
+
+  /**
+   * Compare arrivalTime, paretoRound and c1, relaxing arrivalTime and c1.
+   */
+  static boolean relaxedCompareBase(
+    final RelaxFunction relaxC1,
+    McStopArrival<?> l,
+    McStopArrival<?> r
+  ) {
+    return (
+      l.arrivalTime() < r.arrivalTime() ||
+      l.paretoRound() < r.paretoRound() ||
+      l.c1() < relaxC1.relax(r.c1())
+    );
+  }
+
+  /**
+   * Compare arrivedOnBoard. On-board arrival dominate arrive by transfer(foot) since
+   * you can continue on foot; hence has more options.
+   */
+  static boolean compareArrivedOnBoard(McStopArrival<?> l, McStopArrival<?> r) {
+    return l.arrivedOnBoard() && !r.arrivedOnBoard();
   }
 }

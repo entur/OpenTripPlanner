@@ -236,6 +236,101 @@ class ArrivalParetoSetComparatorFactoryTest {
     );
   }
 
+  @Test
+  void testCompareBase() {
+    // Same values for arrival-time, pareto-round and c1. Ignore c2 and arrivedOnBoard
+    assertFalse(
+      ArrivalParetoSetComparatorFactory.compareBase(
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_100, C1_100, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_100, C1_777, ARRIVED_ON_FOOT)
+      )
+    );
+    // Arrival-time is better
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.compareBase(
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_TWO, C1_777, C1_777, ARRIVED_ON_FOOT),
+        new A(ARRIVAL_TIME_LATE, PARETO_ROUND_ONE, C1_100, C1_100, ARRIVED_ON_BOARD)
+      )
+    );
+    // Pareto-round is better
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.compareBase(
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_777, C1_777, ARRIVED_ON_FOOT),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_TWO, C1_100, C1_100, ARRIVED_ON_BOARD)
+      )
+    );
+    // C1 is better
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.compareBase(
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_100, C1_777, ARRIVED_ON_FOOT),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_777, C1_100, ARRIVED_ON_BOARD)
+      )
+    );
+  }
+
+  @Test
+  void testCompareArrivedOnBoard() {
+    // Same values for arrivedOnBoard. Ignore arrival-time, pareto-round, c1 and c2
+    assertFalse(
+      ArrivalParetoSetComparatorFactory.compareArrivedOnBoard(
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_100, C1_100, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_LATE, PARETO_ROUND_TWO, C1_777, C1_777, ARRIVED_ON_BOARD)
+      )
+    );
+    // Arrived on-board is better
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.compareArrivedOnBoard(
+        new A(ARRIVAL_TIME_LATE, PARETO_ROUND_TWO, C1_777, C1_777, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, C1_100, C1_100, ARRIVED_ON_FOOT)
+      )
+    );
+  }
+
+  @Test
+  void testRelaxedCompareBase() {
+    int bestC1 = 600;
+    int okC1 = 899;
+    int rejectC1 = okC1 + 1;
+
+    RelaxFunction relaxC1 = GeneralizedCostRelaxFunction.of(1.25, 150);
+
+    // Test same values arrival-time, round and c1 should not dominate.
+    // Ignore better c2 and onBoardArrival
+    assertFalse(
+      ArrivalParetoSetComparatorFactory.relaxedCompareBase(
+        relaxC1,
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, rejectC1, C1_100, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, bestC1, C1_777, ARRIVED_ON_FOOT)
+      )
+    );
+
+    // Arrival-time better, other the same
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.relaxedCompareBase(
+        relaxC1,
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, rejectC1, C1_100, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_LATE, PARETO_ROUND_ONE, bestC1, C1_100, ARRIVED_ON_BOARD)
+      )
+    );
+
+    // Round better, other the same
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.relaxedCompareBase(
+        relaxC1,
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, rejectC1, C1_100, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_TWO, bestC1, C1_100, ARRIVED_ON_BOARD)
+      )
+    );
+    // C1 is better, other the same
+    assertTrue(
+      ArrivalParetoSetComparatorFactory.relaxedCompareBase(
+        relaxC1,
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, okC1, C1_100, ARRIVED_ON_BOARD),
+        new A(ARRIVAL_TIME_EARLY, PARETO_ROUND_ONE, bestC1, C1_100, ARRIVED_ON_BOARD)
+      )
+    );
+  }
+
   private static class A extends McStopArrival<TestTripSchedule> {
 
     int c2;

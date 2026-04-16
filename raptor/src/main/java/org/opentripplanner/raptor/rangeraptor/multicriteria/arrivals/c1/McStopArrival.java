@@ -1,6 +1,5 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1;
 
-import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
@@ -133,39 +132,5 @@ public abstract class McStopArrival<T extends RaptorTripSchedule> implements Arr
    */
   protected final int previousStop() {
     return previous.stop;
-  }
-
-  /**
-   * Compare arrivalTime, paretoRound and c1.
-   */
-  protected static boolean compareBase(McStopArrival<?> l, McStopArrival<?> r) {
-    // This is important with respect to performance. Using the short-circuit logical OR(||) is
-    // faster than bitwise inclusive OR(|) (even between boolean expressions)
-    return (
-      l.arrivalTime() < r.arrivalTime() || l.paretoRound() < r.paretoRound() || l.c1() < r.c1()
-    );
-  }
-
-  /**
-   * Compare arrivalTime, paretoRound and c1, relaxing arrivalTime and c1.
-   */
-  protected static boolean relaxedCompareBase(
-    final RelaxFunction relaxC1,
-    McStopArrival<?> l,
-    McStopArrival<?> r
-  ) {
-    return (
-      l.arrivalTime() < r.arrivalTime() ||
-      l.paretoRound() < r.paretoRound() ||
-      l.c1() < relaxC1.relax(r.c1())
-    );
-  }
-
-  /**
-   * Compare arrivedOnBoard. On-board arrival dominate arrive by transfer(foot) since
-   * you can continue on foot; hence has more options.
-   */
-  protected static boolean compareArrivedOnBoard(McStopArrival<?> l, McStopArrival<?> r) {
-    return l.arrivedOnBoard() && !r.arrivedOnBoard();
   }
 }
