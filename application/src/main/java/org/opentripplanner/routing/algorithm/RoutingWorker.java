@@ -42,7 +42,6 @@ import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,15 +59,6 @@ public class RoutingWorker {
 
   private RouteRequest request;
   private final OtpServerRequestContext serverContext;
-  /**
-   * The transit service time-zero normalized for the current search. All transit times are relative
-   * to a "time-zero". This enables us to use an integer(small memory footprint). The times are
-   * number for seconds past the {@code transitSearchTimeZero}. In the internal model all times are
-   * stored relative to the {@link java.time.LocalDate}, but to be able
-   * to compare trip times for different service days we normalize all times by calculating an
-   * offset. Now all times for the selected trip patterns become relative to the {@code
-   * transitSearchTimeZero}.
-   */
   private final ZonedDateTime transitSearchTimeZero;
   private final AdditionalSearchDays additionalSearchDays;
   private final TransitGroupPriorityService transitGroupPriorityService;
@@ -81,33 +71,17 @@ public class RoutingWorker {
 
   public RoutingWorker(
     OtpServerRequestContext serverContext,
-    RouteRequest orginalRequest,
+    RoutingWorkerRequest workerRequest,
     ZoneId zoneId
   ) {
-    this.request = orginalRequest.withPageCursor();
-
-    // For on-board access we need to amend the request to have an on-board access at the exact
-    // boarding time for the access. We do that here in the RoutingWorker because finding the exact
-    // boarding time requires using the transit service to look up timetable data.
-    if (this.request.isOnBoardAccessRequest()) {
-      this.request = amendOnBoardAccessRequestWithExactBoardingTime(
-        this.request,
-        serverContext.transitService(),
-        zoneId,
-        serverContext.raptorTuningParameters()
-      );
-    }
+    this.request = workerRequest.request();
+    this.transitSearchTimeZero = workerRequest.transitSearchTimeZero();
+    this.additionalSearchDays = workerRequest.additionalSearchDays();
 
     this.serverContext = serverContext;
     this.debugTimingAggregator = new DebugTimingAggregator(
       serverContext.meterRegistry(),
       request.preferences().system().tags()
-    );
-    this.transitSearchTimeZero = ServiceDateUtils.asStartOfService(request.dateTime(), zoneId);
-    this.additionalSearchDays = createAdditionalSearchDays(
-      serverContext.raptorTuningParameters(),
-      zoneId,
-      request
     );
     this.transitGroupPriorityService = TransitGroupPriorityService.of(
       request.preferences().transit().relaxTransitGroupPriority(),
@@ -200,23 +174,6 @@ public class RoutingWorker {
       debugTimingAggregator,
       serverContext.transitService(),
       pagingService
-    );
-  }
-
-  private static AdditionalSearchDays createAdditionalSearchDays(
-    RaptorTuningParameters raptorTuningParameters,
-    ZoneId zoneId,
-    RouteRequest request
-  ) {
-    var searchDateTime = ZonedDateTime.ofInstant(request.dateTime(), zoneId);
-    var maxWindow = raptorTuningParameters.dynamicSearchWindowCoefficients().maxWindow();
-
-    return new AdditionalSearchDays(
-      request.arriveBy(),
-      searchDateTime,
-      request.searchWindow(),
-      maxWindow,
-      request.preferences().system().maxJourneyDuration()
     );
   }
 
