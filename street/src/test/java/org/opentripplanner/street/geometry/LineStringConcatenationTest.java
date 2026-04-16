@@ -3,12 +3,13 @@ package org.opentripplanner.street.geometry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.street.geometry.GeometryUtils.makeLineString;
 
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 
-public class LinestringConcatenationTest {
+public class LineStringConcatenationTest {
 
   @Test
   void simpleConcatenate() {
@@ -29,7 +30,7 @@ public class LinestringConcatenationTest {
   }
 
   @Test
-  void manyLinestrings() {
+  void manyLineStrings() {
     var line = GeometryUtils.concatenateLineStrings(
       List.of(makeLineString(0, 0, 1, 1), makeLineString(2, 2, 3, 3), makeLineString(4, 4, 5, 5))
     );
@@ -51,6 +52,20 @@ public class LinestringConcatenationTest {
     );
 
     assertEquals("LINESTRING (0 0, 0 0, 1 1, 1 1, 2 2, 3 3, 3 3)", line.toString());
+  }
+
+  @Test
+  void nullsAreSkipped() {
+    var line = GeometryUtils.concatenateLineStrings(
+      Arrays.asList(null, makeLineString(0, 0, 1, 1), null)
+    );
+    assertEquals("LINESTRING (0 0, 1 1)", line.toString());
+  }
+
+  @Test
+  void emptyLineStrings() {
+    var line = GeometryUtils.concatenateLineStrings(List.of());
+    assertEquals("LINESTRING EMPTY", line.toString());
   }
 
   @Test
