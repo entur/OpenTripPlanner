@@ -9,7 +9,6 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
-import org.opentripplanner.ext.carpooling.updater.CarpoolSiriMapper;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
@@ -20,7 +19,7 @@ public class CarpoolTripTestData {
   private static final AtomicInteger ID_COUNTER = new AtomicInteger(0);
   private static final AtomicInteger AREA_STOP_COUNTER = new AtomicInteger(0);
 
-  private static final int DEFAULT_TOTAL_CAPACITY = CarpoolSiriMapper.DEFAULT_TOTAL_CAPACITY;
+  private static final int DEFAULT_TOTAL_CAPACITY = CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(10);
 
   /**

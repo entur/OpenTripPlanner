@@ -17,7 +17,7 @@ public class CarpoolTripBuilder extends AbstractEntityBuilder<CarpoolTrip, Carpo
   private ZonedDateTime endTime;
   private String provider;
   private Duration deviationBudget = Duration.ofMinutes(15);
-  private int totalCapacity;
+  private int totalCapacity = CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
   private List<CarpoolStop> stops = new ArrayList<>();
 
   public CarpoolTripBuilder(FeedScopedId id) {

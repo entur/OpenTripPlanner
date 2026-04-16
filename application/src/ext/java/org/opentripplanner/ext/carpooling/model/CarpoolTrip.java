@@ -57,6 +57,9 @@ public class CarpoolTrip
   extends AbstractTransitEntity<CarpoolTrip, CarpoolTripBuilder>
   implements LogInfo {
 
+  /** Default total capacity (including driver) when no capacity information is provided. */
+  public static final int DEFAULT_TOTAL_CAPACITY = 5;
+
   private final ZonedDateTime startTime;
   private final ZonedDateTime endTime;
   private final String provider;

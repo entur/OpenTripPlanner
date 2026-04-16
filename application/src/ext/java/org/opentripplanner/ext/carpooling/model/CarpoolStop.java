@@ -21,6 +21,9 @@ public class CarpoolStop
   extends AbstractTransitEntity<CarpoolStop, CarpoolStopBuilder>
   implements StopLocation {
 
+  /** Default onboard count per stop (1 = driver only) when no occupancy information is provided. */
+  public static final int DEFAULT_ONBOARD_COUNT = 1;
+
   private final int index;
   private final I18NString name;
   private final I18NString description;

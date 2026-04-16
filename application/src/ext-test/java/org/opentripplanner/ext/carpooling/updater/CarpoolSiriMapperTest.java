@@ -13,8 +13,8 @@ import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyD
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.stopTimesAreOutOfOrder;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasAimedTimesOnly;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasExpectedTimesOnly;
-import static org.opentripplanner.ext.carpooling.updater.CarpoolSiriMapper.DEFAULT_ONBOARD_COUNT;
-import static org.opentripplanner.ext.carpooling.updater.CarpoolSiriMapper.DEFAULT_TOTAL_CAPACITY;
+import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_ONBOARD_COUNT;
+import static org.opentripplanner.ext.carpooling.model.CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
 
 import org.junit.jupiter.api.Test;
 import uk.org.siri.siri21.EstimatedCall;
@@ -24,14 +24,14 @@ public class CarpoolSiriMapperTest {
   private final CarpoolSiriMapper mapper = new CarpoolSiriMapper();
 
   @Test
-  void mapSiriToCarpoolTrip_arrivalIsAfterDepartureTime_trowsIllegalArgumentException() {
+  void mapSiriToCarpoolTrip_arrivalIsAfterDepartureTime_throwsIllegalArgumentException() {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(arrivalIsAfterDepartureTime())
     );
   }
 
   @Test
-  void mapSiriToCarpoolTrip_lessThanTwoStops_trowsIllegalArgumentException() {
+  void mapSiriToCarpoolTrip_lessThanTwoStops_throwsIllegalArgumentException() {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(lessThanTwoStops())
     );
@@ -108,7 +108,7 @@ public class CarpoolSiriMapperTest {
   }
 
   @Test
-  void mapSiriToCarpoolTrip_stopTimesAreOutOfOrder_trowsIllegalArgumentException() {
+  void mapSiriToCarpoolTrip_stopTimesAreOutOfOrder_throwsIllegalArgumentException() {
     assertThrows(IllegalArgumentException.class, () ->
       mapper.mapSiriToCarpoolTrip(stopTimesAreOutOfOrder())
     );
