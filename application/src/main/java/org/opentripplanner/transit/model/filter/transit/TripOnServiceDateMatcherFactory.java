@@ -61,8 +61,6 @@ public class TripOnServiceDateMatcherFactory {
       TripOnServiceDateMatcherFactory::netexInternalPlanningCode
     );
     expr.atLeastOneMatch(request.includeAlterations(), TripOnServiceDateMatcherFactory::alteration);
-    expr.atLeastOneMatch(request.includeModes(), TripOnServiceDateMatcherFactory::mode);
-    expr.matchesNone(request.excludeModes(), TripOnServiceDateMatcherFactory::mode);
     return expr.build();
   }
 
