@@ -25,7 +25,7 @@ resources:
   xmx: 30g
   xms: 30g
 
-maxConcurrentRoutingRequests: 5
+maxConcurrentRoutingRequests: 6
 
 configMap:
   logbackConfig: env/logback.xml
