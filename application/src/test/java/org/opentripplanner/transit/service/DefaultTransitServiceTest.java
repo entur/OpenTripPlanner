@@ -296,6 +296,32 @@ class DefaultTransitServiceTest {
     }
 
     @Test
+    void filtersByAgencySelect() {
+      // SELECT AGENCY should return all canceled trips since they all belong to this same agency
+      var filter = TripOnServiceDateFilterRequest.of()
+        .addSelect(
+          TripOnServiceDateSelectRequest.of().withAgencies(List.of(AGENCY.getId())).build()
+        )
+        .build();
+      var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
+      var result = service.findCanceledTrips(request);
+      assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", result.toString());
+    }
+
+    @Test
+    void filtersByRoute() {
+      // TRIP uses route "R123" (id F:R123); selecting that route should return all canceled trips
+      var filter = TripOnServiceDateFilterRequest.of()
+        .addSelect(
+          TripOnServiceDateSelectRequest.of().withRoutes(List.of(TRIP.getRoute().getId())).build()
+        )
+        .build();
+      var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
+      var result = service.findCanceledTrips(request);
+      assertEquals("[TripOnServiceDate{F:123}, TripOnServiceDate{F:123}]", result.toString());
+    }
+
+    @Test
     void findCanceledBusTrips() {
       var filter = TripOnServiceDateFilterRequest.of()
         .addSelect(
