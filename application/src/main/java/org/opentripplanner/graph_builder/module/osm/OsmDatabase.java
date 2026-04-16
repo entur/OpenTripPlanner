@@ -80,6 +80,9 @@ public class OsmDatabase {
   /* All bike parking areas */
   private final List<OsmArea> bikeParkingAreas = new ArrayList<>();
 
+  /* All stop area relations */
+  private final List<OsmRelation> stopAreas = new ArrayList<>();
+
   /* Map of all area OSMWay for a given node */
   private final TLongObjectMap<Set<OsmWay>> areasForNode = new TLongObjectHashMap<>();
 
@@ -172,6 +175,10 @@ public class OsmDatabase {
 
   public Collection<OsmArea> getBikeParkingAreas() {
     return Collections.unmodifiableCollection(bikeParkingAreas);
+  }
+
+  public Collection<OsmRelation> getStopAreas() {
+    return Collections.unmodifiableCollection(stopAreas);
   }
 
   public Collection<Long> getTurnRestrictionWayIds() {
@@ -982,6 +989,8 @@ public class OsmDatabase {
    * @see "http://wiki.openstreetmap.org/wiki/Tag:public_transport%3Dstop_area"
    */
   private void processPublicTransportStopArea(OsmRelation relation) {
+    stopAreas.add(relation);
+
     Set<OsmEntity> platformAreas = new HashSet<>();
     Set<OsmNode> platformNodes = new HashSet<>();
     for (OsmRelationMember member : relation.getMembers()) {
@@ -990,10 +999,6 @@ public class OsmDatabase {
           var node = nodesById.get(member.getRef());
           if (node != null && node.isPlatformAccess()) {
             platformNodes.add(node);
-            if (node.isEntrance()) {
-              // mark it as a station entrance so it can be returned in walk step descriptions.
-              node.addTag("public_transport", "entrance");
-            }
           }
         }
         case WAY -> {

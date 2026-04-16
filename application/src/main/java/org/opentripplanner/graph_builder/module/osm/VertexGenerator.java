@@ -20,6 +20,7 @@ import org.opentripplanner.graph_builder.issues.BarrierIntersectingHighway;
 import org.opentripplanner.graph_builder.issues.DifferentLevelsSharingBarrier;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmLevel;
+import org.opentripplanner.osm.model.OsmMemberType;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.graph.Graph;
@@ -61,6 +62,12 @@ class VertexGenerator {
    * The map from node to the split vertex for each routable entity connecting it.
    */
   private final Map<OsmNode, Map<OsmEntity, OsmVertex>> splitVerticesOnBarriers = new HashMap<>();
+
+  /**
+   *
+   */
+  private final Set<OsmNode> entrancesInStopAreas = new HashSet<>();
+
   private final OsmDatabase osmdb;
   private final Set<String> boardingAreaRefTags;
   private final Boolean includeOsmStationEntrances;
@@ -134,7 +141,10 @@ class VertexGenerator {
         }
       }
 
-      if (includeOsmStationEntrances && node.isStationEntrance()) {
+      if (
+        includeOsmStationEntrances &&
+        (node.isStationEntrance() || entrancesInStopAreas.contains(node))
+      ) {
         String ref = node.getTag("ref");
         iv = vertexFactory.stationEntrance(
           nid,
@@ -304,6 +314,21 @@ class VertexGenerator {
           OsmNode node = osmdb.getNode(nodes.get(i));
           if (node != null) {
             nodesInBarrierWays.put(node, way);
+          }
+        }
+      }
+    }
+  }
+
+  void initEntrancesInStopAreas() {
+    if (includeOsmStationEntrances) {
+      for (var relation : osmdb.getStopAreas()) {
+        for (var member : relation.getMembers()) {
+          if (member.getType() == OsmMemberType.NODE) {
+            var node = osmdb.getNode(member.getRef());
+            if (node != null && node.isEntrance()) {
+              entrancesInStopAreas.add(node);
+            }
           }
         }
       }
