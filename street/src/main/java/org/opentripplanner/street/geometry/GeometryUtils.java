@@ -105,14 +105,12 @@ public class GeometryUtils {
           double prevX = coordinates.get(coordinates.size() - 2);
           double prevY = coordinates.get(coordinates.size() - 1);
 
-          if (!(doubleEquals(prevX, x) && doubleEquals(prevY, y))) {
-            coordinates.add(x);
-            coordinates.add(y);
+          if (doubleEquals(prevX, x) && doubleEquals(prevY, y)) {
+            continue;
           }
-        } else {
-          coordinates.add(x);
-          coordinates.add(y);
         }
+        coordinates.add(x);
+        coordinates.add(y);
       }
     }
     return makeLineString(coordinates.toArray());
