@@ -3,6 +3,7 @@ package org.opentripplanner.ext.carpooling.routing;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
 import org.opentripplanner.street.geometry.DirectionUtils;
@@ -256,27 +257,13 @@ public class InsertionPositionFinder {
       stopDuration
     );
 
-    // Check delays at each existing stop (exclude origin at index 0)
-    for (int originalIndex = 1; originalIndex < originalCoords.size(); originalIndex++) {
-      int modifiedIndex = InsertionPosition.mapOriginalIndex(originalIndex, pickupPos, dropoffPos);
-
-      Duration originalTime = originalBeelineTimes[originalIndex];
-      Duration modifiedTime = modifiedBeelineTimes[modifiedIndex];
-      Duration beelineDelay = modifiedTime.minus(originalTime);
-
-      Duration stopBudget = trip.stops().get(originalIndex).getDeviationBudget();
-      // If even the optimistic beeline estimate exceeds threshold, actual routing will too
-      if (beelineDelay.compareTo(stopBudget) > 0) {
-        LOG.trace(
-          "Stop at position {} has beeline delay {}s (exceeds {}s budget)",
-          originalIndex,
-          beelineDelay.getSeconds(),
-          stopBudget.getSeconds()
-        );
-        return false;
-      }
-    }
-
-    return true;
+    // If even the optimistic beeline estimate exceeds a stop's budget, actual routing will too
+    return PassengerDelayConstraints.satisfiesConstraints(
+      originalBeelineTimes,
+      modifiedBeelineTimes,
+      pickupPos,
+      dropoffPos,
+      trip.stops()
+    );
   }
 }
