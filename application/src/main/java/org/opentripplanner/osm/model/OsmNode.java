@@ -9,6 +9,11 @@ import org.locationtech.jts.geom.Coordinate;
 
 public class OsmNode extends OsmEntity {
 
+  private static final Set<String> RAILWAY_STATION_ENTRANCE_TAGS = Set.of(
+    "subway_entrance",
+    "train_station_entrance"
+  );
+
   public double lat;
   public double lon;
 
@@ -51,8 +56,7 @@ public class OsmNode extends OsmEntity {
    */
   public boolean isStationEntrance() {
     return (
-      isOneOfTags("railway", Set.of("subway_entrance", "train_station_entrance")) ||
-      isTag("public_transport", "entrance")
+      isOneOfTags("railway", RAILWAY_STATION_ENTRANCE_TAGS) || isTag("public_transport", "entrance")
     );
   }
 
