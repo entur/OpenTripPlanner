@@ -11,6 +11,7 @@ import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.network.Route;
 
@@ -38,26 +39,26 @@ class CostedTransferAcrossNetworksTest implements PlanTestConstants, FareTestCon
       List.of(
         // transferring from A to A is free
         FareTransferRule.of()
-          .withId(TimetableRepositoryForTest.id("t1"))
+          .withId(FeedScopedIdForTestFactory.id("t1"))
           .withFromLegGroup(LEG_GROUP_A)
           .withToLegGroup(LEG_GROUP_A)
           .build(),
         // transferring from B to B is also free
         FareTransferRule.of()
-          .withId(TimetableRepositoryForTest.id("t2"))
+          .withId(FeedScopedIdForTestFactory.id("t2"))
           .withFromLegGroup(LEG_GROUP_B)
           .withToLegGroup(LEG_GROUP_B)
           .build(),
         // transferring from A to B costs one EUR
         FareTransferRule.of()
-          .withId(TimetableRepositoryForTest.id("t3"))
+          .withId(FeedScopedIdForTestFactory.id("t3"))
           .withFromLegGroup(LEG_GROUP_A)
           .withToLegGroup(LEG_GROUP_B)
           .withFareProducts(TRANSFER_1)
           .build(),
         // transferring from B to A is free
         FareTransferRule.of()
-          .withId(TimetableRepositoryForTest.id("t4"))
+          .withId(FeedScopedIdForTestFactory.id("t4"))
           .withFromLegGroup(LEG_GROUP_B)
           .withToLegGroup(LEG_GROUP_A)
           .build()

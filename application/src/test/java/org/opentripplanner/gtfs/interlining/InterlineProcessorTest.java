@@ -17,6 +17,7 @@ import org.opentripplanner.gtfs.mapping.StaySeatedNotAllowed;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.transfer.constrained.internal.DefaultConstrainedTransferService;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.StopPattern;
@@ -163,7 +164,7 @@ class InterlineProcessorTest implements PlanTestConstants {
     var stopPattern = new StopPattern(stopTimes);
 
     var tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator());
-    return TripPattern.of(TimetableRepositoryForTest.id(tripId))
+    return TripPattern.of(FeedScopedIdForTestFactory.id(tripId))
       .withRoute(trip.getRoute())
       .withStopPattern(stopPattern)
       .withScheduledTimeTableBuilder(builder -> builder.addTripTimes(tripTimes))

@@ -27,7 +27,7 @@ import org.opentripplanner.transfer.constrained.model.StationTransferPoint;
 import org.opentripplanner.transfer.constrained.model.StopTransferPoint;
 import org.opentripplanner.transfer.constrained.model.TransferConstraint;
 import org.opentripplanner.transfer.constrained.model.TripTransferPoint;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -35,7 +35,7 @@ import org.opentripplanner.transit.model.site.RegularStop;
 
 public class ConstrainedBoardingSearchTest {
 
-  private static final FeedScopedId ID = TimetableRepositoryForTest.id("ID");
+  private static final FeedScopedId ID = FeedScopedIdForTestFactory.id("ID");
   private static final TransferConstraint GUARANTEED_CONSTRAINT = TransferConstraint.of()
     .guaranteed()
     .build();

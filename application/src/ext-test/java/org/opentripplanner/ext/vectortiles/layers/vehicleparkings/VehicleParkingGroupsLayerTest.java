@@ -28,11 +28,11 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 
 public class VehicleParkingGroupsLayerTest {
 
-  private static final FeedScopedId ID = TimetableRepositoryForTest.id("id");
+  private static final FeedScopedId ID = FeedScopedIdForTestFactory.id("id");
 
   private VehicleParkingGroup vehicleParkingGroup;
   private VehicleParking vehicleParking;

@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.core.model.basic.Cost.costOfSeconds;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,7 +25,7 @@ import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.search.intersection_model.DrivingDirection;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalModel;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 
 class StreetSearchRequestMapperTest {
 
@@ -332,7 +332,7 @@ class StreetSearchRequestMapperTest {
     var dateTime = Instant.parse("2022-11-10T10:00:00Z");
     var rentalDuration = Duration.ofHours(2);
     builder.withDateTime(dateTime);
-    var from = new GenericLocation(null, TimetableRepositoryForTest.id("STOP"), null, null);
+    var from = new GenericLocation(null, FeedScopedIdForTestFactory.id("STOP"), null, null);
     builder.withFrom(from);
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
     builder.withTo(to);

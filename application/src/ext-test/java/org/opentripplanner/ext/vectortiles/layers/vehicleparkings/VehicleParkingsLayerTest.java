@@ -30,12 +30,12 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 
 public class VehicleParkingsLayerTest {
 
-  private static final FeedScopedId ID = TimetableRepositoryForTest.id("id");
+  private static final FeedScopedId ID = FeedScopedIdForTestFactory.id("id");
 
   private VehicleParking vehicleParking;
 

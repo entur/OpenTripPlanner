@@ -11,6 +11,7 @@ import org.opentripplanner.ext.flex.trip.UnscheduledTrip;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.TestStateBuilder;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
@@ -42,7 +43,7 @@ class FlexAccessEgressBookingTest {
     int alightPos,
     int requestedBookingTime
   ) {
-    var trip = UnscheduledTrip.of(TimetableRepositoryForTest.id("flex"))
+    var trip = UnscheduledTrip.of(FeedScopedIdForTestFactory.id("flex"))
       .withTrip(TimetableRepositoryForTest.trip("t1").build())
       .withStopTimes(stopTimes)
       .build();

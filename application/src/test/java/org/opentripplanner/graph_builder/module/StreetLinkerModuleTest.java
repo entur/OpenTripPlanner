@@ -8,7 +8,7 @@ import static org.opentripplanner._support.geometry.Coordinates.KONGSBERG_PLATFO
 import static org.opentripplanner.street.linking.VisibilityMode.TRAVERSE_AREA_EDGES;
 import static org.opentripplanner.street.model.StreetTraversalPermission.CAR;
 import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.util.Arrays;
 import java.util.List;

@@ -7,7 +7,7 @@ import static org.opentripplanner.ext.flex.FlexStopTimesForTest.area;
 import static org.opentripplanner.ext.flex.FlexStopTimesForTest.areaWithContinuousStopping;
 import static org.opentripplanner.ext.flex.FlexStopTimesForTest.regularStop;
 import static org.opentripplanner.ext.flex.FlexStopTimesForTest.regularStopWithContinuousStopping;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;

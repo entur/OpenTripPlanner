@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.StopTime;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
@@ -31,7 +32,7 @@ class RaptorTransitDataTest {
     stopTime.setStop(stop);
     var stopPattern = new StopPattern(List.of(stopTime));
     var route = TimetableRepositoryForTest.route("1").build();
-    TRIP_PATTERN = TripPattern.of(TimetableRepositoryForTest.id("P1"))
+    TRIP_PATTERN = TripPattern.of(FeedScopedIdForTestFactory.id("P1"))
       .withRoute(route)
       .withStopPattern(stopPattern)
       .build()

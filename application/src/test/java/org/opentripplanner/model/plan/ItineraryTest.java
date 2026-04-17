@@ -19,6 +19,7 @@ import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.SystemNotice;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.street.search.TraverseMode;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
@@ -74,7 +75,7 @@ public class ItineraryTest implements PlanTestConstants {
     assertEquals(newTime(T11_00), firstLeg.startTime());
     assertEquals(newTime(T11_10), firstLeg.endTime());
     assertEquals(TransitMode.BUS, result.transitLeg(0).mode());
-    assertEquals(TimetableRepositoryForTest.id("55"), firstLeg.trip().getId());
+    assertEquals(FeedScopedIdForTestFactory.id("55"), firstLeg.trip().getId());
     assertEquals(A_TO_B_DISTANCE, firstLeg.distanceMeters(), DISTANCE_DELTA);
 
     assertEquals("A ~ BUS 55 11:00 11:10 ~ B [C₁720]", result.toStr());
@@ -99,7 +100,7 @@ public class ItineraryTest implements PlanTestConstants {
     assertEquals(newTime(T11_05), firstLeg.startTime());
     assertEquals(newTime(T11_15), firstLeg.endTime());
     assertEquals(TransitMode.RAIL, result.transitLeg(0).mode());
-    assertEquals(TimetableRepositoryForTest.id("20"), firstLeg.trip().getId());
+    assertEquals(FeedScopedIdForTestFactory.id("20"), firstLeg.trip().getId());
     assertEquals(A_TO_B_DISTANCE, firstLeg.distanceMeters(), DISTANCE_DELTA);
 
     assertEquals("A ~ RAIL R2 11:05 11:15 ~ B [C₁720]", result.toStr());

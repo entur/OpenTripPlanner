@@ -6,7 +6,7 @@ import static org.opentripplanner.graph_builder.issue.api.DataImportIssueStore.N
 import static org.opentripplanner.street.geometry.GeometryUtils.makeLineString;
 import static org.opentripplanner.street.geometry.SphericalDistanceLibrary.distance;
 import static org.opentripplanner.street.geometry.SphericalDistanceLibrary.moveMeters;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.util.List;
 import java.util.stream.IntStream;

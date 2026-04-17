@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.Frequency;
 import org.opentripplanner.model.StopTime;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -28,7 +29,7 @@ public class FrequencyEntryTest {
 
     int time = 0;
     for (int i = 0; i < STOP_NUM; ++i) {
-      FeedScopedId id = TimetableRepositoryForTest.id(i + "");
+      FeedScopedId id = FeedScopedIdForTestFactory.id(i + "");
 
       RegularStop stop = TimetableRepositoryForTest.of().stop(id.getId(), 0.0, 0.0).build();
 

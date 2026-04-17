@@ -13,6 +13,7 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.service.SiteRepository;
 
@@ -34,7 +35,7 @@ class AreaStopTest {
 
   private static AreaStopBuilder areaStopBuilder() {
     return SiteRepository.of()
-      .areaStop(TimetableRepositoryForTest.id(ID))
+      .areaStop(FeedScopedIdForTestFactory.id(ID))
       .withName(NAME)
       .withDescription(DESCRIPTION)
       .withUrl(URL)
@@ -69,7 +70,7 @@ class AreaStopTest {
   @Test
   void sameAs() {
     assertTrue(SUBJECT.sameAs(SUBJECT.copy().build()));
-    assertFalse(SUBJECT.sameAs(SUBJECT.copy().withId(TimetableRepositoryForTest.id("X")).build()));
+    assertFalse(SUBJECT.sameAs(SUBJECT.copy().withId(FeedScopedIdForTestFactory.id("X")).build()));
     assertFalse(SUBJECT.sameAs(SUBJECT.copy().withName(new NonLocalizedString("X")).build()));
     assertFalse(
       SUBJECT.sameAs(SUBJECT.copy().withDescription(new NonLocalizedString("X")).build())

@@ -5,7 +5,7 @@ import static org.opentripplanner.ext.flex.FlexStopTimesForTest.area;
 import static org.opentripplanner.ext.flex.FlexStopTimesForTest.regularStop;
 import static org.opentripplanner.street.model.StreetModelForTest.V1;
 import static org.opentripplanner.street.model.StreetModelForTest.V2;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import java.util.List;
