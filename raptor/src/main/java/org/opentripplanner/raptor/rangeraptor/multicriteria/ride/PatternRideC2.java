@@ -7,7 +7,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * A {@link PatternRide} with support for c1 {@code generalized-cost} and c2 (custom-use-case-cost).
+ * A {@link AbstractPatternRide} with support for c1 {@code generalized-cost} and c2 (custom-use-case-cost).
  */
 public record PatternRideC2<T extends RaptorTripSchedule>(
   McStopArrival<T> prevArrival,
@@ -19,9 +19,9 @@ public record PatternRideC2<T extends RaptorTripSchedule>(
   int c2,
   int tripSortIndex,
   T trip
-) implements PatternRide<T> {
+) implements AbstractPatternRide<T> {
   /**
-   * See {@link PatternRide} for the pareto comparison strategy used by this comparator.
+   * See {@link AbstractPatternRide} for the pareto comparison strategy used by this comparator.
    */
   public static <T extends RaptorTripSchedule> ParetoComparator<
     PatternRideC2<T>

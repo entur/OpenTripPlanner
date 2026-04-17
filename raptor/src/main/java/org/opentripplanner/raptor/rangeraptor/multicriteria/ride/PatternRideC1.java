@@ -7,7 +7,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * A {@link PatternRide} with support for c1 {@code generalized-cost}.
+ * A {@link AbstractPatternRide} with support for c1 {@code generalized-cost}.
  */
 public record PatternRideC1<T extends RaptorTripSchedule>(
   McStopArrival<T> prevArrival,
@@ -18,7 +18,7 @@ public record PatternRideC1<T extends RaptorTripSchedule>(
   int relativeC1,
   int tripSortIndex,
   T trip
-) implements PatternRide<T> {
+) implements AbstractPatternRide<T> {
   // Pareto vector: [relativeCost, tripSortIndex]
 
   public static <T extends RaptorTripSchedule> PatternRideFactory<T, PatternRideC1<T>> factory() {
@@ -48,7 +48,7 @@ public record PatternRideC1<T extends RaptorTripSchedule>(
   }
 
   /**
-   * See {@link PatternRide} for the pareto comparison strategy used by this comparator.
+   * See {@link AbstractPatternRide} for the pareto comparison strategy used by this comparator.
    */
   public static <T extends RaptorTripSchedule> ParetoComparator<
     PatternRideC1<T>

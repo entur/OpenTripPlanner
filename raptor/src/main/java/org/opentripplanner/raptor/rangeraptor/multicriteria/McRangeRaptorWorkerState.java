@@ -14,7 +14,7 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArriv
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.path.DestinationArrivalPaths;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.spi.IntIterator;
@@ -137,7 +137,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
    * Set the time at a transit stop iff it is optimal.
    */
   void transitToStop(
-    final PatternRide<T> ride,
+    final AbstractPatternRide<T> ride,
     final int alightStop,
     final int alightTime,
     final int alightSlack
@@ -211,7 +211,12 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     arrivals.addStopArrival(arrival);
   }
 
-  private int calculateC1(PatternRide<T> ride, int alightStop, int alightTime, int alightSlack) {
+  private int calculateC1(
+    AbstractPatternRide<T> ride,
+    int alightStop,
+    int alightTime,
+    int alightSlack
+  ) {
     return calculatorGeneralizedCost.transitArrivalCost(
       ride.boardC1(),
       alightSlack,

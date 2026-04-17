@@ -6,7 +6,7 @@ import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
 /**
- * This factory creates new {@link PatternRide}s and merge in transit-group-priority ids
+ * This factory creates new {@link AbstractPatternRide}s and merge in transit-group-priority ids
  * into c2.
  */
 public class TransitGroupPriorityRideFactory<T extends RaptorTripSchedule>

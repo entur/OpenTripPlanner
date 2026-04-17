@@ -57,5 +57,5 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSet;
  * <p>
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public interface PatternRide<T extends RaptorTripSchedule>
+public interface AbstractPatternRide<T extends RaptorTripSchedule>
   extends PatternRideView<T, McStopArrival<T>> {}

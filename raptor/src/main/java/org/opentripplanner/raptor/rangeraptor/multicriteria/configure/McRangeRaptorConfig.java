@@ -26,7 +26,7 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStop
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC1;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC2;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC1;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC2;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
@@ -145,7 +145,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
         );
   }
 
-  private <R extends PatternRide<T>> RoutingStrategy<T> createTransitWorkerStrategy(
+  private <R extends AbstractPatternRide<T>> RoutingStrategy<T> createTransitWorkerStrategy(
     McRangeRaptorWorkerState<T> state,
     PatternRideFactory<T, R> factory,
     ParetoComparator<R> patternRideComparator
@@ -202,7 +202,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
     }
   }
 
-  private <R extends PatternRide<T>> ParetoSet<R> createPatternRideParetoSet(
+  private <R extends AbstractPatternRide<T>> ParetoSet<R> createPatternRideParetoSet(
     ParetoComparator<R> comparator
   ) {
     return ParetoSet.of(comparator, context().debugFactory().paretoSetPatternRideListener());
