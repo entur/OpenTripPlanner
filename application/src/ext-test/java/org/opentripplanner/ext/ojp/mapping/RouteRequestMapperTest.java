@@ -4,7 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import de.vdv.ojp20.LineDirectionFilterStructure;
 import de.vdv.ojp20.ModeAndModeOfOperationFilterStructure;
