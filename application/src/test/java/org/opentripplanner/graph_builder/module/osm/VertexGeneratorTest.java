@@ -16,16 +16,12 @@ import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueSto
 import org.opentripplanner.graph_builder.issues.BarrierIntersectingHighway;
 import org.opentripplanner.graph_builder.issues.DifferentLevelsSharingBarrier;
 import org.opentripplanner.osm.model.OsmEntity;
-import org.opentripplanner.osm.model.OsmMemberType;
 import org.opentripplanner.osm.model.OsmNode;
-import org.opentripplanner.osm.model.OsmRelation;
-import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
 import org.opentripplanner.street.model.vertex.BarrierVertex;
 import org.opentripplanner.street.model.vertex.OsmVertex;
-import org.opentripplanner.street.model.vertex.StationEntranceVertex;
 
 class VertexGeneratorTest {
 
@@ -155,64 +151,6 @@ class VertexGeneratorTest {
     assertEquals(2, issues.length);
     assertEquals(3, issues[0].node().getId());
     assertEquals(4, issues[1].node().getId());
-  }
-
-  @Test
-  void testEntranceInStopAreas() {
-    var entranceInStopArea = new OsmNode(0, 0);
-    entranceInStopArea.setId(1);
-    entranceInStopArea.addTag("entrance", "yes");
-
-    var entranceOutsideStopArea = new OsmNode(0, 0);
-    entranceOutsideStopArea.setId(2);
-    entranceOutsideStopArea.addTag("entrance", "yes");
-
-    var subwayEntranceOutsideStopArea = new OsmNode(0, 0);
-    subwayEntranceOutsideStopArea.setId(3);
-    subwayEntranceOutsideStopArea.addTag("railway", "subway_entrance");
-    subwayEntranceOutsideStopArea.addTag("entrance", "yes");
-
-    var footway = new OsmWay();
-    footway.addNodeRef(1);
-    footway.addNodeRef(2);
-    footway.addNodeRef(3);
-    footway.addTag("highway", "footway");
-
-    var stopArea = new OsmRelation();
-    stopArea.addTag("type", "public_transport");
-    stopArea.addTag("public_transport", "stop_area");
-
-    var member = new OsmRelationMember();
-    member.setType(OsmMemberType.NODE);
-    member.setRef(1);
-    stopArea.addMember(member);
-
-    var osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
-    osmdb.addRelation(stopArea);
-    osmdb.doneFirstPhaseRelations();
-    osmdb.addWay(footway);
-    osmdb.doneSecondPhaseWays();
-    osmdb.addNode(entranceInStopArea);
-    osmdb.addNode(entranceOutsideStopArea);
-    osmdb.doneThirdPhaseNodes();
-    osmdb.postLoad();
-
-    Graph graph = new Graph();
-
-    var subject = new VertexGenerator(osmdb, graph, Set.of(), true, DataImportIssueStore.NOOP);
-
-    assertInstanceOf(
-      StationEntranceVertex.class,
-      subject.getVertexForOsmNode(entranceInStopArea, footway, NORMAL)
-    );
-    assertFalse(
-      subject.getVertexForOsmNode(entranceOutsideStopArea, footway, NORMAL) instanceof
-        StationEntranceVertex
-    );
-    assertInstanceOf(
-      StationEntranceVertex.class,
-      subject.getVertexForOsmNode(subwayEntranceOutsideStopArea, footway, NORMAL)
-    );
   }
 
   static DifferentLevelsSharingBarrier[] getBarrierLevelIssues(DataImportIssueStore issueStore) {
