@@ -16,6 +16,7 @@ import org.opentripplanner.transit.api.request.TripTimeOnDateRequestBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.filter.selector.FilterRequest;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -140,7 +141,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void selectByAgency() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -157,7 +158,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void selectByRoute() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(TripTimeOnDateSelectRequest.of().withRoutes(List.of(ROUTE_1.getId())).build())
         .build();
       var request = request().withTransitFilters(List.of(filter)).build();
@@ -169,7 +170,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void selectByMode() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
@@ -186,7 +187,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void notByAgency() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -203,7 +204,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void notByRoute() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(TripTimeOnDateSelectRequest.of().withRoutes(List.of(ROUTE_2.getId())).build())
         .build();
 
@@ -216,7 +217,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void notByMode() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
@@ -234,7 +235,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void selectAndNot() {
       // Select RAIL and BUS, but exclude agency a1 (RAIL)
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withTransportModes(
@@ -263,7 +264,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void multipleSelectsOrBetween() {
       // Two select criteria: agency a1 OR agency a3
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -287,7 +288,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void selectWithAgencyAndMode() {
       // Select items where agency is a1 AND mode is RAIL
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -309,14 +310,14 @@ class TripTimeOnDateMatcherFactoryTest {
     void multipleFiltersOrBetween() {
       // Two filters: filter1 selects agency a1, filter2 selects agency a2
       // OR between filters
-      var filter1 = TripTimeOnDateFilterRequest.of()
+      var filter1 = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
             .build()
         )
         .build();
-      var filter2 = TripTimeOnDateFilterRequest.of()
+      var filter2 = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_2.getAgency().getId()))
@@ -334,7 +335,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void notWithAgencyAndMode() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -355,7 +356,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void multipleNotsInFilter() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -381,7 +382,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void selectWithMultipleAgencies() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId(), ROUTE_2.getAgency().getId()))
@@ -399,14 +400,14 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void multipleFiltersSelectAndNot() {
-      var filter1 = TripTimeOnDateFilterRequest.of()
+      var filter1 = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
             .build()
         )
         .build();
-      var filter2 = TripTimeOnDateFilterRequest.of()
+      var filter2 = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_2.getAgency().getId()))
@@ -427,7 +428,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void multipleFiltersWithSelectNotAndSelect() {
-      var filter1 = TripTimeOnDateFilterRequest.of()
+      var filter1 = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
@@ -439,7 +440,7 @@ class TripTimeOnDateMatcherFactoryTest {
             .build()
         )
         .build();
-      var filter2 = TripTimeOnDateFilterRequest.of()
+      var filter2 = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.FERRY)))
@@ -461,7 +462,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void emptyFilterMatchesEverything() {
       // Empty filter (no select, no not) -> matches everything
-      var filter = TripTimeOnDateFilterRequest.of().build();
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of().build();
 
       var request = request().withTransitFilters(List.of(filter)).build();
       var matcher = TripTimeOnDateMatcherFactory.of(request);
@@ -484,7 +485,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void emptySelectSelectorMatchesEverything() {
       // An empty selector matches everything
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(TripTimeOnDateSelectRequest.of().build())
         .build();
 
@@ -498,7 +499,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void emptyNotSelectorMatchesNothing() {
       // An empty not-selector matches everything, so everything is excluded
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(TripTimeOnDateSelectRequest.of().build())
         .build();
 
@@ -512,7 +513,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void emptySelectAndEmptyNotMatchesNothing() {
       // Empty select matches everything, empty not excludes everything -> nothing
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(TripTimeOnDateSelectRequest.of().build())
         .addNot(TripTimeOnDateSelectRequest.of().build())
         .build();
@@ -527,7 +528,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void transitFiltersViaRequest() {
       // Test that transit filters work when set through the request builder
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -544,7 +545,7 @@ class TripTimeOnDateMatcherFactoryTest {
 
     @Test
     void selectorSelectAndFlatExcludeMode() {
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -567,7 +568,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void selectorSelectAndFlatIncludeAgency() {
       // Selector selects RAIL, flat filter includes only agency a2
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
@@ -591,7 +592,7 @@ class TripTimeOnDateMatcherFactoryTest {
     void selectorNotAndFlatIncludeRoute() {
       // Selector excludes agency a1, flat filter includes only ROUTE_1
       // Both must pass (AND), so ROUTE_1 is excluded despite being in flat include
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addNot(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId()))
@@ -614,7 +615,7 @@ class TripTimeOnDateMatcherFactoryTest {
     @Test
     void selectorSelectAndFlatExcludeAgency() {
       // Selector selects agencies a1 and a2, flat filter excludes agency a1
-      var filter = TripTimeOnDateFilterRequest.of()
+      var filter = FilterRequest.<TripTimeOnDateSelectRequest>of()
         .addSelect(
           TripTimeOnDateSelectRequest.of()
             .withAgencies(List.of(ROUTE_1.getAgency().getId(), ROUTE_2.getAgency().getId()))

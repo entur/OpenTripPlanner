@@ -13,7 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
-import org.opentripplanner.apis.transmodel.mapping.TripOnServiceDateFilterMapper;
+import org.opentripplanner.apis.transmodel.mapping.FilterMapper;
+import org.opentripplanner.apis.transmodel.mapping.TripOnServiceDateSelectMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
@@ -183,8 +184,10 @@ public class DatedServiceJourneyQuery {
         List<Map<String, ?>> filtersInput = environment.getArgument("filters");
         var requestBuilder = TripOnServiceDateRequest.of();
         if (filtersInput != null) {
-          var mapper = new TripOnServiceDateFilterMapper(idMapper);
-          requestBuilder.withFilters(mapper.mapFilters(filtersInput));
+          var mapper = new TripOnServiceDateSelectMapper(idMapper);
+          requestBuilder.withFilters(
+            FilterMapper.mapFilters(filtersInput, mapper::mapSelectRequest)
+          );
         }
         var trips = GqlUtil.getTransitService(environment).findCanceledTrips(
           requestBuilder.build()

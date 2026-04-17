@@ -19,10 +19,6 @@ import org.opentripplanner.apis.support.InvalidInputException;
 
 class TripTimeOnDateFilterMapperTest {
 
-  private static final TripTimeOnDateFilterMapper MAPPER = new TripTimeOnDateFilterMapper(
-    new DefaultFeedIdMapper()
-  );
-
   @SuppressWarnings("unchecked")
   static Stream<Arguments> mapFiltersCases() {
     return Stream.of(
@@ -75,7 +71,8 @@ class TripTimeOnDateFilterMapperTest {
   @ParameterizedTest
   @MethodSource("mapFiltersCases")
   void mapFilters(List<Map<String, ?>> input, String expected) {
-    var result = MAPPER.mapFilters(input);
+    var selectMapper = new TripTimeOnDateSelectMapper(new DefaultFeedIdMapper());
+    var result = FilterMapper.mapFilters(input, selectMapper::mapSelectRequest);
     assertEquals(expected, result.toString());
   }
 
@@ -121,6 +118,9 @@ class TripTimeOnDateFilterMapperTest {
   @ParameterizedTest
   @MethodSource("emptyListRejectedCases")
   void emptyListsAreRejected(List<Map<String, ?>> input) {
-    assertThrows(InvalidInputException.class, () -> MAPPER.mapFilters(input));
+    var selectMapper = new TripTimeOnDateSelectMapper(new DefaultFeedIdMapper());
+    assertThrows(InvalidInputException.class, () ->
+      FilterMapper.mapFilters(input, selectMapper::mapSelectRequest)
+    );
   }
 }

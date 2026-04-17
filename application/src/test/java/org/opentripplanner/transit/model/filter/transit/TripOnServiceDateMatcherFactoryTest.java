@@ -13,6 +13,7 @@ import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
+import org.opentripplanner.transit.model.filter.selector.FilterRequest;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -130,7 +131,7 @@ class TripOnServiceDateMatcherFactoryTest {
       )
       .withFilters(
         List.of(
-          TripOnServiceDateFilterRequest.of()
+          FilterRequest.<TripOnServiceDateSelectRequest>of()
             .addSelect(
               TripOnServiceDateSelectRequest.of()
                 .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
@@ -182,7 +183,7 @@ class TripOnServiceDateMatcherFactoryTest {
     var busSelector = TripOnServiceDateSelectRequest.of()
       .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
       .build();
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(busSelector)
       .addNot(busSelector)
       .build();
@@ -204,7 +205,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterSelectByAgency() {
     // Agency RUT:1 has both a BUS trip and a RAIL trip — both should pass
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
@@ -219,7 +220,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterNotByAgency() {
     // NOT RUT:1 excludes both the BUS and RAIL trips from that agency
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
@@ -234,7 +235,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterSelectIsOrBetweenSelectors() {
     // Two selectors in select — a trip matching either one should pass
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
@@ -250,7 +251,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterNotOverridesSelect() {
     // select RUT:1 and AKT:1, but not AKT:1 — AKT:1 should be excluded despite being selected
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
@@ -267,7 +268,7 @@ class TripOnServiceDateMatcherFactoryTest {
 
   @Test
   void compositeFilterSelectByRoute() {
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withRoutes(List.of(id("RUT:route:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
@@ -284,7 +285,7 @@ class TripOnServiceDateMatcherFactoryTest {
   void compositeFilterSelectorCriteriaAreAnded() {
     // A selector with both agency and route requires both to match (AND logic within selector).
     // RUT:1 has route RUT:route:1, so a selector for RUT:1 + RUT:route:2 should match nothing.
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(
         TripOnServiceDateSelectRequest.of()
           .withAgencies(List.of(id("RUT:1")))
@@ -304,7 +305,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterSelectByMode() {
     // Select BUS: three BUS trips pass, the RAIL trip does not
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(
         TripOnServiceDateSelectRequest.of()
           .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
@@ -323,7 +324,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterNotByMode() {
     // NOT BUS: only the RAIL trip passes
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addNot(
         TripOnServiceDateSelectRequest.of()
           .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
@@ -343,7 +344,7 @@ class TripOnServiceDateMatcherFactoryTest {
   void compositeFilterSelectorCombinesAgencyAndMode() {
     // AND within a selector: agency RUT:1 AND mode RAIL matches only the RUT rail trip.
     // The BUS trip from RUT:1 fails the mode check; the RAIL trip from other agencies fails agency.
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(
         TripOnServiceDateSelectRequest.of()
           .withAgencies(List.of(id("RUT:1")))
@@ -364,7 +365,7 @@ class TripOnServiceDateMatcherFactoryTest {
   void compositeFilterSelectByModeOrAgency() {
     // OR between two selectors: RAIL mode OR agency AKT:1
     // Matches the RAIL trip (mode) and the AKT BUS trip (agency), but not the two RUT BUS trips
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(
         TripOnServiceDateSelectRequest.of()
           .withTransportModes(List.of(new MainAndSubMode(TransitMode.RAIL)))
@@ -384,10 +385,10 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void multipleFiltersAreOred() {
     // Two separate filters — a trip matching either filter should pass
-    var filterRut = TripOnServiceDateFilterRequest.of()
+    var filterRut = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
-    var filterAkt = TripOnServiceDateFilterRequest.of()
+    var filterAkt = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filterRut, filterAkt)).build();
