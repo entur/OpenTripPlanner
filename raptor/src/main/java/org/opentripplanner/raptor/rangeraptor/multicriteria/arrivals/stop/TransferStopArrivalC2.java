@@ -17,7 +17,7 @@ final class TransferStopArrivalC2<T extends RaptorTripSchedule> extends Abstract
   TransferStopArrivalC2(McStopArrival<T> previous, RaptorTransfer transferPath, int arrivalTime) {
     super(
       previous,
-      1,
+      previous.round(),
       transferPath.stop(),
       arrivalTime,
       previous.c1() + transferPath.c1(),

@@ -58,7 +58,7 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
       "10:10 | 1 | 100 | 500 | false | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
       "10:10 | 2 |  97 | 500 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
       "10:10 | 2 | 100 | 499 | false | NONE  NONE  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 | 100 | 500 | true  | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
+      "10:10 | 2 | 100 | 500 | true  | NONE  LEFT  - BOTH  BOTH  - NONE  LEFT  - NONE  LEFT",
       // Case #7-9 - arrivalPath-time & round
       "10:09 | 1 | 100 | 500 | false | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
       "10:09 | 3 | 100 | 500 | false | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
@@ -73,25 +73,25 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
       "10:09 | 2 | 100 | 501 | false | LEFT  LEFT  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
       // Case #16-17 arrivalPath-time & on-board
       "10:09 | 2 | 100 | 500 | true  | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
-      "10:11 | 2 | 100 | 500 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
+      "10:11 | 2 | 100 | 500 | true  | RIGHT BOTH  - BOTH  BOTH  - RIGHT BOTH  - RIGHT BOTH",
       // Case #18-19  ride & on-board
       "10:10 | 1 | 100 | 500 | true  | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
       "10:10 | 3 | 100 | 500 | true  | RIGHT BOTH  - BOTH  BOTH  - RIGHT BOTH  - RIGHT BOTH",
       // Case #20-21 - c1 & on-board
       "10:10 | 2 |  99 | 500 | true  | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 | 101 | 500 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
+      "10:10 | 2 | 101 | 500 | true  | RIGHT BOTH  - BOTH  BOTH  - RIGHT BOTH  - RIGHT BOTH",
       // Case #22-25 - c1 & c2
       "10:10 | 2 | 102 | 500 | false | RIGHT RIGHT - BOTH  BOTH  - RIGHT RIGHT - RIGHT RIGHT",
       "10:10 | 2 | 103 | 500 | false | RIGHT RIGHT - RIGHT RIGHT - RIGHT RIGHT - RIGHT RIGHT",
       "10:10 | 2 | 109 | 499 | false | RIGHT RIGHT - RIGHT RIGHT - BOTH  BOTH  - BOTH  BOTH",
       "10:10 | 2 | 110 | 499 | false | RIGHT RIGHT - RIGHT RIGHT - BOTH  BOTH  - RIGHT RIGHT",
       // Case #26-31 - c1, c2 & on-board
-      "10:10 | 2 | 100 | 500 | true  | LEFT  LEFT  - BOTH  BOTH  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 | 102 | 500 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:10 | 2 | 103 | 500 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:10 | 2 | 109 | 499 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:10 | 2 | 109 | 500 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:10 | 2 | 110 | 499 | true  | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
+      "10:10 | 2 | 100 | 500 | true  | NONE  LEFT  - BOTH  BOTH  - NONE  LEFT  - NONE  LEFT",
+      "10:10 | 2 | 102 | 500 | true  | RIGHT BOTH  - BOTH  BOTH  - RIGHT BOTH  - RIGHT BOTH",
+      "10:10 | 2 | 103 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
+      "10:10 | 2 | 109 | 499 | true  | RIGHT BOTH  - RIGHT BOTH  - BOTH  BOTH  - BOTH  BOTH",
+      "10:10 | 2 | 109 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
+      "10:10 | 2 | 110 | 499 | true  | RIGHT BOTH  - RIGHT BOTH  - BOTH  BOTH  - RIGHT BOTH",
     },
     delimiter = '|'
   )

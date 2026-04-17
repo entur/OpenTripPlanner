@@ -49,8 +49,10 @@ public interface ArrivalView<T extends RaptorTripSchedule> {
   int stop();
 
   /**
-   * The Range Raptor ROUND this stop is reached. Note! the destination is reached in the same round
-   * as the associated egress stop arrival.
+   * The RangeRaptor round. Transit arrivals increment the round by one; transfer arrivals
+   * stay in the same round as the transit they follow. Dominance of transits over transfers at
+   * via/access/egress stops is handled by event listeners, not by inflating the round counter.
+   * This gives better performance.
    */
   int round();
 

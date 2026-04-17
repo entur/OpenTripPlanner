@@ -25,13 +25,13 @@ abstract sealed class AbstractStopArrivalC2<T extends RaptorTripSchedule>
    */
   AbstractStopArrivalC2(
     McStopArrival<T> previous,
-    int paretoRoundIncrement,
+    int round,
     int stop,
     int arrivalTime,
     int c1,
     int c2
   ) {
-    super(previous, paretoRoundIncrement, stop, arrivalTime, c1);
+    super(previous, round, stop, arrivalTime, c1);
     this.c2 = c2;
   }
 
@@ -42,11 +42,11 @@ abstract sealed class AbstractStopArrivalC2<T extends RaptorTripSchedule>
     int stop,
     int departureTime,
     int travelDuration,
-    int paretoRound,
+    int round,
     int c1,
     int c2
   ) {
-    super(stop, departureTime, travelDuration, c1, paretoRound);
+    super(stop, departureTime, travelDuration, c1, round);
     this.c2 = c2;
   }
 

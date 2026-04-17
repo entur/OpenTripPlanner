@@ -13,7 +13,6 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStop
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC1;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC1;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
-import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 
 public class StopArrivalStateParetoSetTest {
@@ -121,37 +120,6 @@ public class StopArrivalStateParetoSetTest {
     subject.add(newTransferStopState(ROUND_3, STOP_6, 6, ANY));
 
     assertStopsInSet(subject, STOP_2, STOP_4, STOP_5);
-  }
-
-  /**
-   * During the same round, transfers should not dominate transits. This is handled by the worker
-   * state (2-phase transfer calculation), not by the pareto-set. Using the pareto-set for this
-   * would cause unnecessary exploration in the following round.
-   */
-  @Test
-  public void testTransitAndTransferDoesNotAffectDominance() {
-    ParetoComparator<McStopArrival<RaptorTripSchedule>> comparator =
-      COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost();
-    var subject = ParetoSet.of(comparator);
-    subject.add(newAccessStopState(STOP_1, 20, ANY));
-    subject.add(newTransitStopState(ROUND_1, STOP_2, 10, ANY));
-    subject.add(newTransferStopState(ROUND_1, STOP_4, 8, ANY));
-    assertStopsInSet(subject, STOP_1, STOP_4);
-  }
-
-  /**
-   * For arrivals arriving on-a-ride (transit and flex) we need to keep the arrival. These
-   * arrivals can continue with an egress that start with a walking leg.
-   *
-   * @see #testTransitAndTransferDoesNotAffectDominance
-   */
-  @Test
-  public void testTransitAndTransferDoesAffectDominanceForStopArrivalsWithEgress() {
-    var subject = ParetoSet.of(COMPARATOR_FACTORY.compareArrivalTimeRoundCostAndOnBoardArrival());
-    subject.add(newAccessStopState(STOP_1, 20, ANY));
-    subject.add(newTransitStopState(ROUND_1, STOP_2, 10, ANY));
-    subject.add(newTransferStopState(ROUND_1, STOP_4, 8, ANY));
-    assertStopsInSet(subject, STOP_1, STOP_2, STOP_4);
   }
 
   private static McStopArrival<RaptorTripSchedule> newAccessStopState(

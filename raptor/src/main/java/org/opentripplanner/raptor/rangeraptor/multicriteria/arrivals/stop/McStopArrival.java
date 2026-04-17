@@ -13,18 +13,7 @@ public abstract sealed class McStopArrival<T extends RaptorTripSchedule>
   permits AbstractStopArrivalC2, AccessStopArrival, TransitStopArrival, TransferStopArrival {
 
   private final McStopArrival<T> previous;
-  /**
-   * We want transits to dominate transfers, so we increment the round not only between RangeRaptor
-   * rounds, but for transits and transfers also. The access path is paretoRound 0, the first
-   * transit path is 1. The following transfer path, if it exists, is paretoRound 2, and the next
-   * transit is 3, and so on.
-   * <p/>
-   * The relationship between Range Raptor round and paretoRound can be described by this formula:
-   * <pre>
-   *     Range Raptor round =  (paretoRound + 1) / 2
-   * </pre>
-   */
-  private final int paretoRound;
+  private final int round;
   private final int stop;
   private final int arrivalTime;
   private final int travelDuration;
@@ -33,21 +22,15 @@ public abstract sealed class McStopArrival<T extends RaptorTripSchedule>
   /**
    * Transit or transfer.
    *
-   * @param previous             the previous arrival visited for the current trip
-   * @param paretoRoundIncrement the increment to add to the paretoRound
-   * @param stop                 stop index for this arrival
-   * @param arrivalTime          the arrival time for this stop index
-   * @param c1                   the accumulated criteria-one(cost) at this stop arrival
+   * @param previous     the previous arrival visited for the current trip
+   * @param round        the RangeRaptor round
+   * @param stop         stop index for this arrival
+   * @param arrivalTime  the arrival time for this stop index
+   * @param c1           the accumulated criteria-one(cost) at this stop arrival
    */
-  protected McStopArrival(
-    McStopArrival<T> previous,
-    int paretoRoundIncrement,
-    int stop,
-    int arrivalTime,
-    int c1
-  ) {
+  protected McStopArrival(McStopArrival<T> previous, int round, int stop, int arrivalTime, int c1) {
     this.previous = previous;
-    this.paretoRound = previous.paretoRound + paretoRoundIncrement;
+    this.round = round;
     this.stop = stop;
     this.arrivalTime = arrivalTime;
     this.travelDuration = previous.travelDuration() + (arrivalTime - previous.arrivalTime());
@@ -62,10 +45,10 @@ public abstract sealed class McStopArrival<T extends RaptorTripSchedule>
     int departureTime,
     int travelDuration,
     int initialC1,
-    int paretoRound
+    int round
   ) {
     this.previous = null;
-    this.paretoRound = paretoRound;
+    this.round = round;
     this.stop = stop;
     this.arrivalTime = departureTime + travelDuration;
     this.travelDuration = travelDuration;
@@ -79,11 +62,7 @@ public abstract sealed class McStopArrival<T extends RaptorTripSchedule>
 
   @Override
   public final int round() {
-    return (paretoRound + 1) / 2;
-  }
-
-  protected final int paretoRound() {
-    return paretoRound;
+    return round;
   }
 
   @Override

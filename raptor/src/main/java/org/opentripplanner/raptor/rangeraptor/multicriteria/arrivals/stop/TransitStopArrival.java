@@ -24,13 +24,7 @@ final class TransitStopArrival<T extends RaptorTripSchedule>
     int totalCost,
     T trip
   ) {
-    super(
-      previousState,
-      previousState.arrivedBy(TRANSIT) ? 2 : 1,
-      stopIndex,
-      arrivalTime,
-      totalCost
-    );
+    super(previousState, previousState.round() + 1, stopIndex, arrivalTime, totalCost);
     this.trip = trip;
   }
 

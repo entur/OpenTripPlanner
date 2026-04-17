@@ -82,9 +82,7 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   private static <T extends McStopArrival<?>> boolean compareBase(T l, T r) {
     // This is important with respect to performance. Using the short-circuit logical OR(||) is
     // faster than bitwise inclusive OR(|) (even between boolean expressions)
-    return (
-      l.arrivalTime() < r.arrivalTime() || l.paretoRound() < r.paretoRound() || l.c1() < r.c1()
-    );
+    return (l.arrivalTime() < r.arrivalTime() || l.round() < r.round() || l.c1() < r.c1());
   }
 
   /**
@@ -97,7 +95,7 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   ) {
     return (
       l.arrivalTime() < r.arrivalTime() ||
-      l.paretoRound() < r.paretoRound() ||
+      l.round() < r.round() ||
       l.c1() < r.c1() ||
       c2Function.leftDominateRight(l.c2(), r.c2())
     );
@@ -112,9 +110,7 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
     T r
   ) {
     return (
-      l.arrivalTime() < r.arrivalTime() ||
-      l.paretoRound() < r.paretoRound() ||
-      l.c1() < relaxC1.relax(r.c1())
+      l.arrivalTime() < r.arrivalTime() || l.round() < r.round() || l.c1() < relaxC1.relax(r.c1())
     );
   }
 
