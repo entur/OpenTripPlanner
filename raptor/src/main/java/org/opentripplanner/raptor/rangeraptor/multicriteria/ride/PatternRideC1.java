@@ -9,17 +9,31 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 /**
  * A {@link AbstractPatternRide} with support for c1 {@code generalized-cost}.
  */
-public record PatternRideC1<T extends RaptorTripSchedule>(
-  McStopArrival<T> prevArrival,
-  int boardStopIndex,
-  int boardPos,
-  int boardTime,
-  int boardC1,
-  int relativeC1,
-  int tripSortIndex,
-  T trip
-) implements AbstractPatternRide<T> {
+public class PatternRideC1<T extends RaptorTripSchedule> extends AbstractPatternRide<T> {
+
   // Pareto vector: [relativeCost, tripSortIndex]
+
+  public PatternRideC1(
+    McStopArrival<T> prevArrival,
+    int boardStopIndex,
+    int boardPos,
+    int boardTime,
+    int boardC1,
+    int relativeC1,
+    int tripSortIndex,
+    T trip
+  ) {
+    super(
+      prevArrival,
+      boardStopIndex,
+      boardPos,
+      boardTime,
+      boardC1,
+      relativeC1,
+      tripSortIndex,
+      trip
+    );
+  }
 
   public static <T extends RaptorTripSchedule> PatternRideFactory<T, PatternRideC1<T>> factory() {
     return new PatternRideFactory<T, PatternRideC1<T>>() {
@@ -63,15 +77,6 @@ public record PatternRideC1<T extends RaptorTripSchedule>(
 
   @Override
   public String toString() {
-    return ToStringBuilder.of(PatternRideC1.class)
-      .addNum("prevArrival", prevArrival.stop())
-      .addNum("boardStop", boardStopIndex)
-      .addNum("boardPos", boardPos)
-      .addServiceTime("boardTime", boardTime)
-      .addNum("boardC1", boardC1)
-      .addNum("relativeC1", relativeC1)
-      .addNum("tripSortIndex", tripSortIndex)
-      .addObj("trip", trip)
-      .toString();
+    return toString(ToStringBuilder.of(PatternRideC1.class), null);
   }
 }

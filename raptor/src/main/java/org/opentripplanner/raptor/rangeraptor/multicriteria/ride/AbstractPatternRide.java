@@ -1,10 +1,13 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.ride;
 
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.view.PatternRideView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.MultiCriteriaRoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.raptor.util.paretoset.ParetoSet;
+import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
  * The implementation of this interface, a pattern-ride, represent the STATE for one possible path
@@ -57,5 +60,85 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSet;
  * <p>
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public interface AbstractPatternRide<T extends RaptorTripSchedule>
-  extends PatternRideView<T, McStopArrival<T>> {}
+public abstract class AbstractPatternRide<T extends RaptorTripSchedule>
+  implements PatternRideView<T, McStopArrival<T>> {
+
+  private final McStopArrival<T> prevArrival;
+  private final int boardStopIndex;
+  private final int boardPos;
+  private final int boardTime;
+  private final int boardC1;
+  protected final int relativeC1;
+  protected final int tripSortIndex;
+  private final T trip;
+
+  public AbstractPatternRide(
+    McStopArrival<T> prevArrival,
+    int boardStopIndex,
+    int boardPos,
+    int boardTime,
+    int boardC1,
+    int relativeC1,
+    int tripSortIndex,
+    T trip
+  ) {
+    this.prevArrival = prevArrival;
+    this.boardStopIndex = boardStopIndex;
+    this.boardPos = boardPos;
+    this.boardTime = boardTime;
+    this.boardC1 = boardC1;
+    this.relativeC1 = relativeC1;
+    this.tripSortIndex = tripSortIndex;
+    this.trip = trip;
+  }
+
+  public McStopArrival<T> prevArrival() {
+    return prevArrival;
+  }
+
+  public int boardStopIndex() {
+    return boardStopIndex;
+  }
+
+  public int boardPos() {
+    return boardPos;
+  }
+
+  public int boardTime() {
+    return boardTime;
+  }
+
+  public int boardC1() {
+    return boardC1;
+  }
+
+  public int relativeC1() {
+    return relativeC1;
+  }
+
+  public int tripSortIndex() {
+    return tripSortIndex;
+  }
+
+  public T trip() {
+    return trip;
+  }
+
+  protected String toString(ToStringBuilder builder, @Nullable Consumer<ToStringBuilder> addC2) {
+    builder
+      .addNum("prevArrival", prevArrival.stop())
+      .addNum("boardStop", boardStopIndex)
+      .addNum("boardPos", boardPos)
+      .addServiceTime("boardTime", boardTime)
+      .addNum("boardC1", boardC1)
+      .addNum("relativeC1", relativeC1);
+
+    if (addC2 != null) {
+      addC2.accept(builder);
+    }
+    return builder
+      .addNum("tripSortIndex", tripSortIndex)
+      .addObj("trip", trip.pattern().debugInfo())
+      .toString();
+  }
+}

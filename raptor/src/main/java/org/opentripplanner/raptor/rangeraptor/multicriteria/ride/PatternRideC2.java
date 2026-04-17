@@ -9,17 +9,34 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 /**
  * A {@link AbstractPatternRide} with support for c1 {@code generalized-cost} and c2 (custom-use-case-cost).
  */
-public record PatternRideC2<T extends RaptorTripSchedule>(
-  McStopArrival<T> prevArrival,
-  int boardStopIndex,
-  int boardPos,
-  int boardTime,
-  int boardC1,
-  int relativeC1,
-  int c2,
-  int tripSortIndex,
-  T trip
-) implements AbstractPatternRide<T> {
+public class PatternRideC2<T extends RaptorTripSchedule> extends AbstractPatternRide<T> {
+
+  private final int c2;
+
+  public PatternRideC2(
+    McStopArrival<T> prevArrival,
+    int boardStopIndex,
+    int boardPos,
+    int boardTime,
+    int boardC1,
+    int relativeC1,
+    int c2,
+    int tripSortIndex,
+    T trip
+  ) {
+    super(
+      prevArrival,
+      boardStopIndex,
+      boardPos,
+      boardTime,
+      boardC1,
+      relativeC1,
+      tripSortIndex,
+      trip
+    );
+    this.c2 = c2;
+  }
+
   /**
    * See {@link AbstractPatternRide} for the pareto comparison strategy used by this comparator.
    */
@@ -32,18 +49,12 @@ public record PatternRideC2<T extends RaptorTripSchedule>(
       dominanceFunctionC2.leftDominateRight(l.c2, r.c2);
   }
 
+  public int c2() {
+    return c2;
+  }
+
   @Override
   public String toString() {
-    return ToStringBuilder.of(PatternRideC2.class)
-      .addNum("prevArrival", prevArrival.stop())
-      .addNum("boardStop", boardStopIndex)
-      .addNum("boardPos", boardPos)
-      .addServiceTime("boardTime", boardTime)
-      .addNum("boardC1", boardC1)
-      .addNum("relativeC1", relativeC1)
-      .addNum("c2", c2)
-      .addNum("tripSortIndex", tripSortIndex)
-      .addObj("trip", trip)
-      .toString();
+    return toString(ToStringBuilder.of(PatternRideC2.class), b -> b.addNum("c2", c2));
   }
 }
