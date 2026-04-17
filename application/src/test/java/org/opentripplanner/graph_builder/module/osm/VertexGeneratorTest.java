@@ -200,7 +200,6 @@ class VertexGeneratorTest {
     Graph graph = new Graph();
 
     var subject = new VertexGenerator(osmdb, graph, Set.of(), true, DataImportIssueStore.NOOP);
-    subject.initEntrancesInStopAreas();
 
     assertInstanceOf(
       StationEntranceVertex.class,

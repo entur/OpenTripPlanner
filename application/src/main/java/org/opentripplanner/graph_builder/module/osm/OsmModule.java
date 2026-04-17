@@ -193,9 +193,6 @@ public class OsmModule implements GraphBuilderModule {
     vertexGenerator.initIntersectionNodes();
     vertexGenerator.initNodesInBarrierWays();
 
-    // figure out entrances in stop areas, which should be treated as station entrances
-    vertexGenerator.initEntrancesInStopAreas();
-
     ElevatorProcessor elevatorProcessor = new ElevatorProcessor(
       issueStore,
       osmdb,

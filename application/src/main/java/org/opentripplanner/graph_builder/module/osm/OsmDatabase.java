@@ -80,9 +80,6 @@ public class OsmDatabase {
   /* All bike parking areas */
   private final List<OsmArea> bikeParkingAreas = new ArrayList<>();
 
-  /* All stop area relations */
-  private final List<OsmRelation> stopAreas = new ArrayList<>();
-
   /* Map of all area OSMWay for a given node */
   private final TLongObjectMap<Set<OsmWay>> areasForNode = new TLongObjectHashMap<>();
 
@@ -121,6 +118,11 @@ public class OsmDatabase {
    * a relation. Keyed by the area's OSM way.
    */
   private final Multimap<OsmEntity, OsmNode> stopsInAreas = HashMultimap.create();
+
+  /**
+   * Set of all entrance nodes in stop areas, which will be treated as station entrances.
+   */
+  private final Set<OsmNode> entrancesInStopAreas = new HashSet<>();
 
   /*
    * ID of the next virtual node we create during building phase. Negative to prevent conflicts
@@ -177,10 +179,6 @@ public class OsmDatabase {
     return Collections.unmodifiableCollection(bikeParkingAreas);
   }
 
-  public Collection<OsmRelation> getStopAreas() {
-    return Collections.unmodifiableCollection(stopAreas);
-  }
-
   public Collection<Long> getTurnRestrictionWayIds() {
     return Collections.unmodifiableCollection(turnRestrictionsByFromWay.keySet());
   }
@@ -195,6 +193,10 @@ public class OsmDatabase {
 
   public Collection<OsmNode> getStopsInArea(OsmEntity areaParent) {
     return stopsInAreas.get(areaParent);
+  }
+
+  public boolean isEntranceInStopArea(OsmNode node) {
+    return entrancesInStopAreas.contains(node);
   }
 
   /**
@@ -989,16 +991,19 @@ public class OsmDatabase {
    * @see "http://wiki.openstreetmap.org/wiki/Tag:public_transport%3Dstop_area"
    */
   private void processPublicTransportStopArea(OsmRelation relation) {
-    stopAreas.add(relation);
-
     Set<OsmEntity> platformAreas = new HashSet<>();
     Set<OsmNode> platformNodes = new HashSet<>();
     for (OsmRelationMember member : relation.getMembers()) {
       switch (member.getType()) {
         case NODE -> {
           var node = nodesById.get(member.getRef());
-          if (node != null && node.isPlatformAccess()) {
-            platformNodes.add(node);
+          if (node != null) {
+            if (node.isPlatformAccess()) {
+              platformNodes.add(node);
+            }
+            if (node.isEntrance()) {
+              entrancesInStopAreas.add(node);
+            }
           }
         }
         case WAY -> {
