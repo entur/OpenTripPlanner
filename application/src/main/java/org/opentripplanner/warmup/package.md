@@ -6,8 +6,9 @@ arrives.
 
 ## Lifecycle
 
-1. `WarmupWorker.start()` is called from `ConstructApplication` after Raptor transit data is
-   created and updaters are configured.
+1. `ConstructApplication` obtains a `WarmupLauncher` from the Dagger factory
+   (`configure.WarmupModule` wires it) and calls `start()` after Raptor transit data is created
+   and updaters are configured.
 2. A daemon thread sends sequential queries through the configured GraphQL API (TransModel or GTFS),
    exercising the full stack: GraphQL parsing, data fetchers, routing (Raptor + A*), itinerary
    filtering, and response serialization.
@@ -15,6 +16,10 @@ arrives.
 4. The thread stops when the health probe reports "UP" (all updaters primed).
 
 ## Design
+
+`WarmupParameters` is the SPI consumed by the module. `WarmupConfig`
+(in `standalone.config.routerconfig`) implements this interface and maps the JSON config section
+into parameter values.
 
 `WarmupQueryExecutor` is the strategy interface with two implementations:
 - `TransmodelWarmupQueryExecutor` -- builds and executes TransModel `trip` queries.

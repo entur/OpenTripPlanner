@@ -5,42 +5,19 @@ import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2
 
 import java.util.List;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.doc.DocumentedEnum;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.warmup.WarmupApi;
+import org.opentripplanner.warmup.WarmupParameters;
 
 /**
- * Configuration for application warmup during startup. When configured, OTP runs transit routing
- * queries between the given locations during startup to warm up the application (JIT compilation,
- * GraphQL schema caches, routing data structures, etc.) before production traffic arrives.
- * <p>
- * Queries start after the Raptor transit data is created and stop when all updaters are
- * primed (the health endpoint would return "UP"). If no updaters are configured, no warmup
- * queries are run.
+ * Maps the {@code warmup} section of {@code router-config.json} into {@link WarmupParameters}
+ * consumed by the warmup module.
+ *
+ * @see WarmupParameters for documentation of parameters
  */
-public final class WarmupConfig {
-
-  public enum Api implements DocumentedEnum<Api> {
-    TRANSMODEL("Use the TransModel GraphQL API for warmup queries."),
-    GTFS("Use the GTFS GraphQL API for warmup queries.");
-
-    private final String description;
-
-    Api(String description) {
-      this.description = description;
-    }
-
-    @Override
-    public String typeDescription() {
-      return "Which GraphQL API to use for warmup queries.";
-    }
-
-    @Override
-    public String enumValueDescription() {
-      return description;
-    }
-  }
+public final class WarmupConfig implements WarmupParameters {
 
   private static final List<StreetMode> DEFAULT_ACCESS_MODES = List.of(
     StreetMode.WALK,
@@ -51,14 +28,14 @@ public final class WarmupConfig {
     StreetMode.WALK
   );
 
-  private final Api api;
+  private final WarmupApi api;
   private final WgsCoordinate from;
   private final WgsCoordinate to;
   private final List<StreetMode> accessModes;
   private final List<StreetMode> egressModes;
 
   private WarmupConfig(
-    Api api,
+    WarmupApi api,
     WgsCoordinate from,
     WgsCoordinate to,
     List<StreetMode> accessModes,
@@ -93,12 +70,12 @@ public final class WarmupConfig {
       )
       .asObject();
 
-    Api api = c
+    WarmupApi api = c
       .of("api")
       .since(V2_10)
       .summary("Which GraphQL API to use for warmup queries.")
-      .description(docEnumValueList(Api.values()))
-      .asEnum(Api.TRANSMODEL);
+      .description(docEnumValueList(WarmupApi.values()))
+      .asEnum(WarmupApi.TRANSMODEL);
 
     var from = c.of("from").since(V2_10).summary("Origin location for warmup searches.").asObject();
     double fromLat = from.of("lat").since(V2_10).summary("Latitude of the origin.").asDouble();
@@ -161,22 +138,27 @@ public final class WarmupConfig {
     );
   }
 
-  public Api api() {
+  @Override
+  public WarmupApi api() {
     return api;
   }
 
+  @Override
   public WgsCoordinate from() {
     return from;
   }
 
+  @Override
   public WgsCoordinate to() {
     return to;
   }
 
+  @Override
   public List<StreetMode> accessModes() {
     return accessModes;
   }
 
+  @Override
   public List<StreetMode> egressModes() {
     return egressModes;
   }

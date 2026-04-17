@@ -28,6 +28,7 @@ import org.opentripplanner.standalone.config.sandbox.FlexConfig;
 import org.opentripplanner.standalone.config.sandbox.GtfsApiConfig;
 import org.opentripplanner.standalone.config.sandbox.TransmodelAPIConfig;
 import org.opentripplanner.updater.UpdatersParameters;
+import org.opentripplanner.warmup.WarmupParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +61,7 @@ public class RouterConfig implements Serializable {
   private final VectorTileConfig vectorTileConfig;
   private final TriasApiParameters triasApiParameters;
   private final OjpApiParameters ojpApiParameters;
-  private final WarmupConfig warmupConfig;
+  private final WarmupParameters warmupParameters;
 
   public RouterConfig(JsonNode node, String source, boolean logUnusedParams) {
     this(new NodeAdapter(node, source), logUnusedParams);
@@ -91,7 +92,7 @@ public class RouterConfig implements Serializable {
     this.triasApiParameters = TriasApiConfig.mapParameters("triasApi", root);
     this.ojpApiParameters = OjpApiConfig.mapParameters("ojpApi", root);
     this.flexConfig = new FlexConfig(root, "flex");
-    this.warmupConfig = WarmupConfig.mapWarmupConfig("warmup", root);
+    this.warmupParameters = WarmupConfig.mapWarmupConfig("warmup", root);
 
     if (logUnusedParams && LOG.isWarnEnabled()) {
       root.logAllWarnings(LOG::warn);
@@ -163,8 +164,8 @@ public class RouterConfig implements Serializable {
   }
 
   @Nullable
-  public WarmupConfig warmupConfig() {
-    return warmupConfig;
+  public WarmupParameters warmupParameters() {
+    return warmupParameters;
   }
 
   public NodeAdapter asNodeAdapter() {

@@ -1,11 +1,9 @@
-package org.opentripplanner.standalone.configure.warmup;
+package org.opentripplanner.warmup;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
-import org.opentripplanner.standalone.config.routerconfig.WarmupConfig;
 import org.opentripplanner.updater.GraphUpdaterStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,81 +21,43 @@ import org.slf4j.LoggerFactory;
  * It starts after Raptor transit data is created and stops when the health probe
  * reports "UP" (all updaters primed).
  */
-public class WarmupWorker implements Runnable {
+class WarmupWorker implements Runnable {
 
   private static final Logger LOG = LoggerFactory.getLogger(WarmupWorker.class);
   private static final int MAX_QUERIES = 20;
 
-  private final WarmupConfig config;
+  private final WarmupParameters parameters;
   private final WarmupQueryExecutor queryExecutor;
   private final Supplier<GraphUpdaterStatus> updaterStatusProvider;
 
   WarmupWorker(
-    WarmupConfig config,
+    WarmupParameters parameters,
     OtpServerRequestContext serverContext,
     Supplier<GraphUpdaterStatus> updaterStatusProvider
   ) {
-    this.config = config;
+    this.parameters = parameters;
     this.updaterStatusProvider = updaterStatusProvider;
-    this.queryExecutor = switch (config.api()) {
+    this.queryExecutor = switch (parameters.api()) {
       case TRANSMODEL -> new TransmodelWarmupQueryExecutor(
         serverContext,
-        config.accessModes(),
-        config.egressModes()
+        parameters.accessModes(),
+        parameters.egressModes()
       );
       case GTFS -> new GtfsWarmupQueryExecutor(
         serverContext,
-        config.accessModes(),
-        config.egressModes()
+        parameters.accessModes(),
+        parameters.egressModes()
       );
     };
-  }
-
-  /**
-   * Start the application warmup thread if configured and applicable.
-   * <p>
-   * No warmup is started if the config is null (section absent in router-config.json)
-   * or if no updaters are configured (health probe would immediately return "UP").
-   */
-  public static void start(
-    @Nullable WarmupConfig config,
-    Supplier<OtpServerRequestContext> serverContextProvider,
-    Supplier<GraphUpdaterStatus> updaterStatusProvider
-  ) {
-    if (config == null) {
-      return;
-    }
-    if (updaterStatusProvider.get() == null) {
-      LOG.info("Application warmup configured but no updaters found. Skipping warmup.");
-      return;
-    }
-    var serverContext = serverContextProvider.get();
-    var schema = switch (config.api()) {
-      case TRANSMODEL -> serverContext.transmodelSchema();
-      case GTFS -> serverContext.gtfsSchema();
-    };
-    if (schema == null) {
-      LOG.warn(
-        "Application warmup configured for {} API, but the schema is not available. " +
-          "Is the corresponding API feature enabled?",
-        config.api()
-      );
-      return;
-    }
-    var worker = new WarmupWorker(config, serverContext, updaterStatusProvider);
-    var thread = new Thread(worker, "app-warmup");
-    thread.setDaemon(true);
-    thread.start();
-    LOG.info("Application warmup thread started.");
   }
 
   @Override
   public void run() {
     LOG.info(
       "Application warmup started. Sending {} GraphQL trip queries from {} to {}.",
-      config.api(),
-      config.from(),
-      config.to()
+      parameters.api(),
+      parameters.from(),
+      parameters.to()
     );
 
     var startTime = Instant.now();
@@ -140,7 +100,12 @@ public class WarmupWorker implements Runnable {
   private boolean executeQuery(int queryCount, boolean arriveBy, int modeIndex) {
     var queryStart = Instant.now();
     try {
-      boolean success = queryExecutor.execute(config.from(), config.to(), arriveBy, modeIndex);
+      boolean success = queryExecutor.execute(
+        parameters.from(),
+        parameters.to(),
+        arriveBy,
+        modeIndex
+      );
       var elapsed = Duration.between(queryStart, Instant.now());
       LOG.info("Warmup query #{} completed in {} ms.", queryCount, elapsed.toMillis());
       return success;

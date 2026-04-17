@@ -1,4 +1,4 @@
-package org.opentripplanner.standalone.configure.warmup;
+package org.opentripplanner.warmup;
 
 import graphql.ExecutionInput;
 import graphql.GraphQL;
