@@ -9,7 +9,6 @@ import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c2.TestStopArivalFactory;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.utils.time.TimeUtils;
 

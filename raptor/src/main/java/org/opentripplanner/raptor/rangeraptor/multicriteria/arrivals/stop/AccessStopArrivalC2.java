@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c2;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import static org.opentripplanner.raptor.api.model.AbstractAccessEgressDecorator.accessEgressWithExtraSlack;
 import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
@@ -6,7 +6,6 @@ import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.view.AccessPathView;
 import org.opentripplanner.raptor.api.view.PathLegType;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;

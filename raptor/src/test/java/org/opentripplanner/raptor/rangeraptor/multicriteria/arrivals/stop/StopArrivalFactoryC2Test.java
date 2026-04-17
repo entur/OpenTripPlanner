@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c2;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -8,7 +8,6 @@ import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.view.PatternRideView;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2.PatternRideC2;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.utils.time.DurationUtils;

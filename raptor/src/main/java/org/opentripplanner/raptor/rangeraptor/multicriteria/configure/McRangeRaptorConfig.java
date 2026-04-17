@@ -20,11 +20,11 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.ViaConnectionStopArr
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McArrivalsEventListenerFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.StopsWithArriveByTransitCriteriaResolver;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c2.StopArrivalFactoryC2;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.ArrivalParetoSetComparatorFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC1;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC2;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;

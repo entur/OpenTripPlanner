@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c2;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -9,7 +9,6 @@ import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
