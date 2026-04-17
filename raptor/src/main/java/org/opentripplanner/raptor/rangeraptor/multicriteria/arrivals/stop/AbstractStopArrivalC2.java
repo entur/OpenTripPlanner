@@ -7,7 +7,9 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-abstract class AbstractStopArrivalC2<T extends RaptorTripSchedule> extends McStopArrival<T> {
+abstract sealed class AbstractStopArrivalC2<T extends RaptorTripSchedule>
+  extends McStopArrival<T>
+  permits AccessStopArrivalC2, TransitStopArrivalC2, TransferStopArrivalC2 {
 
   private final int c2;
 
