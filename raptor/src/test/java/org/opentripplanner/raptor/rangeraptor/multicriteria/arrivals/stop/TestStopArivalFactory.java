@@ -9,7 +9,7 @@ import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2.PatternRideC2;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC2;
 
 public class TestStopArivalFactory {
 
@@ -41,7 +41,7 @@ public class TestStopArivalFactory {
     this.c2 = c2;
     this.arriveOnBoard = arriveOnBoard;
 
-    int nLegs = -1;
+    int nLegs;
     if (nRounds == 0) {
       nLegs = 1;
       this.trasitLegCoeficient = -1.0f;

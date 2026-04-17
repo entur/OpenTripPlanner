@@ -1,8 +1,7 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.ride;
 
 import org.opentripplanner.raptor.api.model.DominanceFunction;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.utils.tostring.ToStringBuilder;

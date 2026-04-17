@@ -27,10 +27,10 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopAr
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC2;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC1;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC2;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c1.PatternRideC1;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2.PatternRideC2;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.c2.TransitGroupPriorityRideFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.TransitGroupPriorityRideFactory;
 import org.opentripplanner.raptor.rangeraptor.path.DestinationArrivalPaths;
 import org.opentripplanner.raptor.rangeraptor.path.configure.PathConfig;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
