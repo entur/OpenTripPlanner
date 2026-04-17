@@ -12,12 +12,10 @@ import org.opentripplanner.warmup.WarmupApi;
 import org.opentripplanner.warmup.WarmupParameters;
 
 /**
- * Maps the {@code warmup} section of {@code router-config.json} into {@link WarmupParameters}
- * consumed by the warmup module.
- *
- * @see WarmupParameters for documentation of parameters
+ * Maps the {@code warmup} section of {@code router-config.json} into a {@link WarmupParameters}
+ * record consumed by the warmup module.
  */
-public final class WarmupConfig implements WarmupParameters {
+public final class WarmupConfig {
 
   private static final List<StreetMode> DEFAULT_ACCESS_MODES = List.of(
     StreetMode.WALK,
@@ -28,28 +26,10 @@ public final class WarmupConfig implements WarmupParameters {
     StreetMode.WALK
   );
 
-  private final WarmupApi api;
-  private final WgsCoordinate from;
-  private final WgsCoordinate to;
-  private final List<StreetMode> accessModes;
-  private final List<StreetMode> egressModes;
-
-  private WarmupConfig(
-    WarmupApi api,
-    WgsCoordinate from,
-    WgsCoordinate to,
-    List<StreetMode> accessModes,
-    List<StreetMode> egressModes
-  ) {
-    this.api = api;
-    this.from = from;
-    this.to = to;
-    this.accessModes = accessModes;
-    this.egressModes = egressModes;
-  }
+  private WarmupConfig() {}
 
   @Nullable
-  public static WarmupConfig mapWarmupConfig(String parameterName, NodeAdapter root) {
+  public static WarmupParameters mapWarmupConfig(String parameterName, NodeAdapter root) {
     if (!root.exist(parameterName)) {
       return null;
     }
@@ -129,37 +109,12 @@ public final class WarmupConfig implements WarmupParameters {
       );
     }
 
-    return new WarmupConfig(
+    return new WarmupParameters(
       api,
       new WgsCoordinate(fromLat, fromLng),
       new WgsCoordinate(toLat, toLng),
       accessModes,
       egressModes
     );
-  }
-
-  @Override
-  public WarmupApi api() {
-    return api;
-  }
-
-  @Override
-  public WgsCoordinate from() {
-    return from;
-  }
-
-  @Override
-  public WgsCoordinate to() {
-    return to;
-  }
-
-  @Override
-  public List<StreetMode> accessModes() {
-    return accessModes;
-  }
-
-  @Override
-  public List<StreetMode> egressModes() {
-    return egressModes;
   }
 }
