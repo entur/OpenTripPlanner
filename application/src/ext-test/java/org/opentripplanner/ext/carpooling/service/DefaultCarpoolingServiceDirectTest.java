@@ -42,17 +42,27 @@ import org.opentripplanner.transit.service.TransitService;
  * These tests use a real street graph to verify the full direct routing pipeline
  * including filtering, position finding, insertion evaluation, and itinerary mapping.
  * <p>
- * Graph layout (going east, ~2km total):
+ * Graph layout (main road going east, P and Q sit south of the road):
  * <pre>
- *   A ---- B ----------- C ---- D
- *   0m   500m          1500m  2000m
- *    \                         /
- *     P ------(shortcut)------Q
+ *           500m         1000m         500m
+ *      A ---------- B ----------- C ---------- D
+ *      |\          /               \          /
+ *      | \        / 255         255 \        / 255
+ *      |  \      /                   \      /
+ *      |   P ---------- 1400 ---------- Q
+ *      |            (P-Q shortcut)    /
+ *      +-------------- 1500 ----------+
+ *               (direct A-Q bypass)
  *
- *   A = tripStart, D = tripEnd (graph intersections)
- *   P-Q direct shortcut edge exists (bypasses B and C)
- *   P = passenger pickup (south, between A and B, linked via LinkingContext)
- *   Q = passenger dropoff (south, between C and D, linked via LinkingContext)
+ *   A = tripStart, D = tripEnd
+ *   P = passenger pickup, connected to both A and B (255m each)
+ *   Q = passenger dropoff, connected to both C and D (255m each)
+ *   P-Q direct shortcut (1400m) beats the main-road P-B-C-Q path (1510m) by 110m,
+ *   so the carpool's shared segment (pickup -> dropoff) routes over it.
+ *   A-Q direct bypass (1500m) is shorter than A-P-Q (255 + 1400 = 1655m), so the
+ *   shortest A->Q path skips the pickup. The carpool itself is still forced to drive
+ *   A->P->Q to pick up the passenger; this edge exists so the test cannot rely on
+ *   "route tripStart to dropoff directly" as a proxy for what the carpool drives.
  * </pre>
  */
 class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
@@ -123,7 +133,8 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
           biStreet(B, P, 255);
           biStreet(C, Q, 255);
           biStreet(D, Q, 255);
-          biStreet(P, Q, 1500);
+          biStreet(P, Q, 1400);
+          biStreet(A, Q, 1500);
           biStreet(Q, F, (int) DistanceBasedFilter.DEFAULT_MAX_DISTANCE_METERS + 10000);
         }
       }
@@ -405,9 +416,14 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     var trip = CarpoolTripTestData.createSimpleTripWithTime(tripStart, tripEnd, departureTime);
     repository.upsertCarpoolTrip(trip);
 
-    // Independently compute driving durations to derive expected start/end times
+    // The carpool is forced to route via the pickup, so we sum the two segments it actually
+    // drives (tripStart -> pickup, then pickup -> dropoff) rather than routing tripStart -> dropoff
+    // directly. The graph includes an A-Q bypass edge whose shortest path skips the pickup, so a
+    // test that used router.route(tripStart, dropoff) here would not match what the carpool
+    // drives; this guards against regressing to that shortcut-in-the-test.
     var router = new CarpoolTreeStreetRouter();
     router.addVertex(vertexTripStart, CarpoolTreeStreetRouter.Direction.FROM, Duration.ofHours(2));
+    router.addVertex(vertexPickup, CarpoolTreeStreetRouter.Direction.FROM, Duration.ofHours(2));
 
     var pathToPickup = router.route(vertexTripStart, vertexPickup);
     assertNotNull(pathToPickup, "Should route from trip start to pickup");
@@ -416,11 +432,11 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       pathToPickup.states.getLast().getTime()
     );
 
-    var pathToDropoff = router.route(vertexTripStart, vertexDropoff);
-    assertNotNull(pathToDropoff, "Should route from trip start to dropoff");
-    var drivingToDropoff = Duration.between(
-      pathToDropoff.states.getFirst().getTime(),
-      pathToDropoff.states.getLast().getTime()
+    var pathPickupToDropoff = router.route(vertexPickup, vertexDropoff);
+    assertNotNull(pathPickupToDropoff, "Should route from pickup to dropoff");
+    var drivingPickupToDropoff = Duration.between(
+      pathPickupToDropoff.states.getFirst().getTime(),
+      pathPickupToDropoff.states.getLast().getTime()
     );
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
@@ -428,10 +444,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     // Start time is when the car departs from the pickup with the passenger onboard,
     // i.e. after the boarding dwell at the pickup.
     var expectedStartTime = departureTime.plus(drivingToPickup).plus(stopDuration);
-    // End time is start time plus the passenger ride duration. Since the direct route
-    // from trip start to dropoff goes via pickup, drivingToDropoff == drivingToPickup
-    // + drivingPickupToDropoff, so end time = departureTime + drivingToDropoff + stopDuration.
-    var expectedEndTime = departureTime.plus(drivingToDropoff).plus(stopDuration);
+    var expectedEndTime = expectedStartTime.plus(drivingPickupToDropoff);
 
     var results = service.routeDirect(request, linkingContext);
 
@@ -449,7 +462,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       assertEquals(
         expectedEndTime.toInstant(),
         itinerary.endTime().toInstant(),
-        "End time should equal trip departure plus driving time to dropoff plus stop duration at pickup"
+        "End time should equal start time plus driving time from pickup to dropoff"
       );
     }
   }
