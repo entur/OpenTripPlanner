@@ -24,7 +24,12 @@ import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.model.StreetMode;
 
-class AbstractFetchAccessEgress {
+/**
+ * This class exposes methods for fetching access and egress legs for passing to a route request.
+ * An access or egress may be e.g. a walking path to the first transit stop on a route,
+ * but could also include other modes such as bicycle, shared mobility, flex or carpooling.
+ */
+class AccessEgressFetcher {
 
   private final RouteRequest request;
   private final OtpServerRequestContext serverContext;
@@ -35,7 +40,7 @@ class AbstractFetchAccessEgress {
   private final TransitServiceResolver transitServiceResolver;
   private final CarpoolingService carpoolingService;
 
-  public AbstractFetchAccessEgress(
+  public AccessEgressFetcher(
     RouteRequest request,
     OtpServerRequestContext serverContext,
     ZonedDateTime transitSearchTimeZero,

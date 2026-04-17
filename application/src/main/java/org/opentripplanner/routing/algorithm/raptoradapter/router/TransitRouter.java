@@ -52,7 +52,7 @@ public class TransitRouter {
   private final AdditionalSearchDays additionalSearchDays;
   private final ViaCoordinateTransferFactory viaTransferResolver;
   private final LinkingContext linkingContext;
-  private final AbstractFetchAccessEgress fetchAccessEgress;
+  private final AccessEgressFetcher fetchAccessEgress;
 
   private TransitRouter(
     RouteRequest request,
@@ -73,7 +73,7 @@ public class TransitRouter {
     this.viaTransferResolver = serverContext.viaTransferResolver();
     this.linkingContext = linkingContext;
 
-    this.fetchAccessEgress = new AbstractFetchAccessEgress(
+    this.fetchAccessEgress = new AccessEgressFetcher(
       request,
       serverContext,
       transitSearchTimeZero,
