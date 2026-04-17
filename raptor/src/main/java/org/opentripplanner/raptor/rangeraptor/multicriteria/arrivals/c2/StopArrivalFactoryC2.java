@@ -2,8 +2,8 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c2;
 
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.view.PatternRideView;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrival;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrivalFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 

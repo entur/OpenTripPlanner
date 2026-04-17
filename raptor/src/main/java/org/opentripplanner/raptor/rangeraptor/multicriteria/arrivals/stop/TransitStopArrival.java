@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 

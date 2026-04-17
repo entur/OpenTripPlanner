@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1;
+package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.DominanceFunction;

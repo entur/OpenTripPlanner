@@ -1,6 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.ride;
 
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.c1.McStopArrival;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
