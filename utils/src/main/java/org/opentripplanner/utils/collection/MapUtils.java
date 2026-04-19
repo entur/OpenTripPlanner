@@ -1,5 +1,6 @@
 package org.opentripplanner.utils.collection;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -32,4 +33,5 @@ public class MapUtils {
     Arrays.stream(maps).forEach(ret::putAll);
     return Map.copyOf(ret);
   }
+
 }

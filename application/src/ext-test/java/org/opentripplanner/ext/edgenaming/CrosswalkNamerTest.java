@@ -26,7 +26,7 @@ import org.opentripplanner.street.model.edge.StreetEdge;
 
 class CrosswalkNamerTest {
 
-  public static final OsmWay CROSSWALK = OsmWay.of()
+  private static final OsmWay CROSSWALK = OsmWay.of()
     .addTag("highway", "footway")
     .addTag("footway", "crossing")
     .addTag("crossing:markings", "yes")
@@ -36,28 +36,28 @@ class CrosswalkNamerTest {
     .addNodeRef(10004)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay SIDEWALK_TO_CROSSWALK = OsmWay.of()
+  private static final OsmWay SIDEWALK_TO_CROSSWALK = OsmWay.of()
     .addTag("highway", "footway")
     .addTag("footway", "sidewalk")
     .addNodeRef(10000)
     .addNodeRef(10001)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay OTHER_SIDEWALK1_TO_CROSSWALK = OsmWay.of()
+  private static final OsmWay OTHER_SIDEWALK1_TO_CROSSWALK = OsmWay.of()
     .addTag("highway", "footway")
     .addTag("footway", "sidewalk")
     .addNodeRef(10004)
     .addNodeRef(10005)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay OTHER_SIDEWALK2_TO_CROSSWALK = OsmWay.of()
+  private static final OsmWay OTHER_SIDEWALK2_TO_CROSSWALK = OsmWay.of()
     .addTag("highway", "footway")
     .addTag("footway", "sidewalk")
     .addNodeRef(10004)
     .addNodeRef(10006)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay STREET = OsmWay.of()
+  private static final OsmWay STREET = OsmWay.of()
     .withId(50001)
     .addTag("highway", "primary")
     .addTag("name", "3rd Street")
@@ -69,7 +69,7 @@ class CrosswalkNamerTest {
     .addNodeRef(20005)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay OTHER_STREET = OsmWay.of()
+  private static final OsmWay OTHER_STREET = OsmWay.of()
     .withId(50002)
     .addTag("highway", "primary")
     .addTag("name", "Other Street")
@@ -80,7 +80,7 @@ class CrosswalkNamerTest {
     .addNodeRef(30005)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay SERVICE_ROAD = OsmWay.of()
+  private static final OsmWay SERVICE_ROAD = OsmWay.of()
     .withId(50001)
     .addTag("highway", "service")
     .addNodeRef(20001)
@@ -91,7 +91,7 @@ class CrosswalkNamerTest {
     .addNodeRef(20005)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay TURN_LANE = OsmWay.of()
+  private static final OsmWay TURN_LANE = OsmWay.of()
     .withId(50001)
     .addTag("highway", "primary_link")
     .addTag("oneway", "yes")
@@ -103,7 +103,7 @@ class CrosswalkNamerTest {
     .addNodeRef(20005)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
-  public static final OsmWay MOTORWAY_RAMP = OsmWay.of()
+  private static final OsmWay MOTORWAY_RAMP = OsmWay.of()
     .withId(50001)
     .addTag("highway", "motorway_link")
     .addTag("oneway", "yes")

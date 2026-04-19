@@ -29,6 +29,7 @@ import org.opentripplanner.core.model.i18n.TranslatedString;
 import org.opentripplanner.graph_builder.module.osm.OsmModule;
 import org.opentripplanner.osm.OsmProvider;
 import org.opentripplanner.street.model.StreetTraversalPermission;
+import org.opentripplanner.utils.collection.MapUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -167,7 +168,7 @@ public abstract class OsmEntity {
    */
   protected OsmEntity(long id, Map<String, String> tags, OsmProvider osmProvider) {
     this.id = id;
-    this.tags = Map.copyOf(tags);
+    this.tags = MapUtils.transformKeys(tags, String::toLowerCase);
     this.osmProvider = osmProvider;
   }
 
