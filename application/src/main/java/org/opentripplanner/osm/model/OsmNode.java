@@ -3,7 +3,6 @@ package org.opentripplanner.osm.model;
 import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
 import static org.opentripplanner.street.model.StreetTraversalPermission.NONE;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalDouble;
 import org.locationtech.jts.geom.Coordinate;
@@ -26,62 +25,12 @@ public class OsmNode extends OsmEntity {
     this.lon = lon;
   }
 
-  public static Builder builder() {
-    return new Builder();
+  public static OsmNodeBuilder of() {
+    return new OsmNodeBuilder();
   }
 
-  public Builder toBuilder() {
-    Builder builder = new Builder();
-    builder.id = this.id;
-    builder.lat = this.lat;
-    builder.lon = this.lon;
-    builder.tags = new HashMap<>(this.getTags());
-    builder.osmProvider = this.getOsmProvider();
-    return builder;
-  }
-
-  public static class Builder {
-
-    private long id;
-    private double lat;
-    private double lon;
-    private Map<String, String> tags = new HashMap<>();
-    private OsmProvider osmProvider;
-
-    public Builder withId(long id) {
-      this.id = id;
-      return this;
-    }
-
-    public Builder withLat(double lat) {
-      this.lat = lat;
-      return this;
-    }
-
-    public Builder withLon(double lon) {
-      this.lon = lon;
-      return this;
-    }
-
-    public Builder addTag(String key, String value) {
-      if (key != null && value != null) {
-        this.tags.put(key.toLowerCase(), value);
-      }
-      return this;
-    }
-
-    public Builder withOsmProvider(OsmProvider osmProvider) {
-      this.osmProvider = osmProvider;
-      return this;
-    }
-
-    public OsmNode build() {
-      return new OsmNode(id, lat, lon, tags, osmProvider);
-    }
-  }
-
-  public String toString() {
-    return "osm node " + id;
+  public OsmNodeBuilder toBuilder() {
+    return new OsmNodeBuilder(this);
   }
 
   public Coordinate getCoordinate() {

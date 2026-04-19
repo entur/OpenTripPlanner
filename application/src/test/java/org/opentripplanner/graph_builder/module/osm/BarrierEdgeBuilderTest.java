@@ -45,7 +45,7 @@ class BarrierEdgeBuilderTest {
   void connectOneVertexWithoutBarrier() {
     var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
     connectToOutsideWorld(v1);
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1), List.of());
+    SUBJECT.build(OsmNode.of().build(), List.of(v1), List.of());
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
   }
@@ -54,7 +54,7 @@ class BarrierEdgeBuilderTest {
   void connectOneVertexWithBarrier() {
     var v1 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 1);
     connectToOutsideWorld(v1);
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1), List.of(WALL));
+    SUBJECT.build(OsmNode.of().build(), List.of(v1), List.of(WALL));
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
   }
@@ -65,7 +65,7 @@ class BarrierEdgeBuilderTest {
     var v2 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 2);
     var v3 = new BarrierPassThroughVertex(0, 0, 0, OsmEntityType.WAY, 3);
     connectToOutsideWorld(v1, v2, v3);
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1, v2, v3), List.of());
+    SUBJECT.build(OsmNode.of().build(), List.of(v1, v2, v3), List.of());
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -86,7 +86,7 @@ class BarrierEdgeBuilderTest {
     connectToOutsideWorld(v1, v2, v3);
 
     // a wall can't be passed with any means so no edges should be created
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1, v2, v3), List.of(WALL));
+    SUBJECT.build(OsmNode.of().build(), List.of(v1, v2, v3), List.of(WALL));
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
     assertEquals(1, v2.getDegreeIn());
@@ -103,7 +103,7 @@ class BarrierEdgeBuilderTest {
     connectToOutsideWorld(v1, v2, v3);
 
     // a chain is passable by pedestrians so edges should be created
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1, v2, v3), List.of(CHAIN));
+    SUBJECT.build(OsmNode.of().build(), List.of(v1, v2, v3), List.of(CHAIN));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -133,7 +133,7 @@ class BarrierEdgeBuilderTest {
     connectToOutsideWorld(v1, v2, v3);
 
     // a kerb allows everything to get across but may pose a problem for wheelchair
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1, v2, v3), List.of(KERB));
+    SUBJECT.build(OsmNode.of().build(), List.of(v1, v2, v3), List.of(KERB));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -156,7 +156,7 @@ class BarrierEdgeBuilderTest {
 
     // a handrail intersects with a kerb, therefore only pedestrians can pass this barrier
     // intersection and wheelchair can't get through it
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1, v2, v3), List.of(KERB, HANDRAIL));
+    SUBJECT.build(OsmNode.of().build(), List.of(v1, v2, v3), List.of(KERB, HANDRAIL));
     assertEquals(3, v1.getDegreeIn());
     assertEquals(3, v1.getDegreeOut());
     assertEquals(3, v2.getDegreeIn());
@@ -178,7 +178,7 @@ class BarrierEdgeBuilderTest {
     connectToOutsideWorld(v1, v2, v3);
 
     // a fence intersects with a kerb, nothing can get through it
-    SUBJECT.build(OsmNode.builder().build(), List.of(v1, v2, v3), List.of(KERB, FENCE));
+    SUBJECT.build(OsmNode.of().build(), List.of(v1, v2, v3), List.of(KERB, FENCE));
     assertEquals(1, v1.getDegreeIn());
     assertEquals(1, v1.getDegreeOut());
     assertEquals(1, v2.getDegreeIn());
@@ -190,15 +190,11 @@ class BarrierEdgeBuilderTest {
   static List<Arguments> wallCases() {
     return List.of(
       Arguments.of(
-        OsmNode.builder()
-          .addTag("barrier", "gate")
-          .addTag("access", "no")
-          .addTag("foot", "yes")
-          .build(),
+        OsmNode.of().addTag("barrier", "gate").addTag("access", "no").addTag("foot", "yes").build(),
         PEDESTRIAN
       ),
-      Arguments.of(OsmNode.builder().addTag("barrier", "bollard").build(), PEDESTRIAN_AND_BICYCLE),
-      Arguments.of(OsmNode.builder().addTag("entrance", "main").build(), ALL)
+      Arguments.of(OsmNode.of().addTag("barrier", "bollard").build(), PEDESTRIAN_AND_BICYCLE),
+      Arguments.of(OsmNode.of().addTag("entrance", "main").build(), ALL)
     );
   }
 
@@ -235,7 +231,7 @@ class BarrierEdgeBuilderTest {
     connect(v0, v1);
     connect(v2, v3);
 
-    var node = OsmNode.builder().addTag("barrier", "bollard").build();
+    var node = OsmNode.of().addTag("barrier", "bollard").build();
 
     SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());
@@ -257,7 +253,7 @@ class BarrierEdgeBuilderTest {
     connect(v0, v1, WALK);
     connect(v2, v3, BICYCLE);
 
-    var node = OsmNode.builder().addTag("barrier", "gate").build();
+    var node = OsmNode.of().addTag("barrier", "gate").build();
 
     SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());

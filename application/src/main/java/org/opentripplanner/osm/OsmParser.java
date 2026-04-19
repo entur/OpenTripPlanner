@@ -9,6 +9,7 @@ import java.util.Objects;
 import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
 import org.opentripplanner.osm.model.OsmMemberType;
 import org.opentripplanner.osm.model.OsmNode;
+import org.opentripplanner.osm.model.OsmNodeBuilder;
 import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.OsmWay;
@@ -123,7 +124,7 @@ class OsmParser extends BinaryParser {
       double latf = parseLat(lat);
       double lonf = parseLon(lon);
 
-      OsmNode.Builder builder = OsmNode.builder()
+      OsmNodeBuilder builder = OsmNode.of()
         .withId(id)
         .withOsmProvider(provider)
         .withLat(latf)
@@ -154,7 +155,7 @@ class OsmParser extends BinaryParser {
     }
 
     for (Osmformat.Node i : nodes) {
-      OsmNode.Builder builder = OsmNode.builder()
+      OsmNodeBuilder builder = OsmNode.of()
         .withId(i.getId())
         .withOsmProvider(provider)
         .withLat(parseLat(i.getLat()))

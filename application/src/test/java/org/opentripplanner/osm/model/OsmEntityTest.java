@@ -234,31 +234,19 @@ public class OsmEntityTest {
 
   private static Stream<Arguments> barrierWheelchairAccessibilityCases() {
     return Stream.of(
-      Arguments.of(OsmNode.builder().addTag("barrier", "stile").build(), false),
+      Arguments.of(OsmNode.of().addTag("barrier", "stile").build(), false),
       Arguments.of(
-        OsmNode.builder().addTag("barrier", "stile").addTag("wheelchair", "yes").build(),
+        OsmNode.of().addTag("barrier", "stile").addTag("wheelchair", "yes").build(),
         true
       ),
-      Arguments.of(OsmNode.builder().addTag("barrier", "kerb").build(), false),
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").build(), false),
       // https://wiki.openstreetmap.org/wiki/Key:kerb
-      Arguments.of(
-        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "flush").build(),
-        true
-      ),
-      Arguments.of(
-        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "lowered").build(),
-        true
-      ),
-      Arguments.of(OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "no").build(), true),
-      Arguments.of(
-        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "raised").build(),
-        false
-      ),
-      Arguments.of(
-        OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "rolled").build(),
-        false
-      ),
-      Arguments.of(OsmNode.builder().addTag("barrier", "kerb").addTag("kerb", "yes").build(), false)
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "flush").build(), true),
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "lowered").build(), true),
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "no").build(), true),
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "raised").build(), false),
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "rolled").build(), false),
+      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "yes").build(), false)
     );
   }
 

@@ -665,7 +665,7 @@ public class OsmDatabase {
    * @return The created node.
    */
   private OsmNode createVirtualNode(OsmProvider osmProvider, Coordinate c) {
-    OsmNode node = OsmNode.builder()
+    OsmNode node = OsmNode.of()
       .withId(virtualNodeId)
       .withLon(c.x)
       .withLat(c.y)

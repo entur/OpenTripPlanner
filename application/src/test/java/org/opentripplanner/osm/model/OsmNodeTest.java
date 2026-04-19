@@ -9,40 +9,40 @@ public class OsmNodeTest {
 
   @Test
   public void isBarrier() {
-    OsmNode node = OsmNode.builder().build();
+    OsmNode node = OsmNode.of().build();
     assertFalse(node.isBarrier());
 
-    node = OsmNode.builder().addTag("barrier", "unknown").build();
+    node = OsmNode.of().addTag("barrier", "unknown").build();
     assertFalse(node.isBarrier());
 
-    node = OsmNode.builder().addTag("barrier", "bollard").build();
+    node = OsmNode.of().addTag("barrier", "bollard").build();
     assertTrue(node.isBarrier());
 
-    node = OsmNode.builder().addTag("access", "no").build();
+    node = OsmNode.of().addTag("access", "no").build();
     assertTrue(node.isBarrier());
   }
 
   @Test
   public void isTaggedBarrierCrossing() {
-    OsmNode node = OsmNode.builder().build();
+    OsmNode node = OsmNode.of().build();
     assertFalse(node.isTaggedBarrierCrossing());
 
-    node = OsmNode.builder().addTag("barrier", "gate").build();
+    node = OsmNode.of().addTag("barrier", "gate").build();
     assertTrue(node.isTaggedBarrierCrossing());
 
-    node = OsmNode.builder().addTag("motor_vehicle", "yes").build();
+    node = OsmNode.of().addTag("motor_vehicle", "yes").build();
     assertTrue(node.isTaggedBarrierCrossing());
 
-    node = OsmNode.builder().addTag("motor_vehicle", "no").build();
+    node = OsmNode.of().addTag("motor_vehicle", "no").build();
     assertTrue(node.isTaggedBarrierCrossing());
 
-    node = OsmNode.builder().addTag("access", "yes").build();
+    node = OsmNode.of().addTag("access", "yes").build();
     assertTrue(node.isTaggedBarrierCrossing());
 
-    node = OsmNode.builder().addTag("access", "no").build();
+    node = OsmNode.of().addTag("access", "no").build();
     assertTrue(node.isTaggedBarrierCrossing());
 
-    node = OsmNode.builder().addTag("entrance", "main").build();
+    node = OsmNode.of().addTag("entrance", "main").build();
     assertTrue(node.isTaggedBarrierCrossing());
   }
 }

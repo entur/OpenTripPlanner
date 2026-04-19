@@ -82,21 +82,21 @@ public class OsmDatabaseTest {
 
   @Test
   void testWayIsntKeptForAreas() {
-    var n1 = OsmNode.builder().withId(1).withLat(0).withLon(0).build();
-    var n2 = OsmNode.builder().withId(2).withLat(0).withLon(3).build();
-    var n3 = OsmNode.builder().withId(3).withLat(3).withLon(3).build();
-    var n4 = OsmNode.builder().withId(4).withLat(3).withLon(0).build();
-    var n5 = OsmNode.builder().withId(5).withLat(0.3).withLon(1).build();
-    var n6 = OsmNode.builder().withId(6).withLat(0.3).withLon(1.5).build();
-    var n7 = OsmNode.builder().withId(7).withLat(0.7).withLon(1.5).build();
-    var n8 = OsmNode.builder().withId(8).withLat(0.7).withLon(1).build();
-    var n9 = OsmNode.builder().withId(9).withLat(0.3).withLon(2).build();
-    var n10 = OsmNode.builder().withId(10).withLat(0.3).withLon(2.5).build();
-    var n11 = OsmNode.builder().withId(11).withLat(0.7).withLon(2.5).build();
-    var n12 = OsmNode.builder().withId(12).withLat(0.7).withLon(2).build();
-    var n13 = OsmNode.builder().withId(13).withLat(3).withLon(3).build();
-    var n14 = OsmNode.builder().withId(14).withLat(3).withLon(4).build();
-    var n15 = OsmNode.builder().withId(15).withLat(4).withLon(3).build();
+    var n1 = OsmNode.of().withId(1).withLat(0).withLon(0).build();
+    var n2 = OsmNode.of().withId(2).withLat(0).withLon(3).build();
+    var n3 = OsmNode.of().withId(3).withLat(3).withLon(3).build();
+    var n4 = OsmNode.of().withId(4).withLat(3).withLon(0).build();
+    var n5 = OsmNode.of().withId(5).withLat(0.3).withLon(1).build();
+    var n6 = OsmNode.of().withId(6).withLat(0.3).withLon(1.5).build();
+    var n7 = OsmNode.of().withId(7).withLat(0.7).withLon(1.5).build();
+    var n8 = OsmNode.of().withId(8).withLat(0.7).withLon(1).build();
+    var n9 = OsmNode.of().withId(9).withLat(0.3).withLon(2).build();
+    var n10 = OsmNode.of().withId(10).withLat(0.3).withLon(2.5).build();
+    var n11 = OsmNode.of().withId(11).withLat(0.7).withLon(2.5).build();
+    var n12 = OsmNode.of().withId(12).withLat(0.7).withLon(2).build();
+    var n13 = OsmNode.of().withId(13).withLat(3).withLon(3).build();
+    var n14 = OsmNode.of().withId(14).withLat(3).withLon(4).build();
+    var n15 = OsmNode.of().withId(15).withLat(4).withLon(3).build();
 
     var simpleArea = OsmWay.of()
       .addTag("public_transport", "platform")
