@@ -2,12 +2,12 @@ package org.opentripplanner.transit.model.filter.transit;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.api.model.FilterValues;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
@@ -26,18 +26,13 @@ class TripOnServiceDateMatcherFactoryTest {
 
   @BeforeEach
   void setup() {
-    tripOnServiceDateRut = TripOnServiceDate.of(
-      FeedScopedIdForTestFactory.id("RUT:route:trip:date:1")
-    )
+    tripOnServiceDateRut = TripOnServiceDate.of(id("RUT:route:trip:date:1"))
       .withTrip(
-        Trip.of(FeedScopedIdForTestFactory.id("RUT:route:trip:1"))
+        Trip.of(id("RUT:route:trip:1"))
           .withRoute(
-            Route.of(FeedScopedIdForTestFactory.id("RUT:route:1"))
+            Route.of(id("RUT:route:1"))
               .withAgency(
-                Agency.of(FeedScopedIdForTestFactory.id("RUT:1"))
-                  .withName("RUT")
-                  .withTimezone("Europe/Oslo")
-                  .build()
+                Agency.of(id("RUT:1")).withName("RUT").withTimezone("Europe/Oslo").build()
               )
               .withMode(TransitMode.BUS)
               .withShortName("BUS")
@@ -48,18 +43,13 @@ class TripOnServiceDateMatcherFactoryTest {
       .withServiceDate(LocalDate.of(2024, 2, 22))
       .build();
 
-    tripOnServiceDateRut2 = TripOnServiceDate.of(
-      FeedScopedIdForTestFactory.id("RUT:route:trip:date:2")
-    )
+    tripOnServiceDateRut2 = TripOnServiceDate.of(id("RUT:route:trip:date:2"))
       .withTrip(
-        Trip.of(FeedScopedIdForTestFactory.id("RUT:route:trip:2"))
+        Trip.of(id("RUT:route:trip:2"))
           .withRoute(
-            Route.of(FeedScopedIdForTestFactory.id("RUT:route:2"))
+            Route.of(id("RUT:route:2"))
               .withAgency(
-                Agency.of(FeedScopedIdForTestFactory.id("RUT:2"))
-                  .withName("RUT")
-                  .withTimezone("Europe/Oslo")
-                  .build()
+                Agency.of(id("RUT:2")).withName("RUT").withTimezone("Europe/Oslo").build()
               )
               .withMode(TransitMode.BUS)
               .withShortName("BUS")
@@ -70,18 +60,13 @@ class TripOnServiceDateMatcherFactoryTest {
       .withServiceDate(LocalDate.of(2024, 2, 22))
       .build();
 
-    tripOnServiceDateAkt = TripOnServiceDate.of(
-      FeedScopedIdForTestFactory.id("AKT:route:trip:date:1")
-    )
+    tripOnServiceDateAkt = TripOnServiceDate.of(id("AKT:route:trip:date:1"))
       .withTrip(
-        Trip.of(FeedScopedIdForTestFactory.id("AKT:route:trip:1"))
+        Trip.of(id("AKT:route:trip:1"))
           .withRoute(
-            Route.of(FeedScopedIdForTestFactory.id("AKT:route:1"))
+            Route.of(id("AKT:route:1"))
               .withAgency(
-                Agency.of(FeedScopedIdForTestFactory.id("AKT:1"))
-                  .withName("AKT")
-                  .withTimezone("Europe/Oslo")
-                  .build()
+                Agency.of(id("AKT:1")).withName("AKT").withTimezone("Europe/Oslo").build()
               )
               .withMode(TransitMode.BUS)
               .withShortName("BUS")
@@ -114,23 +99,10 @@ class TripOnServiceDateMatcherFactoryTest {
       .withIncludeServiceDates(
         FilterValues.ofRequired("serviceDates", List.of(LocalDate.of(2024, 2, 22)))
       )
-      .withIncludeAgencies(
-        FilterValues.ofEmptyIsEverything(
-          "agencies",
-          List.of(FeedScopedIdForTestFactory.id("RUT:1"))
-        )
-      )
-      .withIncludeRoutes(
-        FilterValues.ofEmptyIsEverything(
-          "routes",
-          List.of(FeedScopedIdForTestFactory.id("RUT:route:1"))
-        )
-      )
+      .withIncludeAgencies(FilterValues.ofEmptyIsEverything("agencies", List.of(id("RUT:1"))))
+      .withIncludeRoutes(FilterValues.ofEmptyIsEverything("routes", List.of(id("RUT:route:1"))))
       .withIncludeServiceJourneys(
-        FilterValues.ofEmptyIsEverything(
-          "serviceJourneys",
-          List.of(FeedScopedIdForTestFactory.id("RUT:route:trip:1"))
-        )
+        FilterValues.ofEmptyIsEverything("serviceJourneys", List.of(id("RUT:route:trip:1")))
       )
       .withFilters(
         List.of(
@@ -159,27 +131,15 @@ class TripOnServiceDateMatcherFactoryTest {
         FilterValues.ofRequired("serviceDates", List.of(LocalDate.of(2024, 2, 22)))
       )
       .withIncludeAgencies(
-        FilterValues.ofEmptyIsEverything(
-          "agencies",
-          List.of(FeedScopedIdForTestFactory.id("RUT:1"), FeedScopedIdForTestFactory.id("RUT:2"))
-        )
+        FilterValues.ofEmptyIsEverything("agencies", List.of(id("RUT:1"), id("RUT:2")))
       )
       .withIncludeRoutes(
-        FilterValues.ofEmptyIsEverything(
-          "routes",
-          List.of(
-            FeedScopedIdForTestFactory.id("RUT:route:1"),
-            FeedScopedIdForTestFactory.id("RUT:route:2")
-          )
-        )
+        FilterValues.ofEmptyIsEverything("routes", List.of(id("RUT:route:1"), id("RUT:route:2")))
       )
       .withIncludeServiceJourneys(
         FilterValues.ofEmptyIsEverything(
           "serviceJourneys",
-          List.of(
-            FeedScopedIdForTestFactory.id("RUT:route:trip:1"),
-            FeedScopedIdForTestFactory.id("RUT:route:trip:2")
-          )
+          List.of(id("RUT:route:trip:1"), id("RUT:route:trip:2"))
         )
       )
       .build();
@@ -219,11 +179,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterSelectByAgency() {
     var filter = TripOnServiceDateFilterRequest.of()
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("RUT:1")))
-          .build()
-      )
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
@@ -236,11 +192,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterNotByAgency() {
     var filter = TripOnServiceDateFilterRequest.of()
-      .addNot(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("RUT:1")))
-          .build()
-      )
+      .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
@@ -254,16 +206,8 @@ class TripOnServiceDateMatcherFactoryTest {
   void compositeFilterSelectIsOrBetweenSelectors() {
     // Two selectors in select — a trip matching either one should pass
     var filter = TripOnServiceDateFilterRequest.of()
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("RUT:1")))
-          .build()
-      )
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("AKT:1")))
-          .build()
-      )
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
@@ -277,21 +221,9 @@ class TripOnServiceDateMatcherFactoryTest {
   void compositeFilterNotOverridesSelect() {
     // select RUT:1 and AKT:1, but not AKT:1 — AKT:1 should be excluded despite being selected
     var filter = TripOnServiceDateFilterRequest.of()
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("RUT:1")))
-          .build()
-      )
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("AKT:1")))
-          .build()
-      )
-      .addNot(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("AKT:1")))
-          .build()
-      )
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
+      .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
@@ -305,18 +237,10 @@ class TripOnServiceDateMatcherFactoryTest {
   void multipleFiltersAreOred() {
     // Two separate filters — a trip matching either filter should pass
     var filterRut = TripOnServiceDateFilterRequest.of()
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("RUT:1")))
-          .build()
-      )
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var filterAkt = TripOnServiceDateFilterRequest.of()
-      .addSelect(
-        TripOnServiceDateSelectRequest.of()
-          .withAgencies(List.of(FeedScopedIdForTestFactory.id("AKT:1")))
-          .build()
-      )
+      .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filterRut, filterAkt)).build();
     Matcher<TripOnServiceDate> matcher = TripOnServiceDateMatcherFactory.of(request);
