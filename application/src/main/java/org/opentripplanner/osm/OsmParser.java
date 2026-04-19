@@ -11,7 +11,6 @@ import org.opentripplanner.osm.model.OsmMemberType;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
-import org.opentripplanner.osm.model.OsmTag;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.model.OsmWayBuilder;
 
@@ -69,12 +68,9 @@ class OsmParser extends BinaryParser {
         .withOsmProvider(provider);
 
       for (int j = 0; j < i.getKeysCount(); j++) {
-        OsmTag tag = new OsmTag();
         String key = internalize(getStringById(i.getKeys(j)));
         String value = internalize(getStringById(i.getVals(j)));
-        tag.setK(key);
-        tag.setV(value);
-        builder.addTag(tag);
+        builder.addTag(key, value);
       }
 
       long lastMid = 0;
@@ -139,12 +135,9 @@ class OsmParser extends BinaryParser {
           int keyid = nodes.getKeysVals(j++);
           int valid = nodes.getKeysVals(j++);
 
-          OsmTag tag = new OsmTag();
           String key = internalize(getStringById(keyid));
           String value = internalize(getStringById(valid));
-          tag.setK(key);
-          tag.setV(value);
-          builder.addTag(tag);
+          builder.addTag(key, value);
         }
         // Skip over the '0' delimiter.
         j++;
@@ -169,12 +162,8 @@ class OsmParser extends BinaryParser {
 
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
-        // if handler.retain_tag(key) // TODO: filter tags
         String value = internalize(getStringById(i.getVals(j)));
-        OsmTag tag = new OsmTag();
-        tag.setK(key);
-        tag.setV(value);
-        builder.addTag(tag);
+        builder.addTag(key, value);
       }
 
       osmdb.addNode(builder.build());
@@ -191,12 +180,9 @@ class OsmParser extends BinaryParser {
       OsmWayBuilder builder = OsmWay.of().withId(i.getId()).withOsmProvider(provider);
 
       for (int j = 0; j < i.getKeysCount(); j++) {
-        OsmTag tag = new OsmTag();
-        String key = internalize(getStringById(i.getKeys(j)));
-        String value = internalize(getStringById(i.getVals(j)));
-        tag.setK(key);
-        tag.setV(value);
-        builder.addTag(tag);
+        var key = internalize(getStringById(i.getKeys(j)));
+        var value = internalize(getStringById(i.getVals(j)));
+        builder.addTag(key, value);
       }
 
       long lastId = 0;

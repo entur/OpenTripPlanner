@@ -36,13 +36,6 @@ public class OsmWayBuilder {
     return this;
   }
 
-  public OsmWayBuilder addTag(OsmTag tag) {
-    if (tag != null) {
-      this.tags.put(tag.getK().toLowerCase(), tag.getV());
-    }
-    return this;
-  }
-
   public OsmWayBuilder withCreativeName(I18NString creativeName) {
     this.creativeName = creativeName;
     return this;

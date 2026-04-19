@@ -61,13 +61,6 @@ public class OsmRelation extends OsmEntity {
       return this;
     }
 
-    public Builder addTag(OsmTag tag) {
-      if (tag != null) {
-        this.tags.put(tag.getK().toLowerCase(), tag.getV());
-      }
-      return this;
-    }
-
     public Builder withCreativeName(I18NString creativeName) {
       this.creativeName = creativeName;
       return this;

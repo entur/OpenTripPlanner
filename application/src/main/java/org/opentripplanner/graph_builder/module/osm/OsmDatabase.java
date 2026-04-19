@@ -36,7 +36,6 @@ import org.opentripplanner.osm.model.OsmLevelFactory;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
-import org.opentripplanner.osm.model.OsmTag;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.model.OsmWayBuilder;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -964,7 +963,7 @@ public class OsmDatabase {
             addUniqueName(way.getTag("otp:route_name"), relation.getTag("name"))
           );
         } else {
-          builder.addTag(new OsmTag("otp:route_name", relation.getTag("name")));
+          builder.addTag("otp:route_name", relation.getTag("name"));
         }
         modified = true;
       }
@@ -975,7 +974,7 @@ public class OsmDatabase {
             addUniqueName(way.getTag("otp:route_ref"), relation.getTag("ref"))
           );
         } else {
-          builder.addTag(new OsmTag("otp:route_ref", relation.getTag("ref")));
+          builder.addTag("otp:route_ref", relation.getTag("ref"));
         }
         modified = true;
       }
