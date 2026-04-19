@@ -6,7 +6,6 @@ import gnu.trove.list.array.TLongArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.osm.OsmProvider;
 
 public class OsmWay extends OsmEntity {
@@ -23,7 +22,6 @@ public class OsmWay extends OsmEntity {
   OsmWay(
     long id,
     Map<String, String> tags,
-    I18NString creativeName,
     OsmProvider osmProvider,
     TLongList nodes
   ) {

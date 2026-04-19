@@ -4,14 +4,12 @@ import gnu.trove.list.TLongList;
 import gnu.trove.list.array.TLongArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.osm.OsmProvider;
 
 public class OsmWayBuilder {
 
   private long id = -999;
   private final Map<String, String> tags = new HashMap<>();
-  private I18NString creativeName;
   private OsmProvider osmProvider;
   private final TLongList nodes = new TLongArrayList();
 
@@ -36,11 +34,6 @@ public class OsmWayBuilder {
     return this;
   }
 
-  public OsmWayBuilder withCreativeName(I18NString creativeName) {
-    this.creativeName = creativeName;
-    return this;
-  }
-
   public OsmWayBuilder withOsmProvider(OsmProvider osmProvider) {
     this.osmProvider = osmProvider;
     return this;
@@ -57,6 +50,6 @@ public class OsmWayBuilder {
   }
 
   public OsmWay build() {
-    return new OsmWay(id, tags, creativeName, osmProvider, nodes);
+    return new OsmWay(id, tags, osmProvider, nodes);
   }
 }
