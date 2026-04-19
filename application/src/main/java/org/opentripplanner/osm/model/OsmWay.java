@@ -27,7 +27,7 @@ public class OsmWay extends OsmEntity {
     OsmProvider osmProvider,
     TLongList nodes
   ) {
-    super(id, tags, creativeName, osmProvider);
+    super(id, tags, osmProvider);
     this.nodes = TCollections.unmodifiableList(new TLongArrayList(nodes));
   }
 

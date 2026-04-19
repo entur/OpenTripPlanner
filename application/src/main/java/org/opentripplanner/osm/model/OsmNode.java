@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.OptionalDouble;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.osm.OsmProvider;
 
 public class OsmNode extends OsmEntity {
@@ -15,15 +14,14 @@ public class OsmNode extends OsmEntity {
   public final double lat;
   public final double lon;
 
-  private OsmNode(
+  public OsmNode(
     long id,
     double lat,
     double lon,
     Map<String, String> tags,
-    I18NString creativeName,
     OsmProvider osmProvider
   ) {
-    super(id, tags, creativeName, osmProvider);
+    super(id, tags, osmProvider);
     this.lat = lat;
     this.lon = lon;
   }
@@ -38,7 +36,6 @@ public class OsmNode extends OsmEntity {
     builder.lat = this.lat;
     builder.lon = this.lon;
     builder.tags = new HashMap<>(this.getTags());
-    builder.creativeName = this.creativeName;
     builder.osmProvider = this.getOsmProvider();
     return builder;
   }
@@ -49,7 +46,6 @@ public class OsmNode extends OsmEntity {
     private double lat;
     private double lon;
     private Map<String, String> tags = new HashMap<>();
-    private I18NString creativeName;
     private OsmProvider osmProvider;
 
     public Builder withId(long id) {
@@ -74,18 +70,13 @@ public class OsmNode extends OsmEntity {
       return this;
     }
 
-    public Builder withCreativeName(I18NString creativeName) {
-      this.creativeName = creativeName;
-      return this;
-    }
-
     public Builder withOsmProvider(OsmProvider osmProvider) {
       this.osmProvider = osmProvider;
       return this;
     }
 
     public OsmNode build() {
-      return new OsmNode(id, lat, lon, tags, creativeName, osmProvider);
+      return new OsmNode(id, lat, lon, tags, osmProvider);
     }
   }
 

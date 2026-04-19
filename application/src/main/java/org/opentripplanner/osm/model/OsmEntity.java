@@ -160,22 +160,14 @@ public abstract class OsmEntity {
 
   protected final long id;
 
-  protected final I18NString creativeName;
-
   private final OsmProvider osmProvider;
 
   /**
    * Constructor for immutable OsmEntity
    */
-  protected OsmEntity(
-    long id,
-    Map<String, String> tags,
-    I18NString creativeName,
-    OsmProvider osmProvider
-  ) {
+  protected OsmEntity(long id, Map<String, String> tags, OsmProvider osmProvider) {
     this.id = id;
     this.tags = Map.copyOf(tags);
-    this.creativeName = creativeName;
     this.osmProvider = osmProvider;
   }
 

@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.osm.OsmProvider;
 
 public class OsmRelation extends OsmEntity {
@@ -15,11 +14,10 @@ public class OsmRelation extends OsmEntity {
   private OsmRelation(
     long id,
     Map<String, String> tags,
-    I18NString creativeName,
     OsmProvider osmProvider,
     List<OsmRelationMember> members
   ) {
-    super(id, tags, creativeName, osmProvider);
+    super(id, tags, osmProvider);
     this.members = Collections.unmodifiableList(new ArrayList<>(members));
   }
 
@@ -31,7 +29,6 @@ public class OsmRelation extends OsmEntity {
     Builder builder = new Builder();
     builder.id = this.id;
     builder.tags = new HashMap<>(this.getTags());
-    builder.creativeName = this.creativeName;
     builder.osmProvider = this.getOsmProvider();
     builder.members = new ArrayList<>(this.members);
     return builder;
@@ -45,7 +42,6 @@ public class OsmRelation extends OsmEntity {
 
     private long id;
     private Map<String, String> tags = new HashMap<>();
-    private I18NString creativeName;
     private OsmProvider osmProvider;
     private List<OsmRelationMember> members = new ArrayList<>();
 
@@ -61,11 +57,6 @@ public class OsmRelation extends OsmEntity {
       return this;
     }
 
-    public Builder withCreativeName(I18NString creativeName) {
-      this.creativeName = creativeName;
-      return this;
-    }
-
     public Builder withOsmProvider(OsmProvider osmProvider) {
       this.osmProvider = osmProvider;
       return this;
@@ -77,7 +68,7 @@ public class OsmRelation extends OsmEntity {
     }
 
     public OsmRelation build() {
-      return new OsmRelation(id, tags, creativeName, osmProvider, members);
+      return new OsmRelation(id, tags, osmProvider, members);
     }
   }
 

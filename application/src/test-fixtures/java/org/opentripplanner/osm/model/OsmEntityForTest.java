@@ -13,7 +13,7 @@ public class OsmEntityForTest extends OsmEntity {
   }
 
   public OsmEntityForTest(Map<String, String> tags) {
-    super(0, tags, null, null);
+    super(0, tags, null);
   }
 
   public OsmEntityForTest(String key, String value) {
