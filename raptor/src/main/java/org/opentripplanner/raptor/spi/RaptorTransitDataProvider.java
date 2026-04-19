@@ -143,4 +143,20 @@ public interface RaptorTransitDataProvider<T extends RaptorTripSchedule> {
    * REVERSE search.
    */
   RaptorConstrainedBoardingSearch<T> transferConstraintsReverseSearch(int routeIndex);
+
+  /**
+   * Return a reference for a give trip schedule. It can be stored and later used to fetch
+   * {@link RaptorRoute}, {@link RaptorTripPattern} and {@link RaptorTripSchedule} later on.
+   * <p>
+   * <b>IMPLEMENTATION NOTES</b>
+   * <p>
+   * Raptor uses this to fetch information in places where the original Raptor routing context
+   * (iterating over the stop of a pattern) is no longer available. Raptor could pass this
+   * information down the call stack, but that would have an effect on the performance. An other
+   * alternative is to add methods for this to the {@link RaptorTripSchedule}, but that would
+   * couple the trip schedule to the route and trip-pattern.
+   * <p>
+   * This method is <em>NOT</em> performance critical, but it should not be slow.
+   */
+  RaptorTripScheduleReference tripScheduleReference(T trip);
 }

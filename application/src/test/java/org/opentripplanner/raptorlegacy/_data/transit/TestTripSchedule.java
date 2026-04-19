@@ -1,6 +1,7 @@
 package org.opentripplanner.raptorlegacy._data.transit;
 
 import static org.opentripplanner.core.model.accessibility.Accessibility.NO_INFORMATION;
+import static org.opentripplanner.raptorlegacy._data.RaptorTestConstants.createDeprecatedUnsupportedFeatureException;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -123,6 +124,11 @@ public class TestTripSchedule implements TripSchedule {
   @Override
   public TripPattern getOriginalTripPattern() {
     return this.originalPattern;
+  }
+
+  @Override
+  public int tripScheduleIndex() {
+    throw createDeprecatedUnsupportedFeatureException();
   }
 
   @SuppressWarnings("UnusedReturnValue")

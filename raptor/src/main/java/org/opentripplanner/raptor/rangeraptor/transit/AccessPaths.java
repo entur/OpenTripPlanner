@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.function.IntUnaryOperator;
 import java.util.stream.IntStream;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.api.model.RaptorOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstants;
@@ -34,7 +34,7 @@ public class AccessPaths {
   private final IntUnaryOperator iterationOp;
   private final TIntObjectMap<List<RaptorAccessEgress>> arrivedOnStreetByNumOfRides;
   private final TIntObjectMap<List<RaptorAccessEgress>> arrivedOnBoardByNumOfRides;
-  private final List<RaptorOnBoardAccess> onBoardAccessPaths;
+  private final List<RaptorStartOnBoardAccess> startOnBoardAccessPaths;
   private int iterationTimePenaltyLimit = RaptorConstants.TIME_NOT_SET;
 
   private AccessPaths(
@@ -44,7 +44,7 @@ public class AccessPaths {
     IntUnaryOperator iterationOp,
     TIntObjectMap<List<RaptorAccessEgress>> arrivedOnStreetByNumOfRides,
     TIntObjectMap<List<RaptorAccessEgress>> arrivedOnBoardByNumOfRides,
-    List<RaptorOnBoardAccess> onBoardAccessPaths
+    List<RaptorStartOnBoardAccess> startOnBoardAccessPaths
   ) {
     this.iterationStep = iterationStep;
     this.maxNumberOfRides = maxNumberOfRides;
@@ -52,7 +52,7 @@ public class AccessPaths {
     this.iterationOp = iterationOp;
     this.arrivedOnStreetByNumOfRides = arrivedOnStreetByNumOfRides;
     this.arrivedOnBoardByNumOfRides = arrivedOnBoardByNumOfRides;
-    this.onBoardAccessPaths = onBoardAccessPaths;
+    this.startOnBoardAccessPaths = startOnBoardAccessPaths;
   }
 
   /**
@@ -75,8 +75,8 @@ public class AccessPaths {
     // and also cannot have time penalties, so we extract them from paths before removing.
     var onBoardAccessPaths = paths
       .stream()
-      .filter(RaptorOnBoardAccess.class::isInstance)
-      .map(RaptorOnBoardAccess.class::cast)
+      .filter(RaptorStartOnBoardAccess.class::isInstance)
+      .map(RaptorStartOnBoardAccess.class::cast)
       .toList();
 
     if (profile.is(RaptorProfile.MULTI_CRITERIA)) {
@@ -139,8 +139,8 @@ public class AccessPaths {
   /**
    * Return the on-board accesses
    */
-  public List<RaptorOnBoardAccess> onBoardAccessPaths() {
-    return onBoardAccessPaths;
+  public List<RaptorStartOnBoardAccess> startOnBoardAccessPaths() {
+    return startOnBoardAccessPaths;
   }
 
   public int maxNumberOfRides() {
@@ -194,7 +194,7 @@ public class AccessPaths {
       iterationOp,
       AccessEgressFunctions.filterOnSegment(arrivedOnStreetByNumOfRides, segment),
       AccessEgressFunctions.filterOnSegment(arrivedOnBoardByNumOfRides, segment),
-      AccessEgressFunctions.filterOnSegment(onBoardAccessPaths, segment)
+      AccessEgressFunctions.filterOnSegment(startOnBoardAccessPaths, segment)
     );
   }
 

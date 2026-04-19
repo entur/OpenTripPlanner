@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.SubMode;
@@ -44,7 +46,7 @@ class AddedTripBuilderTest {
 
   private static final Agency AGENCY = TimetableRepositoryForTest.AGENCY;
   private static final ZoneId TIME_ZONE = AGENCY.getTimezone();
-  private static final Operator OPERATOR = Operator.of(TimetableRepositoryForTest.id("OPERATOR_ID"))
+  private static final Operator OPERATOR = Operator.of(FeedScopedIdForTestFactory.id("OPERATOR_ID"))
     .withName("OPERATOR_NAME")
     .build();
   private static final Route REPLACED_ROUTE = TimetableRepositoryForTest.route("REPLACED_ROUTE")
@@ -52,8 +54,8 @@ class AddedTripBuilderTest {
     .withOperator(OPERATOR)
     .build();
   private static final String LINE_REF = "ROUTE_ID";
-  private static final FeedScopedId TRIP_ID = TimetableRepositoryForTest.id("TRIP_ID");
-  private static final FeedScopedId DATED_SERVICE_JOURNEY_ID = TimetableRepositoryForTest.id(
+  private static final FeedScopedId TRIP_ID = FeedScopedIdForTestFactory.id("TRIP_ID");
+  private static final FeedScopedId DATED_SERVICE_JOURNEY_ID = FeedScopedIdForTestFactory.id(
     "DATED_SERVICE_JOURNEY_ID"
   );
   private static final LocalDate SERVICE_DATE = LocalDate.of(2023, 2, 17);
@@ -95,7 +97,7 @@ class AddedTripBuilderTest {
 
     // Crate a scheduled calendar, to have the SERVICE_DATE be within the transit feed coverage
     CalendarServiceData calendarServiceData = new CalendarServiceData();
-    var cal_id = TimetableRepositoryForTest.id("CAL_1");
+    var cal_id = FeedScopedIdForTestFactory.id("CAL_1");
     calendarServiceData.putServiceDatesForServiceId(
       cal_id,
       List.of(SERVICE_DATE.minusDays(1), SERVICE_DATE, SERVICE_DATE.plusDays(1))
@@ -182,6 +184,14 @@ class AddedTripBuilderTest {
     assertEquals(STOP_B, stopPattern.getStop(1));
     assertEquals(STOP_C, stopPattern.getStop(2));
 
+    // Assert pickup/dropoff defaults: no alighting at first stop, no boarding at last stop
+    assertEquals(PickDrop.SCHEDULED, pattern.getBoardType(0), "Can board at first stop");
+    assertEquals(PickDrop.NONE, pattern.getAlightType(0), "Cannot alight at first stop");
+    assertEquals(PickDrop.SCHEDULED, pattern.getBoardType(1), "Can board at middle stop");
+    assertEquals(PickDrop.SCHEDULED, pattern.getAlightType(1), "Can alight at middle stop");
+    assertEquals(PickDrop.NONE, pattern.getBoardType(2), "Cannot board at last stop");
+    assertEquals(PickDrop.SCHEDULED, pattern.getAlightType(2), "Can alight at last stop");
+
     // Assert scheduled timetable
     var scheduledTimes = pattern.getScheduledTimetable().getTripTimes(trip);
     assertNotNull(scheduledTimes);
@@ -255,8 +265,8 @@ class AddedTripBuilderTest {
 
     var firstTrip = firstAddedTrip.tripTimes().getTrip();
 
-    var tripId2 = TimetableRepositoryForTest.id("TRIP_ID_2");
-    var datedServiceJourneyId2 = TimetableRepositoryForTest.id("DATED_SERVICE_JOURNEY_ID_2");
+    var tripId2 = FeedScopedIdForTestFactory.id("TRIP_ID_2");
+    var datedServiceJourneyId2 = FeedScopedIdForTestFactory.id("DATED_SERVICE_JOURNEY_ID_2");
 
     var secondAddedTrip = new AddedTripBuilder(
       transitService,
@@ -561,7 +571,7 @@ class AddedTripBuilderTest {
     String subMode
   ) {
     // Arrange
-    var route = Route.of(TimetableRepositoryForTest.id(LINE_REF))
+    var route = Route.of(FeedScopedIdForTestFactory.id(LINE_REF))
       .withShortName(SHORT_NAME)
       .withAgency(AGENCY)
       .withMode(TransitMode.valueOf(replacedRouteMode))
