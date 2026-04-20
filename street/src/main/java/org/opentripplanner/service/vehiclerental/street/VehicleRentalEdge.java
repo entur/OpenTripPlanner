@@ -189,6 +189,10 @@ public class VehicleRentalEdge extends Edge {
       }
     }
 
+    if (pickedUp) {
+      s1.initializeGeofencingZones(stationVertex.getInitialGeofencingZone());
+    }
+
     s1.incrementWeight(
       pickedUp ? request.pickupCost().toSeconds() : request.dropOffCost().toSeconds()
     );
