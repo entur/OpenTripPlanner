@@ -168,6 +168,8 @@ public abstract class OsmEntity {
    */
   protected OsmEntity(long id, Map<String, String> tags, OsmProvider osmProvider) {
     this.id = id;
+    // calling Map.copyOf here costs about 10% of parsing performance, so we use
+    // Collections.unmodifiableMap in the getter
     this.tags = tags;
     this.osmProvider = osmProvider;
   }

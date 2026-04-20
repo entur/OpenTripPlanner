@@ -6,21 +6,24 @@ import org.opentripplanner.osm.OsmProvider;
 
 public class OsmNodeBuilder {
 
+  private static final Map<String, String> EMPTY_TAGS = Map.of();
   private long id;
   private double lat;
   private double lon;
-  private final Map<String, String> tags = new HashMap<>();
+  // many nodes don't have any tags so we start with an empty immutable map
+  private Map<String, String> tags = EMPTY_TAGS;
   private OsmProvider osmProvider;
 
   public OsmNodeBuilder(OsmNode osmNode) {
     this.id = osmNode.id;
     this.lat = osmNode.lat;
     this.lon = osmNode.lon;
-    this.tags.putAll(osmNode.getTags());
+    this.tags = new HashMap<>();
     this.osmProvider = osmNode.getOsmProvider();
   }
 
-  public OsmNodeBuilder() {}
+  public OsmNodeBuilder() {
+  }
 
   public OsmNodeBuilder withId(long id) {
     this.id = id;
@@ -35,6 +38,9 @@ public class OsmNodeBuilder {
 
   public OsmNodeBuilder addTag(String key, String value) {
     if (key != null && value != null) {
+      if(this.tags == EMPTY_TAGS){
+        this.tags = new HashMap<>();
+      }
       this.tags.put(key.toLowerCase(), value);
     }
     return this;
