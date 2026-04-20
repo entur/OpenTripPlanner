@@ -52,11 +52,9 @@ public final class TripScheduleWithOffset implements TripSchedule {
 
   @Override
   public int relativeTravelDuration(int boardTime) {
-    // sortIndex is the arrival time at stop 0, which is fixed per trip. Since all trips in the
-    // same pattern have the same travel-time structure, (sortIndex - boardTime) satisfies both
-    // invariants of relativeTravelDuration: the difference between two boardings equals the actual
-    // transit time between the stops, and the value is identical across trips for the same
-    // boarding position.
+    // sortIndex is the arrival time at stop 0. This allow us to use it to compute the relative
+    // travel duration. It satisfies both invariants of relativeTravelDuration (see JavaDoc on this
+    // method).
     return sortIndex - boardTime;
   }
 
