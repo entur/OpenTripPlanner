@@ -139,13 +139,13 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
       boardingArrival.arrivalTime(),
       e.stop()
     );
-    var onBoardTripConstrant = new RaptorTripScheduleStopPosition(
+    var onBoardTripConstraint = new RaptorTripScheduleStopPosition(
       info.routeIndex(),
       info.tripScheduleIndex(),
       passThroughStopPos
     );
 
-    next.addOnBoardTripArrival(boardingArrival, e.stop(), onBoardTripConstrant);
+    next.addOnBoardTripArrival(boardingArrival, e.stop(), onBoardTripConstraint);
   }
 
   private void continueFromSameStopArrival(

@@ -208,20 +208,20 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
    *
    * @param boardingArrival       the arrival state from which boarding occurs.
    * @param applyToStopIndex      the stop where the on-board boarding should be applied.
-   * @param onBoardTripConstrant  the trip and stop-position constraint for the on-board access.
+   * @param onBoardTripConstraint  the trip and stop-position constraint for the on-board access.
    */
   public void addOnBoardTripArrival(
     ArrivalView<T> boardingArrival,
     int applyToStopIndex,
-    RaptorTripScheduleStopPosition onBoardTripConstrant
+    RaptorTripScheduleStopPosition onBoardTripConstraint
   ) {
-    int routeIndex = onBoardTripConstrant.routeIndex();
+    int routeIndex = onBoardTripConstraint.routeIndex();
     var arrivalsForRoute = onBoardTripArrivalsByRouteQueue.get(routeIndex);
     if (arrivalsForRoute == null) {
       arrivalsForRoute = new OnTripAccessArrivals<T>();
       onBoardTripArrivalsByRouteQueue.put(routeIndex, arrivalsForRoute);
     }
-    arrivalsForRoute.add(boardingArrival, onBoardTripConstrant);
+    arrivalsForRoute.add(boardingArrival, onBoardTripConstraint);
 
     // Then update the state, both touchedStops and init the pareto-set for the given stop to
     // prevent NPE when the state is fetched later. The set is empty, which is ok.
