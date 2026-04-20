@@ -25,16 +25,16 @@ import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 
 /**
- * This class is used to listen for stop arrivals in one raptor state and then copy
+ * This class is used to listen for stop arrivals in one Raptor state and then copy
  * over the arrival event to another state. This is used to chain the Raptor searches
  * together to force the paths through the given via connections.
  * <p>
  * We need to delay updating the next arrival state if the via connection is a transfer.
- * Raptor process arrivals in phases, if you arrive at a stop by transit, you may continue
+ * Raptor process arrivals in phases. If you arrive at a stop by transit, you may continue
  * using a transfer or transit. The transit state is copied over from the first leg state
  * without delay, while the transfer via-leg state must be cached and copied over in the
- * "transfer phase" of the Raptor algorithm. The life-cycle service will notify this class
- * at the right time to publish the transter-arrivals.
+ * "transfer phase" of the Raptor algorithm. The lifecycle service will notify this class
+ * at the right time to publish the transfer arrivals.
  */
 public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSchedule>
   implements ParetoSetEventListener<ArrivalView<T>> {
@@ -120,7 +120,8 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
           if (e.arrivedOnBoard()) {
             continueWithTransfer(e, transfer);
           }
-          // Ignore arrive-on-foot + via-transfer
+          // Silently ignore arrive-on-foot + via-transfer. Two transfers are
+          // not allowed after each other, and we can safely skip it here.
         }
       }
     }
