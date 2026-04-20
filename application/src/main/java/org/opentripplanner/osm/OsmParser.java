@@ -156,8 +156,7 @@ class OsmParser extends BinaryParser {
       OsmNodeBuilder builder = OsmNode.of()
         .withId(i.getId())
         .withOsmProvider(provider)
-        .withLat(parseLat(i.getLat()))
-        .withLon(parseLon(i.getLon()));
+        .withLatLon(parseLat(i.getLat()), parseLon(i.getLon()));
 
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));

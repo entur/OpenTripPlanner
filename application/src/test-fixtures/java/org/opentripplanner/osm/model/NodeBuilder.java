@@ -9,9 +9,6 @@ public class NodeBuilder {
   }
 
   public static OsmNodeBuilder nodeBuilder(long id, WgsCoordinate wgsCoordinate) {
-    return OsmNode.of()
-      .withId(id)
-      .withLat(wgsCoordinate.latitude())
-      .withLon(wgsCoordinate.longitude());
+    return OsmNode.of().withId(id).withLatLon(wgsCoordinate.latitude(), wgsCoordinate.longitude());
   }
 }

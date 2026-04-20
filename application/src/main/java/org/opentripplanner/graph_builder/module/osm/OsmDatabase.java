@@ -667,8 +667,7 @@ public class OsmDatabase {
   private OsmNode createVirtualNode(OsmProvider osmProvider, Coordinate c) {
     OsmNode node = OsmNode.of()
       .withId(virtualNodeId)
-      .withLat(c.y)
-      .withLon(c.x)
+      .withLatLon(c.y, c.x)
       .withOsmProvider(osmProvider)
       .build();
     virtualNodeId--;

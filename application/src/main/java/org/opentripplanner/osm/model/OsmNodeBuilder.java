@@ -27,16 +27,6 @@ public class OsmNodeBuilder {
     return this;
   }
 
-  public OsmNodeBuilder withLat(double lat) {
-    this.lat = lat;
-    return this;
-  }
-
-  public OsmNodeBuilder withLon(double lon) {
-    this.lon = lon;
-    return this;
-  }
-
   public OsmNodeBuilder withLatLon(double lat, double lon) {
     this.lat = lat;
     this.lon = lon;
