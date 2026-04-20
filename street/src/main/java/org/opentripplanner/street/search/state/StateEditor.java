@@ -228,24 +228,6 @@ public class StateEditor {
     child.stateData.enteredNoThroughTrafficArea = true;
   }
 
-  public void leaveNoRentalDropOffArea() {
-    if (!child.stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-
-    cloneStateDataAsNeeded();
-    child.stateData.insideNoRentalDropOffArea = false;
-  }
-
-  public void enterNoRentalDropOffArea() {
-    if (child.stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-
-    cloneStateDataAsNeeded();
-    child.stateData.insideNoRentalDropOffArea = true;
-  }
-
   public void setBackMode(TraverseMode mode) {
     if (mode == child.stateData.backMode) {
       return;
@@ -277,7 +259,6 @@ public class StateEditor {
       child.stateData.vehicleRentalNetwork = null;
       child.stateData.rentalVehicleFormFactor = null;
       child.stateData.rentalVehiclePropulsionType = null;
-      child.stateData.insideNoRentalDropOffArea = false;
     } else {
       child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
       child.stateData.currentMode = formFactor.traverseMode;
@@ -411,11 +392,6 @@ public class StateEditor {
 
   public State getBackState() {
     return child.getBackState();
-  }
-
-  public void resetStartedInNoDropOffZone() {
-    cloneStateDataAsNeeded();
-    child.stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
   }
 
   /**

@@ -49,18 +49,9 @@ public interface RentalRestrictionExtension {
    */
   List<RentalRestrictionExtension> toList();
 
-  /**
-   * List all networks that have a restriction in this extension.
-   */
-  List<String> networks();
-
   boolean hasRestrictions();
 
-  Set<String> noDropOffNetworks();
-
   enum RestrictionType {
-    NO_TRAVERSAL,
-    NO_DROP_OFF,
     BUSINESS_AREA_BORDER,
     GEOFENCING_BOUNDARY,
   }

@@ -18,15 +18,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.i18n.I18NString;
-import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationBuilder;
-import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.RentalFormFactor;
@@ -36,8 +30,6 @@ import org.opentripplanner.street.search.request.RentalPeriod;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
 import org.opentripplanner.street.search.state.State;
-import org.opentripplanner.street.search.state.VehicleRentalState;
-
 class VehicleRentalEdgeTest {
 
   VehicleRentalEdge vehicleRentalEdge;
@@ -280,66 +272,6 @@ class VehicleRentalEdgeTest {
     assertFalse(State.isEmpty(s1));
   }
 
-  @Nested
-  class StartedReverseSearchInNoGeofencingZone {
-
-    private static final String NETWORK = "tier";
-    private static final StreetSearchRequest SEARCH_REQUEST = StreetSearchRequest.of()
-      .withMode(SCOOTER_RENTAL)
-      .withArriveBy(true)
-      .build();
-
-    private static final VehicleRentalVehicle RENTAL_PLACE = VehicleRentalVehicle.of()
-      .withLatitude(1)
-      .withLongitude(1)
-      .withId(new FeedScopedId(NETWORK, "123"))
-      .withVehicleType(
-        RentalVehicleType.of()
-          .withId(new FeedScopedId(NETWORK, "scooter"))
-          .withName(I18NString.of("scooter"))
-          .withFormFactor(RentalFormFactor.SCOOTER)
-          .withPropulsionType(RentalVehicleType.PropulsionType.ELECTRIC)
-          .withMaxRangeMeters(100000d)
-          .build()
-      )
-      .build();
-
-    @Test
-    void startedInNoDropOffZone() {
-      var rentalVertex = new VehicleRentalPlaceVertex(RENTAL_PLACE);
-      var rentalEdge = VehicleRentalEdge.createVehicleRentalEdge(rentalVertex, SCOOTER);
-
-      rentalVertex.addRentalRestriction(noDropOffZone());
-
-      var state = new State(rentalVertex, SEARCH_REQUEST);
-
-      assertEquals(Set.of(NETWORK), state.stateData.noRentalDropOffZonesAtStartOfReverseSearch);
-
-      assertTrue(State.isEmpty(rentalEdge.traverse(state)));
-    }
-
-    @Test
-    void startedOutsideNoDropOffZone() {
-      var rentalVertex = new VehicleRentalPlaceVertex(RENTAL_PLACE);
-      var rentalEdge = VehicleRentalEdge.createVehicleRentalEdge(rentalVertex, SCOOTER);
-      var state = new State(rentalVertex, SEARCH_REQUEST);
-
-      assertEquals(Set.of(), state.stateData.noRentalDropOffZonesAtStartOfReverseSearch);
-      var result = rentalEdge.traverse(state);
-
-      assertEquals(1, result.length);
-
-      var afterTraversal = result[0];
-      assertEquals(VehicleRentalState.BEFORE_RENTING, afterTraversal.getVehicleRentalState());
-    }
-
-    private GeofencingZoneExtension noDropOffZone() {
-      return new GeofencingZoneExtension(
-        new GeofencingZone(new FeedScopedId(NETWORK, "zone"), null, null, true, false)
-      );
-    }
-  }
-
   private void initBicycleEdgeAndRequest(int vehicles, int spaces) {
     initEdgeAndRequest(BIKE_RENTAL, BICYCLE, HUMAN, vehicles, spaces, false, true, true, false);
   }
@@ -460,5 +392,51 @@ class VehicleRentalEdgeTest {
       fail("Expected a single state from traverse() method but received " + resultingStates.length);
       return null;
     }
+  }
+
+  /**
+   * When a generic RENTING_FLOATING state (network=null) has a network in committedNetworks,
+   * VehicleRentalEdge should block picking up a vehicle of that network. This prevents duplicate
+   * paths — the committed branch already handles that network.
+   */
+  @Test
+  void committedNetworkBlocksGenericPickup() {
+    initFreeFloatingEdgeAndRequest(SCOOTER_RENTAL, SCOOTER, false);
+
+    // Create an arriveBy generic RENTING_FLOATING state with the station's network committed
+    var arriveByReq = StreetSearchRequest.copyOf(request).withArriveBy(true).build();
+    var editor = new org.opentripplanner.street.search.state.StateEditor(vertex, arriveByReq);
+    editor.dropFloatingVehicle(SCOOTER, ELECTRIC, null, true);
+    editor.setCommittedNetworks(Set.of(vertex.getStation().network()));
+    var genericState = editor.makeState();
+
+    // The generic state has the station's network in committedNetworks
+    assertTrue(genericState.getCommittedNetworks().contains(vertex.getStation().network()));
+
+    // Traversing the rental edge should return empty — network is committed
+    var result = vehicleRentalEdge.traverse(genericState);
+    assertTrue(State.isEmpty(result));
+  }
+
+  /**
+   * When a generic RENTING_FLOATING state does NOT have the network committed,
+   * VehicleRentalEdge should allow picking up the vehicle.
+   */
+  @Test
+  void uncommittedNetworkAllowsGenericPickup() {
+    initFreeFloatingEdgeAndRequest(SCOOTER_RENTAL, SCOOTER, false);
+
+    // Create an arriveBy generic RENTING_FLOATING state with a DIFFERENT network committed
+    var arriveByReq = StreetSearchRequest.copyOf(request).withArriveBy(true).build();
+    var editor = new org.opentripplanner.street.search.state.StateEditor(vertex, arriveByReq);
+    editor.dropFloatingVehicle(SCOOTER, ELECTRIC, null, true);
+    editor.setCommittedNetworks(Set.of("some-other-network"));
+    var genericState = editor.makeState();
+
+    assertFalse(genericState.getCommittedNetworks().contains(vertex.getStation().network()));
+
+    // Traversing the rental edge should succeed
+    var result = vehicleRentalEdge.traverse(genericState);
+    assertFalse(State.isEmpty(result));
   }
 }

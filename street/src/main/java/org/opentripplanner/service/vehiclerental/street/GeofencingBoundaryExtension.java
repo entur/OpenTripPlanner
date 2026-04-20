@@ -39,17 +39,7 @@ public record GeofencingBoundaryExtension(GeofencingZone zone, boolean entering)
   }
 
   @Override
-  public List<String> networks() {
-    return List.of(zone.id().getFeedId());
-  }
-
-  @Override
   public boolean hasRestrictions() {
     return true;
-  }
-
-  @Override
-  public Set<String> noDropOffNetworks() {
-    return Set.of();
   }
 }
