@@ -27,17 +27,17 @@ class OsmAreaGroupTest {
   private static final TLongObjectHashMap<OsmNode> NODES = new TLongObjectHashMap<>();
 
   static {
-    NODES.put(1, OsmNode.of().withId(1).withLat(0).withLon(0).build());
-    NODES.put(2, OsmNode.of().withId(2).withLat(0).withLon(1).build());
-    NODES.put(3, OsmNode.of().withId(3).withLat(1).withLon(1).build());
-    NODES.put(4, OsmNode.of().withId(4).withLat(1).withLon(0).build());
-    NODES.put(5, OsmNode.of().withId(5).withLat(-0.5).withLon(-1).build());
-    NODES.put(6, OsmNode.of().withId(6).withLat(-1).withLon(0).build());
-    NODES.put(7, OsmNode.of().withId(7).withLat(1).withLon(2).build());
-    NODES.put(8, OsmNode.of().withId(8).withLat(2).withLon(2).build());
-    NODES.put(9, OsmNode.of().withId(9).withLat(2).withLon(0).build());
-    NODES.put(10, OsmNode.of().withId(10).withLat(0).withLon(2).build());
-    NODES.put(11, OsmNode.of().withId(11).withLat(-1).withLon(3).build());
+    NODES.put(1, OsmNode.of().withId(1).withLatLon(0, 0).build());
+    NODES.put(2, OsmNode.of().withId(2).withLatLon(0, 1).build());
+    NODES.put(3, OsmNode.of().withId(3).withLatLon(1, 1).build());
+    NODES.put(4, OsmNode.of().withId(4).withLatLon(1, 0).build());
+    NODES.put(5, OsmNode.of().withId(5).withLatLon(-0.5, -1).build());
+    NODES.put(6, OsmNode.of().withId(6).withLatLon(-1, 0).build());
+    NODES.put(7, OsmNode.of().withId(7).withLatLon(1, 2).build());
+    NODES.put(8, OsmNode.of().withId(8).withLatLon(2, 2).build());
+    NODES.put(9, OsmNode.of().withId(9).withLatLon(2, 0).build());
+    NODES.put(10, OsmNode.of().withId(10).withLatLon(0, 2).build());
+    NODES.put(11, OsmNode.of().withId(11).withLatLon(-1, 3).build());
   }
 
   private static final OsmWay L0_1_2_3_4_1 = OsmWay.of()

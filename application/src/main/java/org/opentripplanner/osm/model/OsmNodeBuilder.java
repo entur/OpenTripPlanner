@@ -37,6 +37,12 @@ public class OsmNodeBuilder {
     return this;
   }
 
+  public OsmNodeBuilder withLatLon(double lat, double lon) {
+    this.lat = lat;
+    this.lon = lon;
+    return this;
+  }
+
   public OsmNodeBuilder addTag(String key, String value) {
     if (key != null && value != null) {
       this.tags.put(key.toLowerCase(), value);

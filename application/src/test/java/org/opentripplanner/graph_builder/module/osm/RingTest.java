@@ -12,11 +12,11 @@ class RingTest {
 
   @Test
   void testIsNodeConvex() {
-    OsmNode a = OsmNode.of().withLat(0.0).withLon(0.0).build();
-    OsmNode b = OsmNode.of().withLat(1.0).withLon(0.0).build();
-    OsmNode c = OsmNode.of().withLat(1.0).withLon(1.0).build();
-    OsmNode d = OsmNode.of().withLat(0.0).withLon(1.0).build();
-    OsmNode e = OsmNode.of().withLat(0.5).withLon(0.5).build();
+    OsmNode a = OsmNode.of().withLatLon(0.0, 0.0).build();
+    OsmNode b = OsmNode.of().withLatLon(1.0, 0.0).build();
+    OsmNode c = OsmNode.of().withLatLon(1.0, 1.0).build();
+    OsmNode d = OsmNode.of().withLatLon(0.0, 1.0).build();
+    OsmNode e = OsmNode.of().withLatLon(0.5, 0.5).build();
 
     Ring ring = new Ring(List.of(a, b, c, d, a));
 

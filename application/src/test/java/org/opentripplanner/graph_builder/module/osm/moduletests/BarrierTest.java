@@ -52,7 +52,7 @@ public class BarrierTest {
       List.of(way, barrier),
       Set.of(1, 2, 3, 4, 98, 99)
         .stream()
-        .map(id -> OsmNode.of().withId(id).withLat((double) id / 1000).withLon(0).build())
+        .map(id -> OsmNode.of().withId(id).withLatLon((double) id / 1000, 0).build())
         .toList()
     );
 
@@ -78,12 +78,12 @@ public class BarrierTest {
 
   @Test
   void testHighwayReachingBarrierOnArea() {
-    var n1 = OsmNode.of().withId(1).withLat(0).withLon(0).build();
-    var n2 = OsmNode.of().withId(2).withLat(0.001).withLon(0).build();
-    var n3 = OsmNode.of().withId(3).withLat(0).withLon(-0.001).build();
-    var n4 = OsmNode.of().withId(4).withLat(0).withLon(0.001).build();
-    var n5 = OsmNode.of().withId(5).withLat(-0.001).withLon(0.001).build();
-    var n6 = OsmNode.of().withId(6).withLat(-0.001).withLon(-0.001).build();
+    var n1 = OsmNode.of().withId(1).withLatLon(0, 0).build();
+    var n2 = OsmNode.of().withId(2).withLatLon(0.001, 0).build();
+    var n3 = OsmNode.of().withId(3).withLatLon(0, -0.001).build();
+    var n4 = OsmNode.of().withId(4).withLatLon(0, 0.001).build();
+    var n5 = OsmNode.of().withId(5).withLatLon(-0.001, 0.001).build();
+    var n6 = OsmNode.of().withId(6).withLatLon(-0.001, -0.001).build();
 
     var path = OsmWay.of().withId(1).addTag("highway", "path").addNodeRef(1).addNodeRef(2).build();
 
@@ -166,12 +166,12 @@ public class BarrierTest {
 
   @Test
   void testDifferentLevelsConnectingBarrier() {
-    var n1 = OsmNode.of().withId(1).withLat(0).withLon(0).build();
-    var n2 = OsmNode.of().withId(2).withLat(0).withLon(1).build();
-    var n3 = OsmNode.of().withId(3).withLat(0).withLon(2).build();
-    var n4 = OsmNode.of().withId(4).withLat(0).withLon(3).addTag("barrier", "bollard").build();
-    var n5 = OsmNode.of().withId(5).withLat(1).withLon(0).build();
-    var n6 = OsmNode.of().withId(6).withLat(-1).withLon(0).addTag("barrier", "bollard").build();
+    var n1 = OsmNode.of().withId(1).withLatLon(0, 0).build();
+    var n2 = OsmNode.of().withId(2).withLatLon(0, 1).build();
+    var n3 = OsmNode.of().withId(3).withLatLon(0, 2).build();
+    var n4 = OsmNode.of().withId(4).withLatLon(0, 3).addTag("barrier", "bollard").build();
+    var n5 = OsmNode.of().withId(5).withLatLon(1, 0).build();
+    var n6 = OsmNode.of().withId(6).withLatLon(-1, 0).addTag("barrier", "bollard").build();
 
     var chain = OsmWay.of()
       .withId(999)

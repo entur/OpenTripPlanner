@@ -89,8 +89,8 @@ public class TestOsmProvider implements OsmProvider {
      * Add a way and create nodes for the from and to coordinates.
      */
     public Builder addWay(OsmWay way) {
-      var from = OsmNode.of().withId(1).withLat(1).withLon(1).build();
-      var to = OsmNode.of().withId(2).withLat(1.1).withLon(1.1).build();
+      var from = OsmNode.of().withId(1).withLatLon(1, 1).build();
+      var to = OsmNode.of().withId(2).withLatLon(1.1, 1.1).build();
       var wayWithNodes = way.copy().addNodeRef(from.getId()).addNodeRef(to.getId()).build();
 
       ways.add(wayWithNodes);

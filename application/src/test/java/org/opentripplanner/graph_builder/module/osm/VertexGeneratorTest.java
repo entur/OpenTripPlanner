@@ -30,12 +30,12 @@ class VertexGeneratorTest {
     Graph graph = new Graph();
     OsmDatabase osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
 
-    var n1 = OsmNode.of().withId(1).withLat(0).withLon(0).build();
-    var n2 = OsmNode.of().withId(2).withLat(0).withLon(1).build();
-    var n3 = OsmNode.of().withId(3).withLat(0).withLon(2).build();
-    var n4 = OsmNode.of().withId(4).withLat(1).withLon(2).build();
-    var n5 = OsmNode.of().withId(5).withLat(1).withLon(1).build();
-    var n10 = OsmNode.of().withId(10).withLat(2).withLon(2).build();
+    var n1 = OsmNode.of().withId(1).withLatLon(0, 0).build();
+    var n2 = OsmNode.of().withId(2).withLatLon(0, 1).build();
+    var n3 = OsmNode.of().withId(3).withLatLon(0, 2).build();
+    var n4 = OsmNode.of().withId(4).withLatLon(1, 2).build();
+    var n5 = OsmNode.of().withId(5).withLatLon(1, 1).build();
+    var n10 = OsmNode.of().withId(10).withLatLon(2, 2).build();
 
     var chain = OsmWay.of()
       .withId(999)
