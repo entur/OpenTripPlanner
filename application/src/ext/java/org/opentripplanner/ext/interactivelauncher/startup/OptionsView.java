@@ -34,7 +34,6 @@ class OptionsView {
     // Toggle [ ] save on/off
     buildStreetGraphChk.addActionListener(e -> onBuildGraphChkChanged());
     buildTransitGraphChk.addActionListener(e -> onBuildGraphChkChanged());
-    startOptServerChk.addActionListener(e -> onStartOptServerChkChanged());
 
     //addSectionDoubleSpace(panel);
     bindCheckBoxesToModel();
@@ -90,6 +89,4 @@ class OptionsView {
     saveGraphChk.setEnabled(buildStreet() || buildTransit());
     startOptServerChk.setEnabled(buildTransit() || !buildStreet());
   }
-
-  private void onStartOptServerChkChanged() {}
 }
