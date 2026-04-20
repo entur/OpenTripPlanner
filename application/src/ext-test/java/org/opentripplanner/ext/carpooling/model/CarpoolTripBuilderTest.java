@@ -23,7 +23,7 @@ public class CarpoolTripBuilderTest {
 
     var builder = new CarpoolTripBuilder(new FeedScopedId("feed", "id"));
     var trip = builder
-      .withAvailableSeats(2)
+      .withTotalCapacity(2)
       .withProvider("UNIT")
       .withDeviationBudget(Duration.of(8, ChronoUnit.MINUTES))
       .withStartTime(startTime)
@@ -31,7 +31,7 @@ public class CarpoolTripBuilderTest {
       .withStops(List.of(stop))
       .buildFromValues();
 
-    assertEquals(2, trip.availableSeats());
+    assertEquals(2, trip.totalCapacity());
     assertEquals("UNIT", trip.provider());
     assertEquals(Duration.of(8, ChronoUnit.MINUTES), trip.deviationBudget());
     assertEquals(startTime, trip.startTime());
@@ -46,7 +46,7 @@ public class CarpoolTripBuilderTest {
     var builder = new CarpoolTripBuilder(original);
     var trip = builder.buildFromValues();
 
-    assertEquals(original.availableSeats(), trip.availableSeats());
+    assertEquals(original.totalCapacity(), trip.totalCapacity());
     assertEquals(original.provider(), trip.provider());
     assertEquals(original.deviationBudget(), trip.deviationBudget());
     assertEquals(original.startTime(), trip.startTime());

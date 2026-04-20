@@ -1,5 +1,9 @@
 package org.opentripplanner.ext.carpooling.updater;
 
+import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_ONBOARD_COUNT;
+import static org.opentripplanner.ext.carpooling.model.CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
+
+import java.math.BigInteger;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -13,7 +17,6 @@ import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
-import org.opentripplanner.ext.carpooling.model.CarpoolStopType;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
 import org.opentripplanner.street.geometry.WgsCoordinate;
@@ -24,13 +27,16 @@ import uk.org.siri.siri21.CircularAreaStructure;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
+/**
+ * Maps SIRI EstimatedVehicleJourney messages to {@link CarpoolTrip} instances.
+ * Extracts stop geometry, timing, capacity and occupancy from the SIRI data.
+ */
 public class CarpoolSiriMapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(CarpoolSiriMapper.class);
   private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
-  private static final int DEFAULT_AVAILABLE_SEATS = 5;
   private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
   // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
   // run-away memory use if it by error ends up in global repositories.
@@ -70,14 +76,15 @@ public class CarpoolSiriMapper {
       ? lastStop.getExpectedArrivalTime()
       : lastStop.getAimedArrivalTime();
 
+    int totalCapacity = extractTotalCapacity(tripId, calls);
+
     return new CarpoolTripBuilder(new FeedScopedId(FEED_ID, tripId))
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withProvider(journey.getOperatorRef().getValue())
       // TODO: Find a better way to exchange deviation budget with providers.
       .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
-      // TODO: Make available seats dynamic based on EstimatedVehicleJourney data
-      .withAvailableSeats(DEFAULT_AVAILABLE_SEATS)
+      .withTotalCapacity(totalCapacity)
       .withStops(stops)
       .build();
   }
@@ -105,47 +112,85 @@ public class CarpoolSiriMapper {
         ? tripId + "_trip_destination"
         : tripId + "_stop_" + sequenceNumber;
 
-    return toCarpoolStop(call, stopId, isFirst, isLast);
+    return toCarpoolStop(call, stopId, tripId, isFirst, isLast);
   }
 
   /**
-   * Determine the carpool stop type from the EstimatedCall data.
+   * Extracts the total capacity from the EstimatedCalls' ExpectedDepartureCapacities.
+   * Only the first element of each call's capacities list is inspected; additional
+   * entries are ignored. Uses the value from the first call that has it. Logs a warning
+   * if different calls report different capacity values. Returns
+   * {@link CarpoolTrip#DEFAULT_TOTAL_CAPACITY} if no call has capacity data or if the value is invalid.
    */
-  private CarpoolStopType determineCarpoolStopType(EstimatedCall call) {
-    boolean hasArrival =
-      call.getExpectedArrivalTime() != null || call.getAimedArrivalTime() != null;
-    boolean hasDeparture =
-      call.getExpectedDepartureTime() != null || call.getAimedDepartureTime() != null;
+  private int extractTotalCapacity(String tripId, List<EstimatedCall> calls) {
+    Integer firstCapacity = null;
+    int firstCapacityIndex = -1;
 
-    if (hasArrival && hasDeparture) {
-      return CarpoolStopType.PICKUP_AND_DROP_OFF;
-    } else if (hasDeparture) {
-      return CarpoolStopType.PICKUP_ONLY;
-    } else if (hasArrival) {
-      return CarpoolStopType.DROP_OFF_ONLY;
-    } else {
-      return CarpoolStopType.PICKUP_AND_DROP_OFF;
+    for (int i = 0; i < calls.size(); i++) {
+      var capacities = calls.get(i).getExpectedDepartureCapacities();
+      if (capacities == null || capacities.isEmpty()) {
+        continue;
+      }
+      BigInteger value = capacities.getFirst().getTotalCapacity();
+      if (value == null) {
+        continue;
+      }
+      int intValue = value.intValue();
+      if (firstCapacity == null) {
+        firstCapacity = intValue;
+        firstCapacityIndex = i;
+      } else if (intValue != firstCapacity) {
+        LOG.warn(
+          "Trip {}: totalCapacity differs between calls (call {} has {}, call {} has {})",
+          tripId,
+          firstCapacityIndex,
+          firstCapacity,
+          i,
+          intValue
+        );
+      }
     }
+
+    if (firstCapacity == null) {
+      return DEFAULT_TOTAL_CAPACITY;
+    }
+    if (firstCapacity <= 0) {
+      LOG.warn(
+        "Trip {}: invalid totalCapacity {} at call {}, using default {}",
+        tripId,
+        firstCapacity,
+        firstCapacityIndex,
+        DEFAULT_TOTAL_CAPACITY
+      );
+      return DEFAULT_TOTAL_CAPACITY;
+    }
+    return firstCapacity;
   }
 
   /**
-   * Calculate the passenger delta (change in passenger count) from the EstimatedCall.
+   * Extracts the onboard count from the EstimatedCall's ExpectedDepartureOccupancies.
+   * Only the first element of the occupancies list is inspected; additional entries are
+   * ignored. Returns {@link CarpoolStop#DEFAULT_ONBOARD_COUNT} if not present or if the value is invalid.
    */
-  private int calculatePassengerDelta(EstimatedCall call, CarpoolStopType stopType) {
-    // This is a placeholder implementation - adapt based on SIRI ET data structure
-    // SIRI ET may have passenger count changes, boarding/alighting numbers, etc.
-
-    // For now, return a default value of 1 passenger pickup/dropoff
-    if (stopType == CarpoolStopType.DROP_OFF_ONLY) {
-      // Assume 1 passenger drop-off
-      return -1;
-    } else if (stopType == CarpoolStopType.PICKUP_ONLY) {
-      // Assume 1 passenger pickup
-      return 1;
-    } else {
-      // No net change for both pickup and drop-off
-      return 0;
+  private int extractOnboardCount(String tripId, EstimatedCall call) {
+    var occupancies = call.getExpectedDepartureOccupancies();
+    if (occupancies != null && !occupancies.isEmpty()) {
+      BigInteger onboardCount = occupancies.getFirst().getOnboardCount();
+      if (onboardCount != null) {
+        int value = onboardCount.intValue();
+        if (value <= 0) {
+          LOG.warn(
+            "Trip {}: invalid onboardCount {}, using default {}",
+            tripId,
+            value,
+            DEFAULT_ONBOARD_COUNT
+          );
+          return DEFAULT_ONBOARD_COUNT;
+        }
+        return value;
+      }
     }
+    return DEFAULT_ONBOARD_COUNT;
   }
 
   /**
@@ -204,6 +249,7 @@ public class CarpoolSiriMapper {
   private CarpoolStop toCarpoolStop(
     EstimatedCall call,
     String id,
+    String tripId,
     boolean isFirst,
     boolean isLast
   ) {
@@ -214,24 +260,14 @@ public class CarpoolSiriMapper {
       ? toWgsCoordinate(toPolygon(legacyGeometry))
       : toWgsCoordinate(circleLocation);
 
-    CarpoolStopType stopType;
-    if (isFirst) {
-      stopType = CarpoolStopType.PICKUP_ONLY;
-    } else if (isLast) {
-      stopType = CarpoolStopType.DROP_OFF_ONLY;
-    } else {
-      stopType = determineCarpoolStopType(call);
-    }
-
     return CarpoolStop.of(new FeedScopedId(FEED_ID, id), () -> CARPOOLING_DUMMY_INDEX)
       .withName(I18NString.of(call.getStopPointNames().getFirst().getValue()))
       .withCoordinate(centroid)
-      .withCarpoolStopType(stopType)
       .withAimedDepartureTime(isLast ? null : call.getAimedDepartureTime())
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
-      .withPassengerDelta(isLast ? 0 : calculatePassengerDelta(call, stopType))
+      .withOnboardCount(extractOnboardCount(tripId, call))
       .build();
   }
 
