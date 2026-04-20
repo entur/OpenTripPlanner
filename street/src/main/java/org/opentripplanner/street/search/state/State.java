@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.spi.AStarState;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
@@ -448,6 +449,53 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
 
   public boolean isInsideNoRentalDropOffArea() {
     return stateData.insideNoRentalDropOffArea;
+  }
+
+  public Set<GeofencingZone> getCurrentGeofencingZones() {
+    return stateData.currentGeofencingZones;
+  }
+
+  public Set<String> getCommittedNetworks() {
+    return stateData.committedNetworks;
+  }
+
+  /**
+   * Whether drop-off is banned by the governing geofencing zone for the state's committed network.
+   * Returns false if no network is committed (generic state) or no zones match.
+   */
+  public boolean isDropOffBannedByCurrentZones() {
+    var zone = getGoverningZone();
+    return zone != null && zone.dropOffBanned();
+  }
+
+  /**
+   * Whether traversal is banned by the governing geofencing zone for the state's committed network.
+   * Returns false if no network is committed (generic state) or no zones match.
+   */
+  public boolean isTraversalBannedByCurrentZones() {
+    var zone = getGoverningZone();
+    return zone != null && zone.traversalBanned();
+  }
+
+  /**
+   * Returns the highest-priority (lowest priority value) geofencing zone matching the state's
+   * committed network, or null if no network is committed or no zones match.
+   */
+  @Nullable
+  private GeofencingZone getGoverningZone() {
+    if (stateData.currentGeofencingZones.isEmpty() || stateData.vehicleRentalNetwork == null) {
+      return null;
+    }
+    String network = stateData.vehicleRentalNetwork;
+    GeofencingZone best = null;
+    for (var zone : stateData.currentGeofencingZones) {
+      if (zone.id().getFeedId().equals(network)) {
+        if (best == null || zone.priority() < best.priority()) {
+          best = zone;
+        }
+      }
+    }
+    return best;
   }
 
   /**

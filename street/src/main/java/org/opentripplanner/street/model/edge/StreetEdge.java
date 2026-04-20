@@ -981,6 +981,7 @@ public class StreetEdge
       } else if (s0.isInsideNoRentalDropOffArea() && !tov.rentalDropOffBanned(s0)) {
         s1.leaveNoRentalDropOffArea();
       }
+      s1.updateGeofencingZones(fromv, tov, s0.getRequest().arriveBy());
     }
 
     var request = s0.getRequest();
