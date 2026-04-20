@@ -7,8 +7,9 @@ import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
  */
 public final class RaptorPassThroughViaConnection extends ViaConnection {
 
-  RaptorPassThroughViaConnection(int fromStop) {
-    super(fromStop);
+  /// @param stop from and to stop
+  RaptorPassThroughViaConnection(int stop) {
+    super(stop);
   }
 
   @Override

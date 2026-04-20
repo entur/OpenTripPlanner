@@ -9,6 +9,7 @@ public final class RaptorVisitStopViaConnection extends ViaConnection {
 
   private final int minimumWaitTime;
 
+  /// @param stop from and to stop
   RaptorVisitStopViaConnection(int stop, int minimumWaitTime) {
     super(stop);
     this.minimumWaitTime = minimumWaitTime;
