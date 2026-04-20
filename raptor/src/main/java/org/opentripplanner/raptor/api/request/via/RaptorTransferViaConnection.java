@@ -41,7 +41,7 @@ public final class RaptorTransferViaConnection extends ViaConnection {
 
   @Override
   public boolean isBetterOrEqual(ViaConnection other) {
-    if (!super.equalsTo(other, getClass())) {
+    if (!super.equals(other, getClass())) {
       return false;
     }
     var o = (RaptorTransferViaConnection) other;
@@ -56,7 +56,7 @@ public final class RaptorTransferViaConnection extends ViaConnection {
 
   @Override
   public boolean equals(Object other) {
-    if (!super.equalsTo(other, getClass())) {
+    if (!super.equals(other, getClass())) {
       return false;
     }
     var o = (RaptorTransferViaConnection) other;

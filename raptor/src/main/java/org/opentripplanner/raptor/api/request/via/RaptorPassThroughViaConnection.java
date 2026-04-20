@@ -18,7 +18,7 @@ public final class RaptorPassThroughViaConnection extends ViaConnection {
 
   @Override
   public boolean equals(Object other) {
-    return super.equalsTo(other, getClass());
+    return super.equals(other, getClass());
   }
 
   @Override
