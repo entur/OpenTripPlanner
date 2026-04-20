@@ -62,5 +62,6 @@ public interface RentalRestrictionExtension {
     NO_TRAVERSAL,
     NO_DROP_OFF,
     BUSINESS_AREA_BORDER,
+    GEOFENCING_BOUNDARY,
   }
 }
