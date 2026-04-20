@@ -23,6 +23,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Reduce allocations when building linestrings [#7516](https://github.com/opentripplanner/OpenTripPlanner/pull/7516)
 - Improve SpeedTest warm-up [#7534](https://github.com/opentripplanner/OpenTripPlanner/pull/7534)
 - Remove `GraphVisualizer` and inefficient methods in `ShortestPathTree` [#7526](https://github.com/opentripplanner/OpenTripPlanner/pull/7526)
+- Fix cost mismatch by anchoring pattern-ride pareto cost to last stop [#7504](https://github.com/opentripplanner/OpenTripPlanner/pull/7504)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
