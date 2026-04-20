@@ -3,7 +3,7 @@ package org.opentripplanner.raptor.api.request.via;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract sealed class AbstractBuilder<T extends AbstractBuilder>
+abstract sealed class AbstractBuilder<T extends AbstractBuilder>
   permits ViaVisitBuilder, PassThroughBuilder {
 
   protected final String label;
