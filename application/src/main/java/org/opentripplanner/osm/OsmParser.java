@@ -124,12 +124,7 @@ class OsmParser extends BinaryParser {
       double latf = parseLat(lat);
       double lonf = parseLon(lon);
 
-      OsmNodeBuilder builder = OsmNode.of()
-        .withId(id)
-        .withOsmProvider(provider)
-        .withLat(latf)
-        .withLon(lonf);
-
+      var tags = new HashMap<String, String>(nodes.getKeysValsCount());
       // If empty, assume that nothing here has keys or vals.
       if (nodes.getKeysValsCount() > 0) {
         while (nodes.getKeysVals(j) != 0) {
@@ -138,13 +133,13 @@ class OsmParser extends BinaryParser {
 
           String key = internalize(getStringById(keyid));
           String value = internalize(getStringById(valid));
-          builder.addTag(key, value);
+          tags.put(key, value);
         }
         // Skip over the '0' delimiter.
         j++;
       }
 
-      osmdb.addNode(builder.build());
+      osmdb.addNode(new OsmNode(id, latf, lonf, tags, provider));
     }
   }
 

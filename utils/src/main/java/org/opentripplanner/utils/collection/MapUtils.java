@@ -1,5 +1,7 @@
 package org.opentripplanner.utils.collection;
 
+import static java.util.Map.entry;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

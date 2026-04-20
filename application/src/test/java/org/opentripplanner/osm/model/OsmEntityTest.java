@@ -22,8 +22,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
+import org.opentripplanner.utils.collection.MapUtils;
 
 public class OsmEntityTest {
+
+  @Test
+  void lowerCaseKeys(){
+    var tags = Map.of("Foo", "bar", "Baz", "qux");
+    var entity = new OsmEntityForTest(tags);
+    assertEquals("bar", entity.getTag("foo"));
+    assertEquals("qux", entity.getTag("baz"));
+  }
 
   @Test
   void testHasTag() {
