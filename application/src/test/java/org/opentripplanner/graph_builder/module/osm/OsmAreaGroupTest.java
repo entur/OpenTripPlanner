@@ -42,62 +42,38 @@ class OsmAreaGroupTest {
 
   private static final OsmWay L0_1_2_3_4_1 = OsmWay.of()
     .addTag("highway", "living_street")
-    .addNodeRef(1)
-    .addNodeRef(2)
-    .addNodeRef(3)
-    .addNodeRef(4)
-    .addNodeRef(1)
+    .addNodeRef(1, 2, 3, 4, 1)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_5_2_1_5 = OsmWay.of()
     .addTag("highway", "living_street")
-    .addNodeRef(5)
-    .addNodeRef(2)
-    .addNodeRef(1)
-    .addNodeRef(5)
+    .addNodeRef(5, 2, 1, 5)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_1_5_6_1 = OsmWay.of()
     .addTag("highway", "living_street")
-    .addNodeRef(1)
-    .addNodeRef(5)
-    .addNodeRef(6)
-    .addNodeRef(1)
+    .addNodeRef(1, 5, 6, 1)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_1_2_3_7_8_9_1 = OsmWay.of()
     .addTag("highway", "living_street")
-    .addNodeRef(1)
-    .addNodeRef(2)
-    .addNodeRef(3)
-    .addNodeRef(7)
-    .addNodeRef(8)
-    .addNodeRef(9)
-    .addNodeRef(1)
+    .addNodeRef(1, 2, 3, 7, 8, 9, 1)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L0_2_10_7_11_6_2 = OsmWay.of()
     .addTag("highway", "living_street")
-    .addNodeRef(2)
-    .addNodeRef(10)
-    .addNodeRef(7)
-    .addNodeRef(11)
-    .addNodeRef(6)
-    .addNodeRef(2)
+    .addNodeRef(2, 10, 7, 11, 6, 2)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay L1_1_2_5_1 = OsmWay.of()
     .addTag("highway", "living_street")
     .addTag("level", "1")
-    .addNodeRef(1)
-    .addNodeRef(2)
-    .addNodeRef(5)
-    .addNodeRef(1)
+    .addNodeRef(1, 2, 5, 1)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
@@ -105,11 +81,7 @@ class OsmAreaGroupTest {
     .addTag("highway", "pedestrian")
     .addTag("access", "no")
     .addTag("foot", "yes")
-    .addNodeRef(1)
-    .addNodeRef(2)
-    .addNodeRef(3)
-    .addNodeRef(4)
-    .addNodeRef(1)
+    .addNodeRef(1, 2, 3, 4, 1)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
@@ -117,62 +89,48 @@ class OsmAreaGroupTest {
     .addTag("highway", "pedestrian")
     .addTag("access", "no")
     .addTag("foot", "yes")
-    .addNodeRef(5)
-    .addNodeRef(2)
-    .addNodeRef(1)
-    .addNodeRef(5)
+    .addNodeRef(5, 2, 1, 5)
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_3_2_1 = OsmWay.of()
-    .addNodeRef(3)
-    .addNodeRef(2)
-    .addNodeRef(1)
+    .addNodeRef(3, 2, 1)
     .addTag("barrier", "wall")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_1_4 = OsmWay.of()
-    .addNodeRef(1)
-    .addNodeRef(4)
+    .addNodeRef(1, 4)
     .addTag("barrier", "wall")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_2_3 = OsmWay.of()
-    .addNodeRef(2)
-    .addNodeRef(3)
+    .addNodeRef(2, 3)
     .addTag("barrier", "wall")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_5_1_4 = OsmWay.of()
-    .addNodeRef(5)
-    .addNodeRef(1)
-    .addNodeRef(4)
+    .addNodeRef(5, 1, 4)
     .addTag("barrier", "wall")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_1_3_2 = OsmWay.of()
-    .addNodeRef(1)
-    .addNodeRef(3)
-    .addNodeRef(2)
+    .addNodeRef(1, 3, 2)
     .addTag("barrier", "wall")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BARRIER_3_1 = OsmWay.of()
-    .addNodeRef(3)
-    .addNodeRef(1)
+    .addNodeRef(3, 1)
     .addTag("barrier", "wall")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();
 
   private static final OsmWay BOLLARD_1_2_3 = OsmWay.of()
-    .addNodeRef(1)
-    .addNodeRef(2)
-    .addNodeRef(3)
+    .addNodeRef(1, 2, 3)
     .addTag("barrier", "bollard")
     .withOsmProvider(TestOsmProvider.EMPTY)
     .build();

@@ -293,7 +293,7 @@ class OsmWayTest {
   }
 
   private OsmWay getClosedPolygon() {
-    return OsmWay.of().addNodeRef(1).addNodeRef(2).addNodeRef(3).addNodeRef(1).build();
+    return OsmWay.of().addNodeRef(1, 2, 3, 1).build();
   }
 
   private static OsmWay createCrossing(String crossingTag, String crossingValue) {
@@ -400,7 +400,7 @@ class OsmWayTest {
     OsmWay way2 = OsmWay.of().build();
     assertFalse(way1.isAdjacentTo(way2));
 
-    way1 = way1.copy().addNodeRef(sharedNodeId).addNodeRef(nodeId1).build();
+    way1 = way1.copy().addNodeRef(sharedNodeId, nodeId1).build();
     way2 = way2.copy().addNodeRef(nodeId2).build();
     assertFalse(way1.isAdjacentTo(way2));
 

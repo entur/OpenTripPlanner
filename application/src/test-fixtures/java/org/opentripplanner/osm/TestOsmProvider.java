@@ -91,7 +91,7 @@ public class TestOsmProvider implements OsmProvider {
     public Builder addWay(OsmWay way) {
       var from = OsmNode.of().withId(1).withLatLon(1, 1).build();
       var to = OsmNode.of().withId(2).withLatLon(1.1, 1.1).build();
-      var wayWithNodes = way.copy().addNodeRef(from.getId()).addNodeRef(to.getId()).build();
+      var wayWithNodes = way.copy().addNodeRef(from.getId(), to.getId()).build();
 
       ways.add(wayWithNodes);
       nodes.addAll(List.of(from, to));

@@ -62,14 +62,9 @@ public class OsmDatabaseTest {
   void isNodeBelongsToWayShouldNotReturnTrueForNodesSolelyOnBarriers() {
     var osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
 
-    var chain = OsmWay.of()
-      .withId(999)
-      .addTag("barrier", "chain")
-      .addNodeRef(1)
-      .addNodeRef(2)
-      .build();
+    var chain = OsmWay.of().withId(999).addTag("barrier", "chain").addNodeRef(1, 2).build();
 
-    var path = OsmWay.of().withId(1).addTag("highway", "path").addNodeRef(2).addNodeRef(3).build();
+    var path = OsmWay.of().withId(1).addTag("highway", "path").addNodeRef(2, 3).build();
 
     osmdb.addWay(chain);
     osmdb.addWay(path);
@@ -100,38 +95,20 @@ public class OsmDatabaseTest {
 
     var simpleArea = OsmWay.of()
       .addTag("public_transport", "platform")
-      .addNodeRef(13)
-      .addNodeRef(14)
-      .addNodeRef(15)
-      .addNodeRef(13)
+      .addNodeRef(13, 14, 15, 13)
       .build();
 
     var outerRing = OsmWay.of()
       .withId(1)
-      .addNodeRef(1)
-      .addNodeRef(2)
-      .addNodeRef(3)
-      .addNodeRef(4)
-      .addNodeRef(1)
+      .addNodeRef(1, 2, 3, 4, 1)
       .addTag("highway", "residential")
       .build();
 
-    var innerRing = OsmWay.of()
-      .withId(2)
-      .addNodeRef(5)
-      .addNodeRef(6)
-      .addNodeRef(7)
-      .addNodeRef(8)
-      .addNodeRef(5)
-      .build();
+    var innerRing = OsmWay.of().withId(2).addNodeRef(5, 6, 7, 8, 5).build();
 
     var innerRingWithBarrier = OsmWay.of()
       .withId(3)
-      .addNodeRef(9)
-      .addNodeRef(10)
-      .addNodeRef(11)
-      .addNodeRef(12)
-      .addNodeRef(9)
+      .addNodeRef(9, 10, 11, 12, 9)
       .addTag("barrier", "chain")
       .build();
 

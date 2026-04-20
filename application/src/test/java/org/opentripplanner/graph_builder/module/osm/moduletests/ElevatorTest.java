@@ -110,29 +110,25 @@ class ElevatorTest {
       .withId(1)
       .addTag("highway", "corridor")
       .addTag("level", "0")
-      .addNodeRef(1)
-      .addNodeRef(5)
+      .addNodeRef(1, 5)
       .build();
     var way2 = OsmWay.of()
       .withId(2)
       .addTag("highway", "corridor")
       .addTag("level", "2")
-      .addNodeRef(2)
-      .addNodeRef(5)
+      .addNodeRef(2, 5)
       .build();
     var way3 = OsmWay.of()
       .withId(3)
       .addTag("highway", "corridor")
       .addTag("level", "2")
-      .addNodeRef(3)
-      .addNodeRef(5)
+      .addNodeRef(3, 5)
       .build();
     var way4 = OsmWay.of()
       .withId(4)
       .addTag("highway", "corridor")
       .addTag("level", "3")
-      .addNodeRef(4)
-      .addNodeRef(5)
+      .addNodeRef(4, 5)
       .build();
 
     var provider = new TestOsmProvider(
@@ -236,8 +232,7 @@ class ElevatorTest {
       .withId(1)
       .addTag("highway", "elevator")
       .addTag("level", "1;3.5")
-      .addNodeRef(1)
-      .addNodeRef(2)
+      .addNodeRef(1, 2)
       .build();
 
     var provider = new TestOsmProvider(List.of(), List.of(elevatorWay), List.of(n1, n2));
@@ -281,12 +276,7 @@ class ElevatorTest {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
 
-    var elevatorWay = OsmWay.of()
-      .withId(1)
-      .addTag("highway", "elevator")
-      .addNodeRef(1)
-      .addNodeRef(2)
-      .build();
+    var elevatorWay = OsmWay.of().withId(1).addTag("highway", "elevator").addNodeRef(1, 2).build();
 
     var provider = new TestOsmProvider(List.of(), List.of(elevatorWay), List.of(n1, n2));
     var graph = new Graph();

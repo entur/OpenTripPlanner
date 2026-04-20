@@ -39,12 +39,14 @@ public class OsmWayBuilder {
     return this;
   }
 
-  public OsmWayBuilder addNodeRef(long nodeRef) {
-    nodes.add(nodeRef);
+  public OsmWayBuilder addNodeRef(long... nodeRefs) {
+    for (long nodeRef : nodeRefs) {
+      nodes.add(nodeRef);
+    }
     return this;
   }
 
-  public OsmWayBuilder addNodeRef(long nodeRef, int index) {
+  public OsmWayBuilder insertNodeRef(long nodeRef, int index) {
     nodes.insert(index, nodeRef);
     return this;
   }

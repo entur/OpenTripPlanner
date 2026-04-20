@@ -531,7 +531,7 @@ public class OsmDatabase {
               continue;
             }
 
-            way = way.copy().addNodeRef(ringSegment.nA.getId(), i + 1).build();
+            way = way.copy().insertNodeRef(ringSegment.nA.getId(), i + 1).build();
             waysById.put(way.getId(), way);
 
             if (
@@ -551,7 +551,7 @@ public class OsmDatabase {
               continue;
             }
 
-            way = way.copy().addNodeRef(ringSegment.nB.getId(), i + 1).build();
+            way = way.copy().insertNodeRef(ringSegment.nB.getId(), i + 1).build();
             waysById.put(way.getId(), way);
 
             if (
@@ -577,7 +577,7 @@ public class OsmDatabase {
               ringSegment.nB,
               p
             );
-            way = way.copy().addNodeRef(splitNode.getId(), i + 1).build();
+            way = way.copy().insertNodeRef(splitNode.getId(), i + 1).build();
             waysById.put(way.getId(), way);
 
             /*
