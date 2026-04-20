@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -20,35 +19,44 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 
 /**
- * Even though the data is kept on the vertex this class operates mostly on edges which then
- * delegate to the vertices.
+ * Applies geofencing zone restrictions to the street graph. Operates on edges which delegate
+ * extension storage to their vertices.
  * <p>
- * This is because we want to drop the vehicle outside the geofencing zone rather than on the first
- * vertex inside of it. To make this work we need to know which are the edges that cross the
- * border.
- * <p>
- * Perhaps this logic will be replaced with edge splitting where a new vertex is insert right on
- * the border of the zone.
+ * For restricted zones, two types of extensions are applied:
+ * <ul>
+ *   <li>{@link GeofencingZoneExtension} on all intersecting edges (backward-compatible interior
+ *       enforcement, to be removed when state-based tracking is complete)
+ *   <li>{@link GeofencingBoundaryExtension} on boundary-crossing edges only (for state-based
+ *       zone tracking)
+ * </ul>
+ * For business areas, {@link BusinessAreaBorder} is applied to boundary edges as before.
  */
 public class GeofencingZoneApplier {
 
-  private final Function<Envelope, Collection<Edge>> getEdgesForEnvelope;
+  private final Function<Collection<LineString>, Set<Edge>> findEdgesAlongLineStrings;
+  private final Function<Envelope, Collection<Edge>> findEdgesForEnvelope;
 
-  public GeofencingZoneApplier(Function<Envelope, Collection<Edge>> getEdgesForEnvelope) {
-    this.getEdgesForEnvelope = getEdgesForEnvelope;
+  public GeofencingZoneApplier(
+    Function<Collection<LineString>, Set<Edge>> findEdgesAlongLineStrings,
+    Function<Envelope, Collection<Edge>> findEdgesForEnvelope
+  ) {
+    this.findEdgesAlongLineStrings = findEdgesAlongLineStrings;
+    this.findEdgesForEnvelope = findEdgesForEnvelope;
   }
 
   /**
-   * Applies the restrictions described in the geofencing zones to eges by adding
-   * {@link RentalRestrictionExtension} to them.
+   * Applies the restrictions described in the geofencing zones to edges by adding
+   * {@link RentalRestrictionExtension} to them, builds a spatial index, and identifies
+   * boundary-crossing edges.
    */
-  public Map<StreetEdge, RentalRestrictionExtension> applyGeofencingZones(
+  public GeofencingZoneApplierResult applyGeofencingZones(
     Collection<GeofencingZone> geofencingZones
   ) {
+    var zoneIndex = new GeofencingZoneIndex(geofencingZones);
+
     var restrictedZones = geofencingZones.stream().filter(GeofencingZone::hasRestriction).toList();
 
-    // these are the edges inside business area where exceptions like "no pass through"
-    // or "no drop-off" are added
+    // Interior enforcement: apply GeofencingZoneExtension to ALL intersecting edges
     var restrictedEdges = addExtensionToIntersectingStreetEdges(
       restrictedZones,
       GeofencingZoneExtension::new
@@ -56,17 +64,16 @@ public class GeofencingZoneApplier {
 
     var updates = new HashMap<>(restrictedEdges);
 
+    // Boundary marking: apply GeofencingBoundaryExtension to boundary-crossing edges
+    var boundaryEdges = addBoundaryExtensions(restrictedZones);
+
+    // Business area borders
     var generalBusinessAreas = geofencingZones
       .stream()
       .filter(GeofencingZone::isBusinessArea)
       .toList();
 
     if (!generalBusinessAreas.isEmpty()) {
-      // if the geofencing zones don't have any restrictions then they describe a general business
-      // area which you can traverse freely but are not allowed to leave
-      // here we just take the boundary of the geometry since we want to add a "no pass through"
-      // restriction to any edge intersecting it
-
       var network = generalBusinessAreas.get(0).id().getFeedId();
       var polygons = generalBusinessAreas
         .stream()
@@ -77,15 +84,83 @@ public class GeofencingZoneApplier {
         .createGeometryCollection(polygons)
         .union();
 
-      var updated = applyExtension(
-        unionOfBusinessAreas.getBoundary(),
+      var updated = applyBusinessAreaBorder(
+        unionOfBusinessAreas,
         new BusinessAreaBorder(network)
       );
 
       updates.putAll(updated);
     }
 
-    return Map.copyOf(updates);
+    return new GeofencingZoneApplierResult(Map.copyOf(updates), Map.copyOf(boundaryEdges), zoneIndex);
+  }
+
+  /**
+   * Pre-resolves the initial geofencing zone for each vehicle rental vertex by querying the
+   * spatial index. The highest-priority (lowest priority value) zone is stored on the vertex.
+   */
+  public static void preResolveVertexZones(
+    Collection<VehicleRentalPlaceVertex> vertices,
+    GeofencingZoneIndex zoneIndex
+  ) {
+    for (var vertex : vertices) {
+      var zones = zoneIndex.getZonesContaining(vertex.getCoordinate());
+      vertex.setInitialGeofencingZones(Set.copyOf(zones));
+    }
+  }
+
+  /**
+   * Identifies boundary-crossing edges for each restricted zone and applies
+   * {@link GeofencingBoundaryExtension}. A boundary-crossing edge has one vertex inside the zone
+   * and one outside. The {@code entering} flag indicates whether traversing in the edge's natural
+   * direction (fromv → tov) enters the zone.
+   * <p>
+   * Uses vertex coordinates to detect boundary crossings without decompressing the compact edge
+   * geometry. An edge crosses the boundary if and only if its endpoints are on different sides
+   * of the zone. A bounding-box pre-filter on vertex coordinates avoids expensive Point creation
+   * and PreparedGeometry calls for the majority of candidates that are outside the zone envelope.
+   */
+  private Map<StreetEdge, GeofencingBoundaryExtension> addBoundaryExtensions(
+    List<GeofencingZone> zones
+  ) {
+    var edgesUpdated = new HashMap<StreetEdge, GeofencingBoundaryExtension>();
+    var gf = GeometryUtils.getGeometryFactory();
+
+    for (GeofencingZone zone : zones) {
+      var geom = zone.geometry();
+      var preparedZone = PreparedGeometryFactory.prepare(geom);
+      var zoneBBox = geom.getEnvelopeInternal();
+
+      // Find candidate edges using the zone bounding box. The line-following spatial index
+      // query (findEdgesAlongLineStrings) can miss edges in adjacent grid cells. Using the
+      // zone envelope is broader but reliably catches all boundary-crossing edges. Interior
+      // edges are filtered out cheaply: both vertices inside → fromInZone == toInZone → skip.
+      Collection<Edge> candidates = findEdgesForEnvelope.apply(zoneBBox);
+
+      for (var e : candidates) {
+        if (e instanceof StreetEdge streetEdge) {
+          var fromCoord = streetEdge.getFromVertex().getCoordinate();
+          var toCoord = streetEdge.getToVertex().getCoordinate();
+
+          boolean fromMayBeInZone = zoneBBox.contains(fromCoord);
+          boolean toMayBeInZone = zoneBBox.contains(toCoord);
+          if (!fromMayBeInZone && !toMayBeInZone) {
+            continue;
+          }
+
+          boolean fromInZone =
+            fromMayBeInZone && preparedZone.contains(gf.createPoint(fromCoord));
+          boolean toInZone = toMayBeInZone && preparedZone.contains(gf.createPoint(toCoord));
+
+          if (fromInZone != toInZone) {
+            var ext = new GeofencingBoundaryExtension(zone, toInZone);
+            streetEdge.addRentalRestriction(ext);
+            edgesUpdated.put(streetEdge, ext);
+          }
+        }
+      }
+    }
+    return edgesUpdated;
   }
 
   private Map<StreetEdge, RentalRestrictionExtension> addExtensionToIntersectingStreetEdges(
@@ -107,15 +182,12 @@ public class GeofencingZoneApplier {
   ) {
     var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
     Set<Edge> candidates;
-    // for business areas we only care about the borders so we compute the boundary of the
-    // (multi) polygon. this can either be a MultiLineString or a LineString
     if (geom instanceof LineString ring) {
-      candidates = getEdgesAlongLineStrings(List.of(ring));
+      candidates = findEdgesAlongLineStrings.apply(List.of(ring));
     } else if (geom instanceof MultiLineString mls) {
-      var lineStrings = GeometryUtils.getLineStrings(mls);
-      candidates = getEdgesAlongLineStrings(lineStrings);
+      candidates = findEdgesAlongLineStrings.apply(GeometryUtils.getLineStrings(mls));
     } else {
-      candidates = Set.copyOf(getEdgesForEnvelope.apply(geom.getEnvelopeInternal()));
+      candidates = Set.copyOf(findEdgesForEnvelope.apply(geom.getEnvelopeInternal()));
     }
 
     PreparedGeometry preparedZone = PreparedGeometryFactory.prepare(geom);
@@ -130,25 +202,41 @@ public class GeofencingZoneApplier {
   }
 
   /**
-   * This method optimizes finding all the candidate edges which could cross the business zone
-   * border.
-   * <p>
-   * If you put the entire zone into an envelope you get lots and lots of edges in the middle of it
-   * that are nowhere near the border. Since checking if they intersect with the border is an
-   * expensive operation we apply the following optimization:
-   * <li>we split the line string into segments for each pair of coordinates
-   * <li>for each segment we compute the envelope
-   * <li>we only get the edges for that envelope and check if they intersect
-   * <p>
-   * When finding the edges near the business area border in Oslo this speeds up the computation
-   * from ~25 seconds to ~3 seconds (on 2021 hardware).
+   * Apply a business area border extension to edges that cross the boundary of the polygon.
+   * Uses vertex containment to detect boundary crossings without decompressing edge geometry.
    */
-  private Set<Edge> getEdgesAlongLineStrings(Collection<LineString> lineStrings) {
-    return lineStrings
-      .stream()
-      .flatMap(GeometryUtils::toEnvelopes)
-      .map(getEdgesForEnvelope)
-      .flatMap(Collection::stream)
-      .collect(Collectors.toSet());
+  private Map<StreetEdge, RentalRestrictionExtension> applyBusinessAreaBorder(
+    Geometry polygon,
+    RentalRestrictionExtension ext
+  ) {
+    var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
+    Set<Edge> candidates = Set.copyOf(findEdgesForEnvelope.apply(polygon.getEnvelopeInternal()));
+    var preparedPolygon = PreparedGeometryFactory.prepare(polygon);
+    var polygonBBox = polygon.getEnvelopeInternal();
+    var gf = GeometryUtils.getGeometryFactory();
+
+    for (var e : candidates) {
+      if (e instanceof StreetEdge streetEdge) {
+        var fromCoord = streetEdge.getFromVertex().getCoordinate();
+        var toCoord = streetEdge.getToVertex().getCoordinate();
+
+        boolean fromMayBeInZone = polygonBBox.contains(fromCoord);
+        boolean toMayBeInZone = polygonBBox.contains(toCoord);
+        if (!fromMayBeInZone && !toMayBeInZone) {
+          continue;
+        }
+
+        boolean fromInZone =
+          fromMayBeInZone && preparedPolygon.contains(gf.createPoint(fromCoord));
+        boolean toInZone = toMayBeInZone && preparedPolygon.contains(gf.createPoint(toCoord));
+
+        if (fromInZone != toInZone) {
+          streetEdge.addRentalRestriction(ext);
+          edgesUpdated.put(streetEdge, ext);
+        }
+      }
+    }
+    return edgesUpdated;
   }
+
 }
