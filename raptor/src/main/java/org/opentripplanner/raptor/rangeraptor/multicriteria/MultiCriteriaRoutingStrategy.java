@@ -136,34 +136,6 @@ public class MultiCriteriaRoutingStrategy<
     board(prevMcArrival, prevArrival.stop(), boarding);
   }
 
-  private void board(
-    McStopArrival<T> prevArrival,
-    final int stopIndex,
-    final RaptorBoardOrAlightEvent<T> boarding
-  ) {
-    final T trip = boarding.trip();
-    final int boardTime = boarding.time();
-
-    if (prevArrival.arrivedBy(ACCESS)) {
-      int latestArrivalTime = boardTime - slackProvider.boardSlack(trip.pattern().slackIndex());
-      prevArrival = prevArrival.timeShiftNewArrivalTime(latestArrivalTime);
-    }
-
-    final int boardC1 = calculateCostAtBoardTime(prevArrival, boarding);
-    final int relativeBoardC1 = boardC1 + calculateOnTripRelativeCost(boardTime, trip);
-
-    var patternRide = patternRideFactory.createPatternRide(
-      prevArrival,
-      stopIndex,
-      boarding.stopPositionInPattern(),
-      boardTime,
-      boardC1,
-      relativeBoardC1,
-      trip
-    );
-    patternRides.add(patternRide);
-  }
-
   private void boardWithRegularTransfer(
     McStopArrival<T> prevArrival,
     int stopIndex,
@@ -198,6 +170,34 @@ public class MultiCriteriaRoutingStrategy<
     } else if (!boarding.transferConstraint().isNotAllowed()) {
       board(prevArrival, stopIndex, boarding);
     }
+  }
+
+  private void board(
+    McStopArrival<T> prevArrival,
+    final int stopIndex,
+    final RaptorBoardOrAlightEvent<T> boarding
+  ) {
+    final T trip = boarding.trip();
+    final int boardTime = boarding.time();
+
+    if (prevArrival.arrivedBy(ACCESS)) {
+      int latestArrivalTime = boardTime - slackProvider.boardSlack(trip.pattern().slackIndex());
+      prevArrival = prevArrival.timeShiftNewArrivalTime(latestArrivalTime);
+    }
+
+    final int boardC1 = calculateCostAtBoardTime(prevArrival, boarding);
+    final int relativeBoardC1 = boardC1 + calculateOnTripRelativeCost(boardTime, trip);
+
+    var patternRide = patternRideFactory.createPatternRide(
+      prevArrival,
+      stopIndex,
+      boarding.stopPositionInPattern(),
+      boardTime,
+      boardC1,
+      relativeBoardC1,
+      trip
+    );
+    patternRides.add(patternRide);
   }
 
   /**
