@@ -28,18 +28,12 @@ public interface RangeRaptorWorker<T extends RaptorTripSchedule> {
   /**
    * Find on-board access for round (accesses on-board an already started trip)
    */
-  void applyOnBoardTripAccess(int iterationDepartureTime);
+  void applyOnBoardTripAccess();
 
   /**
    * Perform a transit search for the current round.
    */
   void routeTransit();
-
-  /**
-   * Perform on-board (accesses on-board an already started trip) transit search for boardings and
-   * alight events for the current round.
-   */
-  void routeTransitUsingOnBoardTripAccess();
 
   /**
    * Apply transfers for the current round.

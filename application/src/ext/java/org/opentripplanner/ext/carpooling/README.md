@@ -84,7 +84,6 @@ org.opentripplanner.ext.carpooling/
 │
 ├── filter/                          # Pre-screening filters
 │   ├── FilterChain.java            # Composite filter
-│   ├── CapacityFilter.java         # Seat availability check
 │   ├── TimeBasedFilter.java        # Time window check
 │   ├── DirectionalCompatibilityFilter.java  # Direction check
 │   └── DistanceBasedFilter.java    # Distance check
@@ -124,10 +123,9 @@ org.opentripplanner.ext.carpooling/
 
 Filters eliminate obviously incompatible trips **without any street routing**:
 
-1. **CapacityFilter**: Does the vehicle have available seats?
-2. **TimeBasedFilter**: Is the trip timing compatible with passenger request?
-3. **DirectionalCompatibilityFilter**: Are driver and passenger heading the same direction?
-4. **DistanceBasedFilter**: Is the passenger's journey within reasonable distance of driver route?
+1. **TimeBasedFilter**: Is the trip timing compatible with passenger request?
+2. **DirectionalCompatibilityFilter**: Are driver and passenger heading the same direction?
+3. **DistanceBasedFilter**: Is the passenger's journey within reasonable distance of driver route?
 
 **Performance**: O(n) where n = number of active trips.
 
@@ -142,7 +140,7 @@ Fast heuristic checks eliminate impossible positions **before any A* routing**:
 ```
 For each remaining trip:
   1. Generate all position combinations (pickup, dropoff) where:
-     - Pickup: between any two consecutive stops (1-indexed)
+     - Pickup: between any two consecutive stops (0-based index in modified route)
      - Dropoff: after pickup position
 
   2. For each position pair, check:
@@ -297,7 +295,7 @@ Represents a driver's journey offering carpool seats:
 - **startTime**: When driver departs
 - **endTime**: When driver arrives (includes deviation budget)
 - **deviationBudget**: Extra time driver is willing to spend for passengers
-- **availableSeats**: Current remaining capacity
+- **totalCapacity**: Number of seats in the car, including the driver seat
 - **stops**: Ordered list of waypoints (includes booked passenger stops)
 - **provider**: Source system identifier
 
@@ -308,17 +306,14 @@ Waypoint along a carpool route:
 - **coordinate**: Geographic location
 - **sequenceNumber**: Order in route (0-indexed)
 - **estimatedArrivalTime**: When driver expects to arrive
-- **stopType**: PICKUP or DROPOFF
-- **passengerDelta**: Change in passenger count (+1 for pickup, -1 for dropoff)
+- **onboardCount**: Number of passengers onboard (including the driver) when departing this stop
 
 ### InsertionPosition
 
 Represents a viable pickup/dropoff position pair:
 
-- **pickupPos**: Position to insert passenger pickup (1-indexed)
-- **dropoffPos**: Position to insert passenger dropoff (1-indexed)
-
-Note: Positions are 1-indexed to match insertion semantics (insert between existing points).
+- **pickupPos**: 0-based index of the passenger's pickup in the modified route
+- **dropoffPos**: 0-based index of the passenger's dropoff in the modified route
 
 ### InsertionCandidate
 
@@ -374,7 +369,6 @@ public class CustomFilter implements TripFilter {
 
 // Add to filter chain
 FilterChain chain = FilterChain.of(
-  new CapacityFilter(),
   new TimeBasedFilter(),
   new CustomFilter()
 );
@@ -405,17 +399,12 @@ Test individual components in isolation:
 
 ```java
 @Test
-void testCapacityFilter() {
-  var filter = new CapacityFilter();
-  var trip = createTripWithSeats(2);  // 2 available seats
+void testTimeBasedFilter() {
+  var filter = new TimeBasedFilter();
+  var trip = createSimpleTrip(origin, destination);
 
-  // Should pass - within capacity
+  // Should pass - within time window
   assertTrue(filter.accepts(trip, pickup, dropoff, now()));
-
-  var fullTrip = createTripWithSeats(0);  // No seats
-
-  // Should fail - no capacity
-  assertFalse(filter.accepts(fullTrip, pickup, dropoff, now()));
 }
 ```
 

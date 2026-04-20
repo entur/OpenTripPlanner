@@ -14,13 +14,15 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.site.StopType;
 
 /**
- * Represents a stop along a carpool trip route with passenger pickup/drop-off information.
- * Each stop tracks the passenger delta (number of passengers picked up or dropped off).
+ * Represents a stop along a carpool trip route with occupancy and timing information.
  * Stops are ordered sequentially along the route.
  */
 public class CarpoolStop
   extends AbstractTransitEntity<CarpoolStop, CarpoolStopBuilder>
   implements StopLocation {
+
+  /** Default onboard count per stop (1 = driver only) when no occupancy information is provided. */
+  public static final int DEFAULT_ONBOARD_COUNT = 1;
 
   private final int index;
   private final I18NString name;
@@ -28,13 +30,12 @@ public class CarpoolStop
   private final I18NString url;
   private final WgsCoordinate coordinate;
   private final Geometry geometry;
-  private final CarpoolStopType carpoolStopType;
   private final ZonedDateTime expectedArrivalTime;
   private final ZonedDateTime aimedArrivalTime;
   private final ZonedDateTime expectedDepartureTime;
   private final ZonedDateTime aimedDepartureTime;
   private final int sequenceNumber;
-  private final int passengerDelta;
+  private final int onboardCount;
 
   public CarpoolStop(CarpoolStopBuilder builder) {
     super(builder.getId());
@@ -49,13 +50,12 @@ public class CarpoolStop
     this.url = builder.url();
     this.coordinate = Objects.requireNonNull(builder.coordinate());
     this.geometry = builder.geometry();
-    this.carpoolStopType = builder.carpoolStopType();
     this.expectedArrivalTime = builder.expectedArrivalTime();
     this.aimedArrivalTime = builder.aimedArrivalTime();
     this.expectedDepartureTime = builder.expectedDepartureTime();
     this.aimedDepartureTime = builder.aimedDepartureTime();
     this.sequenceNumber = builder.sequenceNumber();
-    this.passengerDelta = builder.passengerDelta();
+    this.onboardCount = builder.onboardCount();
   }
 
   public static CarpoolStopBuilder of(FeedScopedId id, IntSupplier indexCounter) {
@@ -132,13 +132,6 @@ public class CarpoolStop
   // Carpool-specific methods
 
   /**
-   * @return The type of carpool operation allowed at this stop
-   */
-  public CarpoolStopType getCarpoolStopType() {
-    return carpoolStopType;
-  }
-
-  /**
    * @return The expected arrival time, or null if not applicable (e.g., origin stop)
    */
   @Nullable
@@ -162,6 +155,9 @@ public class CarpoolStop
     return expectedDepartureTime;
   }
 
+  /**
+   * @return The 0-based position of this stop in the trip's stop sequence
+   */
   public int getSequenceNumber() {
     return sequenceNumber;
   }
@@ -185,8 +181,11 @@ public class CarpoolStop
     return aimedArrivalTime != null ? aimedArrivalTime : aimedDepartureTime;
   }
 
-  public int getPassengerDelta() {
-    return passengerDelta;
+  /**
+   * @return The number of passengers onboard (including the driver) when departing this stop
+   */
+  public int getOnboardCount() {
+    return onboardCount;
   }
 
   @Override

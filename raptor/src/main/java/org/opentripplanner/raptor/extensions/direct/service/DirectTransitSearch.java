@@ -140,7 +140,7 @@ public class DirectTransitSearch<T extends RaptorTripSchedule> {
     }
 
     if (path.startTime() < latestDepartureTime) {
-      return Optional.of(new PathAndTripIndex<T>(path, boardEvent.tripIndex()));
+      return Optional.of(new PathAndTripIndex<T>(path, boardEvent.tripScheduleIndex()));
     }
     return Optional.empty();
   }

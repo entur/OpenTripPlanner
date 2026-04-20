@@ -97,7 +97,7 @@ public class RaptorArchitectureTest {
 
   @Test
   void enforcePackageDependenciesInRangeRaptorSharedPackages() {
-    RR_INTERNAL_API.dependsOn(OTP_UTILS, RAPTOR_API, RAPTOR_SPI).verify();
+    RR_INTERNAL_API.dependsOn(OTP_UTILS, GNU_TROVE, RAPTOR_API, RAPTOR_SPI).verify();
     RR_DEBUG.dependsOn(RR_SHARED_PACKAGES).verify();
     RR_LIFECYCLE.dependsOn(RR_SHARED_PACKAGES).verify();
     RR_TRANSIT.dependsOn(RR_SHARED_PACKAGES, RR_DEBUG, RR_LIFECYCLE).verify();

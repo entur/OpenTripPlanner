@@ -116,7 +116,7 @@ public class TripScheduleAlightSearchTest implements RaptorTestConstants {
   }
 
   @Test
-  public void findTripWithGivenTripIndexLowerBound() {
+  public void findTripWithGivenTripScheduleIndexLowerBound() {
     // Given a pattern with the following trips: A, B
     withTrips(tripA, tripB);
 
