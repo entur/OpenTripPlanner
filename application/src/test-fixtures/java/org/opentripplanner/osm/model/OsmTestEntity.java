@@ -6,22 +6,22 @@ import java.util.Map;
  * Test version of OsmEntity for use in tests.
  * All tags must be passed into the constructor.
  */
-public class OsmEntityForTest extends OsmEntity {
+public class OsmTestEntity extends OsmEntity {
 
-  public OsmEntityForTest() {
+  public OsmTestEntity() {
     this(Map.of());
   }
 
-  public OsmEntityForTest(Map<String, String> tags) {
+  public OsmTestEntity(Map<String, String> tags) {
     super(0, tags, null);
   }
 
-  public OsmEntityForTest(String key, String value) {
+  public OsmTestEntity(String key, String value) {
     this(Map.of(key, value));
   }
 
   @SafeVarargs
-  public OsmEntityForTest(Map.Entry<String, String>... entries) {
+  public OsmTestEntity(Map.Entry<String, String>... entries) {
     this(Map.ofEntries(entries));
   }
 }

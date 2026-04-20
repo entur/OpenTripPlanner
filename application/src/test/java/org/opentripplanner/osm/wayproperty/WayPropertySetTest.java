@@ -11,7 +11,7 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.CAR;
 import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN;
 
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.osm.model.OsmEntityForTest;
+import org.opentripplanner.osm.model.OsmTestEntity;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.specifier.BestMatchSpecifier;
 import org.opentripplanner.osm.wayproperty.specifier.OsmSpecifier;
@@ -27,11 +27,11 @@ class WayPropertySetTest {
     builder.setMixinProperties("foo=bar", ofBicycleSafety(0.5));
     var wps = builder.build();
 
-    var withoutFoo = new OsmEntityForTest("tag", "imaginary");
+    var withoutFoo = new OsmTestEntity("tag", "imaginary");
     assertEquals(2, wps.getDataForEntity(withoutFoo).bicycleSafety());
 
     // the mixin for foo=bar reduces the bike safety factor
-    var withFoo = new OsmEntityForTest(entry("tag", "imaginary"), entry("foo", "bar"));
+    var withFoo = new OsmTestEntity(entry("tag", "imaginary"), entry("foo", "bar"));
     assertEquals(1, wps.getDataForEntity(withFoo).bicycleSafety());
   }
 
@@ -45,26 +45,26 @@ class WayPropertySetTest {
     builder.setDefaultCarSpeed(kmhAsMs(25));
     var wps = builder.build();
 
-    var way = new OsmEntityForTest();
+    var way = new OsmTestEntity();
 
     // test default speeds
     assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(way, FORWARD), EPSILON);
     assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(way, BACKWARD), EPSILON);
 
-    var tertiary = new OsmEntityForTest("highway", "tertiary");
+    var tertiary = new OsmTestEntity("highway", "tertiary");
     assertEquals(kmhAsMs(35), wps.getCarSpeedForWay(tertiary, FORWARD), EPSILON);
     assertEquals(kmhAsMs(35), wps.getCarSpeedForWay(tertiary, BACKWARD), EPSILON);
 
-    var gravel = new OsmEntityForTest(entry("highway", "tertiary"), entry("surface", "gravel"));
+    var gravel = new OsmTestEntity(entry("highway", "tertiary"), entry("surface", "gravel"));
     assertEquals(kmhAsMs(10), wps.getCarSpeedForWay(gravel, FORWARD), EPSILON);
     assertEquals(kmhAsMs(10), wps.getCarSpeedForWay(gravel, BACKWARD), EPSILON);
 
-    var motorway = new OsmEntityForTest("highway", "motorway");
+    var motorway = new OsmTestEntity("highway", "motorway");
     assertEquals(kmhAsMs(100), wps.getCarSpeedForWay(motorway, FORWARD), EPSILON);
     assertEquals(kmhAsMs(100), wps.getCarSpeedForWay(motorway, BACKWARD), EPSILON);
 
     // make sure that 0-speed ways can't exist
-    var zeroSpeed = new OsmEntityForTest("maxspeed", "0");
+    var zeroSpeed = new OsmTestEntity("maxspeed", "0");
     assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(zeroSpeed, FORWARD), EPSILON);
     assertEquals(kmhAsMs(25), wps.getCarSpeedForWay(zeroSpeed, BACKWARD), EPSILON);
   }

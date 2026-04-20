@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.osm.model.OsmEntity;
-import org.opentripplanner.osm.model.OsmEntityForTest;
+import org.opentripplanner.osm.model.OsmTestEntity;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.wayproperty.WayPropertySet;
 import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
@@ -74,7 +74,7 @@ class OsmTagMapperTest {
 
   @Test
   void testAccessNo() {
-    OsmEntityForTest tags = new OsmEntityForTest("access", "no");
+    OsmTestEntity tags = new OsmTestEntity("access", "no");
     OsmTagMapper osmTagMapper = new OsmTagMapper();
 
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(tags));
@@ -84,7 +84,7 @@ class OsmTagMapperTest {
 
   @Test
   void testAccessPrivate() {
-    OsmEntityForTest tags = new OsmEntityForTest("access", "private");
+    OsmTestEntity tags = new OsmTestEntity("access", "private");
     OsmTagMapper osmTagMapper = new OsmTagMapper();
 
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(tags));
@@ -221,7 +221,7 @@ class OsmTagMapperTest {
   @Test
   void testFootModifier() {
     OsmTagMapper osmTagMapper = new OsmTagMapper();
-    OsmEntityForTest tags = new OsmEntityForTest(entry("access", "private"), entry("foot", "yes"));
+    OsmTestEntity tags = new OsmTestEntity(entry("access", "private"), entry("foot", "yes"));
 
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(tags));
     assertTrue(osmTagMapper.isBicycleThroughTrafficExplicitlyDisallowed(tags));
@@ -230,7 +230,7 @@ class OsmTagMapperTest {
 
   @Test
   void testVehicleDenied() {
-    OsmEntityForTest tags = new OsmEntityForTest("vehicle", "destination");
+    OsmTestEntity tags = new OsmTestEntity("vehicle", "destination");
     OsmTagMapper osmTagMapper = new OsmTagMapper();
 
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(tags));
@@ -240,7 +240,7 @@ class OsmTagMapperTest {
 
   @Test
   void testVehicleDeniedMotorVehiclePermissive() {
-    OsmEntityForTest tags = new OsmEntityForTest(
+    OsmTestEntity tags = new OsmTestEntity(
       entry("vehicle", "destination"),
       entry("motor_vehicle", "designated")
     );
@@ -253,7 +253,7 @@ class OsmTagMapperTest {
 
   @Test
   void testVehicleDeniedBicyclePermissive() {
-    OsmEntityForTest tags = new OsmEntityForTest(
+    OsmTestEntity tags = new OsmTestEntity(
       entry("vehicle", "destination"),
       entry("bicycle", "designated")
     );
@@ -266,7 +266,7 @@ class OsmTagMapperTest {
 
   @Test
   void testMotorcycleModifier() {
-    OsmEntityForTest tags = new OsmEntityForTest(
+    OsmTestEntity tags = new OsmTestEntity(
       entry("access", "private"),
       entry("motor_vehicle", "yes")
     );
@@ -279,10 +279,7 @@ class OsmTagMapperTest {
 
   @Test
   void testBicycleModifier() {
-    OsmEntityForTest tags = new OsmEntityForTest(
-      entry("access", "private"),
-      entry("bicycle", "yes")
-    );
+    OsmTestEntity tags = new OsmTestEntity(entry("access", "private"), entry("bicycle", "yes"));
     OsmTagMapper osmTagMapper = new OsmTagMapper();
 
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(tags));
@@ -292,7 +289,7 @@ class OsmTagMapperTest {
 
   @Test
   void testBicyclePermissive() {
-    OsmEntityForTest tags = new OsmEntityForTest(
+    OsmTestEntity tags = new OsmTestEntity(
       entry("access", "private"),
       entry("bicycle", "permissive")
     );
