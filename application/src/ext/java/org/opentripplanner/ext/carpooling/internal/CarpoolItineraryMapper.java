@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.internal;
 
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -10,10 +9,8 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
-import org.opentripplanner.framework.time.ZoneIdFallback;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Place;
-import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -41,14 +38,11 @@ import org.opentripplanner.street.model.vertex.Vertex;
  *
  * <h2>Time Calculation</h2>
  * <p>
- * The passenger's start time is the later of:
- * <ol>
- *   <li>The passenger's requested departure time</li>
- *   <li>When the car departs with the passenger (driver arrival + boarding time)</li>
- * </ol>
- * <p>
- * This ensures the itinerary reflects realistic timing: passengers can't board before the
- * driver arrives, but they also won't board earlier than they wanted to depart.
+ * The passenger's start time is always the driver's real pickup time (trip start + pickup
+ * travel + boarding dwell). It is <em>not</em> shifted to match the passenger's requested
+ * departure time: the driver is on a committed schedule and cannot wait. Whether the
+ * passenger should show up early, or whether a trip starting before the requested time
+ * should be matched at all, is a filtering concern and lives upstream of this mapper.
  *
  * <h2>Geometry and Cost</h2>
  * <p>
@@ -70,25 +64,17 @@ import org.opentripplanner.street.model.vertex.Vertex;
  */
 public class CarpoolItineraryMapper {
 
-  private final ZoneId timeZone;
   private final ZonedDateTime transitSearchTimeZero;
 
   /**
-   * Creates a new carpool itinerary mapper with the specified timezone.
-   * <p>
-   * The timezone is used to convert passenger requested departure times from Instant to
-   * ZonedDateTime for comparison with driver pickup times.
-   * <p>
-   * @param timeZone the timezone for time conversions, typically from TransitService.getTimeZone()
-   * @param transitSearchTimeZero the base time for access egress requests. It is not used for access / egress
+   * @param transitSearchTimeZero the base time for access egress requests; not used for direct
    */
-  public CarpoolItineraryMapper(ZoneId timeZone, ZonedDateTime transitSearchTimeZero) {
-    this.timeZone = ZoneIdFallback.zoneId(timeZone);
+  public CarpoolItineraryMapper(ZonedDateTime transitSearchTimeZero) {
     this.transitSearchTimeZero = transitSearchTimeZero;
   }
 
-  public CarpoolItineraryMapper(ZoneId timeZone) {
-    this(timeZone, null);
+  public CarpoolItineraryMapper() {
+    this(null);
   }
 
   /**
@@ -100,11 +86,10 @@ public class CarpoolItineraryMapper {
    *
    * <h3>Time Calculation Details</h3>
    * <p>
-   * The method calculates three key times:
+   * Start and end times come entirely from the driver's schedule:
    * <ol>
-   *   <li><strong>Departure with passenger:</strong> Driver's start time + pickup travel + boarding time</li>
-   *   <li><strong>Passenger start:</strong> max(requested time, departure with passenger time)</li>
-   *   <li><strong>Passenger end:</strong> start time + shared segment durations</li>
+   *   <li><strong>Start:</strong> Driver's start time + pickup travel + boarding time</li>
+   *   <li><strong>End:</strong> Start time + shared segment durations</li>
    * </ol>
    *
    * <h3>Null Return Cases</h3>
@@ -112,26 +97,21 @@ public class CarpoolItineraryMapper {
    * Returns {@code null} if the candidate has no shared segments, which should never happen
    * for valid insertion candidates but serves as a safety check.
    *
-   * @param request the original routing request containing passenger preferences and timing
    * @param candidate the insertion candidate containing route segments and trip details
    * @return an itinerary with a single carpool leg, or null if shared segments are empty
    *         (should not occur for valid candidates)
    */
   @Nullable
-  public Itinerary toItinerary(RouteRequest request, InsertionCandidate candidate) {
+  public Itinerary toItinerary(InsertionCandidate candidate) {
     var sharedSegments = candidate.getSharedSegments();
     if (sharedSegments.isEmpty()) {
       return null;
     }
 
-    var driverPickupTime = candidate
+    var startTime = candidate
       .trip()
       .startTime()
       .plus(candidate.getDurationUntilDepartureWithPassenger());
-
-    var startTime = request.dateTime().isAfter(driverPickupTime.toInstant())
-      ? request.dateTime().atZone(timeZone)
-      : driverPickupTime;
 
     var endTime = startTime.plus(candidate.getPassengerRideDuration());
 

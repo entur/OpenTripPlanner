@@ -130,7 +130,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
-    this.itineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
+    this.itineraryMapper = new CarpoolItineraryMapper();
     this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
     this.vertexLinker = vertexLinker;
   }
@@ -272,7 +272,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       itineraries = insertionCandidates
         .stream()
-        .map(candidate -> itineraryMapper.toItinerary(request, candidate))
+        .map(itineraryMapper::toItinerary)
         .filter(Objects::nonNull)
         .toList();
     }

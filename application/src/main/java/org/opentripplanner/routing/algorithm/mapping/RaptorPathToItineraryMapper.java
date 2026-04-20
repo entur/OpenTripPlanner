@@ -102,10 +102,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       graph.ellipsoidToGeoidDifference
     );
     this.transitService = transitService;
-    this.carpoolItineraryMapper = new CarpoolItineraryMapper(
-      transitService.getTimeZone(),
-      transitSearchTimeZero
-    );
+    this.carpoolItineraryMapper = new CarpoolItineraryMapper(transitSearchTimeZero);
   }
 
   public Itinerary createItinerary(RaptorPath<T> path) {
