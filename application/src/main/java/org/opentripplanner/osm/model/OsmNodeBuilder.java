@@ -22,8 +22,7 @@ public class OsmNodeBuilder {
     this.osmProvider = osmNode.getOsmProvider();
   }
 
-  public OsmNodeBuilder() {
-  }
+  public OsmNodeBuilder() {}
 
   public OsmNodeBuilder withId(long id) {
     this.id = id;
@@ -38,7 +37,7 @@ public class OsmNodeBuilder {
 
   public OsmNodeBuilder addTag(String key, String value) {
     if (key != null && value != null) {
-      if(this.tags == EMPTY_TAGS){
+      if (this.tags == EMPTY_TAGS) {
         this.tags = new HashMap<>();
       }
       this.tags.put(key.toLowerCase(), value);

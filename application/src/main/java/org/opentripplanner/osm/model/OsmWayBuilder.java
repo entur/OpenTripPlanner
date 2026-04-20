@@ -8,7 +8,7 @@ import org.opentripplanner.osm.OsmProvider;
 
 public class OsmWayBuilder {
 
-  private long id = -999;
+  private long id;
   private final Map<String, String> tags = new HashMap<>();
   private OsmProvider osmProvider;
   private final TLongList nodes = new TLongArrayList();
