@@ -29,7 +29,7 @@ public class OsmNode extends OsmEntity {
     return new OsmNodeBuilder();
   }
 
-  public OsmNodeBuilder toBuilder() {
+  public OsmNodeBuilder copy() {
     return new OsmNodeBuilder(this);
   }
 

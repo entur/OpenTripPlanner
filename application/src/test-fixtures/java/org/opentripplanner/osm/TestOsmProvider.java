@@ -30,7 +30,7 @@ public class TestOsmProvider implements OsmProvider {
     this.relations = List.copyOf(
       relations
         .stream()
-        .map(relation -> relation.toBuilder().withOsmProvider(this).build())
+        .map(relation -> relation.copy().withOsmProvider(this).build())
         .toList()
     );
     this.ways = List.copyOf(

@@ -25,7 +25,7 @@ public class OsmRelation extends OsmEntity {
     return new Builder();
   }
 
-  public Builder toBuilder() {
+  public Builder copy() {
     Builder builder = new Builder();
     builder.id = this.id;
     builder.tags = new HashMap<>(this.getTags());

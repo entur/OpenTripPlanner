@@ -161,26 +161,26 @@ public class OsmDatabaseTest {
     var provider = TestOsmProvider.of().build();
 
     // Set OsmProvider on all entities
-    multipolygon = multipolygon.toBuilder().withOsmProvider(provider).build();
+    multipolygon = multipolygon.copy().withOsmProvider(provider).build();
     simpleArea = simpleArea.copy().withOsmProvider(provider).build();
     outerRing = outerRing.copy().withOsmProvider(provider).build();
     innerRing = innerRing.copy().withOsmProvider(provider).build();
     innerRingWithBarrier = innerRingWithBarrier.copy().withOsmProvider(provider).build();
-    n1 = n1.toBuilder().withOsmProvider(provider).build();
-    n2 = n2.toBuilder().withOsmProvider(provider).build();
-    n3 = n3.toBuilder().withOsmProvider(provider).build();
-    n4 = n4.toBuilder().withOsmProvider(provider).build();
-    n5 = n5.toBuilder().withOsmProvider(provider).build();
-    n6 = n6.toBuilder().withOsmProvider(provider).build();
-    n7 = n7.toBuilder().withOsmProvider(provider).build();
-    n8 = n8.toBuilder().withOsmProvider(provider).build();
-    n9 = n9.toBuilder().withOsmProvider(provider).build();
-    n10 = n10.toBuilder().withOsmProvider(provider).build();
-    n11 = n11.toBuilder().withOsmProvider(provider).build();
-    n12 = n12.toBuilder().withOsmProvider(provider).build();
-    n13 = n13.toBuilder().withOsmProvider(provider).build();
-    n14 = n14.toBuilder().withOsmProvider(provider).build();
-    n15 = n15.toBuilder().withOsmProvider(provider).build();
+    n1 = n1.copy().withOsmProvider(provider).build();
+    n2 = n2.copy().withOsmProvider(provider).build();
+    n3 = n3.copy().withOsmProvider(provider).build();
+    n4 = n4.copy().withOsmProvider(provider).build();
+    n5 = n5.copy().withOsmProvider(provider).build();
+    n6 = n6.copy().withOsmProvider(provider).build();
+    n7 = n7.copy().withOsmProvider(provider).build();
+    n8 = n8.copy().withOsmProvider(provider).build();
+    n9 = n9.copy().withOsmProvider(provider).build();
+    n10 = n10.copy().withOsmProvider(provider).build();
+    n11 = n11.copy().withOsmProvider(provider).build();
+    n12 = n12.copy().withOsmProvider(provider).build();
+    n13 = n13.copy().withOsmProvider(provider).build();
+    n14 = n14.copy().withOsmProvider(provider).build();
+    n15 = n15.copy().withOsmProvider(provider).build();
 
     var osmdb = new OsmDatabase(DataImportIssueStore.NOOP);
     osmdb.addRelation(multipolygon);
