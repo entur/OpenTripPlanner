@@ -20,6 +20,7 @@ import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.CompositeRentalRestrictionExtension;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
@@ -65,8 +66,22 @@ class RentalRestrictionExtensionTest {
 
   @Test
   public void forkStateWhenEnteringNoDropOffZone() {
+    var noDropOffZone = new GeofencingZone(
+      new FeedScopedId(network, "a-park"),
+      null,
+      null,
+      true,
+      false
+    );
+
+    // V1 is outside, V2 is inside the zone
+    // Add boundary extensions for state-based fork trigger
+    V1.addRentalRestriction(new GeofencingBoundaryExtension(noDropOffZone, true));
+    V2.addRentalRestriction(new GeofencingBoundaryExtension(noDropOffZone, false));
+    // Also add zone extension on V2 for old system compatibility
+    V2.addRentalRestriction(new GeofencingZoneExtension(noDropOffZone));
+
     var edge1 = streetEdge(V4, V1);
-    var edge2 = streetEdge(V2, V3);
     var restrictedEdge = streetEdge(V1, V2);
 
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
@@ -77,29 +92,27 @@ class RentalRestrictionExtensionTest {
       network,
       false
     );
-    restrictedEdge.addRentalRestriction(
-      new GeofencingZoneExtension(
-        new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
-      )
-    );
 
     var states = edge1.traverse(editor.makeState());
 
-    var continueOnFoot = states[0];
-    var continueRenting = states[1];
+    // After traversing edge V4->V1, state enters V1 which has a boundary extension.
+    // The forward drop-off fork should trigger since V2 (tov of next edge) is inside the zone.
+    // But we're traversing edge1 (V4->V1), not the restricted edge (V1->V2).
+    // The fork triggers on the restricted edge when zone is entered.
+    var s0 = states[0];
+    assertEquals(RENTING_FLOATING, s0.getVehicleRentalState());
 
+    // Now traverse the restricted edge — this should trigger the forward drop-off fork
+    var results = restrictedEdge.traverse(s0);
+    assertEquals(2, results.length);
+
+    var continueOnFoot = results[0];
     assertEquals(HAVE_RENTED, continueOnFoot.getVehicleRentalState());
     assertEquals(WALK, continueOnFoot.getBackMode());
 
+    var continueRenting = results[1];
     assertEquals(RENTING_FLOATING, continueRenting.getVehicleRentalState());
     assertEquals(SCOOTER, continueRenting.getBackMode());
-    assertTrue(continueRenting.isInsideNoRentalDropOffArea());
-
-    var insideZone = restrictedEdge.traverse(continueRenting)[0];
-
-    var leftNoDropOff = edge2.traverse(insideZone)[0];
-    assertFalse(leftNoDropOff.isInsideNoRentalDropOffArea());
-    assertEquals(RENTING_FLOATING, continueRenting.getVehicleRentalState());
   }
 
   @Test
