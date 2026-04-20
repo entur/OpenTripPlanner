@@ -3,6 +3,7 @@ package org.opentripplanner.street.search.state;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -11,6 +12,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.astar.spi.AStarState;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.RentalFormFactor;
@@ -69,10 +71,28 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     this.vertex = vertex;
     this.backState = null;
     this.stateData = stateData;
-    if (request.arriveBy() && !vertex.rentalRestrictions().noDropOffNetworks().isEmpty()) {
-      this.stateData.noRentalDropOffZonesAtStartOfReverseSearch = vertex
-        .rentalRestrictions()
-        .noDropOffNetworks();
+    if (request.arriveBy() && request.mode().includesRenting()) {
+      // Legacy field (still used by old per-edge system until Stage 5 cleanup)
+      if (!vertex.rentalRestrictions().noDropOffNetworks().isEmpty()) {
+        this.stateData.noRentalDropOffZonesAtStartOfReverseSearch = vertex
+          .rentalRestrictions()
+          .noDropOffNetworks();
+      }
+      // Populate currentGeofencingZones from vertex's zone extensions
+      var zones = extractGeofencingZonesFromVertex(vertex);
+      if (!zones.isEmpty()) {
+        this.stateData.currentGeofencingZones = zones;
+      }
+      // For generic RENTING_FLOATING: populate committedNetworks with restricted networks
+      if (
+        stateData.vehicleRentalState == VehicleRentalState.RENTING_FLOATING &&
+        stateData.vehicleRentalNetwork == null
+      ) {
+        var restrictedNetworks = extractRestrictedNetworksFromVertex(vertex);
+        if (!restrictedNetworks.isEmpty()) {
+          this.stateData.committedNetworks = restrictedNetworks;
+        }
+      }
     }
     this.traversalDistance_m = 0;
     this.time_ms = startTime.toEpochMilli();
@@ -90,6 +110,14 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     Collection<State> states = new ArrayList<>();
     for (Vertex vertex : vertices) {
       for (StateData stateData : StateData.getInitialStateDatas(streetSearchRequest)) {
+        // Kept-rental filter: skip RENTING_FROM_STATION if destination is in any
+        // no-drop-off or no-traversal zone (rider can't arrive on vehicle there)
+        if (
+          stateData.vehicleRentalState == VehicleRentalState.RENTING_FROM_STATION &&
+          vertexHasRestrictedZones(vertex)
+        ) {
+          continue;
+        }
         states.add(
           new State(vertex, streetSearchRequest.startTime(), stateData, streetSearchRequest)
         );
@@ -224,7 +252,8 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
         !stateData.insideNoRentalDropOffArea) ||
       (getRequest().allowsArrivingInRentalAtDestination() &&
         stateData.mayKeepRentedVehicleAtDestination &&
-        stateData.vehicleRentalState == VehicleRentalState.RENTING_FROM_STATION)
+        stateData.vehicleRentalState == VehicleRentalState.RENTING_FROM_STATION &&
+        !isDropOffBannedByCurrentZones())
     );
   }
 
@@ -478,8 +507,10 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
   }
 
   /**
-   * Returns the highest-priority (lowest priority value) geofencing zone matching the state's
-   * committed network, or null if no network is committed or no zones match.
+   * Returns the highest-priority (lowest priority value) restricted geofencing zone matching the
+   * state's committed network, or null if no network is committed or no restricted zones match.
+   * Business areas are excluded — they enforce "can't leave" via BusinessAreaBorder, not
+   * restriction overrides inside the area.
    */
   @Nullable
   private GeofencingZone getGoverningZone() {
@@ -489,13 +520,44 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     String network = stateData.vehicleRentalNetwork;
     GeofencingZone best = null;
     for (var zone : stateData.currentGeofencingZones) {
-      if (zone.id().getFeedId().equals(network)) {
+      if (zone.id().getFeedId().equals(network) && zone.hasRestriction()) {
         if (best == null || zone.priority() < best.priority()) {
           best = zone;
         }
       }
     }
     return best;
+  }
+
+  private static Set<GeofencingZone> extractGeofencingZonesFromVertex(Vertex vertex) {
+    var zones = new HashSet<GeofencingZone>();
+    for (var ext : vertex.rentalRestrictions().toList()) {
+      if (ext instanceof GeofencingZoneExtension gze) {
+        zones.add(gze.zone());
+      }
+    }
+    return zones.isEmpty() ? Set.of() : Set.copyOf(zones);
+  }
+
+  private static Set<String> extractRestrictedNetworksFromVertex(Vertex vertex) {
+    var networks = new HashSet<String>();
+    for (var ext : vertex.rentalRestrictions().toList()) {
+      if (ext instanceof GeofencingZoneExtension gze && gze.zone().hasRestriction()) {
+        networks.add(gze.zone().id().getFeedId());
+      }
+    }
+    return networks.isEmpty() ? Set.of() : Set.copyOf(networks);
+  }
+
+  private static boolean vertexHasRestrictedZones(Vertex vertex) {
+    for (var ext : vertex.rentalRestrictions().toList()) {
+      if (ext instanceof GeofencingZoneExtension gze) {
+        if (gze.zone().dropOffBanned() || gze.zone().traversalBanned()) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

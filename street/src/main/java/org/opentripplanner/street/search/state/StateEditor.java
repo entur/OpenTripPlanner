@@ -472,6 +472,14 @@ public class StateEditor {
     child.stateData.committedNetworks = Set.copyOf(networks);
   }
 
+  /**
+   * Commit a generic RENTING_FLOATING state to a specific network at a boundary fork.
+   */
+  public void commitToNetwork(String network) {
+    cloneStateDataAsNeeded();
+    child.stateData.vehicleRentalNetwork = network;
+  }
+
   public void addCommittedNetwork(String network) {
     if (child.stateData.committedNetworks.contains(network)) {
       return;

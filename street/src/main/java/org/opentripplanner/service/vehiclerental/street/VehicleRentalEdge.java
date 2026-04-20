@@ -100,7 +100,7 @@ public class VehicleRentalEdge extends Edge {
           // reminder: in an arriveBy search we traverse backwards so beginFloatingVehicle means
           // traversing from renting to walking.
           if (
-            s0.stateData.noRentalDropOffZonesAtStartOfReverseSearch.contains(network) ||
+            s0.getCommittedNetworks().contains(network) ||
             !station.availablePickupFormFactors(realtimeAvailability).contains(formFactor)
           ) {
             return State.empty();
@@ -190,7 +190,7 @@ public class VehicleRentalEdge extends Edge {
     }
 
     if (pickedUp) {
-      s1.initializeGeofencingZones(stationVertex.getInitialGeofencingZone());
+      s1.initializeGeofencingZones(stationVertex.getInitialGeofencingZones());
     }
 
     s1.incrementWeight(
