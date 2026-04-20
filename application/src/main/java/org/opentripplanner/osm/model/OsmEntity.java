@@ -11,6 +11,7 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTR
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -168,7 +169,7 @@ public abstract class OsmEntity {
    */
   protected OsmEntity(long id, Map<String, String> tags, OsmProvider osmProvider) {
     this.id = id;
-    this.tags = MapUtils.transformKeys(tags, String::toLowerCase);
+    this.tags = tags;
     this.osmProvider = osmProvider;
   }
 
@@ -191,7 +192,7 @@ public abstract class OsmEntity {
    * The tags of an entity (immutable).
    */
   public Map<String, String> getTags() {
-    return tags;
+    return Collections.unmodifiableMap(tags);
   }
 
   /**
