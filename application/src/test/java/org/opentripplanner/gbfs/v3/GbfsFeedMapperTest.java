@@ -172,6 +172,11 @@ class GbfsFeedMapperTest {
 
     assertTrue(hubBergnet.dropOffBanned());
     assertFalse(hubBergnet.traversalBanned());
+    // v3 ride_start_allowed and ride_end_allowed are independent
+    assertFalse(hubBergnet.rideStartBanned());
+    assertFalse(hubBergnet.isBusinessArea());
+    assertEquals(List.of("check_moped_almere_60"), hubBergnet.vehicleTypeIds());
+    assertNull(hubBergnet.maximumSpeedKph());
 
     var almereHaven = zones
       .stream()
