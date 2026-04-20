@@ -10,7 +10,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.CompositeRentalRestrictionExtension;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 
 class RentalRestrictionExtensionTest {
@@ -18,8 +18,9 @@ class RentalRestrictionExtensionTest {
   static String network = "tier-oslo";
   RentalRestrictionExtension a = new BusinessAreaBorder("a");
   RentalRestrictionExtension b = new BusinessAreaBorder("b");
-  RentalRestrictionExtension c = new GeofencingZoneExtension(
-    new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
+  RentalRestrictionExtension c = new GeofencingBoundaryExtension(
+    new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false),
+    true
   );
 
   @Test

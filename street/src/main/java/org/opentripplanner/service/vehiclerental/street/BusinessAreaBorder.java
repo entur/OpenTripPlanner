@@ -50,13 +50,4 @@ public final class BusinessAreaBorder implements RentalRestrictionExtension {
     return true;
   }
 
-  @Override
-  public Set<String> noDropOffNetworks() {
-    return Set.of();
-  }
-
-  @Override
-  public List<String> networks() {
-    return List.of(network);
-  }
 }

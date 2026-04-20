@@ -240,6 +240,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestBoundaryEdges = result.boundaryEdges();
         latestZoneIndex = result.zoneIndex();
         latestAppliedGeofencingZones = geofencingZones;
+        context.graph().setGeofencingZoneIndex(nameForLogging, latestZoneIndex);
 
         GeofencingZoneApplier.preResolveVertexZones(
           verticesByStation.values(),
