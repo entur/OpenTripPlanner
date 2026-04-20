@@ -98,6 +98,7 @@ data:
           "feedId": "FL",
           "source": "https://finap.fi/export/gtfs/1660"
         }
-      ]
+      ],
+      "fares": "off"
     }
 {{end}}
