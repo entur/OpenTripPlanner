@@ -114,6 +114,7 @@ class OsmParser extends BinaryParser {
       return;
     }
 
+    // because it's a hot loop we don't use the builder
     for (int i = 0; i < nodes.getIdCount(); i++) {
       long lat = nodes.getLat(i) + lastLat;
       lastLat = lat;

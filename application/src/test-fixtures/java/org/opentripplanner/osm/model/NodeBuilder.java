@@ -5,10 +5,13 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
 public class NodeBuilder {
 
   public static OsmNode node(long id, WgsCoordinate wgsCoordinate) {
+    return nodeBuilder(id, wgsCoordinate).build();
+  }
+
+  public static OsmNodeBuilder nodeBuilder(long id, WgsCoordinate wgsCoordinate) {
     return OsmNode.of()
       .withId(id)
       .withLat(wgsCoordinate.latitude())
-      .withLon(wgsCoordinate.longitude())
-      .build();
+      .withLon(wgsCoordinate.longitude());
   }
 }

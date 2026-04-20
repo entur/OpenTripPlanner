@@ -9,14 +9,14 @@ public class OsmNodeBuilder {
   private long id;
   private double lat;
   private double lon;
-  private Map<String, String> tags = new HashMap<>();
+  private final Map<String, String> tags = new HashMap<>();
   private OsmProvider osmProvider;
 
   public OsmNodeBuilder(OsmNode osmNode) {
     this.id = osmNode.id;
     this.lat = osmNode.lat;
     this.lon = osmNode.lon;
-    this.tags = new HashMap<>(osmNode.getTags());
+    this.tags.putAll(osmNode.getTags());
     this.osmProvider = osmNode.getOsmProvider();
   }
 

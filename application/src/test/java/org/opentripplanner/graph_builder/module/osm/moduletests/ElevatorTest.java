@@ -3,6 +3,7 @@ package org.opentripplanner.graph_builder.module.osm.moduletests;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.osm.model.NodeBuilder.node;
+import static org.opentripplanner.osm.model.NodeBuilder.nodeBuilder;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -52,8 +53,7 @@ class ElevatorTest {
   void testMultilevelNodeDuration() {
     var node0 = node(0, new WgsCoordinate(0, 0));
     var node1 = node(1, new WgsCoordinate(2, 0));
-    var elevatorNode = node(2, new WgsCoordinate(1, 0))
-      .toBuilder()
+    var elevatorNode = nodeBuilder(2, new WgsCoordinate(1, 0))
       .addTag("duration", "00:01:02")
       .addTag("highway", "elevator")
       .addTag("level", "1;2")
@@ -77,10 +77,10 @@ class ElevatorTest {
   void testMultilevelNodeWithWaysOnSameLevel() {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = node(3, new WgsCoordinate(0, 3))
-      .toBuilder()
+    var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
       .addTag("highway", "elevator")
       .build();
+
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("level", "1"), n1, elevatorNode)
       .addWayFromNodes(way -> way.addTag("level", "1"), n2, elevatorNode)
@@ -102,8 +102,7 @@ class ElevatorTest {
     var n2 = node(2, new WgsCoordinate(0, 2));
     var n3 = node(3, new WgsCoordinate(0, 3));
     var n4 = node(4, new WgsCoordinate(0, 4));
-    var elevatorNode = node(5, new WgsCoordinate(0, 5))
-      .toBuilder()
+    var elevatorNode = nodeBuilder(5, new WgsCoordinate(0, 5))
       .addTag("highway", "elevator")
       .build();
 
@@ -335,8 +334,7 @@ class ElevatorTest {
   void testOsmElevatorNodeUniqueLabels(String level1, String ref1, String level2, String ref2) {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = node(3, new WgsCoordinate(0, 3))
-      .toBuilder()
+    var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
       .addTag("highway", "elevator")
       .build();
     var provider = TestOsmProvider.of()
@@ -408,8 +406,8 @@ class ElevatorTest {
    */
   @Test
   void elevatorWayWithFewerThanTwoIntersectionNodes() {
-    var n1 = node(1, new WgsCoordinate(1, 1)).toBuilder().addTag("highway", "elevator").build();
-    var n2 = node(2, new WgsCoordinate(2, 2)).toBuilder().addTag("highway", "elevator").build();
+    var n1 = nodeBuilder(1, new WgsCoordinate(1, 1)).addTag("highway", "elevator").build();
+    var n2 = nodeBuilder(2, new WgsCoordinate(2, 2)).addTag("highway", "elevator").build();
 
     var provider = TestOsmProvider.of()
       .addWayFromNodes(way -> way.addTag("highway", "elevator"), n1, n2)
