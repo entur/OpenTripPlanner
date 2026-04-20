@@ -57,17 +57,13 @@ public final class WarmupConfig {
       .description(docEnumValueList(WarmupApi.values()))
       .asEnum(WarmupApi.TRANSMODEL);
 
-    var from = c.of("from").since(V2_10).summary("Origin location for warmup searches.").asObject();
-    double fromLat = from.of("lat").since(V2_10).summary("Latitude of the origin.").asDouble();
-    double fromLng = from.of("lon").since(V2_10).summary("Longitude of the origin.").asDouble();
-
-    var to = c
-      .of("to")
-      .since(V2_10)
-      .summary("Destination location for warmup searches.")
-      .asObject();
-    double toLat = to.of("lat").since(V2_10).summary("Latitude of the destination.").asDouble();
-    double toLng = to.of("lon").since(V2_10).summary("Longitude of the destination.").asDouble();
+    WgsCoordinate from = mapCoordinate(c, "from", "Origin location for warmup searches.", "origin");
+    WgsCoordinate to = mapCoordinate(
+      c,
+      "to",
+      "Destination location for warmup searches.",
+      "destination"
+    );
 
     var accessModeStrings = c
       .of("accessModes")
@@ -109,12 +105,18 @@ public final class WarmupConfig {
       );
     }
 
-    return new WarmupParameters(
-      api,
-      new WgsCoordinate(fromLat, fromLng),
-      new WgsCoordinate(toLat, toLng),
-      accessModes,
-      egressModes
-    );
+    return new WarmupParameters(api, from, to, accessModes, egressModes);
+  }
+
+  private static WgsCoordinate mapCoordinate(
+    NodeAdapter parent,
+    String name,
+    String summary,
+    String noun
+  ) {
+    var node = parent.of(name).since(V2_10).summary(summary).asObject();
+    double lat = node.of("lat").since(V2_10).summary("Latitude of the " + noun + ".").asDouble();
+    double lon = node.of("lon").since(V2_10).summary("Longitude of the " + noun + ".").asDouble();
+    return new WgsCoordinate(lat, lon);
   }
 }
