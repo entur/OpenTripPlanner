@@ -10,6 +10,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.opentripplanner.apis.support.mapping.PropertyMapper;
 import org.opentripplanner.core.model.i18n.I18NStringMapper;
 import org.opentripplanner.framework.json.ObjectMappers;
@@ -60,9 +61,10 @@ public class DigitransitStopPropertyMapper extends PropertyMapper<RegularStop> {
 
   protected static String getRoutes(TransitService transitService, RegularStop stop) {
     try {
-      var objects = transitService
-        .findRoutes(stop)
-        .stream()
+      var flexRoutes = transitService.getFlexIndex().findRoutes(stop);
+      var fixedRoutes= transitService.findRoutes(stop);
+      var objects = Stream.concat(flexRoutes.stream(), fixedRoutes.stream())
+        .distinct()
         .map(route -> {
           var routeObject = OBJECT_MAPPER.createObjectNode();
           routeObject.put("gtfsType", route.getGtfsType());

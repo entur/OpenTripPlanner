@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.flex;
 
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -25,17 +26,24 @@ public class FlexIndex {
 
   private final Map<LocalDate, List<FlexTripForDate>> flexTripsRunningOnDate = new HashMap<>();
 
+  private final Multimap<StopLocation, Route> routeByStop;
+
   public FlexIndex(TimetableRepository timetableRepository) {
+    var routeByStopBuilder = ImmutableSetMultimap.<StopLocation, Route>builder();
+
     for (FlexTrip<?, ?> flexTrip : timetableRepository.getAllFlexTrips()) {
-      routeById.put(flexTrip.getTrip().getRoute().getId(), flexTrip.getTrip().getRoute());
+      var route = flexTrip.getTrip().getRoute();
+      routeById.put(route.getId(), route);
       tripById.put(flexTrip.getTrip().getId(), flexTrip);
       for (StopLocation stop : flexTrip.getStops()) {
         if (stop instanceof GroupStop groupStop) {
           for (StopLocation stopElement : groupStop.getChildLocations()) {
             flexTripsByStop.put(stopElement, flexTrip);
+            routeByStopBuilder.put(stopElement, route);
           }
         } else {
           flexTripsByStop.put(stop, flexTrip);
+          routeByStopBuilder.put(stop, route);
         }
       }
 
@@ -55,6 +63,8 @@ public class FlexIndex {
             });
         });
     }
+
+    routeByStop = routeByStopBuilder.build();
   }
 
   public Collection<FlexTrip<?, ?>> getFlexTripsByStop(StopLocation stopLocation) {
@@ -75,6 +85,10 @@ public class FlexIndex {
 
   public Collection<FlexTrip<?, ?>> getAllFlexTrips() {
     return tripById.values();
+  }
+
+  public Collection<Route> findRoutes(StopLocation stop){
+    return routeByStop.get(stop);
   }
 
   /**
