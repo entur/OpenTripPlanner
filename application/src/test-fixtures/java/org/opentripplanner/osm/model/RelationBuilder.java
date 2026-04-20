@@ -2,7 +2,7 @@ package org.opentripplanner.osm.model;
 
 public class RelationBuilder {
 
-  private final OsmRelation.Builder relationBuilder = OsmRelation.builder();
+  private final OsmRelationBuilder relationBuilder = OsmRelation.builder();
 
   public static RelationBuilder ofMultiPolygon() {
     var builder = new RelationBuilder();

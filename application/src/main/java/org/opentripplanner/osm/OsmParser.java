@@ -11,6 +11,7 @@ import org.opentripplanner.osm.model.OsmMemberType;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmNodeBuilder;
 import org.opentripplanner.osm.model.OsmRelation;
+import org.opentripplanner.osm.model.OsmRelationBuilder;
 import org.opentripplanner.osm.model.OsmRelationMember;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.osm.model.OsmWayBuilder;
@@ -64,7 +65,7 @@ class OsmParser extends BinaryParser {
     }
 
     for (Osmformat.Relation i : rels) {
-      OsmRelation.Builder builder = OsmRelation.builder()
+      OsmRelationBuilder builder = OsmRelation.builder()
         .withId(i.getId())
         .withOsmProvider(provider);
 
