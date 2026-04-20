@@ -17,6 +17,12 @@ import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 class OsmWayTest {
 
   @Test
+  void lowerCaseKeys() {
+    var entity = OsmWay.of().addTag("foo", "bar").addTag("FOO", "baz").build();
+    assertEquals("baz", entity.getTag("foo"));
+  }
+
+  @Test
   void testIsBicycleDismountForced() {
     OsmWay way = OsmWay.of().build();
     assertFalse(way.isBicycleDismountForced());

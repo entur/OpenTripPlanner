@@ -41,5 +41,4 @@ class MapUtilsTest {
     var combined = MapUtils.combine(Map.of("key", "first value"), Map.of("key", "second value"));
     assertEquals(Map.of("key", "second value"), combined);
   }
-
 }

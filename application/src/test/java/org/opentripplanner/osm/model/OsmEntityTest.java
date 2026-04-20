@@ -26,14 +26,6 @@ import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 public class OsmEntityTest {
 
   @Test
-  void lowerCaseKeys() {
-    var tags = Map.of("Foo", "bar", "Baz", "qux");
-    var entity = new OsmTestEntity(tags);
-    assertEquals("bar", entity.getTag("foo"));
-    assertEquals("qux", entity.getTag("baz"));
-  }
-
-  @Test
   void testHasTag() {
     var o = new OsmTestEntity();
     assertFalse(o.hasTag("foo"));

@@ -13,13 +13,7 @@ public class OsmNode extends OsmEntity {
   public final double lat;
   public final double lon;
 
-  OsmNode(
-    long id,
-    double lat,
-    double lon,
-    Map<String, String> tags,
-    OsmProvider osmProvider
-  ) {
+  OsmNode(long id, double lat, double lon, Map<String, String> tags, OsmProvider osmProvider) {
     super(id, tags, osmProvider);
     this.lat = lat;
     this.lon = lon;

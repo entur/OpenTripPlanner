@@ -1,11 +1,18 @@
 package org.opentripplanner.osm.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
 public class OsmNodeTest {
+
+  @Test
+  void lowerCaseKeys() {
+    var entity = OsmNode.of().addTag("foo", "bar").addTag("FOO", "baz").build();
+    assertEquals("baz", entity.getTag("foo"));
+  }
 
   @Test
   public void isBarrier() {
