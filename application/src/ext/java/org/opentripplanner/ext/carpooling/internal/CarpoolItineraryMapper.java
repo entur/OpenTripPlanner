@@ -179,7 +179,6 @@ public class CarpoolItineraryMapper {
       .withEndTime(endTime)
       .withFrom(Place.normal(fromVertex, new NonLocalizedString("Carpool boarding")))
       .withTo(Place.normal(toVertex, new NonLocalizedString("Carpool alighting")))
-      .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
       .withGeneralizedCost((int) cost)
       .withGeometry(geometry)
