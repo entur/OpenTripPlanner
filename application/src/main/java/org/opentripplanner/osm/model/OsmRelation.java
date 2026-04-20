@@ -10,7 +10,7 @@ public class OsmRelation extends OsmEntity {
 
   private final List<OsmRelationMember> members;
 
-  public OsmRelation(
+  OsmRelation(
     long id,
     Map<String, String> tags,
     OsmProvider osmProvider,

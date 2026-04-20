@@ -19,7 +19,8 @@ import org.opentripplanner.osm.model.OsmWayBuilder;
 /**
  * Parser for the OpenStreetMap PBF Format.
  *
- * @since 0.4
+ * It intentionally skips the builder classes to keep allocations low.
+ *
  */
 class OsmParser extends BinaryParser {
 
@@ -126,7 +127,7 @@ class OsmParser extends BinaryParser {
       double latf = parseLat(lat);
       double lonf = parseLon(lon);
 
-      var tags = new HashMap<String, String>(nodes.getKeysValsCount());
+      var builder = OsmNode.of().withId(id).withOsmProvider(provider).withLatLon(latf, lonf);
       // If empty, assume that nothing here has keys or vals.
       if (nodes.getKeysValsCount() > 0) {
         while (nodes.getKeysVals(j) != 0) {
@@ -135,13 +136,13 @@ class OsmParser extends BinaryParser {
 
           String key = internalize(getStringById(keyid));
           String value = internalize(getStringById(valid));
-          tags.put(key, value);
+          builder.addTag(key, value);
         }
         // Skip over the '0' delimiter.
         j++;
       }
 
-      osmdb.addNode(new OsmNode(id, latf, lonf, tags, provider));
+      osmdb.addNode(builder.build());
     }
   }
 
@@ -178,8 +179,8 @@ class OsmParser extends BinaryParser {
       OsmWayBuilder builder = OsmWay.of().withId(i.getId()).withOsmProvider(provider);
 
       for (int j = 0; j < i.getKeysCount(); j++) {
-        var key = internalize(getStringById(i.getKeys(j)));
-        var value = internalize(getStringById(i.getVals(j)));
+        String key = internalize(getStringById(i.getKeys(j)));
+        String value = internalize(getStringById(i.getVals(j)));
         builder.addTag(key, value);
       }
 

@@ -13,7 +13,7 @@ public class OsmNode extends OsmEntity {
   public final double lat;
   public final double lon;
 
-  public OsmNode(
+  OsmNode(
     long id,
     double lat,
     double lon,
