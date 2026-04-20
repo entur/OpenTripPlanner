@@ -257,7 +257,9 @@ public class SpeedTest {
     // We assume we are debugging and not measuring performance if we only run 1 test-case
     // one time; Hence skip JIT compiler warm-up.
     if (testCases.runJitWarmUp() || opts.profiles().length > 1) {
-      performRouting(testCases.getJitWarmUpCase());
+      for (var tc : testCases.getJitWarmUpCases()) {
+        performRouting(tc);
+      }
     }
 
     ResultPrinter.logSingleTestHeader(profile);
