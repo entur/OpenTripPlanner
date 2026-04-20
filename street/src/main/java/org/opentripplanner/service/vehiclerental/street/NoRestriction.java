@@ -37,17 +37,7 @@ public final class NoRestriction implements RentalRestrictionExtension {
   }
 
   @Override
-  public List<String> networks() {
-    return List.of();
-  }
-
-  @Override
   public boolean hasRestrictions() {
     return false;
-  }
-
-  @Override
-  public Set<String> noDropOffNetworks() {
-    return Set.of();
   }
 }

@@ -217,24 +217,6 @@ public class StateEditor {
     stateData.enteredNoThroughTrafficArea = true;
   }
 
-  public void leaveNoRentalDropOffArea() {
-    if (!stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-
-    cloneStateDataAsNeeded();
-    stateData.insideNoRentalDropOffArea = false;
-  }
-
-  public void enterNoRentalDropOffArea() {
-    if (stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-
-    cloneStateDataAsNeeded();
-    stateData.insideNoRentalDropOffArea = true;
-  }
-
   public void setBackMode(TraverseMode mode) {
     if (mode == stateData.backMode) {
       return;
@@ -266,7 +248,6 @@ public class StateEditor {
       stateData.vehicleRentalNetwork = null;
       stateData.rentalVehicleFormFactor = null;
       stateData.rentalVehiclePropulsionType = null;
-      stateData.insideNoRentalDropOffArea = false;
     } else {
       stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
       stateData.currentMode = formFactor.traverseMode;
@@ -402,11 +383,6 @@ public class StateEditor {
     return backState;
   }
 
-  public void resetStartedInNoDropOffZone() {
-    cloneStateDataAsNeeded();
-    stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
-  }
-
   /**
    * Update geofencing zone tracking based on boundary extensions on the traversed edge.
    * For each {@link GeofencingBoundaryExtension} on fromv, checks if tov has a paired extension
@@ -434,13 +410,13 @@ public class StateEditor {
       }
       boolean effectiveEntering = boundary.entering() ^ arriveBy;
       cloneStateDataAsNeeded();
-      var newZones = new HashSet<>(child.stateData.currentGeofencingZones);
+      var newZones = new HashSet<>(stateData.currentGeofencingZones);
       if (effectiveEntering) {
         newZones.add(boundary.zone());
       } else {
         newZones.remove(boundary.zone());
       }
-      child.stateData.currentGeofencingZones = Set.copyOf(newZones);
+      stateData.currentGeofencingZones = Set.copyOf(newZones);
     }
   }
 
@@ -450,15 +426,15 @@ public class StateEditor {
    */
   public void initializeGeofencingZones(Set<GeofencingZone> zones) {
     cloneStateDataAsNeeded();
-    child.stateData.currentGeofencingZones = Set.copyOf(zones);
+    stateData.currentGeofencingZones = Set.copyOf(zones);
   }
 
   public void setCommittedNetworks(Set<String> networks) {
-    if (networks.equals(child.stateData.committedNetworks)) {
+    if (networks.equals(stateData.committedNetworks)) {
       return;
     }
     cloneStateDataAsNeeded();
-    child.stateData.committedNetworks = Set.copyOf(networks);
+    stateData.committedNetworks = Set.copyOf(networks);
   }
 
   /**
@@ -466,17 +442,17 @@ public class StateEditor {
    */
   public void commitToNetwork(String network) {
     cloneStateDataAsNeeded();
-    child.stateData.vehicleRentalNetwork = network;
+    stateData.vehicleRentalNetwork = network;
   }
 
   public void addCommittedNetwork(String network) {
-    if (child.stateData.committedNetworks.contains(network)) {
+    if (stateData.committedNetworks.contains(network)) {
       return;
     }
     cloneStateDataAsNeeded();
-    var newSet = new HashSet<>(child.stateData.committedNetworks);
+    var newSet = new HashSet<>(stateData.committedNetworks);
     newSet.add(network);
-    child.stateData.committedNetworks = Set.copyOf(newSet);
+    stateData.committedNetworks = Set.copyOf(newSet);
   }
 
   /* PRIVATE METHODS */

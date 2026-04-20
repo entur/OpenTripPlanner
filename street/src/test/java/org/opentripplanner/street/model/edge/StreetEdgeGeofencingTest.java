@@ -2,7 +2,6 @@ package org.opentripplanner.street.model.edge;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
 import static org.opentripplanner.street.model.StreetModelFactory.streetEdge;
@@ -21,9 +20,7 @@ import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.street.model.RentalFormFactor;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -44,6 +41,7 @@ class StreetEdgeGeofencingTest {
     true,
     false
   );
+
   static GeofencingZone NO_DROP_OFF_ZONE_BIRD = new GeofencingZone(
     new FeedScopedId(NETWORK_BIRD, "a-park"),
     null,
@@ -51,18 +49,14 @@ class StreetEdgeGeofencingTest {
     true,
     false
   );
+
   static GeofencingZone NO_TRAVERSAL_ZONE = new GeofencingZone(
-    new FeedScopedId(NETWORK_TIER, "a-park"),
+    new FeedScopedId(NETWORK_TIER, "no-traverse"),
     null,
     null,
     false,
     true
   );
-
-  static RentalRestrictionExtension NO_DROP_OFF_TIER = new GeofencingZoneExtension(
-    NO_DROP_OFF_ZONE_TIER
-  );
-  static RentalRestrictionExtension NO_TRAVERSAL = new GeofencingZoneExtension(NO_TRAVERSAL_ZONE);
 
   StreetVertex V1 = intersectionVertex("V1", 0, 0);
   StreetVertex V2 = intersectionVertex("V2", 1, 1);
@@ -141,25 +135,10 @@ class StreetEdgeGeofencingTest {
     }
 
     @Test
-    public void dontEnterGeofencingZoneOnFoot() {
-      var edge = streetEdge(V1, V2);
-      V2.addRentalRestriction(
-        new GeofencingZoneExtension(
-          new GeofencingZone(new FeedScopedId(NETWORK_TIER, "a-park"), null, null, true, true)
-        )
-      );
-      State result = traverseFromV1(edge)[0];
-      assertEquals(WALK, result.getBackMode());
-      assertEquals(HAVE_RENTED, result.getVehicleRentalState());
-    }
-
-    @Test
     public void forkStateWhenEnteringNoDropOffZone() {
       // Set up boundary: V1 is outside, V2 is inside the no-drop-off zone
       V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
       V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
-      // Also add the zone extension on V2 for the old system
-      V2.addRentalRestriction(NO_DROP_OFF_TIER);
 
       var edge = streetEdge(V1, V2);
 
@@ -183,66 +162,34 @@ class StreetEdgeGeofencingTest {
       assertEquals(RENTING_FLOATING, continueRenting.getVehicleRentalState());
       assertEquals(SCOOTER, continueRenting.getBackMode());
     }
-
-    @Test
-    public void forwardDontFinishInNoDropOffZone() {
-      var edge = streetEdge(V1, V2);
-      V2.addRentalRestriction(NO_DROP_OFF_TIER);
-      edge.addRentalRestriction(NO_DROP_OFF_TIER);
-      State result = traverseFromV1(edge)[0];
-      assertFalse(result.isFinal());
-    }
   }
 
   @Nested
   class Reverse {
 
     @Test
-    public void backwardDontFinishInNoDropOffZone() {
-      var edge = streetEdge(V1, V2);
-      edge.addRentalRestriction(NO_DROP_OFF_TIER);
-      var state = initialState(V2, NETWORK_TIER, true);
-      var state2 = edge.traverse(state)[0];
-      assertFalse(state2.isFinal());
-    }
-
-    @Test
-    public void backwardsDontEnterNoTraversalZone() {
-      var edge = streetEdge(V1, V2);
-      V2.addRentalRestriction(NO_TRAVERSAL);
-      var intialState = initialState(V2, NETWORK_TIER, true);
-      var result = edge.traverse(intialState);
-
-      assertTrue(State.isEmpty(result));
-      assertNotNull(result);
-    }
-
-    @Test
-    public void pickupFloatingVehicleWhenLeavingAZone() {
-      // Set up: V2 is inside a no-traversal zone, V1 is outside
-      // Boundary extensions: V1 has entering=true (V1→V2 enters zone), V2 has entering=false
+    public void pickupFloatingVehicleWhenLeavingNoTraversalZone() {
+      // V2 inside no-traversal zone, V1 outside. Paired boundary extensions.
       V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
       V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
-      V2.addRentalRestriction(NO_TRAVERSAL);
-
-      var req = defaultArriveByRequest();
-      var haveRentedState = makeHaveRentedState(V2, req);
-
-      // Verify initial state has zones populated
-      assertTrue(haveRentedState.getCurrentGeofencingZones().contains(NO_TRAVERSAL_ZONE));
 
       var edge = streetEdge(V1, V2);
-      var states = edge.traverse(haveRentedState);
+      var req = makeArriveByRequest(Set.of(NETWORK_TIER), Collections.emptySet());
+      var haveRentedState = makeHaveRentedState(V2, req, Set.of(NO_TRAVERSAL_ZONE));
 
-      // Walking branch + per-network committed branch + generic
+      assertTrue(haveRentedState.getCurrentGeofencingZones().contains(NO_TRAVERSAL_ZONE));
+
+      var states = edge.traverse(haveRentedState);
       assertTrue(states.length >= 2);
 
+      // Walking branch
       var walkingState = Arrays.stream(states)
         .filter(s -> s.getVehicleRentalState() == HAVE_RENTED)
         .findFirst()
         .get();
       assertEquals(WALK, walkingState.currentMode());
 
+      // Renting branch (speculative pickup)
       var rentalState = Arrays.stream(states)
         .filter(s -> s.getVehicleRentalState() == RENTING_FLOATING)
         .findFirst()
@@ -252,12 +199,27 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWhenStartedInNoDropOffZone() {
-      var states = runTraverse(Collections.emptySet(), Collections.emptySet());
+      // V2 inside both tier and bird no-drop-off zones. Paired boundaries on V1/V2.
+      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
-      // Walking + per-network committed branches (tier, bird) + generic
+      var edge = streetEdge(V1, V2);
+      var req = makeArriveByRequest(Collections.emptySet(), Collections.emptySet());
+      var haveRentedState = makeHaveRentedState(
+        V2,
+        req,
+        Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
+      );
+
+      var states = edge.traverse(haveRentedState);
+
+      // Should have: walking + per-network committed branches + generic
       assertTrue(states.length >= 3);
 
-      final State walkState = Arrays.stream(states)
+      // Walking branch
+      var walkState = Arrays.stream(states)
         .filter(s -> s.getVehicleRentalState() == HAVE_RENTED)
         .findFirst()
         .get();
@@ -274,18 +236,44 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWhenAllNetworksBanned() {
-      var states = runTraverse(Collections.emptySet(), Set.of(NETWORK_TIER, NETWORK_BIRD));
+      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
-      // Should only have a walking state — all networks are banned
+      var edge = streetEdge(V1, V2);
+      var req = makeArriveByRequest(Collections.emptySet(), Set.of(NETWORK_TIER, NETWORK_BIRD));
+      var haveRentedState = makeHaveRentedState(
+        V2,
+        req,
+        Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
+      );
+
+      var states = edge.traverse(haveRentedState);
+
+      // All networks banned — only walking state
       assertEquals(1, states.length);
-      final State walkState = states[0];
-      assertEquals(HAVE_RENTED, walkState.getVehicleRentalState());
-      assertEquals(WALK, walkState.currentMode());
+      assertEquals(HAVE_RENTED, states[0].getVehicleRentalState());
+      assertEquals(WALK, states[0].currentMode());
     }
 
     @Test
     public void pickupFloatingVehiclesWhenSomeNetworksBanned() {
-      var states = runTraverse(Collections.emptySet(), Set.of(NETWORK_BIRD));
+      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
+
+      var edge = streetEdge(V1, V2);
+      // Bird is banned, tier is allowed
+      var req = makeArriveByRequest(Collections.emptySet(), Set.of(NETWORK_BIRD));
+      var haveRentedState = makeHaveRentedState(
+        V2,
+        req,
+        Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
+      );
+
+      var states = edge.traverse(haveRentedState);
 
       // Walking + tier committed + generic (bird is banned)
       assertTrue(states.length >= 2);
@@ -301,24 +289,34 @@ class StreetEdgeGeofencingTest {
       assertFalse(birdState.isPresent());
     }
 
-    private State[] runTraverse(Set<String> allowedNetworks, Set<String> bannedNetworks) {
-      var req = makeArriveByRequest(allowedNetworks, bannedNetworks);
-
-      // V2 inside both tier and bird no-drop-off zones
-      V2.addRentalRestriction(NO_DROP_OFF_TIER);
-      V2.addRentalRestriction(new GeofencingZoneExtension(NO_DROP_OFF_ZONE_BIRD));
-
-      // Boundary extensions for both zones on V1 and V2
+    @Test
+    public void pickupFloatingVehiclesWithAllowedNetworkFilter() {
       V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
       V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
       V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
       V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
-      var haveRentedState = makeHaveRentedState(V2, req);
-
       var edge = streetEdge(V1, V2);
+      // Only tier is allowed
+      var req = makeArriveByRequest(Set.of(NETWORK_TIER), Collections.emptySet());
+      var haveRentedState = makeHaveRentedState(
+        V2,
+        req,
+        Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
+      );
 
-      return edge.traverse(haveRentedState);
+      var states = edge.traverse(haveRentedState);
+
+      // Walking + tier committed + generic (bird not in allowed list)
+      var tierState = Arrays.stream(states)
+        .filter(s -> NETWORK_TIER.equals(s.getVehicleRentalNetwork()))
+        .findFirst();
+      assertTrue(tierState.isPresent());
+
+      var birdState = Arrays.stream(states)
+        .filter(s -> NETWORK_BIRD.equals(s.getVehicleRentalNetwork()))
+        .findFirst();
+      assertFalse(birdState.isPresent());
     }
 
     /**
@@ -338,14 +336,6 @@ class StreetEdgeGeofencingTest {
         .filter(s -> s.getVehicleRentalState() == HAVE_RENTED)
         .findAny()
         .get();
-    }
-
-    private static StreetSearchRequest defaultArriveByRequest() {
-      return StreetSearchRequest.of()
-        .withScooter(b -> b.withRental(r -> r.withAllowedNetworks(Set.of(NETWORK_TIER))))
-        .withMode(StreetMode.SCOOTER_RENTAL)
-        .withArriveBy(true)
-        .build();
     }
 
     private static StreetSearchRequest makeArriveByRequest(

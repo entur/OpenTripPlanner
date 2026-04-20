@@ -3,15 +3,14 @@ package org.opentripplanner.street.search.state;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.spi.AStarState;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.model.RentalFormFactor;
@@ -72,30 +71,7 @@ public final class State implements AStarState<State, Edge, Vertex> {
     this.backState = null;
     this.backEdge = null;
     this.stateData = stateData;
-    if (request.arriveBy() && request.mode().includesRenting()) {
-      // Legacy field (still used by old per-edge system until Stage 5 cleanup)
-      if (!vertex.rentalRestrictions().noDropOffNetworks().isEmpty()) {
-        this.stateData.noRentalDropOffZonesAtStartOfReverseSearch = vertex
-          .rentalRestrictions()
-          .noDropOffNetworks();
-      }
-      // Populate currentGeofencingZones from vertex's zone extensions
-      var zones = extractGeofencingZonesFromVertex(vertex);
-      if (!zones.isEmpty()) {
-        this.stateData.currentGeofencingZones = zones;
-      }
-      // For generic RENTING_FLOATING: populate committedNetworks with restricted networks
-      if (
-        stateData.vehicleRentalState == VehicleRentalState.RENTING_FLOATING &&
-        stateData.vehicleRentalNetwork == null
-      ) {
-        var restrictedNetworks = extractRestrictedNetworksFromVertex(vertex);
-        if (!restrictedNetworks.isEmpty()) {
-          this.stateData.committedNetworks = restrictedNetworks;
-        }
-      }
-    }
-    this.traversalDistance_m = 0;
+    this.walkDistance = 0;
     this.time_ms = startTime.toEpochMilli();
   }
 
@@ -129,15 +105,33 @@ public final class State implements AStarState<State, Edge, Vertex> {
     StreetSearchRequest streetSearchRequest
   ) {
     Collection<State> states = new ArrayList<>();
+    var destinationZones = streetSearchRequest.arriveByDestinationZones();
+    var restrictedNetworks = destinationZones.isEmpty()
+      ? Set.<String>of()
+      : destinationZones.stream()
+        .filter(GeofencingZone::hasRestriction)
+        .map(z -> z.id().getFeedId())
+        .collect(Collectors.toSet());
+
     for (Vertex vertex : vertices) {
       for (StateData stateData : StateData.getInitialStateDatas(streetSearchRequest)) {
-        // Kept-rental filter: skip RENTING_FROM_STATION if destination is in any
-        // no-drop-off or no-traversal zone (rider can't arrive on vehicle there)
+        // Kept-rental filter: skip RENTING_FROM_STATION if destination is in any restricted zone
         if (
           stateData.vehicleRentalState == VehicleRentalState.RENTING_FROM_STATION &&
-          vertexHasRestrictedZones(vertex)
+          !restrictedNetworks.isEmpty()
         ) {
           continue;
+        }
+        // Populate zone state on arriveBy rental initial states
+        if (!destinationZones.isEmpty()) {
+          stateData.currentGeofencingZones = Set.copyOf(destinationZones);
+        }
+        if (
+          stateData.vehicleRentalState == VehicleRentalState.RENTING_FLOATING &&
+          stateData.vehicleRentalNetwork == null &&
+          !restrictedNetworks.isEmpty()
+        ) {
+          stateData.committedNetworks = Set.copyOf(restrictedNetworks);
         }
         states.add(
           new State(vertex, streetSearchRequest.startTime(), stateData, streetSearchRequest)
@@ -263,7 +257,7 @@ public final class State implements AStarState<State, Edge, Vertex> {
     return (
       stateData.vehicleRentalState == VehicleRentalState.HAVE_RENTED ||
       (stateData.vehicleRentalState == VehicleRentalState.RENTING_FLOATING &&
-        !stateData.insideNoRentalDropOffArea) ||
+        !isDropOffBannedByCurrentZones()) ||
       (getRequest().allowsArrivingInRentalAtDestination() &&
         stateData.mayKeepRentedVehicleAtDestination &&
         stateData.vehicleRentalState == VehicleRentalState.RENTING_FROM_STATION &&
@@ -490,10 +484,6 @@ public final class State implements AStarState<State, Edge, Vertex> {
     return Optional.empty();
   }
 
-  public boolean isInsideNoRentalDropOffArea() {
-    return stateData.insideNoRentalDropOffArea;
-  }
-
   public Set<GeofencingZone> getCurrentGeofencingZones() {
     return stateData.currentGeofencingZones;
   }
@@ -543,36 +533,7 @@ public final class State implements AStarState<State, Edge, Vertex> {
     return best;
   }
 
-  private static Set<GeofencingZone> extractGeofencingZonesFromVertex(Vertex vertex) {
-    var zones = new HashSet<GeofencingZone>();
-    for (var ext : vertex.rentalRestrictions().toList()) {
-      if (ext instanceof GeofencingZoneExtension gze) {
-        zones.add(gze.zone());
-      }
-    }
-    return zones.isEmpty() ? Set.of() : Set.copyOf(zones);
-  }
 
-  private static Set<String> extractRestrictedNetworksFromVertex(Vertex vertex) {
-    var networks = new HashSet<String>();
-    for (var ext : vertex.rentalRestrictions().toList()) {
-      if (ext instanceof GeofencingZoneExtension gze && gze.zone().hasRestriction()) {
-        networks.add(gze.zone().id().getFeedId());
-      }
-    }
-    return networks.isEmpty() ? Set.of() : Set.copyOf(networks);
-  }
-
-  private static boolean vertexHasRestrictedZones(Vertex vertex) {
-    for (var ext : vertex.rentalRestrictions().toList()) {
-      if (ext instanceof GeofencingZoneExtension gze) {
-        if (gze.zone().dropOffBanned() || gze.zone().traversalBanned()) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
 
   /**
    * Whether the street path contains any driving.

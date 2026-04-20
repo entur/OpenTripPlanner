@@ -316,8 +316,8 @@ public class StreetEdge
     final boolean arriveByRental =
       s0.getRequest().mode().includesRenting() && s0.getRequest().arriveBy();
 
-    // ArriveBy: traversal ban at destination vertex
-    if (arriveByRental && tov.rentalTraversalBanned(s0)) {
+    // ArriveBy: traversal ban (BusinessAreaBorder via vertex + no-traversal zone via state)
+    if (arriveByRental && (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())) {
       return State.empty();
     }
     // ArriveBy: consolidated boundary fork for HAVE_RENTED walkers exiting restricted zones
@@ -325,7 +325,10 @@ public class StreetEdge
       return performArriveByBoundaryFork(s0);
     }
     // Forward: traversal ban — drop vehicle and walk
-    else if (s0.getRequest().mode().includesRenting() && tov.rentalTraversalBanned(s0)) {
+    else if (
+      s0.getRequest().mode().includesRenting() &&
+      (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())
+    ) {
       editor = doTraverse(s0, TraverseMode.WALK, false);
       if (editor != null) {
         editor.dropFloatingVehicle(
@@ -363,7 +366,6 @@ public class StreetEdge
           state.getVehicleRentalNetwork(),
           state.getRequest().arriveBy()
         );
-        afterTraversal.leaveNoRentalDropOffArea();
         var forkState = afterTraversal.makeState();
         // No-traversal: only the walk+drop branch (riding into zone is blocked)
         // No-drop-off (without no-traversal): fork — both walk+drop and continue riding
@@ -1093,11 +1095,6 @@ public class StreetEdge
     }
 
     if (s0.getRequest().mode().includesRenting()) {
-      if (tov.rentalDropOffBanned(s0)) {
-        s1.enterNoRentalDropOffArea();
-      } else if (s0.isInsideNoRentalDropOffArea() && !tov.rentalDropOffBanned(s0)) {
-        s1.leaveNoRentalDropOffArea();
-      }
       s1.updateGeofencingZones(fromv, tov, s0.getRequest().arriveBy());
     }
 

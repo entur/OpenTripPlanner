@@ -19,17 +19,9 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 
 /**
- * Applies geofencing zone restrictions to the street graph. Operates on edges which delegate
- * extension storage to their vertices.
- * <p>
- * For restricted zones, two types of extensions are applied:
- * <ul>
- *   <li>{@link GeofencingZoneExtension} on all intersecting edges (backward-compatible interior
- *       enforcement, to be removed when state-based tracking is complete)
- *   <li>{@link GeofencingBoundaryExtension} on boundary-crossing edges only (for state-based
- *       zone tracking)
- * </ul>
- * For business areas, {@link BusinessAreaBorder} is applied to boundary edges as before.
+ * Applies geofencing zone restrictions to the street graph. For restricted zones,
+ * {@link GeofencingBoundaryExtension} is applied to boundary-crossing edges for state-based zone
+ * tracking. For business areas, {@link BusinessAreaBorder} is applied to boundary edges.
  */
 public class GeofencingZoneApplier {
 
@@ -56,13 +48,7 @@ public class GeofencingZoneApplier {
 
     var restrictedZones = geofencingZones.stream().filter(GeofencingZone::hasRestriction).toList();
 
-    // Interior enforcement: apply GeofencingZoneExtension to ALL intersecting edges
-    var restrictedEdges = addExtensionToIntersectingStreetEdges(
-      restrictedZones,
-      GeofencingZoneExtension::new
-    );
-
-    var updates = new HashMap<>(restrictedEdges);
+    var updates = new HashMap<StreetEdge, RentalRestrictionExtension>();
 
     // Boundary marking: apply GeofencingBoundaryExtension to boundary-crossing edges
     var boundaryEdges = addBoundaryExtensions(restrictedZones);
@@ -163,18 +149,6 @@ public class GeofencingZoneApplier {
     return edgesUpdated;
   }
 
-  private Map<StreetEdge, RentalRestrictionExtension> addExtensionToIntersectingStreetEdges(
-    List<GeofencingZone> zones,
-    Function<GeofencingZone, RentalRestrictionExtension> createExtension
-  ) {
-    var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
-    for (GeofencingZone zone : zones) {
-      var geom = zone.geometry();
-      var ext = createExtension.apply(zone);
-      edgesUpdated.putAll(applyExtension(geom, ext));
-    }
-    return edgesUpdated;
-  }
 
   private Map<StreetEdge, RentalRestrictionExtension> applyExtension(
     Geometry geom,

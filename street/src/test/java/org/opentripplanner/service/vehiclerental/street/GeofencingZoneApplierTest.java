@@ -64,14 +64,6 @@ class GeofencingZoneApplierTest {
 
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
-    var ext = insideFrognerPark.getFromVertex().rentalRestrictions();
-
-    assertInstanceOf(GeofencingZoneExtension.class, ext);
-
-    var e = (GeofencingZoneExtension) ext;
-
-    assertEquals(zone, e.zone());
-
     // interior edge should not have a boundary extension
     assertFalse(result.boundaryEdges().containsKey(insideFrognerPark));
   }
@@ -82,9 +74,9 @@ class GeofencingZoneApplierTest {
 
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
-    // fromv (insideFrognerPark2) should have both zone extension and boundary extension
+    // fromv (insideFrognerPark2) should have a boundary extension
     var ext = insideFrognerPark2.rentalRestrictions();
-    assertInstanceOf(CompositeRentalRestrictionExtension.class, ext);
+    assertInstanceOf(GeofencingBoundaryExtension.class, ext);
 
     // boundary extension should be present with entering=false (fromv inside, tov outside)
     assertTrue(result.boundaryEdges().containsKey(halfInHalfOutFrognerPark));
@@ -97,10 +89,8 @@ class GeofencingZoneApplierTest {
   void outsideZone() {
     assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
     applier.applyGeofencingZones(List.of(zone, businessArea));
-    assertInstanceOf(
-      GeofencingZoneExtension.class,
-      insideFrognerPark.getFromVertex().rentalRestrictions()
-    );
+    // Interior vertices no longer get zone extensions; only boundary edges get extensions
+    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
   }
 
   @Test
@@ -108,7 +98,7 @@ class GeofencingZoneApplierTest {
     assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
-    assertEquals(3, result.modifiedEdges().size());
+    assertEquals(1, result.modifiedEdges().size());
 
     var ext = (BusinessAreaBorder) businessBorder.getFromVertex().rentalRestrictions();
     assertInstanceOf(BusinessAreaBorder.class, ext);

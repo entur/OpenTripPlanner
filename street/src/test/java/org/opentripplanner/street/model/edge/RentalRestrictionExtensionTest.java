@@ -1,7 +1,6 @@
 package org.opentripplanner.street.model.edge;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -21,7 +20,6 @@ import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.Propuls
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.CompositeRentalRestrictionExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.StreetMode;
@@ -52,19 +50,6 @@ class RentalRestrictionExtensionTest {
   }
 
   @Test
-  public void dontEnterGeofencingZoneOnFoot() {
-    var edge = streetEdge(V1, V2);
-    V2.addRentalRestriction(
-      new GeofencingZoneExtension(
-        new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, true)
-      )
-    );
-    var result = traverse(edge)[0];
-    assertEquals(WALK, result.getBackMode());
-    assertEquals(HAVE_RENTED, result.getVehicleRentalState());
-  }
-
-  @Test
   public void forkStateWhenEnteringNoDropOffZone() {
     var noDropOffZone = new GeofencingZone(
       new FeedScopedId(network, "a-park"),
@@ -78,8 +63,6 @@ class RentalRestrictionExtensionTest {
     // Add boundary extensions for state-based fork trigger
     V1.addRentalRestriction(new GeofencingBoundaryExtension(noDropOffZone, true));
     V2.addRentalRestriction(new GeofencingBoundaryExtension(noDropOffZone, false));
-    // Also add zone extension on V2 for old system compatibility
-    V2.addRentalRestriction(new GeofencingZoneExtension(noDropOffZone));
 
     var edge1 = streetEdge(V4, V1);
     var restrictedEdge = streetEdge(V1, V2);
@@ -113,18 +96,6 @@ class RentalRestrictionExtensionTest {
     var continueRenting = results[1];
     assertEquals(RENTING_FLOATING, continueRenting.getVehicleRentalState());
     assertEquals(SCOOTER, continueRenting.getBackMode());
-  }
-
-  @Test
-  public void dontFinishInNoDropOffZone() {
-    var edge = streetEdge(V1, V2);
-    var ext = new GeofencingZoneExtension(
-      new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
-    );
-    V2.addRentalRestriction(ext);
-    edge.addRentalRestriction(ext);
-    State result = traverse(edge)[0];
-    assertFalse(result.isFinal());
   }
 
   @Test
@@ -202,8 +173,9 @@ class RentalRestrictionExtensionTest {
 
     RentalRestrictionExtension a = new BusinessAreaBorder("a");
     RentalRestrictionExtension b = new BusinessAreaBorder("b");
-    RentalRestrictionExtension c = new GeofencingZoneExtension(
-      new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
+    RentalRestrictionExtension c = new GeofencingBoundaryExtension(
+      new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false),
+      true
     );
 
     @Test

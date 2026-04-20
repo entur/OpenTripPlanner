@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
@@ -59,18 +58,8 @@ class GeofencingBoundaryExtensionTest {
   }
 
   @Test
-  void networks() {
-    assertEquals(List.of(zone.id().getFeedId()), entering.networks());
-  }
-
-  @Test
   void hasRestrictions() {
     assertTrue(entering.hasRestrictions());
-  }
-
-  @Test
-  void noDropOffNetworksIsEmpty() {
-    assertEquals(Set.of(), entering.noDropOffNetworks());
   }
 
   @Test
