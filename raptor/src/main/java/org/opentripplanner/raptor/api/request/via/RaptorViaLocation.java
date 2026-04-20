@@ -20,9 +20,9 @@ public final class RaptorViaLocation {
   private static final Duration MIN_WAIT_TIME = Duration.ZERO;
 
   private final String label;
-  private final List<AbstractViaConnection> connections;
+  private final List<ViaConnection> connections;
 
-  RaptorViaLocation(String label, List<AbstractViaConnection> connections) {
+  RaptorViaLocation(String label, List<ViaConnection> connections) {
     this.label = label;
     this.connections = connections;
 
@@ -65,7 +65,7 @@ public final class RaptorViaLocation {
     return connections.stream().anyMatch(it -> it instanceof RaptorPassThroughViaConnection);
   }
 
-  public List<AbstractViaConnection> connections() {
+  public List<ViaConnection> connections() {
     return connections;
   }
 
@@ -76,7 +76,7 @@ public final class RaptorViaLocation {
   public BitSet asBitSet() {
     return connections
       .stream()
-      .mapToInt(AbstractViaConnection::fromStop)
+      .mapToInt(ViaConnection::fromStop)
       .collect(BitSet::new, BitSet::set, BitSet::or);
   }
 

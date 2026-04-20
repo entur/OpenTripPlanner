@@ -11,10 +11,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
-import org.opentripplanner.raptor.api.request.via.AbstractViaConnection;
 import org.opentripplanner.raptor.api.request.via.RaptorPassThroughViaConnection;
 import org.opentripplanner.raptor.api.request.via.RaptorTransferViaConnection;
 import org.opentripplanner.raptor.api.request.via.RaptorVisitStopViaConnection;
+import org.opentripplanner.raptor.api.request.via.ViaConnection;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
@@ -40,7 +40,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   implements ParetoSetEventListener<ArrivalView<T>> {
 
   private final McStopArrivalFactory<T> stopArrivalFactory;
-  private final List<AbstractViaConnection> connections;
+  private final List<ViaConnection> connections;
   private final McStopArrivals<T> next;
   private final List<McStopArrival<T>> transfersCache = new ArrayList<>();
   private final Function<T, RaptorTripScheduleReference> tripInfoProvider;
@@ -52,7 +52,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
    */
   private ViaConnectionStopArrivalEventListener(
     McStopArrivalFactory<T> stopArrivalFactory,
-    List<AbstractViaConnection> connections,
+    List<ViaConnection> connections,
     McStopArrivals<T> next,
     Consumer<Runnable> publishTransfersEventHandler,
     Function<T, RaptorTripScheduleReference> tripInfoProvider
@@ -81,7 +81,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     if (viaConnections == null) {
       return map;
     }
-    TIntObjectMap<List<AbstractViaConnection>> connectionsByStop = viaConnections.byFromStop();
+    TIntObjectMap<List<ViaConnection>> connectionsByStop = viaConnections.byFromStop();
     for (int stop : connectionsByStop.keys()) {
       var connections = connectionsByStop.get(stop);
       var listener = new ViaConnectionStopArrivalEventListener<>(
@@ -107,7 +107,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   public void notifyElementAccepted(ArrivalView<T> newElement) {
     var e = (McStopArrival<T>) newElement;
 
-    for (AbstractViaConnection c : connections) {
+    for (ViaConnection c : connections) {
       switch (c) {
         case RaptorPassThroughViaConnection ignore -> {
           continueOnSameTripInNextSegment(e);

@@ -3,16 +3,16 @@ package org.opentripplanner.raptor.api.request.via;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 
 /**
- * See {@link AbstractViaConnection}
+ * See {@link ViaConnection}
  */
-public final class RaptorPassThroughViaConnection extends AbstractViaConnection {
+public final class RaptorPassThroughViaConnection extends ViaConnection {
 
   RaptorPassThroughViaConnection(int fromStop) {
     super(fromStop);
   }
 
   @Override
-  public boolean isBetterOrEqual(AbstractViaConnection other) {
+  public boolean isBetterOrEqual(ViaConnection other) {
     return equals(other);
   }
 

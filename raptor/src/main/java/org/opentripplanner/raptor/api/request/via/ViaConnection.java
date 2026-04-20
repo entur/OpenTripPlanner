@@ -33,13 +33,13 @@ import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
  * {@code durationInSeconds}. The calculation of {@code c1} should include the walk time, but not
  * the min-wait-time (assuming all connections have the same minimum wait time).
  */
-public abstract sealed class AbstractViaConnection
+public abstract sealed class ViaConnection
   permits
     RaptorPassThroughViaConnection, RaptorTransferViaConnection, RaptorVisitStopViaConnection {
 
   private final int fromStop;
 
-  public AbstractViaConnection(int fromStop) {
+  public ViaConnection(int fromStop) {
     this.fromStop = fromStop;
   }
 
@@ -56,7 +56,7 @@ public abstract sealed class AbstractViaConnection
    * The method returns {@code true} if this instance is better or equals to the given other
    * stop with respect to being pareto-optimal.
    */
-  public abstract boolean isBetterOrEqual(AbstractViaConnection other);
+  public abstract boolean isBetterOrEqual(ViaConnection other);
 
   @Override
   public final String toString() {
@@ -67,11 +67,11 @@ public abstract sealed class AbstractViaConnection
 
   /// Use this to test if the {@code other} value is of type {@code expectedType}, have the same
   /// {@code fromStop} and the given {@code test} is {@code true}, if not, return {@code false}.
-  final boolean equalsTo(Object other, Class<? extends AbstractViaConnection> expectedType) {
+  final boolean equalsTo(Object other, Class<? extends ViaConnection> expectedType) {
     if (other == null || expectedType != other.getClass()) {
       return false;
     }
-    var that = (AbstractViaConnection) other;
+    var that = (ViaConnection) other;
     return fromStop() == that.fromStop();
   }
 }

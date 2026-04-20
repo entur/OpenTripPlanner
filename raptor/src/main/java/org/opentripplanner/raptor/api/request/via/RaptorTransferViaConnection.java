@@ -37,7 +37,7 @@ import org.opentripplanner.utils.time.DurationUtils;
  * {@code durationInSeconds}. The calculation of {@code c1} should include the walk time, but not
  * the min-wait-time (assuming all connections have the same minimum wait time).
  */
-public final class RaptorTransferViaConnection extends AbstractViaConnection {
+public final class RaptorTransferViaConnection extends ViaConnection {
 
   private final int minimumWaitTime;
   private final RaptorTransfer transfer;
@@ -68,7 +68,7 @@ public final class RaptorTransferViaConnection extends AbstractViaConnection {
   }
 
   @Override
-  public boolean isBetterOrEqual(AbstractViaConnection other) {
+  public boolean isBetterOrEqual(ViaConnection other) {
     if (!super.equalsTo(other, getClass())) {
       return false;
     }

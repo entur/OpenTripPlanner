@@ -5,7 +5,7 @@ import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.utils.time.DurationUtils;
 
-public final class RaptorVisitStopViaConnection extends AbstractViaConnection {
+public final class RaptorVisitStopViaConnection extends ViaConnection {
 
   private final int minimumWaitTime;
 
@@ -19,7 +19,7 @@ public final class RaptorVisitStopViaConnection extends AbstractViaConnection {
   }
 
   @Override
-  public boolean isBetterOrEqual(AbstractViaConnection other) {
+  public boolean isBetterOrEqual(ViaConnection other) {
     if (!super.equalsTo(other, getClass())) {
       return false;
     }
