@@ -1,13 +1,19 @@
 package org.opentripplanner.service.vehiclerental.model;
 
+import java.util.List;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
- * A geometry that describes descriptions about traversing with a rental vehicle or dropping it off
- * inside of it.
+ * A geofencing zone describing restrictions for traversing with a rental vehicle or dropping it off
+ * inside the zone. Each zone corresponds to a single rule from a GBFS geofencing zone feature.
+ * <p>
+ * The {@code businessArea} flag and restriction fields ({@code dropOffBanned}, {@code traversalBanned},
+ * {@code rideStartBanned}) are set at GBFS mapping time. A zone is a business area when all
+ * ride/traversal booleans are permissive — fields like {@code maximumSpeedKph} and
+ * {@code vehicleTypeIds} are orthogonal to business area classification.
  */
 public record GeofencingZone(
   FeedScopedId id,
@@ -15,11 +21,15 @@ public record GeofencingZone(
   Geometry geometry,
   boolean dropOffBanned,
   boolean traversalBanned,
+  boolean rideStartBanned,
+  boolean businessArea,
+  @Nullable List<String> vehicleTypeIds,
+  @Nullable Integer maximumSpeedKph,
   int priority
 ) {
   /**
-   * Convenience constructor with default priority (0 = highest priority).
-   * Used for backward compatibility with existing code.
+   * Convenience constructor for zones with only drop-off and traversal restrictions.
+   * Sets {@code rideStartBanned} to false, infers {@code businessArea}, and uses default priority.
    */
   public GeofencingZone(
     FeedScopedId id,
@@ -28,25 +38,36 @@ public record GeofencingZone(
     boolean dropOffBanned,
     boolean traversalBanned
   ) {
-    this(id, name, geometry, dropOffBanned, traversalBanned, 0);
+    this(
+      id,
+      name,
+      geometry,
+      dropOffBanned,
+      traversalBanned,
+      false,
+      !dropOffBanned && !traversalBanned,
+      null,
+      null,
+      0
+    );
   }
 
   /**
-   * Are there any restrictions in this zone. (It's possible that the data says there are none.)
+   * Whether the zone has any restriction that bans riding or dropping off.
    */
   public boolean hasRestriction() {
-    return dropOffBanned || traversalBanned;
+    return dropOffBanned || traversalBanned || rideStartBanned;
   }
 
   /**
-   * Some GBFS geofencing zones allow both drop off and traversal. In such a case it is interpreted
-   * as describing the general business area of an operator. If this is the case you're allowed to
-   * travel inside the zone but cannot leave it.
+   * Whether this zone describes a general business operating area. Riders can travel freely inside
+   * but cannot leave the area. Enforced separately via {@code BusinessAreaBorder}.
    * <p>
-   * The GBFS spec is remarkably thin in this respect:
-   * https://github.com/MobilityData/gbfs/blob/master/gbfs.md#geofencing_zonesjson
+   * This flag is set explicitly at GBFS mapping time rather than inferred from absence of
+   * restrictions, because zones with only non-ride restrictions (e.g., speed limits) would
+   * otherwise be misclassified as business areas.
    */
   public boolean isBusinessArea() {
-    return !dropOffBanned && !traversalBanned;
+    return businessArea;
   }
 }
