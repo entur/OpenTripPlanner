@@ -60,7 +60,7 @@ class GeofencingZoneApplierTest {
 
   @Test
   void insideZone() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertTrue(insideFrognerPark.getFromVertex().getGeofencingBoundaries().isEmpty());
 
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
@@ -70,13 +70,13 @@ class GeofencingZoneApplierTest {
 
   @Test
   void halfInHalfOutZone() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertTrue(insideFrognerPark.getFromVertex().getGeofencingBoundaries().isEmpty());
 
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
     // fromv (insideFrognerPark2) should have a boundary extension
-    var ext = insideFrognerPark2.rentalRestrictions();
-    assertInstanceOf(GeofencingBoundaryExtension.class, ext);
+    var boundaries = insideFrognerPark2.getGeofencingBoundaries();
+    assertFalse(boundaries.isEmpty());
 
     // boundary extension should be present with entering=false (fromv inside, tov outside)
     assertTrue(result.boundaryEdges().containsKey(halfInHalfOutFrognerPark));
@@ -87,21 +87,22 @@ class GeofencingZoneApplierTest {
 
   @Test
   void outsideZone() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertTrue(insideFrognerPark.getFromVertex().getGeofencingBoundaries().isEmpty());
     applier.applyGeofencingZones(List.of(zone, businessArea));
     // Interior vertices no longer get zone extensions; only boundary edges get extensions
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertTrue(insideFrognerPark.getFromVertex().getGeofencingBoundaries().isEmpty());
   }
 
   @Test
   void businessAreaBorder() {
-    assertInstanceOf(NoRestriction.class, insideFrognerPark.getFromVertex().rentalRestrictions());
+    assertFalse(insideFrognerPark.getFromVertex().rentalTraversalBanned(null));
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
-    assertEquals(1, result.modifiedEdges().size());
+    assertEquals(1, result.businessAreaEdges().size());
 
-    var ext = (BusinessAreaBorder) businessBorder.getFromVertex().rentalRestrictions();
-    assertInstanceOf(BusinessAreaBorder.class, ext);
+    var border = businessBorder.getFromVertex().getBusinessAreaBorder();
+    assertNotNull(border);
+    assertInstanceOf(BusinessAreaBorder.class, border);
   }
 
   @Test

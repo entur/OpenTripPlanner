@@ -9,12 +9,9 @@ import java.util.function.Function;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
-import org.locationtech.jts.geom.MultiLineString;
-import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.geometry.GeometryUtils;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 
@@ -48,7 +45,7 @@ public class GeofencingZoneApplier {
 
     var restrictedZones = geofencingZones.stream().filter(GeofencingZone::hasRestriction).toList();
 
-    var updates = new HashMap<StreetEdge, RentalRestrictionExtension>();
+    var businessAreaEdges = new HashMap<StreetEdge, BusinessAreaBorder>();
 
     // Boundary marking: apply GeofencingBoundaryExtension to boundary-crossing edges
     var boundaryEdges = addBoundaryExtensions(restrictedZones);
@@ -70,13 +67,13 @@ public class GeofencingZoneApplier {
         .createGeometryCollection(polygons)
         .union();
 
-      var updated = applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network));
-
-      updates.putAll(updated);
+      businessAreaEdges.putAll(
+        applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network))
+      );
     }
 
     return new GeofencingZoneApplierResult(
-      Map.copyOf(updates),
+      Map.copyOf(businessAreaEdges),
       Map.copyOf(boundaryEdges),
       zoneIndex
     );
@@ -140,35 +137,10 @@ public class GeofencingZoneApplier {
 
           if (fromInZone != toInZone) {
             var ext = new GeofencingBoundaryExtension(zone, toInZone);
-            streetEdge.addRentalRestriction(ext);
+            streetEdge.addGeofencingBoundary(ext);
             edgesUpdated.put(streetEdge, ext);
           }
         }
-      }
-    }
-    return edgesUpdated;
-  }
-
-  private Map<StreetEdge, RentalRestrictionExtension> applyExtension(
-    Geometry geom,
-    RentalRestrictionExtension ext
-  ) {
-    var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
-    Set<Edge> candidates;
-    if (geom instanceof LineString ring) {
-      candidates = findEdgesAlongLineStrings.apply(List.of(ring));
-    } else if (geom instanceof MultiLineString mls) {
-      candidates = findEdgesAlongLineStrings.apply(GeometryUtils.getLineStrings(mls));
-    } else {
-      candidates = Set.copyOf(findEdgesForEnvelope.apply(geom.getEnvelopeInternal()));
-    }
-
-    PreparedGeometry preparedZone = PreparedGeometryFactory.prepare(geom);
-
-    for (var e : candidates) {
-      if (e instanceof StreetEdge streetEdge && preparedZone.intersects(streetEdge.getGeometry())) {
-        streetEdge.addRentalRestriction(ext);
-        edgesUpdated.put(streetEdge, ext);
       }
     }
     return edgesUpdated;
@@ -178,11 +150,11 @@ public class GeofencingZoneApplier {
    * Apply a business area border extension to edges that cross the boundary of the polygon.
    * Uses vertex containment to detect boundary crossings without decompressing edge geometry.
    */
-  private Map<StreetEdge, RentalRestrictionExtension> applyBusinessAreaBorder(
+  private Map<StreetEdge, BusinessAreaBorder> applyBusinessAreaBorder(
     Geometry polygon,
-    RentalRestrictionExtension ext
+    BusinessAreaBorder ext
   ) {
-    var edgesUpdated = new HashMap<StreetEdge, RentalRestrictionExtension>();
+    var edgesUpdated = new HashMap<StreetEdge, BusinessAreaBorder>();
     Set<Edge> candidates = Set.copyOf(findEdgesForEnvelope.apply(polygon.getEnvelopeInternal()));
     var preparedPolygon = PreparedGeometryFactory.prepare(polygon);
     var polygonBBox = polygon.getEnvelopeInternal();
@@ -203,7 +175,7 @@ public class GeofencingZoneApplier {
         boolean toInZone = toMayBeInZone && preparedPolygon.contains(gf.createPoint(toCoord));
 
         if (fromInZone != toInZone) {
-          streetEdge.addRentalRestriction(ext);
+          streetEdge.setBusinessAreaBorder(ext);
           edgesUpdated.put(streetEdge, ext);
         }
       }

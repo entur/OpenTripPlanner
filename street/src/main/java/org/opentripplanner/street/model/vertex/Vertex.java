@@ -14,7 +14,8 @@ import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
+import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.state.State;
@@ -36,7 +37,10 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   private transient Edge[] incoming = new Edge[0];
 
   private transient Edge[] outgoing = new Edge[0];
-  private RentalRestrictionExtension rentalRestrictions = RentalRestrictionExtension.NO_RESTRICTION;
+  @javax.annotation.Nullable
+  private BusinessAreaBorder businessAreaBorder;
+
+  private List<GeofencingBoundaryExtension> geofencingBoundaries = List.of();
 
   /* CONSTRUCTORS */
 
@@ -55,8 +59,11 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
       sb.append(" lat,lng=").append(this.getCoordinate().y);
       sb.append(",").append(this.getCoordinate().x);
     }
-    if (!rentalRestrictions.toList().isEmpty()) {
-      sb.append(", traversalExtension=").append(rentalRestrictions);
+    if (businessAreaBorder != null) {
+      sb.append(", businessAreaBorder=").append(businessAreaBorder);
+    }
+    if (!geofencingBoundaries.isEmpty()) {
+      sb.append(", geofencingBoundaries=").append(geofencingBoundaries);
     }
     sb.append("}");
     return sb.toString();
@@ -249,23 +256,44 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   }
 
   public boolean rentalTraversalBanned(State currentState) {
-    return rentalRestrictions.traversalBanned(currentState);
+    return businessAreaBorder != null && businessAreaBorder.traversalBanned(currentState);
   }
 
-  public void addRentalRestriction(RentalRestrictionExtension ext) {
-    rentalRestrictions = rentalRestrictions.add(ext);
+  public void setBusinessAreaBorder(BusinessAreaBorder border) {
+    this.businessAreaBorder = border;
   }
 
-  public RentalRestrictionExtension rentalRestrictions() {
-    return rentalRestrictions;
+  @javax.annotation.Nullable
+  public BusinessAreaBorder getBusinessAreaBorder() {
+    return businessAreaBorder;
   }
 
-  public boolean rentalDropOffBanned(State currentState) {
-    return rentalRestrictions.dropOffBanned(currentState);
+  public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    var newList = new ArrayList<>(geofencingBoundaries);
+    newList.add(ext);
+    geofencingBoundaries = List.copyOf(newList);
   }
 
-  public void removeRentalRestriction(RentalRestrictionExtension ext) {
-    rentalRestrictions = rentalRestrictions.remove(ext);
+  public List<GeofencingBoundaryExtension> getGeofencingBoundaries() {
+    return geofencingBoundaries;
+  }
+
+  public void removeGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    var newList = new ArrayList<>(geofencingBoundaries);
+    newList.remove(ext);
+    geofencingBoundaries = List.copyOf(newList);
+  }
+
+  public void removeBusinessAreaBorder() {
+    this.businessAreaBorder = null;
+  }
+
+  /**
+   * Copy all rental restriction data from another vertex to this one.
+   */
+  public void copyRentalRestrictionsFrom(Vertex other) {
+    this.businessAreaBorder = other.businessAreaBorder;
+    this.geofencingBoundaries = other.geofencingBoundaries;
   }
 
   /**
