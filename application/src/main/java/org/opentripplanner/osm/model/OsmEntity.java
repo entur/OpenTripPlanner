@@ -225,15 +225,13 @@ public abstract class OsmEntity {
    * Is the tag defined?
    */
   public boolean hasTag(String tag) {
-    tag = tag.toLowerCase();
-    return tags != null && tags.containsKey(tag);
+    return getTag(tag) != null;
   }
 
   /**
    * Determines if a tag contains a false value. 'no', 'false', and '0' are considered false.
    */
   public boolean isTagFalse(String tag) {
-    tag = tag.toLowerCase();
     if (tags == null) {
       return false;
     }
@@ -258,7 +256,6 @@ public abstract class OsmEntity {
    * Determines if a tag contains a true value. 'yes', 'true', and '1' are considered true.
    */
   public boolean isTagTrue(String tag) {
-    tag = tag.toLowerCase();
     if (tags == null) {
       return false;
     }
@@ -325,7 +322,6 @@ public abstract class OsmEntity {
     if (isTagTrue(key)) {
       return true;
     }
-    key = key.toLowerCase();
     String value = getTag(key);
     return (
       "designated".equals(value) ||
@@ -341,9 +337,8 @@ public abstract class OsmEntity {
    */
   @Nullable
   public String getTag(String tag) {
-    tag = tag.toLowerCase();
     if (tags != null) {
-      return tags.get(tag);
+      return tags.get(tag.toLowerCase());
     }
     return null;
   }
@@ -505,12 +500,11 @@ public abstract class OsmEntity {
    * Checks if a tag contains the specified value.
    */
   public boolean isTag(String tag, String value) {
-    tag = tag.toLowerCase();
-    if (tags != null && tags.containsKey(tag) && value != null) {
-      return value.equals(tags.get(tag));
+    if (tags == null || value == null) {
+      return false;
+    } else {
+      return value.equals(tags.get(tag.toLowerCase()));
     }
-
-    return false;
   }
 
   /**
