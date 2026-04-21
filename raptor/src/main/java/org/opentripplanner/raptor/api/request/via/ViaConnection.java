@@ -23,16 +23,17 @@ import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 /// minimum-wait-time can be applied at the given stop.
 ///
 ///
-/// #4 Route via a coordinate
+/// #4 Route via a coordinate (transfer via connection)
 ///
 /// To route through a coordinate you need to find all nearby stops, then find all access and egress
-/// paths to and from the street location. Then combine all access and egress paths to form
-/// complete Raptor transfers. Raptor does not know/see the actual via street location, it only
-/// uses the connection from a stop to another, the total time it takes and the total cost. You
-/// must generate a via transfer connection with two "legs" in it. One leg going from the
-/// 'from-stop' to the street location, and one leg going back to the 'to-stop'. If you have 10
-/// stops around the via street location, then you must combine all ten access paths and egress
-/// paths (in total 100 possible transfers).
+/// paths to and from the street location. Raptor does not know/see the actual via street location,
+/// it only uses the connection from a stop to another, the total time it takes and the total cost.
+/// From an algorithmic point of view this is just a transfer from a stop to another. To compute
+/// transfers you must combine all access and egress paths to and from nearby stops (around the
+/// street location/coordinate). You must generate a via transfer connection with two "legs" in it.
+/// One leg going from the 'from-stop' to the street location, and one leg going back to the
+/// 'to-stop'. If you have 10 stops around the via street location, then you must combine all ten
+///  access paths and egress paths (in total 100 possible transfers).
 ///
 /// The min-wait-time in the {@link RaptorViaLocation} is added to the transfers
 /// {@code durationInSeconds}. The calculation of `c1` should include the walk time, but not

@@ -5,6 +5,9 @@ import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.utils.time.DurationUtils;
 
+/**
+ * See {@link ViaConnection}
+ */
 public final class RaptorVisitStopViaConnection extends ViaConnection {
 
   private final int minimumWaitTime;
