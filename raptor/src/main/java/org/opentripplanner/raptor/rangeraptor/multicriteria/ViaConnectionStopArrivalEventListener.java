@@ -105,20 +105,20 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
 
   @Override
   public void notifyElementAccepted(ArrivalView<T> newElement) {
-    var e = (McStopArrival<T>) newElement;
+    var arrival = (McStopArrival<T>) newElement;
 
-    for (ViaConnection c : connections) {
-      switch (c) {
+    for (ViaConnection connection : connections) {
+      switch (connection) {
         case RaptorPassThroughViaConnection _ -> {
-          continueOnSameTripInNextSegment(e);
-          continueFromSameStopArrival(e);
+          continueOnSameTripInNextSegment(arrival);
+          continueFromSameStopArrival(arrival);
         }
         case RaptorVisitStopViaConnection visitStop -> {
-          continueFromSameStopArrival(e, visitStop);
+          continueFromSameStopArrival(arrival, visitStop);
         }
         case RaptorTransferViaConnection transfer -> {
-          if (e.arrivedOnBoard()) {
-            continueWithTransfer(e, transfer);
+          if (arrival.arrivedOnBoard()) {
+            continueWithTransfer(arrival, transfer);
           }
           // Silently ignore arrive-on-foot + via-transfer. Two transfers are
           // not allowed after each other, and we can safely skip it here.
@@ -127,18 +127,18 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     }
   }
 
-  private void continueOnSameTripInNextSegment(ArrivalView<T> e) {
-    if (!e.arrivedBy(TRANSIT)) {
-      next.addStopArrival((McStopArrival<T>) e);
+  private void continueOnSameTripInNextSegment(ArrivalView<T> arrival) {
+    if (!arrival.arrivedBy(TRANSIT)) {
+      next.addStopArrival((McStopArrival<T>) arrival);
       return;
     }
-    T trip = e.transitPath().trip();
+    T trip = arrival.transitPath().trip();
     var info = tripInfoProvider.apply(trip);
 
-    var boardingArrival = e.previous();
+    var boardingArrival = arrival.previous();
     int passThroughStopPos = trip.findDepartureStopPosition(
       boardingArrival.arrivalTime(),
-      e.stop()
+      arrival.stop()
     );
     var onBoardTripConstraint = new RaptorTripScheduleStopPosition(
       info.routeIndex(),
@@ -146,7 +146,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
       passThroughStopPos
     );
 
-    next.addOnBoardTripArrival(boardingArrival, e.stop(), onBoardTripConstraint);
+    next.addOnBoardTripArrival(boardingArrival, arrival.stop(), onBoardTripConstraint);
   }
 
   private void continueFromSameStopArrival(
