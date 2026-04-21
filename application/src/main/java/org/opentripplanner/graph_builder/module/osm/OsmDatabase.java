@@ -805,19 +805,6 @@ public class OsmDatabase {
     }
   }
 
-  /**
-   * Handle route=bicycle relations. Copies their network type to all way members.
-   *
-   * @see "https://wiki.openstreetmap.org/wiki/Tag:route%3Dbicycle"
-   */
-  private void processBicycleRoute(OsmRelation relation) {
-    if (relation.isBicycleRoute()) {
-      // we treat networks without known network type like local networks
-      var network = relation.getTagOpt("network").orElse("lcn");
-      setNetworkForAllMembers(relation, network);
-    }
-  }
-
   private void setNetworkForAllMembers(OsmRelation relation, String key) {
     relation
       .getMembers()
@@ -935,7 +922,11 @@ public class OsmDatabase {
    * Handle route=road and route=bicycle relations.
    */
   private void processRoute(OsmRelation relation) {
-    processBicycleRoute(relation);
+    if (relation.isBicycleRoute()) {
+      // we treat networks without known network type like local networks
+      var network = relation.getTagOpt("network").orElse("lcn");
+      setNetworkForAllMembers(relation, network);
+    }
   }
 
   /**
