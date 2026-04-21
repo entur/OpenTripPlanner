@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.warmup.api.WarmupParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

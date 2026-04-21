@@ -8,8 +8,8 @@ import javax.annotation.Nullable;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.warmup.WarmupApi;
-import org.opentripplanner.warmup.WarmupParameters;
+import org.opentripplanner.warmup.api.WarmupApi;
+import org.opentripplanner.warmup.api.WarmupParameters;
 
 /**
  * Maps the {@code warmup} section of {@code router-config.json} into a {@link WarmupParameters}

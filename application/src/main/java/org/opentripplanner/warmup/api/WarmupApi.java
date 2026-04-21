@@ -1,4 +1,4 @@
-package org.opentripplanner.warmup;
+package org.opentripplanner.warmup.api;
 
 import org.opentripplanner.core.model.doc.DocumentedEnum;
 

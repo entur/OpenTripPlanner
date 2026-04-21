@@ -18,7 +18,7 @@ import org.opentripplanner.street.model.StreetMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class GtfsWarmupQueryExecutor implements WarmupQueryExecutor {
+class GtfsWarmupQueryExecutor implements WarmupQueryStrategy {
 
   private static final Logger LOG = LoggerFactory.getLogger(GtfsWarmupQueryExecutor.class);
 
@@ -55,8 +55,7 @@ class GtfsWarmupQueryExecutor implements WarmupQueryExecutor {
 
   private final GraphQL graphQL;
   private final GraphQLRequestContext requestContext;
-  private final List<String> accessModes;
-  private final List<String> egressModes;
+  private final ModeCombinations modeCombinations;
 
   GtfsWarmupQueryExecutor(
     OtpServerRequestContext context,
@@ -67,24 +66,12 @@ class GtfsWarmupQueryExecutor implements WarmupQueryExecutor {
     this.graphQL = GraphQL.newGraphQL(context.gtfsSchema())
       .defaultDataFetcherExceptionHandler(new OtpDataFetcherExceptionHandler())
       .build();
-    this.accessModes = accessModes
-      .stream()
-      .map(m -> AccessModeMapper.map(m).name())
-      .toList();
-    this.egressModes = egressModes
-      .stream()
-      .map(m -> EgressModeMapper.map(m).name())
-      .toList();
+    this.modeCombinations = new ModeCombinations(accessModes, egressModes);
   }
 
   @Override
-  public int modeCombinationCount() {
-    return accessModes.size();
-  }
-
-  @Override
-  public boolean execute(WgsCoordinate from, WgsCoordinate to, boolean arriveBy, int modeIndex) {
-    var variables = buildVariables(from, to, arriveBy, modeIndex);
+  public boolean execute(WgsCoordinate from, WgsCoordinate to, boolean arriveBy, int queryCount) {
+    var variables = buildVariables(from, to, arriveBy, queryCount);
 
     var input = ExecutionInput.newExecutionInput()
       .query(QUERY)
@@ -105,7 +92,7 @@ class GtfsWarmupQueryExecutor implements WarmupQueryExecutor {
     WgsCoordinate from,
     WgsCoordinate to,
     boolean arriveBy,
-    int modeIndex
+    int queryCount
   ) {
     var now = Instant.now().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     var dateTime = arriveBy ? Map.of("latestArrival", now) : Map.of("earliestDeparture", now);
@@ -116,8 +103,8 @@ class GtfsWarmupQueryExecutor implements WarmupQueryExecutor {
       Map.entry("toLat", to.latitude()),
       Map.entry("toLon", to.longitude()),
       Map.entry("dateTime", dateTime),
-      Map.entry("accessMode", accessModes.get(modeIndex % accessModes.size())),
-      Map.entry("egressMode", egressModes.get(modeIndex % egressModes.size()))
+      Map.entry("accessMode", AccessModeMapper.map(modeCombinations.access(queryCount)).name()),
+      Map.entry("egressMode", EgressModeMapper.map(modeCombinations.egress(queryCount)).name())
     );
   }
 }

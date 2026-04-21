@@ -8,7 +8,7 @@ import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.warmup.WarmupLauncher;
-import org.opentripplanner.warmup.WarmupParameters;
+import org.opentripplanner.warmup.api.WarmupParameters;
 
 /**
  * Dagger wiring for the application warmup feature.

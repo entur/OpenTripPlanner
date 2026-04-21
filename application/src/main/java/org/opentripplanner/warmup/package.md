@@ -17,16 +17,17 @@ arrives.
 
 ## Design
 
-`WarmupParameters` is the SPI consumed by the module. `WarmupConfig`
-(in `standalone.config.routerconfig`) implements this interface and maps the JSON config section
-into parameter values.
+The public API of the module lives in the `api` subpackage and exposes only value objects:
+`WarmupParameters` (the configured parameter values) and `WarmupApi` (which GraphQL API to exercise).
+`WarmupConfig` (in `standalone.config.routerconfig`) reads the JSON config section and produces a
+`WarmupParameters` instance.
 
-`WarmupQueryExecutor` is the strategy interface with two implementations:
+`WarmupQueryStrategy` is the strategy interface with two implementations:
 - `TransmodelWarmupQueryExecutor` -- builds and executes TransModel `trip` queries.
 - `GtfsWarmupQueryExecutor` -- builds and executes GTFS `planConnection` queries.
 
-Each executor receives configurable access/egress mode lists (`StreetMode` values) and maps them
-to the API-specific GraphQL enum names.
+Each executor owns a `ModeCombinations` helper that holds the configured access/egress mode lists
+and maps a running query counter to the next access/egress pair via modulo arithmetic.
 
 ## Configuration
 

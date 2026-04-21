@@ -1,4 +1,4 @@
-package org.opentripplanner.warmup;
+package org.opentripplanner.warmup.api;
 
 import java.util.List;
 import org.opentripplanner.street.geometry.WgsCoordinate;

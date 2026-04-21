@@ -14,7 +14,7 @@ import org.opentripplanner.street.model.StreetMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class TransmodelWarmupQueryExecutor implements WarmupQueryExecutor {
+class TransmodelWarmupQueryExecutor implements WarmupQueryStrategy {
 
   private static final Logger LOG = LoggerFactory.getLogger(TransmodelWarmupQueryExecutor.class);
 
@@ -49,8 +49,7 @@ class TransmodelWarmupQueryExecutor implements WarmupQueryExecutor {
   private final OtpServerRequestContext serverContext;
   private final TransmodelRequestContext requestContext;
   private final GraphQLSchema schema;
-  private final List<String> accessModes;
-  private final List<String> egressModes;
+  private final ModeCombinations modeCombinations;
 
   TransmodelWarmupQueryExecutor(
     OtpServerRequestContext context,
@@ -65,18 +64,12 @@ class TransmodelWarmupQueryExecutor implements WarmupQueryExecutor {
       context.transitService(),
       context.empiricalDelayService()
     );
-    this.accessModes = accessModes.stream().map(this::toGraphQLName).toList();
-    this.egressModes = egressModes.stream().map(this::toGraphQLName).toList();
+    this.modeCombinations = new ModeCombinations(accessModes, egressModes);
   }
 
   @Override
-  public int modeCombinationCount() {
-    return accessModes.size();
-  }
-
-  @Override
-  public boolean execute(WgsCoordinate from, WgsCoordinate to, boolean arriveBy, int modeIndex) {
-    var variables = buildVariables(from, to, arriveBy, modeIndex);
+  public boolean execute(WgsCoordinate from, WgsCoordinate to, boolean arriveBy, int queryCount) {
+    var variables = buildVariables(from, to, arriveBy, queryCount);
 
     var input = ExecutionInput.newExecutionInput()
       .query(QUERY)
@@ -98,7 +91,7 @@ class TransmodelWarmupQueryExecutor implements WarmupQueryExecutor {
     }
   }
 
-  private String toGraphQLName(StreetMode mode) {
+  private static String toGraphQLName(StreetMode mode) {
     return EnumTypes.STREET_MODE.getValues()
       .stream()
       .filter(v -> v.getValue() == mode)
@@ -111,7 +104,7 @@ class TransmodelWarmupQueryExecutor implements WarmupQueryExecutor {
     WgsCoordinate from,
     WgsCoordinate to,
     boolean arriveBy,
-    int modeIndex
+    int queryCount
   ) {
     return Map.of(
       "fromLat",
@@ -125,9 +118,9 @@ class TransmodelWarmupQueryExecutor implements WarmupQueryExecutor {
       "arriveBy",
       arriveBy,
       "accessMode",
-      accessModes.get(modeIndex % accessModes.size()),
+      toGraphQLName(modeCombinations.access(queryCount)),
       "egressMode",
-      egressModes.get(modeIndex % egressModes.size())
+      toGraphQLName(modeCombinations.egress(queryCount))
     );
   }
 }

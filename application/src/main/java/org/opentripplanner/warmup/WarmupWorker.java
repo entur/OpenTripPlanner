@@ -5,6 +5,8 @@ import java.time.Instant;
 import java.util.function.Supplier;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.updater.GraphUpdaterStatus;
+import org.opentripplanner.utils.time.DurationUtils;
+import org.opentripplanner.warmup.api.WarmupParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +29,7 @@ class WarmupWorker implements Runnable {
   private static final int MAX_QUERIES = 20;
 
   private final WarmupParameters parameters;
-  private final WarmupQueryExecutor queryExecutor;
+  private final WarmupQueryStrategy queryStrategy;
   private final Supplier<GraphUpdaterStatus> updaterStatusProvider;
 
   WarmupWorker(
@@ -37,7 +39,7 @@ class WarmupWorker implements Runnable {
   ) {
     this.parameters = parameters;
     this.updaterStatusProvider = updaterStatusProvider;
-    this.queryExecutor = switch (parameters.api()) {
+    this.queryStrategy = switch (parameters.api()) {
       case TRANSMODEL -> new TransmodelWarmupQueryExecutor(
         serverContext,
         parameters.accessModes(),
@@ -68,28 +70,27 @@ class WarmupWorker implements Runnable {
       while (queryCount < MAX_QUERIES) {
         if (isHealthy()) {
           LOG.info(
-            "Application warmup complete: {} queries ({} failures) in {} ms. All updaters primed.",
+            "Application warmup complete: {} queries ({} failures) in {}. All updaters primed.",
             queryCount,
             failureCount,
-            Duration.between(startTime, Instant.now()).toMillis()
+            DurationUtils.durationToStr(Duration.between(startTime, Instant.now()))
           );
           return;
         }
 
         queryCount++;
         boolean arriveBy = queryCount % 2 == 0;
-        int modeIndex = (queryCount - 1) % queryExecutor.modeCombinationCount();
-        if (!executeQuery(queryCount, arriveBy, modeIndex)) {
+        if (!executeQuery(queryCount, arriveBy)) {
           failureCount++;
         }
       }
 
       LOG.info(
-        "Application warmup reached maximum of {} queries ({} failures) in {} ms" +
+        "Application warmup reached maximum of {} queries ({} failures) in {}" +
           " before all updaters were primed.",
         MAX_QUERIES,
         failureCount,
-        Duration.between(startTime, Instant.now()).toMillis()
+        DurationUtils.durationToStr(Duration.between(startTime, Instant.now()))
       );
     } catch (Throwable e) {
       LOG.error("Application warmup terminated by error after {} queries.", queryCount, e);
@@ -97,24 +98,28 @@ class WarmupWorker implements Runnable {
   }
 
   /** @return true if the query succeeded without errors, false otherwise. */
-  private boolean executeQuery(int queryCount, boolean arriveBy, int modeIndex) {
+  private boolean executeQuery(int queryCount, boolean arriveBy) {
     var queryStart = Instant.now();
     try {
-      boolean success = queryExecutor.execute(
+      boolean success = queryStrategy.execute(
         parameters.from(),
         parameters.to(),
         arriveBy,
-        modeIndex
+        queryCount
       );
       var elapsed = Duration.between(queryStart, Instant.now());
-      LOG.info("Warmup query #{} completed in {} ms.", queryCount, elapsed.toMillis());
+      LOG.info(
+        "Warmup query #{} completed in {}.",
+        queryCount,
+        DurationUtils.durationToStr(elapsed)
+      );
       return success;
     } catch (Exception e) {
       var elapsed = Duration.between(queryStart, Instant.now());
       LOG.info(
-        "Warmup query #{} failed in {} ms: {}",
+        "Warmup query #{} failed in {}: {}",
         queryCount,
-        elapsed.toMillis(),
+        DurationUtils.durationToStr(elapsed),
         e.getMessage()
       );
       LOG.debug("Warmup query #{} exception detail", queryCount, e);

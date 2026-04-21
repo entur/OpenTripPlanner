@@ -28,7 +28,7 @@ import org.opentripplanner.standalone.config.sandbox.FlexConfig;
 import org.opentripplanner.standalone.config.sandbox.GtfsApiConfig;
 import org.opentripplanner.standalone.config.sandbox.TransmodelAPIConfig;
 import org.opentripplanner.updater.UpdatersParameters;
-import org.opentripplanner.warmup.WarmupParameters;
+import org.opentripplanner.warmup.api.WarmupParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
