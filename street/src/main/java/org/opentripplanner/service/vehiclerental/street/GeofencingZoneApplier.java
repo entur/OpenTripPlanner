@@ -24,13 +24,16 @@ public class GeofencingZoneApplier {
 
   private final Function<Collection<LineString>, Set<Edge>> findEdgesAlongLineStrings;
   private final Function<Envelope, Collection<Edge>> findEdgesForEnvelope;
+  private final boolean applyBusinessAreas;
 
   public GeofencingZoneApplier(
     Function<Collection<LineString>, Set<Edge>> findEdgesAlongLineStrings,
-    Function<Envelope, Collection<Edge>> findEdgesForEnvelope
+    Function<Envelope, Collection<Edge>> findEdgesForEnvelope,
+    boolean applyBusinessAreas
   ) {
     this.findEdgesAlongLineStrings = findEdgesAlongLineStrings;
     this.findEdgesForEnvelope = findEdgesForEnvelope;
+    this.applyBusinessAreas = applyBusinessAreas;
   }
 
   /**
@@ -50,13 +53,14 @@ public class GeofencingZoneApplier {
     // Boundary marking: apply GeofencingBoundaryExtension to boundary-crossing edges
     var boundaryEdges = addBoundaryExtensions(restrictedZones);
 
-    // Business area borders
-    var generalBusinessAreas = geofencingZones
-      .stream()
-      .filter(GeofencingZone::isBusinessArea)
-      .toList();
+    // Business area borders (deprecated — not a GBFS concept)
+    if (applyBusinessAreas) {
+      var generalBusinessAreas = geofencingZones
+        .stream()
+        .filter(GeofencingZone::isBusinessArea)
+        .toList();
 
-    if (!generalBusinessAreas.isEmpty()) {
+      if (!generalBusinessAreas.isEmpty()) {
       var network = generalBusinessAreas.get(0).id().getFeedId();
       var polygons = generalBusinessAreas
         .stream()
@@ -67,9 +71,10 @@ public class GeofencingZoneApplier {
         .createGeometryCollection(polygons)
         .union();
 
-      businessAreaEdges.putAll(
-        applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network))
-      );
+        businessAreaEdges.putAll(
+          applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network))
+        );
+      }
     }
 
     return new GeofencingZoneApplierResult(
