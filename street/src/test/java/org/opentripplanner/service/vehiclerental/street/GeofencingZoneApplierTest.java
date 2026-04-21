@@ -37,7 +37,8 @@ class GeofencingZoneApplierTest {
   final Set<Edge> allEdges = Set.of(insideFrognerPark, halfInHalfOutFrognerPark, businessBorder);
   final GeofencingZoneApplier applier = new GeofencingZoneApplier(
     ignored -> allEdges,
-    ignored -> allEdges
+    ignored -> allEdges,
+    true
   );
 
   static GeometryFactory fac = GeometryUtils.getGeometryFactory();
