@@ -15,6 +15,7 @@ import org.opentripplanner.apis.support.mapping.PropertyMapper;
 import org.opentripplanner.core.model.i18n.I18NStringMapper;
 import org.opentripplanner.framework.json.ObjectMappers;
 import org.opentripplanner.inspector.vector.KeyValue;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.TransitService;
@@ -61,8 +62,8 @@ public class DigitransitStopPropertyMapper extends PropertyMapper<RegularStop> {
 
   protected static String getRoutes(TransitService transitService, RegularStop stop) {
     try {
-      var flexRoutes = transitService.getFlexIndex().findRoutes(stop);
-      var fixedRoutes= transitService.findRoutes(stop);
+      var flexRoutes = findFlexRoutes(transitService, stop);
+      var fixedRoutes = transitService.findRoutes(stop);
       var objects = Stream.concat(flexRoutes.stream(), fixedRoutes.stream())
         .distinct()
         .map(route -> {
@@ -74,6 +75,15 @@ public class DigitransitStopPropertyMapper extends PropertyMapper<RegularStop> {
       return OBJECT_MAPPER.writeValueAsString(objects);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
+    }
+  }
+
+  private static Collection<Route> findFlexRoutes(TransitService transitService, RegularStop stop) {
+    var flexIndex = transitService.getFlexIndex();
+    if (flexIndex == null) {
+      return List.of();
+    } else {
+      return flexIndex.findRoutes(stop);
     }
   }
 

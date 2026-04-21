@@ -87,7 +87,7 @@ public class FlexIndex {
     return tripById.values();
   }
 
-  public Collection<Route> findRoutes(StopLocation stop){
+  public Collection<Route> findRoutes(StopLocation stop) {
     return routeByStop.get(stop);
   }
 

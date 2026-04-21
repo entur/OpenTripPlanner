@@ -3,7 +3,7 @@ package org.opentripplanner.ext.flex.template;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
-import static org.opentripplanner.ext.flex.FlexStopTimesForTest.area;
+import static org.opentripplanner.model.FlexStopTimesFactory.area;
 
 import java.time.Instant;
 import java.time.LocalDate;
