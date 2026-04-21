@@ -46,7 +46,7 @@ class AccessEgressFetcher {
    * @param transitSearchTimeZero the point in time all times in seconds are counted from
    * @param additionalSearchDays  extra search days beyond the departure day, required for flex
    *                              routing
-   * @param linkingContext        context for linking origin/destination to the street network
+   * @param linkingContext        contains temporary vertices for request locations.
    */
   public AccessEgressFetcher(
     RouteRequest request,
