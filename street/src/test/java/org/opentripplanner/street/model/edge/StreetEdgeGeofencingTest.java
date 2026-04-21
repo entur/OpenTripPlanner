@@ -64,45 +64,30 @@ class StreetEdgeGeofencingTest {
   StreetVertex V4 = intersectionVertex("V4", 3, 3);
 
   @Test
-  public void addTwoExtensions() {
+  public void setBusinessAreaBorder() {
     var edge = streetEdge(V1, V2);
-    edge.addRentalRestriction(new BusinessAreaBorder("a"));
-    edge.addRentalRestriction(new BusinessAreaBorder("b"));
+    edge.setBusinessAreaBorder(new BusinessAreaBorder("a"));
 
     assertTrue(edge.fromv.rentalTraversalBanned(forwardState("a")));
-    assertTrue(edge.fromv.rentalTraversalBanned(forwardState("b")));
+    assertFalse(edge.fromv.rentalTraversalBanned(forwardState("b")));
   }
 
   @Test
-  public void removeExtensions() {
+  public void removeBusinessAreaBorder() {
     var edge = streetEdge(V1, V2);
-    var a = new BusinessAreaBorder("a");
-    var b = new BusinessAreaBorder("b");
-    var c = new BusinessAreaBorder("c");
+    edge.setBusinessAreaBorder(new BusinessAreaBorder("a"));
 
-    edge.addRentalRestriction(a);
+    assertTrue(edge.fromv.rentalTraversalBanned(forwardState("a")));
 
-    assertTrue(edge.fromv.rentalRestrictions().traversalBanned(forwardState("a")));
+    edge.removeBusinessAreaBorder();
 
-    edge.addRentalRestriction(b);
-    edge.addRentalRestriction(c);
-
-    edge.removeRentalExtension(a);
-
-    var restrictions = edge.fromv.rentalRestrictions();
-    assertTrue(restrictions.traversalBanned(forwardState("b")));
-    assertTrue(restrictions.traversalBanned(forwardState("c")));
-    assertFalse(restrictions.traversalBanned(forwardState("a")));
-
-    edge.removeRentalExtension(b);
-
-    assertTrue(edge.fromv.rentalRestrictions().traversalBanned(forwardState("c")));
+    assertFalse(edge.fromv.rentalTraversalBanned(forwardState("a")));
   }
 
   @Test
   public void checkNetwork() {
     var edge = streetEdge(V1, V2);
-    edge.addRentalRestriction(new BusinessAreaBorder("a"));
+    edge.setBusinessAreaBorder(new BusinessAreaBorder("a"));
 
     var state = traverseFromV1(edge);
 
@@ -124,7 +109,7 @@ class StreetEdgeGeofencingTest {
     public void leaveBusinessAreaOnFoot() {
       var edge1 = streetEdge(V1, V2);
       var ext = new BusinessAreaBorder(NETWORK_TIER);
-      V2.addRentalRestriction(ext);
+      V2.setBusinessAreaBorder(ext);
 
       var results = traverseFromV1(edge1);
 
@@ -137,8 +122,8 @@ class StreetEdgeGeofencingTest {
     @Test
     public void forkStateWhenEnteringNoDropOffZone() {
       // Set up boundary: V1 is outside, V2 is inside the no-drop-off zone
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
 
       var edge = streetEdge(V1, V2);
 
@@ -170,8 +155,8 @@ class StreetEdgeGeofencingTest {
     @Test
     public void pickupFloatingVehicleWhenLeavingNoTraversalZone() {
       // V2 inside no-traversal zone, V1 outside. Paired boundary extensions.
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
 
       var edge = streetEdge(V1, V2);
       var req = makeArriveByRequest(Set.of(NETWORK_TIER), Collections.emptySet());
@@ -200,10 +185,10 @@ class StreetEdgeGeofencingTest {
     @Test
     public void pickupFloatingVehiclesWhenStartedInNoDropOffZone() {
       // V2 inside both tier and bird no-drop-off zones. Paired boundaries on V1/V2.
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
       var edge = streetEdge(V1, V2);
       var req = makeArriveByRequest(Collections.emptySet(), Collections.emptySet());
@@ -236,10 +221,10 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWhenAllNetworksBanned() {
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
       var edge = streetEdge(V1, V2);
       var req = makeArriveByRequest(Collections.emptySet(), Set.of(NETWORK_TIER, NETWORK_BIRD));
@@ -259,10 +244,10 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWhenSomeNetworksBanned() {
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
       var edge = streetEdge(V1, V2);
       // Bird is banned, tier is allowed
@@ -291,10 +276,10 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWithAllowedNetworkFilter() {
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
-      V1.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
-      V2.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
       var edge = streetEdge(V1, V2);
       // Only tier is allowed

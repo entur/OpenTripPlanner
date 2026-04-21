@@ -554,8 +554,17 @@ public class VertexLinker {
     } else {
       v = splitterVertex(originalEdge, x, y, uniqueSplitLabel);
     }
-    v.addRentalRestriction(originalEdge.getFromVertex().rentalRestrictions());
-    v.addRentalRestriction(originalEdge.getToVertex().rentalRestrictions());
+    v.copyRentalRestrictionsFrom(originalEdge.getFromVertex());
+    // Also copy from tov if it has different restrictions
+    var toVertex = originalEdge.getToVertex();
+    if (toVertex.getBusinessAreaBorder() != null && v.getBusinessAreaBorder() == null) {
+      v.setBusinessAreaBorder(toVertex.getBusinessAreaBorder());
+    }
+    for (var boundary : toVertex.getGeofencingBoundaries()) {
+      if (!v.getGeofencingBoundaries().contains(boundary)) {
+        v.addGeofencingBoundary(boundary);
+      }
+    }
 
     return v;
   }

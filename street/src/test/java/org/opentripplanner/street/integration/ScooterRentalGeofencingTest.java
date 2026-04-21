@@ -108,8 +108,8 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
           // Mark boundary: C is outside zone, D is inside zone
           // Forward edge C→D: entering=true on C (fromv)
           // Back edge D→C: entering=false on D (fromv)
-          C.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, true));
-          D.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, false));
+          C.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, true));
+          D.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, false));
         }
       }
     );
@@ -253,8 +253,8 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
           link(T_ORIGIN, A);
           link(E, T_DEST);
 
-          C.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, true));
-          D.addRentalRestriction(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, false));
+          C.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, true));
+          D.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, false));
         }
       }
     );
@@ -357,8 +357,8 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
           link(T_ORIGIN, A);
           link(E, T_DEST);
 
-          C.addRentalRestriction(new GeofencingBoundaryExtension(noTraversalZone, true));
-          D.addRentalRestriction(new GeofencingBoundaryExtension(noTraversalZone, false));
+          C.addGeofencingBoundary(new GeofencingBoundaryExtension(noTraversalZone, true));
+          D.addGeofencingBoundary(new GeofencingBoundaryExtension(noTraversalZone, false));
         }
       }
     );

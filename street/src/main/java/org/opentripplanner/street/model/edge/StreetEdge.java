@@ -12,6 +12,7 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.geometry.CompactLineStringUtils;
 import org.opentripplanner.street.geometry.DirectionUtils;
@@ -19,7 +20,6 @@ import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.geometry.SplitLineString;
 import org.opentripplanner.street.linking.LinkingDirection;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.elevation.ElevationUtils;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
@@ -459,9 +459,14 @@ public class StreetEdge
   /**
    * This method is not thread-safe.
    */
-  public void removeRentalExtension(RentalRestrictionExtension ext) {
-    fromv.removeRentalRestriction(ext);
-    tov.removeRentalRestriction(ext);
+  public void removeGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    fromv.removeGeofencingBoundary(ext);
+    tov.removeGeofencingBoundary(ext);
+  }
+
+  public void removeBusinessAreaBorder() {
+    fromv.removeBusinessAreaBorder();
+    tov.removeBusinessAreaBorder();
   }
 
   @Override
@@ -580,8 +585,12 @@ public class StreetEdge
   /**
    * This method is not thread-safe!
    */
-  public void addRentalRestriction(RentalRestrictionExtension ext) {
-    fromv.addRentalRestriction(ext);
+  public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    fromv.addGeofencingBoundary(ext);
+  }
+
+  public void setBusinessAreaBorder(BusinessAreaBorder border) {
+    fromv.setBusinessAreaBorder(border);
   }
 
   /**
@@ -772,7 +781,7 @@ public class StreetEdge
    * Copy inherited rental restrictions from a parent edge to a split edge
    */
   protected void copyRentalRestrictionsToSplitEdge(StreetEdge splitEdge) {
-    splitEdge.addRentalRestriction(fromv.rentalRestrictions());
+    splitEdge.getFromVertex().copyRentalRestrictionsFrom(fromv);
   }
 
   short getFlags() {
@@ -829,10 +838,7 @@ public class StreetEdge
       return false;
     }
     // Check if fromv has a paired boundary that exits a restricted zone the walker is inside
-    for (var ext : fromv.rentalRestrictions().toList()) {
-      if (!(ext instanceof GeofencingBoundaryExtension boundary)) {
-        continue;
-      }
+    for (var boundary : fromv.getGeofencingBoundaries()) {
       if (!boundary.zone().hasRestriction()) {
         continue;
       }
@@ -916,9 +922,8 @@ public class StreetEdge
    */
   private Set<String> collectExitingBoundaryNetworks(State s0) {
     var networks = new HashSet<String>();
-    for (var ext : fromv.rentalRestrictions().toList()) {
+    for (var boundary : fromv.getGeofencingBoundaries()) {
       if (
-        ext instanceof GeofencingBoundaryExtension boundary &&
         boundary.zone().hasRestriction() &&
         s0.getCurrentGeofencingZones().contains(boundary.zone()) &&
         hasPairedBoundaryOnTov(boundary) &&
@@ -1039,9 +1044,8 @@ public class StreetEdge
   }
 
   private boolean hasPairedBoundaryOnTov(GeofencingBoundaryExtension boundary) {
-    for (var tovExt : tov.rentalRestrictions().toList()) {
+    for (var tovBoundary : tov.getGeofencingBoundaries()) {
       if (
-        tovExt instanceof GeofencingBoundaryExtension tovBoundary &&
         tovBoundary.zone().equals(boundary.zone()) &&
         tovBoundary.entering() != boundary.entering()
       ) {

@@ -1,15 +1,13 @@
 package org.opentripplanner.service.vehiclerental.street;
 
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Set;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.search.state.State;
 
 /**
- * Traversal is banned since this location is the border of a business area.
+ * Marks a vertex as being on the border of a rental network's business area.
+ * Traversal is banned for vehicles of the matching network — they cannot leave
+ * the business area. Enforced via {@code Vertex.rentalTraversalBanned(State)}.
  */
-public final class BusinessAreaBorder implements RentalRestrictionExtension {
+public final class BusinessAreaBorder {
 
   private final String network;
 
@@ -17,7 +15,6 @@ public final class BusinessAreaBorder implements RentalRestrictionExtension {
     this.network = network;
   }
 
-  @Override
   public boolean traversalBanned(State state) {
     if (!state.isRentingVehicle()) {
       return false;
@@ -30,23 +27,7 @@ public final class BusinessAreaBorder implements RentalRestrictionExtension {
     return network.equals(state.getVehicleRentalNetwork());
   }
 
-  @Override
-  public boolean dropOffBanned(State state) {
-    return false;
-  }
-
-  @Override
-  public Set<RestrictionType> debugTypes() {
-    return EnumSet.of(RestrictionType.BUSINESS_AREA_BORDER);
-  }
-
-  @Override
-  public List<RentalRestrictionExtension> toList() {
-    return List.of(this);
-  }
-
-  @Override
-  public boolean hasRestrictions() {
-    return true;
+  public String network() {
+    return network;
   }
 }
