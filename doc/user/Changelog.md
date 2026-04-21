@@ -25,6 +25,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Remove `GraphVisualizer` and inefficient methods in `ShortestPathTree` [#7526](https://github.com/opentripplanner/OpenTripPlanner/pull/7526)
 - Fix cost mismatch by anchoring pattern-ride pareto cost to last stop [#7504](https://github.com/opentripplanner/OpenTripPlanner/pull/7504)
 - Add NO_DIRECT_MODE_CONNECTION routing error code for direct-only searches [#7494](https://github.com/opentripplanner/OpenTripPlanner/pull/7494)
+- De-duplicate boardinglocations on areas [#7508](https://github.com/opentripplanner/OpenTripPlanner/pull/7508)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
