@@ -7,7 +7,6 @@ import org.opentripplanner.inspector.vector.LayerBuilder;
 import org.opentripplanner.inspector.vector.LayerParameters;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
-import org.opentripplanner.service.vehiclerental.street.NoRestriction;
 import org.opentripplanner.street.graph.Graph;
 
 /**
@@ -31,15 +30,8 @@ public class GeofencingZonesLayerBuilder extends LayerBuilder<GeofencingZone> {
     return graph
       .findVertices(query)
       .stream()
-      .filter(v -> !(v.rentalRestrictions() instanceof NoRestriction))
-      .flatMap(v ->
-        v
-          .rentalRestrictions()
-          .toList()
-          .stream()
-          .filter(ext -> ext instanceof GeofencingBoundaryExtension)
-          .map(ext -> ((GeofencingBoundaryExtension) ext).zone())
-      )
+      .filter(v -> !v.getGeofencingBoundaries().isEmpty())
+      .flatMap(v -> v.getGeofencingBoundaries().stream().map(GeofencingBoundaryExtension::zone))
       .distinct()
       .map(this::createGeometryWithUserData)
       .toList();

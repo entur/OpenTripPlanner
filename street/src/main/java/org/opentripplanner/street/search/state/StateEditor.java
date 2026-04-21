@@ -389,15 +389,11 @@ public class StateEditor {
    * (same zone, opposite entering flag). If paired, adds or removes the zone from state.
    */
   public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
-    for (var ext : fromVertex.rentalRestrictions().toList()) {
-      if (!(ext instanceof GeofencingBoundaryExtension boundary)) {
-        continue;
-      }
+    for (var boundary : fromVertex.getGeofencingBoundaries()) {
       // Paired check: tov must have same zone with opposite entering flag
       boolean paired = false;
-      for (var tovExt : toVertex.rentalRestrictions().toList()) {
+      for (var tovBoundary : toVertex.getGeofencingBoundaries()) {
         if (
-          tovExt instanceof GeofencingBoundaryExtension tovBoundary &&
           tovBoundary.zone().equals(boundary.zone()) &&
           tovBoundary.entering() != boundary.entering()
         ) {

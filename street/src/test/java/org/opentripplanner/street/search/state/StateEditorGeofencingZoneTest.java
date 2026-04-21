@@ -64,8 +64,8 @@ class StateEditorGeofencingZoneTest {
     var tov = intersectionVertex(2, 2);
 
     // fromv has entering=true, tov has entering=false -> paired boundary
-    fromv.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, true));
-    tov.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, false));
+    fromv.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, true));
+    tov.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, false));
 
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var s0 = new State(fromv, req);
@@ -83,8 +83,8 @@ class StateEditorGeofencingZoneTest {
     var tov = intersectionVertex(2, 2);
 
     // fromv has entering=false, tov has entering=true -> paired exit
-    fromv.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, false));
-    tov.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, true));
+    fromv.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, false));
+    tov.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, true));
 
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var s0 = new State(fromv, req);
@@ -106,7 +106,7 @@ class StateEditorGeofencingZoneTest {
     var tov = intersectionVertex(2, 2);
 
     // fromv has boundary extension, tov has nothing -> not paired
-    fromv.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, true));
+    fromv.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, true));
 
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var s0 = new State(fromv, req);
@@ -124,8 +124,8 @@ class StateEditorGeofencingZoneTest {
     var tov = intersectionVertex(2, 2);
 
     // Both have entering=true for same zone -> not paired (interior edge from boundary vertex)
-    fromv.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, true));
-    tov.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, true));
+    fromv.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, true));
+    tov.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, true));
 
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var s0 = new State(fromv, req);
@@ -145,8 +145,8 @@ class StateEditorGeofencingZoneTest {
     // fromv entering=true, tov entering=false -> paired
     // In forward: effectiveEntering = true (add zone)
     // In arriveBy: effectiveEntering = false (remove zone)
-    fromv.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, true));
-    tov.addRentalRestriction(new GeofencingBoundaryExtension(ZONE, false));
+    fromv.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, true));
+    tov.addGeofencingBoundary(new GeofencingBoundaryExtension(ZONE, false));
 
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var s0 = new State(fromv, req);
