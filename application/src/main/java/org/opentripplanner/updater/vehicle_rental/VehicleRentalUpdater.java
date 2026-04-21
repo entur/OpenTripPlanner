@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.retry.OtpRetry;
 import org.opentripplanner.framework.retry.OtpRetryBuilder;
 import org.opentripplanner.framework.retry.OtpRetryException;
@@ -231,8 +232,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestBoundaryEdges.forEach(StreetEdge::removeGeofencingBoundary);
 
         var graph = context.graph();
-        var applier = new GeofencingZoneApplier(graph::findEdgesAlongLineStrings, env ->
-          graph.findEdges(env, Scope.PERMANENT)
+        var applier = new GeofencingZoneApplier(
+          graph::findEdgesAlongLineStrings,
+          env -> graph.findEdges(env, Scope.PERMANENT),
+          OTPFeature.GeofencingBusinessAreaBorders.isOn()
         );
         var result = applier.applyGeofencingZones(geofencingZones);
         latestBusinessAreaEdges = result.businessAreaEdges();
