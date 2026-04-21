@@ -500,13 +500,7 @@ public abstract class OsmEntity {
    * Checks if a tag contains the specified value.
    */
   public boolean isTag(String tag, String value) {
-    if (tags == null || value == null) {
-      return false;
-    } else {
-      return value.equals(tags.get(tag.toLowerCase()));
-public boolean isTag(String tag, String value) {
     return tags != null && value != null && value.equals(tags.get(tag.toLowerCase()));
-}
   }
 
   /**
