@@ -14,12 +14,12 @@ import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.RelationBuilder;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.street.model.vertex.OsmVertex;
+import org.opentripplanner.street.graph.GraphFetcher;
 import org.opentripplanner.street.model.vertex.StationEntranceVertex;
 
 public class StationEntrancesTest {
 
-  private static final Graph GRAPH = new Graph();
+  private static final GraphFetcher GRAPH = new GraphFetcher(new Graph());
   private static final OsmNode ENTRANCE_IN_STOP_AREA = NodeBuilder.of(1, new WgsCoordinate(0, 0))
     .withTag("entrance", "yes")
     .build();
@@ -56,7 +56,7 @@ public class StationEntrancesTest {
       .build();
 
     OsmModuleTestFactory.of(osmProvider)
-      .withGraph(GRAPH)
+      .withGraph(GRAPH.graph())
       .builder()
       .withIncludeOsmStationEntrances(true)
       .withIssueStore(DataImportIssueStore.NOOP)
@@ -66,28 +66,25 @@ public class StationEntrancesTest {
 
   @Test
   void entranceInStopArea() {
-    assertInstanceOf(StationEntranceVertex.class, getVertexForOsmNode(ENTRANCE_IN_STOP_AREA));
+    assertInstanceOf(
+      StationEntranceVertex.class,
+      GRAPH.getVertexForOsmNode(ENTRANCE_IN_STOP_AREA).orElseThrow()
+    );
   }
 
   @Test
   void entranceOutsideStopArea() {
-    assertFalse(getVertexForOsmNode(ENTRANCE_OUTSIDE_STOP_AREA) instanceof StationEntranceVertex);
+    assertFalse(
+      GRAPH.getVertexForOsmNode(ENTRANCE_OUTSIDE_STOP_AREA).orElseThrow() instanceof
+        StationEntranceVertex
+    );
   }
 
   @Test
   void stationEntranceOutsideStopArea() {
     assertInstanceOf(
       StationEntranceVertex.class,
-      getVertexForOsmNode(SUBWAY_ENTRANCE_OUTSIDE_STOP_AREA)
+      GRAPH.getVertexForOsmNode(SUBWAY_ENTRANCE_OUTSIDE_STOP_AREA).orElseThrow()
     );
-  }
-
-  private OsmVertex getVertexForOsmNode(OsmNode node) {
-    var vertices = GRAPH.getVerticesOfType(OsmVertex.class);
-    return vertices
-      .stream()
-      .filter(v -> v.nodeId() == node.getId())
-      .findFirst()
-      .orElseThrow();
   }
 }
