@@ -49,5 +49,4 @@ public final class BusinessAreaBorder implements RentalRestrictionExtension {
   public boolean hasRestrictions() {
     return true;
   }
-
 }

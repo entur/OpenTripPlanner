@@ -125,7 +125,8 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
     assertNotNull(descriptor, "forward search should find a path");
 
     // Find the state where rental transitions from RENTING to HAVE_RENTED
-    var dropOffState = descriptor.stream()
+    var dropOffState = descriptor
+      .stream()
       .filter(d -> d.contains("HAVE_RENTED") && !d.contains("BEFORE_RENTING"))
       .findFirst()
       .orElse(null);
@@ -157,9 +158,9 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       if (d.contains("DE street") && d.contains("RENTING_FLOATING")) {
         throw new AssertionError(
           "Rider is still renting on DE street (inside no-drop-off zone). " +
-          "Drop-off should have happened at the zone boundary (CD street or earlier).\n" +
-          "Full path:\n" +
-          allStates
+            "Drop-off should have happened at the zone boundary (CD street or earlier).\n" +
+            "Full path:\n" +
+            allStates
         );
       }
     }
@@ -181,9 +182,9 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       if (d.contains("DE street") && d.contains("RENTING_FLOATING")) {
         throw new AssertionError(
           "Rider is still renting on DE street (inside no-drop-off zone). " +
-          "Drop-off should have happened at the zone boundary.\n" +
-          "Full path:\n" +
-          allStates
+            "Drop-off should have happened at the zone boundary.\n" +
+            "Full path:\n" +
+            allStates
         );
       }
     }
@@ -208,10 +209,10 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       arriveByLastRentingEdge,
       forwardLastRentingEdge,
       "Forward and arriveBy should drop off at the same edge.\n" +
-      "Forward path:\n  " +
-      String.join("\n  ", forward) +
-      "\nArriveBy path:\n  " +
-      String.join("\n  ", arriveBy)
+        "Forward path:\n  " +
+        String.join("\n  ", forward) +
+        "\nArriveBy path:\n  " +
+        String.join("\n  ", arriveBy)
     );
   }
 
@@ -271,8 +272,8 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       if (d.contains("DE street") && d.contains("RENTING_FLOATING")) {
         throw new AssertionError(
           "Rider is still renting on DE street (inside no-drop-off zone).\n" +
-          "Full path:\n  " +
-          allStates
+            "Full path:\n  " +
+            allStates
         );
       }
     }
@@ -302,16 +303,18 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       "BC street",
       arriveByLastRenting,
       "ArriveBy: last renting edge should be BC (outside zone).\n" +
-      "Path:\n  " + String.join("\n  ", arriveBy)
+        "Path:\n  " +
+        String.join("\n  ", arriveBy)
     );
 
     assertEquals(
       "BC street",
       forwardLastRenting,
       "Forward: last renting edge should be BC (outside zone), NOT CD (inside zone).\n" +
-      "The forward drop-off fork currently places the drop-off at tov of the boundary edge,\n" +
-      "which is inside the zone. It should drop off at fromv (outside the zone).\n" +
-      "Path:\n  " + String.join("\n  ", forward)
+        "The forward drop-off fork currently places the drop-off at tov of the boundary edge,\n" +
+        "which is inside the zone. It should drop off at fromv (outside the zone).\n" +
+        "Path:\n  " +
+        String.join("\n  ", forward)
     );
   }
 
@@ -370,7 +373,8 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       if ((d.contains("CD street") || d.contains("DE street")) && d.contains("RENTING_FLOATING")) {
         throw new AssertionError(
           "Rider is renting inside no-traversal zone! Should have dropped off at boundary.\n" +
-          "Path:\n  " + allStates
+            "Path:\n  " +
+            allStates
         );
       }
     }
@@ -441,11 +445,7 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
       .collect(Collectors.toList());
   }
 
-  private VehicleRentalPlaceVertex createFloatingScooter(
-    String id,
-    double lat,
-    double lon
-  ) {
+  private VehicleRentalPlaceVertex createFloatingScooter(String id, double lat, double lon) {
     var vehicleWithId = VehicleRentalVehicle.of()
       .withId(new FeedScopedId(NETWORK, id))
       .withName(new NonLocalizedString(id))

@@ -96,5 +96,4 @@ public final class CompositeRentalRestrictionExtension implements RentalRestrict
   public boolean hasRestrictions() {
     return extensions.length > 0;
   }
-
 }
