@@ -534,14 +534,8 @@ public abstract class OsmEntity {
         false
       );
     }
-    if (tags.containsKey("otp:route_name")) {
-      return new NonLocalizedString(tags.get("otp:route_name"));
-    }
     if (this.creativeName != null) {
       return this.creativeName;
-    }
-    if (tags.containsKey("otp:route_ref")) {
-      return new NonLocalizedString(tags.get("otp:route_ref"));
     }
     if (tags.containsKey("ref")) {
       return new NonLocalizedString(tags.get("ref"));

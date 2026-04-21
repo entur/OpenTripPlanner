@@ -35,7 +35,6 @@ import org.opentripplanner.osm.model.OsmLevelFactory;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmRelationMember;
-import org.opentripplanner.osm.model.OsmTag;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.HashGridSpatialIndex;
@@ -936,37 +935,6 @@ public class OsmDatabase {
    * Handle route=road and route=bicycle relations.
    */
   private void processRoute(OsmRelation relation) {
-    for (OsmRelationMember member : relation.getMembers()) {
-      if (!(member.hasTypeWay() && waysById.containsKey(member.getRef()))) {
-        continue;
-      }
-
-      OsmWay way = waysById.get(member.getRef());
-      if (way == null) {
-        continue;
-      }
-
-      if (relation.hasTag("name")) {
-        if (way.hasTag("otp:route_name")) {
-          way.addTag(
-            "otp:route_name",
-            addUniqueName(way.getTag("otp:route_name"), relation.getTag("name"))
-          );
-        } else {
-          way.addTag(new OsmTag("otp:route_name", relation.getTag("name")));
-        }
-      }
-      if (relation.hasTag("ref")) {
-        if (way.hasTag("otp:route_ref")) {
-          way.addTag(
-            "otp:route_ref",
-            addUniqueName(way.getTag("otp:route_ref"), relation.getTag("ref"))
-          );
-        } else {
-          way.addTag(new OsmTag("otp:route_ref", relation.getTag("ref")));
-        }
-      }
-    }
     processBicycleRoute(relation);
   }
 
