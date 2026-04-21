@@ -70,15 +70,16 @@ public class GeofencingZoneApplier {
         .createGeometryCollection(polygons)
         .union();
 
-      var updated = applyBusinessAreaBorder(
-        unionOfBusinessAreas,
-        new BusinessAreaBorder(network)
-      );
+      var updated = applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network));
 
       updates.putAll(updated);
     }
 
-    return new GeofencingZoneApplierResult(Map.copyOf(updates), Map.copyOf(boundaryEdges), zoneIndex);
+    return new GeofencingZoneApplierResult(
+      Map.copyOf(updates),
+      Map.copyOf(boundaryEdges),
+      zoneIndex
+    );
   }
 
   /**
@@ -134,8 +135,7 @@ public class GeofencingZoneApplier {
             continue;
           }
 
-          boolean fromInZone =
-            fromMayBeInZone && preparedZone.contains(gf.createPoint(fromCoord));
+          boolean fromInZone = fromMayBeInZone && preparedZone.contains(gf.createPoint(fromCoord));
           boolean toInZone = toMayBeInZone && preparedZone.contains(gf.createPoint(toCoord));
 
           if (fromInZone != toInZone) {
@@ -148,7 +148,6 @@ public class GeofencingZoneApplier {
     }
     return edgesUpdated;
   }
-
 
   private Map<StreetEdge, RentalRestrictionExtension> applyExtension(
     Geometry geom,
@@ -200,8 +199,7 @@ public class GeofencingZoneApplier {
           continue;
         }
 
-        boolean fromInZone =
-          fromMayBeInZone && preparedPolygon.contains(gf.createPoint(fromCoord));
+        boolean fromInZone = fromMayBeInZone && preparedPolygon.contains(gf.createPoint(fromCoord));
         boolean toInZone = toMayBeInZone && preparedPolygon.contains(gf.createPoint(toCoord));
 
         if (fromInZone != toInZone) {
@@ -212,5 +210,4 @@ public class GeofencingZoneApplier {
     }
     return edgesUpdated;
   }
-
 }

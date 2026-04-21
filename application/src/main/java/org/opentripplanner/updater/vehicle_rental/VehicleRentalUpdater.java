@@ -22,10 +22,10 @@ import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.linking.VertexLinker;
-import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.TraverseMode;
@@ -231,9 +231,8 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestBoundaryEdges.forEach(StreetEdge::removeRentalExtension);
 
         var graph = context.graph();
-        var applier = new GeofencingZoneApplier(
-          graph::findEdgesAlongLineStrings,
-          env -> graph.findEdges(env, Scope.PERMANENT)
+        var applier = new GeofencingZoneApplier(graph::findEdgesAlongLineStrings, env ->
+          graph.findEdges(env, Scope.PERMANENT)
         );
         var result = applier.applyGeofencingZones(geofencingZones);
         latestModifiedEdges = result.modifiedEdges();
@@ -242,10 +241,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestAppliedGeofencingZones = geofencingZones;
         context.graph().setGeofencingZoneIndex(nameForLogging, latestZoneIndex);
 
-        GeofencingZoneApplier.preResolveVertexZones(
-          verticesByStation.values(),
-          latestZoneIndex
-        );
+        GeofencingZoneApplier.preResolveVertexZones(verticesByStation.values(), latestZoneIndex);
 
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);

@@ -73,7 +73,8 @@ public class Graph implements Serializable {
 
   private transient StreetIndex streetIndex;
 
-  private transient Map<String, GeofencingZoneIndex> geofencingZoneIndexes = new ConcurrentHashMap<>();
+  private transient Map<String, GeofencingZoneIndex> geofencingZoneIndexes =
+    new ConcurrentHashMap<>();
 
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;
@@ -297,7 +298,9 @@ public class Graph implements Serializable {
    * coordinate.
    */
   public Set<GeofencingZone> getGeofencingZonesContaining(Coordinate coord) {
-    return geofencingZoneIndexes.values().stream()
+    return geofencingZoneIndexes
+      .values()
+      .stream()
       .flatMap(idx -> idx.getZonesContaining(coord).stream())
       .collect(Collectors.toSet());
   }
