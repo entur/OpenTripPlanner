@@ -5,17 +5,22 @@ public class RelationBuilder {
   private final OsmRelation relation = new OsmRelation();
 
   public static RelationBuilder ofMultiPolygon() {
-    var builder = new RelationBuilder();
-    builder.relation.addTag("type", "multipolygon");
-    builder.relation.addTag("highway", "pedestrian");
-    return builder;
+    return ofType("multipolygon").withTag("highway", "pedestrian");
   }
 
   public static RelationBuilder ofTurnRestriction(String restrictionType) {
+    return ofType("restriction").withTag("restriction", restrictionType);
+  }
+
+  public static RelationBuilder ofType(String type) {
     var builder = new RelationBuilder();
-    builder.relation.addTag("type", "restriction");
-    builder.relation.addTag("restriction", restrictionType);
+    builder.relation.addTag("type", type);
     return builder;
+  }
+
+  public RelationBuilder withTag(String key, String value) {
+    relation.addTag(key, value);
+    return this;
   }
 
   public RelationBuilder withWayMember(long id, String role) {
