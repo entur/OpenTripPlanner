@@ -14,6 +14,10 @@ public class NodeBuilder {
     return of(id, wgsCoordinate).build();
   }
 
+  public static NodeBuilder of() {
+    return new NodeBuilder(new OsmNode());
+  }
+
   public static NodeBuilder of(long id, WgsCoordinate wgsCoordinate) {
     var builder = new NodeBuilder(new OsmNode(wgsCoordinate.latitude(), wgsCoordinate.longitude()));
     builder.node.setId(id);

@@ -38,9 +38,8 @@ public class StationEntrancesTest {
     .withTag("entrance", "yes")
     .build();
 
-  private static final OsmRelation STOP_AREA = RelationBuilder.ofType("public_transport")
-    .withTag("public_transport", "stop_area")
-    .withNodeMember(ENTRANCE_IN_STOP_AREA.getId(), "")
+  private static final OsmRelation STOP_AREA = RelationBuilder.ofStopArea()
+    .withNodeMember(ENTRANCE_IN_STOP_AREA.getId())
     .build();
 
   @BeforeAll
@@ -66,17 +65,13 @@ public class StationEntrancesTest {
 
   @Test
   void entranceInStopArea() {
-    assertInstanceOf(
-      StationEntranceVertex.class,
-      GRAPH.getVertexForOsmNode(ENTRANCE_IN_STOP_AREA).orElseThrow()
-    );
+    assertInstanceOf(StationEntranceVertex.class, GRAPH.getVertexForOsmNode(ENTRANCE_IN_STOP_AREA));
   }
 
   @Test
   void entranceOutsideStopArea() {
     assertFalse(
-      GRAPH.getVertexForOsmNode(ENTRANCE_OUTSIDE_STOP_AREA).orElseThrow() instanceof
-        StationEntranceVertex
+      GRAPH.getVertexForOsmNode(ENTRANCE_OUTSIDE_STOP_AREA) instanceof StationEntranceVertex
     );
   }
 
@@ -84,7 +79,7 @@ public class StationEntrancesTest {
   void stationEntranceOutsideStopArea() {
     assertInstanceOf(
       StationEntranceVertex.class,
-      GRAPH.getVertexForOsmNode(SUBWAY_ENTRANCE_OUTSIDE_STOP_AREA).orElseThrow()
+      GRAPH.getVertexForOsmNode(SUBWAY_ENTRANCE_OUTSIDE_STOP_AREA)
     );
   }
 }

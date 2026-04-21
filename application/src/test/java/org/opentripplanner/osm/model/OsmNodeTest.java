@@ -13,27 +13,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class OsmNodeTest {
 
   public static Stream<Arguments> entranceTestCases() {
-    var mainEntrance = new OsmNode();
-    mainEntrance.addTag("entrance", "main");
-
-    var trainStationEntrance = new OsmNode();
-    trainStationEntrance.addTag("railway", "train_station_entrance");
-
-    var subwayEntrance = new OsmNode();
-    subwayEntrance.addTag("railway", "subway_entrance");
-
-    var publicTransportEntrance = new OsmNode();
-    publicTransportEntrance.addTag("public_transport", "entrance");
-
-    var trainStationEntranceWithEntranceTag = new OsmNode();
-    trainStationEntranceWithEntranceTag.addTag("railway", "train_station_entrance");
-    trainStationEntranceWithEntranceTag.addTag("entrance", "main");
-
-    var notAnEntrance = new OsmNode();
-    notAnEntrance.addTag("entrance", "no");
-
-    var emergencyEntrance = new OsmNode();
-    notAnEntrance.addTag("entrance", "emergency");
+    var mainEntrance = NodeBuilder.of().withTag("entrance", "main").build();
+    var trainStationEntrance = NodeBuilder.of()
+      .withTag("railway", "train_station_entrance")
+      .build();
+    var subwayEntrance = NodeBuilder.of().withTag("railway", "subway_entrance").build();
+    var publicTransportEntrance = NodeBuilder.of().withTag("public_transport", "entrance").build();
+    var trainStationEntranceWithEntranceTag = NodeBuilder.of()
+      .withTag("railway", "train_station_entrance")
+      .withTag("entrance", "main")
+      .build();
+    var notAnEntrance = NodeBuilder.of().withTag("entrance", "no").build();
+    var emergencyEntrance = NodeBuilder.of().withTag("entrance", "emergency").build();
 
     return Stream.of(
       Arguments.argumentSet("main entrance", mainEntrance, true, false),
