@@ -19,6 +19,7 @@ public class OsmNodeBuilder {
     this.lat = osmNode.lat;
     this.lon = osmNode.lon;
     this.tags = new HashMap<>();
+    tags.putAll(osmNode.getTags());
     this.osmProvider = osmNode.getOsmProvider();
   }
 
