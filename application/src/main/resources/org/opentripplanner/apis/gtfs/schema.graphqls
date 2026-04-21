@@ -3906,6 +3906,12 @@ enum RoutingErrorCode {
   """
   LOCATION_NOT_FOUND
   """
+  No usable itineraries were found for the requested direct mode (e.g. walking, cycling, car, flex)
+  and no transit modes were included in the search. This is returned both when no route exists and
+  when routes were found but didn't pass quality filters.
+  """
+  NO_DIRECT_MODE_CONNECTION
+  """
   No stops are reachable from the start or end locations specified.
     
   You can try searching using a different access or egress mode, for example cycling instead of walking,
