@@ -36,5 +36,4 @@ public class DominanceFunctionTest {
   // TODO: Make unit tests for rest of dominance functionality
   // TODO: Make functional tests for concepts covered by dominance with current algorithm
   // (Specific transfers, bike rental, park and ride, turn restrictions)
-
 }

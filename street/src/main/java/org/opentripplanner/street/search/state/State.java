@@ -87,10 +87,11 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     var destinationZones = streetSearchRequest.arriveByDestinationZones();
     var restrictedNetworks = destinationZones.isEmpty()
       ? Set.<String>of()
-      : destinationZones.stream()
-        .filter(GeofencingZone::hasRestriction)
-        .map(z -> z.id().getFeedId())
-        .collect(Collectors.toSet());
+      : destinationZones
+          .stream()
+          .filter(GeofencingZone::hasRestriction)
+          .map(z -> z.id().getFeedId())
+          .collect(Collectors.toSet());
 
     for (Vertex vertex : vertices) {
       for (StateData stateData : StateData.getInitialStateDatas(streetSearchRequest)) {
@@ -518,8 +519,6 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
     }
     return best;
   }
-
-
 
   /**
    * Whether the street path contains any driving.

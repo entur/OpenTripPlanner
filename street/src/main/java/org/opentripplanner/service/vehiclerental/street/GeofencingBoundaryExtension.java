@@ -15,9 +15,8 @@ import org.opentripplanner.street.search.state.State;
  * @param entering true if traversing the edge in its natural direction (fromv → tov) enters the
  *     zone; false if it exits
  */
-public record GeofencingBoundaryExtension(GeofencingZone zone, boolean entering)
-  implements RentalRestrictionExtension {
-
+public record GeofencingBoundaryExtension(GeofencingZone zone, boolean entering) implements
+  RentalRestrictionExtension {
   @Override
   public boolean traversalBanned(State state) {
     return false;

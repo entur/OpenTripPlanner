@@ -227,8 +227,8 @@ class StreetEdgeGeofencingTest {
 
       // Generic renting state (null network)
       var genericState = Arrays.stream(states)
-        .filter(s ->
-          s.getVehicleRentalState() == RENTING_FLOATING && s.getVehicleRentalNetwork() == null
+        .filter(
+          s -> s.getVehicleRentalState() == RENTING_FLOATING && s.getVehicleRentalNetwork() == null
         )
         .findFirst();
       assertTrue(genericState.isPresent());

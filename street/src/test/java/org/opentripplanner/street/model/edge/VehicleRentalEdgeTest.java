@@ -30,6 +30,7 @@ import org.opentripplanner.street.search.request.RentalPeriod;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.request.StreetSearchRequestBuilder;
 import org.opentripplanner.street.search.state.State;
+
 class VehicleRentalEdgeTest {
 
   VehicleRentalEdge vehicleRentalEdge;
