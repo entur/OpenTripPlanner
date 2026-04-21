@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.api.request.via;
 
+import java.util.Objects;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 
 /**
@@ -24,7 +25,7 @@ public final class RaptorPassThroughViaConnection extends ViaConnection {
 
   @Override
   public int hashCode() {
-    return 117 + fromStop();
+    return Objects.hash(fromStop());
   }
 
   public final String toString(RaptorStopNameResolver stopNameResolver) {

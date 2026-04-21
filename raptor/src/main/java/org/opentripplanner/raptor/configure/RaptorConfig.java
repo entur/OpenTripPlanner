@@ -26,7 +26,7 @@ import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
 /**
- * This class is responsible for creating a new search and holding application scoped Raptor state.
+ * This class is responsible for creating a new search and holding application-scoped Raptor state.
  * <p/>
  * This class should have APPLICATION scope. It keeps a reference to the environment and the
  * tuning parameters. The environment has a thread-pool, which should be APPLICATION scope.
@@ -92,25 +92,26 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     Heuristics heuristics
   ) {
     var context = context(transitData, request);
-    RangeRaptorWorker<T> worker = null;
+    RangeRaptorWorker<T> nextWorker = null;
     McStopArrivals<T> nextStopArrivals = null;
 
     if (request.searchParams().isViaSearch()) {
+      // Note! We start with the last segment to be able to link the segments together
       for (SearchContextViaSegments<T> ctxSegment : context.segments().reversed()) {
         var c = new McRangeRaptorConfig<>(ctxSegment).connectWithNextSegmentArrivals(
           nextStopArrivals
         );
         var w = createWorker(ctxSegment, c.state(), c.strategy());
-        worker = RangeRaptorWorkerComposite.of(c.createPathParetoComparator(), w, worker);
+        nextWorker = RangeRaptorWorkerComposite.of(c.createPathParetoComparator(), w, nextWorker);
         nextStopArrivals = c.stopArrivals();
       }
     } else {
       // The first segment is the only segment
       var segment = context.segments().getFirst();
       var c = new McRangeRaptorConfig<>(segment).withHeuristics(heuristics);
-      worker = createWorker(segment, c.state(), c.strategy());
+      nextWorker = createWorker(segment, c.state(), c.strategy());
     }
-    return createRangeRaptor(context, worker);
+    return createRangeRaptor(context, nextWorker);
   }
 
   public RaptorRouter<T> createRangeRaptorWithHeuristicSearch(

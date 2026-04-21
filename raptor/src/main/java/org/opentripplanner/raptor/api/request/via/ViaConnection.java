@@ -12,26 +12,27 @@ import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 /// #4 Route via a pass-through-stop
 ///
 /// Raptor will allow a path to go through a pass-through-stop. The stop can be visited on-board
-/// transit, or at the alight- or board-stop. The from-stop and to-stop must be the same, and the
-/// minimum-wait-time must be zero.
+/// transit, or at the alight- or board-stop. The from-stop and to-stop must be the same (there is
+/// no to-stop defined), and the minimum-wait-time must be zero.
 ///
 ///
 /// #4 Route via a single stop with a minimum-wait-time
 ///
-/// Raptor will allow a path to go through a single stop, if the from-stop and to-stop is the
-/// same. If the minimum-wait-time is greater than zero(0) the path will either alight or board
-/// transit at this stop, and the minimum-wait-time criteria is enforced.
+/// Raptor will allow a path to go through a single stop, the path must either alight or board at
+/// the given stop. The from-stop and to-stop is the same (there is no to-stop defined). A
+/// minimum-wait-time can be applied at the given stop.
 ///
 ///
 /// #4 Route via a coordinate
 ///
 /// To route through a coordinate you need to find all nearby stops, then find all access and egress
 /// paths to and from the street location. Then combine all access and egress paths to form
-/// complete transfers. Raptor does not know/see the actual via street location, it only uses the
-/// connection from a stop to another, the total time it takes and the total cost. You must generate
-/// a transfer with two "legs" in it. One leg going from the 'from-stop' to the street location, and
-/// one leg going back to the 'to-stop'. If you have 10 stops around the via street location, then
-/// you must combine all ten access paths and egress paths.
+/// complete Raptor transfers. Raptor does not know/see the actual via street location, it only
+/// uses the connection from a stop to another, the total time it takes and the total cost. You
+/// must generate a via transfer connection with two "legs" in it. One leg going from the
+/// 'from-stop' to the street location, and one leg going back to the 'to-stop'. If you have 10
+/// stops around the via street location, then you must combine all ten access paths and egress
+/// paths (in total 100 possible transfers).
 ///
 /// The min-wait-time in the {@link RaptorViaLocation} is added to the transfers
 /// {@code durationInSeconds}. The calculation of `c1` should include the walk time, but not
@@ -47,8 +48,9 @@ public abstract sealed class ViaConnection
   }
 
   /**
-   * Stop index where the connection starts.
-   * Note! The {@code toStop()} is only relevant for {@link RaptorTransferViaConnection}s.
+   * Stop index where the connection starts. If only one stop is involved, then this is the
+   * stop where the path continues from as well. Note! The {@code toStop()} method is only defined
+   * for {@link RaptorTransferViaConnection}s.
    */
   public final int fromStop() {
     return fromStop;
