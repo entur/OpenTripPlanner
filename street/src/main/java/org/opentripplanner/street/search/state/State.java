@@ -71,7 +71,7 @@ public final class State implements AStarState<State, Edge, Vertex> {
     this.backState = null;
     this.backEdge = null;
     this.stateData = stateData;
-    this.walkDistance = 0;
+    this.traversalDistance_m = 0;
     this.time_ms = startTime.toEpochMilli();
   }
 
