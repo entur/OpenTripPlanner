@@ -64,7 +64,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     this.transitCalculator = transitCalculator;
 
     // Attach to the RR life cycle
-    lifeCycle.onSetupIteration(ignore -> setupIteration());
+    lifeCycle.onSetupIteration(_ -> setupIteration());
     lifeCycle.onTransitsForRoundComplete(this::transitsForRoundComplete);
     lifeCycle.onTransfersForRoundComplete(this::transfersForRoundComplete);
   }

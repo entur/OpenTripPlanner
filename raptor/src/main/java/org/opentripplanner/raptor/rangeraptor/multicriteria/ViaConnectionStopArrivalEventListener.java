@@ -109,7 +109,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
 
     for (ViaConnection c : connections) {
       switch (c) {
-        case RaptorPassThroughViaConnection ignore -> {
+        case RaptorPassThroughViaConnection _ -> {
           continueOnSameTripInNextSegment(e);
           continueFromSameStopArrival(e);
         }
