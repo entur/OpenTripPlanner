@@ -46,19 +46,22 @@ class GbfsGeofencingZoneMapper
   }
 
   @Override
-  protected boolean ruleBansDropOff(GBFSRule rule) {
-    return !rule.getRideAllowed();
+  protected @Nullable Boolean ruleBansDropOff(GBFSRule rule) {
+    Boolean val = rule.getRideAllowed();
+    return val == null ? null : !val;
   }
 
   @Override
-  protected boolean ruleBansPassThrough(GBFSRule rule) {
-    return !rule.getRideThroughAllowed();
+  protected @Nullable Boolean ruleBansPassThrough(GBFSRule rule) {
+    Boolean val = rule.getRideThroughAllowed();
+    return val == null ? null : !val;
   }
 
   @Override
-  protected boolean ruleBansRideStart(GBFSRule rule) {
+  protected @Nullable Boolean ruleBansRideStart(GBFSRule rule) {
     // v2 ride_allowed covers both start and end
-    return !rule.getRideAllowed();
+    Boolean val = rule.getRideAllowed();
+    return val == null ? null : !val;
   }
 
   @Override

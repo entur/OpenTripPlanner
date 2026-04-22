@@ -480,44 +480,29 @@ public class State implements AStarState<State, Edge, Vertex>, Cloneable {
   }
 
   /**
-   * Whether drop-off is banned by the governing geofencing zone for the state's committed network.
-   * Returns false if no network is committed (generic state) or no zones match.
+   * Whether drop-off is banned by the current geofencing zones for the state's committed network.
+   * Uses per-field precedence: the highest-priority zone that specifies this field wins.
+   * Returns false if no network is committed (generic state) or no zone specifies the field.
    */
   public boolean isDropOffBannedByCurrentZones() {
-    var zone = getGoverningZone();
-    return zone != null && zone.dropOffBanned();
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      stateData.vehicleRentalNetwork,
+      GeofencingZone::dropOffBanned
+    );
   }
 
   /**
-   * Whether traversal is banned by the governing geofencing zone for the state's committed network.
-   * Returns false if no network is committed (generic state) or no zones match.
+   * Whether traversal is banned by the current geofencing zones for the state's committed network.
+   * Uses per-field precedence: the highest-priority zone that specifies this field wins.
+   * Returns false if no network is committed (generic state) or no zone specifies the field.
    */
   public boolean isTraversalBannedByCurrentZones() {
-    var zone = getGoverningZone();
-    return zone != null && zone.traversalBanned();
-  }
-
-  /**
-   * Returns the highest-priority (lowest priority value) restricted geofencing zone matching the
-   * state's committed network, or null if no network is committed or no restricted zones match.
-   * Business areas are excluded — they enforce "can't leave" via BusinessAreaBorder, not
-   * restriction overrides inside the area.
-   */
-  @Nullable
-  private GeofencingZone getGoverningZone() {
-    if (stateData.currentGeofencingZones.isEmpty() || stateData.vehicleRentalNetwork == null) {
-      return null;
-    }
-    String network = stateData.vehicleRentalNetwork;
-    GeofencingZone best = null;
-    for (var zone : stateData.currentGeofencingZones) {
-      if (zone.id().getFeedId().equals(network) && zone.hasRestriction()) {
-        if (best == null || zone.priority() < best.priority()) {
-          best = zone;
-        }
-      }
-    }
-    return best;
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      stateData.vehicleRentalNetwork,
+      GeofencingZone::traversalBanned
+    );
   }
 
   /**
