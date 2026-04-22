@@ -290,13 +290,10 @@ Configure the SIRI-ET updater to receive trip updates:
 Represents a driver's journey offering carpool seats:
 
 - **id**: Unique trip identifier
-- **boardingArea**: Start zone for driver journey
-- **alightingArea**: End zone for driver journey
-- **startTime**: When driver departs
-- **endTime**: When driver arrives (includes deviation budget)
-- **deviationBudget**: Extra time driver is willing to spend for passengers
+- **startTime**: When the driver departs
+- **endTime**: When the driver arrives
 - **totalCapacity**: Number of seats in the car, including the driver seat
-- **stops**: Ordered list of waypoints (includes booked passenger stops)
+- **stops**: Ordered list of waypoints; the first stop is the origin, the last is the destination, and booked passenger stops are inserted in between
 - **provider**: Source system identifier
 
 ### CarpoolStop
@@ -304,8 +301,12 @@ Represents a driver's journey offering carpool seats:
 Waypoint along a carpool route:
 
 - **coordinate**: Geographic location
-- **sequenceNumber**: Order in route (0-indexed)
-- **estimatedArrivalTime**: When driver expects to arrive
+- **aimedArrivalTime**: Planned arrival time (null for the origin stop)
+- **expectedArrivalTime**: Currently expected arrival time, updated via real-time (null for the origin stop)
+- **latestExpectedArrivalTime**: Latest arrival time the driver commits to (null if not provided); used to derive `deviationBudget`
+- **aimedDepartureTime**: Planned departure time (null for the destination stop)
+- **expectedDepartureTime**: Currently expected departure time (null for the destination stop)
+- **deviationBudget**: Extra time the driver is willing to spend on deviations before reaching this stop
 - **onboardCount**: Number of passengers onboard (including the driver) when departing this stop
 
 ### InsertionPosition
@@ -320,12 +321,12 @@ Represents a viable pickup/dropoff position pair:
 Result of finding optimal passenger insertion:
 
 - **trip**: The original carpool trip
-- **pickupPosition**: Where to insert passenger pickup (index)
-- **dropoffPosition**: Where to insert passenger dropoff (index)
-- **segments**: Routed path segments for modified route
-- **baselineDuration**: Original trip duration
-- **totalDuration**: Modified trip duration (with passenger)
-- **additionalDuration**: Extra time added (= totalDuration - baselineDuration)
+- **pickupPosition**: 0-based index of the passenger's pickup in the modified route
+- **dropoffPosition**: 0-based index of the passenger's dropoff in the modified route
+- **routeSegments**: Routed path segments forming the complete modified route
+- **stopDuration**: Dwell time added at each intermediate stop (from the car routing preferences' `pickupTime`)
+- **transitStop**: Passenger's access/egress stop, if any
+- **totalTripDuration**: Total trip duration including driving and stop delays, computed from `routeSegments` and `stopDuration`
 
 ## Performance Characteristics
 
