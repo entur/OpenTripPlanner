@@ -207,10 +207,6 @@ public abstract class OsmEntity {
    * Determines if a tag contains a false value. 'no', 'false', and '0' are considered false.
    */
   public boolean isTagFalse(String tag) {
-    if (tags == null) {
-      return false;
-    }
-
     return isFalse(getTag(tag));
   }
 
@@ -231,10 +227,6 @@ public abstract class OsmEntity {
    * Determines if a tag contains a true value. 'yes', 'true', and '1' are considered true.
    */
   public boolean isTagTrue(String tag) {
-    if (tags == null) {
-      return false;
-    }
-
     return isTrue(getTag(tag));
   }
 
@@ -470,7 +462,7 @@ public abstract class OsmEntity {
    * Checks if a tag contains the specified value.
    */
   public boolean isTag(String tag, String value) {
-    return tags != null && value != null && value.equals(tags.get(tag.toLowerCase()));
+    return value != null && value.equals(tags.get(tag.toLowerCase()));
   }
 
   /**
