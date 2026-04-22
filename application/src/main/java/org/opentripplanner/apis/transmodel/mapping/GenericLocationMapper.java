@@ -30,6 +30,14 @@ class GenericLocationMapper {
     String name = (String) m.get("name");
     name = name == null ? "" : name;
 
-    return new GenericLocation(name, stopId, lat, lon);
+    if (stopId != null && lat != null && lon != null) {
+      return GenericLocation.fromStopIdWithFallback(stopId, lat, lon, name);
+    } else if (stopId != null) {
+      return GenericLocation.fromStopId(stopId, name);
+    } else if (lat != null && lon != null) {
+      return GenericLocation.fromCoordinate(lat, lon, name);
+    } else {
+      return GenericLocation.fromUnspecified(name);
+    }
   }
 }

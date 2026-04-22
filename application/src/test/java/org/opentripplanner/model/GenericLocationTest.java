@@ -15,16 +15,21 @@ class GenericLocationTest {
   private static final FeedScopedId STOP_ID = new FeedScopedId("F", "Stop:1");
   private static final double LATITUDE = 20.0;
   private static final double LONGITUDE = 30.0;
-  private final GenericLocation subject = new GenericLocation(LABEL, STOP_ID, LATITUDE, LONGITUDE);
+  private final GenericLocation subject = GenericLocation.fromStopIdWithFallback(
+    STOP_ID,
+    LATITUDE,
+    LONGITUDE,
+    LABEL
+  );
 
   @Test
   void fromStopId() {
-    assertEquals(STOP_ID, subject.stopId);
+    assertEquals(STOP_ID, subject.stopId());
   }
 
   @Test
   void getCoordinate() {
-    assertEquals(STOP_ID, subject.stopId);
+    assertEquals(STOP_ID, subject.stopId());
   }
 
   @Test
@@ -35,7 +40,7 @@ class GenericLocationTest {
 
   @Test
   void testEquals() {
-    var copy = new GenericLocation(LABEL, STOP_ID, LATITUDE, LONGITUDE);
+    var copy = GenericLocation.fromStopIdWithFallback(STOP_ID, LATITUDE, LONGITUDE, LABEL);
     AssertEqualsAndHashCode.verify(subject).sameAs(copy).differentFrom(UNKNOWN);
   }
 

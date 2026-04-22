@@ -262,7 +262,7 @@ public class LegacyRouteRequestMapper {
     String address = (String) m.get("address");
 
     if (address != null) {
-      return new GenericLocation(address, null, lat, lng);
+      return GenericLocation.fromCoordinate(lat, lng, address);
     }
 
     return GenericLocation.fromCoordinate(lat, lng);

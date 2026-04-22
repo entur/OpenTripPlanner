@@ -79,7 +79,7 @@ class StreetSearchRequestMapperTest {
 
     Instant dateTime = INSTANT;
     builder.withDateTime(dateTime);
-    var from = new GenericLocation(null, id("STOP"), null, null);
+    var from = GenericLocation.fromStopId(id("STOP"));
     builder.withFrom(from);
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
     builder.withTo(to);
@@ -101,7 +101,7 @@ class StreetSearchRequestMapperTest {
   @ParameterizedTest
   @ValueSource(booleans = { true, false })
   void mapTransferRequest(boolean arriveBy) {
-    var from = new GenericLocation(null, id("STOP"), null, null);
+    var from = GenericLocation.fromStopId(id("STOP"));
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
     var builder = builder()
       .withArriveBy(arriveBy)
@@ -332,7 +332,7 @@ class StreetSearchRequestMapperTest {
     var dateTime = Instant.parse("2022-11-10T10:00:00Z");
     var rentalDuration = Duration.ofHours(2);
     builder.withDateTime(dateTime);
-    var from = new GenericLocation(null, FeedScopedIdForTestFactory.id("STOP"), null, null);
+    var from = GenericLocation.fromStopId(FeedScopedIdForTestFactory.id("STOP"));
     builder.withFrom(from);
     var to = GenericLocation.fromCoordinate(60.0, 20.0);
     builder.withTo(to);

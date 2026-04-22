@@ -4,6 +4,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
 
@@ -16,31 +17,23 @@ public class GenericLocation {
 
   public static final GenericLocation UNKNOWN = new GenericLocation(null, null, null, null);
 
-  /**
-   * A label for the place, if provided. This is pass-through information and does not affect
-   * routing in any way.
-   */
   @Nullable
-  public final String label;
+  private final String label;
 
-  /**
-   * Refers to a specific element in the OTP model. This can currently be a regular stop, area stop,
-   * group stop, station, multi-modal station or group of stations.
-   */
   @Nullable
-  public final FeedScopedId stopId;
+  private final FeedScopedId stopId;
 
   /**
    * Coordinates of the location. These can be used by themselves or as a fallback if placeId is not
    * found.
    */
   @Nullable
-  public final Double lat;
+  private final Double lat;
 
   @Nullable
-  public final Double lng;
+  private final Double lng;
 
-  public GenericLocation(
+  private GenericLocation(
     @Nullable String label,
     @Nullable FeedScopedId stopId,
     @Nullable Double lat,
@@ -56,8 +49,22 @@ public class GenericLocation {
     return new GenericLocation(null, id, null, null);
   }
 
+  public static GenericLocation fromStopId(FeedScopedId id, @Nullable String label) {
+    return new GenericLocation(label, id, null, null);
+  }
+
   public static GenericLocation fromStopId(String name, String feedId, String stopId) {
     return new GenericLocation(name, new FeedScopedId(feedId, stopId), null, null);
+  }
+
+  /// Create a GenericLocation of a stop id with fallback coordinates if the id is not found.
+  public static GenericLocation fromStopIdWithFallback(
+    FeedScopedId id,
+    double lat,
+    double lng,
+    @Nullable String label
+  ) {
+    return new GenericLocation(label, id, lat, lng);
   }
 
   /**
@@ -66,6 +73,14 @@ public class GenericLocation {
    */
   public static GenericLocation fromCoordinate(double lat, double lng) {
     return new GenericLocation(null, null, lat, lng);
+  }
+
+  public static GenericLocation fromCoordinate(double lat, double lng, @Nullable String label) {
+    return new GenericLocation(label, null, lat, lng);
+  }
+
+  public static GenericLocation fromUnspecified(@Nullable String label) {
+    return new GenericLocation(label, null, null, null);
   }
 
   /**
@@ -77,6 +92,32 @@ public class GenericLocation {
       return null;
     }
     return new Coordinate(this.lng, this.lat);
+  }
+
+  @Nullable
+  public WgsCoordinate wgsCoordinate() {
+    if (lat == null || lng == null) {
+      return null;
+    }
+    return new WgsCoordinate(lat, lng);
+  }
+
+  /**
+   * Refers to a specific element in the OTP model. This can currently be a regular stop, area stop,
+   * group stop, station, multi-modal station or group of stations.
+   */
+  @Nullable
+  public FeedScopedId stopId() {
+    return stopId;
+  }
+
+  /**
+   * A label for the place, if provided. This is pass-through information and does not affect
+   * routing in any way.
+   */
+  @Nullable
+  public String label() {
+    return label;
   }
 
   public boolean isSpecified() {
