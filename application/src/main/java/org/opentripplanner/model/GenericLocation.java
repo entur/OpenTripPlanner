@@ -15,7 +15,7 @@ import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
  */
 public class GenericLocation {
 
-  public static final GenericLocation UNKNOWN = new GenericLocation(null, null, null, null);
+  public static final GenericLocation UNKNOWN = new GenericLocation(null, null, null);
 
   @Nullable
   private final String label;
@@ -28,33 +28,28 @@ public class GenericLocation {
    * found.
    */
   @Nullable
-  private final Double lat;
-
-  @Nullable
-  private final Double lng;
+  WgsCoordinate coordinate;
 
   private GenericLocation(
     @Nullable String label,
     @Nullable FeedScopedId stopId,
-    @Nullable Double lat,
-    @Nullable Double lng
+    @Nullable WgsCoordinate coordinate
   ) {
     this.label = label;
     this.stopId = stopId;
-    this.lat = lat;
-    this.lng = lng;
+    this.coordinate = coordinate;
   }
 
   public static GenericLocation fromStopId(FeedScopedId id) {
-    return new GenericLocation(null, id, null, null);
+    return new GenericLocation(null, id, null);
   }
 
   public static GenericLocation fromStopId(FeedScopedId id, @Nullable String label) {
-    return new GenericLocation(label, id, null, null);
+    return new GenericLocation(label, id, null);
   }
 
   public static GenericLocation fromStopId(String name, String feedId, String stopId) {
-    return new GenericLocation(name, new FeedScopedId(feedId, stopId), null, null);
+    return new GenericLocation(name, new FeedScopedId(feedId, stopId), null);
   }
 
   /// Create a GenericLocation of a stop id with fallback coordinates if the id is not found.
@@ -64,7 +59,7 @@ public class GenericLocation {
     double lng,
     @Nullable String label
   ) {
-    return new GenericLocation(label, id, lat, lng);
+    return new GenericLocation(label, id, new WgsCoordinate(lat, lng));
   }
 
   /**
@@ -72,15 +67,15 @@ public class GenericLocation {
    * inserting {@code null} values.
    */
   public static GenericLocation fromCoordinate(double lat, double lng) {
-    return new GenericLocation(null, null, lat, lng);
+    return new GenericLocation(null, null, new WgsCoordinate(lat, lng));
   }
 
   public static GenericLocation fromCoordinate(double lat, double lng, @Nullable String label) {
-    return new GenericLocation(label, null, lat, lng);
+    return new GenericLocation(label, null, new WgsCoordinate(lat, lng));
   }
 
   public static GenericLocation fromUnspecified(@Nullable String label) {
-    return new GenericLocation(label, null, null, null);
+    return new GenericLocation(label, null, null);
   }
 
   /**
@@ -88,18 +83,15 @@ public class GenericLocation {
    */
   @Nullable
   public Coordinate getCoordinate() {
-    if (this.lat == null || this.lng == null) {
+    if (this.coordinate == null) {
       return null;
     }
-    return new Coordinate(this.lng, this.lat);
+    return coordinate.asJtsCoordinate();
   }
 
   @Nullable
   public WgsCoordinate wgsCoordinate() {
-    if (lat == null || lng == null) {
-      return null;
-    }
-    return new WgsCoordinate(lat, lng);
+    return coordinate;
   }
 
   /**
@@ -121,7 +113,7 @@ public class GenericLocation {
   }
 
   public boolean isSpecified() {
-    return stopId != null || (lat != null && lng != null);
+    return stopId != null || coordinate != null;
   }
 
   @Override
@@ -133,14 +125,13 @@ public class GenericLocation {
     return (
       Objects.equals(label, that.label) &&
       Objects.equals(stopId, that.stopId) &&
-      Objects.equals(lat, that.lat) &&
-      Objects.equals(lng, that.lng)
+      Objects.equals(coordinate, that.coordinate)
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(label, stopId, lat, lng);
+    return Objects.hash(label, stopId, coordinate);
   }
 
   @Override
@@ -154,7 +145,9 @@ public class GenericLocation {
       buf.addText(label).addText(" ");
     }
     buf.addObj(stopId);
-    buf.addCoordinate(lat, lng);
+    if (coordinate != null) {
+      buf.addCoordinate(coordinate.latitude(), coordinate.longitude());
+    }
     return buf.toString();
   }
 }

@@ -26,15 +26,15 @@ public class LocationStringParserTest {
     assertNull(loc.stopId());
     assertEquals(new Coordinate(2.5, 1.0), loc.getCoordinate());
 
-    loc = LocationStringParser.fromOldStyleString("Label Label::-15.0,  200");
+    loc = LocationStringParser.fromOldStyleString("Label Label::-15.0,  170");
     assertEquals("Label Label", loc.label());
     assertNull(loc.stopId());
-    assertEquals(new Coordinate(200, -15), loc.getCoordinate());
+    assertEquals(new Coordinate(170, -15), loc.getCoordinate());
 
-    loc = LocationStringParser.fromOldStyleString("A Label::122,-22.3");
+    loc = LocationStringParser.fromOldStyleString("A Label::89,-22.3");
     assertEquals("A Label", loc.label());
     assertNull(loc.stopId());
-    assertEquals(new Coordinate(-22.3, 122), loc.getCoordinate());
+    assertEquals(new Coordinate(-22.3, 89), loc.getCoordinate());
   }
 
   @Test
@@ -57,15 +57,15 @@ public class LocationStringParserTest {
     assertNull(loc.stopId());
     assertEquals(new Coordinate(2.5, 1.0), loc.getCoordinate());
 
-    loc = LocationStringParser.fromOldStyleString("    -15.0,  200");
+    loc = LocationStringParser.fromOldStyleString("    -15.0,  170");
     assertNull(loc.label());
     assertNull(loc.stopId());
-    assertEquals(new Coordinate(200, -15), loc.getCoordinate());
+    assertEquals(new Coordinate(170, -15), loc.getCoordinate());
 
-    loc = LocationStringParser.fromOldStyleString("122,-22.3   ");
+    loc = LocationStringParser.fromOldStyleString("89,-22.3   ");
     assertNull(loc.label());
     assertNull(loc.stopId());
-    assertEquals(new Coordinate(-22.3, 122), loc.getCoordinate());
+    assertEquals(new Coordinate(-22.3, 89), loc.getCoordinate());
   }
 
   @Test
