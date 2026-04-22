@@ -45,11 +45,11 @@ public abstract class GbfsGeofencingZoneMapper<F, R> {
 
   protected abstract List<R> featureRules(F feature);
 
-  protected abstract boolean ruleBansDropOff(R rule);
+  protected abstract @Nullable Boolean ruleBansDropOff(R rule);
 
-  protected abstract boolean ruleBansPassThrough(R rule);
+  protected abstract @Nullable Boolean ruleBansPassThrough(R rule);
 
-  protected abstract boolean ruleBansRideStart(R rule);
+  protected abstract @Nullable Boolean ruleBansRideStart(R rule);
 
   protected abstract @Nullable List<String> ruleVehicleTypeIds(R rule);
 
@@ -95,13 +95,16 @@ public abstract class GbfsGeofencingZoneMapper<F, R> {
       var rule = scopes.get(i).getValue();
       String id = scopes.size() > 1 ? baseId + "-scope" + i : baseId;
 
-      boolean dropOffBanned = ruleBansDropOff(rule);
-      boolean traversalBanned = ruleBansPassThrough(rule);
-      boolean rideStartBanned = ruleBansRideStart(rule);
+      Boolean dropOffBanned = ruleBansDropOff(rule);
+      Boolean traversalBanned = ruleBansPassThrough(rule);
+      Boolean rideStartBanned = ruleBansRideStart(rule);
 
-      // A zone is a business area when all ride/traversal booleans are permissive.
-      // Fields like maximum_speed_kph, station_parking, vehicle_type_ids are orthogonal.
-      boolean businessArea = !dropOffBanned && !traversalBanned && !rideStartBanned;
+      // A zone is a business area when all ride/traversal booleans are permissive
+      // (null or false). Fields like maximum_speed_kph, station_parking are orthogonal.
+      boolean businessArea =
+        !Boolean.TRUE.equals(dropOffBanned) &&
+        !Boolean.TRUE.equals(traversalBanned) &&
+        !Boolean.TRUE.equals(rideStartBanned);
 
       zones.add(
         new GeofencingZone(

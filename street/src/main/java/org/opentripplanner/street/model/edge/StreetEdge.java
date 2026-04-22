@@ -938,7 +938,7 @@ public class StreetEdge
     for (var zone : traversedState.getCurrentGeofencingZones()) {
       if (
         !s0.getCurrentGeofencingZones().contains(zone) &&
-        (zone.dropOffBanned() || zone.traversalBanned())
+        (Boolean.TRUE.equals(zone.dropOffBanned()) || Boolean.TRUE.equals(zone.traversalBanned()))
       ) {
         if (network == null || zone.id().getFeedId().equals(network)) {
           return true;
@@ -958,7 +958,7 @@ public class StreetEdge
     }
     String network = s0.getVehicleRentalNetwork();
     for (var zone : traversedState.getCurrentGeofencingZones()) {
-      if (!s0.getCurrentGeofencingZones().contains(zone) && zone.traversalBanned()) {
+      if (!s0.getCurrentGeofencingZones().contains(zone) && Boolean.TRUE.equals(zone.traversalBanned())) {
         if (network == null || zone.id().getFeedId().equals(network)) {
           return true;
         }
@@ -980,7 +980,7 @@ public class StreetEdge
     for (var zone : traversedState.getCurrentGeofencingZones()) {
       if (!s0.getCurrentGeofencingZones().contains(zone)) {
         String network = zone.id().getFeedId();
-        if (!s0.getCommittedNetworks().contains(network) && !zone.traversalBanned()) {
+        if (!s0.getCommittedNetworks().contains(network) && !Boolean.TRUE.equals(zone.traversalBanned())) {
           return true;
         }
       }
@@ -998,7 +998,7 @@ public class StreetEdge
     // Collect new zones entered
     var newZoneNetworks = new HashSet<String>();
     for (var zone : genericState.getCurrentGeofencingZones()) {
-      if (!s0.getCurrentGeofencingZones().contains(zone) && !zone.traversalBanned()) {
+      if (!s0.getCurrentGeofencingZones().contains(zone) && !Boolean.TRUE.equals(zone.traversalBanned())) {
         String network = zone.id().getFeedId();
         if (!s0.getCommittedNetworks().contains(network)) {
           newZoneNetworks.add(network);
