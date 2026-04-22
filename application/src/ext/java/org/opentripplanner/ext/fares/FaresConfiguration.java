@@ -58,7 +58,7 @@ public class FaresConfiguration {
     }
 
     if (type == null) {
-      type = "default";
+      type = "off";
     }
 
     FareServiceFactory factory = createFactory(type);
