@@ -38,6 +38,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       null,
       false,
+      true,
       false,
       RentalPickupType.ALL
     );
@@ -134,6 +135,7 @@ class GbfsFeedMapperTest {
         HttpHeaders.empty(),
         null,
         true,
+        true,
         false,
         RentalPickupType.ALL
       ),
@@ -152,6 +154,7 @@ class GbfsFeedMapperTest {
         false,
         HttpHeaders.empty(),
         null,
+        true,
         true,
         false,
         RentalPickupType.ALL
@@ -175,10 +178,10 @@ class GbfsFeedMapperTest {
       .findFirst()
       .get();
 
-    assertTrue(frognerPark.dropOffBanned());
-    assertFalse(frognerPark.traversalBanned());
+    assertEquals(true, frognerPark.dropOffBanned());
+    assertEquals(false, frognerPark.traversalBanned());
     // v2 ride_allowed covers both start and end
-    assertTrue(frognerPark.rideStartBanned());
+    assertEquals(true, frognerPark.rideStartBanned());
     assertFalse(frognerPark.isBusinessArea());
     assertEquals(
       List.of("YTI:VehicleType:escooter_oslo", "YTI:VehicleType:ebicycle_oslo"),
@@ -193,9 +196,9 @@ class GbfsFeedMapperTest {
     var osloZone = businessAreas.get(0);
     assertEquals("OSLO Summer 2021", osloZone.name().toString());
     assertEquals("tieroslo:4640262c", osloZone.id().toString());
-    assertFalse(osloZone.dropOffBanned());
-    assertFalse(osloZone.traversalBanned());
-    assertFalse(osloZone.rideStartBanned());
+    assertEquals(false, osloZone.dropOffBanned());
+    assertEquals(false, osloZone.traversalBanned());
+    assertEquals(false, osloZone.rideStartBanned());
     assertTrue(osloZone.isBusinessArea());
     assertEquals(
       List.of("YTI:VehicleType:escooter_oslo", "YTI:VehicleType:ebicycle_oslo"),
@@ -217,6 +220,7 @@ class GbfsFeedMapperTest {
         false,
         HttpHeaders.empty(),
         null,
+        true,
         true,
         false,
         RentalPickupType.ALL
@@ -257,6 +261,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       network,
       false,
+      true,
       true,
       RentalPickupType.ALL
     );
@@ -319,6 +324,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       null,
       false,
+      true,
       false,
       RentalPickupType.ALL
     );
@@ -349,6 +355,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       null,
       false,
+      true,
       false,
       RentalPickupType.ALL
     );
