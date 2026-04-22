@@ -171,7 +171,21 @@ data:
             "ALLOWED" : 75,
             "RECOMMENDED" : 30,
             "PREFERRED" : 0
-          }
+          },
+          "transferCacheMaxSize": 75,
+          "transferCacheRequests": [
+            { "modes": "WALK",     "walk":    { "speed": 1.38 } },
+            { "modes": "WALK",     "walk":    { "speed": 1.39 } },
+            { "modes": "WALK",     "walk":    { "speed": 1.3  } },
+            { "modes": "BIKE",     "bicycle": { "speed": 8.0  } },
+            { "modes": "WALK",     "walk":    { "speed": 1.31 } },
+            { "modes": "FLEXIBLE", "walk":    { "speed": 1.3  } },
+            { "modes": "CAR",      "walk":    { "speed": 1.3  } },
+            { "modes": "WALK",     "walk":    { "speed": 1.94 } },
+            { "modes": "FLEXIBLE", "walk":    { "speed": 1.31 } },
+            { "modes": "WALK",     "walk":    { "speed": 0.69 } },
+            { "modes": "WALK",     "walk":    { "speed": 1.3, "reluctance": 12.0 } }
+          ]
         },
         "flex": {
           "maxTransferDuration" : "5m",
