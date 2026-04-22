@@ -4508,13 +4508,13 @@ input InputUnpreferred {
 """
 A generalized linear cost function that can be applied to a cost value.
 The coefficient is used to scale the input Cost linearly and the constant is used
-to add a fixed offset. If we assume a cost t, then f(t) = coefficient * t + constant.
+to add a fixed offset. If we assume a cost c, then f(c) = coefficient * c + constant.
 """
 input LinearCostFunctionInput {
   "The coefficient that scales the Cost input linearly."
-  coefficient: Float
-  "The 0th degree constant of the function as a Cost, must be a positive integer"
-  constant: Cost
+  coefficient: Float!
+  "The 0th degree constant of the function as a Cost, must be a non-negative integer"
+  constant: Cost!
 }
 
 "Filters an entity by a date range."
