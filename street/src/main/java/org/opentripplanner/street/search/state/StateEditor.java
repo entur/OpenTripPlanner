@@ -177,7 +177,7 @@ public class StateEditor {
     if (milliseconds < 0) {
       LOG.warn(
         "A state's time is being incremented by a negative amount while traversing edge " +
-          backState
+          backEdge
       );
       defectiveTraversal = true;
       return;
