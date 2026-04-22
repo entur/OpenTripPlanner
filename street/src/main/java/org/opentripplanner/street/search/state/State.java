@@ -194,18 +194,6 @@ public final class State implements AStarState<State, Edge, Vertex> {
     return new StateEditor(this, e);
   }
 
-  /**
-   * Create a state editor that stays at the current vertex without traversing an edge.
-   * Unlike {@link #edit(Edge)} with a null edge, this preserves the backState chain
-   * for correct path reconstruction. Used for in-place state transitions like vehicle
-   * drop-off at a geofencing zone boundary.
-   */
-  public StateEditor editInPlace() {
-    var editor = new StateEditor(this, null);
-    editor.resetBackState(this);
-    return editor;
-  }
-
   /*
    * FIELD ACCESSOR METHODS States are immutable, so they have only get methods. The corresponding
    * set methods are in StateEditor.

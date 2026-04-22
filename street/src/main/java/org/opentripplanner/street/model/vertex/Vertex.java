@@ -259,6 +259,30 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     return businessAreaBorder != null && businessAreaBorder.traversalBanned(currentState);
   }
 
+  /**
+   * Whether this vertex is on the boundary of a no-traversal geofencing zone for the
+   * vehicle network the given state is currently renting. Used as a forward-only pre-traversal
+   * check to stop the rider one edge before the zone boundary.
+   */
+  public boolean isGeofencingNoTraversalBoundary(State currentState) {
+    if (geofencingBoundaries.isEmpty() || !currentState.isRentingVehicle()) {
+      return false;
+    }
+    String network = currentState.getVehicleRentalNetwork();
+    if (network == null) {
+      return false;
+    }
+    for (var boundary : geofencingBoundaries) {
+      if (
+        Boolean.TRUE.equals(boundary.zone().traversalBanned()) &&
+        boundary.zone().id().getFeedId().equals(network)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void setBusinessAreaBorder(BusinessAreaBorder border) {
     this.businessAreaBorder = border;
   }
