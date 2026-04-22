@@ -2310,6 +2310,7 @@ public class GraphQLTypes {
 
     private GraphQLTransitModePreferenceCostInput cost;
     private GraphQLTransitMode mode;
+    private GraphQLReplacementFilterInput replacement;
 
     public GraphQLPlanTransitModePreferenceInput(Map<String, Object> args) {
       if (args != null) {
@@ -2321,6 +2322,9 @@ public class GraphQLTypes {
         } else if (args.get("mode") != null) {
           this.mode = GraphQLTransitMode.valueOf((String) args.get("mode"));
         }
+        this.replacement = new GraphQLReplacementFilterInput(
+          (Map<String, Object>) args.get("replacement")
+        );
       }
     }
 
@@ -2332,12 +2336,20 @@ public class GraphQLTypes {
       return this.mode;
     }
 
+    public GraphQLReplacementFilterInput getGraphQLReplacement() {
+      return this.replacement;
+    }
+
     public void setGraphQLCost(GraphQLTransitModePreferenceCostInput cost) {
       this.cost = cost;
     }
 
     public void setGraphQLMode(GraphQLTransitMode mode) {
       this.mode = mode;
+    }
+
+    public void setGraphQLReplacement(GraphQLReplacementFilterInput replacement) {
+      this.replacement = replacement;
     }
   }
 
@@ -4625,6 +4637,38 @@ public class GraphQLTypes {
     UTURN_RIGHT,
   }
 
+  public static class GraphQLReplacementFilterInput {
+
+    private GraphQLReplacementRequirement requirement;
+
+    public GraphQLReplacementFilterInput(Map<String, Object> args) {
+      if (args != null) {
+        if (args.get("requirement") instanceof GraphQLReplacementRequirement) {
+          this.requirement = (GraphQLReplacementRequirement) args.get("requirement");
+        } else if (args.get("requirement") != null) {
+          this.requirement = GraphQLReplacementRequirement.valueOf(
+            (String) args.get("requirement")
+          );
+        }
+      }
+    }
+
+    public GraphQLReplacementRequirement getGraphQLRequirement() {
+      return this.requirement;
+    }
+
+    public void setGraphQLRequirement(GraphQLReplacementRequirement requirement) {
+      this.requirement = requirement;
+    }
+  }
+
+  /** How does a trip's replacement feature affect whether a it is considered for use in routing? */
+  public enum GraphQLReplacementRequirement {
+    FEATURE_IGNORED,
+    FORBIDDEN,
+    REQUIRED,
+  }
+
   public static class GraphQLRouteAlertsArgs {
 
     private List<GraphQLRouteAlertType> types;
@@ -4706,6 +4750,7 @@ public class GraphQLTypes {
 
   public enum GraphQLRoutingErrorCode {
     LOCATION_NOT_FOUND,
+    NO_DIRECT_MODE_CONNECTION,
     NO_STOPS_IN_RANGE,
     NO_TRANSIT_CONNECTION,
     NO_TRANSIT_CONNECTION_IN_SEARCH_WINDOW,

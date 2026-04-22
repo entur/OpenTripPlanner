@@ -49,15 +49,28 @@ public final class FareTransferRule implements Serializable {
     return fareProducts.isEmpty() || fareProducts.stream().allMatch(p -> p.price().isZero());
   }
 
-  public boolean containsWildCard() {
-    return fromLegGroup == null || toLegGroup == null;
-  }
-
   /**
    * Returns true if there is no limit on the number of transfers or if limit unknown.
    */
   public boolean unlimitedTransfers() {
     return transferCount == UNLIMITED_TRANSFERS;
+  }
+
+  /**
+   * Does it limit the number of transfers?
+   */
+  public boolean limitedTransfers() {
+    return !unlimitedTransfers();
+  }
+
+  /**
+   * Does the rule allow a given number of transfers?
+   */
+  public boolean allowsNumberOfTransfers(int transferCount) {
+    if (unlimitedTransfers()) {
+      return true;
+    }
+    return this.transferCount >= transferCount;
   }
 
   public FeedScopedId id() {

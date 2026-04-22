@@ -1,8 +1,8 @@
 package org.opentripplanner.ext.stopconsolidation.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.ext.fares.model.FareModelForTest.ANY_FARE_OFFER;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -25,15 +25,21 @@ class ConsolidatedStopLegBuilderTest implements PlanTestConstants {
   private static final Set<TransitAlert> ALERTS = Set.of(
     TransitAlert.of(id("alert")).withDescriptionText(I18NString.of("alert")).build()
   );
-  private static final TripPattern PATTERN = TimetableRepositoryForTest.of()
-    .pattern(TransitMode.BUS)
+  private static final TimetableRepositoryForTest MODEL = TimetableRepositoryForTest.of();
+  private static final TripPattern PATTERN = MODEL.pattern(TransitMode.BUS)
+    .withStopPattern(
+      TimetableRepositoryForTest.stopPattern(
+        MODEL.stop("S0", 60.0, 10.0).build(),
+        MODEL.stop("S1", 60.0, 10.01).build(),
+        MODEL.stop("S2", 60.0, 10.02).build()
+      )
+    )
     .build();
   private static final ScheduledTransitLeg SCHEDULED_TRANSIT_LEG =
     new ScheduledTransitLegBuilder<>()
       .withZoneId(ZoneIds.BERLIN)
       .withTripPattern(PATTERN)
       .withBoardStopIndexInPattern(0)
-      .withDistanceMeters(1000)
       .withAlightStopIndexInPattern(1)
       .withStartTime(TIME)
       .withEndTime(TIME)

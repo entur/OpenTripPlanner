@@ -3,7 +3,7 @@ package org.opentripplanner.ext.ojp.service;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import java.util.List;
@@ -130,6 +130,29 @@ class CallAtStopServiceTest {
     assertThat(result).hasSize(1);
     var stopId = result.getFirst().tripTimeOnDate().getStop().getId();
     assertEquals(STOP_A.getId(), stopId);
+  }
+
+  @Test
+  void numberOfDeparturesLimitsResultsForStation() {
+    var stopD = envBuilder.stopAtStation("D", STATION_OMEGA_ID);
+    var trip2 = TripInput.of("t2")
+      .addStop(stopD, "12:05", "12:06")
+      .addStop(STOP_C, "12:15", "12:16");
+
+    var env = envBuilder.addTrip(TRIP_INPUT).addTrip(trip2).build();
+    var service = new CallAtStopService(
+      env.transitService(),
+      new DirectGraphFinder(e -> List.of())
+    );
+
+    // Station OMEGA has two child stops (A, D), each with a departure.
+    // Requesting 1 departure should return exactly 1, not 2.
+    var result1 = service.findCallsAtStop(id(STATION_OMEGA_ID), params(env, 1));
+    assertThat(result1).hasSize(1);
+
+    // Requesting 2 should return both
+    var result2 = service.findCallsAtStop(id(STATION_OMEGA_ID), params(env, 2));
+    assertThat(result2).hasSize(2);
   }
 
   @Test

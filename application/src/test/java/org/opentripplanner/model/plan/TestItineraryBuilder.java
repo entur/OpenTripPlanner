@@ -1,10 +1,10 @@
 package org.opentripplanner.model.plan;
 
 import static java.time.ZoneOffset.UTC;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.street.search.TraverseMode.BICYCLE;
 import static org.opentripplanner.street.search.TraverseMode.CAR;
 import static org.opentripplanner.street.search.TraverseMode.WALK;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.route;
 
 import java.time.Duration;
@@ -555,8 +555,6 @@ public class TestItineraryBuilder implements PlanTestConstants {
 
     ScheduledTransitLeg leg;
 
-    var distance = speed(trip.getMode()) * (end - start);
-
     if (headwaySecs != null) {
       leg = new FrequencyTransitLegBuilder()
         .withTripTimes(tripTimes)
@@ -569,7 +567,6 @@ public class TestItineraryBuilder implements PlanTestConstants {
         .withZoneId(UTC)
         .withTransferFromPreviousLeg(transferFromPreviousLeg)
         .withGeneralizedCost(legCost)
-        .withDistanceMeters(distance)
         .withFrequencyHeadwayInSeconds(headwaySecs)
         .withToViaLocationType(to.viaLocationType)
         .build();
@@ -585,7 +582,6 @@ public class TestItineraryBuilder implements PlanTestConstants {
         .withZoneId(UTC)
         .withTransferFromPreviousLeg(transferFromPreviousLeg)
         .withGeneralizedCost(legCost)
-        .withDistanceMeters(distance)
         .withToViaLocationType(to.viaLocationType)
         .build();
     }

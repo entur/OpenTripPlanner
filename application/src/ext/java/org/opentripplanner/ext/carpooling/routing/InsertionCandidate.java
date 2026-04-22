@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -13,9 +14,13 @@ import org.opentripplanner.street.search.state.State;
  * <p>
  * Contains all information needed to construct an itinerary, including:
  * - The original trip
- * - Insertion positions (where pickup and dropoff occur in the route)
+ * - Insertion positions (where pickup and dropoff occur in the modified route)
  * - Route segments (all GraphPaths forming the complete modified route)
  * - Timing information (baseline and total duration, deviation)
+ * <p>
+ * {@code pickupPosition} and {@code dropoffPosition} are 0-based indices of the passenger's
+ * pickup and dropoff stops in the modified route (the route after the passenger's stops have
+ * been inserted into the carpool trip).
  */
 public record InsertionCandidate(
   CarpoolTrip trip,
@@ -23,11 +28,11 @@ public record InsertionCandidate(
   int dropoffPosition,
   List<GraphPath<State, Edge, Vertex>> routeSegments,
   Duration durationBetweenOriginAndDestination,
-  Duration totalDuration
+  Duration totalDuration,
+  NearbyStop transitStop
 ) {
   /**
-   * Calculates the difference between the total duration when inserting this passenger,
-   * and the duration when driving directly from the start to the end of the trip.
+   * Calculates the additional duration caused by inserting this passenger.
    */
   public Duration additionalDuration() {
     return totalDuration.minus(durationBetweenOriginAndDestination);

@@ -13,6 +13,7 @@ import static org.opentripplanner.routing.api.request.preference.ItineraryFilter
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -30,7 +31,8 @@ import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitTestEnvironment;
+import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.utils.lang.Box;
 
 /**
@@ -39,12 +41,22 @@ import org.opentripplanner.utils.lang.Box;
  */
 class ItineraryListFilterChainTest implements PlanTestConstants {
 
-  private static final TimetableRepositoryForTest TEST_MODEL = TimetableRepositoryForTest.of();
-  private static final Place A = Place.forStop(TEST_MODEL.stop("A").build());
-  private static final Place B = Place.forStop(TEST_MODEL.stop("B").build());
-  private static final Place C = Place.forStop(TEST_MODEL.stop("C").build());
-  private static final Place D = Place.forStop(TEST_MODEL.stop("D").build());
-  private static final Place E = Place.forStop(TEST_MODEL.stop("E").build());
+  private static final TransitTestEnvironmentBuilder ENV_BUILDER = TransitTestEnvironment.of();
+  private static final Place A = Place.forStop(
+    ENV_BUILDER.stop("A", b -> b.withCoordinate(60.0, 10.000))
+  );
+  private static final Place B = Place.forStop(
+    ENV_BUILDER.stop("B", b -> b.withCoordinate(60.0, 10.010))
+  );
+  private static final Place C = Place.forStop(
+    ENV_BUILDER.stop("C", b -> b.withCoordinate(60.0, 10.015))
+  );
+  private static final Place D = Place.forStop(
+    ENV_BUILDER.stop("D", b -> b.withCoordinate(60.0, 10.022))
+  );
+  private static final Place E = Place.forStop(
+    ENV_BUILDER.stop("E", b -> b.withCoordinate(60.0, 10.030))
+  );
 
   private static final int I3_LATE_START_TIME = T11_33;
   private static final Duration SW_D10_m = Duration.ofSeconds(D10_m);
@@ -251,6 +263,38 @@ class ItineraryListFilterChainTest implements PlanTestConstants {
       .withRemoveTimeshiftedItinerariesWithSameRoutesAndStops(true)
       .build();
     assertEquals(toStr(List.of(i4, i1)), toStr(chain.filter(List.of(i1, i2, i3, i4, i5, i6))));
+  }
+
+  @Test
+  void departuresOnDifferentServiceDatesShouldNotBeGroupedTogether() {
+    final int TRIP_ID = 1;
+    final int D50_h = 50 * D1_h;
+    final int COST = 1000;
+
+    LocalDate date1 = TestItineraryBuilder.SERVICE_DAY;
+    LocalDate date2 = TestItineraryBuilder.SERVICE_DAY.plusDays(1);
+
+    // Same trip ID and stop positions, 50h journey, departing 24h apart on consecutive service
+    // dates. The time windows overlap (50h > 24h gap), but the filter chain should still not
+    // group these and flag any of them for deletion, because the 24h difference means they are
+    // different TripOnServiceDate. This situation commonly arises with multi-day ferry routes,
+    // such as the ones along the Norwegian cost.
+    var day1 = newItinerary(A).bus(TRIP_ID, T11_00, T11_00 + D50_h, B, date1).build(COST);
+    var day2 = newItinerary(A)
+      .bus(TRIP_ID, T11_00 + D24_h, T11_00 + D24_h + D50_h, B, date2)
+      .build(COST);
+
+    var chain = new ItineraryListFilterChainBuilder(STREET_AND_ARRIVAL_TIME)
+      .withMaxNumberOfItineraries(3)
+      .addGroupBySimilarity(
+        GroupBySimilarity.createWithMoreThanOneItineraryPerGroup(0.68, 3, true, 0.0)
+      )
+      .build();
+
+    chain.filter(List.of(day2, day1));
+
+    assertFalse(day1.isFlaggedForDeletion(), "Day-1 departure should not be filtered");
+    assertFalse(day2.isFlaggedForDeletion(), "Day-2 departure should not be filtered");
   }
 
   private ItineraryListFilterChainBuilder createBuilder(
