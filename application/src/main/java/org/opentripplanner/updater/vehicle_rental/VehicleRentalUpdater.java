@@ -10,7 +10,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
@@ -33,6 +32,7 @@ import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
+import org.opentripplanner.updater.vehicle_rental.datasources.params.GbfsVehicleRentalDataSourceParameters;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -52,6 +52,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   private final VehicleRentalDataSource source;
   private final String nameForLogging;
+  private final boolean applyBusinessAreas;
 
   private Map<StreetEdge, BusinessAreaBorder> latestBusinessAreaEdges = Map.of();
   private Map<StreetEdge, GeofencingBoundaryExtension> latestBoundaryEdges = Map.of();
@@ -78,6 +79,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       parameters.sourceParameters().network(),
       parameters.sourceParameters().url()
     );
+    this.applyBusinessAreas =
+      parameters.sourceParameters() instanceof GbfsVehicleRentalDataSourceParameters gbfs
+        ? gbfs.geofencingBusinessAreaBorders()
+        : true;
     this.unlinkedPlaceThrottle = Throttle.ofOneSecond();
 
     // Creation of network linker library will not modify the graph
@@ -219,7 +224,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         var applier = new GeofencingZoneApplier(
           graph::findEdgesAlongLineStrings,
           env -> graph.findEdges(env, Scope.PERMANENT),
-          OTPFeature.GeofencingBusinessAreaBorders.isOn()
+          applyBusinessAreas
         );
         var result = applier.applyGeofencingZones(geofencingZones);
         latestBusinessAreaEdges = result.businessAreaEdges();

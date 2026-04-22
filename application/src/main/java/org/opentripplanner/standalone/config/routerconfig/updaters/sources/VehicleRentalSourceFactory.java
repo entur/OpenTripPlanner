@@ -46,6 +46,7 @@ public class VehicleRentalSourceFactory {
         headers(),
         network(),
         geofencingZones(),
+        geofencingBusinessAreaBorders(),
         overloadingAllowed(),
         rentalPickupTypes()
       );
@@ -118,6 +119,25 @@ public class VehicleRentalSourceFactory {
         """
       )
       .asBoolean(false);
+  }
+
+  private boolean geofencingBusinessAreaBorders() {
+    return c
+      .of("geofencingBusinessAreaBorders")
+      .since(V2_3)
+      .summary(
+        "Infer an operational area from GBFS geofencing zones that have no restrictions."
+      )
+      .description(
+        """
+        When enabled, GBFS geofencing zones with no restrictions (ride_allowed, ride_end_allowed,
+        ride_start_allowed all true or absent) are interpreted as "business areas" — operational
+        boundaries that prevent rental vehicles from leaving. This is an OTP-specific inference
+        not defined in the GBFS spec. Disable to avoid inferring operational area boundaries
+        from permissive zones. Only relevant when `geofencingZones` is enabled.
+        """
+      )
+      .asBoolean(true);
   }
 
   private Set<RentalPickupType> rentalPickupTypes() {

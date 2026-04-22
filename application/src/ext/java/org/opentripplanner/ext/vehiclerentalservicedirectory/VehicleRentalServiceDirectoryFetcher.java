@@ -120,6 +120,8 @@ public class VehicleRentalServiceDirectoryFetcher {
             parameters.getHeaders(),
             networkName,
             networkParams.geofencingZones(),
+            // geofencingBusinessAreaBorders - default to true
+            true,
             // overloadingAllowed - not part of GBFS, not supported here
             false,
             // rentalPickupType not supported
