@@ -399,7 +399,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
           .withTo(to)
           .withDistanceMeters(transfer.getDistanceMeters())
           .withGeneralizedCost(toOtpDomainCost(pathLeg.c1()))
-          .withGeometry(GeometryUtils.makeLineString(transfer.getCoordinates()))
+          .withGeometry(transfer.getGeometry())
           .withWalkSteps(List.of())
           .build()
       );
@@ -499,7 +499,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
   private Itinerary mapAccessEgressPathLeg(RaptorAccessEgress accessEgress) {
     return accessEgress
       .findOriginal(RoutingAccessEgress.class)
-      .map(RoutingAccessEgress::getLastState)
+      .map(RoutingAccessEgress::getFinalState)
       .map(StreetPath::new)
       .map(path -> graphPathToItineraryMapper.generateItinerary(path, request))
       .orElseThrow();

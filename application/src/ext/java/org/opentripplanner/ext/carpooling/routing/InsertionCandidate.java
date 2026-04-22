@@ -14,9 +14,13 @@ import org.opentripplanner.street.search.state.State;
  * <p>
  * Contains all information needed to construct an itinerary, including:
  * - The original trip
- * - Insertion positions (where pickup and dropoff occur in the route)
+ * - Insertion positions (where pickup and dropoff occur in the modified route)
  * - Route segments (all GraphPaths forming the complete modified route)
  * - Timing information (baseline and total duration, deviation)
+ * <p>
+ * {@code pickupPosition} and {@code dropoffPosition} are 0-based indices of the passenger's
+ * pickup and dropoff stops in the modified route (the route after the passenger's stops have
+ * been inserted into the carpool trip).
  */
 public record InsertionCandidate(
   CarpoolTrip trip,
