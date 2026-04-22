@@ -638,12 +638,13 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
 
     assertFalse(results.isEmpty(), "Should find access results");
 
-    // Departure time of the passenger is when the car departs from the pickup with the
-    // passenger onboard, i.e. trip start + driving to P2 + boarding dwell at P2.
+    // Departure time of the passenger is when the car arrives at the pickup (P2). The
+    // boarding dwell at P2 is part of the CarpoolAccessEgress duration, not added before
+    // the departure time.
     var pickupTime = RouteRequest.defaultValue().preferences().car().pickupTime();
     var expectedDeparture = (int) Duration.between(
       transitSearchTimeZero.toInstant(),
-      departureTime.plus(drivingDurationAToP2).plus(pickupTime).toInstant()
+      departureTime.plus(drivingDurationAToP2).toInstant()
     ).getSeconds();
 
     int stopT3Index = stopResolver.getRegularStop(stopT3.getId()).getIndex();
@@ -683,13 +684,15 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
       );
 
       var drivingP2ToStop = expectedDrivingP2ToStop.get(accessEgress.stop());
-      // Boarding dwell is already part of the passenger's departure time, so arrival is
-      // simply departure plus driving time from P2 to the transit stop.
-      var expectedArrival = expectedDeparture + (int) drivingP2ToStop.getSeconds();
+      // Boarding dwell at P2 is now part of the passenger's ride duration, so the arrival
+      // time is the departure (arrival at P2) plus boarding plus driving from P2 to the stop.
+      var expectedArrival =
+        expectedDeparture + (int) pickupTime.getSeconds() + (int) drivingP2ToStop.getSeconds();
       assertEquals(
         expectedArrival,
         accessEgress.getArrivalTimeOfPassenger(),
-        "Arrival time should equal passenger departure plus driving time from P2 to stop"
+        "Arrival time should equal passenger departure plus boarding dwell plus driving " +
+          "time from P2 to stop"
       );
     }
   }

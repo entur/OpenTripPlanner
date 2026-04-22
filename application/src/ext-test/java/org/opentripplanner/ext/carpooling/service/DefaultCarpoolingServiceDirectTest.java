@@ -420,19 +420,21 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
     var stopDuration = request.preferences().car().pickupTime();
 
-    // The driver's real pickup time is fixed by the trip's schedule. It does NOT shift
+    // The driver's pickup arrival time is fixed by the trip's schedule. It does NOT shift
     // forward just because the passenger requested a later departure — the driver cannot
     // wait (committed schedule / other passengers).
-    var actualPickupTime = departureTime.plus(drivingToPickup).plus(stopDuration);
+    var actualPickupArrivalTime = departureTime.plus(drivingToPickup);
 
-    // Guard the premise of this test: the requested time is after the real pickup time.
+    // Guard the premise of this test: the requested time is after the real pickup arrival.
     assertTrue(
-      request.dateTime().isAfter(actualPickupTime.toInstant()),
-      "Test premise: request time must be after the driver's real pickup time"
+      request.dateTime().isAfter(actualPickupArrivalTime.toInstant()),
+      "Test premise: request time must be after the driver's real pickup arrival time"
     );
 
-    var expectedStartTime = actualPickupTime;
-    var expectedEndTime = expectedStartTime.plus(drivingPickupToDropoff);
+    // Itinerary start time is when the car arrives at the pickup; the boarding dwell is part
+    // of the leg's duration, so it shows up in the end time.
+    var expectedStartTime = actualPickupArrivalTime;
+    var expectedEndTime = expectedStartTime.plus(stopDuration).plus(drivingPickupToDropoff);
 
     var results = service.routeDirect(request, linkingContext);
 
@@ -442,7 +444,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     assertEquals(
       expectedStartTime.toInstant(),
       itinerary.startTime().toInstant(),
-      "Itinerary start time must match the driver's real pickup time, not the passenger's " +
+      "Itinerary start time must match the driver's pickup arrival time, not the passenger's " +
         "requested time — the driver cannot wait for the passenger"
     );
     assertEquals(
@@ -483,10 +485,10 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
     var stopDuration = request.preferences().car().pickupTime();
-    // Start time is when the car departs from the pickup with the passenger onboard,
-    // i.e. after the boarding dwell at the pickup.
-    var expectedStartTime = departureTime.plus(drivingToPickup).plus(stopDuration);
-    var expectedEndTime = expectedStartTime.plus(drivingPickupToDropoff);
+    // Start time is when the car arrives at the pickup. The boarding dwell is part of the
+    // leg's duration, so it is included in the end time rather than before the start.
+    var expectedStartTime = departureTime.plus(drivingToPickup);
+    var expectedEndTime = expectedStartTime.plus(stopDuration).plus(drivingPickupToDropoff);
 
     var results = service.routeDirect(request, linkingContext);
 
@@ -499,12 +501,13 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       assertEquals(
         expectedStartTime.toInstant(),
         itinerary.startTime().toInstant(),
-        "Start time should equal trip departure plus driving time to pickup plus boarding time"
+        "Start time should equal trip departure plus driving time to pickup (arrival at pickup)"
       );
       assertEquals(
         expectedEndTime.toInstant(),
         itinerary.endTime().toInstant(),
-        "End time should equal start time plus driving time from pickup to dropoff"
+        "End time should equal start time plus boarding dwell plus driving time from pickup " +
+          "to dropoff"
       );
     }
   }

@@ -93,26 +93,27 @@ public record InsertionCandidate(
   }
 
   /**
-   * Calculates the duration from trip start until the car departs with the passenger onboard.
-   * Includes travel time through pickup segments, intermediate stop delays, and boarding time
-   * at the pickup point.
+   * Calculates the duration from trip start until the car arrives at the passenger's pickup.
+   * Includes travel time through pickup segments and intermediate stop delays between them, but
+   * <em>excludes</em> the boarding dwell at the pickup itself — that is accounted for in
+   * {@link #getPassengerRideDuration()}.
    * Returns {@link Duration#ZERO} when the passenger boards at the trip origin (no pickup segments).
    */
-  public Duration getDurationUntilDepartureWithPassenger() {
-    var pickupSegments = getPickupSegments();
-    if (pickupSegments.isEmpty()) {
-      return Duration.ZERO;
-    }
-    return totalSegmentDuration(pickupSegments, stopDuration).plus(stopDuration);
+  public Duration getDurationUntilPickupArrival() {
+    return totalSegmentDuration(getPickupSegments(), stopDuration);
   }
 
   /**
-   * Calculates the duration of the passenger's ride from pickup to dropoff.
-   * Includes travel time through shared segments and stop delays at intermediate stops.
-   * For a single shared segment (direct ride), no stop delays are added.
+   * Calculates the duration of the passenger's ride from pickup arrival to dropoff.
+   * Includes the boarding dwell at the pickup (when there are pickup segments preceding it),
+   * travel time through shared segments, and stop delays at intermediate stops between shared
+   * segments. The no-pickup-segments case (passenger boarding at the trip origin) cannot occur
+   * today — the search never places {@code pickupPosition == 0} — but the branch guards against
+   * it by omitting the boarding dwell.
    */
   public Duration getPassengerRideDuration() {
-    return totalSegmentDuration(getSharedSegments(), stopDuration);
+    Duration boardingDwell = pickupPosition == 0 ? Duration.ZERO : stopDuration;
+    return totalSegmentDuration(getSharedSegments(), stopDuration).plus(boardingDwell);
   }
 
   private static Duration totalSegmentDuration(

@@ -123,8 +123,8 @@ class InsertionCandidateTest {
   }
 
   /**
-   * No pickup segments → durationUntilPickup is zero.
-   * Single shared segment → passengerRideDuration is just the segment duration (no stop delays).
+   * No pickup segments → durationUntilPickup is zero and no boarding dwell is added to the ride.
+   * Single shared segment → passengerRideDuration is just the segment duration.
    */
   @Test
   void durations_noPickupSegments_singleSharedSegment() {
@@ -136,13 +136,13 @@ class InsertionCandidateTest {
     var candidate = new InsertionCandidate(trip, 0, 1, List.of(sharedPath), stopDuration, null);
 
     assertEquals(Duration.ofMinutes(10), sharedDuration);
-    assertEquals(Duration.ZERO, candidate.getDurationUntilDepartureWithPassenger());
+    assertEquals(Duration.ZERO, candidate.getDurationUntilPickupArrival());
     assertEquals(sharedDuration, candidate.getPassengerRideDuration());
   }
 
   /**
-   * Single pickup segment → durationUntilPickup = segment duration + boarding time.
-   * Single shared segment → passengerRideDuration = segment duration (no stop delays).
+   * Single pickup segment → durationUntilPickup = segment duration (boarding excluded).
+   * Single shared segment → passengerRideDuration = boarding time + segment duration.
    */
   @Test
   void durations_onePickupSegment_singleSharedSegment() {
@@ -163,16 +163,13 @@ class InsertionCandidateTest {
       null
     );
 
-    assertEquals(
-      pickupDuration.plus(stopDuration),
-      candidate.getDurationUntilDepartureWithPassenger()
-    );
-    assertEquals(sharedDuration, candidate.getPassengerRideDuration());
+    assertEquals(pickupDuration, candidate.getDurationUntilPickupArrival());
+    assertEquals(stopDuration.plus(sharedDuration), candidate.getPassengerRideDuration());
   }
 
   /**
-   * Two pickup segments → intermediate stop delay between them + boarding time.
-   * Two shared segments → intermediate stop delay + pickup point delay.
+   * Two pickup segments → travel + 1 intermediate stop, no boarding dwell.
+   * Two shared segments → boarding dwell + travel + 1 intermediate stop.
    */
   @Test
   void durations_multiplePickupAndSharedSegments() {
@@ -197,15 +194,12 @@ class InsertionCandidateTest {
       null
     );
 
-    // 2 pickup segments: travel + 1 intermediate stop + boarding
-    var expectedPickup = pickup0Duration
-      .plus(stopDuration)
-      .plus(pickup1Duration)
-      .plus(stopDuration);
-    assertEquals(expectedPickup, candidate.getDurationUntilDepartureWithPassenger());
+    // 2 pickup segments: travel + 1 intermediate stop (boarding now belongs to the ride)
+    var expectedPickup = pickup0Duration.plus(stopDuration).plus(pickup1Duration);
+    assertEquals(expectedPickup, candidate.getDurationUntilPickupArrival());
 
-    // 2 shared segments: travel + 1 intermediate stop delay
-    var expectedRide = shared0Duration.plus(stopDuration).plus(shared1Duration);
+    // 2 shared segments: boarding dwell + travel + 1 intermediate stop delay
+    var expectedRide = stopDuration.plus(shared0Duration).plus(stopDuration).plus(shared1Duration);
     assertEquals(expectedRide, candidate.getPassengerRideDuration());
   }
 
@@ -236,7 +230,8 @@ class InsertionCandidateTest {
       null
     );
 
-    // 2 shared segments → 1x stopDuration difference (1 intermediate stop)
+    // Pickup at origin (no pickup segments) → no boarding dwell, so only the 1 intermediate
+    // stop between the 2 shared segments scales: 1x stopDuration difference.
     var difference = candidateLarge
       .getPassengerRideDuration()
       .minus(candidateSmall.getPassengerRideDuration());

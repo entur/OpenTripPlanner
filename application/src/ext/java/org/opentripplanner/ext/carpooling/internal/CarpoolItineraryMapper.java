@@ -38,8 +38,9 @@ import org.opentripplanner.street.model.vertex.Vertex;
  *
  * <h2>Time Calculation</h2>
  * <p>
- * The passenger's start time is always the driver's real pickup time (trip start + pickup
- * travel + boarding dwell). It is <em>not</em> shifted to match the passenger's requested
+ * The passenger's start time is the moment the driver arrives at the pickup location
+ * (trip start + pickup travel); the boarding dwell is included in the leg's duration, not
+ * added before it. The start time is <em>not</em> shifted to match the passenger's requested
  * departure time: the driver is on a committed schedule and cannot wait. Whether the
  * passenger should show up early, or whether a trip starting before the requested time
  * should be matched at all, is a filtering concern and lives upstream of this mapper.
@@ -88,8 +89,13 @@ public class CarpoolItineraryMapper {
    * <p>
    * Start and end times come entirely from the driver's schedule:
    * <ol>
-   *   <li><strong>Start:</strong> Driver's start time + pickup travel + boarding time</li>
-   *   <li><strong>End:</strong> Start time + shared segment durations</li>
+   *   <li><strong>Start:</strong> {@code trip.startTime() +}
+   *       {@link InsertionCandidate#getDurationUntilPickupArrival()} — the moment the driver
+   *       arrives at the pickup point.</li>
+   *   <li><strong>End:</strong> {@code start +}
+   *       {@link InsertionCandidate#getPassengerRideDuration()}, which already includes the
+   *       boarding dwell at the pickup and any intermediate stop delays along the shared
+   *       segments.</li>
    * </ol>
    *
    * <h3>Null Return Cases</h3>
@@ -108,10 +114,7 @@ public class CarpoolItineraryMapper {
       return null;
     }
 
-    var startTime = candidate
-      .trip()
-      .startTime()
-      .plus(candidate.getDurationUntilDepartureWithPassenger());
+    var startTime = candidate.trip().startTime().plus(candidate.getDurationUntilPickupArrival());
 
     var endTime = startTime.plus(candidate.getPassengerRideDuration());
 

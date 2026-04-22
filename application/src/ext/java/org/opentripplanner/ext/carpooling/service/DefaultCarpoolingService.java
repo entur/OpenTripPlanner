@@ -518,7 +518,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     Double carpoolReluctance
   ) {
     var sharedSegments = insertionCandidate.getSharedSegments();
-    var durationUntilPickup = insertionCandidate.getDurationUntilDepartureWithPassenger();
+    var durationUntilPickup = insertionCandidate.getDurationUntilPickupArrival();
     var passengerRideDuration = insertionCandidate.getPassengerRideDuration();
 
     var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationUntilPickup);
