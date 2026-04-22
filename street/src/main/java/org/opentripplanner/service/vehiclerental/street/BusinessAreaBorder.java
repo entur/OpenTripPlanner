@@ -9,8 +9,9 @@ import org.opentripplanner.street.search.state.State;
  *
  * @deprecated Business areas are an OTP-specific concept not defined in the GBFS spec.
  *     They are inferred from GBFS zones with no restrictions, but this inference is
- *     unreliable and the enforcement logic is not standardized. Disable via
- *     {@code OTPFeature.GeofencingBusinessAreaBorders}. May be removed in a future version.
+ *     unreliable and the enforcement logic is not standardized. Disable via the
+ *     {@code geofencingBusinessAreaBorders} updater configuration option.
+ *     May be removed in a future version.
  */
 @Deprecated
 public final class BusinessAreaBorder {

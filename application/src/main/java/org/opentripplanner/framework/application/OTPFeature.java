@@ -139,14 +139,6 @@ public enum OTPFeature {
   DebugRasterTiles(false, true, "Enable debug raster tile API."),
   FaresV2(false, true, "Enable import of GTFS-Fares v2 data."),
   FlexRouting(false, true, "Enable FLEX routing."),
-  GeofencingBusinessAreaBorders(
-    true,
-    false,
-    "Infer an operational area from GBFS geofencing zones that have no restrictions, " +
-    "preventing rental vehicles from leaving it. This is an OTP-specific concept " +
-    "not defined in the GBFS spec. Disable to avoid inferring operational area " +
-    "boundaries from permissive zones."
-  ),
   GoogleCloudStorage(false, true, "Enable Google Cloud Storage integration."),
   MultiCriteriaGroupMaxFilter(
     false,
