@@ -144,8 +144,9 @@ public abstract class OsmEntity {
     "bicycle",
     "vehicle"
   );
-  public static final Set<String> NO_ACCESS_TAGS = Set.of("no", "license", "dismount");
-  public static final Map<StreetTraversalPermission, String> OSM_TAGS_FOR_TRAVERSAL_PERMISSION =
+  private static final Set<String> WALK_ONLY_HIGHWAYS = Set.of("footway", "step", "corridor");
+  private static final Set<String> NO_ACCESS_TAGS = Set.of("no", "license", "dismount");
+  private static final Map<StreetTraversalPermission, String> OSM_TAGS_FOR_TRAVERSAL_PERMISSION =
     Map.of(
       StreetTraversalPermission.CAR,
       "motorcar",
@@ -224,15 +225,13 @@ public abstract class OsmEntity {
    * Is the tag defined?
    */
   public boolean hasTag(String tag) {
-    tag = tag.toLowerCase();
-    return tags != null && tags.containsKey(tag);
+    return getTag(tag) != null;
   }
 
   /**
    * Determines if a tag contains a false value. 'no', 'false', and '0' are considered false.
    */
   public boolean isTagFalse(String tag) {
-    tag = tag.toLowerCase();
     if (tags == null) {
       return false;
     }
@@ -257,7 +256,6 @@ public abstract class OsmEntity {
    * Determines if a tag contains a true value. 'yes', 'true', and '1' are considered true.
    */
   public boolean isTagTrue(String tag) {
-    tag = tag.toLowerCase();
     if (tags == null) {
       return false;
     }
@@ -324,7 +322,6 @@ public abstract class OsmEntity {
     if (isTagTrue(key)) {
       return true;
     }
-    key = key.toLowerCase();
     String value = getTag(key);
     return (
       "designated".equals(value) ||
@@ -340,9 +337,8 @@ public abstract class OsmEntity {
    */
   @Nullable
   public String getTag(String tag) {
-    tag = tag.toLowerCase();
-    if (tags != null && tags.containsKey(tag)) {
-      return tags.get(tag);
+    if (tags != null) {
+      return tags.get(tag.toLowerCase());
     }
     return null;
   }
@@ -504,19 +500,19 @@ public abstract class OsmEntity {
    * Checks if a tag contains the specified value.
    */
   public boolean isTag(String tag, String value) {
-    tag = tag.toLowerCase();
-    if (tags != null && tags.containsKey(tag) && value != null) {
-      return value.equals(tags.get(tag));
-    }
-
-    return false;
+    return tags != null && value != null && value.equals(tags.get(tag.toLowerCase()));
   }
 
   /**
    * Takes a tag key and checks if the value is any of those in {@code oneOfTags}.
    */
   public boolean isOneOfTags(String key, Set<String> oneOfTags) {
-    return oneOfTags.stream().anyMatch(value -> isTag(key, value));
+    var value = getTag(key);
+    if (value == null) {
+      return false;
+    } else {
+      return oneOfTags.contains(value);
+    }
   }
 
   /**
@@ -658,7 +654,7 @@ public abstract class OsmEntity {
       return Optional.empty();
     }
 
-    if ("foot".equals(mode) && !isOneOfTags("highway", Set.of("footway", "step", "corridor"))) {
+    if ("foot".equals(mode) && !isOneOfTags("highway", WALK_ONLY_HIGHWAYS)) {
       return Optional.empty();
     }
 
