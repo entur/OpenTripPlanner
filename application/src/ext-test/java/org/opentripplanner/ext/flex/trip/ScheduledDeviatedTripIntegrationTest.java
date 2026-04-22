@@ -125,7 +125,7 @@ class ScheduledDeviatedTripIntegrationTest {
     EncodedPolyline legGeometry = EncodedPolyline.of(leg.legGeometry());
     assertThatPolylinesAreEqual(
       legGeometry.points(),
-      "kfsmEjojcOa@eBRKfBfHR|ALjBBhVArMG|OCrEGx@OhAKj@a@tAe@hA]l@MPgAnAgw@nr@cDxCm@t@c@t@c@x@_@~@]pAyAdIoAhG}@lE{AzHWhAtt@t~Aj@tAb@~AXdBHn@FlBC`CKnA_@nC{CjOa@dCOlAEz@E|BRtUCbCQ~CWjD??????qBvXBl@kBvWOzAc@dDOx@sHv]aIG?q@@c@ZaB\\mA"
+      "kfsmEjojcOa@eBRKfBfHR|ALjBBhVArMG|OCrEGx@OhAKj@a@tAe@hA]l@MPgAnAgw@nr@cDxCm@t@c@t@c@x@_@~@]pAyAdIoAhG}@lE{AzHWhAtt@t~Aj@tAb@~AXdBHn@FlBC`CKnA_@nC{CjOa@dCOlAEz@E|BRtUCbCQ~CWjD??qBvXBl@kBvWOzAc@dDOx@sHv]aIG?q@@c@ZaB\\mA"
     );
   }
 
@@ -187,7 +187,8 @@ class ScheduledDeviatedTripIntegrationTest {
         transitStartOfTime,
         additionalSearchDays,
         new DebugTimingAggregator(),
-        linkingContext
+        linkingContext,
+        null
       );
 
       return result.getItineraries();

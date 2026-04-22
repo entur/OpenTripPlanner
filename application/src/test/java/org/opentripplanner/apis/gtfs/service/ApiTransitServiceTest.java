@@ -2,7 +2,7 @@ package org.opentripplanner.apis.gtfs.service;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
@@ -146,9 +146,9 @@ class ApiTransitServiceTest {
     var calls = service.findStopCalls(leg);
     assertEquals(
       "[" +
-        "TripTimeOnDate{trip: Trip{F:TestTrip1 RRoute1}, stopPosition: 0, arrival: 12:00, departure: 12:00, serviceDate: 2024-05-08}, " +
-        "TripTimeOnDate{trip: Trip{F:TestTrip1 RRoute1}, stopPosition: 1, arrival: 12:30, departure: 12:30, serviceDate: 2024-05-08}, " +
-        "TripTimeOnDate{trip: Trip{F:TestTrip1 RRoute1}, stopPosition: 2, arrival: 13:00, departure: 13:00, serviceDate: 2024-05-08}" +
+        "TripTimeOnDate{trip: Trip{F:TestTrip1 TestTrip1}, stopPosition: 0, arrival: 12:00, departure: 12:00, serviceDate: 2024-05-08}, " +
+        "TripTimeOnDate{trip: Trip{F:TestTrip1 TestTrip1}, stopPosition: 1, arrival: 12:30, departure: 12:30, serviceDate: 2024-05-08}, " +
+        "TripTimeOnDate{trip: Trip{F:TestTrip1 TestTrip1}, stopPosition: 2, arrival: 13:00, departure: 13:00, serviceDate: 2024-05-08}" +
         "]",
       calls.toString()
     );

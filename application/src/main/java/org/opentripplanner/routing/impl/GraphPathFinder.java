@@ -1,27 +1,21 @@
 package org.opentripplanner.routing.impl;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import javax.annotation.Nullable;
-import org.opentripplanner.astar.model.GraphPath;
-import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
-import org.opentripplanner.astar.strategy.PathComparator;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.street.model.StreetConstants;
-import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.search.StreetSearchBuilder;
-import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.slf4j.Logger;
@@ -53,23 +47,18 @@ public class GraphPathFinder {
 
   private static final Logger LOG = LoggerFactory.getLogger(GraphPathFinder.class);
 
-  @Nullable
-  private final TraverseVisitor<State, Edge> traverseVisitor;
-
   private final Collection<ExtensionRequestContext> extensionRequestContexts;
 
   private final float maxCarSpeed;
 
-  public GraphPathFinder(@Nullable TraverseVisitor<State, Edge> traverseVisitor) {
-    this(traverseVisitor, List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED);
+  public GraphPathFinder() {
+    this(List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED);
   }
 
   public GraphPathFinder(
-    @Nullable TraverseVisitor<State, Edge> traverseVisitor,
     Collection<ExtensionRequestContext> extensionRequestContexts,
     float maxCarSpeed
   ) {
-    this.traverseVisitor = traverseVisitor;
     this.extensionRequestContexts = Objects.requireNonNull(extensionRequestContexts);
     this.maxCarSpeed = maxCarSpeed;
   }
@@ -78,14 +67,10 @@ public class GraphPathFinder {
    * This no longer does "trip banning" to find multiple itineraries. It just searches once trying
    * to find a non-transit path.
    */
-  public List<GraphPath<State, Edge, Vertex>> getPaths(
-    RouteRequest request,
-    Set<Vertex> from,
-    Set<Vertex> to
-  ) {
+  public List<StreetPath> getPaths(RouteRequest request, Set<Vertex> from, Set<Vertex> to) {
     StreetPreferences preferences = request.preferences().street();
 
-    StreetSearchBuilder aStar = StreetSearchBuilder.of()
+    StreetSearchBuilder streetSearch = StreetSearchBuilder.of()
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
       .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
       .withSkipEdgeStrategy(
@@ -104,29 +89,22 @@ public class GraphPathFinder {
       .withFrom(from)
       .withTo(to);
 
-    // If the search has a traverseVisitor(GraphVisualizer) attached to it, set it as a callback
-    // for the AStar search
-    if (traverseVisitor != null) {
-      aStar.withTraverseVisitor(traverseVisitor);
-    }
-
     LOG.debug("rreq={}", request);
 
     long searchBeginTime = System.currentTimeMillis();
     LOG.debug("BEGIN SEARCH");
 
-    List<GraphPath<State, Edge, Vertex>> paths = aStar.getPathsToTarget();
+    var paths = streetSearch.getPathsToTarget();
 
     LOG.debug("we have {} paths", paths.size());
     LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);
-    paths.sort(new PathComparator(request.arriveBy()));
     return paths;
   }
 
   /**
    * Try to find N paths through the Graph
    */
-  public List<GraphPath<State, Edge, Vertex>> graphPathFinderEntryPoint(
+  public List<StreetPath> graphPathFinderEntryPoint(
     RouteRequest request,
     LinkingContext linkingContext
   ) {
@@ -137,7 +115,7 @@ public class GraphPathFinder {
     );
   }
 
-  public List<GraphPath<State, Edge, Vertex>> graphPathFinderEntryPoint(
+  public List<StreetPath> graphPathFinderEntryPoint(
     RouteRequest request,
     Set<Vertex> from,
     Set<Vertex> to
@@ -145,38 +123,36 @@ public class GraphPathFinder {
     OTPRequestTimeoutException.checkForTimeout();
     var reqTime = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
 
-    List<GraphPath<State, Edge, Vertex>> paths = getPaths(request, from, to);
+    var paths = getPaths(request, from, to);
 
     // Detect and report that most obnoxious of bugs: path reversal asymmetry.
     // Removing paths might result in an empty list, so do this check before the empty list check.
-    if (paths != null) {
-      Iterator<GraphPath<State, Edge, Vertex>> gpi = paths.iterator();
-      while (gpi.hasNext()) {
-        GraphPath<State, Edge, Vertex> graphPath = gpi.next();
-        // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
-        if (request.arriveBy()) {
-          if (graphPath.states.getLast().getTimeAccurate().isAfter(reqTime)) {
-            LOG.error(
-              "A graph path arrives {} after the requested time {}. This implies a bug.",
-              graphPath.states.getLast().getTimeAccurate(),
-              reqTime
-            );
-            gpi.remove();
-          }
-        } else {
-          if (graphPath.states.getFirst().getTimeAccurate().isBefore(reqTime)) {
-            LOG.error(
-              "A graph path leaves {} before the requested time {}. This implies a bug.",
-              graphPath.states.getFirst().getTimeAccurate(),
-              reqTime
-            );
-            gpi.remove();
-          }
+    var gpi = paths.iterator();
+    while (gpi.hasNext()) {
+      var graphPath = gpi.next();
+      // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
+      if (request.arriveBy()) {
+        if (graphPath.endTimeAccurate().isAfter(reqTime)) {
+          LOG.error(
+            "A graph path arrives {} after the requested time {}. This implies a bug.",
+            graphPath.endTimeAccurate(),
+            reqTime
+          );
+          gpi.remove();
+        }
+      } else {
+        if (graphPath.startTimeAccurate().isBefore(reqTime)) {
+          LOG.error(
+            "A graph path leaves {} before the requested time {}. This implies a bug.",
+            graphPath.startTimeAccurate(),
+            reqTime
+          );
+          gpi.remove();
         }
       }
     }
 
-    if (paths == null || paths.isEmpty()) {
+    if (paths.isEmpty()) {
       LOG.debug("Path not found: {} : {}", request.from(), request.to());
       throw new PathNotFoundException();
     }

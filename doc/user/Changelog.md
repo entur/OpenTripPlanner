@@ -3,6 +3,32 @@
 The changelog lists most feature changes between each release. The list is automatically created
 based on merged pull requests. Search GitHub issues and pull requests for smaller issues.
 
+## 2.10.0-SNAPSHOT (in progress)
+
+- Add select/not filters to estimatedCalls in Transmodel [#7305](https://github.com/opentripplanner/OpenTripPlanner/pull/7305)
+- Cleanup regular transfer build parameters [#7425](https://github.com/opentripplanner/OpenTripPlanner/pull/7425)
+- Add CostlyAssertions feature that should be turned off in production and improve performance of via routing with coordinates [#7301](https://github.com/opentripplanner/OpenTripPlanner/pull/7301)
+- Added carpooling as an access/egress mode [#7341](https://github.com/opentripplanner/OpenTripPlanner/pull/7341)
+-  Cache TransferIndexGenerator results to skip redundant regeneration [#7355](https://github.com/opentripplanner/OpenTripPlanner/pull/7355)
+- Improve compatibility with Swiss NeTEx data [#7427](https://github.com/opentripplanner/OpenTripPlanner/pull/7427)
+- fix: Introduce stable order for fareZones (tariffZones) [#7434](https://github.com/opentripplanner/OpenTripPlanner/pull/7434)
+- Prevent long routes mistakenly getting grouped across service-date [#7452](https://github.com/opentripplanner/OpenTripPlanner/pull/7452)
+- Migrate away from deprecated FeedScopedId.parse() [#7457](https://github.com/opentripplanner/OpenTripPlanner/pull/7457)
+- Expose GTFS feed version in the GTFS GraphQL API [#7445](https://github.com/opentripplanner/OpenTripPlanner/pull/7445)
+- Fix MC Raptor Pareto comparator performance regression [#7440](https://github.com/opentripplanner/OpenTripPlanner/pull/7440)
+- Use A* traversal distance for flex access/egress [#7490](https://github.com/opentripplanner/OpenTripPlanner/pull/7490)
+- Fix NullPointerException when loading availableUntil for a rental bike [#7388](https://github.com/opentripplanner/OpenTripPlanner/pull/7388)
+- Add replacement mode filter to the GTFS API's planConnection query [#7437](https://github.com/opentripplanner/OpenTripPlanner/pull/7437)
+- Fix default boarding/alighting rules for SIRI ET ExtraJourneys (#7506) [#7510](https://github.com/opentripplanner/OpenTripPlanner/pull/7510)
+- Reduce allocations when building linestrings [#7516](https://github.com/opentripplanner/OpenTripPlanner/pull/7516)
+- Improve SpeedTest warm-up [#7534](https://github.com/opentripplanner/OpenTripPlanner/pull/7534)
+- Remove `GraphVisualizer` and inefficient methods in `ShortestPathTree` [#7526](https://github.com/opentripplanner/OpenTripPlanner/pull/7526)
+- Fix cost mismatch by anchoring pattern-ride pareto cost to last stop [#7504](https://github.com/opentripplanner/OpenTripPlanner/pull/7504)
+- Add NO_DIRECT_MODE_CONNECTION routing error code for direct-only searches [#7494](https://github.com/opentripplanner/OpenTripPlanner/pull/7494)
+- De-duplicate boardinglocations on areas [#7508](https://github.com/opentripplanner/OpenTripPlanner/pull/7508)
+- Speed up tag lookup during OSM processing [#7536](https://github.com/opentripplanner/OpenTripPlanner/pull/7536)
+[](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
+
 ## 2.9.0 (2026-03-18)
 
 ### Notable changes
@@ -94,7 +120,6 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Reduce Raptor on-board optimal set by using strict less-than for tripSortIndex [#7417](https://github.com/opentripplanner/OpenTripPlanner/pull/7417)
 - fix: Return NO_TRANSIT_CONNECTION_IN_SEARCH_WINDOW when transit search finds no trips [#7398](https://github.com/opentripplanner/OpenTripPlanner/pull/7398)
 - Fix findTripTimesOnDate filters using wrong route mode and applying filters after limit [#7408](https://github.com/opentripplanner/OpenTripPlanner/pull/7408)
-[](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.8.1 (2025-09-22)
 

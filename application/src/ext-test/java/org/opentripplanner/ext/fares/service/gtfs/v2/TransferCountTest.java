@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -67,8 +67,6 @@ class TransferCountTest implements PlanTestConstants, FareTestConstants {
   @Test
   void twoTransfers() {
     var result = SERVICE.calculateFares(TestItinerary.of(LEG_1, LEG_2, LEG_3).build());
-
-    assertThat(result.itineraryProducts()).isEmpty();
 
     assertThat(result.offersForLeg(LEG_1)).containsExactly(
       FareOffer.of(LEG_1.startTime(), FARE_PRODUCT_A)
