@@ -125,9 +125,7 @@ public class VehicleRentalSourceFactory {
     return c
       .of("geofencingBusinessAreaBorders")
       .since(V2_3)
-      .summary(
-        "Infer an operational area from GBFS geofencing zones that have no restrictions."
-      )
+      .summary("Infer an operational area from GBFS geofencing zones that have no restrictions.")
       .description(
         """
         When enabled, GBFS geofencing zones with no restrictions (ride_allowed, ride_end_allowed,
