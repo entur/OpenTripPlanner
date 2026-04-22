@@ -46,12 +46,18 @@ public class GeofencingZoneApplier {
   ) {
     var zoneIndex = new GeofencingZoneIndex(geofencingZones);
 
-    var restrictedZones = geofencingZones.stream().filter(GeofencingZone::hasRestriction).toList();
+    // All zones with geometry get boundary extensions, not just restricted ones.
+    // Permissive zones (e.g., station_parking) need boundary tracking so they enter/exit
+    // state correctly and can override restrictions via per-field precedence.
+    var zonesWithGeometry = geofencingZones
+      .stream()
+      .filter(z -> z.geometry() != null)
+      .toList();
 
     var businessAreaEdges = new HashMap<StreetEdge, BusinessAreaBorder>();
 
     // Boundary marking: apply GeofencingBoundaryExtension to boundary-crossing edges
-    var boundaryEdges = addBoundaryExtensions(restrictedZones);
+    var boundaryEdges = addBoundaryExtensions(zonesWithGeometry);
 
     // Business area borders (deprecated — not a GBFS concept)
     if (applyBusinessAreas) {
@@ -61,15 +67,15 @@ public class GeofencingZoneApplier {
         .toList();
 
       if (!generalBusinessAreas.isEmpty()) {
-      var network = generalBusinessAreas.get(0).id().getFeedId();
-      var polygons = generalBusinessAreas
-        .stream()
-        .map(GeofencingZone::geometry)
-        .toArray(Geometry[]::new);
+        var network = generalBusinessAreas.get(0).id().getFeedId();
+        var polygons = generalBusinessAreas
+          .stream()
+          .map(GeofencingZone::geometry)
+          .toArray(Geometry[]::new);
 
-      var unionOfBusinessAreas = GeometryUtils.getGeometryFactory()
-        .createGeometryCollection(polygons)
-        .union();
+        var unionOfBusinessAreas = GeometryUtils.getGeometryFactory()
+          .createGeometryCollection(polygons)
+          .union();
 
         businessAreaEdges.putAll(
           applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network))
@@ -137,8 +143,8 @@ public class GeofencingZoneApplier {
             continue;
           }
 
-          boolean fromInZone = fromMayBeInZone && preparedZone.contains(gf.createPoint(fromCoord));
-          boolean toInZone = toMayBeInZone && preparedZone.contains(gf.createPoint(toCoord));
+          boolean fromInZone = fromMayBeInZone && preparedZone.covers(gf.createPoint(fromCoord));
+          boolean toInZone = toMayBeInZone && preparedZone.covers(gf.createPoint(toCoord));
 
           if (fromInZone != toInZone) {
             var ext = new GeofencingBoundaryExtension(zone, toInZone);
@@ -176,8 +182,8 @@ public class GeofencingZoneApplier {
           continue;
         }
 
-        boolean fromInZone = fromMayBeInZone && preparedPolygon.contains(gf.createPoint(fromCoord));
-        boolean toInZone = toMayBeInZone && preparedPolygon.contains(gf.createPoint(toCoord));
+        boolean fromInZone = fromMayBeInZone && preparedPolygon.covers(gf.createPoint(fromCoord));
+        boolean toInZone = toMayBeInZone && preparedPolygon.covers(gf.createPoint(toCoord));
 
         if (fromInZone != toInZone) {
           streetEdge.setBusinessAreaBorder(ext);

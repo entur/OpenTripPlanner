@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -20,6 +19,7 @@ import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.geometry.SplitLineString;
 import org.opentripplanner.street.linking.LinkingDirection;
+import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.elevation.ElevationUtils;
 import org.opentripplanner.street.model.vertex.BarrierPassThroughVertex;
@@ -316,15 +316,84 @@ public class StreetEdge
     final boolean arriveByRental =
       s0.getRequest().mode().includesRenting() && s0.getRequest().arriveBy();
 
-    // ArriveBy: traversal ban (BusinessAreaBorder via vertex + no-traversal zone via state)
-    if (arriveByRental && (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())) {
+    // ArriveBy: traversal ban (BusinessAreaBorder + no-traversal zone in state + boundary zone entry)
+    if (
+      arriveByRental &&
+      (tov.rentalTraversalBanned(s0) ||
+        s0.isTraversalBannedByCurrentZones() ||
+        isArriveByNoTraversalEntry(s0))
+    ) {
       return State.empty();
     }
-    // ArriveBy: consolidated boundary fork for HAVE_RENTED walkers exiting restricted zones
+    // ArriveBy: consolidated boundary fork for HAVE_RENTED walkers exiting restricted zones.
+    // Only produces the walking branch — renting branches are deferred to the next edge
+    // so their backEdge is outside the zone (not the boundary-crossing edge).
     else if (arriveByRental && isArriveByBoundaryForkTrigger(s0)) {
       return performArriveByBoundaryFork(s0);
     }
-    // Forward: traversal ban — drop vehicle and walk
+    // ArriveBy: deferred renting fork — creates RENTING_FLOATING states one edge after the
+    // zone boundary, so the backEdge is safely outside the zone in the forward itinerary.
+    else if (arriveByRental && isDeferredRentingForkTrigger(s0)) {
+      return performDeferredRentingFork(s0);
+    }
+    // Forward: unconditional drop when approaching a no-traversal zone.
+    // The rider must stop — traversal is banned inside the zone.
+    else if (
+      s0.getRequest().mode().includesRenting() &&
+      s0.isRentingVehicle() &&
+      tov.isGeofencingNoTraversalBoundary(s0)
+    ) {
+      editor = doTraverse(s0, s0.currentMode(), false);
+      if (editor != null) {
+        editor.dropFloatingVehicle(
+          s0.vehicleRentalFormFactor(),
+          s0.rentalVehiclePropulsionType(),
+          s0.getVehicleRentalNetwork(),
+          s0.getRequest().arriveBy()
+        );
+      }
+    }
+    // Forward: fork when approaching a no-drop-off zone from OUTSIDE all restricted zones.
+    // One branch drops the vehicle here (last vertex outside zone), the other continues
+    // riding into the zone. The A* picks the drop branch when the destination is inside
+    // the zone (can't drop off there), and the ride branch when the destination is outside
+    // (rider can traverse the zone and drop off on the other side).
+    // If the rider is already inside a restricted zone (e.g., adjacent no-drop-off zones),
+    // dropping here is invalid — just continue riding.
+    else if (
+      s0.getRequest().mode().includesRenting() &&
+      s0.isRentingVehicle() &&
+      tov.isGeofencingNoDropOffBoundary(s0)
+    ) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        // Already inside a no-drop-off zone — can't drop here, just ride through
+        if (canTraverse(s0.currentMode())) {
+          editor = doTraverse(s0, s0.currentMode(), false);
+        } else {
+          editor = null;
+        }
+      } else {
+        // Outside all restricted zones — fork: drop or continue riding
+        StateEditor dropEditor = doTraverse(s0, s0.currentMode(), false);
+        State dropState = null;
+        if (dropEditor != null) {
+          dropEditor.dropFloatingVehicle(
+            s0.vehicleRentalFormFactor(),
+            s0.rentalVehiclePropulsionType(),
+            s0.getVehicleRentalNetwork(),
+            s0.getRequest().arriveBy()
+          );
+          dropState = dropEditor.makeState();
+        }
+        State rideState = null;
+        if (canTraverse(s0.currentMode())) {
+          StateEditor rideEditor = doTraverse(s0, s0.currentMode(), false);
+          rideState = rideEditor != null ? rideEditor.makeState() : null;
+        }
+        return State.ofNullable(dropState, rideState);
+      }
+    }
+    // Forward: drop vehicle for BusinessAreaBorder or zone already in state
     else if (
       s0.getRequest().mode().includesRenting() &&
       (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())
@@ -356,23 +425,24 @@ public class StreetEdge
 
     State state = editor != null ? editor.makeState() : null;
 
-    // Forward: entering a restricted zone (no-drop-off or no-traversal)
+    // Forward: entering a restricted zone (no-drop-off or no-traversal).
+    // For no-traversal: drop and walk (rider can't continue riding).
+    // For no-drop-off: just continue riding. Dropping inside the zone is never valid.
+    // The pre-traversal fork at the zone boundary already offers the drop-at-boundary
+    // option, so this post-traversal check only needs to handle no-traversal zones and
+    // let no-drop-off zones pass through (the rider continues riding normally).
     if (state != null && isForwardZoneEntryTrigger(s0, state)) {
-      StateEditor afterTraversal = doTraverse(s0, TraverseMode.WALK, false);
-      if (afterTraversal != null) {
-        afterTraversal.dropFloatingVehicle(
-          state.vehicleRentalFormFactor(),
-          state.rentalVehiclePropulsionType(),
-          state.getVehicleRentalNetwork(),
-          state.getRequest().arriveBy()
-        );
-        var forkState = afterTraversal.makeState();
-        // No-traversal: only the walk+drop branch (riding into zone is blocked)
-        // No-drop-off (without no-traversal): fork — both walk+drop and continue riding
-        if (isForwardTraversalBanTrigger(s0, state)) {
-          return State.ofNullable(forkState);
+      if (isForwardTraversalBanTrigger(s0, state)) {
+        StateEditor afterTraversal = doTraverse(s0, TraverseMode.WALK, false);
+        if (afterTraversal != null) {
+          afterTraversal.dropFloatingVehicle(
+            state.vehicleRentalFormFactor(),
+            state.rentalVehiclePropulsionType(),
+            state.getVehicleRentalNetwork(),
+            state.getRequest().arriveBy()
+          );
+          return State.ofNullable(afterTraversal.makeState());
         }
-        return State.ofNullable(forkState, state);
       }
     }
 
@@ -849,10 +919,88 @@ public class StreetEdge
   }
 
   /**
-   * Produce forked states when a HAVE_RENTED walker exits a restricted zone at a boundary.
-   * Creates: walking branch + per-network committed branches + generic renting branch.
+   * Whether a RENTING_FLOATING rider in arrive-by would enter a no-traversal zone by traversing
+   * this edge. This is the arrive-by mirror of {@link Vertex#isGeofencingNoTraversalBoundary}.
+   * <p>
+   * In arrive-by, edge fromv→tov is traversed from tov to fromv. Entry into a zone occurs when
+   * fromv has a boundary with entering=false (effectiveEntering = !false = true in arrive-by).
+   * <p>
+   * Unlike the forward check, no paired-boundary guard is needed here. The forward check uses
+   * {@code tov.isGeofencingNoTraversalBoundary} which fires on any vertex with a no-traversal
+   * boundary regardless of pairing. Similarly, this check fires when fromv is a boundary vertex
+   * on the inside of a no-traversal zone (entering=false). Only boundary-crossing edges get
+   * boundary extensions, so interior vertices never have them — no false positives arise.
+   */
+  private boolean isArriveByNoTraversalEntry(State s0) {
+    if (!s0.isRentingVehicle()) {
+      return false;
+    }
+    String network = s0.getVehicleRentalNetwork();
+    for (var boundary : fromv.getGeofencingBoundaries()) {
+      if (!Boolean.TRUE.equals(boundary.zone().traversalBanned())) {
+        continue;
+      }
+      // For committed states: only block if zone network matches the rider's network.
+      // For generic states (null network): block for ANY no-traversal zone, since a
+      // committed branch for that network would be blocked and the generic continuing
+      // through the zone cannot produce a legal path.
+      if (network != null && !boundary.zone().id().getFeedId().equals(network)) {
+        continue;
+      }
+      // entering=false on fromv means effectiveEntering=true in arrive-by → entering zone
+      if (!boundary.entering()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Produce walking branch when a HAVE_RENTED walker exits a restricted zone at a boundary.
+   * Renting branches (RENTING_FLOATING) are NOT created here — they are deferred to the next
+   * edge via {@link #isDeferredRentingForkTrigger} so their backEdge is outside the zone.
    */
   private State[] performArriveByBoundaryFork(State s0) {
+    StateEditor walking = doTraverse(s0, TraverseMode.WALK, false);
+    if (walking != null) {
+      return walking.makeStateArray();
+    }
+    return State.empty();
+  }
+
+  /**
+   * Whether a HAVE_RENTED walker just exited one or more restricted zones — the backState had
+   * restricted zones that the current state no longer has. This is the trigger for the deferred
+   * renting fork: RENTING_FLOATING states are created here (one edge after the boundary) so
+   * their backEdge is outside the zone in the forward itinerary.
+   * <p>
+   * This handles overlapping zones: the walker may still be inside other zones while having
+   * just exited one. The deferred fork creates renting branches for the exited zones' networks.
+   */
+  private boolean isDeferredRentingForkTrigger(State s0) {
+    if (s0.getVehicleRentalState() != VehicleRentalState.HAVE_RENTED) {
+      return false;
+    }
+    var backState = s0.getBackState();
+    if (backState == null) {
+      return false;
+    }
+    // Check if any restricted zones were exited (present in backState but not in current state)
+    for (var zone : backState.getCurrentGeofencingZones()) {
+      if (zone.hasRestriction() && !s0.getCurrentGeofencingZones().contains(zone)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Create renting branches one edge after the zone boundary. The walker just exited a
+   * restricted zone (via the boundary fork's walking branch). Now at the first edge outside
+   * the zone, create per-network and generic RENTING_FLOATING states with backEdges that
+   * are safely outside the zone.
+   */
+  private State[] performDeferredRentingFork(State s0) {
     var request = s0.getRequest();
     var states = new ArrayList<State>();
 
@@ -862,8 +1010,18 @@ public class StreetEdge
       states.add(walking.makeState());
     }
 
-    // Collect networks from boundary zones being exited
-    var forkNetworks = collectExitingBoundaryNetworks(s0);
+    // Collect networks from the zones the walker just exited (in backState but not current)
+    var forkNetworks = new HashSet<String>();
+    for (var zone : s0.getBackState().getCurrentGeofencingZones()) {
+      if (zone.hasRestriction() && !s0.getCurrentGeofencingZones().contains(zone)) {
+        forkNetworks.add(zone.id().getFeedId());
+      }
+    }
+
+    // The rental traverse mode for this edge. In the forward itinerary, this edge
+    // is the last edge ridden on the rental vehicle before drop-off, so the cost
+    // must reflect the rental vehicle speed, not walking speed.
+    var rentalMode = StreetModeToRentalTraverseModeMapper.map(request.mode());
 
     // Per-network committed branches
     boolean hasNetworkStates = false;
@@ -871,7 +1029,7 @@ public class StreetEdge
       if (!isNetworkAllowedByRequest(network, request)) {
         continue;
       }
-      var edit = doTraverse(s0, TraverseMode.WALK, false);
+      var edit = doTraverse(s0, rentalMode, false);
       if (edit != null) {
         edit.dropFloatingVehicle(
           s0.vehicleRentalFormFactor(),
@@ -889,7 +1047,7 @@ public class StreetEdge
 
     // Generic renting branch (null network)
     if (hasNetworkStates) {
-      var edit = doTraverse(s0, TraverseMode.WALK, false);
+      var edit = doTraverse(s0, rentalMode, false);
       if (edit != null) {
         edit.dropFloatingVehicle(
           s0.vehicleRentalFormFactor(),
@@ -905,25 +1063,6 @@ public class StreetEdge
     }
 
     return states.toArray(State[]::new);
-  }
-
-  /**
-   * Collect networks of restricted zones that the walker is exiting at this boundary.
-   */
-  private Set<String> collectExitingBoundaryNetworks(State s0) {
-    var networks = new HashSet<String>();
-    for (var boundary : fromv.getGeofencingBoundaries()) {
-      if (
-        boundary.zone().hasRestriction() &&
-        s0.getCurrentGeofencingZones().contains(boundary.zone()) &&
-        hasPairedBoundaryOnTov(boundary) &&
-        // In arriveBy, entering in natural direction = geographic exit
-        boundary.entering()
-      ) {
-        networks.add(boundary.zone().id().getFeedId());
-      }
-    }
-    return networks;
   }
 
   /**
@@ -958,7 +1097,10 @@ public class StreetEdge
     }
     String network = s0.getVehicleRentalNetwork();
     for (var zone : traversedState.getCurrentGeofencingZones()) {
-      if (!s0.getCurrentGeofencingZones().contains(zone) && Boolean.TRUE.equals(zone.traversalBanned())) {
+      if (
+        !s0.getCurrentGeofencingZones().contains(zone) &&
+        Boolean.TRUE.equals(zone.traversalBanned())
+      ) {
         if (network == null || zone.id().getFeedId().equals(network)) {
           return true;
         }
@@ -980,7 +1122,10 @@ public class StreetEdge
     for (var zone : traversedState.getCurrentGeofencingZones()) {
       if (!s0.getCurrentGeofencingZones().contains(zone)) {
         String network = zone.id().getFeedId();
-        if (!s0.getCommittedNetworks().contains(network) && !Boolean.TRUE.equals(zone.traversalBanned())) {
+        if (
+          !s0.getCommittedNetworks().contains(network) &&
+          !Boolean.TRUE.equals(zone.traversalBanned())
+        ) {
           return true;
         }
       }
@@ -998,7 +1143,10 @@ public class StreetEdge
     // Collect new zones entered
     var newZoneNetworks = new HashSet<String>();
     for (var zone : genericState.getCurrentGeofencingZones()) {
-      if (!s0.getCurrentGeofencingZones().contains(zone) && !Boolean.TRUE.equals(zone.traversalBanned())) {
+      if (
+        !s0.getCurrentGeofencingZones().contains(zone) &&
+        !Boolean.TRUE.equals(zone.traversalBanned())
+      ) {
         String network = zone.id().getFeedId();
         if (!s0.getCommittedNetworks().contains(network)) {
           newZoneNetworks.add(network);
@@ -1036,8 +1184,7 @@ public class StreetEdge
   private boolean hasPairedBoundaryOnTov(GeofencingBoundaryExtension boundary) {
     for (var tovBoundary : tov.getGeofencingBoundaries()) {
       if (
-        tovBoundary.zone().equals(boundary.zone()) &&
-        tovBoundary.entering() != boundary.entering()
+        tovBoundary.zone().equals(boundary.zone()) && tovBoundary.entering() != boundary.entering()
       ) {
         return true;
       }
