@@ -12,6 +12,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.SetMultimap;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,13 +24,16 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.utils.logging.Throttle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,6 +177,7 @@ public class TimetableSnapshot {
       HashMultimap.create(),
       false
     );
+    logNumberOfTripPatternGaps();
   }
 
   TimetableSnapshot(
@@ -200,6 +205,26 @@ public class TimetableSnapshot {
     this.realTimeAddedTripOnServiceDateForTripAndDay = realTimeAddedTripOnServiceDateForTripAndDay;
     this.patternsForStop = patternsForStop;
     this.readOnly = readOnly;
+
+    LOG_TRIP_PATTERN_SIZE.throttle(() -> logNumberOfTripPatternGaps());
+  }
+
+
+  // We start logging when we have more than 25 000 patterns
+  private static final AtomicInteger LAST_TRIP_PATTERN_INDEX_LOGGED = new AtomicInteger(25_000);
+  private static final Throttle LOG_TRIP_PATTERN_SIZE = Throttle.ofTenMinutes();
+
+  private void logNumberOfTripPatternGaps() {
+    int created = RoutingTripPattern.indexCounter();
+    var set = new BitSet(created);
+    for (var route : realTimeAddedPatternsForRoute.keySet()) {
+      for (var p : realTimeAddedPatternsForRoute.get(route)) {
+        set.set(p.getRoutingTripPattern().patternIndex());
+      }
+    }
+    int skipped = set.nextSetBit(0);
+    int inUse = set.cardinality();
+    LOG.info("TRIP PATTERN INDEX :: N={}  SKIPED={}  IN USE={}  TOTAL={}", created, skipped, inUse, skipped+inUse);
   }
 
   /**

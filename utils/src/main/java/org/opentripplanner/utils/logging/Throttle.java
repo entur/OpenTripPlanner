@@ -42,6 +42,9 @@ public class Throttle {
   public static Throttle ofOneMinute() {
     return new Throttle(Duration.ofMinutes(1));
   }
+  public static Throttle ofTenMinutes() {
+    return new Throttle(Duration.ofMinutes(10));
+  }
 
   public String setupInfo() {
     return setupInfo;
