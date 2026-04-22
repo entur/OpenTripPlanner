@@ -93,6 +93,14 @@ public class StateEditor {
     }
   }
 
+  /**
+   * Override the backState that was cleared by the null-edge constructor path.
+   * Package-private: only used by {@link State#editInPlace()}.
+   */
+  void resetBackState(State backState) {
+    child.backState = backState;
+  }
+
   /* PUBLIC METHODS */
 
   /**

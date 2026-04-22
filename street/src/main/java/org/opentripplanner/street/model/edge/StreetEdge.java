@@ -357,23 +357,24 @@ public class StreetEdge
     State state = editor != null ? editor.makeState() : null;
 
     // Forward: entering a restricted zone (no-drop-off or no-traversal)
+    // Drop vehicle at fromv (before the zone boundary) so it doesn't end up inside the zone.
+    // The algorithm will re-explore fromv as a HAVE_RENTED walker, traversing this edge on foot.
     if (state != null && isForwardZoneEntryTrigger(s0, state)) {
-      StateEditor afterTraversal = doTraverse(s0, TraverseMode.WALK, false);
-      if (afterTraversal != null) {
-        afterTraversal.dropFloatingVehicle(
-          state.vehicleRentalFormFactor(),
-          state.rentalVehiclePropulsionType(),
-          state.getVehicleRentalNetwork(),
-          state.getRequest().arriveBy()
-        );
-        var forkState = afterTraversal.makeState();
-        // No-traversal: only the walk+drop branch (riding into zone is blocked)
-        // No-drop-off (without no-traversal): fork — both walk+drop and continue riding
-        if (isForwardTraversalBanTrigger(s0, state)) {
-          return State.ofNullable(forkState);
-        }
-        return State.ofNullable(forkState, state);
+      var dropEditor = s0.editInPlace();
+      dropEditor.setBackMode(TraverseMode.WALK);
+      dropEditor.dropFloatingVehicle(
+        state.vehicleRentalFormFactor(),
+        state.rentalVehiclePropulsionType(),
+        state.getVehicleRentalNetwork(),
+        state.getRequest().arriveBy()
+      );
+      var droppedState = dropEditor.makeState();
+      // No-traversal: only the drop state (rider can't enter zone)
+      // No-drop-off (without no-traversal): fork — drop state and continue riding
+      if (isForwardTraversalBanTrigger(s0, state)) {
+        return State.ofNullable(droppedState);
       }
+      return State.ofNullable(droppedState, state);
     }
 
     // Generic state boundary fork: generic RENTING_FLOATING crossing a zone boundary
