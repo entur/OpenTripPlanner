@@ -1,7 +1,7 @@
 package org.opentripplanner.standalone.config.buildconfig;
 
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
 
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParameters;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParametersBuilder;
@@ -89,7 +89,7 @@ public class OsmConfig {
       .withIncludeOsmStationEntrances(
         node
           .of("includeOsmStationEntrances")
-          .since(V2_7)
+          .since(V2_10)
           .summary(
             "Whether to include station entrances from the OSM data." + documentationAddition
           )
