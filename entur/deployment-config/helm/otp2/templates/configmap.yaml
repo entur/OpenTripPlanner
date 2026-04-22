@@ -172,10 +172,16 @@ data:
             "RECOMMENDED" : 30,
             "PREFERRED" : 0
           },
+          // Pre-populates the stop-to-stop transfer cache with option tuples observed in
+          // production traffic (top ~99% by frequency over 24 h of BigQuery logs). Each entry
+          // triggers a ~1 s graph-wide transfer-index build at startup and eliminates the
+          // corresponding first-request cache-miss cost on a cold pod.
           "transferCacheMaxSize": 75,
           "transferCacheRequests": [
             { "modes": "WALK",    "walk":    { "speed": 1.38 } },
             { "modes": "WALK",    "walk":    { "speed": 1.39 } },
+            // Entry below must match routingDefaults.walk.speed — it is the cache entry used
+            // by clients that do not send a walkSpeed variable (~14% of traffic).
             { "modes": "WALK",    "walk":    { "speed": 1.3  } },
             { "modes": "BICYCLE", "bicycle": { "speed": 8.0  } },
             { "modes": "WALK",    "walk":    { "speed": 1.31 } },
