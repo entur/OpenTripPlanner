@@ -66,12 +66,8 @@ class StateGeofencingEnforcementTest {
     // Transition to RENTING_FLOATING with a specific network
     editor.beginFloatingVehicleRenting(RentalFormFactor.SCOOTER_STANDING, null, network, false);
 
-    // Set up zones
-    for (var zone : zones) {
-      editor.initializeGeofencingZones(Set.of(zone));
-    }
-    // If multiple zones, we need to add them all. initializeGeofencingZones sets a single zone,
-    // so for multi-zone cases, build the set manually via the editor's internal access.
+    // Set up zones — pass all zones at once
+    editor.initializeGeofencingZones(Set.of(zones));
     return editor.makeState();
   }
 
@@ -119,9 +115,99 @@ class StateGeofencingEnforcementTest {
     // HIGH_PRIORITY_ZONE (priority 0) has dropOff=true, traversal=true
     // LOW_PRIORITY_ZONE (priority 10) has dropOff=false, traversal=false
     // Both are for network "tier"
-    // The governing zone should be HIGH_PRIORITY_ZONE (lowest priority value)
-    var state = createRentingState("tier", HIGH_PRIORITY_ZONE);
+    // The high-priority zone's values should win per-field
+    var state = createRentingState("tier", HIGH_PRIORITY_ZONE, LOW_PRIORITY_ZONE);
     assertTrue(state.isDropOffBannedByCurrentZones());
     assertTrue(state.isTraversalBannedByCurrentZones());
+  }
+
+  // --- Per-field precedence tests ---
+
+  @Test
+  void perFieldPrecedenceUnspecifiedFieldFallsThrough() {
+    // High-priority zone: traversalBanned=true, dropOffBanned=null (not specified)
+    // Low-priority zone: dropOffBanned=true, traversalBanned=null
+    // Expected: traversal banned (from high), drop-off banned (from low - per-field fall-through)
+    var highPriority = new GeofencingZone(
+      new FeedScopedId("tier", "zone-hp"),
+      null,
+      Polygons.OSLO_FROGNER_PARK,
+      null,
+      true,
+      null,
+      false,
+      null,
+      null,
+      0
+    );
+    var lowPriority = new GeofencingZone(
+      new FeedScopedId("tier", "zone-lp"),
+      null,
+      Polygons.OSLO,
+      true,
+      null,
+      null,
+      false,
+      null,
+      null,
+      10
+    );
+    var state = createRentingState("tier", highPriority, lowPriority);
+    assertTrue(state.isTraversalBannedByCurrentZones());
+    assertTrue(state.isDropOffBannedByCurrentZones());
+  }
+
+  @Test
+  void perFieldPrecedenceHighPriorityExplicitlyAllowsOverridesLowPriority() {
+    // High-priority zone: dropOffBanned=false (explicitly allowed)
+    // Low-priority zone: dropOffBanned=true
+    // Expected: drop-off NOT banned (high-priority explicitly allows)
+    var highPriority = new GeofencingZone(
+      new FeedScopedId("tier", "zone-hp"),
+      null,
+      Polygons.OSLO_FROGNER_PARK,
+      false,
+      null,
+      null,
+      false,
+      null,
+      null,
+      0
+    );
+    var lowPriority = new GeofencingZone(
+      new FeedScopedId("tier", "zone-lp"),
+      null,
+      Polygons.OSLO,
+      true,
+      null,
+      null,
+      false,
+      null,
+      null,
+      10
+    );
+    var state = createRentingState("tier", highPriority, lowPriority);
+    assertFalse(state.isDropOffBannedByCurrentZones());
+  }
+
+  @Test
+  void nullFieldMeansNotSpecifiedDefaultsToPermissive() {
+    // Single zone with dropOffBanned=null, traversalBanned=true
+    // Expected: traversal banned, drop-off NOT banned (null = not specified = permissive)
+    var zone = new GeofencingZone(
+      new FeedScopedId("tier", "zone1"),
+      null,
+      Polygons.OSLO,
+      null,
+      true,
+      null,
+      false,
+      null,
+      null,
+      0
+    );
+    var state = createRentingState("tier", zone);
+    assertTrue(state.isTraversalBannedByCurrentZones());
+    assertFalse(state.isDropOffBannedByCurrentZones());
   }
 }
