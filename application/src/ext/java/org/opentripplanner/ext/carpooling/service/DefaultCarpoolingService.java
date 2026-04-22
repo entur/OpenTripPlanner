@@ -3,7 +3,6 @@ package org.opentripplanner.ext.carpooling.service;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
@@ -91,7 +90,6 @@ import org.slf4j.LoggerFactory;
 public class DefaultCarpoolingService implements CarpoolingService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCarpoolingService.class);
-  static final int DEFAULT_MAX_CARPOOL_DIRECT_RESULTS = 3;
   private static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(30);
   // How far away in time a carpooling trip can be from the requested departure time to be considered
   private static final Duration ACCESS_EGRESS_SEARCH_WINDOW = Duration.ofHours(12);
@@ -148,14 +146,11 @@ public class DefaultCarpoolingService implements CarpoolingService {
    *       routing to find the insertion that minimizes additional driver travel time while
    *       respecting delay constraints.</li>
    * </ol>
-   * <p>
-   * Results are sorted by additional travel time and limited to
-   * {@value #DEFAULT_MAX_CARPOOL_DIRECT_RESULTS} itineraries.
    *
    * @param request the routing request. Must have {@link StreetMode#CARPOOL} as the direct mode.
    * @param linkingContext pre-linked vertices for the passenger's origin and destination
-   * @return a list of carpool itineraries sorted by additional travel time, or an empty list
-   *         if no viable matches are found or the direct mode is not CARPOOL
+   * @return a list of carpool itineraries, or an empty list if no viable matches are found
+   *         or the direct mode is not CARPOOL
    * @throws RoutingValidationException if origin or destination coordinates are missing
    */
   @Override
@@ -264,8 +259,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
           );
         })
         .filter(Objects::nonNull)
-        .sorted(Comparator.comparing(InsertionCandidate::totalTripDuration))
-        .limit(DEFAULT_MAX_CARPOOL_DIRECT_RESULTS)
         .toList();
 
       LOG.debug("Found {} viable insertion candidates", insertionCandidates.size());

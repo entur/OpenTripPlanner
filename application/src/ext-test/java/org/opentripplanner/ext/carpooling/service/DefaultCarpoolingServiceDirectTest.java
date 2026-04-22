@@ -282,26 +282,6 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
   }
 
   @Test
-  void returnsAtMostMaxDirectResults() {
-    int maxResults = DefaultCarpoolingService.DEFAULT_MAX_CARPOOL_DIRECT_RESULTS;
-    for (int i = 0; i < maxResults + 2; i++) {
-      var departureTime = SEARCH_TIME.plusMinutes(5 + i * 5);
-      var trip = CarpoolTripTestData.createSimpleTripWithTime(tripStart, tripEnd, departureTime);
-      repository.upsertCarpoolTrip(trip);
-    }
-
-    var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
-
-    var results = service.routeDirect(request, linkingContext);
-
-    assertEquals(
-      maxResults,
-      results.size(),
-      "Should return exactly DEFAULT_MAX_CARPOOL_DIRECT_RESULTS results"
-    );
-  }
-
-  @Test
   void twoTripsReturnTwoResults() {
     var departureTime1 = SEARCH_TIME.plusMinutes(10);
     var departureTime2 = SEARCH_TIME.plusMinutes(20);
