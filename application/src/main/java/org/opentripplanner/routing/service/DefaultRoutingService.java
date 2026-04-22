@@ -52,15 +52,22 @@ public class DefaultRoutingService implements RoutingService {
     LOG.debug("Request: {}", request);
     OTPRequestTimeoutException.checkForTimeout();
     var viaRoutingWorker = new ViaRoutingWorker(request, req -> {
-      return new RoutingWorker(serverContext, mapRequest(req), serverContext.transitService().getTimeZone()).route();
-    }
-    );
+      return new RoutingWorker(
+        serverContext,
+        mapRequest(req),
+        serverContext.transitService().getTimeZone()
+      ).route();
+    });
     // TODO: Add output logging here, see route(..) method
     return viaRoutingWorker.route();
   }
 
   private RoutingWorkerRequest mapRequest(RouteRequest request) {
-    return new RequestPreProcessor(serverContext.transitService(), serverContext.raptorTuningParameters(), timeZone).computeRequest(request);
+    return new RequestPreProcessor(
+      serverContext.transitService(),
+      serverContext.raptorTuningParameters(),
+      timeZone
+    ).computeRequest(request);
   }
 
   private void logResponse(RoutingResponse response) {

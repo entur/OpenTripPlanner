@@ -5,11 +5,16 @@ import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSear
 import org.opentripplanner.routing.api.request.RouteRequest;
 
 public class RoutingWorkerRequest {
+
   private final RouteRequest request;
   private final ZonedDateTime transitSearchTimeZero;
   private final AdditionalSearchDays additionalSearchDays;
 
-  public RoutingWorkerRequest(RouteRequest request, ZonedDateTime transitSearchTimeZero, AdditionalSearchDays additionalSearchDays) {
+  public RoutingWorkerRequest(
+    RouteRequest request,
+    ZonedDateTime transitSearchTimeZero,
+    AdditionalSearchDays additionalSearchDays
+  ) {
     this.request = request;
     this.transitSearchTimeZero = transitSearchTimeZero;
     this.additionalSearchDays = additionalSearchDays;

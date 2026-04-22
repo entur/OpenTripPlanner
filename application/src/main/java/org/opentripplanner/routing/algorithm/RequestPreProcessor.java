@@ -60,7 +60,6 @@ public class RequestPreProcessor {
     return request.copyOf().withOnBoardAccessAt(boardingDateTime, iterationStep).buildRequest();
   }
 
-
   private static AdditionalSearchDays createAdditionalSearchDays(
     RaptorTuningParameters raptorTuningParameters,
     ZoneId zoneId,

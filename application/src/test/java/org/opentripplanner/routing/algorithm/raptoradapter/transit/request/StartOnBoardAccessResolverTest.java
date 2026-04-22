@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -335,7 +335,10 @@ class StartOnBoardAccessResolverTest {
     // falls back to findPattern(trip) which returns scheduledPattern (in index)
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(scheduledPattern.getRoutingTripPattern().patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(
+      scheduledPattern.getRoutingTripPattern().patternIndex(),
+      result.tripBoarding().routeIndex()
+    );
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
@@ -561,7 +564,10 @@ class StartOnBoardAccessResolverTest {
     // Should succeed by falling back to scheduledTimetable.getPattern() (the original)
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(originalPattern.getRoutingTripPattern().patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(
+      originalPattern.getRoutingTripPattern().patternIndex(),
+      result.tripBoarding().routeIndex()
+    );
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
@@ -655,7 +661,10 @@ class StartOnBoardAccessResolverTest {
     // copiedPattern.scheduledTimetable.getPattern() → originalPattern (in index!)
     var result = resolver.resolve(tripLocation, patternSearch);
 
-    assertEquals(originalPattern.getRoutingTripPattern().patternIndex(), result.tripBoarding().routeIndex());
+    assertEquals(
+      originalPattern.getRoutingTripPattern().patternIndex(),
+      result.tripBoarding().routeIndex()
+    );
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }

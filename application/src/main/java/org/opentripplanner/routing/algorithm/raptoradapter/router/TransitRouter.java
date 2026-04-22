@@ -137,7 +137,8 @@ public class TransitRouter {
 
     var extraSearchForSorlandsbanen = createExtraMcRouterSearchForSorlandsbanen(
       accessEgresses,
-      raptorTransitData);
+      raptorTransitData
+    );
 
     // Prepare transit search
 
