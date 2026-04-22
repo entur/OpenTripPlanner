@@ -24,8 +24,7 @@ public interface CarpoolingService {
    *
    * @param request the routing request containing passenger origin, destination, and preferences
    * @param linkingContext linking context with pre-linked vertices for the request
-   * @return list of carpool itineraries, sorted by quality (additional travel time), may be empty
-   *         if no compatible trips found. Results are limited to avoid overwhelming users.
+   * @return list of carpool itineraries, may be empty if no compatible trips found
    * @throws IllegalArgumentException if request is null
    */
   List<Itinerary> routeDirect(RouteRequest request, LinkingContext linkingContext);

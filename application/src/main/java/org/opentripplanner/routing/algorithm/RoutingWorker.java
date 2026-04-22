@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -147,6 +148,8 @@ public class RoutingWorker {
       result.transform(filterChain::filter);
       result.addErrors(filterChain.getRoutingErrors());
     }
+
+    result.addErrors(checkForEmptyDirectModeResult(result));
 
     if (LOG.isDebugEnabled()) {
       LOG.debug(
@@ -341,6 +344,21 @@ public class RoutingWorker {
         )
       );
     }
+  }
+
+  /**
+   * If this is a direct-only search (no transit) and no itineraries were found, return an error
+   * so the client knows why no results were returned.
+   */
+  private Collection<RoutingError> checkForEmptyDirectModeResult(RoutingResult result) {
+    if (
+      !request.journey().transit().enabled() &&
+      result.errors().isEmpty() &&
+      result.itineraries().stream().allMatch(Itinerary::isFlaggedForDeletion)
+    ) {
+      return List.of(new RoutingError(RoutingErrorCode.NO_DIRECT_MODE_CONNECTION, null));
+    }
+    return List.of();
   }
 
   private LinkingContext linkingContext() {

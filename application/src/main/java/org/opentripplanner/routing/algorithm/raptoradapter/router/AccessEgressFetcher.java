@@ -24,7 +24,12 @@ import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.model.StreetMode;
 
-class AbstractFetchAccessEgress {
+/**
+ * This class exposes methods for fetching access and egress legs for a request.
+ * An access or egress may be e.g. a walking path to the first transit stop on a route,
+ * but could also include other modes such as bicycle, shared mobility, flex or carpooling.
+ */
+class AccessEgressFetcher {
 
   private final RouteRequest request;
   private final OtpServerRequestContext serverContext;
@@ -35,7 +40,15 @@ class AbstractFetchAccessEgress {
   private final TransitServiceResolver transitServiceResolver;
   private final CarpoolingService carpoolingService;
 
-  public AbstractFetchAccessEgress(
+  /**
+   * Creates an {@code AccessEgressFetcher} for a single route request.
+   *
+   * @param transitSearchTimeZero the point in time all times in seconds are counted from
+   * @param additionalSearchDays  extra search days beyond the departure day, required for flex
+   *                              routing
+   * @param linkingContext        contains temporary vertices for request locations.
+   */
+  public AccessEgressFetcher(
     RouteRequest request,
     OtpServerRequestContext serverContext,
     ZonedDateTime transitSearchTimeZero,
@@ -94,7 +107,7 @@ class AbstractFetchAccessEgress {
       stopCountLimit,
       linkingContext
     );
-    var accessEgresses = AccessEgressMapper.mapNearbyStops(nearbyStops, type);
+    var accessEgresses = AccessEgressMapper.mapNearbyStops(nearbyStops);
     accessEgresses = timeshiftRideHailing(streetRequest, type, accessEgresses);
 
     var results = new ArrayList<>(accessEgresses);
@@ -112,7 +125,7 @@ class AbstractFetchAccessEgress {
         linkingContext
       );
 
-      results.addAll(AccessEgressMapper.mapFlexAccessEgresses(flexAccessList, type));
+      results.addAll(AccessEgressMapper.mapFlexAccessEgresses(flexAccessList));
     }
 
     if (OTPFeature.CarPooling.isOn() && mode == StreetMode.CARPOOL) {

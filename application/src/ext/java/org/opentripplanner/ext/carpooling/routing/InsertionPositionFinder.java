@@ -32,27 +32,21 @@ public class InsertionPositionFinder {
   /** Maximum bearing deviation allowed for forward progress (90° allows detours, prevents U-turns) */
   private static final double FORWARD_PROGRESS_TOLERANCE_DEGREES = 90.0;
 
-  private final PassengerDelayConstraints delayConstraints;
   private final BeelineEstimator beelineEstimator;
 
   /**
-   * Creates a finder with default constraints and estimator.
+   * Creates a finder with default estimator.
    */
   public InsertionPositionFinder() {
-    this(new PassengerDelayConstraints(), new BeelineEstimator());
+    this(new BeelineEstimator());
   }
 
   /**
-   * Creates a finder with specified constraints and estimator.
+   * Creates a finder with specified estimator.
    *
-   * @param delayConstraints Constraints for acceptable passenger delays
    * @param beelineEstimator Estimator for beeline travel times
    */
-  public InsertionPositionFinder(
-    PassengerDelayConstraints delayConstraints,
-    BeelineEstimator beelineEstimator
-  ) {
-    this.delayConstraints = delayConstraints;
+  public InsertionPositionFinder(BeelineEstimator beelineEstimator) {
     this.beelineEstimator = beelineEstimator;
   }
 
@@ -63,22 +57,27 @@ public class InsertionPositionFinder {
    * @param trip The carpool trip being evaluated
    * @param passengerPickup Passenger's pickup location
    * @param passengerDropoff Passenger's dropoff location
+   * @param stopDuration Dwell time added at each intermediate stop; used by the beeline delay
+   *                     heuristic so its cumulative-time estimates match the per-stop budget
+   *                     check used downstream
    * @return List of viable insertion positions (may be empty)
    */
   public List<InsertionPosition> findViablePositions(
     CarpoolTrip trip,
     WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
+    WgsCoordinate passengerDropoff,
+    Duration stopDuration
   ) {
     List<WgsCoordinate> routePoints = trip.routePoints();
 
-    Duration[] beelineTimes = beelineEstimator.calculateCumulativeTimes(routePoints);
+    Duration[] beelineTimes = beelineEstimator.calculateCumulativeTimes(routePoints, stopDuration);
 
     List<InsertionPosition> viable = new ArrayList<>();
 
-    // Pickup positions: 1 to routePoints.size()-1 (cannot pick up at position 0/origin)
+    // pickupPos/dropoffPos are 0-based indices of the passenger's stops in the modified route.
+    // Pickup cannot be at index 0 (that's the driver's origin).
     for (int pickupPos = 1; pickupPos < routePoints.size(); pickupPos++) {
-      // Dropoff positions: pickupPos+1 to routePoints.size() (can drop off up to and including destination)
+      // Dropoff must be after pickup. Max is routePoints.size() (appended after all original stops except the last).
       for (int dropoffPos = pickupPos + 1; dropoffPos <= routePoints.size(); dropoffPos++) {
         if (!trip.hasCapacityForInsertion(pickupPos, dropoffPos, 1)) {
           LOG.trace(
@@ -106,24 +105,24 @@ public class InsertionPositionFinder {
           continue;
         }
 
-        if (routePoints.size() > 2) {
-          if (
-            !passesBeelineDelayCheck(
-              routePoints,
-              beelineTimes,
-              passengerPickup,
-              passengerDropoff,
-              pickupPos,
-              dropoffPos
-            )
-          ) {
-            LOG.trace(
-              "Insertion at pickup={}, dropoff={} rejected by beeline delay heuristic",
-              pickupPos,
-              dropoffPos
-            );
-            continue;
-          }
+        if (
+          !passesBeelineDelayCheck(
+            routePoints,
+            beelineTimes,
+            passengerPickup,
+            passengerDropoff,
+            pickupPos,
+            dropoffPos,
+            trip,
+            stopDuration
+          )
+        ) {
+          LOG.trace(
+            "Insertion at pickup={}, dropoff={} rejected by beeline delay heuristic",
+            pickupPos,
+            dropoffPos
+          );
+          continue;
         }
 
         viable.add(new InsertionPosition(pickupPos, dropoffPos));
@@ -139,8 +138,8 @@ public class InsertionPositionFinder {
    * to deviate too far from its intended direction.
    *
    * @param routePoints Current route points
-   * @param pickupPos Position to insert pickup (1-indexed)
-   * @param dropoffPos Position to insert dropoff (1-indexed)
+   * @param pickupPos 0-based index of the passenger's pickup in the modified route
+   * @param dropoffPos 0-based index of the passenger's dropoff in the modified route
    * @param passengerPickup Passenger pickup coordinate
    * @param passengerDropoff Passenger dropoff coordinate
    * @return true if insertion maintains forward progress
@@ -232,8 +231,9 @@ public class InsertionPositionFinder {
    * @param originalBeelineTimes Beeline cumulative times for original route
    * @param passengerPickup Passenger pickup location
    * @param passengerDropoff Passenger dropoff location
-   * @param pickupPos Pickup insertion position (1-indexed)
-   * @param dropoffPos Dropoff insertion position (1-indexed)
+   * @param pickupPos 0-based index of the passenger's pickup in the modified route
+   * @param dropoffPos 0-based index of the passenger's dropoff in the modified route
+   * @param trip The carpool trip being evaluated
    * @return true if insertion might satisfy delay constraints (proceed with A* routing)
    */
   private boolean passesBeelineDelayCheck(
@@ -242,7 +242,9 @@ public class InsertionPositionFinder {
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff,
     int pickupPos,
-    int dropoffPos
+    int dropoffPos,
+    CarpoolTrip trip,
+    Duration stopDuration
   ) {
     // Build modified coordinate list with passenger stops inserted
     List<WgsCoordinate> modifiedCoords = new ArrayList<>(originalCoords);
@@ -250,28 +252,18 @@ public class InsertionPositionFinder {
     modifiedCoords.add(dropoffPos, passengerDropoff);
 
     // Calculate beeline times for modified route
-    Duration[] modifiedBeelineTimes = beelineEstimator.calculateCumulativeTimes(modifiedCoords);
+    Duration[] modifiedBeelineTimes = beelineEstimator.calculateCumulativeTimes(
+      modifiedCoords,
+      stopDuration
+    );
 
-    // Check delays at each existing stop (exclude boarding at 0 and alighting at end)
-    for (int originalIndex = 1; originalIndex < originalCoords.size() - 1; originalIndex++) {
-      int modifiedIndex = InsertionPosition.mapOriginalIndex(originalIndex, pickupPos, dropoffPos);
-
-      Duration originalTime = originalBeelineTimes[originalIndex];
-      Duration modifiedTime = modifiedBeelineTimes[modifiedIndex];
-      Duration beelineDelay = modifiedTime.minus(originalTime);
-
-      // If even the optimistic beeline estimate exceeds threshold, actual routing will too
-      if (beelineDelay.compareTo(delayConstraints.getMaxDelay()) > 0) {
-        LOG.trace(
-          "Stop at position {} has beeline delay {}s (exceeds {}s threshold)",
-          originalIndex,
-          beelineDelay.getSeconds(),
-          delayConstraints.getMaxDelay().getSeconds()
-        );
-        return false;
-      }
-    }
-
-    return true;
+    // If even the optimistic beeline estimate exceeds a stop's budget, actual routing will too
+    return PassengerDelayConstraints.satisfiesConstraints(
+      originalBeelineTimes,
+      modifiedBeelineTimes,
+      pickupPos,
+      dropoffPos,
+      trip.stops()
+    );
   }
 }

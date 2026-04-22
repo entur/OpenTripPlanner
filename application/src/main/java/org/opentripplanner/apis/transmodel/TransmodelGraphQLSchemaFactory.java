@@ -46,6 +46,7 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
+import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.apis.support.graphql.injectdoc.ApiDocumentationProfile;
 import org.opentripplanner.apis.support.graphql.injectdoc.CustomDocumentation;
 import org.opentripplanner.apis.support.graphql.injectdoc.InjectCustomDocumentation;
@@ -651,7 +652,7 @@ public class TransmodelGraphQLSchemaFactory {
               var ids = resolveIds(environment);
 
               if (environment.getArgument("name") != null) {
-                throw new IllegalArgumentException("Unable to combine other filters with ids");
+                throw new InvalidInputException("Unable to combine other filters with ids");
               }
 
               TransitService transitService = GqlUtil.getTransitService(environment);
@@ -1156,7 +1157,7 @@ public class TransmodelGraphQLSchemaFactory {
                 ).anyMatch(environment::containsArgument) ||
                 Boolean.TRUE.equals(environment.getArgument("flexibleOnly"))
               ) {
-                throw new IllegalArgumentException("Unable to combine other filters with ids");
+                throw new InvalidInputException("Unable to combine other filters with ids");
               }
 
               return GqlUtil.getTransitService(environment).getRoutes(ids);

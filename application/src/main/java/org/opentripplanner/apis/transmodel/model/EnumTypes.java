@@ -343,6 +343,11 @@ public class EnumTypes {
       RoutingErrorCode.ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME,
       "The on-board location is ambiguous because the stop is visited more than once by the service journey. An aimedDepartureTime is necessary to disambiguate."
     )
+    .value(
+      "noDirectModeConnection",
+      RoutingErrorCode.NO_DIRECT_MODE_CONNECTION,
+      "No usable itineraries were found for the requested direct mode and no transit was included in the search"
+    )
     .build();
 
   public static final GraphQLEnumType SERVICE_ALTERATION = GraphQLEnumType.newEnum()

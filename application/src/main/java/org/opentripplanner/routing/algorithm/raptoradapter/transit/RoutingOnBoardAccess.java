@@ -74,7 +74,7 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
    * On-board access has no street state since it does not originate from a street search.
    */
   @Override
-  public State getLastState() {
+  public State getFinalState() {
     return null;
   }
 
