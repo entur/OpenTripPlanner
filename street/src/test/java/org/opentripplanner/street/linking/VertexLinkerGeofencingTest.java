@@ -173,6 +173,6 @@ class VertexLinkerGeofencingTest {
 
   private static void registerZoneIndex(Graph graph) {
     var index = new GeofencingZoneIndex(Set.of(NO_DROP_OFF_ZONE));
-    graph.setGeofencingZoneIndex("tier", index);
+    graph.setGeofencingZoneIndex("tier", index, Set.of(NO_DROP_OFF_ZONE));
   }
 }
