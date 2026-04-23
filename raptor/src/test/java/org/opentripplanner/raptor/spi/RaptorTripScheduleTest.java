@@ -1,6 +1,8 @@
 package org.opentripplanner.raptor.spi;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.raptor.spi.RaptorTripSchedule.NOT_SET;
+import static org.opentripplanner.utils.time.TimeUtils.time;
 import static org.opentripplanner.utils.time.TimeUtils.timeToStrLong;
 
 import org.junit.jupiter.api.Test;
@@ -42,5 +44,17 @@ public class RaptorTripScheduleTest {
     assertEquals("10:01:00", timeToStrLong(subject.departure(0, 1)));
     assertEquals("10:46:00", timeToStrLong(subject.departure(0, 8)));
     assertEquals("10:56:00", timeToStrLong(subject.departure(2, 1)));
+  }
+
+  @Test
+  public void flexPatternWithDuplicateStop() {
+    var subject = TestTripSchedule.schedule(
+      TestTripPattern.pattern("flex-with-repeating-stops", 1, 1, 2, 3)
+    )
+      .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
+      .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
+      .build();
+
+    assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
   }
 }
