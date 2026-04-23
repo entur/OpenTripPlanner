@@ -38,11 +38,11 @@ public class OsmNode extends OsmEntity {
   }
 
   public boolean hasHighwayTrafficLight() {
-    return hasTag("highway") && "traffic_signals".equals(getTag("highway"));
+    return "traffic_signals".equals(getTag("highway"));
   }
 
   public boolean hasCrossingTrafficLight() {
-    return hasTag("crossing") && "traffic_signals".equals(getTag("crossing"));
+    return "traffic_signals".equals(getTag("crossing"));
   }
 
   /**

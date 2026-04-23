@@ -133,6 +133,24 @@ public abstract class OsmEntity {
    */
   protected static final Set<String> CHECKED_MODES = Set.of("foot", "bicycle", "motorcar");
 
+  private static final Set<String> WALK_ONLY_HIGHWAY_VALUES = Set.of("footway", "step", "corridor");
+  private static final Set<String> NO_ACCESS_VALUES = Set.of("no", "license", "dismount");
+  private static final Set<String> HIGHWAY_BOARDING_LOCATION_VALUES = Set.of(
+    "platform",
+    "bus_stop"
+  );
+  private static final Set<String> RAILWAY_BOARDING_LOCATION_VALUES = Set.of(
+    "tram_stop",
+    "station",
+    "halt"
+  );
+  private static final Set<String> AMENITY_BOARDING_LOCATION_VALUES = Set.of(
+    "bus_station",
+    "amenity",
+    "ferry_terminal"
+  );
+  private static final Set<String> RAILWAY_PLATFORM_VALUES = Set.of("platform", "platform_edge");
+
   /**
    * Mapping for the fallback key for checking access restrictions for each access mode in OSM
    * However, access is not included because we are skeptical of access=yes tags.
@@ -145,8 +163,6 @@ public abstract class OsmEntity {
     "bicycle",
     "vehicle"
   );
-  private static final Set<String> WALK_ONLY_HIGHWAYS = Set.of("footway", "step", "corridor");
-  private static final Set<String> NO_ACCESS_TAGS = Set.of("no", "license", "dismount");
   private static final Map<StreetTraversalPermission, String> OSM_TAGS_FOR_TRAVERSAL_PERMISSION =
     Map.of(
       StreetTraversalPermission.CAR,
@@ -160,6 +176,10 @@ public abstract class OsmEntity {
   private final Map<String, String> tags;
 
   protected final long id;
+  private static final Pattern I18N_PATTERN = Pattern.compile("\\{(.*?)}");
+
+  /* To save memory this is only created when an entity actually has tags. */
+  private Map<String, String> tags;
 
   private final OsmProvider osmProvider;
 
@@ -524,7 +544,7 @@ public abstract class OsmEntity {
   public Map<String, String> generateI18NForPattern(String pattern) {
     Map<String, StringBuffer> i18n = new HashMap<>();
     i18n.put(null, new StringBuffer());
-    Matcher matcher = Pattern.compile("\\{(.*?)}").matcher(pattern);
+    Matcher matcher = I18N_PATTERN.matcher(pattern);
 
     int lastEnd = 0;
     while (matcher.find()) {
@@ -621,7 +641,7 @@ public abstract class OsmEntity {
       return Optional.empty();
     }
 
-    if ("foot".equals(mode) && !isOneOfTags("highway", WALK_ONLY_HIGHWAYS)) {
+    if ("foot".equals(mode) && !isOneOfTags("highway", WALK_ONLY_HIGHWAY_VALUES)) {
       return Optional.empty();
     }
 
@@ -706,13 +726,9 @@ public abstract class OsmEntity {
    */
   public boolean isBoardingLocation() {
     return (
-      isTag("highway", "bus_stop") ||
-      isTag("railway", "tram_stop") ||
-      isTag("railway", "station") ||
-      isTag("railway", "halt") ||
-      isTag("amenity", "bus_station") ||
-      isTag("amenity", "ferry_terminal") ||
-      isTag("highway", "platform") ||
+      isOneOfTags("highway", HIGHWAY_BOARDING_LOCATION_VALUES) ||
+      isOneOfTags("railway", RAILWAY_BOARDING_LOCATION_VALUES) ||
+      isOneOfTags("amenity", AMENITY_BOARDING_LOCATION_VALUES) ||
       isPlatform()
     );
   }
@@ -726,9 +742,7 @@ public abstract class OsmEntity {
    **/
   public boolean isPlatform() {
     var isPlatform =
-      isTag("public_transport", "platform") ||
-      isTag("railway", "platform") ||
-      isTag("railway", "platform_edge");
+      isTag("public_transport", "platform") || isOneOfTags("railway", RAILWAY_PLATFORM_VALUES);
     return isPlatform && !isTag("usage", "tourism");
   }
 
@@ -891,7 +905,7 @@ public abstract class OsmEntity {
    * Returns true if this tag is explicitly access to this entity.
    */
   private boolean isExplicitlyDenied(String key) {
-    return isOneOfTags(key, NO_ACCESS_TAGS);
+    return isOneOfTags(key, NO_ACCESS_VALUES);
   }
 
   public StreetTraversalPermission getPermission() {

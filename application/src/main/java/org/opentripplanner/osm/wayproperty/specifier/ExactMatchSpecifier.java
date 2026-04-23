@@ -1,7 +1,6 @@
 package org.opentripplanner.osm.wayproperty.specifier;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.TraverseDirection;
@@ -51,21 +50,27 @@ public class ExactMatchSpecifier implements OsmSpecifier {
 
   public boolean allTagsMatch(OsmEntity way) {
     for (var c : conditions) {
-      if (!c.isMatch(way)) return false;
+      if (!c.isMatch(way)) {
+        return false;
+      }
     }
     return true;
   }
 
   public boolean allBackwardTagsMatch(OsmEntity way) {
     for (var c : conditions) {
-      if (!c.isBackwardMatch(way)) return false;
+      if (!c.isBackwardMatch(way)) {
+        return false;
+      }
     }
     return true;
   }
 
   public boolean allForwardTagsMatch(OsmEntity way) {
     for (var c : conditions) {
-      if (!c.isForwardMatch(way)) return false;
+      if (!c.isForwardMatch(way)) {
+        return false;
+      }
     }
     return true;
   }
