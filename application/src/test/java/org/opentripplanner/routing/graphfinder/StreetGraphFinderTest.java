@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
@@ -109,13 +110,13 @@ class StreetGraphFinderTest extends GraphRoutingTest {
           street(C, D, 100, StreetTraversalPermission.ALL);
 
           tripPattern(
-            TP1 = TripPattern.of(TimetableRepositoryForTest.id("TP1"))
+            TP1 = TripPattern.of(FeedScopedIdForTestFactory.id("TP1"))
               .withRoute(R1)
               .withStopPattern(new StopPattern(List.of(st(S1), st(S2))))
               .build()
           );
           tripPattern(
-            TP2 = TripPattern.of(TimetableRepositoryForTest.id("TP2"))
+            TP2 = TripPattern.of(FeedScopedIdForTestFactory.id("TP2"))
               .withRoute(R2)
               .withStopPattern(new StopPattern(List.of(st(S1), st(S3))))
               .build()

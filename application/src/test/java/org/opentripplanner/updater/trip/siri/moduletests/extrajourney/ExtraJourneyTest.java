@@ -3,12 +3,13 @@ package org.opentripplanner.updater.trip.siri.moduletests.extrajourney;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
@@ -288,6 +289,49 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       "SCHEDULED | A 0:01 0:01 | B 0:03 0:05 | C 0:07 0:07",
       env.tripData(ADDED_TRIP_ID).showScheduledTimetable()
     );
+  }
+
+  /**
+   * When SIRI does not explicitly set boarding/alighting activity, the default rules should
+   * apply: no alighting at the first stop and no boarding at the last stop.
+   */
+  @Test
+  void testExtraJourneyDefaultBoardingAlighting() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_A).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_B)
+          .arriveAimedExpected("00:03", "00:04")
+          .departAimedExpected("00:05", "00:06")
+          .call(STOP_C)
+          .arriveAimedExpected("00:07", "00:08")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var pattern = env.tripData(ADDED_TRIP_ID).tripPattern();
+
+    // First stop: can board, cannot alight
+    assertEquals(PickDrop.SCHEDULED, pattern.getBoardType(0));
+    assertEquals(PickDrop.NONE, pattern.getAlightType(0));
+
+    // Middle stop: can board and alight
+    assertEquals(PickDrop.SCHEDULED, pattern.getBoardType(1));
+    assertEquals(PickDrop.SCHEDULED, pattern.getAlightType(1));
+
+    // Last stop: cannot board, can alight
+    assertEquals(PickDrop.NONE, pattern.getBoardType(2));
+    assertEquals(PickDrop.SCHEDULED, pattern.getAlightType(2));
   }
 
   @Test

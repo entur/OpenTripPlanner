@@ -57,8 +57,8 @@ class DirectionalCompatibilityFilterTest {
   @Test
   void accepts_tripAroundLake_passengerOnSegment_returnsTrue() {
     // Trip goes around a lake: North → East → South → West
-    var stop1 = createStopAt(0, LAKE_EAST);
-    var stop2 = createStopAt(1, LAKE_SOUTH);
+    var stop1 = createStopAt(LAKE_EAST);
+    var stop2 = createStopAt(LAKE_SOUTH);
     var trip = createTripWithStops(LAKE_NORTH, List.of(stop1, stop2), LAKE_WEST);
 
     // Passenger aligned with the southward segment (East → South)
@@ -108,9 +108,9 @@ class DirectionalCompatibilityFilterTest {
   void accepts_complexRoute_multipleSegments_findsCompatibleSegment() {
     // Trip with multiple segments going different directions
     // Go east first
-    var stop1 = createStopAt(0, OSLO_EAST);
+    var stop1 = createStopAt(OSLO_EAST);
     // Then northeast
-    var stop2 = createStopAt(1, OSLO_NORTHEAST);
+    var stop2 = createStopAt(OSLO_NORTHEAST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1, stop2), OSLO_NORTH);
 
     // Passenger going northeast (aligns with second segment)
@@ -122,7 +122,7 @@ class DirectionalCompatibilityFilterTest {
 
   @Test
   void accepts_tripWithSingleStop_checksAllSegments() {
-    var stop1 = createStopAt(0, OSLO_EAST);
+    var stop1 = createStopAt(OSLO_EAST);
     var trip = createTripWithStops(OSLO_CENTER, List.of(stop1), OSLO_NORTH);
 
     // Passenger aligned with first segment (Center → East)

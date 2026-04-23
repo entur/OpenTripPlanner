@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -116,14 +117,19 @@ public class RoutingWorker {
           var r1 = CompletableFuture.supplyAsync(() -> routeDirectStreet());
           var r2 = CompletableFuture.supplyAsync(() -> routeDirectFlex());
           var r3 = CompletableFuture.supplyAsync(() -> routeTransit());
-          var r4 = CompletableFuture.supplyAsync(() -> routeCarpooling());
+          var r4 = CompletableFuture.supplyAsync(() -> routeDirectCarpooling());
 
           result.merge(r1.join(), r2.join(), r3.join(), r4.join());
         } catch (CompletionException e) {
           RoutingValidationException.unwrapAndRethrowCompletionException(e);
         }
       } else {
-        result.merge(routeDirectStreet(), routeDirectFlex(), routeTransit(), routeCarpooling());
+        result.merge(
+          routeDirectStreet(),
+          routeDirectFlex(),
+          routeTransit(),
+          routeDirectCarpooling()
+        );
       }
     } catch (RoutingValidationException e) {
       result.merge(RoutingResult.failed(e.getRoutingErrors()));
@@ -153,6 +159,8 @@ public class RoutingWorker {
       result.transform(filterChain::filter);
       result.addErrors(filterChain.getRoutingErrors());
     }
+
+    result.addErrors(checkForEmptyDirectModeResult(result));
 
     if (LOG.isDebugEnabled()) {
       LOG.debug(
@@ -283,13 +291,15 @@ public class RoutingWorker {
     }
   }
 
-  private RoutingResult routeCarpooling() {
+  private RoutingResult routeDirectCarpooling() {
     if (OTPFeature.CarPooling.isOff()) {
       return RoutingResult.ok(List.of());
     }
     debugTimingAggregator.startedDirectCarpoolRouter();
     try {
-      return RoutingResult.ok(serverContext.carpoolingService().route(request, linkingContext()));
+      return RoutingResult.ok(
+        serverContext.carpoolingService().routeDirect(request, linkingContext())
+      );
     } catch (RoutingValidationException e) {
       return RoutingResult.failed(e.getRoutingErrors());
     } finally {
@@ -307,7 +317,8 @@ public class RoutingWorker {
         transitSearchTimeZero,
         additionalSearchDays,
         debugTimingAggregator,
-        linkingContext()
+        linkingContext(),
+        serverContext.carpoolingService()
       );
       raptorSearchParamsUsed = transitResults.getSearchParams();
       var itineraries = transitResults.getItineraries();
@@ -351,6 +362,21 @@ public class RoutingWorker {
         )
       );
     }
+  }
+
+  /**
+   * If this is a direct-only search (no transit) and no itineraries were found, return an error
+   * so the client knows why no results were returned.
+   */
+  private Collection<RoutingError> checkForEmptyDirectModeResult(RoutingResult result) {
+    if (
+      !request.journey().transit().enabled() &&
+      result.errors().isEmpty() &&
+      result.itineraries().stream().allMatch(Itinerary::isFlaggedForDeletion)
+    ) {
+      return List.of(new RoutingError(RoutingErrorCode.NO_DIRECT_MODE_CONNECTION, null));
+    }
+    return List.of();
   }
 
   private LinkingContext linkingContext() {

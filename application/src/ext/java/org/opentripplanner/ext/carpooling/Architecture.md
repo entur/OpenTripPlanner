@@ -18,7 +18,6 @@ org.opentripplanner.ext.carpooling/
 │   └── CarpoolStreetRouter  # Street routing for carpooling
 ├── filter/                   # Trip pre-filtering
 │   ├── TripFilter           # Filter interface
-│   ├── CapacityFilter       # Checks available capacity
 │   ├── TimeBasedFilter      # Time window filtering
 │   ├── DistanceBasedFilter  # Geographic distance checks
 │   └── DirectionalCompatibilityFilter # Directional alignment

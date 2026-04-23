@@ -1,10 +1,5 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router;
 
-import static org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType.ACCESS;
-import static org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType.EGRESS;
-
-import java.time.Duration;
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,31 +9,25 @@ import java.util.concurrent.CompletionException;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
+import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
-import org.opentripplanner.raptor.spi.ExtraMcRouterSearch;
+import org.opentripplanner.raptor.extensions.extrasearch.ExtraMcRouterSearch;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressPenaltyDecorator;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressRouter;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgresses;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.street.FlexAccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.AccessEgressMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.DirectTransitRequestMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorRequestMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.DefaultTransitDataProviderFilter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.algorithm.transferoptimization.configure.TransferOptimizationServiceConfigurator;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
@@ -47,7 +36,6 @@ import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
-import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -64,7 +52,7 @@ public class TransitRouter {
   private final AdditionalSearchDays additionalSearchDays;
   private final ViaCoordinateTransferFactory viaTransferResolver;
   private final LinkingContext linkingContext;
-  private final AccessEgressRouter accessEgressRouter;
+  private final AccessEgressFetcher fetchAccessEgress;
 
   private TransitRouter(
     RouteRequest request,
@@ -73,7 +61,8 @@ public class TransitRouter {
     ZonedDateTime transitSearchTimeZero,
     AdditionalSearchDays additionalSearchDays,
     DebugTimingAggregator debugTimingAggregator,
-    LinkingContext linkingContext
+    LinkingContext linkingContext,
+    CarpoolingService carpoolingService
   ) {
     this.request = request;
     this.serverContext = serverContext;
@@ -83,8 +72,14 @@ public class TransitRouter {
     this.debugTimingAggregator = debugTimingAggregator;
     this.viaTransferResolver = serverContext.viaTransferResolver();
     this.linkingContext = linkingContext;
-    this.accessEgressRouter = new AccessEgressRouter(
-      new TransitServiceResolver(serverContext.transitService())
+
+    this.fetchAccessEgress = new AccessEgressFetcher(
+      request,
+      serverContext,
+      transitSearchTimeZero,
+      additionalSearchDays,
+      linkingContext,
+      carpoolingService
     );
   }
 
@@ -95,7 +90,8 @@ public class TransitRouter {
     ZonedDateTime transitSearchTimeZero,
     AdditionalSearchDays additionalSearchDays,
     DebugTimingAggregator debugTimingAggregator,
-    LinkingContext linkingContext
+    LinkingContext linkingContext,
+    CarpoolingService carpoolingService
   ) {
     TransitRouter transitRouter = new TransitRouter(
       request,
@@ -104,7 +100,8 @@ public class TransitRouter {
       transitSearchTimeZero,
       additionalSearchDays,
       debugTimingAggregator,
-      linkingContext
+      linkingContext,
+      carpoolingService
     );
 
     return transitRouter.route();
@@ -257,98 +254,16 @@ public class TransitRouter {
 
   private Collection<? extends RoutingAccessEgress> fetchAccess() {
     debugTimingAggregator.startedAccessCalculating();
-    var list = fetchAccessEgresses(ACCESS);
+    var list = fetchAccessEgress.fetchAccess();
     debugTimingAggregator.finishedAccessCalculating();
     return list;
   }
 
   private Collection<? extends RoutingAccessEgress> fetchEgress() {
     debugTimingAggregator.startedEgressCalculating();
-    var list = fetchAccessEgresses(EGRESS);
+    var list = fetchAccessEgress.fetchEgress();
     debugTimingAggregator.finishedEgressCalculating();
     return list;
-  }
-
-  private Collection<? extends RoutingAccessEgress> fetchAccessEgresses(AccessEgressType type) {
-    var streetRequest = type.isAccess() ? request.journey().access() : request.journey().egress();
-    StreetMode mode = streetRequest.mode();
-
-    // Prepare access/egress lists
-    var accessBuilder = request.copyOf();
-
-    if (type.isAccess()) {
-      accessBuilder.withPreferences(p -> {
-        p.withBike(b -> b.withRental(r -> r.withAllowArrivingInRentedVehicleAtDestination(false)));
-        p.withCar(c -> c.withRental(r -> r.withAllowArrivingInRentedVehicleAtDestination(false)));
-        p.withScooter(s ->
-          s.withRental(r -> r.withAllowArrivingInRentedVehicleAtDestination(false))
-        );
-      });
-    }
-
-    var accessRequest = accessBuilder.buildRequest();
-    var accessEgressPreferences = accessRequest.preferences().street().accessEgress();
-
-    Duration durationLimit = accessEgressPreferences.maxDuration().valueOf(mode);
-    int stopCountLimit = accessEgressPreferences.maxStopCountLimit().limitForMode(mode);
-
-    var nearbyStops = accessEgressRouter.findAccessEgresses(
-      accessRequest,
-      streetRequest.mode(),
-      serverContext.listExtensionRequestContexts(accessRequest),
-      type,
-      durationLimit,
-      stopCountLimit,
-      linkingContext
-    );
-    var accessEgresses = AccessEgressMapper.mapNearbyStops(nearbyStops, type);
-    accessEgresses = timeshiftRideHailing(streetRequest, type, accessEgresses);
-
-    var results = new ArrayList<>(accessEgresses);
-
-    // Special handling of flex accesses
-    if (OTPFeature.FlexRouting.isOn() && mode == StreetMode.FLEXIBLE) {
-      var flexAccessList = FlexAccessEgressRouter.routeAccessEgress(
-        accessRequest,
-        accessEgressRouter,
-        serverContext,
-        additionalSearchDays,
-        serverContext.flexParameters(),
-        serverContext.listExtensionRequestContexts(accessRequest),
-        type,
-        linkingContext
-      );
-
-      results.addAll(AccessEgressMapper.mapFlexAccessEgresses(flexAccessList, type));
-    }
-
-    return results;
-  }
-
-  /**
-   * Given a list of {@code results} shift the access ones that contain driving so that they only
-   * start at the time when the ride hailing vehicle can actually be there to pick up passengers.
-   * <p>
-   * If there are accesses/egresses with only walking, then they remain unchanged.
-   * <p>
-   * This method is a good candidate to be moved to the access/egress filter chain when that has
-   * been added.
-   */
-  private List<RoutingAccessEgress> timeshiftRideHailing(
-    StreetRequest streetRequest,
-    AccessEgressType type,
-    List<RoutingAccessEgress> accessEgressList
-  ) {
-    if (streetRequest.mode() != StreetMode.CAR_HAILING) {
-      return accessEgressList;
-    }
-    return RideHailingAccessShifter.shiftAccesses(
-      type.isAccess(),
-      accessEgressList,
-      serverContext.rideHailingServices(),
-      request,
-      Instant.now()
-    );
   }
 
   private RaptorRoutingRequestTransitData createRequestTransitDataProvider(
