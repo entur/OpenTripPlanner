@@ -12,6 +12,7 @@ import org.opentripplanner.gbfs.GbfsDataSourceParameters;
 public record GbfsGeofencingFeedParameters(
   String url,
   @Nullable String network,
+  boolean applyBusinessAreas,
   HttpHeaders httpHeaders
 ) implements GbfsDataSourceParameters {
   public GbfsGeofencingFeedParameters {
