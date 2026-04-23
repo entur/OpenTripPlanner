@@ -39,11 +39,17 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
     );
 
     List<GeofencingZone> allZones = new ArrayList<>();
+    boolean anyFeedAppliesBusinessAreas = false;
 
     try (var httpClientFactory = new OtpHttpClientFactory()) {
       for (var feedParams : parameters.feeds()) {
         try {
           var zones = loadGeofencingZonesFromFeed(feedParams, httpClientFactory);
+          if (!feedParams.applyBusinessAreas()) {
+            zones = zones.stream().map(GeofencingZone::withoutBusinessArea).toList();
+          } else {
+            anyFeedAppliesBusinessAreas = true;
+          }
           allZones.addAll(zones);
           LOG.info("Loaded {} geofencing zones from GBFS feed: {}", zones.size(), feedParams.url());
         } catch (Exception e) {
@@ -60,7 +66,7 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
     var applier = new GeofencingZoneApplier(
       graph::findEdgesAlongLineStrings,
       graph::findEdges,
-      parameters.applyBusinessAreas()
+      anyFeedAppliesBusinessAreas
     );
     var result = applier.applyGeofencingZones(allZones);
 

@@ -173,6 +173,28 @@ public final class GeofencingZone implements Serializable {
     return businessArea;
   }
 
+  /**
+   * Returns a copy of this zone with {@code businessArea} set to false.
+   * If already false, returns this instance.
+   */
+  public GeofencingZone withoutBusinessArea() {
+    if (!businessArea) {
+      return this;
+    }
+    return new GeofencingZone(
+      id,
+      name,
+      geometry,
+      dropOffBanned,
+      traversalBanned,
+      rideStartBanned,
+      false,
+      vehicleTypeIds,
+      maximumSpeedKph,
+      priority
+    );
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
