@@ -27,6 +27,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add NO_DIRECT_MODE_CONNECTION routing error code for direct-only searches [#7494](https://github.com/opentripplanner/OpenTripPlanner/pull/7494)
 - De-duplicate boardinglocations on areas [#7508](https://github.com/opentripplanner/OpenTripPlanner/pull/7508)
 - Speed up tag lookup during OSM processing [#7536](https://github.com/opentripplanner/OpenTripPlanner/pull/7536)
+- Include entrances that are part of a stop area relation, change build config field `includeOsmSubwayEntrance` to `includeOsmStationEntrance` [#7170](https://github.com/opentripplanner/OpenTripPlanner/pull/7170)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
