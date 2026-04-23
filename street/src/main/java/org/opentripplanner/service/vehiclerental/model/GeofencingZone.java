@@ -1,5 +1,6 @@
 package org.opentripplanner.service.vehiclerental.model;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -32,7 +33,8 @@ public record GeofencingZone(
   @Nullable List<String> vehicleTypeIds,
   @Nullable Integer maximumSpeedKph,
   int priority
-) {
+)
+  implements Serializable {
   /**
    * Convenience constructor for zones with only drop-off and traversal restrictions.
    * Sets {@code rideStartBanned} to false, infers {@code businessArea}, and uses default priority.
