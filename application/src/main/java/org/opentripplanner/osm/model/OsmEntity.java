@@ -13,6 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -21,7 +22,6 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -789,14 +789,20 @@ public abstract class OsmEntity {
    * Values are split by semicolons.
    */
   public Set<String> getMultiTagValues(Set<String> refTags) {
-    return refTags
-      .stream()
-      .map(this::getTag)
-      .filter(Objects::nonNull)
-      .flatMap(v -> Arrays.stream(v.split(";")))
-      .map(String::strip)
-      .filter(v -> !v.isBlank())
-      .collect(Collectors.toUnmodifiableSet());
+    Set<String> result = HashSet.newHashSet(2);
+    for (var tag : refTags) {
+      var value = getTag(tag);
+      if (value == null) {
+        continue;
+      }
+      for (var part : value.split(";")) {
+        var stripped = part.strip();
+        if (!stripped.isBlank()) {
+          result.add(stripped);
+        }
+      }
+    }
+    return result;
   }
 
   public OsmProvider getOsmProvider() {
