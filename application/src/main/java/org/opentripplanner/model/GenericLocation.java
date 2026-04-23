@@ -21,10 +21,6 @@ public class GenericLocation {
   @Nullable
   private final FeedScopedId stopId;
 
-  /**
-   * Coordinates of the location. These can be used by themselves or as a fallback if placeId is not
-   * found.
-   */
   @Nullable
   WgsCoordinate coordinate;
 
@@ -77,7 +73,8 @@ public class GenericLocation {
   }
 
   /**
-   * Returns this as a Coordinate object.
+   * Coordinates of the location. These can be used by themselves or as a fallback if placeId is not
+   * found.
    */
   @Nullable
   public Coordinate getCoordinate() {
@@ -87,6 +84,10 @@ public class GenericLocation {
     return coordinate.asJtsCoordinate();
   }
 
+  /**
+   * Coordinates of the location. These can be used by themselves or as a fallback if placeId is not
+   * found.
+   */
   @Nullable
   public WgsCoordinate wgsCoordinate() {
     return coordinate;
