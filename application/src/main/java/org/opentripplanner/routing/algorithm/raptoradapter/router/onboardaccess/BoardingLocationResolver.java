@@ -6,9 +6,11 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.TripPatternForDates;
@@ -95,11 +97,16 @@ public class BoardingLocationResolver {
     return raptorTimetables
       .stream()
       .filter(patternForDates ->
-        patternForDates
-          .tripPatternForDate(tripAndServiceDate.serviceDate)
-          .tripTimes()
-          .stream()
-          .anyMatch(tripTime -> tripTime.getTrip().getId().equals(tripAndServiceDate.trip.getId()))
+        tripPatternForDate(patternForDates, tripAndServiceDate.serviceDate)
+          .map(tripPatternForDate ->
+            tripPatternForDate
+              .tripTimes()
+              .stream()
+              .anyMatch(tripTime ->
+                tripTime.getTrip().getId().equals(tripAndServiceDate.trip.getId())
+              )
+          )
+          .orElse(false)
       )
       .findFirst()
       .orElseThrow(() ->
@@ -116,19 +123,28 @@ public class BoardingLocationResolver {
     RaptorRoutingRequestTransitData raptorRequestTransitData,
     FeedScopedId stopLocationId
   ) {
-    var stop = transitService.getRegularStop(stopLocationId);
-    var station = transitService.getStation(stopLocationId);
-    if (stop == null && station == null) {
-      throw new IllegalArgumentException(
-        "No stop or station found with id %s".formatted(stopLocationId)
-      );
+    return raptorRequestTransitData.activeTripPatternsByStopIndices(getStopIndices(stopLocationId));
+  }
+
+  /**
+   * Find a trip pattern for the given service date. Either returns the trip pattern if it exists
+   * in the data, or an empty Optional if the requested date is not present.
+   */
+  private Optional<TripPatternForDate> tripPatternForDate(
+    TripPatternForDates tripPatternForDates,
+    LocalDate serviceDate
+  ) {
+    var dayIndexIterator = tripPatternForDates.tripPatternForDatesIndexIterator(true);
+
+    while (dayIndexIterator.hasNext()) {
+      var dayIndex = dayIndexIterator.next();
+      var tripPattern = tripPatternForDates.tripPatternForDate(dayIndex);
+      if (tripPattern.getServiceDate().equals(serviceDate)) {
+        return Optional.of(tripPattern);
+      }
     }
-    if (stop != null) {
-      return raptorRequestTransitData.activeTripPatternsPerStop(stop.getIndex());
-    } else {
-      var stopsInStation = station.getChildStops().stream().map(StopLocation::getIndex).toList();
-      return raptorRequestTransitData.activeTripPatternsByStopIndices(stopsInStation);
-    }
+
+    return Optional.empty();
   }
 
   /**
