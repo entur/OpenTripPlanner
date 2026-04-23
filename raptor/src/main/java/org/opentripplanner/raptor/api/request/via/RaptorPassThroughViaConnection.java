@@ -14,13 +14,13 @@ public final class RaptorPassThroughViaConnection extends ViaConnection {
   }
 
   @Override
-  public boolean isBetterOrEqual(ViaConnection other) {
-    return equals(other);
+  public boolean leftDominanceExist(ViaConnection right) {
+    return !equals(right);
   }
 
   @Override
   public boolean equals(Object other) {
-    return super.equals(other, getClass());
+    return super.sameTypeAndStop(other, getClass());
   }
 
   @Override

@@ -5,6 +5,7 @@ import java.util.BitSet;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
+import org.opentripplanner.raptor.util.paretoset.ParetoDominance;
 import org.opentripplanner.utils.lang.IntUtils;
 
 /**
@@ -70,7 +71,7 @@ public final class RaptorViaLocation {
   }
 
   /**
-   * This is a convenient accessor method used inside Raptor. It converts the list stops to a
+   * This is a convenient accessor method used inside Raptor. It converts the list of stops to a
    * bit-set. Add other access methods if needed.
    */
   public BitSet asBitSet() {
@@ -80,16 +81,19 @@ public final class RaptorViaLocation {
       .collect(BitSet::new, BitSet::set, BitSet::or);
   }
 
-  /// Compare all pairs to check for duplicates and non-optimal connections Avoid usage of this
+  /// Compare all pairs to check for duplicates and non-optimal connections. Avoid usage of this
   /// method because it can have a really bad performance.
   public void validateDuplicateConnections() {
+    var comparator = ViaConnection.paretoComparator();
     for (int i = 0; i < connections.size(); ++i) {
       var a = connections.get(i);
       for (int j = i + 1; j < connections.size(); ++j) {
         var b = connections.get(j);
-        if (a.isBetterOrEqual(b) || b.isBetterOrEqual(a)) {
+        // If NOT both values dominate each other, at least one should be dropped
+        var dominance = comparator.compare(a, b);
+        if (dominance == ParetoDominance.NONE) {
           throw new IllegalArgumentException(
-            "All connection need to be pareto-optimal: (" + a + ") <-> (" + b + ")"
+            "All connection need to be pareto-optimal: %s %s %s".formatted(a, dominance, b)
           );
         }
       }

@@ -23,17 +23,17 @@ public final class RaptorVisitStopViaConnection extends ViaConnection {
   }
 
   @Override
-  public boolean isBetterOrEqual(ViaConnection other) {
-    if (!super.equals(other, getClass())) {
-      return false;
+  public boolean leftDominanceExist(ViaConnection right) {
+    if (!sameTypeAndStop(right, getClass())) {
+      return true;
     }
-    var o = (RaptorVisitStopViaConnection) other;
-    return minimumWaitTime <= o.minimumWaitTime;
+    var o = (RaptorVisitStopViaConnection) right;
+    return minimumWaitTime < o.minimumWaitTime;
   }
 
   @Override
   public boolean equals(Object other) {
-    if (!super.equals(other, getClass())) {
+    if (!super.sameTypeAndStop(other, getClass())) {
       return false;
     }
     var o = (RaptorVisitStopViaConnection) other;
@@ -49,7 +49,7 @@ public final class RaptorVisitStopViaConnection extends ViaConnection {
   public final String toString(RaptorStopNameResolver stopNameResolver) {
     var buf = new StringBuilder("(stop ").append(stopNameResolver.apply(fromStop()));
     if (minimumWaitTime > RaptorConstants.ZERO) {
-      buf.append(" ").append(DurationUtils.durationToStr(minimumWaitTime));
+      buf.append(" [").append(DurationUtils.durationToStr(minimumWaitTime)).append(']');
     }
     return buf.append(')').toString();
   }

@@ -40,23 +40,17 @@ public final class RaptorTransferViaConnection extends ViaConnection {
   }
 
   @Override
-  public boolean isBetterOrEqual(ViaConnection other) {
-    if (!super.equals(other, getClass())) {
-      return false;
-    }
-    var o = (RaptorTransferViaConnection) other;
-    if (toStop() != o.toStop()) {
-      return false;
-    }
-    if (durationInSeconds() < o.durationInSeconds() || c1() < o.c1()) {
+  public boolean leftDominanceExist(ViaConnection right) {
+    if (!super.sameTypeAndStop(right, getClass())) {
       return true;
     }
-    return durationInSeconds() == o.durationInSeconds() && c1() == o.c1();
+    var r = (RaptorTransferViaConnection) right;
+    return toStop() != r.toStop() || durationInSeconds() < r.durationInSeconds() || c1() < r.c1();
   }
 
   @Override
   public boolean equals(Object other) {
-    if (!super.equals(other, getClass())) {
+    if (!super.sameTypeAndStop(other, getClass())) {
       return false;
     }
     var o = (RaptorTransferViaConnection) other;
@@ -69,16 +63,16 @@ public final class RaptorTransferViaConnection extends ViaConnection {
   }
 
   @Override
-  public final String toString(RaptorStopNameResolver stopNameResolver) {
+  public String toString(RaptorStopNameResolver stopNameResolver) {
     return new StringBuilder("(transfer ")
       .append(stopNameResolver.apply(fromStop()))
       .append(" ~ ")
       .append(stopNameResolver.apply(toStop()))
-      .append(" ")
+      .append(" [")
       .append(DurationUtils.durationToStr(durationInSeconds()))
       .append(" ")
       .append(RaptorValueType.C1.format(c1()))
-      .append(')')
+      .append("])")
       .toString();
   }
 }

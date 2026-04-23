@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.api.request.via;
 
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
+import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 
 /// A via-connection is used to define one of the physical locations in a via location Raptor must
 /// visit. At least one connection in a {@link RaptorViaLocation} must be used. A connection can be
@@ -48,6 +49,10 @@ public abstract sealed class ViaConnection
     this.fromStop = fromStop;
   }
 
+  public static ParetoComparator<ViaConnection> paretoComparator() {
+    return (l, r) -> l.leftDominanceExist(r);
+  }
+
   /**
    * Stop index where the connection starts. If only one stop is involved, then this is the
    * stop where the path continues from as well. Note! The {@code toStop()} method is only defined
@@ -57,12 +62,14 @@ public abstract sealed class ViaConnection
     return fromStop;
   }
 
-  /**
-   * This method is used to check that all connections are unique/provide an optimal path.
-   * The method returns {@code true} if this instance is better or equals to the given other
-   * stop with respect to being pareto-optimal.
-   */
-  public abstract boolean isBetterOrEqual(ViaConnection other);
+  /// This method is used to create a {@link ParetoComparator}, see {@link #paretoComparator()}.
+  ///
+  /// **Notes**
+  /// - If the connection is connecting diffrent stops, they by definition dominates each other.
+  /// - Only parameters having a direct effect on one of the search ciriteria should be included.
+  ///   For example _minimum wait time_ should be included in the comparason, because it has an
+  ///   effect on the arrivel time.
+  abstract boolean leftDominanceExist(ViaConnection right);
 
   @Override
   public final String toString() {
@@ -73,7 +80,7 @@ public abstract sealed class ViaConnection
 
   /// Use this to test if the {@code other} value is of type {@code expectedType} and has the same
   /// {@code fromStop}, if not, return {@code false}.
-  final boolean equals(Object other, Class<? extends ViaConnection> expectedType) {
+  final boolean sameTypeAndStop(Object other, Class<? extends ViaConnection> expectedType) {
     if (other == null || expectedType != other.getClass()) {
       return false;
     }

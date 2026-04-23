@@ -117,7 +117,7 @@ class RaptorRequestMapperTest {
 
     assertTrue(result.searchParams().isViaSearch());
     assertEquals(
-      "[RaptorViaLocation{via-visit Via A : [(stop 0 13m)]}]",
+      "[RaptorViaLocation{via-visit Via A : [(stop 0 [13m])]}]",
       result.searchParams().viaLocations().toString()
     );
   }
@@ -151,7 +151,7 @@ class RaptorRequestMapperTest {
 
     assertFalse(result.searchParams().viaLocations().isEmpty());
     assertEquals(
-      "[RaptorViaLocation{via-visit Via coordinate : [(transfer 47 ~ 123 10m10s C₁12)]}]",
+      "[RaptorViaLocation{via-visit Via coordinate : [(transfer 47 ~ 123 [10m10s C₁12])]}]",
       result.searchParams().viaLocations().toString()
     );
   }

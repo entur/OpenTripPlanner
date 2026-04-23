@@ -73,7 +73,7 @@ public class RaptorArchitectureTest {
     var request = API.subPackage("request");
     var requestVia = request.subPackage("via");
     request.dependsOn(OTP_UTILS, debug, API_MODEL, API_PATH, view, RAPTOR_SPI, requestVia).verify();
-    requestVia.dependsOn(OTP_UTILS, API_MODEL, RAPTOR_SPI).verify();
+    requestVia.dependsOn(OTP_UTILS, RAPTOR_UTIL_PARETO_SET, API_MODEL, RAPTOR_SPI).verify();
     API.subPackage("response")
       .dependsOn(OTP_UTILS, API_MODEL, API_PATH, request, RAPTOR_SPI)
       .verify();
