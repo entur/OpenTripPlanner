@@ -237,7 +237,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 4037,
+      "generalizedCost" : 4036,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -1700,7 +1700,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 4037,
+      "generalizedCost" : 4036,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -2851,7 +2851,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3876,
+      "generalizedCost" : 3872,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -3144,7 +3144,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "0"
           },
-          "generalizedCost" : 1739,
+          "generalizedCost" : 1744,
           "headsign" : "NW 23rd Ave",
           "interlineWithPreviousLeg" : false,
           "intermediateStops" : [
@@ -3877,7 +3877,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3721,
+      "generalizedCost" : 3716,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -4183,7 +4183,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "0"
           },
-          "generalizedCost" : 1356,
+          "generalizedCost" : 1361,
           "headsign" : "Montgomery Park",
           "interlineWithPreviousLeg" : false,
           "intermediateStops" : [
@@ -4917,7 +4917,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3721,
+      "generalizedCost" : 3716,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -5223,7 +5223,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "0"
           },
-          "generalizedCost" : 1356,
+          "generalizedCost" : 1361,
           "headsign" : "Sauvie Is. via St.Johns",
           "interlineWithPreviousLeg" : false,
           "intermediateStops" : [

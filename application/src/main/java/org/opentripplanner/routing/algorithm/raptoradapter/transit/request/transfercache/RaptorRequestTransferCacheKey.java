@@ -1,5 +1,7 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.request.transfercache;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -13,7 +15,23 @@ import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transfer.regular.model.Transfer;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
+/**
+ * Walk parameters are bucketed to reduce transfer-cache key cardinality. Real-world walk
+ * speeds and reluctances are client-supplied per request and cluster around many
+ * close-but-distinct values (speed: 1.30, 1.31, 1.38, 1.39, ...); each distinct value
+ * would otherwise trigger a ~900 ms transfer-index rebuild on first touch. Rounding to
+ * the nearest value on a coarser grid (half-up on ties) collapses neighbouring values
+ * into a shared cache entry:
+ * <ul>
+ *   <li>speed: step 0.05 m/s</li>
+ *   <li>reluctance: step 0.1 below 3.0, 0.5 between 3.0 and 10.0, 1.0 at 10.0 and above</li>
+ * </ul>
+ * The resulting small deviation of walk speed and walk reluctance in pre-computed
+ * transfer times is acceptable.
+ */
 class RaptorRequestTransferCacheKey {
+
+  private static final double WALK_SPEED_BUCKET = 0.05;
 
   private final List<List<Transfer>> transfersByStopIndex;
   private final StreetSearchRequest request;
@@ -24,8 +42,48 @@ class RaptorRequestTransferCacheKey {
     RouteRequest request
   ) {
     this.transfersByStopIndex = transfersByStopIndex;
-    this.request = StreetSearchRequestMapper.mapToTransferRequest(request).build();
+    this.request = bucketWalk(StreetSearchRequestMapper.mapToTransferRequest(request).build());
     this.options = new StreetRelevantOptions(this.request);
+  }
+
+  private static StreetSearchRequest bucketWalk(StreetSearchRequest request) {
+    if (!request.mode().includesWalking()) {
+      return request;
+    }
+    WalkRequest walk = request.walk();
+    double currentSpeed = walk.speed();
+    double bucketedSpeed = bucketTo(currentSpeed, WALK_SPEED_BUCKET);
+    double currentReluctance = walk.reluctance();
+    double bucketedReluctance = bucketTo(currentReluctance, reluctanceStep(currentReluctance));
+    if (bucketedSpeed == currentSpeed && bucketedReluctance == currentReluctance) {
+      return request;
+    }
+    return StreetSearchRequest.copyOf(request)
+      .withWalk(b -> b.withSpeed(bucketedSpeed).withReluctance(bucketedReluctance))
+      .build();
+  }
+
+  private static double reluctanceStep(double reluctance) {
+    if (reluctance < 3.0) {
+      return 0.1;
+    }
+    if (reluctance < 10.0) {
+      return 0.5;
+    }
+    return 1.0;
+  }
+
+  /**
+   * Round {@code value} to the nearest multiple of {@code step}, with ties rounded up.
+   * BigDecimal is used to avoid floating-point bias at bucket boundaries (e.g. so that
+   * {@code 2.05 / 0.1} is treated as exactly 20.5 and rounds to 2.1 rather than drifting
+   * to 2.0 through IEEE-754 representation of 0.1).
+   */
+  private static double bucketTo(double value, double step) {
+    return BigDecimal.valueOf(value)
+      .divide(BigDecimal.valueOf(step), 0, RoundingMode.HALF_UP)
+      .multiply(BigDecimal.valueOf(step))
+      .doubleValue();
   }
 
   public List<List<Transfer>> transfersByStopIndex() {

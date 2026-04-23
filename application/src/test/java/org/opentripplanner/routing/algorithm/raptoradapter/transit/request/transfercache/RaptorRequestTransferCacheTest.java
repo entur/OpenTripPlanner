@@ -135,6 +135,117 @@ public class RaptorRequestTransferCacheTest {
   }
 
   @Test
+  public void testWalkSpeedIsBucketedToNearest5cm() {
+    List<List<Transfer>> list = List.of();
+
+    // 1.38, 1.39, 1.40, 1.41, 1.42 are all closer to 1.40 than to 1.35 or 1.45 -> same bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.38)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.39))
+    );
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.40)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.41))
+    );
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.42)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.38))
+    );
+
+    // 1.42 rounds to 1.40, 1.43 rounds to 1.45 -> different buckets.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.42)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.43))
+    );
+
+    // Tie (1.425) rounds half-up to 1.45.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.425)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.45))
+    );
+
+    // Exact multiples of 0.05 stay in their own bucket.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.30)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithSpeed(1.35))
+    );
+  }
+
+  @Test
+  public void testWalkSpeedBucketingIsSkippedForNonWalkingModes() {
+    List<List<Transfer>> list = List.of();
+
+    // In CAR mode walk sub-options are forced to DEFAULT, so walk speed is irrelevant;
+    // two CAR requests with different walk speeds must still produce equal cache keys.
+    RouteRequest car1 = RouteRequest.of()
+      .withFrom(GenericLocation.fromCoordinate(0, 0))
+      .withTo(GenericLocation.fromCoordinate(1, 1))
+      .withJourney(b -> b.withAllModes(StreetMode.CAR))
+      .withPreferences(p -> p.withWalk(b -> b.withSpeed(1.38)))
+      .buildRequest();
+    RouteRequest car2 = RouteRequest.of()
+      .withFrom(GenericLocation.fromCoordinate(0, 0))
+      .withTo(GenericLocation.fromCoordinate(1, 1))
+      .withJourney(b -> b.withAllModes(StreetMode.CAR))
+      .withPreferences(p -> p.withWalk(b -> b.withSpeed(1.41)))
+      .buildRequest();
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, car1),
+      new RaptorRequestTransferCacheKey(list, car2)
+    );
+  }
+
+  @Test
+  public void testWalkReluctanceIsBucketedWithTieredSteps() {
+    List<List<Transfer>> list = List.of();
+
+    // Below 3.0: step 0.1, round to nearest (half-up).
+    // 2.05 ties and rounds up to 2.1; 2.10 stays at 2.1 -> same bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.05)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.10))
+    );
+    // 2.10 -> 2.1, 2.14 -> 2.1 (nearest is 2.1, 2.15 would tie to 2.2).
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.10)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.14))
+    );
+    // 2.14 -> 2.1, 2.15 -> 2.2 (tie rounded up).
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.14)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.15))
+    );
+
+    // [3.0, 10.0): step 0.5, round to nearest.
+    // 3.1 -> 3.0, 3.2 -> 3.0 (both closer to 3.0 than to 3.5).
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.1)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.2))
+    );
+    // 3.3 -> 3.5, 3.4 -> 3.5 (both closer to 3.5).
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.3)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.4))
+    );
+    // Crossing the 0.25-halfway point: 3.2 -> 3.0, 3.3 -> 3.5.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.2)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.3))
+    );
+
+    // [10.0, inf): step 1.0. Units.reluctance already rounds values >= 10.0 to integers
+    // (half-up), so 10.0 and 10.4 both normalize to 10; 10.5 normalizes to 11.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(10.0)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(10.4))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(10.4)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(10.5))
+    );
+  }
+
+  @Test
   public void testRaptorRequestTransferCacheKeyWithTurnReluctance() {
     List<List<Transfer>> list = List.of();
 
@@ -159,5 +270,19 @@ public class RaptorRequestTransferCacheTest {
     return RouteRequest.of()
       .withFrom(GenericLocation.fromCoordinate(0, 0))
       .withTo(GenericLocation.fromCoordinate(1, 1));
+  }
+
+  private static RouteRequest walkRequestWithSpeed(double speed) {
+    return builder()
+      .withJourney(b -> b.withAllModes(StreetMode.WALK))
+      .withPreferences(p -> p.withWalk(b -> b.withSpeed(speed)))
+      .buildRequest();
+  }
+
+  private static RouteRequest walkRequestWithReluctance(double reluctance) {
+    return builder()
+      .withJourney(b -> b.withAllModes(StreetMode.WALK))
+      .withPreferences(p -> p.withWalk(b -> b.withReluctance(reluctance)))
+      .buildRequest();
   }
 }
