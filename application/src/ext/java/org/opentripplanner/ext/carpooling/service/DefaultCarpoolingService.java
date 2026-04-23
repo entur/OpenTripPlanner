@@ -3,15 +3,12 @@ package org.opentripplanner.ext.carpooling.service;
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
-import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
@@ -44,9 +41,7 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.TransitService;
@@ -95,17 +90,9 @@ import org.slf4j.LoggerFactory;
 public class DefaultCarpoolingService implements CarpoolingService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCarpoolingService.class);
-  static final int DEFAULT_MAX_CARPOOL_DIRECT_RESULTS = 3;
   private static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(30);
   // How far away in time a carpooling trip can be from the requested departure time to be considered
   private static final Duration ACCESS_EGRESS_SEARCH_WINDOW = Duration.ofHours(12);
-  /*
-    The time it takes to pick up or drop off a passenger and start driving again.
-    It is only used for access/egress, and is a temporary solution.
-    The implementation will be changed for both direct and access/egress when implementing the field
-    latestExpectedArrivalTime from siri.
-   */
-  static final Duration CARPOOL_STOP_DURATION = Duration.ofMinutes(1);
   /*
     This is needed for managing computational complexity unless we find a smarter way of searching
     for nearby stops.
@@ -116,7 +103,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final StreetLimitationParametersService streetLimitationParametersService;
   private final FilterChain preFilters;
   private final CarpoolItineraryMapper itineraryMapper;
-  private final PassengerDelayConstraints delayConstraints;
   private final InsertionPositionFinder positionFinder;
   private final VertexLinker vertexLinker;
 
@@ -142,9 +128,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
-    this.itineraryMapper = new CarpoolItineraryMapper(transitService.getTimeZone());
-    this.delayConstraints = new PassengerDelayConstraints();
-    this.positionFinder = new InsertionPositionFinder(delayConstraints, new BeelineEstimator());
+    this.itineraryMapper = new CarpoolItineraryMapper();
+    this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
     this.vertexLinker = vertexLinker;
   }
 
@@ -161,14 +146,11 @@ public class DefaultCarpoolingService implements CarpoolingService {
    *       routing to find the insertion that minimizes additional driver travel time while
    *       respecting delay constraints.</li>
    * </ol>
-   * <p>
-   * Results are sorted by additional travel time and limited to
-   * {@value #DEFAULT_MAX_CARPOOL_DIRECT_RESULTS} itineraries.
    *
    * @param request the routing request. Must have {@link StreetMode#CARPOOL} as the direct mode.
    * @param linkingContext pre-linked vertices for the passenger's origin and destination
-   * @return a list of carpool itineraries sorted by additional travel time, or an empty list
-   *         if no viable matches are found or the direct mode is not CARPOOL
+   * @return a list of carpool itineraries, or an empty list if no viable matches are found
+   *         or the direct mode is not CARPOOL
    * @throws RoutingValidationException if origin or destination coordinates are missing
    */
   @Override
@@ -226,11 +208,13 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var streetVertexUtils = new StreetVertexUtils(this.vertexLinker, temporaryVerticesContainer);
 
+      var stopDuration = request.preferences().car().pickupTime();
+
       var insertionEvaluator = new InsertionEvaluator(
-        delayConstraints,
         linkingContext,
         streetVertexUtils,
-        router
+        router,
+        stopDuration
       );
 
       // Find optimal insertions for remaining trips
@@ -240,7 +224,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
           List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
             trip,
             passengerPickup,
-            passengerDropoff
+            passengerDropoff,
+            stopDuration
           );
 
           if (viablePositions.isEmpty()) {
@@ -274,15 +259,13 @@ public class DefaultCarpoolingService implements CarpoolingService {
           );
         })
         .filter(Objects::nonNull)
-        .sorted(Comparator.comparing(InsertionCandidate::additionalDuration))
-        .limit(DEFAULT_MAX_CARPOOL_DIRECT_RESULTS)
         .toList();
 
       LOG.debug("Found {} viable insertion candidates", insertionCandidates.size());
 
       itineraries = insertionCandidates
         .stream()
-        .map(candidate -> itineraryMapper.toItinerary(request, candidate))
+        .map(itineraryMapper::toItinerary)
         .filter(Objects::nonNull)
         .toList();
     }
@@ -448,11 +431,13 @@ public class DefaultCarpoolingService implements CarpoolingService {
         });
       });
 
+      var stopDuration = request.preferences().car().pickupTime();
+
       var insertionEvaluator = new InsertionEvaluator(
-        delayConstraints,
         linkingContext,
         streetVertexUtils,
-        carpoolTreeVertexRouter
+        carpoolTreeVertexRouter,
+        stopDuration
       );
 
       var candidateTripsWithViableStopsAndPositions = candidateTripsWithVertices
@@ -473,7 +458,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
               var viablePositions = positionFinder.findViablePositions(
                 tripWithVertices.trip(),
                 pickUpCoord,
-                dropOffCoord
+                dropOffCoord,
+                stopDuration
               );
               return new ViableAccessEgress(
                 nearbyStop,
@@ -527,44 +513,18 @@ public class DefaultCarpoolingService implements CarpoolingService {
     }
   }
 
-  private Duration getTotalDurationOfSegments(
-    List<GraphPath<State, Edge, Vertex>> segments,
-    Duration extraTimeForStop
-  ) {
-    return segments
-      .stream()
-      .map(it -> Duration.between(it.states.getFirst().getTime(), it.states.getLast().getTime()))
-      .reduce(Duration.ZERO, Duration::plus)
-      .plus(extraTimeForStop.multipliedBy(segments.size() - 1));
-  }
-
   private CarpoolAccessEgress createCarpoolAccessEgress(
     TransitServiceResolver transitServiceResolver,
     InsertionCandidate insertionCandidate,
     ZonedDateTime transitSearchTimeZero,
     Double carpoolReluctance
   ) {
-    var pickUpIndex = insertionCandidate.pickupPosition();
-    var dropOffIndex = insertionCandidate.dropoffPosition() - 1;
+    var sharedSegments = insertionCandidate.getSharedSegments();
+    var durationUntilPickup = insertionCandidate.getDurationUntilPickupArrival();
+    var passengerRideDuration = insertionCandidate.getPassengerRideDuration();
 
-    var segmentsBeforeInsertion = insertionCandidate.routeSegments().subList(0, pickUpIndex);
-    var segmentsWithPassenger = insertionCandidate
-      .routeSegments()
-      .subList(pickUpIndex, dropOffIndex + 1);
-
-    var durationBeforeInsertion = getTotalDurationOfSegments(
-      segmentsBeforeInsertion,
-      CARPOOL_STOP_DURATION
-    );
-
-    // Adding an extra CARPOOL_STOP_DURATION for the time it takes to pick up the passenger
-    var durationWithPassenger = getTotalDurationOfSegments(
-      segmentsWithPassenger,
-      CARPOOL_STOP_DURATION
-    ).plus(CARPOOL_STOP_DURATION);
-
-    var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationBeforeInsertion);
-    var endTimeOfSegment = startTimeOfSegment.plus(durationWithPassenger);
+    var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationUntilPickup);
+    var endTimeOfSegment = startTimeOfSegment.plus(passengerRideDuration);
 
     var relativeStartTime = TimeUtils.toTransitTimeSeconds(
       transitSearchTimeZero,
@@ -575,16 +535,14 @@ public class DefaultCarpoolingService implements CarpoolingService {
       endTimeOfSegment.toInstant()
     );
 
-    var accessEgress = new CarpoolAccessEgress(
+    return new CarpoolAccessEgress(
       transitServiceResolver.getStopLocation(insertionCandidate.transitStop().stopId).getIndex(),
-      durationWithPassenger,
+      passengerRideDuration,
       relativeStartTime,
       relativeEndTime,
-      segmentsWithPassenger,
+      sharedSegments,
       TimeAndCost.ZERO,
       carpoolReluctance
     );
-
-    return accessEgress;
   }
 }
