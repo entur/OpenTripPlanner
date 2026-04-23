@@ -11,8 +11,6 @@ import java.util.List;
  * choose the most efficient underlying representation that suits its needs.
  */
 public interface RaptorTripSchedule {
-  int NOT_SET = -999;
-
   /**
    * An id/index for the trip which can be used to sort trips so they follow each other in time. The
    * id/index must increase with the departure time.
@@ -100,7 +98,7 @@ public interface RaptorTripSchedule {
     RaptorTripPattern p = pattern();
     int i = p.numberOfStopsInPattern() - 1;
 
-    while (arrivalIsAfter(latestArrivalTime, i)) {
+    while (!p.alightingPossibleAt(i) || arrival(i) > latestArrivalTime) {
       --i;
       if (i == -1) {
         return -1;
@@ -167,13 +165,5 @@ public interface RaptorTripSchedule {
     }
 
     return stops;
-  }
-
-  /// Check if the arrival time at stop position is after the given latestArrivalTime, considering
-  /// that there can also be flex stop visits in this pattern that use -999 to indicate that they
-  /// use a window, not fixed times.
-  private boolean arrivalIsAfter(int latestArrivalTime, int stopPosInPattern) {
-    int arrival = arrival(stopPosInPattern);
-    return arrival > latestArrivalTime || arrival == NOT_SET;
   }
 }

@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.spi;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor.spi.RaptorTripSchedule.NOT_SET;
 import static org.opentripplanner.utils.time.TimeUtils.time;
 import static org.opentripplanner.utils.time.TimeUtils.timeToStrLong;
 
@@ -10,6 +9,8 @@ import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 
 public class RaptorTripScheduleTest {
+
+  private static final int NOT_SET = -999;
 
   private final TestTripSchedule subject = TestTripSchedule.schedule(
     TestTripPattern.pattern("L23", 1, 1, 2, 3, 5, 8, 1)
@@ -49,7 +50,7 @@ public class RaptorTripScheduleTest {
   @Test
   public void flexPatternWithDuplicateStop() {
     var subject = TestTripSchedule.schedule(
-      TestTripPattern.pattern("flex-with-repeating-stops", 1, 1, 2, 3)
+      TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
     )
       .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
       .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
