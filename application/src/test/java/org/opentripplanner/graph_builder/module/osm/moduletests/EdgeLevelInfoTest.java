@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.osm.model.NodeBuilder.node;
-import static org.opentripplanner.osm.model.NodeBuilder.nodeBuilder;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -10,6 +9,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.osm.TestOsmProvider;
+import org.opentripplanner.osm.model.NodeBuilder;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
@@ -104,8 +104,8 @@ public class EdgeLevelInfoTest {
   void testElevatorNodeEdgeLevelInfo() {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
-      .setTag("highway", "elevator")
+    var elevatorNode = NodeBuilder.of(3, new WgsCoordinate(0, 3))
+      .withTag("highway", "elevator")
       .build();
 
     var provider = TestOsmProvider.of()
@@ -132,8 +132,8 @@ public class EdgeLevelInfoTest {
   void testElevatorNodeEdgeLevelInfoOnSameLevel() {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
-      .setTag("highway", "elevator")
+    var elevatorNode = NodeBuilder.of(3, new WgsCoordinate(0, 3))
+      .withTag("highway", "elevator")
       .build();
 
     var provider = TestOsmProvider.of()
@@ -160,8 +160,8 @@ public class EdgeLevelInfoTest {
   void testElevatorNodeEdgeLevelInfoWithoutDefinedLevels() {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
-    var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
-      .setTag("highway", "elevator")
+    var elevatorNode = NodeBuilder.of(3, new WgsCoordinate(0, 3))
+      .withTag("highway", "elevator")
       .build();
 
     var provider = TestOsmProvider.of()

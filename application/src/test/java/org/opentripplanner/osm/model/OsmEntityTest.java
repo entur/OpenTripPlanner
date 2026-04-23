@@ -234,19 +234,28 @@ public class OsmEntityTest {
 
   private static Stream<Arguments> barrierWheelchairAccessibilityCases() {
     return Stream.of(
-      Arguments.of(OsmNode.of().setTag("barrier", "stile").build(), false),
+      Arguments.of(OsmNode.of().withTag("barrier", "stile").build(), false),
       Arguments.of(
-        OsmNode.of().setTag("barrier", "stile").setTag("wheelchair", "yes").build(),
+        OsmNode.of().withTag("barrier", "stile").withTag("wheelchair", "yes").build(),
         true
       ),
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").build(), false),
+      Arguments.of(OsmNode.of().withTag("barrier", "kerb").build(), false),
       // https://wiki.openstreetmap.org/wiki/Key:kerb
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "flush").build(), true),
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "lowered").build(), true),
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "no").build(), true),
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "raised").build(), false),
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "rolled").build(), false),
-      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "yes").build(), false)
+      Arguments.of(OsmNode.of().withTag("barrier", "kerb").withTag("kerb", "flush").build(), true),
+      Arguments.of(
+        OsmNode.of().withTag("barrier", "kerb").withTag("kerb", "lowered").build(),
+        true
+      ),
+      Arguments.of(OsmNode.of().withTag("barrier", "kerb").withTag("kerb", "no").build(), true),
+      Arguments.of(
+        OsmNode.of().withTag("barrier", "kerb").withTag("kerb", "raised").build(),
+        false
+      ),
+      Arguments.of(
+        OsmNode.of().withTag("barrier", "kerb").withTag("kerb", "rolled").build(),
+        false
+      ),
+      Arguments.of(OsmNode.of().withTag("barrier", "kerb").withTag("kerb", "yes").build(), false)
     );
   }
 

@@ -20,7 +20,7 @@ public class OsmRelation extends OsmEntity {
     this.members = Collections.unmodifiableList(new ArrayList<>(members));
   }
 
-  public static OsmRelationBuilder builder() {
+  public static OsmRelationBuilder of() {
     return new OsmRelationBuilder();
   }
 

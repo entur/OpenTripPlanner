@@ -64,9 +64,7 @@ class OsmParser extends BinaryParser {
     }
 
     for (Osmformat.Relation i : rels) {
-      OsmRelationBuilder builder = OsmRelation.builder()
-        .withId(i.getId())
-        .withOsmProvider(provider);
+      OsmRelationBuilder builder = OsmRelation.of().withId(i.getId()).withOsmProvider(provider);
 
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
@@ -134,7 +132,7 @@ class OsmParser extends BinaryParser {
 
           String key = internalize(getStringById(keyid));
           String value = internalize(getStringById(valid));
-          builder.setTag(key, value);
+          builder.withTag(key, value);
         }
         // Skip over the '0' delimiter.
         j++;
@@ -159,7 +157,7 @@ class OsmParser extends BinaryParser {
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
         String value = internalize(getStringById(i.getVals(j)));
-        builder.setTag(key, value);
+        builder.withTag(key, value);
       }
 
       osmdb.addNode(builder.build());

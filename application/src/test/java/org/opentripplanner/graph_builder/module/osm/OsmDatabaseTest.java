@@ -127,7 +127,7 @@ public class OsmDatabaseTest {
     innerBarrierMember.setType(OsmMemberType.WAY);
     innerBarrierMember.setRef(3);
 
-    var multipolygon = OsmRelation.builder()
+    var multipolygon = OsmRelation.of()
       .addTag("type", "multipolygon")
       .addTag("highway", "pedestrian")
       .addMember(outerMember)

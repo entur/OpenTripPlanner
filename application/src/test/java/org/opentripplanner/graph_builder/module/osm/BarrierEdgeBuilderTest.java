@@ -190,11 +190,15 @@ class BarrierEdgeBuilderTest {
   static List<Arguments> wallCases() {
     return List.of(
       Arguments.of(
-        OsmNode.of().setTag("barrier", "gate").setTag("access", "no").setTag("foot", "yes").build(),
+        OsmNode.of()
+          .withTag("barrier", "gate")
+          .withTag("access", "no")
+          .withTag("foot", "yes")
+          .build(),
         PEDESTRIAN
       ),
-      Arguments.of(OsmNode.of().setTag("barrier", "bollard").build(), PEDESTRIAN_AND_BICYCLE),
-      Arguments.of(OsmNode.of().setTag("entrance", "main").build(), ALL)
+      Arguments.of(OsmNode.of().withTag("barrier", "bollard").build(), PEDESTRIAN_AND_BICYCLE),
+      Arguments.of(OsmNode.of().withTag("entrance", "main").build(), ALL)
     );
   }
 
@@ -231,7 +235,7 @@ class BarrierEdgeBuilderTest {
     connect(v0, v1);
     connect(v2, v3);
 
-    var node = OsmNode.of().setTag("barrier", "bollard").build();
+    var node = OsmNode.of().withTag("barrier", "bollard").build();
 
     SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());
@@ -253,7 +257,7 @@ class BarrierEdgeBuilderTest {
     connect(v0, v1, WALK);
     connect(v2, v3, BICYCLE);
 
-    var node = OsmNode.of().setTag("barrier", "gate").build();
+    var node = OsmNode.of().withTag("barrier", "gate").build();
 
     SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());

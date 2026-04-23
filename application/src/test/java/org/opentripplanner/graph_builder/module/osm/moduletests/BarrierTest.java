@@ -145,9 +145,9 @@ public class BarrierTest {
     var n1 = OsmNode.of().withId(1).withLatLon(0, 0).build();
     var n2 = OsmNode.of().withId(2).withLatLon(0, 1).build();
     var n3 = OsmNode.of().withId(3).withLatLon(0, 2).build();
-    var n4 = OsmNode.of().withId(4).withLatLon(0, 3).setTag("barrier", "bollard").build();
+    var n4 = OsmNode.of().withId(4).withLatLon(0, 3).withTag("barrier", "bollard").build();
     var n5 = OsmNode.of().withId(5).withLatLon(1, 0).build();
-    var n6 = OsmNode.of().withId(6).withLatLon(-1, 0).setTag("barrier", "bollard").build();
+    var n6 = OsmNode.of().withId(6).withLatLon(-1, 0).withTag("barrier", "bollard").build();
 
     var chain = OsmWay.of().withId(999).setTag("barrier", "chain").addNodeRef(1, 2, 3).build();
 
