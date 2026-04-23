@@ -153,31 +153,23 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       return false;
     }
 
-    boolean mutualDominanceExist = false;
-    boolean equivalentVectorExist = false;
-
+    loop:
     for (int i = size - 1; i >= 0; --i) {
       boolean leftDominance = leftDominanceExist(newValue, elements[i]);
       boolean rightDominance = rightDominanceExist(newValue, elements[i]);
 
       if (leftDominance && rightDominance) {
-        if (equivalentVectorExist) {
-          return false;
-        }
-        mutualDominanceExist = true;
+        continue loop;
       } else if (leftDominance) {
         return true;
       } else if (rightDominance) {
         goodElement = elements[i];
         return false;
       } else {
-        if (mutualDominanceExist) {
-          return false;
-        }
-        equivalentVectorExist = true;
+        return false;
       }
     }
-    return mutualDominanceExist;
+    return true;
   }
 
   /**
