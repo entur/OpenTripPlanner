@@ -56,13 +56,17 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
       return;
     }
 
-    var applier = new GeofencingZoneApplier(graph::findEdgesAlongLineStrings, graph::findEdges);
+    var applier = new GeofencingZoneApplier(
+      graph::findEdgesAlongLineStrings,
+      graph::findEdges,
+      parameters.applyBusinessAreas()
+    );
     var result = applier.applyGeofencingZones(allZones);
 
     LOG.info(
       "Applied {} geofencing zones to {} street edges at build time",
       allZones.size(),
-      result.modifiedEdges().size()
+      result.boundaryEdges().size()
     );
   }
 

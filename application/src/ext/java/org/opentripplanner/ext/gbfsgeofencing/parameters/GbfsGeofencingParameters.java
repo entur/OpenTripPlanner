@@ -5,7 +5,10 @@ import java.util.List;
 /**
  * Configuration parameters for build-time GBFS geofencing zone loading.
  */
-public record GbfsGeofencingParameters(List<GbfsGeofencingFeedParameters> feeds) {
+public record GbfsGeofencingParameters(
+  List<GbfsGeofencingFeedParameters> feeds,
+  boolean applyBusinessAreas
+) {
   public GbfsGeofencingParameters {
     if (feeds == null) {
       feeds = List.of();
