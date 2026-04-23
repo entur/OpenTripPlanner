@@ -502,11 +502,10 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
       4,
       List.of(
         CarpoolTripTestData.createOriginStopWithTime(coordA, departureTime, departureTime),
-        CarpoolTripTestData.createStopAt(1, coordB),
-        CarpoolTripTestData.createStopAt(2, coordC),
+        CarpoolTripTestData.createStopAt(coordB),
+        CarpoolTripTestData.createStopAt(coordC),
         CarpoolTripTestData.createDestinationStopWithTime(
           coordD,
-          3,
           departureTime.plusHours(1),
           departureTime.plusHours(1)
         )
@@ -639,6 +638,10 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
 
     assertFalse(results.isEmpty(), "Should find access results");
 
+    // Departure time of the passenger is when the car arrives at the pickup (P2). The
+    // boarding dwell at P2 is part of the CarpoolAccessEgress duration, not added before
+    // the departure time.
+    var pickupTime = RouteRequest.defaultValue().preferences().car().pickupTime();
     var expectedDeparture = (int) Duration.between(
       transitSearchTimeZero.toInstant(),
       departureTime.plus(drivingDurationAToP2).toInstant()
@@ -681,15 +684,15 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
       );
 
       var drivingP2ToStop = expectedDrivingP2ToStop.get(accessEgress.stop());
-      // The service adds CARPOOL_STOP_DURATION (1 min) for the passenger pickup at P2
+      // Boarding dwell at P2 is now part of the passenger's ride duration, so the arrival
+      // time is the departure (arrival at P2) plus boarding plus driving from P2 to the stop.
       var expectedArrival =
-        expectedDeparture +
-        (int) drivingP2ToStop.getSeconds() +
-        (int) DefaultCarpoolingService.CARPOOL_STOP_DURATION.getSeconds();
+        expectedDeparture + (int) pickupTime.getSeconds() + (int) drivingP2ToStop.getSeconds();
       assertEquals(
         expectedArrival,
         accessEgress.getArrivalTimeOfPassenger(),
-        "Arrival time should equal passenger departure plus driving time from P2 to stop plus pickup duration"
+        "Arrival time should equal passenger departure plus boarding dwell plus driving " +
+          "time from P2 to stop"
       );
     }
   }
