@@ -100,7 +100,7 @@ public interface RaptorTripSchedule {
     RaptorTripPattern p = pattern();
     int i = p.numberOfStopsInPattern() - 1;
 
-    while (isBefore(latestArrivalTime, i)) {
+    while (arrivalIsAfter(latestArrivalTime, i)) {
       --i;
       if (i == -1) {
         return -1;
@@ -169,10 +169,11 @@ public interface RaptorTripSchedule {
     return stops;
   }
 
-  /// Check if the time at stop position i is before the given latestArrivalTime, considering
-  /// that there can also be flex stop visits in this pattern that does not have a time.
-  private boolean isBefore(int latestArrivalTime, int i) {
-    int arrival = arrival(i);
+  /// Check if the arrival time at stop position is after the given latestArrivalTime, considering
+  /// that there can also be flex stop visits in this pattern that use -999 to indicate that they
+  /// use a window, not fixed times.
+  private boolean arrivalIsAfter(int latestArrivalTime, int stopPosInPattern) {
+    int arrival = arrival(stopPosInPattern);
     return arrival > latestArrivalTime || arrival == NOT_SET;
   }
 }
