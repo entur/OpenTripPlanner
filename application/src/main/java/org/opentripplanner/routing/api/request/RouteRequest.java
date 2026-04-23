@@ -22,6 +22,7 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.utils.collection.ListSection;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -275,6 +276,24 @@ public class RouteRequest implements Serializable {
    */
   public boolean allowTransferOptimization() {
     return !isViaSearch() || via.stream().allMatch(ViaLocation::isPassThroughLocation);
+  }
+
+  /**
+   * Returns {@code true} when the request has no way to reach transit on either the access or the
+   * egress side. A side is unreachable when its street mode is {@link StreetMode#NOT_SET} and the
+   * corresponding endpoint is not a stop (a stop endpoint provides a zero-distance access/egress,
+   * so it does not need a street mode). Transit routers can use this to skip their per-request
+   * data-provider build when neither the access nor the egress side can feed raptor. This guards
+   * against API callers that supply a direct street mode without explicitly disabling transit
+   * (e.g. Transmodel queries like {@code modes: { directMode: foot }} that omit
+   * {@code transportModes}, which is not picked up by the request mappers).
+   */
+  public boolean cannotReachTransit() {
+    boolean accessUnreachable =
+      journey.access().mode() == StreetMode.NOT_SET && (from == null || from.stopId == null);
+    boolean egressUnreachable =
+      journey.egress().mode() == StreetMode.NOT_SET && (to == null || to.stopId == null);
+    return accessUnreachable || egressUnreachable;
   }
 
   /**

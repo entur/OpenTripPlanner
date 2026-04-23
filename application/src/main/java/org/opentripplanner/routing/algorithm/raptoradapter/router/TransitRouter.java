@@ -36,7 +36,6 @@ import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
-import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -109,7 +108,7 @@ public class TransitRouter {
   }
 
   private TransitRouterResult route() {
-    if (!request.journey().transit().enabled() || cannotReachTransit(request)) {
+    if (!request.journey().transit().enabled() || request.cannotReachTransit()) {
       return new TransitRouterResult(List.of(), null);
     }
 
@@ -343,24 +342,5 @@ public class TransitRouter {
     return service == null
       ? null
       : service.createExtraMcRouterSearch(request, accessEgresses, raptorTransitData);
-  }
-
-  /**
-   * Returns {@code true} when the request has no way to reach transit on either the access or the
-   * egress side. A side is unreachable when its street mode is {@link StreetMode#NOT_SET} and the
-   * corresponding endpoint is not a stop (a stop endpoint provides a zero-distance access/egress,
-   * so it does not need a street mode). In that case the raptor search would fail in
-   * {@link #verifyAccessEgress} anyway, so we skip the expensive per-request transit-data build.
-   * This guards against API callers that supply a direct street mode without explicitly disabling
-   * transit (e.g. Transmodel queries like {@code modes: { directMode: foot }} that omit
-   * {@code transportModes}, which is not picked up by the request mappers).
-   */
-  private static boolean cannotReachTransit(RouteRequest request) {
-    var journey = request.journey();
-    boolean accessUnreachable =
-      journey.access().mode() == StreetMode.NOT_SET && request.from().stopId == null;
-    boolean egressUnreachable =
-      journey.egress().mode() == StreetMode.NOT_SET && request.to().stopId == null;
-    return accessUnreachable || egressUnreachable;
   }
 }
