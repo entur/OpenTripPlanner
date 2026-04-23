@@ -2,7 +2,6 @@ package org.opentripplanner.osm.model;
 
 import gnu.trove.TCollections;
 import gnu.trove.list.TLongList;
-import gnu.trove.list.array.TLongArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;

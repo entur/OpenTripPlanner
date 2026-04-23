@@ -164,6 +164,15 @@ public abstract class OsmEntity {
   private final OsmProvider osmProvider;
 
   /**
+   * Because it is expensive to compute the creative way, we do it only once and store the fact in
+   * this boolean.
+   */
+  private boolean creativeNameComputed = false;
+
+  @Nullable
+  private I18NString creativeName;
+
+  /**
    * Constructor for immutable OsmEntity
    */
   protected OsmEntity(long id, Map<String, String> tags, OsmProvider osmProvider) {
@@ -493,9 +502,13 @@ public abstract class OsmEntity {
       return new NonLocalizedString(tags.get("otp:route_name"));
     }
 
-    var creativeName = getOsmProvider().getWayPropertySet().getCreativeName(this);
+    // because it is expensive to compute the creative way, we do it only once.
+    if (!creativeNameComputed) {
+      this.creativeName = getOsmProvider().getWayPropertySet().getCreativeName(this);
+      this.creativeNameComputed = true;
+    }
     if (creativeName != null) {
-      return creativeName;
+      return this.creativeName;
     }
     if (tags.containsKey("otp:route_ref")) {
       return new NonLocalizedString(tags.get("otp:route_ref"));
