@@ -97,26 +97,23 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       return false;
     }
 
-    loop:
-    for (int i = 0; i < size; ++i) {
+    loop: for (int i = 0; i < size; ++i) {
       T it = elements[i];
 
-      boolean leftDominance = leftDominanceExist(newValue, it);
-      boolean rightDominance = rightDominanceExist(newValue, it);
-
-      if (leftDominance && rightDominance) {
-        continue loop;
-      } else if (leftDominance) {
-        removeDominatedElementsFromRestOfSetAndAddNewElement(newValue, i);
-        return true;
-      } else if (rightDominance) {
-        goodElement = it;
-        notifyElementRejected(newValue, it);
-        return false;
-      } else {
-        // newValue is equivalent with an existing value
-        notifyElementRejected(newValue, it);
-        return false;
+      switch (comparator.compare(newValue, it)) {
+        case BOTH:
+          continue loop;
+        case LEFT:
+          removeDominatedElementsFromRestOfSetAndAddNewElement(newValue, i);
+          return true;
+        case RIGHT:
+          goodElement = it;
+          notifyElementRejected(newValue, it);
+          return false;
+        case NONE:
+          // newValue is equivalent with an existing value
+          notifyElementRejected(newValue, it);
+          return false;
       }
     }
 
@@ -153,20 +150,19 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       return false;
     }
 
-    loop:
-    for (int i = size - 1; i >= 0; --i) {
-      boolean leftDominance = leftDominanceExist(newValue, elements[i]);
-      boolean rightDominance = rightDominanceExist(newValue, elements[i]);
+    loop: for (int i = size - 1; i >= 0; --i) {
+      var it = elements[i];
 
-      if (leftDominance && rightDominance) {
-        continue loop;
-      } else if (leftDominance) {
-        return true;
-      } else if (rightDominance) {
-        goodElement = elements[i];
-        return false;
-      } else {
-        return false;
+      switch (comparator.compare(newValue, it)) {
+        case BOTH:
+          continue loop;
+        case LEFT:
+          return true;
+        case RIGHT:
+          goodElement = it;
+          return false;
+        case NONE:
+          return false;
       }
     }
     return true;
