@@ -97,9 +97,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       return false;
     }
 
-    boolean mutualDominanceExist = false;
-    boolean equivalentVectorExist = false;
-
+    loop:
     for (int i = 0; i < size; ++i) {
       T it = elements[i];
 
@@ -107,28 +105,24 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       boolean rightDominance = rightDominanceExist(newValue, it);
 
       if (leftDominance && rightDominance) {
-        mutualDominanceExist = true;
+        continue loop;
       } else if (leftDominance) {
         removeDominatedElementsFromRestOfSetAndAddNewElement(newValue, i);
         return true;
       } else if (rightDominance) {
-        goodElement = elements[i];
+        goodElement = it;
         notifyElementRejected(newValue, it);
         return false;
       } else {
-        equivalentVectorExist = true;
+        // newValue is equivalent with an existing value
+        notifyElementRejected(newValue, it);
+        return false;
       }
     }
 
-    if (mutualDominanceExist && !equivalentVectorExist) {
-      assertEnoughSpaceInSet();
-      acceptAndAppendValue(newValue);
-      return true;
-    }
-
-    // No dominance found, newValue is equivalent with all values in the set
-    notifyElementRejected(newValue, elements[0]);
-    return false;
+    assertEnoughSpaceInSet();
+    acceptAndAppendValue(newValue);
+    return true;
   }
 
   public final void clear() {
