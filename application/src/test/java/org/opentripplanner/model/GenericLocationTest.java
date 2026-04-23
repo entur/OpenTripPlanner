@@ -1,9 +1,7 @@
 package org.opentripplanner.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.model.GenericLocation.UNKNOWN;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
@@ -22,6 +20,8 @@ class GenericLocationTest {
     LABEL
   );
 
+  private final GenericLocation other = GenericLocation.fromCoordinate(LATITUDE, LONGITUDE, LABEL);
+
   @Test
   void fromStopId() {
     assertEquals(STOP_ID, subject.stopId());
@@ -35,18 +35,16 @@ class GenericLocationTest {
   @Test
   void isSpecified() {
     assertTrue(subject.isSpecified());
-    assertFalse(UNKNOWN.isSpecified());
   }
 
   @Test
   void testEquals() {
     var copy = GenericLocation.fromStopIdWithFallback(STOP_ID, LATITUDE, LONGITUDE, LABEL);
-    AssertEqualsAndHashCode.verify(subject).sameAs(copy).differentFrom(UNKNOWN);
+    AssertEqualsAndHashCode.verify(subject).sameAs(copy).differentFrom(other);
   }
 
   @Test
   void testToString() {
-    assertEquals("Unknown location", UNKNOWN.toString());
     assertEquals("A place F:Stop:1 (20.0, 30.0)", subject.toString());
   }
 }

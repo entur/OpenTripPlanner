@@ -15,8 +15,6 @@ import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
  */
 public class GenericLocation {
 
-  public static final GenericLocation UNKNOWN = new GenericLocation(null, null, null);
-
   @Nullable
   private final String label;
 
@@ -35,16 +33,23 @@ public class GenericLocation {
     @Nullable FeedScopedId stopId,
     @Nullable WgsCoordinate coordinate
   ) {
+    if (stopId == null && coordinate == null) {
+      throw new IllegalArgumentException(
+        "GenericLocation requires either a stop id or a coordinate"
+      );
+    }
     this.label = label;
     this.stopId = stopId;
     this.coordinate = coordinate;
   }
 
   public static GenericLocation fromStopId(FeedScopedId id) {
+    Objects.requireNonNull(id);
     return new GenericLocation(null, id, null);
   }
 
   public static GenericLocation fromStopId(FeedScopedId id, @Nullable String label) {
+    Objects.requireNonNull(id);
     return new GenericLocation(label, id, null);
   }
 
@@ -59,6 +64,7 @@ public class GenericLocation {
     double lng,
     @Nullable String label
   ) {
+    Objects.requireNonNull(id);
     return new GenericLocation(label, id, new WgsCoordinate(lat, lng));
   }
 
@@ -72,10 +78,6 @@ public class GenericLocation {
 
   public static GenericLocation fromCoordinate(double lat, double lng, @Nullable String label) {
     return new GenericLocation(label, null, new WgsCoordinate(lat, lng));
-  }
-
-  public static GenericLocation fromUnspecified(@Nullable String label) {
-    return new GenericLocation(label, null, null);
   }
 
   /**
@@ -136,10 +138,6 @@ public class GenericLocation {
 
   @Override
   public String toString() {
-    if (UNKNOWN.equals(this)) {
-      return "Unknown location";
-    }
-
     ValueObjectToStringBuilder buf = ValueObjectToStringBuilder.of().skipNull();
     if (StringUtils.hasValue(label)) {
       buf.addText(label).addText(" ");
