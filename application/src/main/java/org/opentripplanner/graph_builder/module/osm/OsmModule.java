@@ -554,7 +554,10 @@ public class OsmModule implements GraphBuilderModule {
 
   private Optional<Platform> getPlatform(OsmDatabase osmdb, OsmWay way) {
     var references = way.getMultiTagValues(params.boardingAreaRefTags());
-    if (way.isBoardingLocation() && !references.isEmpty()) {
+    if (!references.isEmpty()) {
+      if (!way.isBoardingLocation()) {
+        return Optional.empty();
+      }
       var nodeRefs = way.getNodeRefs();
       var size = nodeRefs.size();
       var nodes = new Coordinate[size];

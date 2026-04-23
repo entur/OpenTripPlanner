@@ -862,10 +862,11 @@ public abstract class OsmEntity {
    *         of other information.
    */
   public boolean isWheelchairAccessible() {
-    if (isTagTrue("wheelchair")) {
+    var wheelchairValue = getTag("wheelchair");
+    if (isTrue(wheelchairValue)) {
       return true;
     }
-    if (isTagFalse("wheelchair")) {
+    if (isFalse(wheelchairValue)) {
       return false;
     }
     if (isOneOfTags("barrier", WHEELCHAIR_INACCESSIBLE_BARRIERS)) {
