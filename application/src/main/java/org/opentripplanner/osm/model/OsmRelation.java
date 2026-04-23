@@ -1,6 +1,5 @@
 package org.opentripplanner.osm.model;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +16,7 @@ public class OsmRelation extends OsmEntity {
     List<OsmRelationMember> members
   ) {
     super(id, tags, osmProvider);
-    this.members = Collections.unmodifiableList(new ArrayList<>(members));
+    this.members = Collections.unmodifiableList(members);
   }
 
   public static OsmRelationBuilder of() {
