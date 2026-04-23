@@ -727,20 +727,6 @@ public abstract class OsmEntity {
   }
 
   /**
-   * @return True if this entity provides an entrance to a platform or similar entity
-   */
-  public boolean isEntrance() {
-    return (
-      (isTag("railway", "subway_entrance") ||
-        isTag("highway", "elevator") ||
-        isTag("entrance", "yes") ||
-        isTag("entrance", "main")) &&
-      !isTag("access", "private") &&
-      !isTag("access", "no")
-    );
-  }
-
-  /**
    * @return True if this node / area is a bike parking.
    */
   public boolean isBikeParking() {
@@ -889,7 +875,7 @@ public abstract class OsmEntity {
    * set on the entity in OSM.
    *
    * @see OsmEntity#isNamed()
-   * @see https://wiki.openstreetmap.org/wiki/Tag:noname%3Dyes
+   * @link https://wiki.openstreetmap.org/wiki/Tag:noname%3Dyes
    */
   public boolean isExplicitlyUnnamed() {
     return isTagTrue("noname");

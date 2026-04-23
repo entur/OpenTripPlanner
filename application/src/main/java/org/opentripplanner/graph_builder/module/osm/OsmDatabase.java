@@ -120,6 +120,11 @@ public class OsmDatabase {
    */
   private final Multimap<OsmEntity, OsmNode> stopsInAreas = HashMultimap.create();
 
+  /**
+   * Set of all entrance nodes in stop areas, which will be treated as station entrances.
+   */
+  private final Set<OsmNode> entrancesInStopAreas = new HashSet<>();
+
   /*
    * ID of the next virtual node we create during building phase. Negative to prevent conflicts
    * with existing ones.
@@ -189,6 +194,10 @@ public class OsmDatabase {
 
   public Collection<OsmNode> getStopsInArea(OsmEntity areaParent) {
     return stopsInAreas.get(areaParent);
+  }
+
+  public boolean isEntranceInStopArea(OsmNode node) {
+    return entrancesInStopAreas.contains(node);
   }
 
   /**
@@ -1004,8 +1013,13 @@ public class OsmDatabase {
       switch (member.getType()) {
         case NODE -> {
           var node = nodesById.get(member.getRef());
-          if (node != null && (node.isEntrance() || node.isBoardingLocation())) {
-            platformNodes.add(node);
+          if (node != null) {
+            if (node.isPlatformAccess()) {
+              platformNodes.add(node);
+            }
+            if (node.isEntrance()) {
+              entrancesInStopAreas.add(node);
+            }
           }
         }
         case WAY -> {

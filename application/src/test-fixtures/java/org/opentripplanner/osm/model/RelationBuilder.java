@@ -12,14 +12,30 @@ public class RelationBuilder {
   }
 
   public static RelationBuilder ofTurnRestriction(String restrictionType) {
+    return ofType("restriction").withTag("restriction", restrictionType);
+  }
+
+  public static RelationBuilder ofStopArea() {
+    return ofType("public_transport").withTag("public_transport", "stop_area");
+  }
+
+  public static RelationBuilder ofType(String type) {
     var builder = new RelationBuilder();
-    builder.relationBuilder.addTag("type", "restriction");
-    builder.relationBuilder.addTag("restriction", restrictionType);
+    builder.relationBuilder.addTag("type", type);
     return builder;
+  }
+
+  public RelationBuilder withTag(String key, String value) {
+    relation.addTag(key, value);
+    return this;
   }
 
   public RelationBuilder withWayMember(long id, String role) {
     return withMember(id, role, OsmMemberType.WAY);
+  }
+
+  public RelationBuilder withNodeMember(long id) {
+    return withMember(id, "", OsmMemberType.NODE);
   }
 
   public RelationBuilder withNodeMember(long id, String role) {
