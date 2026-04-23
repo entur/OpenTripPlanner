@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
-import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.StreetMode;
@@ -64,22 +63,22 @@ class StreetEdgeGeofencingTest {
   StreetVertex V4 = intersectionVertex("V4", 3, 3);
 
   @Test
-  public void setBusinessAreaBorder() {
+  public void addBusinessAreaBorderNetwork() {
     var edge = streetEdge(V1, V2);
-    edge.setBusinessAreaBorder(new BusinessAreaBorder("a"));
+    edge.addBusinessAreaBorderNetwork("a");
 
     assertTrue(edge.fromv.rentalTraversalBanned(forwardState("a")));
     assertFalse(edge.fromv.rentalTraversalBanned(forwardState("b")));
   }
 
   @Test
-  public void removeBusinessAreaBorder() {
+  public void removeBusinessAreaBorderNetwork() {
     var edge = streetEdge(V1, V2);
-    edge.setBusinessAreaBorder(new BusinessAreaBorder("a"));
+    edge.addBusinessAreaBorderNetwork("a");
 
     assertTrue(edge.fromv.rentalTraversalBanned(forwardState("a")));
 
-    edge.removeBusinessAreaBorder();
+    edge.removeBusinessAreaBorderNetwork("a");
 
     assertFalse(edge.fromv.rentalTraversalBanned(forwardState("a")));
   }
@@ -87,7 +86,7 @@ class StreetEdgeGeofencingTest {
   @Test
   public void checkNetwork() {
     var edge = streetEdge(V1, V2);
-    edge.setBusinessAreaBorder(new BusinessAreaBorder("a"));
+    edge.addBusinessAreaBorderNetwork("a");
 
     var state = traverseFromV1(edge);
 
@@ -108,8 +107,7 @@ class StreetEdgeGeofencingTest {
     @Test
     public void leaveBusinessAreaOnFoot() {
       var edge1 = streetEdge(V1, V2);
-      var ext = new BusinessAreaBorder(NETWORK_TIER);
-      V2.setBusinessAreaBorder(ext);
+      V2.addBusinessAreaBorderNetwork(NETWORK_TIER);
 
       var results = traverseFromV1(edge1);
 
