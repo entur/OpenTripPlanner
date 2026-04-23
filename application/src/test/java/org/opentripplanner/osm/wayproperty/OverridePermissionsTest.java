@@ -18,12 +18,12 @@ class OverridePermissionsTest {
    */
   @Test
   void testCarPermission() {
-    OsmWay way = OsmWay.of().setTag("highway", "unclassified").build();
+    OsmWay way = OsmWay.of().withTag("highway", "unclassified").build();
 
     var permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
 
-    way = way.copy().setTag("bicycle", "designated").build();
+    way = way.copy().withTag("bicycle", "designated").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
   }
@@ -34,32 +34,32 @@ class OverridePermissionsTest {
    */
   @Test
   void testMotorCarTagAllowedPermissions() {
-    OsmWay way = OsmWay.of().setTag("highway", "residential").build();
+    OsmWay way = OsmWay.of().withTag("highway", "residential").build();
     var permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
 
-    way = way.copy().setTag("access", "no").build();
+    way = way.copy().withTag("access", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
 
     way = way
       .copy()
-      .setTag("motorcar", "private")
-      .setTag("bicycle", "private")
-      .setTag("foot", "private")
+      .withTag("motorcar", "private")
+      .withTag("bicycle", "private")
+      .withTag("foot", "private")
       .build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
 
-    way = way.copy().setTag("motorcar", "yes").build();
+    way = way.copy().withTag("motorcar", "yes").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.CAR));
 
-    way = way.copy().setTag("bicycle", "yes").build();
+    way = way.copy().withTag("bicycle", "yes").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.BICYCLE_AND_CAR));
 
-    way = way.copy().setTag("foot", "yes").build();
+    way = way.copy().withTag("foot", "yes").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
   }
@@ -70,19 +70,19 @@ class OverridePermissionsTest {
    */
   @Test
   void testMotorCarTagDeniedPermissions() {
-    OsmWay way = OsmWay.of().setTag("highway", "residential").build();
+    OsmWay way = OsmWay.of().withTag("highway", "residential").build();
     var permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
 
-    way = way.copy().setTag("motorcar", "no").build();
+    way = way.copy().withTag("motorcar", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE));
 
-    way = way.copy().setTag("bicycle", "no").build();
+    way = way.copy().withTag("bicycle", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.PEDESTRIAN));
 
-    way = way.copy().setTag("foot", "no").build();
+    way = way.copy().withTag("foot", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
   }
@@ -95,32 +95,32 @@ class OverridePermissionsTest {
    */
   @Test
   void testMotorVehicleTagAllowedPermissions() {
-    OsmWay way = OsmWay.of().setTag("highway", "residential").build();
+    OsmWay way = OsmWay.of().withTag("highway", "residential").build();
     var permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
 
-    way = way.copy().setTag("access", "no").build();
+    way = way.copy().withTag("access", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
 
     way = way
       .copy()
-      .setTag("motor_vehicle", "private")
-      .setTag("bicycle", "private")
-      .setTag("foot", "private")
+      .withTag("motor_vehicle", "private")
+      .withTag("bicycle", "private")
+      .withTag("foot", "private")
       .build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
 
-    way = way.copy().setTag("motor_vehicle", "yes").build();
+    way = way.copy().withTag("motor_vehicle", "yes").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.CAR));
 
-    way = way.copy().setTag("bicycle", "yes").build();
+    way = way.copy().withTag("bicycle", "yes").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.BICYCLE_AND_CAR));
 
-    way = way.copy().setTag("foot", "yes").build();
+    way = way.copy().withTag("foot", "yes").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
   }
@@ -133,19 +133,19 @@ class OverridePermissionsTest {
    */
   @Test
   void testMotorVehicleTagDeniedPermissions() {
-    OsmWay way = OsmWay.of().setTag("highway", "residential").build();
+    OsmWay way = OsmWay.of().withTag("highway", "residential").build();
     var permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.ALL));
 
-    way = way.copy().setTag("motor_vehicle", "no").build();
+    way = way.copy().withTag("motor_vehicle", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE));
 
-    way = way.copy().setTag("bicycle", "no").build();
+    way = way.copy().withTag("bicycle", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allows(StreetTraversalPermission.PEDESTRIAN));
 
-    way = way.copy().setTag("foot", "no").build();
+    way = way.copy().withTag("foot", "no").build();
     permissionPair = getWayProperties(way);
     assertTrue(permissionPair.main().allowsNothing());
   }

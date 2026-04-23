@@ -23,7 +23,7 @@ public class HamburgMapperTest {
 
   @Test
   public void shouldAllowThroughTraffic_WhenAccessCustomers_AndCustomersHVV() {
-    var way = OsmWay.of().setTag("access", "customers").setTag("customers", "HVV").build();
+    var way = OsmWay.of().withTag("access", "customers").withTag("customers", "HVV").build();
 
     boolean generalNoThroughTraffic = mapper.isGeneralNoThroughTraffic(way);
 
@@ -36,7 +36,7 @@ public class HamburgMapperTest {
   @ParameterizedTest
   @ValueSource(strings = { "no", "destination", "private", "customers", "delivery" })
   public void shouldDisallowThroughTraffic_WhenNoCustomersHVV(String access) {
-    var way = OsmWay.of().setTag("access", access).build();
+    var way = OsmWay.of().withTag("access", access).build();
 
     boolean generalNoThroughTraffic = mapper.isGeneralNoThroughTraffic(way);
 

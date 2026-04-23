@@ -38,13 +38,13 @@ class OsmTagMapperTest {
 
     assertFalse(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(o));
 
-    o = o.copy().setTag("access", "something").build();
+    o = o.copy().withTag("access", "something").build();
     assertFalse(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(o));
 
-    o = o.copy().setTag("access", "destination").build();
+    o = o.copy().withTag("access", "destination").build();
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(o));
 
-    o = o.copy().setTag("access", "private").build();
+    o = o.copy().withTag("access", "private").build();
     assertTrue(osmTagMapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(o));
 
     assertTrue(
@@ -193,17 +193,17 @@ class OsmTagMapperTest {
   void testTrunkWalkSafety() {
     var rawScore = WPS.getDataForWay(WayTestData.highwayTrunk()).forward().walkSafety();
     var scoreWithLane = WPS.getDataForWay(
-      WayTestData.highwayTrunk().copy().setTag("sidewalk", "lane").build()
+      WayTestData.highwayTrunk().copy().withTag("sidewalk", "lane").build()
     )
       .forward()
       .walkSafety();
     var scoreWithSidewalk = WPS.getDataForWay(
-      WayTestData.highwayTrunk().copy().setTag("sidewalk", "both").build()
+      WayTestData.highwayTrunk().copy().withTag("sidewalk", "both").build()
     )
       .forward()
       .walkSafety();
     var scoreWithSeparateSidewalk = WPS.getDataForWay(
-      WayTestData.highwayTrunk().copy().setTag("sidewalk", "separate").build()
+      WayTestData.highwayTrunk().copy().withTag("sidewalk", "separate").build()
     )
       .forward()
       .walkSafety();
@@ -302,12 +302,12 @@ class OsmTagMapperTest {
 
   @Test
   void testOneWay() {
-    var way = WayTestData.highwayTertiary().copy().setTag("oneway", "yes").build();
+    var way = WayTestData.highwayTertiary().copy().withTag("oneway", "yes").build();
     var props = WPS.getDataForWay(way);
     assertEquals(ALL, props.forward().getPermission());
     assertEquals(PEDESTRIAN, props.backward().getPermission());
 
-    var wayWithBicycle = way.copy().setTag("oneway:bicycle", "no").build();
+    var wayWithBicycle = way.copy().withTag("oneway:bicycle", "no").build();
     props = WPS.getDataForWay(wayWithBicycle);
     assertEquals(ALL, props.forward().getPermission());
     assertEquals(PEDESTRIAN_AND_BICYCLE, props.backward().getPermission());
@@ -328,7 +328,7 @@ class OsmTagMapperTest {
   void motorroad(OsmWay way) {
     assertEquals(ALL, WPS.getDataForWay(way).forward().getPermission());
 
-    var wayWithMotorroad = way.copy().setTag("motorroad", "yes").build();
+    var wayWithMotorroad = way.copy().withTag("motorroad", "yes").build();
     assertEquals(CAR, WPS.getDataForWay(wayWithMotorroad).forward().getPermission());
   }
 
@@ -365,7 +365,7 @@ class OsmTagMapperTest {
     assertEquals(ALL, props.backward().getPermission());
     assertEquals(1, props.backward().walkSafety());
 
-    var discouraged = WayTestData.highwayTertiary().copy().setTag("foot", "discouraged").build();
+    var discouraged = WayTestData.highwayTertiary().copy().withTag("foot", "discouraged").build();
     var discouragedProps = WPS.getDataForWay(discouraged);
     assertEquals(ALL, discouragedProps.forward().getPermission());
     assertEquals(3, discouragedProps.forward().walkSafety());
@@ -384,7 +384,7 @@ class OsmTagMapperTest {
 
     var discouraged = WayTestData.southeastLaBonitaWay()
       .copy()
-      .setTag("bicycle", "discouraged")
+      .withTag("bicycle", "discouraged")
       .build();
     var discouragedProps = WPS.getDataForWay(discouraged);
     assertEquals(ALL, discouragedProps.forward().getPermission());
@@ -402,7 +402,7 @@ class OsmTagMapperTest {
     assertEquals(ALL, props.backward().getPermission());
     assertEquals(1, props.backward().walkSafety());
 
-    var useSidepath = WayTestData.highwayTertiary().copy().setTag("foot", "use_sidepath").build();
+    var useSidepath = WayTestData.highwayTertiary().copy().withTag("foot", "use_sidepath").build();
     var useSidepathProps = WPS.getDataForWay(useSidepath);
     assertEquals(ALL, useSidepathProps.forward().getPermission());
     assertEquals(5, useSidepathProps.forward().walkSafety());
@@ -421,7 +421,7 @@ class OsmTagMapperTest {
 
     var useSidepath = WayTestData.southeastLaBonitaWay()
       .copy()
-      .setTag("bicycle", "use_sidepath")
+      .withTag("bicycle", "use_sidepath")
       .build();
     var useSidepathProps = WPS.getDataForWay(useSidepath);
     assertEquals(ALL, useSidepathProps.forward().getPermission());
@@ -431,7 +431,7 @@ class OsmTagMapperTest {
 
     var useSidepathForward = WayTestData.southeastLaBonitaWay()
       .copy()
-      .setTag("bicycle:forward", "use_sidepath")
+      .withTag("bicycle:forward", "use_sidepath")
       .build();
     var useSidepathForwardProps = WPS.getDataForWay(useSidepathForward);
     assertEquals(ALL, useSidepathForwardProps.forward().getPermission());
@@ -441,7 +441,7 @@ class OsmTagMapperTest {
 
     var useSidepathBackward = WayTestData.southeastLaBonitaWay()
       .copy()
-      .setTag("bicycle:backward", "use_sidepath")
+      .withTag("bicycle:backward", "use_sidepath")
       .build();
     var useSidepathBackwardProps = WPS.getDataForWay(useSidepathBackward);
     assertEquals(ALL, useSidepathBackwardProps.forward().getPermission());
@@ -455,7 +455,7 @@ class OsmTagMapperTest {
     var regular = WayTestData.southeastLaBonitaWay();
     assertFalse(WPS.getSlopeOverride(regular));
 
-    var indoor = WayTestData.southeastLaBonitaWay().copy().setTag("indoor", "yes").build();
+    var indoor = WayTestData.southeastLaBonitaWay().copy().withTag("indoor", "yes").build();
     assertTrue(WPS.getSlopeOverride(indoor));
   }
 
@@ -466,28 +466,28 @@ class OsmTagMapperTest {
   public void testCarSpeeds() {
     OsmWay way;
 
-    way = OsmWay.of().setTag("maxspeed", "60").build();
+    way = OsmWay.of().withTag("maxspeed", "60").build();
     assertTrue(within(kmhAsMs(60), WPS.getCarSpeedForWay(way, FORWARD), EPSILON));
     assertTrue(within(kmhAsMs(60), WPS.getCarSpeedForWay(way, BACKWARD), EPSILON));
 
     way = OsmWay.of()
-      .setTag("maxspeed:forward", "80")
-      .setTag("maxspeed:backward", "20")
-      .setTag("maxspeed", "40")
+      .withTag("maxspeed:forward", "80")
+      .withTag("maxspeed:backward", "20")
+      .withTag("maxspeed", "40")
       .build();
     assertTrue(within(kmhAsMs(80), WPS.getCarSpeedForWay(way, FORWARD), EPSILON));
     assertTrue(within(kmhAsMs(20), WPS.getCarSpeedForWay(way, BACKWARD), EPSILON));
 
-    way = OsmWay.of().setTag("maxspeed", "40").setTag("maxspeed:lanes", "60|80|40").build();
+    way = OsmWay.of().withTag("maxspeed", "40").withTag("maxspeed:lanes", "60|80|40").build();
     assertTrue(within(kmhAsMs(80), WPS.getCarSpeedForWay(way, FORWARD), EPSILON));
     assertTrue(within(kmhAsMs(80), WPS.getCarSpeedForWay(way, BACKWARD), EPSILON));
 
-    way = OsmWay.of().setTag("maxspeed", "20").setTag("maxspeed:motorcar", "80").build();
+    way = OsmWay.of().withTag("maxspeed", "20").withTag("maxspeed:motorcar", "80").build();
     assertTrue(within(kmhAsMs(80), WPS.getCarSpeedForWay(way, FORWARD), EPSILON));
     assertTrue(within(kmhAsMs(80), WPS.getCarSpeedForWay(way, BACKWARD), EPSILON));
 
     // test with english units
-    way = OsmWay.of().setTag("maxspeed", "35 mph").build();
+    way = OsmWay.of().withTag("maxspeed", "35 mph").build();
     assertTrue(within(kmhAsMs(35 * 1.609f), WPS.getCarSpeedForWay(way, FORWARD), EPSILON));
     assertTrue(within(kmhAsMs(35 * 1.609f), WPS.getCarSpeedForWay(way, BACKWARD), EPSILON));
   }
@@ -500,7 +500,7 @@ class OsmTagMapperTest {
   }
 
   public OsmEntity way(String key, String value) {
-    return OsmWay.of().setTag(key, value).build();
+    return OsmWay.of().withTag(key, value).build();
   }
 
   /**

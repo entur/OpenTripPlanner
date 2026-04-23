@@ -108,8 +108,8 @@ public class TestOsmProvider implements OsmProvider {
 
       var areaBuilder = OsmWay.of()
         .withId(id)
-        .setTag("area", "yes")
-        .setTag("highway", "pedestrian");
+        .withTag("area", "yes")
+        .withTag("highway", "pedestrian");
       nodeIds.forEach(areaBuilder::addNodeRef);
       areaBuilder.addNodeRef(nodeIds.getFirst());
       var area = areaBuilder.build();
@@ -142,7 +142,7 @@ public class TestOsmProvider implements OsmProvider {
     ) {
       this.nodes.addAll(nodes);
       var nodeIds = nodes.stream().map(OsmEntity::getId).toList();
-      var wayBuilder = OsmWay.of().withId(id).setTag("highway", "pedestrian");
+      var wayBuilder = OsmWay.of().withId(id).withTag("highway", "pedestrian");
       nodeIds.forEach(wayBuilder::addNodeRef);
       wayBuilderConsumer.accept(wayBuilder);
       var way = wayBuilder.build();

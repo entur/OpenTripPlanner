@@ -285,9 +285,9 @@ public class OsmEntityTest {
 
     var highway = WayTestData.highwayWithCycleLane();
     assertTrue(highway.isRoutable());
-    var modifiedHighway = highway.copy().setTag("access", "no").build();
+    var modifiedHighway = highway.copy().withTag("access", "no").build();
     assertFalse(modifiedHighway.isRoutable());
-    var furtherModified = modifiedHighway.copy().setTag("bicycle", "yes").build();
+    var furtherModified = modifiedHighway.copy().withTag("bicycle", "yes").build();
     assertTrue(furtherModified.isRoutable());
   }
 

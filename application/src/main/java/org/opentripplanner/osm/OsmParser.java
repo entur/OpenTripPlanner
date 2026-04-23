@@ -176,7 +176,7 @@ class OsmParser extends BinaryParser {
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
         String value = internalize(getStringById(i.getVals(j)));
-        builder.setTag(key, value);
+        builder.withTag(key, value);
       }
 
       long lastId = 0;

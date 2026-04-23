@@ -47,8 +47,8 @@ public class NorwayMapperTest {
         if (!Double.isNaN(expectedSafety)) {
           var maxspeed = expectedMaxspeeds[j];
           var way = OsmWay.of();
-          way.setTag("highway", highway);
-          way.setTag("maxspeed", String.valueOf(maxspeed));
+          way.withTag("highway", highway);
+          way.withTag("maxspeed", String.valueOf(maxspeed));
           argumentsList.add(Arguments.of(way.build(), expectedSafety));
         }
       }
@@ -62,7 +62,7 @@ public class NorwayMapperTest {
     for (int i = 0; i < expectedHighways.length; i++) {
       var highway = expectedHighways[i];
       var expectedSafety = expectedBicycleSafety[i];
-      var way = OsmWay.of().setTag("highway", highway).build();
+      var way = OsmWay.of().withTag("highway", highway).build();
       argumentsList.add(Arguments.of(way, expectedSafety));
     }
     return argumentsList;
@@ -74,11 +74,11 @@ public class NorwayMapperTest {
       var highway = expectedHighways[i];
       for (var maxspeed : expectedMaxspeeds) {
         var mainRoad = OsmWay.of();
-        mainRoad.setTag("highway", highway);
-        mainRoad.setTag("maxspeed", String.valueOf(maxspeed));
+        mainRoad.withTag("highway", highway);
+        mainRoad.withTag("maxspeed", String.valueOf(maxspeed));
         var linkRoad = OsmWay.of();
-        linkRoad.setTag("highway", highway.concat("_link"));
-        linkRoad.setTag("maxspeed", String.valueOf(maxspeed));
+        linkRoad.withTag("highway", highway.concat("_link"));
+        linkRoad.withTag("maxspeed", String.valueOf(maxspeed));
         argumentsList.add(Arguments.of(mainRoad.build(), linkRoad.build()));
       }
     }
@@ -110,7 +110,7 @@ public class NorwayMapperTest {
 
   @Test
   public void testTrunkIsWalkable() {
-    var way = OsmWay.of().setTag("highway", "trunk").build();
+    var way = OsmWay.of().withTag("highway", "trunk").build();
 
     assertEquals(StreetTraversalPermission.ALL, WPS.getDataForEntity(way).getPermission());
   }
@@ -118,33 +118,33 @@ public class NorwayMapperTest {
   @Test
   public void testMtbScaleNone() {
     // https://www.openstreetmap.org/way/302610220
-    var way1 = OsmWay.of().setTag("highway", "path").setTag("mtb:scale", "3").build();
+    var way1 = OsmWay.of().withTag("highway", "path").withTag("mtb:scale", "3").build();
 
     assertEquals(StreetTraversalPermission.NONE, WPS.getDataForEntity(way1).getPermission());
 
-    var way2 = OsmWay.of().setTag("highway", "track").setTag("mtb:scale", "3").build();
+    var way2 = OsmWay.of().withTag("highway", "track").withTag("mtb:scale", "3").build();
 
     assertEquals(StreetTraversalPermission.NONE, WPS.getDataForEntity(way2).getPermission());
   }
 
   @Test
   public void testMtbScalePedestrian() {
-    var way1 = OsmWay.of().setTag("highway", "path").setTag("mtb:scale", "1").build();
+    var way1 = OsmWay.of().withTag("highway", "path").withTag("mtb:scale", "1").build();
 
     assertEquals(StreetTraversalPermission.PEDESTRIAN, WPS.getDataForEntity(way1).getPermission());
 
-    var way2 = OsmWay.of().setTag("highway", "track").setTag("mtb:scale", "1").build();
+    var way2 = OsmWay.of().withTag("highway", "track").withTag("mtb:scale", "1").build();
 
     assertEquals(StreetTraversalPermission.PEDESTRIAN, WPS.getDataForEntity(way2).getPermission());
   }
 
   @Test
   public void testMotorroad() {
-    var way1 = OsmWay.of().setTag("highway", "trunk").setTag("motorroad", "yes").build();
+    var way1 = OsmWay.of().withTag("highway", "trunk").withTag("motorroad", "yes").build();
 
     assertEquals(StreetTraversalPermission.CAR, WPS.getDataForEntity(way1).getPermission());
 
-    var way2 = OsmWay.of().setTag("highway", "primary").setTag("motorroad", "yes").build();
+    var way2 = OsmWay.of().withTag("highway", "primary").withTag("motorroad", "yes").build();
 
     assertEquals(StreetTraversalPermission.CAR, WPS.getDataForEntity(way2).getPermission());
   }

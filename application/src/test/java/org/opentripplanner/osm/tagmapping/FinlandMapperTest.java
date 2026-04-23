@@ -25,64 +25,64 @@ class FinlandMapperTest {
    */
   @Test
   void testSafety() {
-    var primaryWay = OsmWay.of().setTag("highway", "primary").setTag("oneway", "no").build();
-    var livingStreetWay = OsmWay.of().setTag("highway", "living_street").build();
-    var footway = OsmWay.of().setTag("highway", "footway").build();
-    var sidewalk = OsmWay.of().setTag("footway", "sidewalk").setTag("highway", "footway").build();
+    var primaryWay = OsmWay.of().withTag("highway", "primary").withTag("oneway", "no").build();
+    var livingStreetWay = OsmWay.of().withTag("highway", "living_street").build();
+    var footway = OsmWay.of().withTag("highway", "footway").build();
+    var sidewalk = OsmWay.of().withTag("footway", "sidewalk").withTag("highway", "footway").build();
     var segregatedCycleway = OsmWay.of()
-      .setTag("segregated", "yes")
-      .setTag("highway", "cycleway")
+      .withTag("segregated", "yes")
+      .withTag("highway", "cycleway")
       .build();
-    var tunnel = OsmWay.of().setTag("tunnel", "yes").setTag("highway", "footway").build();
-    var bridge = OsmWay.of().setTag("bridge", "yes").setTag("highway", "footway").build();
+    var tunnel = OsmWay.of().withTag("tunnel", "yes").withTag("highway", "footway").build();
+    var bridge = OsmWay.of().withTag("bridge", "yes").withTag("highway", "footway").build();
     var footwayCrossing = OsmWay.of()
-      .setTag("footway", "crossing")
-      .setTag("highway", "footway")
+      .withTag("footway", "crossing")
+      .withTag("highway", "footway")
       .build();
     var footwayCrossingWithTrafficLights = OsmWay.of()
-      .setTag("footway", "crossing")
-      .setTag("highway", "footway")
-      .setTag("crossing", "traffic_signals")
+      .withTag("footway", "crossing")
+      .withTag("highway", "footway")
+      .withTag("crossing", "traffic_signals")
       .build();
     var cyclewayCrossing = OsmWay.of()
-      .setTag("cycleway", "crossing")
-      .setTag("highway", "cycleway")
+      .withTag("cycleway", "crossing")
+      .withTag("highway", "cycleway")
       .build();
     var cyclewayFootwayCrossing = OsmWay.of()
-      .setTag("footway", "crossing")
-      .setTag("highway", "cycleway")
+      .withTag("footway", "crossing")
+      .withTag("highway", "cycleway")
       .build();
     var cyclewayCrossingWithTrafficLights = OsmWay.of()
-      .setTag("cycleway", "crossing")
-      .setTag("highway", "cycleway")
-      .setTag("crossing", "traffic_signals")
+      .withTag("cycleway", "crossing")
+      .withTag("highway", "cycleway")
+      .withTag("crossing", "traffic_signals")
       .build();
     var cyclewayFootwayCrossingWithTrafficLights = OsmWay.of()
-      .setTag("footway", "crossing")
-      .setTag("highway", "cycleway")
-      .setTag("crossing", "traffic_signals")
+      .withTag("footway", "crossing")
+      .withTag("highway", "cycleway")
+      .withTag("crossing", "traffic_signals")
       .build();
     var cyclewaySegregatedCrossing = OsmWay.of()
-      .setTag("cycleway", "crossing")
-      .setTag("segregated", "yes")
-      .setTag("highway", "cycleway")
+      .withTag("cycleway", "crossing")
+      .withTag("segregated", "yes")
+      .withTag("highway", "cycleway")
       .build();
     var cyclewaySegregatedFootwayCrossing = OsmWay.of()
-      .setTag("footway", "crossing")
-      .setTag("segregated", "yes")
-      .setTag("highway", "cycleway")
+      .withTag("footway", "crossing")
+      .withTag("segregated", "yes")
+      .withTag("highway", "cycleway")
       .build();
     var cyclewaySegregatedCrossingWithTrafficLights = OsmWay.of()
-      .setTag("cycleway", "crossing")
-      .setTag("segregated", "yes")
-      .setTag("highway", "cycleway")
-      .setTag("crossing", "traffic_signals")
+      .withTag("cycleway", "crossing")
+      .withTag("segregated", "yes")
+      .withTag("highway", "cycleway")
+      .withTag("crossing", "traffic_signals")
       .build();
     var cyclewaySegregatedFootwayCrossingWithTrafficLights = OsmWay.of()
-      .setTag("footway", "crossing")
-      .setTag("segregated", "yes")
-      .setTag("highway", "cycleway")
-      .setTag("crossing", "traffic_signals")
+      .withTag("footway", "crossing")
+      .withTag("segregated", "yes")
+      .withTag("highway", "cycleway")
+      .withTag("crossing", "traffic_signals")
       .build();
     assertEquals(2.06, wps.getDataForWay(primaryWay).forward().bicycleSafety(), EPSILON);
     // way with high speed limit, has higher walk safety factor
@@ -139,9 +139,9 @@ class FinlandMapperTest {
   void testSafetyWithMixins() {
     var wayWithMixins = OsmWay.of()
       // highway=service has no custom bicycle or walk safety
-      .setTag("highway", "unclassified")
+      .withTag("highway", "unclassified")
       // surface has mixin bicycle safety of 1.3 but no walk safety
-      .setTag("surface", "metal")
+      .withTag("surface", "metal")
       .build();
     // 1.0 * 1.3 = 1.3
     assertEquals(1.3, wps.getDataForWay(wayWithMixins).forward().bicycleSafety(), EPSILON);
@@ -150,9 +150,9 @@ class FinlandMapperTest {
 
     var wayWithMixinsAndCustomSafety = OsmWay.of()
       // highway=service has custom bicycle safety of 1.1 but no custom walk safety
-      .setTag("highway", "service")
+      .withTag("highway", "service")
       // surface has mixin bicycle safety of 1.3 but no walk safety
-      .setTag("surface", "metal")
+      .withTag("surface", "metal")
       .build();
     // 1.1 * 1.3 = 1.43
     assertEquals(
@@ -170,9 +170,9 @@ class FinlandMapperTest {
 
   @Test
   void testUseSidePath() {
-    var wayWithBicycleSidePath = OsmWay.of().setTag("bicycle", "use_sidepath").build();
+    var wayWithBicycleSidePath = OsmWay.of().withTag("bicycle", "use_sidepath").build();
     assertEquals(9, wps.getDataForWay(wayWithBicycleSidePath).forward().walkSafety(), EPSILON);
-    var wayWithFootSidePath = OsmWay.of().setTag("foot", "use_sidepath").build();
+    var wayWithFootSidePath = OsmWay.of().withTag("foot", "use_sidepath").build();
     assertEquals(9, wps.getDataForWay(wayWithFootSidePath).forward().walkSafety(), EPSILON);
   }
 
@@ -186,15 +186,15 @@ class FinlandMapperTest {
   void testTagMapping() {
     WayProperties wayData;
 
-    var way = OsmWay.of().setTag("highway", "unclassified").setTag("seasonal", "winter").build();
+    var way = OsmWay.of().withTag("highway", "unclassified").withTag("seasonal", "winter").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(wayData.getPermission(), NONE);
 
-    way = OsmWay.of().setTag("highway", "trunk").setTag("ice_road", "yes").build();
+    way = OsmWay.of().withTag("highway", "trunk").withTag("ice_road", "yes").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(wayData.getPermission(), NONE);
 
-    way = OsmWay.of().setTag("highway", "track").setTag("winter_road", "yes").build();
+    way = OsmWay.of().withTag("highway", "track").withTag("winter_road", "yes").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(wayData.getPermission(), NONE);
   }
@@ -222,21 +222,21 @@ class FinlandMapperTest {
   void testArea() {
     WayProperties wayData;
 
-    var way = OsmWay.of().setTag("highway", "footway").setTag("area", "yes").build();
+    var way = OsmWay.of().withTag("highway", "footway").withTag("area", "yes").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(PEDESTRIAN, wayData.getPermission());
 
-    way = OsmWay.of().setTag("public_transport", "platform").setTag("area", "yes").build();
+    way = OsmWay.of().withTag("public_transport", "platform").withTag("area", "yes").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(PEDESTRIAN, wayData.getPermission());
-    way = way.copy().setTag("bicycle", "yes").build();
+    way = way.copy().withTag("bicycle", "yes").build();
     wayData = wps.getDataForEntity(way);
     assertEquals(PEDESTRIAN_AND_BICYCLE, wayData.getPermission());
   }
 
   @Test
   void serviceNoThroughTraffic() {
-    var way = OsmWay.of().setTag("highway", "residential").setTag("service", "driveway").build();
+    var way = OsmWay.of().withTag("highway", "residential").withTag("service", "driveway").build();
     assertTrue(mapper.isMotorVehicleThroughTrafficExplicitlyDisallowed(way));
   }
 
@@ -244,7 +244,7 @@ class FinlandMapperTest {
   void motorroad() {
     var way = WayTestData.carTunnel();
     assertEquals(ALL, wps.getDataForWay(way).forward().getPermission());
-    way = way.copy().setTag("motorroad", "yes").build();
+    way = way.copy().withTag("motorroad", "yes").build();
     assertEquals(CAR, wps.getDataForWay(way).forward().getPermission());
   }
 }

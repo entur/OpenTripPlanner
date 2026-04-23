@@ -72,9 +72,9 @@ class WayPropertySetTest {
   @Test
   public void testWayDataSet() {
     OsmWay way = OsmWay.of()
-      .setTag("highway", "footway")
-      .setTag("cycleway", "lane")
-      .setTag("surface", "gravel")
+      .withTag("highway", "footway")
+      .withTag("cycleway", "lane")
+      .withTag("surface", "gravel")
       .build();
 
     WayPropertySetBuilder builder = WayPropertySet.of();
@@ -132,9 +132,9 @@ class WayPropertySetTest {
 
     // test a left-right distinction
     way = OsmWay.of()
-      .setTag("highway", "footway")
-      .setTag("cycleway", "lane")
-      .setTag("cycleway:right", "track")
+      .withTag("highway", "footway")
+      .withTag("cycleway", "lane")
+      .withTag("cycleway:right", "track")
       .build();
 
     OsmSpecifier track_only = new BestMatchSpecifier("highway=footway;cycleway=track");
@@ -152,9 +152,9 @@ class WayPropertySetTest {
     assertEquals(0.75, dataForWay.backward().bicycleSafety());
 
     way = OsmWay.of()
-      .setTag("highway", "footway")
-      .setTag("footway", "sidewalk")
-      .setTag("RLIS:reviewed", "no")
+      .withTag("highway", "footway")
+      .withTag("footway", "sidewalk")
+      .withTag("RLIS:reviewed", "no")
       .build();
     WayPropertySetBuilder builder2 = WayPropertySet.of();
     CreativeNamer namer = new CreativeNamer("platform");

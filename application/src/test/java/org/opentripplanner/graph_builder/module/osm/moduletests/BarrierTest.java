@@ -30,9 +30,9 @@ public class BarrierTest {
 
   @Test
   void testLinearCrossingNonIntersection() {
-    var way = OsmWay.of().withId(1).setTag("highway", "path").addNodeRef(1, 2, 3, 4).build();
+    var way = OsmWay.of().withId(1).withTag("highway", "path").addNodeRef(1, 2, 3, 4).build();
 
-    var barrier = OsmWay.of().withId(2).setTag("barrier", "fence").addNodeRef(99, 2, 98).build();
+    var barrier = OsmWay.of().withId(2).withTag("barrier", "fence").addNodeRef(99, 2, 98).build();
 
     var osmProvider = new TestOsmProvider(
       List.of(),
@@ -72,14 +72,14 @@ public class BarrierTest {
     var n5 = OsmNode.of().withId(5).withLatLon(-0.001, 0.001).build();
     var n6 = OsmNode.of().withId(6).withLatLon(-0.001, -0.001).build();
 
-    var path = OsmWay.of().withId(1).setTag("highway", "path").addNodeRef(1, 2).build();
+    var path = OsmWay.of().withId(1).withTag("highway", "path").addNodeRef(1, 2).build();
 
-    var chain = OsmWay.of().withId(2).setTag("barrier", "chain").addNodeRef(3, 1, 4).build();
+    var chain = OsmWay.of().withId(2).withTag("barrier", "chain").addNodeRef(3, 1, 4).build();
 
     var barrier = OsmWay.of()
-      .setTag("highway", "pedestrian")
-      .setTag("bicycle", "yes")
-      .setTag("area", "yes")
+      .withTag("highway", "pedestrian")
+      .withTag("bicycle", "yes")
+      .withTag("area", "yes")
       .addNodeRef(1, 4, 5, 6, 3, 1)
       .build();
 
@@ -149,29 +149,29 @@ public class BarrierTest {
     var n5 = OsmNode.of().withId(5).withLatLon(1, 0).build();
     var n6 = OsmNode.of().withId(6).withLatLon(-1, 0).withTag("barrier", "bollard").build();
 
-    var chain = OsmWay.of().withId(999).setTag("barrier", "chain").addNodeRef(1, 2, 3).build();
+    var chain = OsmWay.of().withId(999).withTag("barrier", "chain").addNodeRef(1, 2, 3).build();
 
     var w1 = OsmWay.of()
       .withId(1)
-      .setTag("highway", "pedestrian")
-      .setTag("level", "0")
-      .setTag("area", "yes")
+      .withTag("highway", "pedestrian")
+      .withTag("level", "0")
+      .withTag("area", "yes")
       .addNodeRef(4, 5, 1, 4)
       .build();
 
     var w2 = OsmWay.of()
       .withId(2)
-      .setTag("highway", "pedestrian")
-      .setTag("level", "1")
-      .setTag("area", "yes")
+      .withTag("highway", "pedestrian")
+      .withTag("level", "1")
+      .withTag("area", "yes")
       .addNodeRef(1, 2, 3, 6, 1)
       .build();
 
     var w3 = OsmWay.of()
       .withId(3)
-      .setTag("highway", "pedestrian")
-      .setTag("level", "1")
-      .setTag("area", "yes")
+      .withTag("highway", "pedestrian")
+      .withTag("level", "1")
+      .withTag("area", "yes")
       .addNodeRef(4, 6, 1, 4)
       .build();
 

@@ -33,13 +33,13 @@ class BarrierEdgeBuilderTest {
   private static final EdgeNamer EDGE_NAMER = new DefaultNamer();
   private static final BarrierEdgeBuilder SUBJECT = new BarrierEdgeBuilder(EDGE_NAMER);
 
-  private static final OsmWay WALL = OsmWay.of().setTag("barrier", "wall").build();
-  private static final OsmWay FENCE = OsmWay.of().setTag("barrier", "fence").build();
-  private static final OsmWay CHAIN = OsmWay.of().setTag("barrier", "chain").build();
+  private static final OsmWay WALL = OsmWay.of().withTag("barrier", "wall").build();
+  private static final OsmWay FENCE = OsmWay.of().withTag("barrier", "fence").build();
+  private static final OsmWay CHAIN = OsmWay.of().withTag("barrier", "chain").build();
 
-  private static final OsmWay KERB = OsmWay.of().setTag("barrier", "kerb").build();
+  private static final OsmWay KERB = OsmWay.of().withTag("barrier", "kerb").build();
 
-  private static final OsmWay HANDRAIL = OsmWay.of().setTag("barrier", "handrail").build();
+  private static final OsmWay HANDRAIL = OsmWay.of().withTag("barrier", "handrail").build();
 
   @Test
   void connectOneVertexWithoutBarrier() {

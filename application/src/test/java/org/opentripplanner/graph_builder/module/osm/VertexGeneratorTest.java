@@ -37,26 +37,26 @@ class VertexGeneratorTest {
     var n5 = OsmNode.of().withId(5).withLatLon(1, 1).build();
     var n10 = OsmNode.of().withId(10).withLatLon(2, 2).build();
 
-    var chain = OsmWay.of().withId(999).setTag("barrier", "chain").addNodeRef(1, 2, 3).build();
+    var chain = OsmWay.of().withId(999).withTag("barrier", "chain").addNodeRef(1, 2, 3).build();
 
     var circularChain = OsmWay.of()
       .withId(998)
-      .setTag("barrier", "chain")
+      .withTag("barrier", "chain")
       .addNodeRef(3, 4, 5, 3)
       .build();
 
     var w1 = OsmWay.of()
       .withId(1)
-      .setTag("highway", "pedestrian")
-      .setTag("level", "0")
+      .withTag("highway", "pedestrian")
+      .withTag("level", "0")
       .addNodeRef(4, 10, 3, 4)
       .build();
 
     var w2 = OsmWay.of()
       .withId(2)
-      .setTag("highway", "pedestrian")
-      .setTag("level", "1")
-      .setTag("area", "yes")
+      .withTag("highway", "pedestrian")
+      .withTag("level", "1")
+      .withTag("area", "yes")
       .addNodeRef(30, 3, 10, 30)
       .build();
 
