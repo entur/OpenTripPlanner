@@ -323,6 +323,9 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   }
 
   public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    if (geofencingBoundaries.contains(ext)) {
+      return;
+    }
     var newList = new ArrayList<>(geofencingBoundaries);
     newList.add(ext);
     geofencingBoundaries = List.copyOf(newList);
