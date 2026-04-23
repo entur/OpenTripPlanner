@@ -27,7 +27,7 @@ public class ExactMatchSpecifier implements OsmSpecifier {
    */
   public static final int MATCH_MULTIPLIER = 200;
   public static final int NO_MATCH_SCORE = 0;
-  private final List<Condition> conditions;
+  private final Condition[] conditions;
   private final int bestMatchScore;
 
   public ExactMatchSpecifier(String spec) {
@@ -35,8 +35,8 @@ public class ExactMatchSpecifier implements OsmSpecifier {
   }
 
   public ExactMatchSpecifier(Condition... conditions) {
-    this.conditions = Arrays.asList(conditions);
-    bestMatchScore = this.conditions.size() * MATCH_MULTIPLIER;
+    this.conditions = conditions;
+    bestMatchScore = this.conditions.length * MATCH_MULTIPLIER;
   }
 
   @Override
@@ -46,19 +46,28 @@ public class ExactMatchSpecifier implements OsmSpecifier {
 
   @Override
   public String toDocString() {
-    return conditions.stream().map(Object::toString).collect(Collectors.joining("; "));
+    return Arrays.stream(conditions).map(Object::toString).collect(Collectors.joining("; "));
   }
 
   public boolean allTagsMatch(OsmEntity way) {
-    return conditions.stream().allMatch(o -> o.isMatch(way));
+    for (var c : conditions) {
+      if (!c.isMatch(way)) return false;
+    }
+    return true;
   }
 
   public boolean allBackwardTagsMatch(OsmEntity way) {
-    return conditions.stream().allMatch(c -> c.isBackwardMatch(way));
+    for (var c : conditions) {
+      if (!c.isBackwardMatch(way)) return false;
+    }
+    return true;
   }
 
   public boolean allForwardTagsMatch(OsmEntity way) {
-    return conditions.stream().allMatch(c -> c.isForwardMatch(way));
+    for (var c : conditions) {
+      if (!c.isForwardMatch(way)) return false;
+    }
+    return true;
   }
 
   private boolean allTagsMatch(OsmEntity way, TraverseDirection direction) {
