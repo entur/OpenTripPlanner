@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareServiceFactory;
+import org.opentripplanner.ext.fares.service.gtfs.v1.GtfsFareServiceFactory;
 import org.opentripplanner.graph_builder.module.TimeZoneAdjusterModule;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.test.support.ResourceLoader;
@@ -44,7 +44,7 @@ class TimetableRepositoryTest {
       graph,
       timetableRepository,
       ConstantsForTests.SIMPLE_GTFS,
-      new DefaultFareServiceFactory(),
+      new GtfsFareServiceFactory(),
       FAKE_FEED_ID
     );
 
@@ -66,7 +66,7 @@ class TimetableRepositoryTest {
           graph,
           timetableRepository,
           RESOURCE_LOADER.file("kcm_gtfs.zip"),
-          new DefaultFareServiceFactory(),
+          new GtfsFareServiceFactory(),
           null
         ),
       ("The graph contains agencies with different time zones. " +
@@ -89,7 +89,7 @@ class TimetableRepositoryTest {
       graph,
       timetableRepository,
       ConstantsForTests.SIMPLE_GTFS,
-      new DefaultFareServiceFactory(),
+      new GtfsFareServiceFactory(),
       FAKE_FEED_ID
     );
 
@@ -98,7 +98,7 @@ class TimetableRepositoryTest {
       graph,
       timetableRepository,
       RESOURCE_LOADER.file("kcm_gtfs.zip"),
-      new DefaultFareServiceFactory(),
+      new GtfsFareServiceFactory(),
       null
     );
 
