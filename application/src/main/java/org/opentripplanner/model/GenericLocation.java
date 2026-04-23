@@ -110,10 +110,6 @@ public class GenericLocation {
     return label;
   }
 
-  public boolean isSpecified() {
-    return stopId != null || coordinate != null;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) {

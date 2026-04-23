@@ -1,7 +1,6 @@
 package org.opentripplanner.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
@@ -30,11 +29,6 @@ class GenericLocationTest {
   @Test
   void getCoordinate() {
     assertEquals(STOP_ID, subject.stopId());
-  }
-
-  @Test
-  void isSpecified() {
-    assertTrue(subject.isSpecified());
   }
 
   @Test

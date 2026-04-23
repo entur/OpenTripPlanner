@@ -126,7 +126,7 @@ public class LinkingContextFactory {
     LinkingContextRequest request
   ) {
     var from = request.from();
-    if (from == null || !from.isSpecified()) {
+    if (from == null) {
       return Set.of();
     }
     var modes = request.accessMode() != StreetMode.NOT_SET
@@ -143,7 +143,7 @@ public class LinkingContextFactory {
     LinkingContextRequest request
   ) {
     var to = request.to();
-    if (to == null || !to.isSpecified()) {
+    if (to == null) {
       return Set.of();
     }
     var modes = request.egressMode() != StreetMode.NOT_SET
@@ -269,10 +269,6 @@ public class LinkingContextFactory {
     EnumSet<StreetMode> streetModes,
     LocationType type
   ) {
-    if (!location.isSpecified()) {
-      return Set.of();
-    }
-
     // Differentiate between driving and non-driving, as driving is not available from transit stops
     List<TraverseMode> modes = streetModes
       .stream()
@@ -388,12 +384,7 @@ public class LinkingContextFactory {
     }
 
     // check that vertices where found if to-location was specified
-    if (
-      to != null &&
-      to.isSpecified() &&
-      toStopVertices.isEmpty() &&
-      isDisconnected(toVertices, LocationType.TO)
-    ) {
+    if (to != null && toStopVertices.isEmpty() && isDisconnected(toVertices, LocationType.TO)) {
       routingErrors.add(
         new RoutingError(getRoutingErrorCodeForDisconnected(to), InputField.TO_PLACE)
       );
