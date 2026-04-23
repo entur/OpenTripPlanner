@@ -13,6 +13,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
+import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneApplier;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
@@ -23,7 +24,6 @@ import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.linking.VertexLinker;
-import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
@@ -79,10 +79,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       parameters.sourceParameters().network(),
       parameters.sourceParameters().url()
     );
-    this.applyBusinessAreas =
-      parameters.sourceParameters() instanceof GbfsVehicleRentalDataSourceParameters gbfs
-        ? gbfs.geofencingBusinessAreaBorders()
-        : true;
+    this.applyBusinessAreas = parameters.sourceParameters() instanceof
+        GbfsVehicleRentalDataSourceParameters gbfs
+      ? gbfs.geofencingBusinessAreaBorders()
+      : true;
     this.unlinkedPlaceThrottle = Throttle.ofOneSecond();
 
     // Creation of network linker library will not modify the graph
