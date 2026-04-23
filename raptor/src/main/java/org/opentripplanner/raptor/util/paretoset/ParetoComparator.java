@@ -1,29 +1,41 @@
 package org.opentripplanner.raptor.util.paretoset;
 
-/// Comparator used by the {@link ParetoSet} to compare to elements for dominance. There is 4
-/// outcomes of a comparison between a left and right vector:
+/// Compares two elements in a {@link ParetoSet} for Pareto dominance.
 ///
-/// - Left dominates right `<` - At least one left criteria dominates, and no right dominance exist
-/// - Right dominates left `>` - At least one right criteria dominates, and no left dominance exist
-/// - Mutual dominance `||` - At least one left criteria dominates right and at least one right
-///   criteria dominates left
-/// - No dominance `=` - all criteria is equals or no dominance exist.
+/// A comparison between a `left` and `right` element can produce four outcomes:
 ///
-/// To implement the comparator you only need to implement the comparison in one direction - if dominance exist.
+/// - **Left dominates right** `≺`: at least one left criterion dominates and no right
+///   criterion dominates.
+/// - **Right dominates left** `≻`: at least one right criterion dominates and no left
+///   criterion dominates.
+/// - **Mutual dominance** `∥`: at least one left criteria dominates right and at
+///   least one right criteria dominates left
+/// - **No dominance** `≡`: all criteria are equal, or neither side dominates.
 ///
-/// @param <T> The pareto set element type
+/// Implementations only need to provide one directional check in
+/// {@link #leftDominanceExist(Object, Object)}.
+///
+/// @param <T> the Pareto set element type
 ///
 @FunctionalInterface
 public interface ParetoComparator<T> {
   /**
-   * At least one of the left criteria dominates one of the corresponding right criteria.
+   * Returns {@code true} if at least one criterion in {@code left} dominates the corresponding
+   * criterion in {@code right}.
    */
   boolean leftDominanceExist(T left, T right);
 
+  /**
+   * Returns {@code true} if either element dominates the other.
+   */
   default boolean dominanceExist(T left, T right) {
     return leftDominanceExist(left, right) || leftDominanceExist(right, left);
   }
 
+  /**
+   * Compares {@code left} and {@code right} and returns the corresponding {@link ParetoDominance}
+   * outcome.
+   */
   default ParetoDominance compare(T left, T right) {
     final boolean l = leftDominanceExist(left, right);
     final boolean r = leftDominanceExist(right, left);
