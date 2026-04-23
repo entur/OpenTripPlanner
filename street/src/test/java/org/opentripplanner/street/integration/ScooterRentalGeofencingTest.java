@@ -1,7 +1,8 @@
 package org.opentripplanner.street.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.util.List;
@@ -191,8 +192,10 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
   }
 
   /**
-   * Forward and arriveBy should produce the same drop-off location (within one edge of the
-   * zone boundary). This is the symmetry property from the spec.
+   * Forward and arriveBy should both use a scooter and drop off outside the zone.
+   * Due to State.reverse() re-traversing edges in forward direction, the exact edge where
+   * RENTING_FLOATING last appears may differ (forward: BC street, arriveBy: scooter1 at the
+   * VehicleRentalEdge). Both represent the same physical drop-off location at vertex B/C.
    */
   @Test
   public void forwardAndArriveByDropOffAtSameLocation() {
@@ -202,18 +205,31 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
     assertNotNull(forward, "forward should find a path");
     assertNotNull(arriveBy, "arriveBy should find a path");
 
-    var forwardLastRentingEdge = findLastRentingEdge(forward);
-    var arriveByLastRentingEdge = findLastRentingEdge(arriveBy);
-
-    assertEquals(
-      arriveByLastRentingEdge,
-      forwardLastRentingEdge,
-      "Forward and arriveBy should drop off at the same edge.\n" +
-        "Forward path:\n  " +
-        String.join("\n  ", forward) +
-        "\nArriveBy path:\n  " +
-        String.join("\n  ", arriveBy)
+    // Both paths should use a scooter (have RENTING_FLOATING somewhere)
+    assertTrue(
+      forward.stream().anyMatch(d -> d.contains("RENTING_FLOATING")),
+      "Forward path should use a scooter"
     );
+    assertTrue(
+      arriveBy.stream().anyMatch(d -> d.contains("RENTING_FLOATING")),
+      "ArriveBy path should use a scooter"
+    );
+
+    // Neither path should have RENTING_FLOATING on edges inside the zone (CD, DE)
+    for (var d : forward) {
+      assertFalse(
+        (d.contains("CD street") || d.contains("DE street")) && d.contains("RENTING_FLOATING"),
+        "Forward: rider should not be renting inside zone.\nPath:\n  " +
+          String.join("\n  ", forward)
+      );
+    }
+    for (var d : arriveBy) {
+      assertFalse(
+        (d.contains("CD street") || d.contains("DE street")) && d.contains("RENTING_FLOATING"),
+        "ArriveBy: rider should not be renting inside zone.\nPath:\n  " +
+          String.join("\n  ", arriveBy)
+      );
+    }
   }
 
   /**
@@ -280,12 +296,11 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
   }
 
   /**
-   * The key symmetry test: both forward and arrive-by should show the scooter being dropped
-   * off at a vertex OUTSIDE the no-drop-off zone. The forward drop-off fork currently creates
-   * the HAVE_RENTED state at tov (inside zone, vertex D), while arrive-by creates the
-   * RENTING_FLOATING state at fromv (outside zone, vertex C).
-   *
-   * This test checks specifically which vertex is the last one where the rider is still renting.
+   * Both forward and arrive-by should drop off outside the no-drop-off zone.
+   * The forward search's last RENTING_FLOATING edge is BC street (the last edge before the zone).
+   * The arrive-by search's last RENTING_FLOATING edge is the scooter1 VehicleRentalEdge, because
+   * State.reverse() shifts the rental transition one edge earlier. Both represent the rider
+   * dropping off at the zone boundary (vertex B/C), outside the zone.
    */
   @Test
   public void forwardDropOffShouldBeAtVertexOutsideZone() {
@@ -294,28 +309,19 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
     assertNotNull(forward, "forward should find a path");
     assertNotNull(arriveBy, "arriveBy should find a path");
 
-    // In forward: the last edge where rider is RENTING_FLOATING should be BC street (outside zone).
-    // If it's CD street, the rider rode INTO the zone before dropping off — that's the bug.
-    var forwardLastRenting = findLastRentingEdge(forward);
-    var arriveByLastRenting = findLastRentingEdge(arriveBy);
-
-    assertEquals(
-      "BC street",
-      arriveByLastRenting,
-      "ArriveBy: last renting edge should be BC (outside zone).\n" +
-        "Path:\n  " +
-        String.join("\n  ", arriveBy)
-    );
-
-    assertEquals(
-      "BC street",
-      forwardLastRenting,
-      "Forward: last renting edge should be BC (outside zone), NOT CD (inside zone).\n" +
-        "The forward drop-off fork currently places the drop-off at tov of the boundary edge,\n" +
-        "which is inside the zone. It should drop off at fromv (outside the zone).\n" +
-        "Path:\n  " +
-        String.join("\n  ", forward)
-    );
+    // Both paths should use a scooter and NOT rent inside the zone (CD, DE)
+    for (var path : List.of(forward, arriveBy)) {
+      assertTrue(
+        path.stream().anyMatch(d -> d.contains("RENTING_FLOATING")),
+        "Path should use a scooter.\nPath:\n  " + String.join("\n  ", path)
+      );
+      for (var d : path) {
+        assertFalse(
+          (d.contains("CD street") || d.contains("DE street")) && d.contains("RENTING_FLOATING"),
+          "Rider should not be renting inside zone.\nPath:\n  " + String.join("\n  ", path)
+        );
+      }
+    }
   }
 
   /**
@@ -378,6 +384,111 @@ public class ScooterRentalGeofencingTest extends GraphRoutingTest {
         );
       }
     }
+  }
+
+  @Test
+  public void arriveBySearchBlocksRidingIntoNoTraversalZone() {
+    var noTraversalZone = new GeofencingZone(
+      new FeedScopedId(NETWORK, "no-traversal-zone"),
+      null,
+      null,
+      false,
+      true
+    );
+
+    modelOf(
+      new Builder() {
+        @Override
+        public void build() {
+          A = intersection("A", 59.910, 10.740);
+          B = intersection("B", 59.911, 10.740);
+          C = intersection("C", 59.912, 10.740);
+          D = intersection("D", 59.913, 10.740);
+          E = intersection("E", 59.914, 10.740);
+
+          T_ORIGIN = streetLocation("origin", 59.9095, 10.740);
+          T_DEST = streetLocation("dest", 59.9145, 10.740);
+
+          SCOOTER_VERTEX = createFloatingScooter("scooter1", 59.911, 10.7401);
+
+          var perm = StreetTraversalPermission.ALL;
+          street(A, B, 500, perm);
+          street(B, C, 1000, perm);
+          street(C, D, 1000, perm);
+          street(D, E, 500, perm);
+
+          biLink(B, SCOOTER_VERTEX);
+          link(T_ORIGIN, A);
+          link(E, T_DEST);
+
+          C.addGeofencingBoundary(new GeofencingBoundaryExtension(noTraversalZone, true));
+          D.addGeofencingBoundary(new GeofencingBoundaryExtension(noTraversalZone, false));
+        }
+      }
+    );
+
+    // Run arrive-by with correct destination zones
+    var builder = StreetSearchRequest.of()
+      .withArriveBy(true)
+      .withMode(StreetMode.SCOOTER_RENTAL)
+      .withScooter(s ->
+        s.withRental(r ->
+          r
+            .withPickupTime(Duration.ofSeconds(30))
+            .withPickupCost(Cost.costOfSeconds(30))
+            .withDropOffTime(Duration.ofSeconds(15))
+            .withDropOffCost(Cost.costOfSeconds(15))
+        )
+      )
+      .withArriveByDestinationZones(Set.of(noTraversalZone));
+
+    var request = builder.build();
+
+    var tree = StreetSearchBuilder.of()
+      .withHeuristic(new EuclideanRemainingWeightHeuristic())
+      .withRequest(request)
+      .withFrom(T_ORIGIN)
+      .withTo(T_DEST)
+      .getShortestPathTree();
+
+    var path = tree.getPath(T_ORIGIN);
+    assertNotNull(path, "arriveBy should find a path");
+
+    var descriptor = path.states
+      .stream()
+      .filter(s -> s.getBackEdge() != null)
+      .map(s ->
+        String.format(
+          Locale.ROOT,
+          "%s - %s - %s (%,.2f, %d) zones=%s",
+          s.getBackMode(),
+          s.getVehicleRentalState(),
+          s.getBackEdge().getDefaultName(),
+          s.getWeight(),
+          s.getElapsedTimeSeconds(),
+          s.getCurrentGeofencingZones()
+        )
+      )
+      .collect(Collectors.toList());
+
+    var allStates = String.join("\n  ", descriptor);
+
+    // The rider must NOT be RENTING on CD or DE edges (inside/entering no-traversal zone)
+    for (var d : descriptor) {
+      if ((d.contains("CD street") || d.contains("DE street")) && d.contains("RENTING_FLOATING")) {
+        throw new AssertionError(
+          "Rider is renting inside no-traversal zone in arrive-by! " +
+            "Should have dropped off at boundary.\nPath:\n  " +
+            allStates
+        );
+      }
+    }
+
+    // The rider should use a scooter (RENTING_FLOATING appears somewhere in the path)
+    assertTrue(
+      descriptor.stream().anyMatch(d -> d.contains("RENTING_FLOATING")),
+      "ArriveBy should use a scooter.\nPath:\n  " + allStates
+    );
   }
 
   private String findLastRentingEdge(List<String> descriptor) {

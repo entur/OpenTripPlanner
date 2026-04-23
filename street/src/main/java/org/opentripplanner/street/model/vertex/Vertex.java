@@ -13,9 +13,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.state.State;
@@ -37,6 +37,7 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   private transient Edge[] incoming = new Edge[0];
 
   private transient Edge[] outgoing = new Edge[0];
+
   @javax.annotation.Nullable
   private BusinessAreaBorder businessAreaBorder;
 
@@ -262,9 +263,23 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   /**
    * Whether this vertex is on the boundary of a no-traversal geofencing zone for the
    * vehicle network the given state is currently renting. Used as a forward-only pre-traversal
-   * check to stop the rider one edge before the zone boundary.
+   * check to unconditionally stop the rider one edge before the zone.
    */
   public boolean isGeofencingNoTraversalBoundary(State currentState) {
+    return hasGeofencingBoundaryMatching(currentState, true);
+  }
+
+  /**
+   * Whether this vertex is on the boundary of a no-drop-off (but not no-traversal) geofencing
+   * zone for the vehicle network the given state is currently renting. Used as a forward-only
+   * pre-traversal check to fork: one branch drops the vehicle here (outside the zone), the
+   * other continues riding into the zone.
+   */
+  public boolean isGeofencingNoDropOffBoundary(State currentState) {
+    return hasGeofencingBoundaryMatching(currentState, false);
+  }
+
+  private boolean hasGeofencingBoundaryMatching(State currentState, boolean traversalBanned) {
     if (geofencingBoundaries.isEmpty() || !currentState.isRentingVehicle()) {
       return false;
     }
@@ -273,11 +288,26 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
       return false;
     }
     for (var boundary : geofencingBoundaries) {
-      if (
-        Boolean.TRUE.equals(boundary.zone().traversalBanned()) &&
-        boundary.zone().id().getFeedId().equals(network)
-      ) {
-        return true;
+      if (!boundary.zone().id().getFeedId().equals(network)) {
+        continue;
+      }
+      // Only match entering=true boundaries. This vertex is the fromv of an edge whose
+      // natural direction enters the zone. The pre-traversal check fires on an edge whose
+      // tov is this vertex, so the rider rides TO this vertex (outside the zone) and drops.
+      if (!boundary.entering()) {
+        continue;
+      }
+      if (traversalBanned) {
+        if (Boolean.TRUE.equals(boundary.zone().traversalBanned())) {
+          return true;
+        }
+      } else {
+        if (
+          Boolean.TRUE.equals(boundary.zone().dropOffBanned()) &&
+          !Boolean.TRUE.equals(boundary.zone().traversalBanned())
+        ) {
+          return true;
+        }
       }
     }
     return false;

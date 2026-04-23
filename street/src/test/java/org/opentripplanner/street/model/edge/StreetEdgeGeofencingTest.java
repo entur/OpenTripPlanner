@@ -119,8 +119,13 @@ class StreetEdgeGeofencingTest {
       assertEquals(1, results.length);
     }
 
+    /**
+     * When the rider starts AT the boundary vertex and traverses into a no-drop-off zone,
+     * they continue riding normally. No drop-off is offered inside the zone — the
+     * pre-traversal fork on the approach edge handles the drop-at-boundary case.
+     */
     @Test
-    public void forkStateWhenEnteringNoDropOffZone() {
+    public void continueRidingWhenStartingAtNoDropOffZoneBoundary() {
       // Set up boundary: V1 is outside, V2 is inside the no-drop-off zone
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
@@ -137,15 +142,44 @@ class StreetEdgeGeofencingTest {
       );
 
       var results = edge.traverse(editor.makeState());
+      assertEquals(1, results.length);
+      assertEquals(RENTING_FLOATING, results[0].getVehicleRentalState());
+      assertEquals(SCOOTER, results[0].getBackMode());
+    }
+
+    /**
+     * When the rider approaches a no-drop-off zone boundary from one edge before, the
+     * pre-traversal check forks: one branch drops at the boundary vertex (outside zone),
+     * the other continues riding into the zone. The A* picks the best option based on
+     * whether the destination is inside or outside the zone.
+     */
+    @Test
+    public void forkWhenApproachingNoDropOffZone() {
+      // V1→V2→V3, boundary at V2/V3. Rider approaches from V1.
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var approachEdge = streetEdge(V1, V2);
+
+      var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
+      var editor = new StateEditor(V1, req);
+      editor.beginFloatingVehicleRenting(
+        RentalFormFactor.SCOOTER,
+        PropulsionType.ELECTRIC,
+        NETWORK_TIER,
+        false
+      );
+
+      var results = approachEdge.traverse(editor.makeState());
       assertEquals(2, results.length);
 
-      var continueOnFoot = results[0];
-      assertEquals(HAVE_RENTED, continueOnFoot.getVehicleRentalState());
-      assertEquals(WALK, continueOnFoot.getBackMode());
+      var droppedOff = results[0];
+      assertEquals(HAVE_RENTED, droppedOff.getVehicleRentalState());
+      assertEquals(SCOOTER, droppedOff.getBackMode());
 
-      var continueRenting = results[1];
-      assertEquals(RENTING_FLOATING, continueRenting.getVehicleRentalState());
-      assertEquals(SCOOTER, continueRenting.getBackMode());
+      var continueRiding = results[1];
+      assertEquals(RENTING_FLOATING, continueRiding.getVehicleRentalState());
+      assertEquals(SCOOTER, continueRiding.getBackMode());
     }
   }
 
@@ -154,17 +188,27 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehicleWhenLeavingNoTraversalZone() {
-      // V2 inside no-traversal zone, V1 outside. Paired boundary extensions.
+      // 3-vertex graph: V3→V1→V2. Boundary at V1/V2, V2 inside no-traversal zone.
+      // Boundary fork fires on V1→V2 (walking only), deferred fork fires on V3→V1.
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
 
-      var edge = streetEdge(V1, V2);
+      var boundaryEdge = streetEdge(V1, V2);
+      var deferredEdge = streetEdge(V3, V1);
       var req = makeArriveByRequest(Set.of(NETWORK_TIER), Collections.emptySet());
       var haveRentedState = makeHaveRentedState(V2, req, Set.of(NO_TRAVERSAL_ZONE));
 
       assertTrue(haveRentedState.getCurrentGeofencingZones().contains(NO_TRAVERSAL_ZONE));
 
-      var states = edge.traverse(haveRentedState);
+      // Step 1: boundary fork on V1→V2 — only produces walking branch
+      var boundaryStates = boundaryEdge.traverse(haveRentedState);
+      assertEquals(1, boundaryStates.length);
+      var walkingAtV1 = boundaryStates[0];
+      assertEquals(HAVE_RENTED, walkingAtV1.getVehicleRentalState());
+      assertEquals(WALK, walkingAtV1.currentMode());
+
+      // Step 2: deferred fork on V3→V1 — produces walking + RENTING_FLOATING
+      var states = deferredEdge.traverse(walkingAtV1);
       assertTrue(states.length >= 2);
 
       // Walking branch
@@ -184,13 +228,14 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWhenStartedInNoDropOffZone() {
-      // V2 inside both tier and bird no-drop-off zones. Paired boundaries on V1/V2.
+      // 3-vertex graph: V3→V1→V2. Boundary at V1/V2, V2 inside both zones.
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
-      var edge = streetEdge(V1, V2);
+      var boundaryEdge = streetEdge(V1, V2);
+      var deferredEdge = streetEdge(V3, V1);
       var req = makeArriveByRequest(Collections.emptySet(), Collections.emptySet());
       var haveRentedState = makeHaveRentedState(
         V2,
@@ -198,7 +243,14 @@ class StreetEdgeGeofencingTest {
         Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
       );
 
-      var states = edge.traverse(haveRentedState);
+      // Step 1: boundary fork — walking only
+      var boundaryStates = boundaryEdge.traverse(haveRentedState);
+      assertEquals(1, boundaryStates.length);
+      var walkingAtV1 = boundaryStates[0];
+      assertEquals(HAVE_RENTED, walkingAtV1.getVehicleRentalState());
+
+      // Step 2: deferred fork — walking + per-network + generic
+      var states = deferredEdge.traverse(walkingAtV1);
 
       // Should have: walking + per-network committed branches + generic
       assertTrue(states.length >= 3);
@@ -244,12 +296,14 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWhenSomeNetworksBanned() {
+      // 3-vertex graph: V3→V1→V2. Boundary at V1/V2, V2 inside both zones.
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
-      var edge = streetEdge(V1, V2);
+      var boundaryEdge = streetEdge(V1, V2);
+      var deferredEdge = streetEdge(V3, V1);
       // Bird is banned, tier is allowed
       var req = makeArriveByRequest(Collections.emptySet(), Set.of(NETWORK_BIRD));
       var haveRentedState = makeHaveRentedState(
@@ -258,7 +312,12 @@ class StreetEdgeGeofencingTest {
         Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
       );
 
-      var states = edge.traverse(haveRentedState);
+      // Step 1: boundary fork — walking only
+      var boundaryStates = boundaryEdge.traverse(haveRentedState);
+      assertEquals(1, boundaryStates.length);
+
+      // Step 2: deferred fork — walking + tier (bird banned)
+      var states = deferredEdge.traverse(boundaryStates[0]);
 
       // Walking + tier committed + generic (bird is banned)
       assertTrue(states.length >= 2);
@@ -276,12 +335,14 @@ class StreetEdgeGeofencingTest {
 
     @Test
     public void pickupFloatingVehiclesWithAllowedNetworkFilter() {
+      // 3-vertex graph: V3→V1→V2. Boundary at V1/V2, V2 inside both zones.
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, true));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_BIRD, false));
 
-      var edge = streetEdge(V1, V2);
+      var boundaryEdge = streetEdge(V1, V2);
+      var deferredEdge = streetEdge(V3, V1);
       // Only tier is allowed
       var req = makeArriveByRequest(Set.of(NETWORK_TIER), Collections.emptySet());
       var haveRentedState = makeHaveRentedState(
@@ -290,9 +351,13 @@ class StreetEdgeGeofencingTest {
         Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
       );
 
-      var states = edge.traverse(haveRentedState);
+      // Step 1: boundary fork — walking only
+      var boundaryStates = boundaryEdge.traverse(haveRentedState);
+      assertEquals(1, boundaryStates.length);
 
-      // Walking + tier committed + generic (bird not in allowed list)
+      // Step 2: deferred fork — walking + tier (bird not in allowed list)
+      var states = deferredEdge.traverse(boundaryStates[0]);
+
       var tierState = Arrays.stream(states)
         .filter(s -> NETWORK_TIER.equals(s.getVehicleRentalNetwork()))
         .findFirst();
@@ -321,6 +386,61 @@ class StreetEdgeGeofencingTest {
         .filter(s -> s.getVehicleRentalState() == HAVE_RENTED)
         .findAny()
         .get();
+    }
+
+    @Test
+    public void arriveByRentingBlockedFromEnteringNoTraversalZone() {
+      // V1 inside no-traversal zone (entering=false), V2 boundary outside (entering=true). Paired.
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+
+      var edge = streetEdge(V1, V2);
+      // RENTING_FLOATING rider at V2 (tov), arrive-by traversal goes from V2 to V1 (into zone)
+      var rentingState = initialState(V2, NETWORK_TIER, true);
+
+      var states = edge.traverse(rentingState);
+      assertEquals(0, states.length);
+    }
+
+    @Test
+    public void arriveByRentingBlockedOnInteriorEdgeAdjacentToBoundary() {
+      // V1 is boundary vertex (entering=false, inside zone). V3 is interior (no boundary).
+      // Edge V1→V3: fromv=V1 has boundary, tov=V3 has none (not paired).
+      // Arrive-by traversal from V3 to V1 should still be blocked — the rider would
+      // enter the zone even though V3 has no boundary extension.
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+
+      var edge = streetEdge(V1, V3);
+      var rentingState = initialState(V3, NETWORK_TIER, true);
+
+      var states = edge.traverse(rentingState);
+      assertEquals(0, states.length);
+    }
+
+    @Test
+    public void arriveByRentingNotBlockedForDifferentNetwork() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+
+      var edge = streetEdge(V1, V2);
+      // Rider on BIRD network — zone is for TIER, should not be blocked
+      var rentingState = initialState(V2, NETWORK_BIRD, true);
+
+      var states = edge.traverse(rentingState);
+      assertTrue(states.length > 0);
+    }
+
+    @Test
+    public void arriveByGenericRentingBlockedByNoTraversalZone() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+
+      var edge = streetEdge(V1, V2);
+      // Generic state (null network) should also be blocked — no-traversal applies to all vehicles
+      var rentingState = initialState(V2, null, true);
+
+      var states = edge.traverse(rentingState);
+      assertEquals(0, states.length);
     }
 
     private static StreetSearchRequest makeArriveByRequest(
