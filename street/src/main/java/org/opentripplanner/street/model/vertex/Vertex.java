@@ -313,8 +313,20 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     return false;
   }
 
-  public void setBusinessAreaBorder(BusinessAreaBorder border) {
-    this.businessAreaBorder = border;
+  public void addBusinessAreaBorderNetwork(String network) {
+    if (businessAreaBorder == null) {
+      businessAreaBorder = new BusinessAreaBorder();
+    }
+    businessAreaBorder.addNetwork(network);
+  }
+
+  public void removeBusinessAreaBorderNetwork(String network) {
+    if (businessAreaBorder != null) {
+      businessAreaBorder.removeNetwork(network);
+      if (businessAreaBorder.isEmpty()) {
+        businessAreaBorder = null;
+      }
+    }
   }
 
   @javax.annotation.Nullable
@@ -341,7 +353,7 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     geofencingBoundaries = List.copyOf(newList);
   }
 
-  public void removeBusinessAreaBorder() {
+  public void removeAllBusinessAreaBorders() {
     this.businessAreaBorder = null;
   }
 
@@ -349,7 +361,11 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
    * Copy all rental restriction data from another vertex to this one.
    */
   public void copyRentalRestrictionsFrom(Vertex other) {
-    this.businessAreaBorder = other.businessAreaBorder;
+    if (other.businessAreaBorder != null) {
+      for (var network : other.businessAreaBorder.networks()) {
+        addBusinessAreaBorderNetwork(network);
+      }
+    }
     this.geofencingBoundaries = other.geofencingBoundaries;
   }
 

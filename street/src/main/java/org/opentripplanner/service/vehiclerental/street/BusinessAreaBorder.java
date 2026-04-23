@@ -1,11 +1,13 @@
 package org.opentripplanner.service.vehiclerental.street;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.opentripplanner.street.search.state.State;
 
 /**
- * Marks a vertex as being on the border of a rental network's business area.
- * Traversal is banned for vehicles of the matching network — they cannot leave
- * the business area. Enforced via {@code Vertex.rentalTraversalBanned(State)}.
+ * Marks a vertex as being on the border of one or more rental networks' business areas.
+ * Traversal is banned for vehicles of any matching network — they cannot leave
+ * their business area. Enforced via {@code Vertex.rentalTraversalBanned(State)}.
  *
  * @deprecated Business areas are an OTP-specific concept not defined in the GBFS spec.
  *     They are inferred from GBFS zones with no restrictions, but this inference is
@@ -16,10 +18,22 @@ import org.opentripplanner.street.search.state.State;
 @Deprecated
 public final class BusinessAreaBorder {
 
-  private final String network;
+  private final Set<String> networks;
 
-  public BusinessAreaBorder(String network) {
-    this.network = network;
+  public BusinessAreaBorder() {
+    this.networks = new HashSet<>();
+  }
+
+  public void addNetwork(String network) {
+    networks.add(network);
+  }
+
+  public void removeNetwork(String network) {
+    networks.remove(network);
+  }
+
+  public boolean isEmpty() {
+    return networks.isEmpty();
   }
 
   public boolean traversalBanned(State state) {
@@ -31,10 +45,10 @@ public final class BusinessAreaBorder {
     if (state.getVehicleRentalNetwork() == null) {
       return false;
     }
-    return network.equals(state.getVehicleRentalNetwork());
+    return networks.contains(state.getVehicleRentalNetwork());
   }
 
-  public String network() {
-    return network;
+  public Set<String> networks() {
+    return Set.copyOf(networks);
   }
 }
