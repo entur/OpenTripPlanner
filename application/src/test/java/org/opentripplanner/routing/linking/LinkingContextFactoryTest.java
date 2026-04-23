@@ -161,7 +161,10 @@ class LinkingContextFactoryTest {
       id -> Optional.empty()
     );
     var container = new TemporaryVerticesContainer();
-    var from = GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId());
+    var from = GenericLocation.fromStopId(
+      new FeedScopedId(OMEGA_ID.getFeedId(), OMEGA_ID.getId()),
+      "station"
+    );
     var request = LinkingContextRequest.of()
       .withFrom(from)
       .withTo(stopToLocation(stopB))
@@ -192,15 +195,15 @@ class LinkingContextFactoryTest {
       }
     );
     var container = new TemporaryVerticesContainer();
+    String label1 = stationAlpha.getName().toString();
     var from = GenericLocation.fromStopId(
-      stationAlpha.getName().toString(),
-      stationAlpha.getId().getFeedId(),
-      stationAlpha.getId().getId()
+      new FeedScopedId(stationAlpha.getId().getFeedId(), stationAlpha.getId().getId()),
+      label1
     );
+    String label = multiModalStation.getName().toString();
     var to = GenericLocation.fromStopId(
-      multiModalStation.getName().toString(),
-      multiModalStation.getId().getFeedId(),
-      multiModalStation.getId().getId()
+      new FeedScopedId(multiModalStation.getId().getFeedId(), multiModalStation.getId().getId()),
+      label
     );
     var request = LinkingContextRequest.of()
       .withFrom(from)
@@ -224,7 +227,10 @@ class LinkingContextFactoryTest {
   @Test
   void centroid() {
     var container = new TemporaryVerticesContainer();
-    var from = GenericLocation.fromStopId("station", ALPHA_ID.getFeedId(), ALPHA_ID.getId());
+    var from = GenericLocation.fromStopId(
+      new FeedScopedId(ALPHA_ID.getFeedId(), ALPHA_ID.getId()),
+      "station"
+    );
     var request = LinkingContextRequest.of()
       .withFrom(from)
       .withTo(stopToLocation(stopB))
@@ -514,10 +520,10 @@ class LinkingContextFactoryTest {
   }
 
   private GenericLocation stopToLocation(RegularStop s) {
+    String label = s.getName().toString();
     return GenericLocation.fromStopId(
-      s.getName().toString(),
-      s.getId().getFeedId(),
-      s.getId().getId()
+      new FeedScopedId(s.getId().getFeedId(), s.getId().getId()),
+      label
     );
   }
 

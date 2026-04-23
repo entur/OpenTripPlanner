@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.core.model.basic.Cost;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RequestModes;
@@ -62,8 +63,8 @@ class StreetSearchRequestMapperTest {
   void mapFromToStopIds() {
     var builder = builder();
 
-    var from = GenericLocation.fromStopId("S1", "A", "STOP1");
-    var to = GenericLocation.fromStopId("S2", "A", "STOP2");
+    var from = GenericLocation.fromStopId(new FeedScopedId("A", "STOP1"), "S1");
+    var to = GenericLocation.fromStopId(new FeedScopedId("A", "STOP2"), "S2");
 
     var req = builder.withDateTime(INSTANT).withFrom(from).withTo(to).buildRequest();
 

@@ -53,10 +53,6 @@ public class GenericLocation {
     return new GenericLocation(label, id, null);
   }
 
-  public static GenericLocation fromStopId(String name, String feedId, String stopId) {
-    return new GenericLocation(name, new FeedScopedId(feedId, stopId), null);
-  }
-
   /// Create a GenericLocation of a stop id with fallback coordinates if the id is not found.
   public static GenericLocation fromStopIdWithFallback(
     FeedScopedId id,

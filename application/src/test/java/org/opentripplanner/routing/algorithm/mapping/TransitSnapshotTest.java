@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.street.model.StreetMode;
@@ -13,12 +14,14 @@ import org.opentripplanner.street.model.StreetMode;
 public class TransitSnapshotTest extends SnapshotTestBase {
 
   static GenericLocation ptc = GenericLocation.fromStopId(
-    "Rose Quarter Transit Center",
-    "prt",
-    "79-tc"
+    new FeedScopedId("prt", "79-tc"),
+    "Rose Quarter Transit Center"
   );
 
-  static GenericLocation ps = GenericLocation.fromStopId("NE 12th & Couch", "prt", "6577");
+  static GenericLocation ps = GenericLocation.fromStopId(
+    new FeedScopedId("prt", "6577"),
+    "NE 12th & Couch"
+  );
 
   static GenericLocation p0 = GenericLocation.fromCoordinate(
     45.519320,
