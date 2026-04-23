@@ -283,11 +283,7 @@ public class RouteRequest implements Serializable {
    * because the caller has explicitly disabled transit or because the request has no way to reach
    * transit on at least one of the access and egress sides. A side is unreachable when its street
    * mode is {@link StreetMode#NOT_SET} and the corresponding endpoint is not a stop (a stop
-   * endpoint provides a zero-distance access/egress, so it does not need a street mode). Transit
-   * routers can use this to skip their per-request data-provider build. This guards against API
-   * callers that supply a direct street mode without explicitly disabling transit (e.g. Transmodel
-   * queries like {@code modes: { directMode: foot }} that omit {@code transportModes}, which is
-   * not picked up by the request mappers).
+   * endpoint provides a zero-distance access/egress, so it does not need a street mode).
    */
   public boolean cannotReachTransit() {
     if (!journey.transit().enabled()) {

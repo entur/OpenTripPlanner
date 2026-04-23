@@ -108,6 +108,7 @@ public class TransitRouter {
   }
 
   private TransitRouterResult route() {
+    // Skip the creation of raptor transit data when the request cannot use transit
     if (request.cannotReachTransit()) {
       return new TransitRouterResult(List.of(), null);
     }
