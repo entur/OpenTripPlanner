@@ -2,6 +2,7 @@ package org.opentripplanner.ext.gbfsgeofencing.internal.graphbuilder;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingFeedParameters;
 import org.opentripplanner.ext.gbfsgeofencing.parameters.GbfsGeofencingParameters;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
@@ -62,6 +63,8 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
       parameters.applyBusinessAreas()
     );
     var result = applier.applyGeofencingZones(allZones);
+
+    graph.setGeofencingZoneIndex("gbfs-build-time", result.zoneIndex(), Set.copyOf(allZones));
 
     LOG.info(
       "Applied {} geofencing zones to {} street edges at build time",

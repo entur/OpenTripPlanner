@@ -76,6 +76,9 @@ public class Graph implements Serializable {
   private transient Map<String, GeofencingZoneIndex> geofencingZoneIndexes =
     new ConcurrentHashMap<>();
 
+  /** Serialized geofencing zones for rebuilding the spatial index after deserialization. */
+  private Map<String, Set<GeofencingZone>> serializedGeofencingZones = new ConcurrentHashMap<>();
+
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;
 
@@ -283,14 +286,32 @@ public class Graph implements Serializable {
     LOG.info("Index street model...");
     streetIndex = new StreetIndex(this);
     LOG.info("Index street model complete.");
+
+    if (!serializedGeofencingZones.isEmpty()) {
+      LOG.info(
+        "Rebuilding geofencing zone indexes from {} data source(s)...",
+        serializedGeofencingZones.size()
+      );
+      long start = System.currentTimeMillis();
+      for (var entry : serializedGeofencingZones.entrySet()) {
+        geofencingZoneIndexes.put(entry.getKey(), new GeofencingZoneIndex(entry.getValue()));
+      }
+      LOG.info("Rebuilt geofencing zone indexes in {} ms", System.currentTimeMillis() - start);
+    }
   }
 
   /**
    * Register a geofencing zone index for a specific data source. Called by the vehicle rental
-   * updater when zones are applied. Multiple data sources (networks) each register their index.
+   * updater when zones are applied, or rebuilt from serialized zones on graph load.
+   * Multiple data sources (networks) each register their index.
    */
-  public void setGeofencingZoneIndex(String dataSourceName, GeofencingZoneIndex index) {
+  public void setGeofencingZoneIndex(
+    String dataSourceName,
+    GeofencingZoneIndex index,
+    Set<GeofencingZone> zones
+  ) {
     geofencingZoneIndexes.put(dataSourceName, index);
+    serializedGeofencingZones.put(dataSourceName, Set.copyOf(zones));
   }
 
   /**
