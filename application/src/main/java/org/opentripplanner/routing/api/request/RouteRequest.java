@@ -279,16 +279,20 @@ public class RouteRequest implements Serializable {
   }
 
   /**
-   * Returns {@code true} when the request has no way to reach transit on either the access or the
-   * egress side. A side is unreachable when its street mode is {@link StreetMode#NOT_SET} and the
-   * corresponding endpoint is not a stop (a stop endpoint provides a zero-distance access/egress,
-   * so it does not need a street mode). Transit routers can use this to skip their per-request
-   * data-provider build when neither the access nor the egress side can feed raptor. This guards
-   * against API callers that supply a direct street mode without explicitly disabling transit
-   * (e.g. Transmodel queries like {@code modes: { directMode: foot }} that omit
-   * {@code transportModes}, which is not picked up by the request mappers).
+   * Returns {@code true} when running a transit search for this request would be pointless, either
+   * because the caller has explicitly disabled transit or because the request has no way to reach
+   * transit on at least one of the access and egress sides. A side is unreachable when its street
+   * mode is {@link StreetMode#NOT_SET} and the corresponding endpoint is not a stop (a stop
+   * endpoint provides a zero-distance access/egress, so it does not need a street mode). Transit
+   * routers can use this to skip their per-request data-provider build. This guards against API
+   * callers that supply a direct street mode without explicitly disabling transit (e.g. Transmodel
+   * queries like {@code modes: { directMode: foot }} that omit {@code transportModes}, which is
+   * not picked up by the request mappers).
    */
   public boolean cannotReachTransit() {
+    if (!journey.transit().enabled()) {
+      return true;
+    }
     boolean accessUnreachable =
       journey.access().mode() == StreetMode.NOT_SET && (from == null || from.stopId == null);
     boolean egressUnreachable =

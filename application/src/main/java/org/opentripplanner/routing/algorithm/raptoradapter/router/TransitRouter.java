@@ -108,7 +108,7 @@ public class TransitRouter {
   }
 
   private TransitRouterResult route() {
-    if (!request.journey().transit().enabled() || request.cannotReachTransit()) {
+    if (request.cannotReachTransit()) {
       return new TransitRouterResult(List.of(), null);
     }
 
