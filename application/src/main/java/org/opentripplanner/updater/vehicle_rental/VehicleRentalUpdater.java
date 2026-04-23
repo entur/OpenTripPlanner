@@ -13,7 +13,6 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
-import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneApplier;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
@@ -54,7 +53,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
   private final String nameForLogging;
   private final boolean applyBusinessAreas;
 
-  private Map<StreetEdge, BusinessAreaBorder> latestBusinessAreaEdges = Map.of();
+  private Map<StreetEdge, String> latestBusinessAreaEdges = Map.of();
   private Map<StreetEdge, GeofencingBoundaryExtension> latestBoundaryEdges = Map.of();
   private GeofencingZoneIndex latestZoneIndex;
   private Set<GeofencingZone> latestAppliedGeofencingZones = Set.of();
@@ -217,7 +216,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         LOG.info("Computing geofencing zones for {}", nameForLogging);
         var start = System.currentTimeMillis();
 
-        latestBusinessAreaEdges.forEach((edge, border) -> edge.removeBusinessAreaBorder());
+        latestBusinessAreaEdges.forEach(StreetEdge::removeBusinessAreaBorderNetwork);
         latestBoundaryEdges.forEach(StreetEdge::removeGeofencingBoundary);
 
         var graph = context.graph();
