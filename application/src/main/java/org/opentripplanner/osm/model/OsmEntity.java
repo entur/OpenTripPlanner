@@ -936,7 +936,7 @@ public abstract class OsmEntity {
    * set on the entity in OSM.
    *
    * @see OsmEntity#isNamed()
-   * @see https://wiki.openstreetmap.org/wiki/Tag:noname%3Dyes
+   * @link https://wiki.openstreetmap.org/wiki/Tag:noname%3Dyes
    */
   public boolean isExplicitlyUnnamed() {
     return isTagTrue("noname");
