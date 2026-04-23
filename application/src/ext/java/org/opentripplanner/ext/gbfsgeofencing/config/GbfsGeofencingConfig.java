@@ -31,10 +31,24 @@ public class GbfsGeofencingConfig {
       .asObject();
 
     if (c.isEmpty()) {
-      return new GbfsGeofencingParameters(List.of());
+      return new GbfsGeofencingParameters(List.of(), false);
     }
 
-    return new GbfsGeofencingParameters(mapFeeds(c));
+    var applyBusinessAreas = c
+      .of("applyBusinessAreas")
+      .since(V2_8)
+      .summary("Apply deprecated business area borders.")
+      .description(
+        """
+        When enabled, all permissive zones (where all ride booleans are true) for a network
+        are merged into a single business area polygon. This is the legacy behavior.
+        When disabled (default), business area borders are not applied but individual
+        permissive zones still participate in state-based geofencing precedence.
+        """
+      )
+      .asBoolean(false);
+
+    return new GbfsGeofencingParameters(mapFeeds(c), applyBusinessAreas);
   }
 
   private static List<GbfsGeofencingFeedParameters> mapFeeds(NodeAdapter config) {
@@ -55,9 +69,9 @@ public class GbfsGeofencingConfig {
         .asString(null),
       HttpHeaders.of(
         node
-          .of("httpHeaders")
+          .of("headers")
           .since(V2_8)
-          .summary("HTTP headers to include in GBFS requests.")
+          .summary("HTTP headers to add to the request. Any header key, value can be inserted.")
           .asStringMap()
       )
     );

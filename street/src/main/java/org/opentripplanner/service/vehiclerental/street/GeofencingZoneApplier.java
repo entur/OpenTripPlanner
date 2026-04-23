@@ -37,6 +37,13 @@ public class GeofencingZoneApplier {
     this.applyBusinessAreas = applyBusinessAreas;
   }
 
+  public GeofencingZoneApplier(
+    Function<Collection<LineString>, Set<Edge>> findEdgesAlongLineStrings,
+    Function<Envelope, Collection<Edge>> findEdgesForEnvelope
+  ) {
+    this(findEdgesAlongLineStrings, findEdgesForEnvelope, false);
+  }
+
   /**
    * Applies the restrictions described in the geofencing zones to edges by adding
    * {@link RentalRestrictionExtension} to them, builds a spatial index, and identifies
