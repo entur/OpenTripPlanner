@@ -31,24 +31,10 @@ public class GbfsGeofencingConfig {
       .asObject();
 
     if (c.isEmpty()) {
-      return new GbfsGeofencingParameters(List.of(), false);
+      return new GbfsGeofencingParameters(List.of());
     }
 
-    var applyBusinessAreas = c
-      .of("applyBusinessAreas")
-      .since(V2_8)
-      .summary("Apply deprecated business area borders.")
-      .description(
-        """
-        When enabled, all permissive zones (where all ride booleans are true) for a network
-        are merged into a single business area polygon. This is the legacy behavior.
-        When disabled (default), business area borders are not applied but individual
-        permissive zones still participate in state-based geofencing precedence.
-        """
-      )
-      .asBoolean(false);
-
-    return new GbfsGeofencingParameters(mapFeeds(c), applyBusinessAreas);
+    return new GbfsGeofencingParameters(mapFeeds(c));
   }
 
   private static List<GbfsGeofencingFeedParameters> mapFeeds(NodeAdapter config) {
@@ -67,6 +53,20 @@ public class GbfsGeofencingConfig {
         .since(V2_8)
         .summary("Network identifier. If not provided, extracted from GBFS system_id.")
         .asString(null),
+      node
+        .of("applyBusinessAreas")
+        .since(V2_8)
+        .summary("Apply deprecated business area borders for this feed.")
+        .description(
+          """
+          When enabled, all permissive zones (where all ride booleans are true) for this
+          feed's network are merged into a single business area polygon. This prevents
+          vehicles from leaving the operator's service area. When disabled (default),
+          business area borders are not applied but individual permissive zones still
+          participate in state-based geofencing precedence.
+          """
+        )
+        .asBoolean(false),
       HttpHeaders.of(
         node
           .of("headers")

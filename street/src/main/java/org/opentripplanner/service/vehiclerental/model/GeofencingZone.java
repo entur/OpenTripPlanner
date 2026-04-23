@@ -84,6 +84,28 @@ public record GeofencingZone(
   }
 
   /**
+   * Returns a copy of this zone with {@code businessArea} set to false.
+   * If already false, returns this instance.
+   */
+  public GeofencingZone withoutBusinessArea() {
+    if (!businessArea) {
+      return this;
+    }
+    return new GeofencingZone(
+      id,
+      name,
+      geometry,
+      dropOffBanned,
+      traversalBanned,
+      rideStartBanned,
+      false,
+      vehicleTypeIds,
+      maximumSpeedKph,
+      priority
+    );
+  }
+
+  /**
    * Resolve the effective value of a restriction field across overlapping zones for a given
    * network, using per-field precedence. For each field independently, the highest-priority zone
    * (lowest priority value) that specifies (non-null) the field wins.
