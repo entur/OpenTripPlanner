@@ -62,15 +62,9 @@ public class ViaRequestMapper {
       )
       .withSearchWindow(environment.getArgumentOrDefault("searchWindow", request.searchWindow()))
       .withFrom(
-        genericLocationMapper
-          .toGenericLocation(environment.getArgument("from"))
-          .orElse(null)
+        genericLocationMapper.toGenericLocation(environment.getArgument("from")).orElse(null)
       )
-      .withTo(
-        genericLocationMapper
-          .toGenericLocation(environment.getArgument("to"))
-          .orElse(null)
-      )
+      .withTo(genericLocationMapper.toGenericLocation(environment.getArgument("to")).orElse(null))
       .withNumItineraries(
         environment.getArgumentOrDefault("numTripPatterns", request.numItineraries())
       )
