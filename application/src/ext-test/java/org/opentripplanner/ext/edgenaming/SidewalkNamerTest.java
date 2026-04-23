@@ -67,7 +67,7 @@ class SidewalkNamerTest {
         .withName(I18NString.of(name))
         .withPermission(StreetTraversalPermission.ALL)
         .buildAndConnect();
-      var way = WayTestData.highwayTertiary().copy().addTag("name", name).build();
+      var way = WayTestData.highwayTertiary().copy().setTag("name", name).build();
       assertFalse(way.isSidewalk());
       assertTrue(way.isNamed());
       var p = new EdgePair(way, edge);

@@ -35,8 +35,8 @@ class ConditionSpecificityTest {
 
     // Speed limit that is within limits should be used as the max used car speed
     var streetWithSpeedLimit = OsmWay.of()
-      .addTag("highway", "motorway")
-      .addTag("maxspeed", "120")
+      .setTag("highway", "motorway")
+      .setTag("maxspeed", "120")
       .build();
     var waySpeed = wps.getCarSpeedForWay(streetWithSpeedLimit, FORWARD);
     assertEquals(33.33336, waySpeed, EPSILON);
@@ -44,8 +44,8 @@ class ConditionSpecificityTest {
     // Speed limit that is higher than maxPossibleCarSpeed should be ignored and regular motorway
     // speed limit should be used instead
     var streetWithTooHighSpeedLimit = OsmWay.of()
-      .addTag("highway", "motorway")
-      .addTag("maxspeed", "200")
+      .setTag("highway", "motorway")
+      .setTag("maxspeed", "200")
       .build();
     waySpeed = wps.getCarSpeedForWay(streetWithTooHighSpeedLimit, FORWARD);
     assertEquals(motorWaySpeed, waySpeed, EPSILON);
@@ -53,8 +53,8 @@ class ConditionSpecificityTest {
     // Speed limit that is too low should be ignored and regular motorway speed limit should
     // be used instead
     var streetWithTooLowSpeedLimit = OsmWay.of()
-      .addTag("highway", "motorway")
-      .addTag("maxspeed", "0")
+      .setTag("highway", "motorway")
+      .setTag("maxspeed", "0")
       .build();
     waySpeed = wps.getCarSpeedForWay(streetWithTooLowSpeedLimit, FORWARD);
     assertEquals(motorWaySpeed, waySpeed, EPSILON);

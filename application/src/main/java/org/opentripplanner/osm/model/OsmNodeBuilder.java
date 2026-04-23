@@ -36,7 +36,7 @@ public class OsmNodeBuilder {
     return this;
   }
 
-  public OsmNodeBuilder addTag(String key, String value) {
+  public OsmNodeBuilder setTag(String key, String value) {
     if (key != null && value != null) {
       if (this.tags == EMPTY_TAGS) {
         this.tags = new HashMap<>();

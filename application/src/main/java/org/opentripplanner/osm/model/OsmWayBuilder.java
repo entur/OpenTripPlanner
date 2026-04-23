@@ -27,7 +27,7 @@ public class OsmWayBuilder {
     return this;
   }
 
-  public OsmWayBuilder addTag(String key, String value) {
+  public OsmWayBuilder setTag(String key, String value) {
     if (key != null && value != null) {
       this.tags.put(key.toLowerCase(), value);
     }

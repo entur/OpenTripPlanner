@@ -164,9 +164,9 @@ public class OsmModuleTest {
   @Test
   public void testCreativeNaming() {
     OsmEntity way = OsmWay.of()
-      .addTag("highway", "footway")
-      .addTag("cycleway", "lane")
-      .addTag("access", "no")
+      .setTag("highway", "footway")
+      .setTag("cycleway", "lane")
+      .setTag("access", "no")
       .build();
 
     CreativeNamer namer = new CreativeNamer(

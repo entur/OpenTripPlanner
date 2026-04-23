@@ -19,8 +19,6 @@ import org.opentripplanner.osm.model.OsmWayBuilder;
 /**
  * Parser for the OpenStreetMap PBF Format.
  *
- * It intentionally skips the builder classes to keep allocations low.
- *
  */
 class OsmParser extends BinaryParser {
 
@@ -136,7 +134,7 @@ class OsmParser extends BinaryParser {
 
           String key = internalize(getStringById(keyid));
           String value = internalize(getStringById(valid));
-          builder.addTag(key, value);
+          builder.setTag(key, value);
         }
         // Skip over the '0' delimiter.
         j++;
@@ -161,7 +159,7 @@ class OsmParser extends BinaryParser {
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
         String value = internalize(getStringById(i.getVals(j)));
-        builder.addTag(key, value);
+        builder.setTag(key, value);
       }
 
       osmdb.addNode(builder.build());
@@ -180,7 +178,7 @@ class OsmParser extends BinaryParser {
       for (int j = 0; j < i.getKeysCount(); j++) {
         String key = internalize(getStringById(i.getKeys(j)));
         String value = internalize(getStringById(i.getVals(j)));
-        builder.addTag(key, value);
+        builder.setTag(key, value);
       }
 
       long lastId = 0;

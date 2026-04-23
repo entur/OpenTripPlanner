@@ -25,23 +25,23 @@ public class EdgeLevelInfoTest {
   void testInclinedEdgeLevelInfo() {
     var levelStairs = OsmWay.of()
       .withId(1)
-      .addTag("highway", "steps")
-      .addTag("incline", "up")
-      .addTag("level", "1;2")
+      .setTag("highway", "steps")
+      .setTag("incline", "up")
+      .setTag("level", "1;2")
       .build();
 
     var inclineStairs = OsmWay.of()
       .withId(2)
-      .addTag("highway", "steps")
-      .addTag("incline", "up")
+      .setTag("highway", "steps")
+      .setTag("incline", "up")
       .build();
 
     var escalator = OsmWay.of()
       .withId(3)
-      .addTag("highway", "steps")
-      .addTag("conveying", "yes")
-      .addTag("level", "1;-1")
-      .addTag("level:ref", "1;P1")
+      .setTag("highway", "steps")
+      .setTag("conveying", "yes")
+      .setTag("level", "1;-1")
+      .setTag("level:ref", "1;P1")
       .build();
 
     var provider = TestOsmProvider.of()
@@ -81,8 +81,8 @@ public class EdgeLevelInfoTest {
   void testEdgeLevelInfoNotStoredWithoutIncludeEdgeLevelInfo() {
     var inclineStairs = OsmWay.of()
       .withId(2)
-      .addTag("highway", "steps")
-      .addTag("incline", "up")
+      .setTag("highway", "steps")
+      .setTag("incline", "up")
       .build();
 
     var provider = TestOsmProvider.of().addWay(inclineStairs).build();
@@ -105,12 +105,12 @@ public class EdgeLevelInfoTest {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
     var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
-      .addTag("highway", "elevator")
+      .setTag("highway", "elevator")
       .build();
 
     var provider = TestOsmProvider.of()
-      .addWayFromNodes(way -> way.addTag("level", "1"), n1, elevatorNode)
-      .addWayFromNodes(way -> way.addTag("level", "2"), n2, elevatorNode)
+      .addWayFromNodes(way -> way.setTag("level", "1"), n1, elevatorNode)
+      .addWayFromNodes(way -> way.setTag("level", "2"), n2, elevatorNode)
       .build();
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
@@ -133,12 +133,12 @@ public class EdgeLevelInfoTest {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
     var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
-      .addTag("highway", "elevator")
+      .setTag("highway", "elevator")
       .build();
 
     var provider = TestOsmProvider.of()
-      .addWayFromNodes(way -> way.addTag("level", "1"), n1, elevatorNode)
-      .addWayFromNodes(way -> way.addTag("level", "1"), n2, elevatorNode)
+      .addWayFromNodes(way -> way.setTag("level", "1"), n1, elevatorNode)
+      .addWayFromNodes(way -> way.setTag("level", "1"), n2, elevatorNode)
       .build();
     var graph = new Graph();
     var streetDetailsRepository = new DefaultStreetDetailsRepository();
@@ -161,7 +161,7 @@ public class EdgeLevelInfoTest {
     var n1 = node(1, new WgsCoordinate(0, 1));
     var n2 = node(2, new WgsCoordinate(0, 2));
     var elevatorNode = nodeBuilder(3, new WgsCoordinate(0, 3))
-      .addTag("highway", "elevator")
+      .setTag("highway", "elevator")
       .build();
 
     var provider = TestOsmProvider.of()
@@ -185,8 +185,8 @@ public class EdgeLevelInfoTest {
   void testElevatorWayEdgeLevelInfo() {
     var elevatorWay = OsmWay.of()
       .withId(1)
-      .addTag("highway", "elevator")
-      .addTag("level", "0;1")
+      .setTag("highway", "elevator")
+      .setTag("level", "0;1")
       .build();
 
     var provider = TestOsmProvider.of().addWay(elevatorWay).build();
@@ -210,8 +210,8 @@ public class EdgeLevelInfoTest {
   void testElevatorWayEdgeLevelInfoOnSameLevel() {
     var elevatorWay = OsmWay.of()
       .withId(1)
-      .addTag("highway", "elevator")
-      .addTag("level", "1;1")
+      .setTag("highway", "elevator")
+      .setTag("level", "1;1")
       .build();
 
     var provider = TestOsmProvider.of().addWay(elevatorWay).build();
@@ -233,7 +233,7 @@ public class EdgeLevelInfoTest {
 
   @Test
   void testElevatorWayEdgeLevelInfoWithoutDefinedLevels() {
-    var elevatorWay = OsmWay.of().withId(1).addTag("highway", "elevator").build();
+    var elevatorWay = OsmWay.of().withId(1).setTag("highway", "elevator").build();
 
     var provider = TestOsmProvider.of().addWay(elevatorWay).build();
     var graph = new Graph();

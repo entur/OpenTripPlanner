@@ -33,13 +33,13 @@ class BarrierEdgeBuilderTest {
   private static final EdgeNamer EDGE_NAMER = new DefaultNamer();
   private static final BarrierEdgeBuilder SUBJECT = new BarrierEdgeBuilder(EDGE_NAMER);
 
-  private static final OsmWay WALL = OsmWay.of().addTag("barrier", "wall").build();
-  private static final OsmWay FENCE = OsmWay.of().addTag("barrier", "fence").build();
-  private static final OsmWay CHAIN = OsmWay.of().addTag("barrier", "chain").build();
+  private static final OsmWay WALL = OsmWay.of().setTag("barrier", "wall").build();
+  private static final OsmWay FENCE = OsmWay.of().setTag("barrier", "fence").build();
+  private static final OsmWay CHAIN = OsmWay.of().setTag("barrier", "chain").build();
 
-  private static final OsmWay KERB = OsmWay.of().addTag("barrier", "kerb").build();
+  private static final OsmWay KERB = OsmWay.of().setTag("barrier", "kerb").build();
 
-  private static final OsmWay HANDRAIL = OsmWay.of().addTag("barrier", "handrail").build();
+  private static final OsmWay HANDRAIL = OsmWay.of().setTag("barrier", "handrail").build();
 
   @Test
   void connectOneVertexWithoutBarrier() {
@@ -190,11 +190,11 @@ class BarrierEdgeBuilderTest {
   static List<Arguments> wallCases() {
     return List.of(
       Arguments.of(
-        OsmNode.of().addTag("barrier", "gate").addTag("access", "no").addTag("foot", "yes").build(),
+        OsmNode.of().setTag("barrier", "gate").setTag("access", "no").setTag("foot", "yes").build(),
         PEDESTRIAN
       ),
-      Arguments.of(OsmNode.of().addTag("barrier", "bollard").build(), PEDESTRIAN_AND_BICYCLE),
-      Arguments.of(OsmNode.of().addTag("entrance", "main").build(), ALL)
+      Arguments.of(OsmNode.of().setTag("barrier", "bollard").build(), PEDESTRIAN_AND_BICYCLE),
+      Arguments.of(OsmNode.of().setTag("entrance", "main").build(), ALL)
     );
   }
 
@@ -231,7 +231,7 @@ class BarrierEdgeBuilderTest {
     connect(v0, v1);
     connect(v2, v3);
 
-    var node = OsmNode.of().addTag("barrier", "bollard").build();
+    var node = OsmNode.of().setTag("barrier", "bollard").build();
 
     SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());
@@ -253,7 +253,7 @@ class BarrierEdgeBuilderTest {
     connect(v0, v1, WALK);
     connect(v2, v3, BICYCLE);
 
-    var node = OsmNode.of().addTag("barrier", "gate").build();
+    var node = OsmNode.of().setTag("barrier", "gate").build();
 
     SUBJECT.build(node, List.of(v1, v2), List.of(WALL));
     assertEquals(1, v1.getDegreeOut());

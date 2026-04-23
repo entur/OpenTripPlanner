@@ -38,7 +38,7 @@ public class UKMapperTest {
     assertEquals(ALL, WPS.getDataForWay(way).forward().getPermission());
     assertEquals(2.5, WPS.getDataForWay(way).forward().walkSafety());
     assertEquals(2.5, WPS.getDataForWay(way).forward().bicycleSafety());
-    var modifiedWay = way.copy().addTag("oneway", "yes").addTag("expressway", "yes").build();
+    var modifiedWay = way.copy().setTag("oneway", "yes").setTag("expressway", "yes").build();
     assertEquals(12.5, WPS.getDataForWay(modifiedWay).forward().walkSafety());
     assertEquals(12.5, WPS.getDataForWay(modifiedWay).forward().bicycleSafety());
   }

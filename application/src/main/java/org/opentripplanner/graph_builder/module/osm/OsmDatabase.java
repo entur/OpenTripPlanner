@@ -833,7 +833,7 @@ public class OsmDatabase {
         // if it is an OSM way (rather than a node) and it doesn't already contain the tag
         // we add it
         if (way != null && isOsmWay && !way.hasTag(key)) {
-          var updatedWay = way.copy().addTag(key, "yes").build();
+          var updatedWay = way.copy().setTag(key, "yes").build();
           waysById.put(updatedWay.getId(), updatedWay);
         }
       });
@@ -957,23 +957,23 @@ public class OsmDatabase {
 
       if (relation.hasTag("name")) {
         if (way.hasTag("otp:route_name")) {
-          builder.addTag(
+          builder.setTag(
             "otp:route_name",
             addUniqueName(way.getTag("otp:route_name"), relation.getTag("name"))
           );
         } else {
-          builder.addTag("otp:route_name", relation.getTag("name"));
+          builder.setTag("otp:route_name", relation.getTag("name"));
         }
         modified = true;
       }
       if (relation.hasTag("ref")) {
         if (way.hasTag("otp:route_ref")) {
-          builder.addTag(
+          builder.setTag(
             "otp:route_ref",
             addUniqueName(way.getTag("otp:route_ref"), relation.getTag("ref"))
           );
         } else {
-          builder.addTag("otp:route_ref", relation.getTag("ref"));
+          builder.setTag("otp:route_ref", relation.getTag("ref"));
         }
         modified = true;
       }

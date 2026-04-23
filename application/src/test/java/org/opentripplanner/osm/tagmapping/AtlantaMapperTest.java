@@ -23,12 +23,12 @@ class AtlantaMapperTest {
     // Peachtree Rd in Atlanta has sidewalks, and bikes are allowed.
     // https://www.openstreetmap.org/way/144429544
     OsmWay peachtreeRd = OsmWay.of()
-      .addTag("highway", "trunk")
-      .addTag("lanes", "6")
-      .addTag("name", "Peachtree Road")
-      .addTag("ref", "US 19;GA 9")
-      .addTag("surface", "asphalt")
-      .addTag("tiger:county", "Fulton, GA")
+      .setTag("highway", "trunk")
+      .setTag("lanes", "6")
+      .setTag("name", "Peachtree Road")
+      .setTag("ref", "US 19;GA 9")
+      .setTag("surface", "asphalt")
+      .setTag("tiger:county", "Fulton, GA")
       .build();
 
     assertEquals(StreetTraversalPermission.ALL, WPS.getDataForEntity(peachtreeRd).getPermission());
@@ -39,12 +39,12 @@ class AtlantaMapperTest {
     // "Outer" ramps from DeKalb Ave onto Moreland Ave in Atlanta have sidewalks, and bikes are allowed.
     // https://www.openstreetmap.org/way/9164434
     OsmWay morelandRamp = OsmWay.of()
-      .addTag("highway", "trunk_link")
-      .addTag("lanes", "1")
-      .addTag("oneway", "yes")
-      .addTag("tiger:cfcc", "A63")
-      .addTag("tiger:county", "DeKalb, GA")
-      .addTag("tiger:reviewed", "no")
+      .setTag("highway", "trunk_link")
+      .setTag("lanes", "1")
+      .setTag("oneway", "yes")
+      .setTag("tiger:cfcc", "A63")
+      .setTag("tiger:county", "DeKalb, GA")
+      .setTag("tiger:reviewed", "no")
       .build();
 
     assertEquals(
@@ -58,16 +58,16 @@ class AtlantaMapperTest {
     // For sanity check, secondary roads (e.g. 10th Street) should remain allowed for all modes.
     // https://www.openstreetmap.org/way/505912700
     OsmWay tenthSt = OsmWay.of()
-      .addTag("highway", "secondary")
-      .addTag("lanes", "4")
-      .addTag("maxspeed", "30 mph")
-      .addTag("name", "10th Street Northeast")
-      .addTag("oneway", "no")
-      .addTag("source:maxspeed", "sign")
-      .addTag("surface", "asphalt")
-      .addTag("tiger:cfcc", "A41")
-      .addTag("tiger:county", "Fulton, GA")
-      .addTag("tiger:reviewed", "no")
+      .setTag("highway", "secondary")
+      .setTag("lanes", "4")
+      .setTag("maxspeed", "30 mph")
+      .setTag("name", "10th Street Northeast")
+      .setTag("oneway", "no")
+      .setTag("source:maxspeed", "sign")
+      .setTag("surface", "asphalt")
+      .setTag("tiger:cfcc", "A41")
+      .setTag("tiger:county", "Fulton, GA")
+      .setTag("tiger:reviewed", "no")
       .build();
     // Some other params omitted.
     assertEquals(StreetTraversalPermission.ALL, WPS.getDataForEntity(tenthSt).getPermission());

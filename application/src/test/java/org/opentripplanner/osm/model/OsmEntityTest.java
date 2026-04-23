@@ -234,19 +234,19 @@ public class OsmEntityTest {
 
   private static Stream<Arguments> barrierWheelchairAccessibilityCases() {
     return Stream.of(
-      Arguments.of(OsmNode.of().addTag("barrier", "stile").build(), false),
+      Arguments.of(OsmNode.of().setTag("barrier", "stile").build(), false),
       Arguments.of(
-        OsmNode.of().addTag("barrier", "stile").addTag("wheelchair", "yes").build(),
+        OsmNode.of().setTag("barrier", "stile").setTag("wheelchair", "yes").build(),
         true
       ),
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").build(), false),
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").build(), false),
       // https://wiki.openstreetmap.org/wiki/Key:kerb
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "flush").build(), true),
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "lowered").build(), true),
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "no").build(), true),
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "raised").build(), false),
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "rolled").build(), false),
-      Arguments.of(OsmNode.of().addTag("barrier", "kerb").addTag("kerb", "yes").build(), false)
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "flush").build(), true),
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "lowered").build(), true),
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "no").build(), true),
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "raised").build(), false),
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "rolled").build(), false),
+      Arguments.of(OsmNode.of().setTag("barrier", "kerb").setTag("kerb", "yes").build(), false)
     );
   }
 
@@ -276,9 +276,9 @@ public class OsmEntityTest {
 
     var highway = WayTestData.highwayWithCycleLane();
     assertTrue(highway.isRoutable());
-    var modifiedHighway = highway.copy().addTag("access", "no").build();
+    var modifiedHighway = highway.copy().setTag("access", "no").build();
     assertFalse(modifiedHighway.isRoutable());
-    var furtherModified = modifiedHighway.copy().addTag("bicycle", "yes").build();
+    var furtherModified = modifiedHighway.copy().setTag("bicycle", "yes").build();
     assertTrue(furtherModified.isRoutable());
   }
 

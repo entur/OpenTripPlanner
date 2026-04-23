@@ -13,13 +13,13 @@ public class ConstantSpeedMapperTest {
   public void constantSpeedCarRouting() {
     OsmTagMapper osmTagMapper = new ConstantSpeedMapper(20f);
 
-    var slowWay = OsmWay.of().addTag("highway", "residential").build();
+    var slowWay = OsmWay.of().setTag("highway", "residential").build();
     assertEquals(
       20f,
       osmTagMapper.getCarSpeedForWay(slowWay, TraverseDirection.BACKWARD, DataImportIssueStore.NOOP)
     );
 
-    var fastWay = OsmWay.of().addTag("highway", "motorway").addTag("maxspeed", "120 kmph").build();
+    var fastWay = OsmWay.of().setTag("highway", "motorway").setTag("maxspeed", "120 kmph").build();
     assertEquals(
       20f,
       osmTagMapper.getCarSpeedForWay(fastWay, TraverseDirection.BACKWARD, DataImportIssueStore.NOOP)

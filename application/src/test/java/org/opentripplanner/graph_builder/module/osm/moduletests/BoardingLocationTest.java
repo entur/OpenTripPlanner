@@ -23,9 +23,9 @@ class BoardingLocationTest {
   void oneWayPlatform() {
     var way = WayTestData.platform()
       .copy()
-      .addTag("access", "no")
-      .addTag("motor_vehicle", "permissive")
-      .addTag("oneway", "yes")
+      .setTag("access", "no")
+      .setTag("motor_vehicle", "permissive")
+      .setTag("oneway", "yes")
       .build();
     var provider = TestOsmProvider.of().addWay(way).build();
 
@@ -51,7 +51,7 @@ class BoardingLocationTest {
 
   @Test
   void skipPlatformsWithoutReferences() {
-    var way = OsmWay.of().addTag("public_transport", "platform").build();
+    var way = OsmWay.of().setTag("public_transport", "platform").build();
     var provider = TestOsmProvider.of().addWay(way).build();
 
     var graph = new Graph();
@@ -73,7 +73,7 @@ class BoardingLocationTest {
 
   @Test
   void testHighwayPlatform() {
-    var way = OsmWay.of().addTag("highway", "platform").addTag("ref", "1").build();
+    var way = OsmWay.of().setTag("highway", "platform").setTag("ref", "1").build();
 
     var graph = new Graph();
     var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
