@@ -12,7 +12,6 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
-import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.geometry.CompactLineStringUtils;
 import org.opentripplanner.street.geometry.DirectionUtils;
@@ -535,9 +534,9 @@ public class StreetEdge
     tov.removeGeofencingBoundary(ext);
   }
 
-  public void removeBusinessAreaBorder() {
-    fromv.removeBusinessAreaBorder();
-    tov.removeBusinessAreaBorder();
+  public void removeBusinessAreaBorderNetwork(String network) {
+    fromv.removeBusinessAreaBorderNetwork(network);
+    tov.removeBusinessAreaBorderNetwork(network);
   }
 
   @Override
@@ -660,8 +659,8 @@ public class StreetEdge
     fromv.addGeofencingBoundary(ext);
   }
 
-  public void setBusinessAreaBorder(BusinessAreaBorder border) {
-    fromv.setBusinessAreaBorder(border);
+  public void addBusinessAreaBorderNetwork(String network) {
+    fromv.addBusinessAreaBorderNetwork(network);
   }
 
   /**

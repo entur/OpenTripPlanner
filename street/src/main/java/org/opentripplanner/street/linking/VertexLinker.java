@@ -557,8 +557,10 @@ public class VertexLinker {
     v.copyRentalRestrictionsFrom(originalEdge.getFromVertex());
     // Also copy from tov if it has different restrictions
     var toVertex = originalEdge.getToVertex();
-    if (toVertex.getBusinessAreaBorder() != null && v.getBusinessAreaBorder() == null) {
-      v.setBusinessAreaBorder(toVertex.getBusinessAreaBorder());
+    if (toVertex.getBusinessAreaBorder() != null) {
+      for (var network : toVertex.getBusinessAreaBorder().networks()) {
+        v.addBusinessAreaBorderNetwork(network);
+      }
     }
     for (var boundary : toVertex.getGeofencingBoundaries()) {
       if (!v.getGeofencingBoundaries().contains(boundary)) {

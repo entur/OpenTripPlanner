@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
@@ -54,21 +55,22 @@ public class GeofencingZoneApplier {
       .filter(z -> z.geometry() != null)
       .toList();
 
-    var businessAreaEdges = new HashMap<StreetEdge, BusinessAreaBorder>();
+    var businessAreaEdges = new HashMap<StreetEdge, String>();
 
     // Boundary marking: apply GeofencingBoundaryExtension to boundary-crossing edges
     var boundaryEdges = addBoundaryExtensions(zonesWithGeometry);
 
     // Business area borders (deprecated — not a GBFS concept)
     if (applyBusinessAreas) {
-      var generalBusinessAreas = geofencingZones
+      var businessAreasByNetwork = geofencingZones
         .stream()
         .filter(GeofencingZone::isBusinessArea)
-        .toList();
+        .collect(Collectors.groupingBy(z -> z.id().getFeedId()));
 
-      if (!generalBusinessAreas.isEmpty()) {
-        var network = generalBusinessAreas.get(0).id().getFeedId();
-        var polygons = generalBusinessAreas
+      for (var entry : businessAreasByNetwork.entrySet()) {
+        var network = entry.getKey();
+        var polygons = entry
+          .getValue()
           .stream()
           .map(GeofencingZone::geometry)
           .toArray(Geometry[]::new);
@@ -77,9 +79,7 @@ public class GeofencingZoneApplier {
           .createGeometryCollection(polygons)
           .union();
 
-        businessAreaEdges.putAll(
-          applyBusinessAreaBorder(unionOfBusinessAreas, new BusinessAreaBorder(network))
-        );
+        businessAreaEdges.putAll(applyBusinessAreaBorder(unionOfBusinessAreas, network));
       }
     }
 
@@ -161,11 +161,8 @@ public class GeofencingZoneApplier {
    * Apply a business area border extension to edges that cross the boundary of the polygon.
    * Uses vertex containment to detect boundary crossings without decompressing edge geometry.
    */
-  private Map<StreetEdge, BusinessAreaBorder> applyBusinessAreaBorder(
-    Geometry polygon,
-    BusinessAreaBorder ext
-  ) {
-    var edgesUpdated = new HashMap<StreetEdge, BusinessAreaBorder>();
+  private Map<StreetEdge, String> applyBusinessAreaBorder(Geometry polygon, String network) {
+    var edgesUpdated = new HashMap<StreetEdge, String>();
     Set<Edge> candidates = Set.copyOf(findEdgesForEnvelope.apply(polygon.getEnvelopeInternal()));
     var preparedPolygon = PreparedGeometryFactory.prepare(polygon);
     var polygonBBox = polygon.getEnvelopeInternal();
@@ -186,8 +183,8 @@ public class GeofencingZoneApplier {
         boolean toInZone = toMayBeInZone && preparedPolygon.covers(gf.createPoint(toCoord));
 
         if (fromInZone != toInZone) {
-          streetEdge.setBusinessAreaBorder(ext);
-          edgesUpdated.put(streetEdge, ext);
+          streetEdge.addBusinessAreaBorderNetwork(network);
+          edgesUpdated.put(streetEdge, network);
         }
       }
     }
