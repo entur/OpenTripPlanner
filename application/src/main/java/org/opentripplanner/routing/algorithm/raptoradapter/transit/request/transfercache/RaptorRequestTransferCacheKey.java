@@ -16,22 +16,34 @@ import org.opentripplanner.transfer.regular.model.Transfer;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
- * Walk parameters are bucketed to reduce transfer-cache key cardinality. Real-world walk
+ * Request parameters are bucketed to reduce transfer-cache key cardinality. Real-world
  * speeds and reluctances are client-supplied per request and cluster around many
- * close-but-distinct values (speed: 1.30, 1.31, 1.38, 1.39, ...); each distinct value
- * would otherwise trigger a ~900 ms transfer-index rebuild on first touch. Rounding to
- * the nearest value on a coarser grid (half-up on ties) collapses neighbouring values
- * into a shared cache entry:
+ * close-but-distinct values (e.g. walk speed: 1.30, 1.31, 1.38, 1.39, ...); each distinct
+ * value would otherwise trigger a ~900 ms transfer-index rebuild on first touch.
+ * Rounding to the nearest value on a coarser grid (half-up on ties) collapses neighbouring
+ * values into a shared cache entry.
+ * <p>
+ * Bucketing is applied symmetrically to the mode sub-request that the current transfer
+ * mode includes. A deployment whose clients vary walk parameters benefits from the walk
+ * buckets; a deployment whose clients vary bike speed sees the same benefit on the bike
+ * buckets, and so on.
  * <ul>
- *   <li>speed: step 0.05 m/s</li>
- *   <li>reluctance: step 0.1 below 3.0, 0.5 between 3.0 and 10.0, 1.0 at 10.0 and above</li>
+ *   <li>walk speed:        step 0.05 m/s (mode includes walking)</li>
+ *   <li>walk reluctance:   tiered step (mode includes walking)</li>
+ *   <li>bike speed:        step 0.1 m/s (mode includes biking)</li>
+ *   <li>bike reluctance:   tiered step (mode includes biking)</li>
+ *   <li>car reluctance:    tiered step (mode includes driving)</li>
+ *   <li>turn reluctance:   tiered step (always applied)</li>
  * </ul>
- * The resulting small deviation of walk speed and walk reluctance in pre-computed
- * transfer times is acceptable.
+ * Tiered reluctance step: 0.1 below 3.0, 0.5 in [3.0, 10.0), 1.0 at 10.0 and above.
+ * <p>
+ * The resulting small deviation in pre-computed transfer times is acceptable; actual
+ * access/egress/direct paths still use the caller's un-bucketed values.
  */
 class RaptorRequestTransferCacheKey {
 
   private static final double WALK_SPEED_BUCKET = 0.05;
+  private static final double BIKE_SPEED_BUCKET = 0.1;
 
   private final List<List<Transfer>> transfersByStopIndex;
   private final StreetSearchRequest request;
@@ -42,7 +54,12 @@ class RaptorRequestTransferCacheKey {
     RouteRequest request
   ) {
     this.transfersByStopIndex = transfersByStopIndex;
-    this.request = bucketWalk(StreetSearchRequestMapper.mapToTransferRequest(request).build());
+    var req = StreetSearchRequestMapper.mapToTransferRequest(request).build();
+    req = bucketWalk(req);
+    req = bucketBike(req);
+    req = bucketCar(req);
+    req = bucketTurnReluctance(req);
+    this.request = req;
     this.options = new StreetRelevantOptions(this.request);
   }
 
@@ -61,6 +78,47 @@ class RaptorRequestTransferCacheKey {
     return StreetSearchRequest.copyOf(request)
       .withWalk(b -> b.withSpeed(bucketedSpeed).withReluctance(bucketedReluctance))
       .build();
+  }
+
+  private static StreetSearchRequest bucketBike(StreetSearchRequest request) {
+    if (!request.mode().includesBiking()) {
+      return request;
+    }
+    BikeRequest bike = request.bike();
+    double currentSpeed = bike.speed();
+    double bucketedSpeed = bucketTo(currentSpeed, BIKE_SPEED_BUCKET);
+    double currentReluctance = bike.reluctance();
+    double bucketedReluctance = bucketTo(currentReluctance, reluctanceStep(currentReluctance));
+    if (bucketedSpeed == currentSpeed && bucketedReluctance == currentReluctance) {
+      return request;
+    }
+    return StreetSearchRequest.copyOf(request)
+      .withBike(b -> b.withSpeed(bucketedSpeed).withReluctance(bucketedReluctance))
+      .build();
+  }
+
+  private static StreetSearchRequest bucketCar(StreetSearchRequest request) {
+    if (!request.mode().includesDriving()) {
+      return request;
+    }
+    CarRequest car = request.car();
+    double currentReluctance = car.reluctance();
+    double bucketedReluctance = bucketTo(currentReluctance, reluctanceStep(currentReluctance));
+    if (bucketedReluctance == currentReluctance) {
+      return request;
+    }
+    return StreetSearchRequest.copyOf(request)
+      .withCar(b -> b.withReluctance(bucketedReluctance))
+      .build();
+  }
+
+  private static StreetSearchRequest bucketTurnReluctance(StreetSearchRequest request) {
+    double currentReluctance = request.turnReluctance();
+    double bucketedReluctance = bucketTo(currentReluctance, reluctanceStep(currentReluctance));
+    if (bucketedReluctance == currentReluctance) {
+      return request;
+    }
+    return StreetSearchRequest.copyOf(request).withTurnReluctance(bucketedReluctance).build();
   }
 
   private static double reluctanceStep(double reluctance) {

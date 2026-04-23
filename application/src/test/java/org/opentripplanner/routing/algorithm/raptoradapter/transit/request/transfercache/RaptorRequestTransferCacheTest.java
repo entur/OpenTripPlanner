@@ -272,6 +272,172 @@ public class RaptorRequestTransferCacheTest {
       .withTo(GenericLocation.fromCoordinate(1, 1));
   }
 
+  @Test
+  public void testBikeSpeedIsBucketedToNearest10cm() {
+    List<List<Transfer>> list = List.of();
+
+    // 5.05, 5.06, 5.07 all round half-up to 5.1 -> same bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.05)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.07))
+    );
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.05)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.10))
+    );
+
+    // 5.03, 5.04 are closer to 5.0 -> different bucket from 5.05.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.04)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.05))
+    );
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.03)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.00))
+    );
+
+    // Exact multiples of 0.1 stay in their own bucket.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(4.9)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.0))
+    );
+  }
+
+  @Test
+  public void testBikeBucketingIsSkippedForNonBikingModes() {
+    List<List<Transfer>> list = List.of();
+
+    // In CAR mode bike sub-options are forced to DEFAULT, so bike speed is irrelevant;
+    // two CAR requests with different bike speeds must still produce equal cache keys.
+    RouteRequest car1 = builder()
+      .withJourney(b -> b.withAllModes(StreetMode.CAR))
+      .withPreferences(p -> p.withBike(b -> b.withSpeed(5.03)))
+      .buildRequest();
+    RouteRequest car2 = builder()
+      .withJourney(b -> b.withAllModes(StreetMode.CAR))
+      .withPreferences(p -> p.withBike(b -> b.withSpeed(5.08)))
+      .buildRequest();
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, car1),
+      new RaptorRequestTransferCacheKey(list, car2)
+    );
+  }
+
+  @Test
+  public void testBikeReluctanceIsBucketedWithTieredSteps() {
+    List<List<Transfer>> list = List.of();
+
+    // Below 3.0: step 0.1. 2.05 ties half-up to 2.1; 2.10 stays at 2.1 -> same bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(2.05)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(2.10))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(2.14)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(2.15))
+    );
+
+    // [3.0, 10.0): step 0.5.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(3.1)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(3.2))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(3.2)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(3.3))
+    );
+
+    // [10.0, inf): step 1.0. Units.reluctance already rounds values >= 10.0 to integers.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(10.0)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(10.4))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(10.4)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(10.5))
+    );
+  }
+
+  @Test
+  public void testCarReluctanceIsBucketedWithTieredSteps() {
+    List<List<Transfer>> list = List.of();
+
+    // Below 3.0: step 0.1.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(2.05)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(2.10))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(2.14)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(2.15))
+    );
+
+    // [3.0, 10.0): step 0.5.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(3.1)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(3.2))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(3.2)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(3.3))
+    );
+
+    // [10.0, inf): step 1.0.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(10.0)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(10.4))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(10.4)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(10.5))
+    );
+  }
+
+  @Test
+  public void testCarBucketingIsSkippedForNonDrivingModes() {
+    List<List<Transfer>> list = List.of();
+
+    // In WALK mode car sub-options are forced to DEFAULT, so car reluctance is irrelevant;
+    // two WALK requests with different car reluctances must still produce equal cache keys.
+    RouteRequest walk1 = builder()
+      .withJourney(b -> b.withAllModes(StreetMode.WALK))
+      .withPreferences(p -> p.withCar(b -> b.withReluctance(2.05)))
+      .buildRequest();
+    RouteRequest walk2 = builder()
+      .withJourney(b -> b.withAllModes(StreetMode.WALK))
+      .withPreferences(p -> p.withCar(b -> b.withReluctance(2.14)))
+      .buildRequest();
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walk1),
+      new RaptorRequestTransferCacheKey(list, walk2)
+    );
+  }
+
+  @Test
+  public void testTurnReluctanceIsBucketedWithTieredSteps() {
+    List<List<Transfer>> list = List.of();
+
+    // Below 3.0: step 0.1.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(2.05)),
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(2.10))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(2.14)),
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(2.15))
+    );
+
+    // [3.0, 10.0): step 0.5.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(3.1)),
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(3.2))
+    );
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(3.2)),
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(3.3))
+    );
+  }
+
   private static RouteRequest walkRequestWithSpeed(double speed) {
     return builder()
       .withJourney(b -> b.withAllModes(StreetMode.WALK))
@@ -283,6 +449,34 @@ public class RaptorRequestTransferCacheTest {
     return builder()
       .withJourney(b -> b.withAllModes(StreetMode.WALK))
       .withPreferences(p -> p.withWalk(b -> b.withReluctance(reluctance)))
+      .buildRequest();
+  }
+
+  private static RouteRequest bikeRequestWithSpeed(double speed) {
+    return builder()
+      .withJourney(b -> b.withAllModes(StreetMode.BIKE))
+      .withPreferences(p -> p.withBike(b -> b.withSpeed(speed)))
+      .buildRequest();
+  }
+
+  private static RouteRequest bikeRequestWithReluctance(double reluctance) {
+    return builder()
+      .withJourney(b -> b.withAllModes(StreetMode.BIKE))
+      .withPreferences(p -> p.withBike(b -> b.withReluctance(reluctance)))
+      .buildRequest();
+  }
+
+  private static RouteRequest carRequestWithReluctance(double reluctance) {
+    return builder()
+      .withJourney(b -> b.withAllModes(StreetMode.CAR))
+      .withPreferences(p -> p.withCar(b -> b.withReluctance(reluctance)))
+      .buildRequest();
+  }
+
+  private static RouteRequest turnReluctanceRequest(double turnReluctance) {
+    return builder()
+      .withJourney(b -> b.withAllModes(StreetMode.WALK))
+      .withPreferences(p -> p.withStreet(b -> b.withTurnReluctance(turnReluctance)))
       .buildRequest();
   }
 }
