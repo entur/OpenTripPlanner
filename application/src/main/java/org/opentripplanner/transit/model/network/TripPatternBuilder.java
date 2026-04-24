@@ -8,7 +8,6 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.street.geometry.CompactLineStringUtils;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -217,20 +216,16 @@ public final class TripPatternBuilder
     return stopPatternModifiedInRealTime;
   }
 
-  public byte[][] hopGeometries() {
+  TripPatternGeometry buildGeometry() {
     List<LineString> geometries;
     if (this.hopGeometries != null) {
       geometries = this.hopGeometries;
     } else if (this.originalTripPattern != null) {
       geometries = generateHopGeometriesFromOriginalTripPattern();
     } else {
-      return null;
+      geometries = null;
     }
-
-    return geometries
-      .stream()
-      .map(hopGeometry -> CompactLineStringUtils.compactLineString(hopGeometry, false))
-      .toArray(byte[][]::new);
+    return TripPatternGeometry.of(stopPattern, geometries);
   }
 
   /**
