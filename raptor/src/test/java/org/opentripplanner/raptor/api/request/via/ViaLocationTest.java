@@ -47,13 +47,6 @@ class ViaLocationTest implements RaptorTestConstants {
     .map(it -> (RaptorVisitStopViaConnection) it)
     .orElseThrow();
 
-  private final RaptorPassThroughViaConnection passThroughStopConnection = subjectPassThrough
-    .connections()
-    .stream()
-    .findFirst()
-    .map(it -> (RaptorPassThroughViaConnection) it)
-    .orElseThrow();
-
   @Test
   void connections() {
     var connections = subject.connections();
@@ -71,12 +64,28 @@ class ViaLocationTest implements RaptorTestConstants {
 
   @Test
   void validateDuplicateConnections() {
-    var subject = RaptorViaLocation.passThrough("subject").addStop(STOP_A, STOP_B, STOP_A).build();
+    var passThroughLocation = RaptorViaLocation.passThrough("subject")
+      .addStop(STOP_A, STOP_B, STOP_A)
+      .build();
 
-    var ex = assertThrows(IllegalArgumentException.class, () ->
-      subject.validateDuplicateConnections()
+    var ex1 = assertThrows(IllegalArgumentException.class, () ->
+      passThroughLocation.validateDuplicateConnections()
     );
-    assertEquals("All connection need to be pareto-optimal: (stop 1) ≡ (stop 1)", ex.getMessage());
+    assertEquals("All connection need to be pareto-optimal: (stop 1) ≡ (stop 1)", ex1.getMessage());
+
+    var viaVisitLocation = RaptorViaLocation.viaVisit("subject", MINIMUM_WAIT_TIME)
+      .addTransfer(STOP_A, TestTransfer.transfer(STOP_B, 30))
+      .addTransfer(STOP_A, TestTransfer.transfer(STOP_B, 20))
+      .addStop(STOP_A)
+      .build();
+
+    var ex2 = assertThrows(IllegalArgumentException.class, () ->
+      viaVisitLocation.validateDuplicateConnections()
+    );
+    assertEquals(
+      "All connection need to be pareto-optimal: (transfer 1 ~ 2 [53s C₁60]) ≻ (transfer 1 ~ 2 [43s C₁40])",
+      ex2.getMessage()
+    );
   }
 
   @Test

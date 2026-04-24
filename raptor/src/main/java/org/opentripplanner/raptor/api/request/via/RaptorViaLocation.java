@@ -3,6 +3,7 @@ package org.opentripplanner.raptor.api.request.via;
 import java.time.Duration;
 import java.util.BitSet;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.raptor.util.paretoset.ParetoDominance;
@@ -84,17 +85,20 @@ public final class RaptorViaLocation {
   /// Compare all pairs to check for duplicates and non-optimal connections. Avoid usage of this
   /// method because it can have a really bad performance.
   public void validateDuplicateConnections() {
-    var comparator = ViaConnection.paretoComparator();
-    for (int i = 0; i < connections.size(); ++i) {
-      var a = connections.get(i);
-      for (int j = i + 1; j < connections.size(); ++j) {
-        var b = connections.get(j);
-        // If NOT both values dominate each other, at least one should be dropped
-        var dominance = comparator.compare(a, b);
-        if (dominance == ParetoDominance.NONE) {
-          throw new IllegalArgumentException(
-            "All connection need to be pareto-optimal: %s %s %s".formatted(a, dominance, b)
-          );
+    var byFromStop = connections.stream().collect(Collectors.groupingBy(ViaConnection::fromStop));
+    for (var list : byFromStop.values()) {
+      var comparator = ViaConnection.paretoComparator();
+      for (int i = 0; i < list.size(); ++i) {
+        var a = list.get(i);
+        for (int j = i + 1; j < list.size(); ++j) {
+          var b = list.get(j);
+          // If NOT both values dominate each other, at least one should be dropped
+          var dominance = comparator.compare(a, b);
+          if (dominance != ParetoDominance.BOTH) {
+            throw new IllegalArgumentException(
+              "All connection need to be pareto-optimal: %s %s %s".formatted(a, dominance, b)
+            );
+          }
         }
       }
     }
