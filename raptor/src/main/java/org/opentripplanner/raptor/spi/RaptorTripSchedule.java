@@ -125,7 +125,7 @@ public interface RaptorTripSchedule {
     final int size = p.numberOfStopsInPattern();
     int i = 0;
 
-    while (departure(i) < earliestDepartureTime) {
+    while (!p.boardingPossibleAt(i) || departure(i) < earliestDepartureTime) {
       ++i;
       if (i == size) {
         return -1;

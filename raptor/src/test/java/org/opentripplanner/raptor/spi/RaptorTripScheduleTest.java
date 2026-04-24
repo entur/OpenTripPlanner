@@ -49,10 +49,10 @@ class RaptorTripScheduleTest {
   }
 
   @Nested
-  class FlexPatternWithDuplicateStop {
+  class RestrictedPatternsWithDuplicateStops {
 
     @Test
-    void flexPatternWithDuplicateStop() {
+    void findArrivalStopPosition() {
       var subject = TestTripSchedule.schedule(
         TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
       )
@@ -61,6 +61,18 @@ class RaptorTripScheduleTest {
         .build();
 
       assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
+    }
+
+    @Test
+    void findDepartureStopPosition() {
+      var subject = TestTripSchedule.schedule(
+        TestTripPattern.of("restricted-repeating-stops", 1, 1, 1, 3).restrictions("* A * *").build()
+      )
+        .arrivals(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
+        .departures(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
+        .build();
+
+      assertEquals(2, subject.findDepartureStopPosition(time("09:09"), 1));
     }
   }
 }
