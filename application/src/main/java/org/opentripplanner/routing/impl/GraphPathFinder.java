@@ -18,8 +18,6 @@ import org.opentripplanner.street.search.EuclideanRemainingWeightHeuristic;
 import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class contains the logic for repeatedly building shortest path trees and accumulating paths
@@ -45,8 +43,6 @@ import org.slf4j.LoggerFactory;
  */
 public class GraphPathFinder {
 
-  private static final Logger LOG = LoggerFactory.getLogger(GraphPathFinder.class);
-
   private final Collection<ExtensionRequestContext> extensionRequestContexts;
 
   private final float maxCarSpeed;
@@ -64,10 +60,26 @@ public class GraphPathFinder {
   }
 
   /**
-   * This no longer does "trip banning" to find multiple itineraries. It just searches once trying
-   * to find a non-transit path.
+   * Try to find N paths through the Graph
    */
-  public List<StreetPath> getPaths(RouteRequest request, Set<Vertex> from, Set<Vertex> to) {
+  public List<StreetPath> find(
+    RouteRequest request,
+    LinkingContext linkingContext
+  ) {
+    Set<Vertex> from = linkingContext.findVertices(request.from());
+    Set<Vertex> to = linkingContext.findVertices(request.to());
+    OTPRequestTimeoutException.checkForTimeout();
+
+    var paths = getPaths(request, from, to);
+
+    if (paths.isEmpty()) {
+      throw new PathNotFoundException();
+    }
+
+    return paths;
+  }
+
+  private List<StreetPath> getPaths(RouteRequest request, Set<Vertex> from, Set<Vertex> to) {
     StreetPreferences preferences = request.preferences().street();
 
     StreetSearchBuilder streetSearch = StreetSearchBuilder.of()
@@ -89,74 +101,6 @@ public class GraphPathFinder {
       .withFrom(from)
       .withTo(to);
 
-    LOG.debug("rreq={}", request);
-
-    long searchBeginTime = System.currentTimeMillis();
-    LOG.debug("BEGIN SEARCH");
-
-    var paths = streetSearch.getPathsToTarget();
-
-    LOG.debug("we have {} paths", paths.size());
-    LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);
-    return paths;
-  }
-
-  /**
-   * Try to find N paths through the Graph
-   */
-  public List<StreetPath> graphPathFinderEntryPoint(
-    RouteRequest request,
-    LinkingContext linkingContext
-  ) {
-    return graphPathFinderEntryPoint(
-      request,
-      linkingContext.findVertices(request.from()),
-      linkingContext.findVertices(request.to())
-    );
-  }
-
-  public List<StreetPath> graphPathFinderEntryPoint(
-    RouteRequest request,
-    Set<Vertex> from,
-    Set<Vertex> to
-  ) {
-    OTPRequestTimeoutException.checkForTimeout();
-    var reqTime = request.dateTime() == null ? RouteRequest.normalizeNow() : request.dateTime();
-
-    var paths = getPaths(request, from, to);
-
-    // Detect and report that most obnoxious of bugs: path reversal asymmetry.
-    // Removing paths might result in an empty list, so do this check before the empty list check.
-    var gpi = paths.iterator();
-    while (gpi.hasNext()) {
-      var graphPath = gpi.next();
-      // TODO check, is it possible that arriveBy and time are modifed in-place by the search?
-      if (request.arriveBy()) {
-        if (graphPath.endTimeAccurate().isAfter(reqTime)) {
-          LOG.error(
-            "A graph path arrives {} after the requested time {}. This implies a bug.",
-            graphPath.endTimeAccurate(),
-            reqTime
-          );
-          gpi.remove();
-        }
-      } else {
-        if (graphPath.startTimeAccurate().isBefore(reqTime)) {
-          LOG.error(
-            "A graph path leaves {} before the requested time {}. This implies a bug.",
-            graphPath.startTimeAccurate(),
-            reqTime
-          );
-          gpi.remove();
-        }
-      }
-    }
-
-    if (paths.isEmpty()) {
-      LOG.debug("Path not found: {} : {}", request.from(), request.to());
-      throw new PathNotFoundException();
-    }
-
-    return paths;
+    return streetSearch.getPathsToTarget();
   }
 }

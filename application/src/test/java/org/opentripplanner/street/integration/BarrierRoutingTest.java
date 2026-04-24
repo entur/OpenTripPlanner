@@ -198,7 +198,7 @@ public class BarrierRoutingTest {
     var linkingRequest = LinkingContextRequestMapper.map(request);
     var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
     var gpf = new GraphPathFinder();
-    var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
+    var paths = gpf.find(request, linkingContext);
 
     StreetPathToLegsMapper streetPathToLegsMapper = new StreetPathToLegsMapper(
       new NoopSiteResolver(),

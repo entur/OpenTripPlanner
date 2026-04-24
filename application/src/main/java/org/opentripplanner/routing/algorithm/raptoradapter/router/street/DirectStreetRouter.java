@@ -45,7 +45,7 @@ public class DirectStreetRouter {
         serverContext.listExtensionRequestContexts(request),
         maxCarSpeed
       );
-      var paths = gpFinder.graphPathFinderEntryPoint(request, linkingContext);
+      var paths = gpFinder.find(request, linkingContext);
 
       // Convert the internal GraphPaths to itineraries
       final StreetPathToLegsMapper streetPathToLegsMapper = new StreetPathToLegsMapper(

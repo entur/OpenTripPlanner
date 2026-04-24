@@ -100,7 +100,7 @@ class WalkRoutingTest {
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
       var gpf = new GraphPathFinder();
-      return gpf.graphPathFinderEntryPoint(request, linkingContext);
+      return gpf.find(request, linkingContext);
     }
   }
 }
