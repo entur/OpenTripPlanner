@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.street.geometry.CompactLineStringUtils;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -17,21 +16,19 @@ import org.opentripplanner.transit.model.site.StopLocation;
  * between any two stop positions in O(1) instead of re-running the haversine sum over the
  * pattern geometry on every leg construction.
  * <p>
- * When no shape data is available ({@code hopGeometries} is null at construction), the
- * per-hop geometry is synthesized on the fly as a straight line between consecutive stops,
- * and cumulative distances are computed from the stop coordinates. This mirrors the
- * original behaviour on {@link TripPattern}.
+ * When no shape data is available at construction, the per-hop geometry is materialized as
+ * a straight line between consecutive stops and compressed through the same pipeline as real
+ * shape data. A {@code fromShape} flag preserves the null-return of
+ * {@link #concatenatedGeometry()} so that GraphQL resolvers can still distinguish
+ * "shape available" from "no shape".
  */
 final class TripPatternGeometry implements Serializable {
 
-  private final StopPattern stopPattern;
-
   /**
-   * Compressed per-hop geometry, one entry per hop (length = numberOfStops - 1).
-   * Null iff the pattern was built without shape data; a synthetic straight line between
-   * consecutive stops is returned by {@link #hopGeometry(int)} in that case.
+   * Compressed per-hop geometry, one entry per hop (length = numberOfStops - 1). Always
+   * non-null. For shapeless patterns the entries are the compressed form of synthetic
+   * 2-point straight lines between consecutive stops.
    */
-  @Nullable
   private final byte[][] hopGeometries;
 
   /**
@@ -40,31 +37,38 @@ final class TripPatternGeometry implements Serializable {
    */
   private final int[] cumulativeDistanceMeters;
 
+  /**
+   * True iff the pattern was built with real shape data. When false, the stored hops are
+   * synthesized straight lines and {@link #concatenatedGeometry()} returns {@code null} to
+   * preserve the historical "no shape available" sentinel on the public API.
+   */
+  private final boolean fromShape;
+
   private TripPatternGeometry(
-    StopPattern stopPattern,
-    @Nullable byte[][] hopGeometries,
-    int[] cumulativeDistanceMeters
+    byte[][] hopGeometries,
+    int[] cumulativeDistanceMeters,
+    boolean fromShape
   ) {
-    this.stopPattern = stopPattern;
     this.hopGeometries = hopGeometries;
     this.cumulativeDistanceMeters = cumulativeDistanceMeters;
+    this.fromShape = fromShape;
   }
 
   /**
    * Build a {@link TripPatternGeometry} for the given stop pattern. When {@code hopGeometries}
    * is non-null the per-hop distances are summed over each line string; otherwise the straight
-   * line between consecutive stops is used. Distances are summed in double and rounded to the
-   * nearest meter only when writing each entry of the cumulative table, which bounds the
-   * rounding error of any {@code distanceBetween(board, alight)} query to at most 1 meter
-   * independent of leg length.
+   * line between consecutive stops is materialized from the stop coordinates. Distances are
+   * summed in double and rounded to the nearest meter only when writing each entry of the
+   * cumulative table, which bounds the rounding error of any
+   * {@code distanceBetween(board, alight)} query to at most 1 meter independent of leg length.
    */
   static TripPatternGeometry of(StopPattern stopPattern, @Nullable List<LineString> hopGeometries) {
     int numberOfStops = stopPattern.getSize();
     double[] cumulativeDouble = new double[numberOfStops];
-    byte[][] compressed = null;
+    byte[][] compressed = new byte[Math.max(numberOfStops - 1, 0)][];
+    boolean fromShape = hopGeometries != null;
 
-    if (hopGeometries != null) {
-      compressed = new byte[hopGeometries.size()][];
+    if (fromShape) {
       for (int i = 0; i < hopGeometries.size(); i++) {
         LineString hop = hopGeometries.get(i);
         cumulativeDouble[i + 1] =
@@ -75,9 +79,11 @@ final class TripPatternGeometry implements Serializable {
       for (int i = 0; i < numberOfStops - 1; i++) {
         StopLocation from = stopPattern.getStop(i);
         StopLocation to = stopPattern.getStop(i + 1);
+        LineString hop = GeometryUtils.makeLineString(from.getCoordinate(), to.getCoordinate());
         cumulativeDouble[i + 1] =
           cumulativeDouble[i] +
           SphericalDistanceLibrary.distance(from.getLat(), from.getLon(), to.getLat(), to.getLon());
+        compressed[i] = CompactLineStringUtils.compactLineString(hop, false);
       }
     }
 
@@ -85,7 +91,7 @@ final class TripPatternGeometry implements Serializable {
     for (int i = 0; i < numberOfStops; i++) {
       cumulativeMeters[i] = (int) Math.round(cumulativeDouble[i]);
     }
-    return new TripPatternGeometry(stopPattern, compressed, cumulativeMeters);
+    return new TripPatternGeometry(compressed, cumulativeMeters, fromShape);
   }
 
   /**
@@ -99,20 +105,12 @@ final class TripPatternGeometry implements Serializable {
   }
 
   /**
-   * Return the geometry of the hop at {@code hopIndex}. When the pattern has shape data the
-   * compressed hop is decoded; otherwise a straight line between consecutive stops is
-   * synthesized from the stop coordinates.
+   * Return the geometry of the hop at {@code hopIndex}. For shapeless patterns the returned
+   * geometry is the synthetic straight line between the consecutive stop coordinates, which
+   * matches the previous on-the-fly synthesis behaviour.
    */
   LineString hopGeometry(int hopIndex) {
-    if (hopGeometries != null) {
-      return CompactLineStringUtils.uncompactLineString(hopGeometries[hopIndex], false);
-    }
-    return GeometryUtils.getGeometryFactory().createLineString(
-      new Coordinate[] {
-        stopPattern.getStop(hopIndex).getCoordinate().asJtsCoordinate(),
-        stopPattern.getStop(hopIndex + 1).getCoordinate().asJtsCoordinate(),
-      }
-    );
+    return CompactLineStringUtils.uncompactLineString(hopGeometries[hopIndex], false);
   }
 
   /**
@@ -129,12 +127,13 @@ final class TripPatternGeometry implements Serializable {
 
   /**
    * Return the concatenated geometry of all hops, or {@code null} when the pattern was built
-   * without shape data. The null-return preserves existing behaviour for GraphQL field
-   * resolvers that expose the full-pattern geometry and treat null as "no shape available".
+   * without shape data or has no hops. The null-return preserves existing behaviour for
+   * GraphQL field resolvers that expose the full-pattern geometry and treat null as "no shape
+   * available".
    */
   @Nullable
   LineString concatenatedGeometry() {
-    if (hopGeometries == null || hopGeometries.length == 0) {
+    if (!fromShape || hopGeometries.length == 0) {
       return null;
     }
     return geometryBetween(0, hopGeometries.length);
