@@ -115,7 +115,7 @@ public class StateEditor {
     if (backState != null) {
       // check that time changes are coherent with edge traversal
       // direction
-      int timeDelta = (int) (time_ms - backState.getTimeMilliseconds());
+      double timeDelta = time_ms - backState.getTimeMilliseconds();
       if (traversingBackward ? (timeDelta > 0) : (timeDelta < 0)) {
         LOG.trace("Time was incremented the wrong direction during state editing. {}", backEdge);
         return null;
