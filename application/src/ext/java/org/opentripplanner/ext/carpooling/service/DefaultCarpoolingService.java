@@ -62,10 +62,10 @@ import org.slf4j.LoggerFactory;
  * The service executes routing requests in three distinct phases:
  * <ol>
  *   <li><strong>Pre-filtering ({@link FilterChain}):</strong> Quickly eliminates incompatible
- *       trips based on capacity, time windows, direction, and distance.</li>
+ *       trips based on capacity, time windows, and distance.</li>
  *   <li><strong>Position Finding ({@link InsertionPositionFinder}):</strong> For trips that
  *       pass filtering, identifies viable pickup/dropoff position pairs using fast heuristics
- *       (capacity, direction, beeline delay estimates). No routing is performed in this phase.</li>
+ *       (capacity, beeline delay estimates). No routing is performed in this phase.</li>
  *   <li><strong>Insertion Evaluation ({@link InsertionEvaluator}):</strong> For viable positions,
  *       computes actual routes using A* street routing. Evaluates all feasible insertion positions
  *       and selects the one minimizing additional travel time while satisfying delay constraints.</li>
@@ -139,7 +139,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * This method executes the full three-phase carpooling algorithm:
    * <ol>
    *   <li><strong>Pre-filtering:</strong> All trips from the repository are filtered by capacity,
-   *       time window, direction, and distance to quickly eliminate incompatible matches.</li>
+   *       time window, and distance to quickly eliminate incompatible matches.</li>
    *   <li><strong>Position finding:</strong> For each surviving trip, viable pickup/dropoff
    *       insertion positions are identified using beeline heuristics (no routing).</li>
    *   <li><strong>Insertion evaluation:</strong> Viable positions are evaluated with A* street
