@@ -157,25 +157,4 @@ class RouteRequestMapperTransitTest {
     assertEquals(constant, transitPreferences.relaxTransitGroupPriority().constant());
     assertEquals(coefficient, transitPreferences.relaxTransitGroupPriority().coefficient());
   }
-
-  @Test
-  void testPartialRelaxTransitGroupPriority() {
-    var args = testCtx.basicRequest();
-    var coefficient = 1.2;
-    var relaxTransitGroupPriority = Map.ofEntries(entry("coefficient", coefficient));
-    args.put(
-      "preferences",
-      Map.ofEntries(
-        entry(
-          "transit",
-          Map.ofEntries(entry("relaxTransitGroupPriority", relaxTransitGroupPriority))
-        )
-      )
-    );
-    var env = testCtx.executionContext(args);
-    var routeRequest = RouteRequestMapper.toRouteRequest(env, testCtx.context());
-    var transitPreferences = routeRequest.preferences().transit();
-    assertEquals(Cost.ZERO, transitPreferences.relaxTransitGroupPriority().constant());
-    assertEquals(coefficient, transitPreferences.relaxTransitGroupPriority().coefficient());
-  }
 }

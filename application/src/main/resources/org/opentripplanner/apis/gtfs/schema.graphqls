@@ -5104,12 +5104,9 @@ input TransitPreferencesInput {
   paths have a different set of transit-group-priorities, then the generalized-cost
   comparison is relaxed. The final set of paths are filtered through the normal
   itinerary-filters.
-    
-  The relaxation is done using a linear function applied to the generalized cost.
-  If not defined, a function with a constant 0 and a coefficient of 1.0 is used,
-  meaning the cost comparison is not relaxed between transit groups.
   
-  A relax-cost is used to increase the limit when comparing one cost to another cost.
+  A relax-cost is used to increase the limit when comparing one cost to another cost
+  using a linear function applied to the generalized cost.
   This is used to include more results into the result. A `coefficient=2.0` means a path (itinerary)
   with twice as high cost as another one, is accepted. A `constant=300` means a "fixed"
   constant is added to the limit.
