@@ -4,11 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.utils.time.TimeUtils.time;
 import static org.opentripplanner.utils.time.TimeUtils.timeToStrLong;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 
-public class RaptorTripScheduleTest {
+class RaptorTripScheduleTest {
 
   private static final int NOT_SET = -999;
 
@@ -20,42 +21,46 @@ public class RaptorTripScheduleTest {
     .build();
 
   @Test
-  public void arrival() {
+  void arrival() {
     assertEquals("10:00:00", timeToStrLong(subject.arrival(0)));
     assertEquals("10:05:00", timeToStrLong(subject.arrival(1)));
     assertEquals("10:55:00", timeToStrLong(subject.arrival(6)));
   }
 
   @Test
-  public void departure() {
+  void departure() {
     assertEquals("10:01:00", timeToStrLong(subject.departure(0)));
     assertEquals("10:46:00", timeToStrLong(subject.departure(5)));
     assertEquals("10:56:00", timeToStrLong(subject.departure(6)));
   }
 
   @Test
-  public void findArrivalStopPosition() {
+  void findArrivalStopPosition() {
     assertEquals("10:00:00", timeToStrLong(subject.arrival(0, 1)));
     assertEquals("10:05:00", timeToStrLong(subject.arrival(1, 1)));
     assertEquals("10:55:00", timeToStrLong(subject.arrival(2, 1)));
   }
 
   @Test
-  public void findDepartureStopPosition() {
+  void findDepartureStopPosition() {
     assertEquals("10:01:00", timeToStrLong(subject.departure(0, 1)));
     assertEquals("10:46:00", timeToStrLong(subject.departure(0, 8)));
     assertEquals("10:56:00", timeToStrLong(subject.departure(2, 1)));
   }
 
-  @Test
-  public void flexPatternWithDuplicateStop() {
-    var subject = TestTripSchedule.schedule(
-      TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
-    )
-      .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
-      .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
-      .build();
+  @Nested
+  class FlexPatternWithDuplicateStop {
 
-    assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
+    @Test
+    void flexPatternWithDuplicateStop() {
+      var subject = TestTripSchedule.schedule(
+        TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
+      )
+        .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
+        .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
+        .build();
+
+      assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
+    }
   }
 }
