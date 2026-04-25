@@ -42,10 +42,10 @@ public final class ItineraryFaresDecorator {
     if (fareOffers.isEmpty() && legOffers.isEmpty()) {
       return leg;
     }
-    var allOfferes = ListUtils.combine(fareOffers, legOffers);
+    var allOffers = ListUtils.combine(fareOffers, legOffers);
 
     return (leg instanceof FareProductAware<TransitLeg> fpa)
-      ? fpa.decorateWithFareOffers(allOfferes)
+      ? fpa.decorateWithFareOffers(allOffers)
       : leg;
   }
 }
