@@ -233,8 +233,6 @@ class J01_PassThroughTest {
       "Walk 30s ~ A ~ BUS R1 0:05 0:20 ~ D ~ Walk 30s [0:04:30 0:20:30 16m Tₙ0 C₁1_620]",
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );
-    // Walk 30s ~ A ~ BUS R1 0:05 0:10 ~ B ~ BUS R2 0:15 0:17 ~ D ~ Walk 30s [0:04:30 0:17:30 13m Tₙ1 C₁2_040]
-    // Walk 30s ~ A ~ BUS R1 0:05 0:20 ~                        D ~ Walk 30s [0:04:30 0:20:30 16m Tₙ0 C₁1_620]
   }
 
   @Test
