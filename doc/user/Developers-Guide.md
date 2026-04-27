@@ -53,7 +53,7 @@ like "program arguments".
 OpenTripPlanner is a community based open source project, and we welcome all who wish to contribute.
 There are several ways to get involved:
 
-* Join the [Gitter chat room](https://gitter.im/opentripplanner/OpenTripPlanner) and the 
+* Join the [Gitter chat room](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im) and the 
   [user mailing list](http://groups.google.com/group/opentripplanner-users).
 
 * Fix typos and improve the documentation within the `/doc/user` directory of the project (details
@@ -61,7 +61,7 @@ There are several ways to get involved:
 
 * [File a bug or new feature request](http://github.com/openplans/OpenTripPlanner/issues/new).
   If you want a GitHub issue to be addressed, you should also discuss it in
-  [Gitter](https://gitter.im/opentripplanner/OpenTripPlanner) or in the
+  [Gitter](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im) or in the
   [developer meetings](https://github.com/opentripplanner/OpenTripPlanner/blob/dev-2.x/CONTRIBUTING.md#developer-meetings).
 
 * Create pull requests citing the relevant issue.
@@ -93,7 +93,7 @@ implementation discussions (in the comments). The created issue should be refere
 request. For really minor and uncontroversial pull requests, it is ok to not create an issue.
 
 **If you want a GitHub issue to be addressed, you should also discuss it in
-[Gitter](https://gitter.im/opentripplanner/OpenTripPlanner) or in the
+[Gitter](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im) or in the
 [developer meetings](https://github.com/opentripplanner/OpenTripPlanner/blob/dev-2.x/CONTRIBUTING.md#developer-meetings).**
 
 ### Unit tests using real OSM data
