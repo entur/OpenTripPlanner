@@ -22,7 +22,7 @@ public class GenericLocation {
   private final FeedScopedId stopId;
 
   @Nullable
-  WgsCoordinate coordinate;
+  private final WgsCoordinate coordinate;
 
   private GenericLocation(
     @Nullable String label,

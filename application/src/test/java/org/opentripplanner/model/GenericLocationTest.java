@@ -1,11 +1,13 @@
 package org.opentripplanner.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.street.geometry.WgsCoordinate;
 
 class GenericLocationTest {
 
@@ -23,13 +25,27 @@ class GenericLocationTest {
   private final GenericLocation other = GenericLocation.fromCoordinate(LATITUDE, LONGITUDE, LABEL);
 
   @Test
-  void fromStopId() {
-    assertEquals(STOP_ID, subject.stopId());
+  void fromStopIdWithFallback() {
+    var location = GenericLocation.fromStopIdWithFallback(STOP_ID, LATITUDE, LONGITUDE, LABEL);
+    assertEquals(STOP_ID, location.stopId());
+    assertEquals(new WgsCoordinate(LATITUDE, LONGITUDE), location.wgsCoordinate());
+    assertEquals(LABEL, location.label());
   }
 
   @Test
-  void getCoordinate() {
-    assertEquals(STOP_ID, subject.stopId());
+  void fromStopId() {
+    var location = GenericLocation.fromStopId(STOP_ID, LABEL);
+    assertEquals(STOP_ID, location.stopId());
+    assertNull(location.wgsCoordinate());
+    assertEquals(LABEL, location.label());
+  }
+
+  @Test
+  void fromCoordinate() {
+    var location = GenericLocation.fromCoordinate(LATITUDE, LONGITUDE, LABEL);
+    assertNull(location.stopId());
+    assertEquals(new WgsCoordinate(LATITUDE, LONGITUDE), location.wgsCoordinate());
+    assertEquals(LABEL, location.label());
   }
 
   @Test
