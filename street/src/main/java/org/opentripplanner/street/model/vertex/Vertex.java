@@ -64,7 +64,7 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
       sb.append(", businessAreaBorder=").append(businessAreaBorder);
     }
     if (!geofencingBoundaries.isEmpty()) {
-      sb.append(", geofencingBoundaries=").append(geofencingBoundaries);
+      sb.append(", geofencingBoundaries=").append(geofencingBoundaries.size());
     }
     sb.append("}");
     return sb.toString();
