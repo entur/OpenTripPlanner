@@ -123,7 +123,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   public ParetoComparator<RaptorPath<T>> createPathParetoComparator() {
     if (comparator == null) {
-      var c2Comp = includeC2() ? dominanceFunctionC2() : null;
+      var c2Comp = isTransitPriority() ? dominanceFunctionC2() : null;
       comparator = pathConfig.createPathParetoComparator(resolveCostConfig(), c2Comp);
     }
     return comparator;
@@ -132,7 +132,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   /* private factory methods */
 
   private RoutingStrategy<T> createTransitWorkerStrategy(McRangeRaptorWorkerState<T> state) {
-    return includeC2()
+    return isTransitPriority()
       ? createTransitWorkerStrategy(
           state,
           createPatternRideC2Factory(),
@@ -177,7 +177,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private McStopArrivalFactory<T> createStopArrivalFactory() {
     if (stopArrivalFactory == null) {
-      this.stopArrivalFactory = includeC2()
+      this.stopArrivalFactory = isTransitPriority()
         ? new StopArrivalFactoryC2<>()
         : new StopArrivalFactoryC1<>();
     }
@@ -231,14 +231,6 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private MultiCriteriaRequest<T> mcRequest() {
     return context().multiCriteria();
-  }
-
-  /**
-   * Use c2 in the search, this is use-case specific. For example the pass-through or
-   * transit-group-priority features uses the c2 value.
-   */
-  private boolean includeC2() {
-    return mcRequest().transitPriorityCalculator().isPresent();
   }
 
   private PatternRideFactory<T, PatternRideC2<T>> createPatternRideC2Factory() {
