@@ -120,7 +120,8 @@ data:
             {
               "url": "{{ $feed.url }}",
               "network": "{{ $feed.network }}",
-              "httpHeaders":{
+              "applyBusinessAreas": "{{ $feed.applyBusinessArea }}"
+              "headers":{
                 "ET-Client-Name": "entur-otp2"
               }
             }
