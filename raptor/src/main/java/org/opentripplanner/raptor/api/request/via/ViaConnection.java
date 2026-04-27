@@ -49,7 +49,7 @@ public abstract sealed class ViaConnection
     this.fromStop = fromStop;
   }
 
-  public static ParetoComparator<ViaConnection> paretoComparator() {
+  static ParetoComparator<ViaConnection> paretoComparator() {
     return (l, r) -> l.leftDominanceExist(r);
   }
 
