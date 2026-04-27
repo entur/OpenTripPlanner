@@ -32,6 +32,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add `startupRetryPeriod` to GBFS feed configuration [#7525](https://github.com/opentripplanner/OpenTripPlanner/pull/7525)
 - Add support for transit group priority in the GTFS API [#7451](https://github.com/opentripplanner/OpenTripPlanner/pull/7451)
 - Set default fares to  [#7545](https://github.com/opentripplanner/OpenTripPlanner/pull/7545)
+- Reduce memory consumption when parsing very large NeTEx files [#7563](https://github.com/opentripplanner/OpenTripPlanner/pull/7563)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
