@@ -1,6 +1,5 @@
 package org.opentripplanner.routing.service;
 
-import java.time.ZoneId;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.framework.time.ZoneIdFallback;
 import org.opentripplanner.model.plan.Itinerary;
@@ -29,11 +28,17 @@ public class DefaultRoutingService implements RoutingService {
 
   private final OtpServerRequestContext serverContext;
 
-  private final ZoneId timeZone;
+  private final RequestPreProcessor requestPreProcessor;
 
   public DefaultRoutingService(OtpServerRequestContext serverContext) {
     this.serverContext = serverContext;
-    this.timeZone = ZoneIdFallback.zoneId(serverContext.transitService().getTimeZone());
+
+    var timeZone = ZoneIdFallback.zoneId(serverContext.transitService().getTimeZone());
+
+    this.requestPreProcessor = new RequestPreProcessor(
+      serverContext.raptorTuningParameters(),
+      timeZone
+    );
   }
 
   @Override
@@ -59,9 +64,7 @@ public class DefaultRoutingService implements RoutingService {
   }
 
   private RoutingWorkerRequest mapRequest(RouteRequest request) {
-    return new RequestPreProcessor(serverContext.raptorTuningParameters(), timeZone).computeRequest(
-      request
-    );
+    return requestPreProcessor.computeRequest(request);
   }
 
   private void logResponse(RoutingResponse response) {
