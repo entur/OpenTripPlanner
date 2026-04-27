@@ -2,6 +2,7 @@ package org.opentripplanner.updater.vehicle_rental;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,8 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.retry.OtpRetry;
 import org.opentripplanner.framework.retry.OtpRetryBuilder;
@@ -18,23 +17,26 @@ import org.opentripplanner.framework.retry.OtpRetryException;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneApplier;
+import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.linking.VertexLinker;
-import org.opentripplanner.street.model.RentalFormFactor;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
-import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
+import org.opentripplanner.updater.vehicle_rental.datasources.params.GbfsVehicleRentalDataSourceParameters;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -56,8 +58,11 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   private final VehicleRentalDataSource source;
   private final String nameForLogging;
+  private final boolean applyBusinessAreas;
 
-  private Map<StreetEdge, RentalRestrictionExtension> latestModifiedEdges = Map.of();
+  private Map<StreetEdge, String> latestBusinessAreaEdges = Map.of();
+  private Map<StreetEdge, GeofencingBoundaryExtension> latestBoundaryEdges = Map.of();
+  private GeofencingZoneIndex latestZoneIndex;
   private Set<GeofencingZone> latestAppliedGeofencingZones = Set.of();
   private final Map<FeedScopedId, VehicleRentalPlaceVertex> verticesByStation = new HashMap<>();
   private final Map<FeedScopedId, DisposableEdgeCollection> tempEdgesByStation = new HashMap<>();
@@ -80,6 +85,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       parameters.sourceParameters().network(),
       parameters.sourceParameters().url()
     );
+    this.applyBusinessAreas = parameters.sourceParameters() instanceof
+        GbfsVehicleRentalDataSourceParameters gbfs
+      ? gbfs.geofencingBusinessAreaBorders()
+      : true;
     this.unlinkedPlaceThrottle = Throttle.ofOneSecond();
 
     // Creation of network linker library will not modify the graph
@@ -148,6 +157,27 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     updateGraph(graphWriterRunnable);
   }
 
+  /**
+   * Pre-resolve initial geofencing zones on rental vertices by querying all zone indexes
+   * registered on the graph. Zones from multiple indexes are merged into a single set per vertex.
+   */
+  private static void preResolveVertexZonesFromAllIndexes(
+    Graph graph,
+    Collection<VehicleRentalPlaceVertex> vertices
+  ) {
+    var allIndexes = graph.getAllGeofencingZoneIndexes();
+    if (allIndexes.isEmpty()) {
+      return;
+    }
+    for (var vertex : vertices) {
+      var merged = new HashSet<GeofencingZone>();
+      for (var index : allIndexes.values()) {
+        merged.addAll(index.getZonesContaining(vertex.getCoordinate()));
+      }
+      vertex.setInitialGeofencingZones(Set.copyOf(merged));
+    }
+  }
+
   private class VehicleRentalGraphWriterRunnable implements GraphWriterRunnable {
 
     private final List<VehicleRentalPlace> stations;
@@ -165,7 +195,6 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     public void run(RealTimeUpdateContext context) {
       // Apply stations to graph
       Set<FeedScopedId> stationSet = new HashSet<>();
-      var vertexFactory = new VertexFactory(context.graph());
 
       /* add any new stations and update vehicle counts for existing stations */
       for (VehicleRentalPlace station : stations) {
@@ -174,22 +203,13 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         VehicleRentalPlaceVertex vehicleRentalVertex = verticesByStation.get(station.id());
 
         if (vehicleRentalVertex == null) {
-          vehicleRentalVertex = vertexFactory.vehicleRentalPlace(station);
+          vehicleRentalVertex = new VehicleRentalPlaceVertex(station);
+          context.graph().addVertex(vehicleRentalVertex);
           DisposableEdgeCollection tempEdges = linker.linkVertexForRealTime(
             vehicleRentalVertex,
             new TraverseModeSet(TraverseMode.WALK),
             LinkingDirection.BIDIRECTIONAL,
-            (vertex, streetVertex) ->
-              List.of(
-                StreetVehicleRentalLink.createStreetVehicleRentalLink(
-                  (VehicleRentalPlaceVertex) vertex,
-                  streetVertex
-                ),
-                StreetVehicleRentalLink.createStreetVehicleRentalLink(
-                  streetVertex,
-                  (VehicleRentalPlaceVertex) vertex
-                )
-              )
+            StreetVehicleRentalLink::createBidirectionalLinks
           );
           if (vehicleRentalVertex.getOutgoing().isEmpty()) {
             // Copy reference to pass into lambda
@@ -204,15 +224,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
               )
             );
           }
-          Set<RentalFormFactor> formFactors = Stream.concat(
-            station.availablePickupFormFactors(false).stream(),
-            station.availableDropoffFormFactors(false).stream()
-          ).collect(Collectors.toSet());
-          for (RentalFormFactor formFactor : formFactors) {
-            tempEdges.addEdge(
-              VehicleRentalEdge.createVehicleRentalEdge(vehicleRentalVertex, formFactor)
-            );
-          }
+          VehicleRentalEdge.createRentalEdgesForStation(vehicleRentalVertex, station, tempEdges);
           verticesByStation.put(station.id(), vehicleRentalVertex);
           tempEdgesByStation.put(station.id(), tempEdges);
         } else {
@@ -243,21 +255,38 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         LOG.info("Computing geofencing zones for {}", nameForLogging);
         var start = System.currentTimeMillis();
 
-        latestModifiedEdges.forEach(StreetEdge::removeRentalExtension);
+        latestBusinessAreaEdges.forEach(StreetEdge::removeBusinessAreaBorderNetwork);
+        latestBoundaryEdges.forEach(StreetEdge::removeGeofencingBoundary);
 
-        var updater = new GeofencingVertexUpdater(context.graph()::findEdges);
-        latestModifiedEdges = updater.applyGeofencingZones(geofencingZones);
+        var graph = context.graph();
+        var applier = new GeofencingZoneApplier(
+          graph::findEdgesAlongLineStrings,
+          env -> graph.findEdges(env, Scope.PERMANENT),
+          applyBusinessAreas
+        );
+        var result = applier.applyGeofencingZones(geofencingZones);
+        latestBusinessAreaEdges = result.businessAreaEdges();
+        latestBoundaryEdges = result.boundaryEdges();
+        latestZoneIndex = result.zoneIndex();
         latestAppliedGeofencingZones = geofencingZones;
+        context.graph().setGeofencingZoneIndex(nameForLogging, latestZoneIndex, geofencingZones);
 
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);
         LOG.info(
-          "Geofencing zones computation took {}. Added extension to {} edges. For {}",
+          "Geofencing zones computation took {}. {} boundary edges, {} business area edges. For {}",
           DurationUtils.durationToStr(millis),
-          latestModifiedEdges.size(),
+          latestBoundaryEdges.size(),
+          latestBusinessAreaEdges.size(),
           nameForLogging
         );
       }
+
+      // Pre-resolve rental vertex zones against all zone indexes on the graph, including
+      // those from other sources (e.g., zones applied at graph build time). This ensures
+      // rental vertices have correct initial zone state for all zones, not just those
+      // applied by this updater.
+      preResolveVertexZonesFromAllIndexes(context.graph(), verticesByStation.values());
     }
   }
 }

@@ -1,8 +1,11 @@
 package org.opentripplanner.street.search.state;
 
+import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
@@ -225,24 +228,6 @@ public class StateEditor {
     child.stateData.enteredNoThroughTrafficArea = true;
   }
 
-  public void leaveNoRentalDropOffArea() {
-    if (!child.stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-
-    cloneStateDataAsNeeded();
-    child.stateData.insideNoRentalDropOffArea = false;
-  }
-
-  public void enterNoRentalDropOffArea() {
-    if (child.stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-
-    cloneStateDataAsNeeded();
-    child.stateData.insideNoRentalDropOffArea = true;
-  }
-
   public void setBackMode(TraverseMode mode) {
     if (mode == child.stateData.backMode) {
       return;
@@ -274,7 +259,6 @@ public class StateEditor {
       child.stateData.vehicleRentalNetwork = null;
       child.stateData.rentalVehicleFormFactor = null;
       child.stateData.rentalVehiclePropulsionType = null;
-      child.stateData.insideNoRentalDropOffArea = false;
     } else {
       child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
       child.stateData.currentMode = formFactor.traverseMode;
@@ -410,9 +394,72 @@ public class StateEditor {
     return child.getBackState();
   }
 
-  public void resetStartedInNoDropOffZone() {
+  /**
+   * Update geofencing zone tracking based on boundary extensions on the traversed edge.
+   * For each {@link GeofencingBoundaryExtension} on fromv, checks if tov has a paired extension
+   * (same zone, opposite entering flag). If paired, adds or removes the zone from state.
+   */
+  public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
+    for (var boundary : fromVertex.getGeofencingBoundaries()) {
+      // Paired check: tov must have same zone with opposite entering flag
+      boolean paired = false;
+      for (var tovBoundary : toVertex.getGeofencingBoundaries()) {
+        if (
+          tovBoundary.zone().equals(boundary.zone()) &&
+          tovBoundary.entering() != boundary.entering()
+        ) {
+          paired = true;
+          break;
+        }
+      }
+      if (!paired) {
+        continue;
+      }
+      boolean effectiveEntering = boundary.entering() ^ arriveBy;
+      cloneStateDataAsNeeded();
+      var newZones = new HashSet<>(child.stateData.currentGeofencingZones);
+      if (effectiveEntering) {
+        newZones.add(boundary.zone());
+      } else {
+        newZones.remove(boundary.zone());
+      }
+      child.stateData.currentGeofencingZones = Set.copyOf(newZones);
+    }
+  }
+
+  /**
+   * Initialize geofencing zones from pre-resolved zones on a vehicle rental vertex.
+   * Called at vehicle pickup time.
+   */
+  public void initializeGeofencingZones(Set<GeofencingZone> zones) {
     cloneStateDataAsNeeded();
-    child.stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
+    child.stateData.currentGeofencingZones = Set.copyOf(zones);
+  }
+
+  public void setCommittedNetworks(Set<String> networks) {
+    if (networks.equals(child.stateData.committedNetworks)) {
+      return;
+    }
+    cloneStateDataAsNeeded();
+    child.stateData.committedNetworks = Set.copyOf(networks);
+  }
+
+  /**
+   * Commit a generic RENTING_FLOATING state to a specific network at a boundary fork.
+   */
+  public void commitToNetwork(String network) {
+    cloneStateDataAsNeeded();
+    child.stateData.vehicleRentalNetwork = network;
+  }
+
+  public void addCommittedNetwork(String network) {
+    if (child.stateData.committedNetworks.contains(network)) {
+      return;
+    }
+    cloneStateDataAsNeeded();
+    var newSet = new HashSet<>(child.stateData.committedNetworks);
+    newSet.add(network);
+    child.stateData.committedNetworks = Set.copyOf(newSet);
   }
 
   /* PRIVATE METHODS */

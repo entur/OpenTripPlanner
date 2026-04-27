@@ -59,8 +59,8 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
       return false;
     }
 
-    // we cannot compare the states where one is inside a "no-drop off" zone and one isn't
-    if (a.isInsideNoRentalDropOffArea() != b.isInsideNoRentalDropOffArea()) {
+    // two generic renting states with different committed networks are incomparable
+    if (!a.getCommittedNetworks().equals(b.getCommittedNetworks())) {
       return false;
     }
 
