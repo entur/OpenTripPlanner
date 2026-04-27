@@ -39,6 +39,15 @@ import org.opentripplanner.street.search.request.WalkRequest;
  * Used as a transient context object: the builder is lazily allocated on the first field
  * that needs to change, so a request with multiple off-grid fields incurs at most one
  * {@code copyOf} + {@code build} round trip rather than one per field.
+ * <p>
+ * The {@code ==} comparisons between the snapped value and the original (in
+ * {@code bucketWalk}/{@code bucketBike}/{@code bucketCar}/{@code bucketTurnReluctance})
+ * are an allocation-avoidance fast path, not a correctness check. A value that was
+ * already on the grid can in principle come back from {@link BucketGrid#snapToStep} as a
+ * marginally different {@code double} due to {@link java.math.BigDecimal} round-tripping,
+ * in which case the check fails and an extra {@code copyOf}/{@code build} is paid; the
+ * resulting cache key still groups requests deterministically because both populating
+ * and probing requests run through the same snap.
  */
 final class TransferRequestBucketer {
 
