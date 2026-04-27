@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.ride;
 
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.api.view.PatternRideView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.MultiCriteriaRoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
@@ -68,8 +69,8 @@ public abstract class AbstractPatternRide<T extends RaptorTripSchedule>
   private final int boardPos;
   private final int boardTime;
   private final int boardC1;
-  protected final int relativeC1;
-  protected final int tripSortIndex;
+  private final int relativeC1;
+  private final int tripSortIndex;
   private final T trip;
 
   public AbstractPatternRide(
@@ -140,5 +141,19 @@ public abstract class AbstractPatternRide<T extends RaptorTripSchedule>
       .addNum("tripSortIndex", tripSortIndex)
       .addObj("trip", trip.pattern().debugInfo())
       .toString();
+  }
+
+  /* Comperators */
+
+  final boolean compareArrivalTime(AbstractPatternRide<?> r) {
+    return tripSortIndex < r.tripSortIndex;
+  }
+
+  final boolean compareC1(AbstractPatternRide<?> r) {
+    return relativeC1 < r.relativeC1;
+  }
+
+  final boolean compareC1(RelaxFunction relax, AbstractPatternRide<?> r) {
+    return relativeC1 < relax.relax(r.relativeC1);
   }
 }

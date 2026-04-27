@@ -188,7 +188,7 @@ public class MultiCriteriaRoutingStrategy<
     final int boardC1 = calculateCostAtBoardTime(prevArrival, boarding);
     final int relativeBoardC1 = boardC1 + calculateOnTripRelativeCost(boardTime, trip);
 
-    var patternRide = patternRideFactory.createPatternRide(
+    var ride = patternRideFactory.createPatternRide(
       prevArrival,
       stopIndex,
       boarding.stopPositionInPattern(),
@@ -197,7 +197,7 @@ public class MultiCriteriaRoutingStrategy<
       relativeBoardC1,
       trip
     );
-    patternRides.add(patternRide);
+    patternRides.add(ride);
   }
 
   /**

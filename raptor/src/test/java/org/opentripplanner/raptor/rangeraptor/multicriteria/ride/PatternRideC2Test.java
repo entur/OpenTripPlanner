@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.raptor.api.model.RelaxFunction;
 
 public class PatternRideC2Test {
 
@@ -13,7 +14,9 @@ public class PatternRideC2Test {
     final var C1_HIGH = 500;
     final var TRIP_SORT_INDEX_1 = 1;
     final var TRIP_SORT_INDEX_2 = 2;
-    var comparator = PatternRideC2.paretoComparatorRelativeCost((l1, l2) -> l1 > l2);
+    final RelaxFunction relacC1 = c -> c + 3;
+
+    var comparator = PatternRideC2.comparatorRelaxedC1IfC2IsOptimal(relacC1, (l1, l2) -> l1 > l2);
 
     assertTrue(
       comparator.leftDominanceExist(

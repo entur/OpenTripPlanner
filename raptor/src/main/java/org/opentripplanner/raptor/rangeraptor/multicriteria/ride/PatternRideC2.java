@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.ride;
 
 import org.opentripplanner.raptor.api.model.DominanceFunction;
+import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
@@ -42,10 +43,10 @@ public class PatternRideC2<T extends RaptorTripSchedule> extends AbstractPattern
    */
   public static <T extends RaptorTripSchedule> ParetoComparator<
     PatternRideC2<T>
-  > paretoComparatorRelativeCost(DominanceFunction dominanceFunctionC2) {
+  > comparatorRelaxedC1IfC2IsOptimal(RelaxFunction relaxC1, DominanceFunction dominanceFunctionC2) {
     return (l, r) ->
-      l.tripSortIndex < r.tripSortIndex ||
-      l.relativeC1 < r.relativeC1 ||
+      l.compareArrivalTime(r) ||
+      l.compareC1(r) ||
       dominanceFunctionC2.leftDominateRight(l.c2, r.c2);
   }
 

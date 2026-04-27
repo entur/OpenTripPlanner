@@ -61,13 +61,10 @@ public class PatternRideC1<T extends RaptorTripSchedule> extends AbstractPattern
     };
   }
 
-  /**
-   * See {@link AbstractPatternRide} for the pareto comparison strategy used by this comparator.
-   */
   public static <T extends RaptorTripSchedule> ParetoComparator<
     PatternRideC1<T>
   > paretoComparatorRelativeCost() {
-    return (l, r) -> l.tripSortIndex < r.tripSortIndex || l.relativeC1 < r.relativeC1;
+    return (l, r) -> l.compareArrivalTime(r) || l.compareC1(r);
   }
 
   @Override

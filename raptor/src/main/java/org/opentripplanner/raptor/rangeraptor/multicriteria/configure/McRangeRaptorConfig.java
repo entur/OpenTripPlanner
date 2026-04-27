@@ -136,7 +136,10 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
       ? createTransitWorkerStrategy(
           state,
           createPatternRideC2Factory(),
-          PatternRideC2.paretoComparatorRelativeCost(dominanceFunctionC2())
+          PatternRideC2.comparatorRelaxedC1IfC2IsOptimal(
+            mcRequest().relaxC1(),
+            dominanceFunctionC2()
+          )
         )
       : createTransitWorkerStrategy(
           state,
