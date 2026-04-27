@@ -70,11 +70,7 @@ public class GbfsGeofencingGraphBuilder implements GraphBuilderModule {
     );
     var result = applier.applyGeofencingZones(allZones);
 
-    graph.setGeofencingZoneIndex(
-      "gbfs-build-time",
-      result.zoneIndex(),
-      Set.copyOf(allZones)
-    );
+    graph.setGeofencingZoneIndex("gbfs-build-time", result.zoneIndex(), Set.copyOf(allZones));
 
     LOG.info(
       "Applied {} geofencing zones to {} street edges at build time",

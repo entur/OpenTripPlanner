@@ -288,8 +288,10 @@ public class Graph implements Serializable {
     LOG.info("Index street model complete.");
 
     if (!serializedGeofencingZones.isEmpty()) {
-      LOG.info("Rebuilding geofencing zone indexes from {} data source(s)...",
-        serializedGeofencingZones.size());
+      LOG.info(
+        "Rebuilding geofencing zone indexes from {} data source(s)...",
+        serializedGeofencingZones.size()
+      );
       long start = System.currentTimeMillis();
       for (var entry : serializedGeofencingZones.entrySet()) {
         geofencingZoneIndexes.put(entry.getKey(), new GeofencingZoneIndex(entry.getValue()));
