@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.utils.time.TimeUtils.time;
 import static org.opentripplanner.utils.time.TimeUtils.timeToStrLong;
 
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
@@ -48,31 +47,27 @@ class RaptorTripScheduleTest {
     assertEquals("10:56:00", timeToStrLong(subject.departure(2, 1)));
   }
 
-  @Nested
-  class RestrictedPatternsWithDuplicateStops {
+  @Test
+  void restrictedFindArrivalStopPosition() {
+    var subject = TestTripSchedule.schedule(
+      TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
+    )
+      .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
+      .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
+      .build();
 
-    @Test
-    void findArrivalStopPosition() {
-      var subject = TestTripSchedule.schedule(
-        TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
-      )
-        .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
-        .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
-        .build();
+    assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
+  }
 
-      assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
-    }
+  @Test
+  void restrictedFindDepartureStopPosition() {
+    var subject = TestTripSchedule.schedule(
+      TestTripPattern.of("restricted-repeating-stops", 1, 1, 1, 3).restrictions("* A * *").build()
+    )
+      .arrivals(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
+      .departures(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
+      .build();
 
-    @Test
-    void findDepartureStopPosition() {
-      var subject = TestTripSchedule.schedule(
-        TestTripPattern.of("restricted-repeating-stops", 1, 1, 1, 3).restrictions("* A * *").build()
-      )
-        .arrivals(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
-        .departures(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
-        .build();
-
-      assertEquals(2, subject.findDepartureStopPosition(time("09:09"), 1));
-    }
+    assertEquals(2, subject.findDepartureStopPosition(time("09:09"), 1));
   }
 }
