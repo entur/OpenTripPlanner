@@ -96,6 +96,11 @@ public class TestTransitData
   }
 
   @Override
+  public int numberOfTripPatterns() {
+    return routes.size();
+  }
+
+  @Override
   public RaptorCostCalculator<TestTripSchedule> multiCriteriaCostCalculator() {
     return CostCalculatorFactory.createCostCalculator(
       costParamsBuilder.build(),
