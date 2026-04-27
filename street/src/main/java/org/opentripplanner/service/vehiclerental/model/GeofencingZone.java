@@ -33,8 +33,7 @@ public record GeofencingZone(
   @Nullable List<String> vehicleTypeIds,
   @Nullable Integer maximumSpeedKph,
   int priority
-)
-  implements Serializable {
+) implements Serializable {
   /**
    * Convenience constructor for zones with only drop-off and traversal restrictions.
    * Sets {@code rideStartBanned} to false, infers {@code businessArea}, and uses default priority.
