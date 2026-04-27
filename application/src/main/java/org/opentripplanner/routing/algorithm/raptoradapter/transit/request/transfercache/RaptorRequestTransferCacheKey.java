@@ -45,6 +45,12 @@ class RaptorRequestTransferCacheKey {
   private static final double WALK_SPEED_BUCKET = 0.05;
   private static final double BIKE_SPEED_BUCKET = 0.1;
 
+  private static final double LOW_RELUCTANCE_BREAKPOINT = 3.0;
+  private static final double HIGH_RELUCTANCE_BREAKPOINT = 10.0;
+  private static final double LOW_RELUCTANCE_STEP = 0.1;
+  private static final double MID_RELUCTANCE_STEP = 0.5;
+  private static final double HIGH_RELUCTANCE_STEP = 1.0;
+
   private final List<List<Transfer>> transfersByStopIndex;
   private final StreetSearchRequest request;
   private final StreetRelevantOptions options;
@@ -122,13 +128,13 @@ class RaptorRequestTransferCacheKey {
   }
 
   private static double reluctanceStep(double reluctance) {
-    if (reluctance < 3.0) {
-      return 0.1;
+    if (reluctance < LOW_RELUCTANCE_BREAKPOINT) {
+      return LOW_RELUCTANCE_STEP;
     }
-    if (reluctance < 10.0) {
-      return 0.5;
+    if (reluctance < HIGH_RELUCTANCE_BREAKPOINT) {
+      return MID_RELUCTANCE_STEP;
     }
-    return 1.0;
+    return HIGH_RELUCTANCE_STEP;
   }
 
   /**
