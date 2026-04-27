@@ -15,10 +15,6 @@ public enum ParetoSetCost {
    */
   USE_C1,
   /**
-   * Use both c1 and c2 in the pareto function. A small value is better than a large one.
-   */
-  USE_C1_AND_C2,
-  /**
    * Use c1 in the pareto function, but relax c1 is c2 is optimal. This allows slightly worse
    * c1 values if a path is considered better based on the c2 value. Another way of looking at
    * this, is that all paths are grouped by the c2 value. When two paths are compared inside a group

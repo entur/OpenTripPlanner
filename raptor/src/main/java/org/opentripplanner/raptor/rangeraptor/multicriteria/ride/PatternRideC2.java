@@ -38,9 +38,6 @@ public class PatternRideC2<T extends RaptorTripSchedule> extends AbstractPattern
     this.c2 = c2;
   }
 
-  /**
-   * See {@link AbstractPatternRide} for the pareto comparison strategy used by this comparator.
-   */
   public static <T extends RaptorTripSchedule> ParetoComparator<
     PatternRideC2<T>
   > comparatorRelaxedC1IfC2IsOptimal(RelaxFunction relaxC1, DominanceFunction dominanceFunctionC2) {
