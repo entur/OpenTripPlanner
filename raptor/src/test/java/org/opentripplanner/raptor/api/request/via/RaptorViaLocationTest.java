@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 
-class ViaLocationTest implements RaptorTestConstants {
+class RaptorViaLocationTest implements RaptorTestConstants {
 
   private static final Duration MINIMUM_WAIT_TIME = Duration.ofSeconds(23);
   private static final String VIA_LABEL = "Via";
@@ -137,7 +137,39 @@ class ViaLocationTest implements RaptorTestConstants {
   }
 
   @Test
-  void testEqualsAndHAshCode() {
+  void testEquals() {
+    var ex = assertThrows(UnsupportedOperationException.class, () ->
+      subject.equals("<Any object>")
+    );
+    assertEquals(
+      "No need to compare class org.opentripplanner.raptor.api.request.via.RaptorViaLocation",
+      ex.getMessage()
+    );
+    ex = assertThrows(UnsupportedOperationException.class, () ->
+      subjectPassThrough.equals("<Any object>")
+    );
+    assertEquals(
+      "No need to compare class org.opentripplanner.raptor.api.request.via.RaptorViaLocation",
+      ex.getMessage()
+    );
+  }
+
+  @Test
+  void testHashCode() {
+    var ex = assertThrows(UnsupportedOperationException.class, () -> subject.hashCode());
+    assertEquals(
+      "No need for hashCode of class org.opentripplanner.raptor.api.request.via.RaptorViaLocation",
+      ex.getMessage()
+    );
+    ex = assertThrows(UnsupportedOperationException.class, () -> subjectPassThrough.hashCode());
+    assertEquals(
+      "No need for hashCode of class org.opentripplanner.raptor.api.request.via.RaptorViaLocation",
+      ex.getMessage()
+    );
+  }
+
+  @Test
+  void testMixingConnectionEqualsAndHashCode() {
     var viaTxConnection = RaptorViaLocation.viaVisit("SameAsVia", MINIMUM_WAIT_TIME)
       .addTransfer(STOP_B, TRANSFER)
       .build();
