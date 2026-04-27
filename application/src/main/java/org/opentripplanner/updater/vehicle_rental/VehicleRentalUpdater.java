@@ -2,6 +2,7 @@ package org.opentripplanner.updater.vehicle_rental;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneApplier;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
@@ -155,6 +157,27 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     updateGraph(graphWriterRunnable);
   }
 
+  /**
+   * Pre-resolve initial geofencing zones on rental vertices by querying all zone indexes
+   * registered on the graph. Zones from multiple indexes are merged into a single set per vertex.
+   */
+  private static void preResolveVertexZonesFromAllIndexes(
+    Graph graph,
+    Collection<VehicleRentalPlaceVertex> vertices
+  ) {
+    var allIndexes = graph.getAllGeofencingZoneIndexes();
+    if (allIndexes.isEmpty()) {
+      return;
+    }
+    for (var vertex : vertices) {
+      var merged = new HashSet<GeofencingZone>();
+      for (var index : allIndexes.values()) {
+        merged.addAll(index.getZonesContaining(vertex.getCoordinate()));
+      }
+      vertex.setInitialGeofencingZones(Set.copyOf(merged));
+    }
+  }
+
   private class VehicleRentalGraphWriterRunnable implements GraphWriterRunnable {
 
     private final List<VehicleRentalPlace> stations;
@@ -248,8 +271,6 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         latestAppliedGeofencingZones = geofencingZones;
         context.graph().setGeofencingZoneIndex(nameForLogging, latestZoneIndex, geofencingZones);
 
-        GeofencingZoneApplier.preResolveVertexZones(verticesByStation.values(), latestZoneIndex);
-
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);
         LOG.info(
@@ -260,6 +281,12 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
           nameForLogging
         );
       }
+
+      // Pre-resolve rental vertex zones against all zone indexes on the graph, including
+      // those from other sources (e.g., zones applied at graph build time). This ensures
+      // rental vertices have correct initial zone state for all zones, not just those
+      // applied by this updater.
+      preResolveVertexZonesFromAllIndexes(context.graph(), verticesByStation.values());
     }
   }
 }
