@@ -60,8 +60,8 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   ) {
     if (relaxC1.isNormal()) {
       return c2Function == null
-        ? (l, r) -> compareBase(l, r)
-        : (l, r) -> compareC2(c2Function, l, r);
+        ? (l, r) -> compareC1(l, r)
+        : (l, r) -> compareC1AndC2(c2Function, l, r);
     }
 
     return c2Function == null
@@ -79,7 +79,7 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   /**
    * Compare arrivalTime, paretoRound and c1.
    */
-  private static <T extends McStopArrival<?>> boolean compareBase(T l, T r) {
+  private static <T extends McStopArrival<?>> boolean compareC1(T l, T r) {
     // This is important with respect to performance. Using the short-circuit logical OR(||) is
     // faster than bitwise inclusive OR(|) (even between boolean expressions)
     return (l.arrivalTime() < r.arrivalTime() || l.round() < r.round() || l.c1() < r.c1());
@@ -88,7 +88,7 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   /**
    * Compare arrivalTime, paretoRound, c1, and c21.
    */
-  private static <T extends McStopArrival<?>> boolean compareC2(
+  private static <T extends McStopArrival<?>> boolean compareC1AndC2(
     DominanceFunction c2Function,
     T l,
     T r
@@ -125,7 +125,7 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   ) {
     return c2Function.leftDominateRight(l.c2(), r.c2())
       ? compareC1Relaxed(relaxC1, l, r)
-      : compareBase(l, r);
+      : compareC1(l, r);
   }
 
   /**

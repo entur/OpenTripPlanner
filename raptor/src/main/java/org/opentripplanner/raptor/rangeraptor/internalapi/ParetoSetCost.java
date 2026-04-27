@@ -7,7 +7,7 @@ package org.opentripplanner.raptor.rangeraptor.internalapi;
  */
 public enum ParetoSetCost {
   /**
-   * Cost is not used.
+   * Cost is not used. This can not be used with McRaptor.
    */
   NONE,
   /**
@@ -27,7 +27,8 @@ public enum ParetoSetCost {
    */
   USE_C1_RELAXED_IF_C2_IS_OPTIMAL;
 
-  public boolean includeC1() {
+  /// Return `true` if the c1 criteria is included in the pareto comparason.
+  public boolean useC1() {
     return this != NONE;
   }
 }
