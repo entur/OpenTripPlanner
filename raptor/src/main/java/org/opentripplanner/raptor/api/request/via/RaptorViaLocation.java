@@ -36,8 +36,8 @@ public final class RaptorViaLocation {
   /**
    * Force the path through a set of stops, either on-board or as an alight or board stop.
    */
-  public static PassThroughBuilder passThrough(@Nullable String label) {
-    return new PassThroughBuilder(label);
+  public static PassThroughLocationBuilder passThrough(@Nullable String label) {
+    return new PassThroughLocationBuilder(label);
   }
 
   /**
@@ -45,7 +45,7 @@ public final class RaptorViaLocation {
    * alight transit at the given stop, on-board visits do not count, see
    * {@link #passThrough(String)}.
    */
-  public static ViaVisitBuilder viaVisit(@Nullable String label) {
+  public static ViaVisitLocationBuilder viaVisit(@Nullable String label) {
     return viaVisit(label, MIN_WAIT_TIME);
   }
 
@@ -54,8 +54,8 @@ public final class RaptorViaLocation {
    * before continuing. To visit a stop, the path must board or alight transit at the given stop,
    * on-board visits do not count, see {@link #passThrough(String)}.
    */
-  public static ViaVisitBuilder viaVisit(@Nullable String label, Duration minimumWaitTime) {
-    return new ViaVisitBuilder(label, minimumWaitTime);
+  public static ViaVisitLocationBuilder viaVisit(@Nullable String label, Duration minimumWaitTime) {
+    return new ViaVisitLocationBuilder(label, minimumWaitTime);
   }
 
   @Nullable

@@ -2,17 +2,18 @@ package org.opentripplanner.raptor.api.request.via;
 
 import java.util.stream.IntStream;
 
-public final class PassThroughBuilder extends AbstractBuilder<PassThroughBuilder> {
+public final class PassThroughLocationBuilder
+  extends AbstractViaLocationBuilder<PassThroughLocationBuilder> {
 
-  public PassThroughBuilder(String label) {
+  public PassThroughLocationBuilder(String label) {
     super(label);
   }
 
-  public PassThroughBuilder addStop(int stop) {
+  public PassThroughLocationBuilder addStop(int stop) {
     return addConnection(new RaptorPassThroughViaConnection(stop));
   }
 
-  public PassThroughBuilder addStop(int... stops) {
+  public PassThroughLocationBuilder addStop(int... stops) {
     IntStream.of(stops).forEach(this::addStop);
     return this;
   }

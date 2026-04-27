@@ -3,13 +3,13 @@ package org.opentripplanner.raptor.api.request.via;
 import java.util.ArrayList;
 import java.util.List;
 
-abstract sealed class AbstractBuilder<T extends AbstractBuilder>
-  permits ViaVisitBuilder, PassThroughBuilder {
+abstract sealed class AbstractViaLocationBuilder<T extends AbstractViaLocationBuilder>
+  permits ViaVisitLocationBuilder, PassThroughLocationBuilder {
 
   protected final String label;
   protected final List<ViaConnection> connections = new ArrayList<>();
 
-  public AbstractBuilder(String label) {
+  public AbstractViaLocationBuilder(String label) {
     this.label = label;
   }
 
