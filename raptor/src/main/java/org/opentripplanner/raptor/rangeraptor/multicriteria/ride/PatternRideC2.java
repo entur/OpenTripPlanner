@@ -46,8 +46,9 @@ public class PatternRideC2<T extends RaptorTripSchedule> extends AbstractPattern
   > comparatorRelaxedC1IfC2IsOptimal(RelaxFunction relaxC1, DominanceFunction dominanceFunctionC2) {
     return (l, r) ->
       l.compareArrivalTime(r) ||
-      l.compareC1(r) ||
-      dominanceFunctionC2.leftDominateRight(l.c2, r.c2);
+      (dominanceFunctionC2.leftDominateRight(l.c2, r.c2)
+        ? l.compareC1(relaxC1, r)
+        : l.compareC1(r));
   }
 
   public int c2() {
