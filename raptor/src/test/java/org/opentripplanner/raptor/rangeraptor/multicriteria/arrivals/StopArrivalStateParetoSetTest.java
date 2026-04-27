@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.raptor._data.transit.TestAccessEgress;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
-import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.ArrivalParetoSetComparatorFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC1;
@@ -63,7 +62,7 @@ public class StopArrivalStateParetoSetTest {
   );
   private static final ArrivalParetoSetComparatorFactory<
     McStopArrival<RaptorTripSchedule>
-  > COMPARATOR_FACTORY = ArrivalParetoSetComparatorFactory.of(RelaxFunction.NORMAL, null);
+  > COMPARATOR_FACTORY = ArrivalParetoSetComparatorFactory.ofCompareC1();
 
   private ParetoSet<McStopArrival<RaptorTripSchedule>> subject = ParetoSet.of(
     COMPARATOR_FACTORY.compareArrivalTimeRoundAndCost()
