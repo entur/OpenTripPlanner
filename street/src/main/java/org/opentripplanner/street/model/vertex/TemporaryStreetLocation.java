@@ -25,7 +25,7 @@ public final class TemporaryStreetLocation extends StreetLocation implements Tem
   @Override
   public void addOutgoing(Edge edge) {
     assertConnectToTemporaryEdge(edge);
-    addRentalRestriction(edge.getToVertex().rentalRestrictions());
+    copyRentalRestrictionsFrom(edge.getToVertex());
     super.addOutgoing(edge);
   }
 
@@ -33,7 +33,7 @@ public final class TemporaryStreetLocation extends StreetLocation implements Tem
   public void addIncoming(Edge edge) {
     assertConnectToTemporaryEdge(edge);
     super.addIncoming(edge);
-    addRentalRestriction(edge.getFromVertex().rentalRestrictions());
+    copyRentalRestrictionsFrom(edge.getFromVertex());
   }
 
   private static void assertConnectToTemporaryEdge(Edge edge) {
