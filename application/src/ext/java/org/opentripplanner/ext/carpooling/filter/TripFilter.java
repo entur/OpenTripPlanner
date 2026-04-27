@@ -1,9 +1,7 @@
 package org.opentripplanner.ext.carpooling.filter;
 
 import java.time.Duration;
-import java.time.Instant;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
-import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
  * Interface for filtering carpool trips before expensive routing calculations.
@@ -17,54 +15,40 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
 public interface TripFilter {
   /**
    * Checks if a trip passes this filter for the given passenger request.
-   *
-   * @param trip The carpool trip to evaluate
-   * @param passengerPickup Passenger's pickup location
-   * @param passengerDropoff Passenger's dropoff location
-   * @return true if the trip passes the filter, false otherwise
-   */
-  boolean accepts(CarpoolTrip trip, WgsCoordinate passengerPickup, WgsCoordinate passengerDropoff);
-
-  /**
-   * Checks if a trip passes this filter for the given passenger request with time information.
    * <p>
-   * Default implementation delegates to the simpler {@link #accepts(CarpoolTrip, WgsCoordinate, WgsCoordinate)}
-   * method, ignoring the time parameter. Time-aware filters should override this method.
+   * Implementations are intentionally loose (necessary conditions only), because passengers board
+   * and alight mid-route — using trip endpoints as tight bounds causes false negatives. Tight
+   * enforcement is delegated to post-filters on the complete itinerary.
    *
-   * @param trip The carpool trip to evaluate
-   * @param passengerPickup Passenger's pickup location
-   * @param passengerDropoff Passenger's dropoff location
-   * @param passengerDepartureTime Passenger's requested departure time
-   * @param searchWindow Time window around the requested departure time
+   * @param trip         The carpool trip to evaluate
+   * @param request      The passenger's journey preferences
+   * @param searchWindow For depart-after: a trip is a candidate if it is still running at T
+   *                     ({@code trip.endTime >= T}) and starts within the window
+   *                     ({@code trip.startTime <= T + searchWindow}). A trip underway at T can
+   *                     still pick up the passenger mid-route; tight enforcement is done by
+   *                     {@link org.opentripplanner.ext.carpooling.filter.DepartAfterFilter}.
+   *                     For arrive-by: a trip is a candidate if its driver has started at or
+   *                     before T ({@code trip.startTime <= T}); tight enforcement is done by
+   *                     {@link org.opentripplanner.ext.carpooling.filter.ArriveByFilter}.
    * @return true if the trip passes the filter, false otherwise
    */
-  default boolean accepts(
-    CarpoolTrip trip,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff,
-    Instant passengerDepartureTime,
-    Duration searchWindow
-  ) {
-    // Default: ignore time and delegate to coordinate-only method
-    return accepts(trip, passengerPickup, passengerDropoff);
-  }
+  boolean accepts(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow);
 
   /**
    * Checks if a trip passes this filter for access/egress routing.
    * <p>
-   * Used when evaluating carpool trip viability for connecting passengers
-   * to public transit stops. Default implementation always returns true.
+   * Used when evaluating carpool trip viability for connecting passengers to public transit stops.
+   * Applies the same loose necessary-condition semantics as {@link #accepts}. Default
+   * implementation always returns true.
    *
-   * @param trip Carpool trip
-   * @param coordinateOfPassenger Coordinates of origin if access, and destination if egress
-   * @param passengerDepartureTime Requested departure time of the passenger
-   * @param searchWindow The time window around the requested departure time
-   * @return true if the filter passes, false if it doesn't
+   * @param trip         The carpool trip to evaluate
+   * @param request      The passenger's journey preferences
+   * @param searchWindow Same semantics as in {@link #accepts}.
+   * @return true if the trip passes the filter, false otherwise
    */
   default boolean acceptsAccessEgress(
     CarpoolTrip trip,
-    WgsCoordinate coordinateOfPassenger,
-    Instant passengerDepartureTime,
+    CarpoolingRequest request,
     Duration searchWindow
   ) {
     return true;
