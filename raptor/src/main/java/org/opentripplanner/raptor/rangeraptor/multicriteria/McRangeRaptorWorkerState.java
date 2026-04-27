@@ -97,7 +97,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     return arrivals.hasArrivalsAfterMarker(stopIndex);
   }
 
-  public void setAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
+  public void addAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
     addStopArrival(stopArrivalFactory.createAccessStopArrival(departureTime, accessPath));
   }
 

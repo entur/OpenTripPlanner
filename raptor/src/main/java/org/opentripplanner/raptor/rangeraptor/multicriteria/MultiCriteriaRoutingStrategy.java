@@ -56,7 +56,7 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
 
   @Override
   public void addAccessStopArrival(RaptorAccessEgress accessPath, int departureTime) {
-    state.setAccessToStop(accessPath, departureTime);
+    state.addAccessToStop(accessPath, departureTime);
   }
 
   @Override
