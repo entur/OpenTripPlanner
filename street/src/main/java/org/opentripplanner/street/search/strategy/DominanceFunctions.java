@@ -59,8 +59,10 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
       return false;
     }
 
-    // two generic renting states with different committed networks are incomparable
-    if (!a.getCommittedNetworks().equals(b.getCommittedNetworks())) {
+    // Two generic renting states: a superset of committed networks dominates a subset.
+    // A state that has already forked off committed branches for more networks has
+    // strictly more coverage — the subset would eventually fork the same branches.
+    if (!a.getCommittedNetworks().containsAll(b.getCommittedNetworks())) {
       return false;
     }
 
