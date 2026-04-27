@@ -9,7 +9,9 @@ import java.util.Objects;
 import java.util.Set;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
+import org.opentripplanner.ext.carpooling.filter.CarpoolingRequest;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
+import org.opentripplanner.ext.carpooling.filter.PostFilters;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
@@ -102,6 +104,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final CarpoolingRepository repository;
   private final StreetLimitationParametersService streetLimitationParametersService;
   private final FilterChain preFilters;
+  private final PostFilters postFilters;
   private final CarpoolItineraryMapper itineraryMapper;
   private final InsertionPositionFinder positionFinder;
   private final VertexLinker vertexLinker;
@@ -128,6 +131,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
+    this.postFilters = PostFilters.defaults();
     this.itineraryMapper = new CarpoolItineraryMapper();
     this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
     this.vertexLinker = vertexLinker;
@@ -162,18 +166,16 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     validateRequest(request);
 
-    WgsCoordinate passengerPickup = new WgsCoordinate(request.from().getCoordinate());
-    WgsCoordinate passengerDropoff = new WgsCoordinate(request.to().getCoordinate());
-    var passengerDepartureTime = request.dateTime();
+    var carpoolingRequest = CarpoolingRequest.of(request);
     var searchWindow = request.searchWindow() == null
       ? DEFAULT_SEARCH_WINDOW
       : request.searchWindow();
 
     LOG.debug(
       "Finding carpool itineraries from {} to {} at {}",
-      passengerPickup,
-      passengerDropoff,
-      passengerDepartureTime
+      carpoolingRequest.getPassengerPickup(),
+      carpoolingRequest.getPassengerDropoff(),
+      carpoolingRequest.getRequestedDateTime()
     );
 
     var allTrips = repository.getCarpoolTrips();
@@ -181,15 +183,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var candidateTrips = allTrips
       .stream()
-      .filter(trip ->
-        preFilters.accepts(
-          trip,
-          passengerPickup,
-          passengerDropoff,
-          passengerDepartureTime,
-          searchWindow
-        )
-      )
+      .filter(trip -> preFilters.accepts(trip, carpoolingRequest, searchWindow))
       .toList();
 
     LOG.debug(
@@ -223,8 +217,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .map(trip -> {
           List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
             trip,
-            passengerPickup,
-            passengerDropoff,
+            carpoolingRequest.getPassengerPickup(),
+            carpoolingRequest.getPassengerDropoff(),
             stopDuration
           );
 
@@ -254,8 +248,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
           return insertionEvaluator.findBestInsertion(
             tripWithVertices,
             viablePositions,
-            passengerPickup,
-            passengerDropoff
+            carpoolingRequest.getPassengerPickup(),
+            carpoolingRequest.getPassengerDropoff()
           );
         })
         .filter(Objects::nonNull)
@@ -267,6 +261,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .stream()
         .map(itineraryMapper::toItinerary)
         .filter(Objects::nonNull)
+        .filter(itinerary -> postFilters.accepts(itinerary, carpoolingRequest, searchWindow))
         .toList();
     }
 
@@ -294,7 +289,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * </ol>
    *
    * @param request the routing request
-   * @param streetRequest
+   * @param streetRequest the street routing parameters for the access or egress leg
    * @param accessOrEgress whether this is an access leg (origin to transit) or egress leg
    *        (transit to destination)
    * @param transitServiceResolver used for nearby stop search
@@ -327,6 +322,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     }
 
     validateRequest(request);
+    var carpoolingRequest = CarpoolingRequest.of(request, accessOrEgress);
 
     var allTrips = repository.getCarpoolTrips();
     LOG.debug("Repository contains {} carpool trips", allTrips.size());
@@ -341,17 +337,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
       passengerLocation.lng
     );
 
-    var passengerDepartureTime = request.dateTime();
-
     var candidateTrips = allTrips
       .stream()
       .filter(trip ->
-        preFilters.acceptsAccessEgress(
-          trip,
-          passengerCoordinates,
-          passengerDepartureTime,
-          ACCESS_EGRESS_SEARCH_WINDOW
-        )
+        preFilters.acceptsAccessEgress(trip, carpoolingRequest, ACCESS_EGRESS_SEARCH_WINDOW)
       )
       .toList();
 
@@ -535,7 +524,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
       endTimeOfSegment.toInstant()
     );
 
-    return new CarpoolAccessEgress(
+    // Named variable to allow inspection during debugging.
+    var accessEgress = new CarpoolAccessEgress(
       transitServiceResolver.getStopLocation(insertionCandidate.transitStop().stopId).getIndex(),
       passengerRideDuration,
       relativeStartTime,
@@ -544,5 +534,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
       TimeAndCost.ZERO,
       carpoolReluctance
     );
+
+    return accessEgress;
   }
 }

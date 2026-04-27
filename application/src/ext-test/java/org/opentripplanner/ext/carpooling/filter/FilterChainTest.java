@@ -15,40 +15,52 @@ class FilterChainTest {
 
   @Test
   void accepts_allFiltersAccept_returnsTrue() {
-    TripFilter filter1 = (trip, pickup, dropoff) -> true;
-    TripFilter filter2 = (trip, pickup, dropoff) -> true;
+    TripFilter filter1 = (trip, request, searchWindow) -> true;
+    TripFilter filter2 = (trip, request, searchWindow) -> true;
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
     var chain = new FilterChain(List.of(filter1, filter2));
+    var request = new CarpoolingRequestBuilder()
+      .withPassengerPickup(OSLO_EAST)
+      .withPassengerDropoff(OSLO_WEST)
+      .build();
 
-    assertTrue(chain.accepts(trip, OSLO_EAST, OSLO_WEST));
+    assertTrue(chain.accepts(trip, request, null));
   }
 
   @Test
   void accepts_oneFilterRejects_returnsFalse() {
-    TripFilter filter1 = (trip, pickup, dropoff) -> true;
-    TripFilter filter2 = (trip, pickup, dropoff) -> false;
+    TripFilter filter1 = (trip, request, searchWindow) -> true;
+    TripFilter filter2 = (trip, request, searchWindow) -> false;
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
 
     var chain = new FilterChain(List.of(filter1, filter2));
+    var request = new CarpoolingRequestBuilder()
+      .withPassengerPickup(OSLO_EAST)
+      .withPassengerDropoff(OSLO_WEST)
+      .build();
 
-    assertFalse(chain.accepts(trip, OSLO_EAST, OSLO_WEST));
+    assertFalse(chain.accepts(trip, request, null));
   }
 
   @Test
   void accepts_shortCircuits_afterFirstRejection() {
     var filter3Called = new boolean[] { false };
 
-    TripFilter filter1 = (trip, pickup, dropoff) -> true;
-    TripFilter filter2 = (trip, pickup, dropoff) -> false;
-    TripFilter filter3 = (trip, pickup, dropoff) -> {
+    TripFilter filter1 = (trip, request, searchWindow) -> true;
+    TripFilter filter2 = (trip, request, searchWindow) -> false;
+    TripFilter filter3 = (trip, request, searchWindow) -> {
       filter3Called[0] = true;
       return true;
     };
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var request = new CarpoolingRequestBuilder()
+      .withPassengerPickup(OSLO_EAST)
+      .withPassengerDropoff(OSLO_WEST)
+      .build();
 
     var chain = new FilterChain(List.of(filter1, filter2, filter3));
-    chain.accepts(trip, OSLO_EAST, OSLO_WEST);
+    chain.accepts(trip, request, null);
 
     assertFalse(filter3Called[0], "Filter3 should not have been called due to short-circuit");
   }
@@ -57,15 +69,19 @@ class FilterChainTest {
   void accepts_firstFilterRejects_doesNotCallOthers() {
     var filter2Called = new boolean[] { false };
 
-    TripFilter filter1 = (trip, pickup, dropoff) -> false;
-    TripFilter filter2 = (trip, pickup, dropoff) -> {
+    TripFilter filter1 = (trip, request, searchWindow) -> false;
+    TripFilter filter2 = (trip, request, searchWindow) -> {
       filter2Called[0] = true;
       return true;
     };
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var request = new CarpoolingRequestBuilder()
+      .withPassengerPickup(OSLO_EAST)
+      .withPassengerDropoff(OSLO_WEST)
+      .build();
 
     var chain = new FilterChain(List.of(filter1, filter2));
-    chain.accepts(trip, OSLO_EAST, OSLO_WEST);
+    chain.accepts(trip, request, null);
 
     assertFalse(filter2Called[0], "Filter2 should not have been called due to short-circuit");
   }
@@ -74,18 +90,26 @@ class FilterChainTest {
   void emptyChain_acceptsAll() {
     var chain = new FilterChain(List.of());
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var request = new CarpoolingRequestBuilder()
+      .withPassengerPickup(OSLO_EAST)
+      .withPassengerDropoff(OSLO_WEST)
+      .build();
 
     // Empty chain accepts everything
-    assertTrue(chain.accepts(trip, OSLO_EAST, OSLO_WEST));
+    assertTrue(chain.accepts(trip, request, null));
   }
 
   @Test
   void singleFilter_behavesCorrectly() {
-    TripFilter filter = (trip, pickup, dropoff) -> true;
+    TripFilter filter = (trip, request, searchWindow) -> true;
 
     var chain = new FilterChain(List.of(filter));
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var request = new CarpoolingRequestBuilder()
+      .withPassengerPickup(OSLO_EAST)
+      .withPassengerDropoff(OSLO_WEST)
+      .build();
 
-    assertTrue(chain.accepts(trip, OSLO_EAST, OSLO_WEST));
+    assertTrue(chain.accepts(trip, request, null));
   }
 }
