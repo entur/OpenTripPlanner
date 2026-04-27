@@ -5,7 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.arrivalIsAfterDepartureTime;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithDifferentCapacitiesPerCall;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithLatestExpectedArrivalTime;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithLatestExpectedArrivalTimeAimedOnly;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithOnboardCounts;
+import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithPerStopLatestExpectedArrivalTimes;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithTotalCapacity;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.lessThanTwoStops;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.minimalCompleteJourney;
@@ -13,9 +16,11 @@ import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyD
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.stopTimesAreOutOfOrder;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasAimedTimesOnly;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.tripHasExpectedTimesOnly;
+import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_DEVIATION_BUDGET;
 import static org.opentripplanner.ext.carpooling.model.CarpoolStop.DEFAULT_ONBOARD_COUNT;
 import static org.opentripplanner.ext.carpooling.model.CarpoolTrip.DEFAULT_TOTAL_CAPACITY;
 
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import uk.org.siri.siri21.EstimatedCall;
 
@@ -183,5 +188,56 @@ public class CarpoolSiriMapperTest {
     for (var stop : mapped.stops()) {
       assertEquals(DEFAULT_ONBOARD_COUNT, stop.getOnboardCount());
     }
+  }
+
+  // -- extractDeviationBudget tests --
+
+  @Test
+  void mapSiriToCarpoolTrip_noLatestExpectedArrivalTime_returnsDefaultDeviationBudget() {
+    var mapped = mapper.mapSiriToCarpoolTrip(minimalCompleteJourney());
+    assertEquals(Duration.ZERO, mapped.stops().getFirst().getDeviationBudget());
+    assertEquals(DEFAULT_DEVIATION_BUDGET, mapped.stops().getLast().getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withLatestExpectedArrivalTime_computesDeviationBudget() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTime(0, 10));
+    var lastStop = mapped.stops().getLast();
+    assertEquals(Duration.ofMinutes(10), lastStop.getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_withLatestExpectedArrivalTimeNoExpected_usesAimedArrivalTime() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTimeAimedOnly(20));
+    var lastStop = mapped.stops().getLast();
+    assertEquals(Duration.ofMinutes(20), lastStop.getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_originStop_hasZeroDeviationBudget() {
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTime(0, 10));
+    assertEquals(Duration.ZERO, mapped.stops().getFirst().getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_latestBeforeExpected_returnsZeroDeviationBudget() {
+    // latestExpectedArrival is before expectedArrival — schedule has slipped past commitment,
+    // no further deviation is acceptable
+    var mapped = mapper.mapSiriToCarpoolTrip(journeyWithLatestExpectedArrivalTime(10, 5));
+    var lastStop = mapped.stops().getLast();
+    assertEquals(Duration.ZERO, lastStop.getDeviationBudget());
+  }
+
+  @Test
+  void mapSiriToCarpoolTrip_multiStopWithDifferingBudgets_eachStopHasOwnBudget() {
+    // 3-stop journey. Intermediate arrives at +20 with latest +23 (3 min slack),
+    // last arrives at +45 with latest +55 (10 min slack).
+    var mapped = mapper.mapSiriToCarpoolTrip(
+      journeyWithPerStopLatestExpectedArrivalTimes(20, 23, 45, 55)
+    );
+    assertEquals(3, mapped.stops().size());
+    assertEquals(Duration.ZERO, mapped.stops().get(0).getDeviationBudget());
+    assertEquals(Duration.ofMinutes(3), mapped.stops().get(1).getDeviationBudget());
+    assertEquals(Duration.ofMinutes(10), mapped.stops().get(2).getDeviationBudget());
   }
 }

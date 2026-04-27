@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.model;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +22,6 @@ import org.opentripplanner.transit.model.framework.TransitBuilder;
  *   <li><strong>Origin/Destination Areas:</strong> Start and end zones for the driver's journey</li>
  *   <li><strong>Stops:</strong> Ordered sequence of waypoints along the route where passengers
  *       can be picked up or dropped off. Stops are dynamically updated as bookings occur.</li>
- *   <li><strong>Deviation Budget:</strong> Maximum additional time the driver is willing to spend
- *       to pick up/drop off passengers (e.g., 5 minutes). This represents the driver's flexibility.</li>
  *   <li><strong>Total Capacity:</strong> Number of seats in the car, including the driver seat</li>
  * </ul>
  *
@@ -63,10 +60,6 @@ public class CarpoolTrip
   private final ZonedDateTime startTime;
   private final ZonedDateTime endTime;
   private final String provider;
-
-  // The amount of time the trip can deviate from the scheduled time in order to pick up or drop off
-  // a passenger.
-  private final Duration deviationBudget;
   private final int totalCapacity;
 
   // Ordered list of stops along the carpool route where passengers can be picked up or dropped off
@@ -78,7 +71,6 @@ public class CarpoolTrip
     this.endTime = builder.endTime();
     this.provider = builder.provider();
     this.totalCapacity = builder.totalCapacity();
-    this.deviationBudget = builder.deviationBudget();
     this.stops = Collections.unmodifiableList(builder.stops());
   }
 
@@ -120,10 +112,6 @@ public class CarpoolTrip
     return provider;
   }
 
-  public Duration deviationBudget() {
-    return deviationBudget;
-  }
-
   /**
    * @return Total number of seats in the vehicle, including the driver seat
    */
@@ -135,11 +123,11 @@ public class CarpoolTrip
    * Returns the ordered sequence of stops along the carpool route.
    * <p>
    * Stops include both the driver's originally planned stops and any dynamically added stops
-   * for passenger pickups and dropoffs. The list is ordered by sequence number, representing
-   * the order in which stops are visited along the route.
+   * for passenger pickups and dropoffs. The list is ordered by visit order along the route:
+   * the first element is the origin and the last is the destination.
    *
-   * @return an immutable list of stops along the carpool route, ordered by sequence number,
-   *         never null but may be empty for trips with no intermediate stops
+   * @return an immutable list of stops along the carpool route, in visit order; never null,
+   *         and always contains at least the origin and destination
    */
   public List<CarpoolStop> stops() {
     return stops;

@@ -35,14 +35,12 @@ The carpooling extension enables OpenTripPlanner to find carpool trip options by
 │  1. Filter Phase (FilterChain)            │
 │     - Capacity check                       │
 │     - Time window check                    │
-│     - Direction check                      │
 │     - Distance check                       │
 │                                            │
 │  2. Insertion Phase                        │
 │     2a. Position Pre-screening             │
 │         (InsertionPositionFinder)          │
 │         - Capacity check                   │
-│         - Directional check                │
 │         - Beeline delay heuristic          │
 │                                            │
 │     2b. Routing & Selection                │
@@ -54,7 +52,6 @@ The carpooling extension enables OpenTripPlanner to find carpool trip options by
 │                                            │
 │  3. Validation Phase (CompositeValidator) │
 │     - Capacity timeline check              │
-│     - Directional consistency check        │
 │     - Deviation budget check               │
 │                                            │
 └────────┬───────────────────────────────────┘
@@ -85,7 +82,6 @@ org.opentripplanner.ext.carpooling/
 ├── filter/                          # Pre-screening filters
 │   ├── FilterChain.java            # Composite filter
 │   ├── TimeBasedFilter.java        # Time window check
-│   ├── DirectionalCompatibilityFilter.java  # Direction check
 │   └── DistanceBasedFilter.java    # Distance check
 │
 ├── routing/                         # Insertion optimization
@@ -96,8 +92,7 @@ org.opentripplanner.ext.carpooling/
 │
 ├── validation/                      # Constraint validation
 │   ├── CompositeValidator.java     # Composite validator
-│   ├── CapacityValidator.java      # Capacity timeline check
-│   └── DirectionalValidator.java   # Backtracking check
+│   └── CapacityValidator.java      # Capacity timeline check
 │
 ├── internal/                        # Implementation details
 │   ├── DefaultCarpoolingRepository.java  # In-memory repository
@@ -107,8 +102,7 @@ org.opentripplanner.ext.carpooling/
 │   └── SiriETCarpoolingUpdater.java  # SIRI-ET message processing
 │
 ├── util/                            # Utilities
-│   ├── BeelineEstimator.java       # Straight-line distance estimation
-│   └── DirectionalCalculator.java  # Bearing and direction calculations
+│   └── BeelineEstimator.java       # Straight-line distance estimation
 │
 ├── constraints/                     # Constraint definitions
 │   └── PassengerDelayConstraints.java  # Delay limits for passengers
@@ -124,8 +118,7 @@ org.opentripplanner.ext.carpooling/
 Filters eliminate obviously incompatible trips **without any street routing**:
 
 1. **TimeBasedFilter**: Is the trip timing compatible with passenger request?
-2. **DirectionalCompatibilityFilter**: Are driver and passenger heading the same direction?
-3. **DistanceBasedFilter**: Is the passenger's journey within reasonable distance of driver route?
+2. **DistanceBasedFilter**: Is the passenger's journey within reasonable distance of driver route?
 
 **Performance**: O(n) where n = number of active trips.
 
@@ -145,15 +138,13 @@ For each remaining trip:
 
   2. For each position pair, check:
      a. Capacity: Does insertion exceed vehicle capacity at any point?
-     b. Direction: Does insertion cause backtracking or U-turns?
-     c. Beeline delay: Do straight-line estimates exceed delay threshold?
+     b. Beeline delay: Do straight-line estimates exceed delay threshold?
 
   3. Return only "viable" positions that pass all checks
 ```
 
 **Key optimizations**:
 - **Capacity validation**: Uses `CarpoolTrip.hasCapacityForInsertion()` to check entire journey range
-- **Directional filtering**: Prevents insertions that deviate >90° from route bearing
 - **Beeline heuristic**: Optimistic straight-line estimates eliminate positions early
 - **No routing yet**: All checks use geometric calculations only
 
@@ -191,11 +182,7 @@ Ensures the proposed insertion satisfies all constraints:
    - Tracks passenger count at each stop
    - Ensures capacity never exceeds vehicle limit
 
-2. **DirectionalValidator**: Ensures no backtracking
-   - Computes bearings between consecutive stops
-   - Rejects if bearing changes > threshold (indicates backtracking)
-
-3. **Deviation Budget Check**: Ensures additional time ≤ driver's stated willingness
+2. **Deviation Budget Check**: Ensures additional time ≤ driver's stated willingness
 
 **All validators must pass** for an insertion to be considered valid.
 
@@ -290,13 +277,10 @@ Configure the SIRI-ET updater to receive trip updates:
 Represents a driver's journey offering carpool seats:
 
 - **id**: Unique trip identifier
-- **boardingArea**: Start zone for driver journey
-- **alightingArea**: End zone for driver journey
-- **startTime**: When driver departs
-- **endTime**: When driver arrives (includes deviation budget)
-- **deviationBudget**: Extra time driver is willing to spend for passengers
+- **startTime**: When the driver departs
+- **endTime**: When the driver arrives
 - **totalCapacity**: Number of seats in the car, including the driver seat
-- **stops**: Ordered list of waypoints (includes booked passenger stops)
+- **stops**: Ordered list of waypoints; the first stop is the origin, the last is the destination, and booked passenger stops are inserted in between
 - **provider**: Source system identifier
 
 ### CarpoolStop
@@ -304,8 +288,12 @@ Represents a driver's journey offering carpool seats:
 Waypoint along a carpool route:
 
 - **coordinate**: Geographic location
-- **sequenceNumber**: Order in route (0-indexed)
-- **estimatedArrivalTime**: When driver expects to arrive
+- **aimedArrivalTime**: Planned arrival time (null for the origin stop)
+- **expectedArrivalTime**: Currently expected arrival time, updated via real-time (null for the origin stop)
+- **latestExpectedArrivalTime**: Latest arrival time the driver commits to (null if not provided); used to derive `deviationBudget`
+- **aimedDepartureTime**: Planned departure time (null for the destination stop)
+- **expectedDepartureTime**: Currently expected departure time (null for the destination stop)
+- **deviationBudget**: Extra time the driver is willing to spend on deviations before reaching this stop
 - **onboardCount**: Number of passengers onboard (including the driver) when departing this stop
 
 ### InsertionPosition
@@ -320,12 +308,12 @@ Represents a viable pickup/dropoff position pair:
 Result of finding optimal passenger insertion:
 
 - **trip**: The original carpool trip
-- **pickupPosition**: Where to insert passenger pickup (index)
-- **dropoffPosition**: Where to insert passenger dropoff (index)
-- **segments**: Routed path segments for modified route
-- **baselineDuration**: Original trip duration
-- **totalDuration**: Modified trip duration (with passenger)
-- **additionalDuration**: Extra time added (= totalDuration - baselineDuration)
+- **pickupPosition**: 0-based index of the passenger's pickup in the modified route
+- **dropoffPosition**: 0-based index of the passenger's dropoff in the modified route
+- **routeSegments**: Routed path segments forming the complete modified route
+- **stopDuration**: Dwell time added at each intermediate stop (from the car routing preferences' `pickupTime`)
+- **transitStop**: Passenger's access/egress stop, if any
+- **totalTripDuration**: Total trip duration including driving and stop delays, computed from `routeSegments` and `stopDuration`
 
 ## Performance Characteristics
 

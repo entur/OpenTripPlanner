@@ -14,7 +14,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.model.CarpoolStop;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
@@ -36,11 +35,6 @@ public class CarpoolSiriMapper {
   private static final Logger LOG = LoggerFactory.getLogger(CarpoolSiriMapper.class);
   private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
-
-  private static final Duration DEFAULT_DEVIATION_BUDGET = Duration.ofMinutes(15);
-  // INDEX is not relevant for our stop type. Also set index to a hard coded value to avoid
-  // run-away memory use if it by error ends up in global repositories.
-  public static final int CARPOOLING_DUMMY_INDEX = -9_999;
 
   public CarpoolTrip mapSiriToCarpoolTrip(EstimatedVehicleJourney journey) {
     var calls = journey.getEstimatedCalls().getEstimatedCalls();
@@ -82,8 +76,6 @@ public class CarpoolSiriMapper {
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withProvider(journey.getOperatorRef().getValue())
-      // TODO: Find a better way to exchange deviation budget with providers.
-      .withDeviationBudget(DEFAULT_DEVIATION_BUDGET)
       .withTotalCapacity(totalCapacity)
       .withStops(stops)
       .build();
@@ -94,7 +86,7 @@ public class CarpoolSiriMapper {
    *
    * @param call The SIRI EstimatedCall containing stop information
    * @param tripId The trip ID for generating unique stop IDs
-   * @param sequenceNumber The 0-based sequence number of this stop
+   * @param stopIndex The 0-based index of this stop in the call list
    * @param isFirst true if this is the first stop (origin)
    * @param isLast true if this is the last stop (destination)
    * @return A CarpoolStop representing the stop
@@ -102,7 +94,7 @@ public class CarpoolSiriMapper {
   private CarpoolStop buildCarpoolStopForPosition(
     EstimatedCall call,
     String tripId,
-    int sequenceNumber,
+    int stopIndex,
     boolean isFirst,
     boolean isLast
   ) {
@@ -110,7 +102,7 @@ public class CarpoolSiriMapper {
       ? tripId + "_trip_origin"
       : isLast
         ? tripId + "_trip_destination"
-        : tripId + "_stop_" + sequenceNumber;
+        : tripId + "_stop_" + stopIndex;
 
     return toCarpoolStop(call, stopId, tripId, isFirst, isLast);
   }
@@ -194,6 +186,49 @@ public class CarpoolSiriMapper {
   }
 
   /**
+   * Extracts the deviation budget from the EstimatedCall by computing the difference between
+   * {@code latestExpectedArrivalTime} and the arrival time ({@code expectedArrivalTime} if
+   * present, otherwise {@code aimedArrivalTime}).
+   * <p>
+   * The result is the <em>remaining</em> slack at this stop, not an initial contract:
+   * {@code expectedArrivalTime} already reflects detours committed by prior passenger
+   * insertions, and {@code latestExpectedArrivalTime} is the unchanged commitment to the
+   * passenger at this stop. Each time this mapper runs against a fresh SIRI snapshot, the
+   * extracted value therefore shrinks in step with the consumed slack.
+   * <p>
+   * Fallbacks:
+   * <ul>
+   *   <li>Returns {@link CarpoolStop#DEFAULT_DEVIATION_BUDGET} if either timestamp is missing.
+   *       This is intentionally permissive — the absence of a commitment should not block
+   *       insertions.</li>
+   *   <li>Returns {@link Duration#ZERO} (and logs a warning) if {@code latestExpectedArrivalTime}
+   *       is before the arrival time — the schedule has slipped past the commitment, so no
+   *       further deviation is acceptable.</li>
+   * </ul>
+   */
+  private Duration extractDeviationBudget(EstimatedCall call) {
+    var latestExpected = call.getLatestExpectedArrivalTime();
+    var arrivalTime = call.getExpectedArrivalTime() != null
+      ? call.getExpectedArrivalTime()
+      : call.getAimedArrivalTime();
+
+    if (latestExpected == null || arrivalTime == null) {
+      return CarpoolStop.DEFAULT_DEVIATION_BUDGET;
+    }
+
+    Duration budget = Duration.between(arrivalTime, latestExpected);
+    if (budget.isNegative()) {
+      LOG.warn(
+        "latestExpectedArrivalTime ({}) is before arrivalTime ({}), using zero deviation budget",
+        latestExpected,
+        arrivalTime
+      );
+      return Duration.ZERO;
+    }
+    return budget;
+  }
+
+  /**
    * Validates that the EstimatedCalls are properly ordered in time.
    * Ensures intermediate stops occur between the first (boarding) and last (alighting) calls.
    */
@@ -246,6 +281,11 @@ public class CarpoolSiriMapper {
     }
   }
 
+  /**
+   * Builds a {@link CarpoolStop} from a SIRI call. The origin (when {@code isFirst} is true)
+   * always gets {@link Duration#ZERO} as its deviation budget — the trip cannot start later
+   * than scheduled — regardless of any value extracted from the call.
+   */
   private CarpoolStop toCarpoolStop(
     EstimatedCall call,
     String id,
@@ -260,14 +300,15 @@ public class CarpoolSiriMapper {
       ? toWgsCoordinate(toPolygon(legacyGeometry))
       : toWgsCoordinate(circleLocation);
 
-    return CarpoolStop.of(new FeedScopedId(FEED_ID, id), () -> CARPOOLING_DUMMY_INDEX)
-      .withName(I18NString.of(call.getStopPointNames().getFirst().getValue()))
+    return CarpoolStop.of(new FeedScopedId(FEED_ID, id))
       .withCoordinate(centroid)
       .withAimedDepartureTime(isLast ? null : call.getAimedDepartureTime())
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
       .withAimedArrivalTime(isFirst ? null : call.getAimedArrivalTime())
       .withExpectedArrivalTime(isFirst ? null : call.getExpectedArrivalTime())
+      .withLatestExpectedArrivalTime(isFirst ? null : call.getLatestExpectedArrivalTime())
       .withOnboardCount(extractOnboardCount(tripId, call))
+      .withDeviationBudget(isFirst ? Duration.ZERO : extractDeviationBudget(call))
       .build();
   }
 
