@@ -59,7 +59,7 @@ class RaptorViaLocationTest implements RaptorTestConstants {
     var ex = assertThrows(IllegalArgumentException.class, () ->
       RaptorViaLocation.viaVisit(VIA_LABEL, MINIMUM_WAIT_TIME).build()
     );
-    assertEquals("At least on connection must exist!", ex.getMessage());
+    assertEquals("At least one connection must exist!", ex.getMessage());
   }
 
   @Test
