@@ -29,6 +29,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Speed up tag lookup during OSM processing [#7536](https://github.com/opentripplanner/OpenTripPlanner/pull/7536)
 - Include entrances that are part of a stop area relation, change build config field `includeOsmSubwayEntrance` to `includeOsmStationEntrance` [#7170](https://github.com/opentripplanner/OpenTripPlanner/pull/7170)
 - Add application warmup feature to run routing queries during startup [#7509](https://github.com/opentripplanner/OpenTripPlanner/pull/7509)
+- Add `startupRetryPeriod` to GBFS feed configuration [#7525](https://github.com/opentripplanner/OpenTripPlanner/pull/7525)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
