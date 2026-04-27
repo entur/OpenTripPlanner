@@ -114,6 +114,17 @@ public class CarpoolTrip
     return endTime;
   }
 
+  /**
+   * Returns the latest expected arrival time of the destination stop if available, otherwise
+   * falls back to {@link #endTime()}.
+   *
+   * @return the latest expected end time of the trip
+   */
+  public ZonedDateTime latestEndTime() {
+    var latest = getDestination().getLatestExpectedArrivalTime();
+    return latest != null ? latest : endTime;
+  }
+
   public String provider() {
     return provider;
   }

@@ -11,7 +11,9 @@ import java.util.Set;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
-import org.opentripplanner.ext.carpooling.filter.FilterChain;
+import org.opentripplanner.ext.carpooling.filter.CarpoolingRequest;
+import org.opentripplanner.ext.carpooling.filter.ItineraryPostFilters;
+import org.opentripplanner.ext.carpooling.filter.TripPreFilters;
 import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
@@ -68,7 +70,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * The service executes routing requests in three distinct phases:
  * <ol>
- *   <li><strong>Pre-filtering ({@link FilterChain}):</strong> Quickly eliminates incompatible
+ *   <li><strong>Pre-filtering ({@link TripPreFilters}):</strong> Quickly eliminates incompatible
  *       trips based on capacity, time windows, and distance.</li>
  *   <li><strong>Position Finding ({@link InsertionPositionFinder}):</strong> For trips that
  *       pass filtering, identifies viable pickup/dropoff position pairs using fast heuristics
@@ -83,21 +85,21 @@ import org.slf4j.LoggerFactory;
  *   <li><strong>{@link CarpoolingRepository}:</strong> Source of available driver trips</li>
  *   <li><strong>{@link VertexCreationService}:</strong> Links coordinates to graph vertices</li>
  *   <li><strong>{@link StreetLimitationParametersService}:</strong> Street routing configuration</li>
- *   <li><strong>{@link FilterChain}:</strong> Pre-screening filters</li>
+ *   <li><strong>{@link TripPreFilters}:</strong> Pre-screening filters</li>
  *   <li><strong>{@link InsertionPositionFinder}:</strong> Heuristic position filtering</li>
  *   <li><strong>{@link InsertionEvaluator}:</strong> Routing evaluation and selection</li>
  *   <li><strong>{@link CarpoolItineraryMapper}:</strong> Maps insertions to OTP itineraries</li>
  * </ul>
  *
  * @see CarpoolingService for interface documentation and usage examples
- * @see FilterChain for filtering strategy details
+ * @see TripPreFilters for filtering strategy details
  * @see InsertionPositionFinder for position finding strategy details
  * @see InsertionEvaluator for insertion evaluation algorithm details
  */
 public class DefaultCarpoolingService implements CarpoolingService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCarpoolingService.class);
-  private static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(30);
+  private static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(300);
   // How far away in time a carpooling trip can be from the requested departure time to be considered
   private static final Duration ACCESS_EGRESS_SEARCH_WINDOW = Duration.ofHours(12);
   /*
@@ -108,7 +110,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     Duration.ofMinutes(60);
   private final CarpoolingRepository repository;
   private final StreetLimitationParametersService streetLimitationParametersService;
-  private final FilterChain preFilters;
+  private final TripPreFilters preFilters;
+  private final ItineraryPostFilters postFilters;
   private final CarpoolItineraryMapper itineraryMapper;
   private final InsertionPositionFinder positionFinder;
   private final VertexCreationService vertexCreationService;
@@ -135,7 +138,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
   ) {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
-    this.preFilters = FilterChain.standard();
+    this.preFilters = TripPreFilters.standard();
+    this.postFilters = ItineraryPostFilters.defaults();
     this.itineraryMapper = new CarpoolItineraryMapper();
     this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
     this.vertexCreationService = vertexCreationService;
@@ -168,18 +172,16 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     validateRequest(request);
 
-    WgsCoordinate passengerPickup = new WgsCoordinate(request.from().getCoordinate());
-    WgsCoordinate passengerDropoff = new WgsCoordinate(request.to().getCoordinate());
-    var passengerDepartureTime = request.dateTime();
+    var carpoolingRequest = CarpoolingRequest.of(request);
     var searchWindow = request.searchWindow() == null
       ? DEFAULT_SEARCH_WINDOW
       : request.searchWindow();
 
     LOG.debug(
       "Finding carpool itineraries from {} to {} at {}",
-      passengerPickup,
-      passengerDropoff,
-      passengerDepartureTime
+      carpoolingRequest.getPassengerPickup(),
+      carpoolingRequest.getPassengerDropoff(),
+      carpoolingRequest.getRequestedDateTime()
     );
 
     var allTrips = repository.getCarpoolTrips();
@@ -187,15 +189,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var candidateTrips = allTrips
       .stream()
-      .filter(trip ->
-        preFilters.accepts(
-          trip,
-          passengerPickup,
-          passengerDropoff,
-          passengerDepartureTime,
-          searchWindow
-        )
-      )
+      .filter(trip -> preFilters.isCandidateTrip(trip, carpoolingRequest, searchWindow))
       .toList();
 
     LOG.debug(
@@ -226,8 +220,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .valueOf(StreetMode.WALK);
       var streetSearchRequest = StreetSearchRequestMapper.map(request).build();
 
-      var passengerPickupVertex = streetVertexUtils.createPassengerVertex(passengerPickup);
-      var passengerDropoffVertex = streetVertexUtils.createPassengerVertex(passengerDropoff);
+      var passengerPickupVertex = streetVertexUtils.createPassengerVertex(
+        carpoolingRequest.getPassengerPickup()
+      );
+      var passengerDropoffVertex = streetVertexUtils.createPassengerVertex(
+        carpoolingRequest.getPassengerDropoff()
+      );
       if (passengerPickupVertex == null || passengerDropoffVertex == null) {
         LOG.warn("Could not link passenger origin/destination to graph");
         return List.of();
@@ -307,6 +305,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
           itineraryMapper.toItinerary(candidate, carpoolReluctance, request.from(), request.to())
         )
         .filter(Objects::nonNull)
+        .filter(itinerary ->
+          postFilters.isValidItinerary(itinerary, carpoolingRequest, searchWindow)
+        )
         .toList();
     }
 
@@ -334,7 +335,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * </ol>
    *
    * @param request the routing request
-   * @param streetRequest
+   * @param streetRequest the street routing parameters for the access or egress leg
    * @param accessOrEgress whether this is an access leg (origin to transit) or egress leg
    *        (transit to destination)
    * @param transitServiceResolver used for resolving stop locations and nearby stop search
@@ -365,6 +366,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     }
 
     validateRequest(request);
+    var carpoolingRequest = CarpoolingRequest.of(request, accessOrEgress);
 
     var allTrips = repository.getCarpoolTrips();
     LOG.debug("Repository contains {} carpool trips", allTrips.size());
@@ -372,17 +374,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
     GenericLocation passengerLocation = accessOrEgress.isAccess() ? request.from() : request.to();
     WgsCoordinate passengerCoordinates = passengerLocation.wgsCoordinate();
 
-    var passengerDepartureTime = request.dateTime();
-
     var candidateTrips = allTrips
       .stream()
       .filter(trip ->
-        preFilters.acceptsAccessEgress(
-          trip,
-          passengerCoordinates,
-          passengerDepartureTime,
-          ACCESS_EGRESS_SEARCH_WINDOW
-        )
+        preFilters.isCandidateTrip(trip, carpoolingRequest, ACCESS_EGRESS_SEARCH_WINDOW)
       )
       .toList();
 
