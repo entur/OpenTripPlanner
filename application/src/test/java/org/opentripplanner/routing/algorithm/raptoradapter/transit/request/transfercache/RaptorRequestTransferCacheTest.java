@@ -199,24 +199,40 @@ public class RaptorRequestTransferCacheTest {
   public void testWalkReluctanceIsBucketedWithTieredSteps() {
     List<List<Transfer>> list = List.of();
 
-    // Below 3.0: step 0.1, round to nearest (half-up).
-    // 2.05 ties and rounds up to 2.1; 2.10 stays at 2.1 -> same bucket.
+    // Below 2.0 the bucketing actually does work: Units.reluctance keeps 2 decimals here,
+    // so two 2-decimal inputs that share a 0.1 bucket collapse to the same key.
+    // 1.94 -> 1.9, 1.95 -> 2.0 (tie rounded up) -> different buckets.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(1.94)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(1.95))
+    );
+    // 1.94 and 1.9 share the 1.9 bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(1.94)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(1.9))
+    );
+    // 1.95 and 2.0 share the 2.0 bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(1.95)),
+      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.0))
+    );
+
+    // [2.0, 3.0): step 0.1. Units.reluctance already rounds to 1 decimal in [2.0, 10.0),
+    // so the 0.1 step bucketing is a no-op here; the assertions below mostly verify that
+    // the bucketing pipeline does not introduce drift on top of Units.
+    // 2.05 ties and rounds up to 2.1 (via Units); 2.10 stays at 2.1 -> same bucket.
     assertEquals(
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.05)),
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.10))
     );
-    // 2.10 -> 2.1, 2.14 -> 2.1 (nearest is 2.1, 2.15 would tie to 2.2).
-    assertEquals(
-      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.10)),
-      new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.14))
-    );
-    // 2.14 -> 2.1, 2.15 -> 2.2 (tie rounded up).
+    // 2.14 -> 2.1, 2.15 -> 2.2 (tie rounded up by Units).
     assertNotEquals(
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.14)),
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(2.15))
     );
 
-    // [3.0, 10.0): step 0.5, round to nearest.
+    // [3.0, 10.0): step 0.5, round to nearest. Units.reluctance keeps 1 decimal here, so
+    // the 0.5 step bucketing collapses up to 5 distinct Units-rounded values into one.
     // 3.1 -> 3.0, 3.2 -> 3.0 (both closer to 3.0 than to 3.5).
     assertEquals(
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(3.1)),
@@ -234,7 +250,8 @@ public class RaptorRequestTransferCacheTest {
     );
 
     // [10.0, inf): step 1.0. Units.reluctance already rounds values >= 10.0 to integers
-    // (half-up), so 10.0 and 10.4 both normalize to 10; 10.5 normalizes to 11.
+    // (half-up), so the 1.0 step bucketing is a no-op; 10.0 and 10.4 both normalize to 10
+    // and 10.5 normalizes to 11.
     assertEquals(
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(10.0)),
       new RaptorRequestTransferCacheKey(list, walkRequestWithReluctance(10.4))
@@ -276,7 +293,28 @@ public class RaptorRequestTransferCacheTest {
   public void testBikeSpeedIsBucketedToNearest10cm() {
     List<List<Transfer>> list = List.of();
 
-    // 5.05, 5.06, 5.07 all round half-up to 5.1 -> same bucket.
+    // Below 2.0 the bucketing actually does work: Units.speed keeps 2 decimals here,
+    // so two 2-decimal inputs that share a 0.1 bucket collapse to the same key.
+    // 1.84 -> 1.8, 1.85 -> 1.9 (tie rounded up) -> different buckets.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(1.84)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(1.85))
+    );
+    // 1.84 and 1.8 share the 1.8 bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(1.84)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(1.8))
+    );
+    // 1.85 and 1.9 share the 1.9 bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(1.85)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(1.9))
+    );
+
+    // [2.0, 10.0): step 0.1. Units.speed already rounds to 1 decimal here, so the
+    // 0.1 step bucketing is a no-op; the assertions below mostly verify that the
+    // bucketing pipeline does not introduce drift on top of Units.
+    // 5.05, 5.07, 5.10 all round half-up to 5.1 via Units -> same bucket.
     assertEquals(
       new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.05)),
       new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.07))
@@ -285,8 +323,7 @@ public class RaptorRequestTransferCacheTest {
       new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.05)),
       new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.10))
     );
-
-    // 5.03, 5.04 are closer to 5.0 -> different bucket from 5.05.
+    // 5.03, 5.04 are closer to 5.0 via Units -> different bucket from 5.05.
     assertNotEquals(
       new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.04)),
       new RaptorRequestTransferCacheKey(list, bikeRequestWithSpeed(5.05))
@@ -327,7 +364,19 @@ public class RaptorRequestTransferCacheTest {
   public void testBikeReluctanceIsBucketedWithTieredSteps() {
     List<List<Transfer>> list = List.of();
 
-    // Below 3.0: step 0.1. 2.05 ties half-up to 2.1; 2.10 stays at 2.1 -> same bucket.
+    // Below 2.0: step 0.1, Units keeps 2 decimals -> bucketing actually collapses.
+    // 1.94 -> 1.9, 1.95 -> 2.0 (tie rounded up) -> different buckets.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(1.94)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(1.95))
+    );
+    // 1.94 and 1.9 share the 1.9 bucket.
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(1.94)),
+      new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(1.9))
+    );
+
+    // [2.0, 3.0): step 0.1, Units already rounds to 1 decimal -> 0.1 bucketing is a no-op.
     assertEquals(
       new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(2.05)),
       new RaptorRequestTransferCacheKey(list, bikeRequestWithReluctance(2.10))
@@ -362,7 +411,18 @@ public class RaptorRequestTransferCacheTest {
   public void testCarReluctanceIsBucketedWithTieredSteps() {
     List<List<Transfer>> list = List.of();
 
-    // Below 3.0: step 0.1.
+    // Below 2.0: step 0.1, Units keeps 2 decimals -> bucketing actually collapses.
+    // 1.94 -> 1.9, 1.95 -> 2.0 (tie rounded up) -> different buckets.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(1.94)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(1.95))
+    );
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(1.94)),
+      new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(1.9))
+    );
+
+    // [2.0, 3.0): step 0.1, Units already rounds to 1 decimal -> 0.1 bucketing is a no-op.
     assertEquals(
       new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(2.05)),
       new RaptorRequestTransferCacheKey(list, carRequestWithReluctance(2.10))
@@ -417,7 +477,18 @@ public class RaptorRequestTransferCacheTest {
   public void testTurnReluctanceIsBucketedWithTieredSteps() {
     List<List<Transfer>> list = List.of();
 
-    // Below 3.0: step 0.1.
+    // Below 2.0: step 0.1, Units keeps 2 decimals -> bucketing actually collapses.
+    // 1.94 -> 1.9, 1.95 -> 2.0 (tie rounded up) -> different buckets.
+    assertNotEquals(
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(1.94)),
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(1.95))
+    );
+    assertEquals(
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(1.94)),
+      new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(1.9))
+    );
+
+    // [2.0, 3.0): step 0.1, Units already rounds to 1 decimal -> 0.1 bucketing is a no-op.
     assertEquals(
       new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(2.05)),
       new RaptorRequestTransferCacheKey(list, turnReluctanceRequest(2.10))
