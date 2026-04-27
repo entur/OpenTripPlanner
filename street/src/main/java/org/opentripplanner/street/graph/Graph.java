@@ -287,6 +287,11 @@ public class Graph implements Serializable {
     streetIndex = new StreetIndex(this);
     LOG.info("Index street model complete.");
 
+    // Re-initialize transient field after deserialization (field initializers don't run)
+    if (geofencingZoneIndexes == null) {
+      geofencingZoneIndexes = new ConcurrentHashMap<>();
+    }
+
     if (!serializedGeofencingZones.isEmpty()) {
       LOG.info(
         "Rebuilding geofencing zone indexes from {} data source(s)...",
@@ -319,6 +324,9 @@ public class Graph implements Serializable {
    * coordinate.
    */
   public Set<GeofencingZone> getGeofencingZonesContaining(Coordinate coord) {
+    if (geofencingZoneIndexes == null || geofencingZoneIndexes.isEmpty()) {
+      return Set.of();
+    }
     return geofencingZoneIndexes
       .values()
       .stream()
@@ -327,6 +335,9 @@ public class Graph implements Serializable {
   }
 
   public Map<String, GeofencingZoneIndex> getAllGeofencingZoneIndexes() {
+    if (geofencingZoneIndexes == null) {
+      return Map.of();
+    }
     return Map.copyOf(geofencingZoneIndexes);
   }
 
