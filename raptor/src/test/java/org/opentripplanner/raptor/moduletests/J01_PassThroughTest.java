@@ -25,14 +25,14 @@ import org.opentripplanner.raptor.configure.RaptorTestFactory;
 /**
  * FEATURE UNDER TEST
  *
- * Raptor should be able to handle route request with a specified pass-through point.
- * If a stop point is specified as pass-through point in the request then all the results returned
- * from raptor should include this stop point either as alight or board point for a trip or as an
- * intermediate point in the trip.
+ * Raptor should be able to handle a route request with a specified pass-through point.
+ * If a stop point is specified as a pass-through point in the request, then all the results
+ * returned from Raptor should include this stop point either as an alight or board point for a
+ * trip or as an intermediate point in the trip.
  *
- * It should be possible to specify more than one pass through point. The result should include
- * stop points in the order as they were specified in the request. Only alternatives that pass
- * through all the stop point should be included in the result.
+ * It should be possible to specify more than one pass-through point. The result should include
+ * stop points in the order in which they were specified in the request. Only alternatives that
+ * pass through all stop points should be included in the result.
  *
  * In order to support stop areas raptor should also support multiple stop points in the same
  * pass-through group. It should be possible to define both stop A and B as a pass-through. Then
@@ -72,7 +72,7 @@ class J01_PassThroughTest {
       .searchParams()
       .earliestDepartureTime(T00_00)
       .latestArrivalTime(T01_00)
-      .searchWindow(Duration.ofMinutes(2))
+      .searchWindow(Duration.ofMinutes(8))
       .timetable(true);
 
     return builder;
@@ -84,7 +84,7 @@ class J01_PassThroughTest {
     // Create two routes.
     // Only one of them includes required pass-through point.
     // Pass-through point is the last stop in the trip.
-    // The trip with pass-through point have significant longer travel time so that normally it
+    // The trip with pass-through point has significantly longer travel time so that normally it
     //  should not be used
     data.withTimetables(
       """
@@ -118,7 +118,7 @@ class J01_PassThroughTest {
       // Create two routes.
       // Only one of them includes required pass-through point.
       // Pass-through point is the first stop in the trip.
-      // The trip with pass-through point have significant longer travel time so that normally it
+      // The trip with pass-through point has significantly longer travel time so that normally it
       //  should not be used
       .withTimetables(
         """
@@ -148,7 +148,7 @@ class J01_PassThroughTest {
     // Create two routes.
     // Only one of them includes required pass-through point.
     // Pass-through point is the intermediate stop in the trip.
-    // The trip with pass-through point have significant longer travel time so that normally it
+    // The trip with pass-through point has significantly longer travel time so that normally it
     //  should not be used
     data.withTimetables(
       """
@@ -179,15 +179,16 @@ class J01_PassThroughTest {
   void multiplePassThroughPoints() {
     // Create two routes.
     // First one includes one pass-through stop point.
-    // Second one include the second pass-through point.
+    // The second one includes the second pass-through point.
     // Both arrive at the desired destination so normally there should not be any transfers.
     data.withTimetables(
       """
-      A     B     C     F
-      0:02  0:05  0:10  0:20
-      --
-      C     D     E     F
-      0:15  0:20  0:30  0:50
+      -- R1
+      A     B     C                 F
+      0:02  0:05  0:10              0:20
+      -- R2
+                  C     D     E     F
+                  0:15  0:20  0:30  0:50
       """
     );
 
@@ -239,8 +240,8 @@ class J01_PassThroughTest {
   @DisplayName("Multiple stops in same pass-through group")
   void passThroughGroup() {
     // Create two routes.
-    // Route one include STOP_B and route two include STOP_C.
-    // Both stops with be part of the same pass-through group
+    // Route one includes STOP_B and route two includes STOP_C.
+    // Both stops will be part of the same pass-through group
     //  so that both routes should be valid
     data.withTimetables(
       """
@@ -265,6 +266,47 @@ class J01_PassThroughTest {
       """
       Walk 2m ~ B ~ BUS R2 0:05 0:14 ~ E ~ Walk 30s [0:03 0:14:30 11m30s Tₙ0 C₁1_440]
       Walk 30s ~ A ~ BUS R1 0:04 0:15 ~ E ~ Walk 30s [0:03:30 0:15:30 12m Tₙ0 C₁1_380]
+      """.trim(),
+      pathsToString(raptorService.route(requestBuilder.build(), data))
+    );
+  }
+
+  @Test
+  @DisplayName(
+    "The pass-through is implemented with listeners at the alight stop. If another path exists at " +
+      "the same stop, then this should have no effect on the pass-through connection."
+  )
+  void passThroughStopVisitShouldNotBeDominatedByAnotherPath() {
+    // Create two routes.
+    // Route one includes STOP_B and route two includes STOP_C.
+    // Both stops will be part of the same pass-through group
+    //  so that both routes should be valid
+    data.withTimetables(
+      """
+      -- R1
+      A     C
+      0:01  0:10
+      -- R2
+      A     C     E
+      0:00  0:10  0:15
+      """
+    );
+
+    // Both routes are pareto optimal.
+    // Route 2 is faster but it contains more walk
+    data.access("Free ~ A").egress("E ~ Free");
+
+    var requestBuilder = prepareRequest();
+
+    requestBuilder.searchParams().addViaLocation(PASS_THROUGH_STOP_C);
+
+    // R2 is the only path which takes you to the destination, so the state should be copied over
+    // from segment 1 to segment 2 after stop C is "passed-through". Even when R1 ≺ R2 at stop
+    // arrival at stop C. R1 is optimal compared to R2 at stop arrival C, because the cost and
+    // departure time is better, while number of transfers and arrival time is the same.
+    assertEquals(
+      """
+      A ~ BUS R2 0:00 0:15 ~ E [0:00 0:15 15m Tₙ0 C₁1_500]
       """.trim(),
       pathsToString(raptorService.route(requestBuilder.build(), data))
     );

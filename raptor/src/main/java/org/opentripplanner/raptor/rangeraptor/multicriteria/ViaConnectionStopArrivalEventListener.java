@@ -30,11 +30,16 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
  * together to force the paths through the given via connections.
  * <p>
  * We need to delay updating the next arrival state if the via connection is a transfer.
- * Raptor process arrivals in phases. If you arrive at a stop by transit, you may continue
+ * Raptor processes arrivals in phases. If you arrive at a stop by transit, you may continue
  * using a transfer or transit. The transit state is copied over from the first leg state
  * without delay, while the transfer via-leg state must be cached and copied over in the
  * "transfer phase" of the Raptor algorithm. The lifecycle service will notify this class
  * at the right time to publish the transfer arrivals.
+ * <p>
+ * This event listener is only called for stops which allow alighting at the given stop. Since
+ * we can not pick up the pass-through event during the on-board processing due to degrading the
+ * performance - we do it here and for the moment does not support pass-through for stops
+ * where alighting is forbidden.
  */
 public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSchedule>
   implements ParetoSetEventListener<ArrivalView<T>> {
@@ -123,6 +128,17 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
           // Silently ignore arrive-on-foot + via-transfer. Two transfers are
           // not allowed after each other, and we can safely skip it here.
         }
+      }
+    }
+  }
+
+  /// We need to continue pass-through connections, even if they are better arrivals in the
+  /// stop arrivals at the given stop - so we ignore the fact that the alighting is rejected.
+  @Override
+  public void notifyElementRejected(ArrivalView<T> arrival, ArrivalView<T> rejectedByElement) {
+    for (ViaConnection connection : connections) {
+      if (connection instanceof RaptorPassThroughViaConnection) {
+        continueOnSameTripInNextSegment(arrival);
       }
     }
   }
