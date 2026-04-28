@@ -368,7 +368,7 @@ public class TransmodelGraphQLSchemaFactory {
       replacementForRelationType
     );
 
-    GraphQLOutputType timetabledPassingTime = TimetabledPassingTimeType.create(
+    var timetabledPassingTime = TimetabledPassingTimeType.create(
       bookingArrangementType,
       noticeType,
       quayType,
