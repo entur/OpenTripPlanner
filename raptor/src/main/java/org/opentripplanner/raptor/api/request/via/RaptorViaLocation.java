@@ -82,21 +82,23 @@ public final class RaptorViaLocation {
       .collect(BitSet::new, BitSet::set, BitSet::or);
   }
 
-  /// Compare all pairs to check for duplicates and non-optimal connections. Avoid usage of this
-  /// method because it can have a really bad performance.
+  /// Compare all pairs to check for duplicates and non-optimal connections.
   public void validateDuplicateConnections() {
+    var comparator = ViaConnection.paretoComparator();
+    // Group by fromStop to reduce the Order from O(N*N) to O(S*n*n), where:
+    // (N is # connections, S is # from-stops, n is # of connections per stop)
+    // N is ~= S * n, so this S times faster. If S==N, then n=1 and the order is O(N)
     var byFromStop = connections.stream().collect(Collectors.groupingBy(ViaConnection::fromStop));
     for (var list : byFromStop.values()) {
-      var comparator = ViaConnection.paretoComparator();
       for (int i = 0; i < list.size(); ++i) {
-        var a = list.get(i);
+        var x = list.get(i);
         for (int j = i + 1; j < list.size(); ++j) {
-          var b = list.get(j);
+          var y = list.get(j);
           // If NOT both values dominate each other, at least one should be dropped
-          var dominance = comparator.compare(a, b);
+          var dominance = comparator.compare(x, y);
           if (dominance != ParetoDominance.MUTUAL) {
             throw new IllegalArgumentException(
-              "All connection need to be pareto-optimal: %s %s %s".formatted(a, dominance, b)
+              "All connection need to be pareto-optimal: %s %s %s".formatted(x, dominance, y)
             );
           }
         }
