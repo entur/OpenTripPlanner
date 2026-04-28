@@ -1,6 +1,7 @@
 package org.opentripplanner.service.vehiclerental.model;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -20,19 +21,63 @@ import org.opentripplanner.core.model.id.FeedScopedId;
  * The {@code businessArea} flag is set at GBFS mapping time. A zone is a business area when all
  * ride/traversal booleans are permissive — fields like {@code maximumSpeedKph} and
  * {@code vehicleTypeIds} are orthogonal to business area classification.
+ * <p>
+ * Equality uses {@code id} + {@code priority} only. The geometry and restriction fields are
+ * excluded because JTS Geometry equality iterates all coordinates (expensive in hot paths like
+ * set lookups during A* traversal), and id+priority uniquely identifies a zone within a feed.
  */
-public record GeofencingZone(
-  FeedScopedId id,
-  @Nullable I18NString name,
-  Geometry geometry,
-  @Nullable Boolean dropOffBanned,
-  @Nullable Boolean traversalBanned,
-  @Nullable Boolean rideStartBanned,
-  boolean businessArea,
-  @Nullable List<String> vehicleTypeIds,
-  @Nullable Integer maximumSpeedKph,
-  int priority
-) {
+public final class GeofencingZone {
+
+  private final FeedScopedId id;
+
+  @Nullable
+  private final I18NString name;
+
+  private final Geometry geometry;
+
+  @Nullable
+  private final Boolean dropOffBanned;
+
+  @Nullable
+  private final Boolean traversalBanned;
+
+  @Nullable
+  private final Boolean rideStartBanned;
+
+  private final boolean businessArea;
+
+  @Nullable
+  private final List<String> vehicleTypeIds;
+
+  @Nullable
+  private final Integer maximumSpeedKph;
+
+  private final int priority;
+
+  public GeofencingZone(
+    FeedScopedId id,
+    @Nullable I18NString name,
+    Geometry geometry,
+    @Nullable Boolean dropOffBanned,
+    @Nullable Boolean traversalBanned,
+    @Nullable Boolean rideStartBanned,
+    boolean businessArea,
+    @Nullable List<String> vehicleTypeIds,
+    @Nullable Integer maximumSpeedKph,
+    int priority
+  ) {
+    this.id = Objects.requireNonNull(id);
+    this.name = name;
+    this.geometry = geometry;
+    this.dropOffBanned = dropOffBanned;
+    this.traversalBanned = traversalBanned;
+    this.rideStartBanned = rideStartBanned;
+    this.businessArea = businessArea;
+    this.vehicleTypeIds = vehicleTypeIds;
+    this.maximumSpeedKph = maximumSpeedKph;
+    this.priority = priority;
+  }
+
   /**
    * Convenience constructor for zones with only drop-off and traversal restrictions.
    * Sets {@code rideStartBanned} to false, infers {@code businessArea}, and uses default priority.
@@ -58,6 +103,52 @@ public record GeofencingZone(
     );
   }
 
+  public FeedScopedId id() {
+    return id;
+  }
+
+  @Nullable
+  public I18NString name() {
+    return name;
+  }
+
+  public Geometry geometry() {
+    return geometry;
+  }
+
+  @Nullable
+  public Boolean dropOffBanned() {
+    return dropOffBanned;
+  }
+
+  @Nullable
+  public Boolean traversalBanned() {
+    return traversalBanned;
+  }
+
+  @Nullable
+  public Boolean rideStartBanned() {
+    return rideStartBanned;
+  }
+
+  public boolean businessArea() {
+    return businessArea;
+  }
+
+  @Nullable
+  public List<String> vehicleTypeIds() {
+    return vehicleTypeIds;
+  }
+
+  @Nullable
+  public Integer maximumSpeedKph() {
+    return maximumSpeedKph;
+  }
+
+  public int priority() {
+    return priority;
+  }
+
   /**
    * Whether the zone has any restriction that bans riding or dropping off.
    */
@@ -81,11 +172,6 @@ public record GeofencingZone(
     return businessArea;
   }
 
-  /**
-   * Two zones are equal if they have the same id and priority. The geometry and restriction
-   * fields are intentionally excluded — they are expensive to compare (JTS Geometry processes
-   * all coordinates) and the id+priority pair uniquely identifies a zone within a feed.
-   */
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -100,6 +186,11 @@ public record GeofencingZone(
   @Override
   public int hashCode() {
     return 31 * id.hashCode() + priority;
+  }
+
+  @Override
+  public String toString() {
+    return "GeofencingZone{id=" + id + ", priority=" + priority + "}";
   }
 
   /**
