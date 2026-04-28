@@ -820,19 +820,6 @@ public class OsmDatabase {
     }
   }
 
-  /**
-   * Handle route=bicycle relations. Copies their network type to all way members.
-   *
-   * @see "https://wiki.openstreetmap.org/wiki/Tag:route%3Dbicycle"
-   */
-  private void processBicycleRoute(OsmRelation relation) {
-    if (relation.isBicycleRoute()) {
-      // we treat networks without known network type like local networks
-      var network = relation.getTagOpt("network").orElse("lcn");
-      setNetworkForAllMembers(relation, network);
-    }
-  }
-
   private void setNetworkForAllMembers(OsmRelation relation, String key) {
     relation
       .getMembers()
@@ -951,48 +938,11 @@ public class OsmDatabase {
    * Handle route=road and route=bicycle relations.
    */
   private void processRoute(OsmRelation relation) {
-    for (OsmRelationMember member : relation.getMembers()) {
-      if (!(member.hasTypeWay() && waysById.containsKey(member.getRef()))) {
-        continue;
-      }
-
-      OsmWay way = waysById.get(member.getRef());
-      if (way == null) {
-        continue;
-      }
-
-      OsmWayBuilder builder = way.copy();
-      boolean modified = false;
-
-      if (relation.hasTag("name")) {
-        if (way.hasTag("otp:route_name")) {
-          builder.withTag(
-            "otp:route_name",
-            addUniqueName(way.getTag("otp:route_name"), relation.getTag("name"))
-          );
-        } else {
-          builder.withTag("otp:route_name", relation.getTag("name"));
-        }
-        modified = true;
-      }
-      if (relation.hasTag("ref")) {
-        if (way.hasTag("otp:route_ref")) {
-          builder.withTag(
-            "otp:route_ref",
-            addUniqueName(way.getTag("otp:route_ref"), relation.getTag("ref"))
-          );
-        } else {
-          builder.withTag("otp:route_ref", relation.getTag("ref"));
-        }
-        modified = true;
-      }
-
-      if (modified) {
-        way = builder.build();
-        waysById.put(way.getId(), way);
-      }
+    if (relation.isBicycleRoute()) {
+      // we treat networks without known network type like local networks
+      var network = relation.getTagOpt("network").orElse("lcn");
+      setNetworkForAllMembers(relation, network);
     }
-    processBicycleRoute(relation);
   }
 
   /**

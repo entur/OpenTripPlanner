@@ -12,7 +12,6 @@ import java.util.List;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.graph_builder.module.nearbystops.TransitServiceResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.FlexAccessEgressRouter;
@@ -20,6 +19,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccess
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.AccessEgressMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
+import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.model.StreetMode;
@@ -36,8 +36,8 @@ class AccessEgressFetcher {
   private final ZonedDateTime transitSearchTimeZero;
   private final AdditionalSearchDays additionalSearchDays;
   private final LinkingContext linkingContext;
-  private final AccessEgressRouter accessEgressRouter;
   private final TransitServiceResolver transitServiceResolver;
+  private final AccessEgressMapper accessEgressMapper;
   private final CarpoolingService carpoolingService;
 
   /**
@@ -63,7 +63,7 @@ class AccessEgressFetcher {
     this.linkingContext = linkingContext;
     this.carpoolingService = carpoolingService;
     this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
-    this.accessEgressRouter = new AccessEgressRouter(transitServiceResolver);
+    this.accessEgressMapper = new AccessEgressMapper(transitServiceResolver);
   }
 
   Collection<? extends RoutingAccessEgress> fetchAccess() {
@@ -98,7 +98,7 @@ class AccessEgressFetcher {
     Duration durationLimit = accessEgressPreferences.maxDuration().valueOf(mode);
     int stopCountLimit = accessEgressPreferences.maxStopCountLimit().limitForMode(mode);
 
-    var nearbyStops = accessEgressRouter.findAccessEgresses(
+    var nearbyStops = AccessEgressRouter.findAccessEgresses(
       accessRequest,
       mode,
       serverContext.listExtensionRequestContexts(accessRequest),
@@ -107,7 +107,7 @@ class AccessEgressFetcher {
       stopCountLimit,
       linkingContext
     );
-    var accessEgresses = AccessEgressMapper.mapNearbyStops(nearbyStops);
+    var accessEgresses = accessEgressMapper.mapNearbyStops(nearbyStops);
     accessEgresses = timeshiftRideHailing(streetRequest, type, accessEgresses);
 
     var results = new ArrayList<>(accessEgresses);
@@ -116,7 +116,6 @@ class AccessEgressFetcher {
     if (OTPFeature.FlexRouting.isOn() && mode == StreetMode.FLEXIBLE) {
       var flexAccessList = FlexAccessEgressRouter.routeAccessEgress(
         accessRequest,
-        accessEgressRouter,
         serverContext,
         additionalSearchDays,
         serverContext.flexParameters(),

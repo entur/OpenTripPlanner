@@ -6,7 +6,6 @@ import java.util.List;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
-import org.opentripplanner.street.geometry.DirectionUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
  * are worth evaluating with expensive A* routing. It validates positions using:
  * <ul>
  *   <li>Capacity constraints - ensures available seats throughout the journey</li>
- *   <li>Directional compatibility - prevents backtracking and U-turns</li>
  *   <li>Beeline delay heuristic - optimistic straight-line time estimates</li>
  * </ul>
  * <p>
@@ -28,9 +26,6 @@ import org.slf4j.LoggerFactory;
 public class InsertionPositionFinder {
 
   private static final Logger LOG = LoggerFactory.getLogger(InsertionPositionFinder.class);
-
-  /** Maximum bearing deviation allowed for forward progress (90° allows detours, prevents U-turns) */
-  private static final double FORWARD_PROGRESS_TOLERANCE_DEGREES = 90.0;
 
   private final BeelineEstimator beelineEstimator;
 
@@ -89,23 +84,6 @@ public class InsertionPositionFinder {
         }
 
         if (
-          !insertionMaintainsForwardProgress(
-            routePoints,
-            pickupPos,
-            dropoffPos,
-            passengerPickup,
-            passengerDropoff
-          )
-        ) {
-          LOG.trace(
-            "Insertion at pickup={}, dropoff={} rejected by directional check",
-            pickupPos,
-            dropoffPos
-          );
-          continue;
-        }
-
-        if (
           !passesBeelineDelayCheck(
             routePoints,
             beelineTimes,
@@ -130,95 +108,6 @@ public class InsertionPositionFinder {
     }
 
     return viable;
-  }
-
-  /**
-   * Checks if inserting pickup/dropoff points maintains forward progress.
-   * Prevents backtracking by ensuring insertions don't cause the route
-   * to deviate too far from its intended direction.
-   *
-   * @param routePoints Current route points
-   * @param pickupPos 0-based index of the passenger's pickup in the modified route
-   * @param dropoffPos 0-based index of the passenger's dropoff in the modified route
-   * @param passengerPickup Passenger pickup coordinate
-   * @param passengerDropoff Passenger dropoff coordinate
-   * @return true if insertion maintains forward progress
-   */
-  private boolean insertionMaintainsForwardProgress(
-    List<WgsCoordinate> routePoints,
-    int pickupPos,
-    int dropoffPos,
-    WgsCoordinate passengerPickup,
-    WgsCoordinate passengerDropoff
-  ) {
-    if (pickupPos > 0 && pickupPos < routePoints.size()) {
-      WgsCoordinate prevPoint = routePoints.get(pickupPos - 1);
-      WgsCoordinate nextPoint = routePoints.get(pickupPos);
-
-      if (!maintainsForwardProgress(prevPoint, passengerPickup, nextPoint)) {
-        return false;
-      }
-    }
-
-    if (dropoffPos > 0 && dropoffPos <= routePoints.size()) {
-      WgsCoordinate prevPoint;
-      if (dropoffPos == pickupPos) {
-        prevPoint = passengerPickup;
-      } else if (dropoffPos - 1 < routePoints.size()) {
-        prevPoint = routePoints.get(dropoffPos - 1);
-      } else {
-        return true;
-      }
-
-      if (dropoffPos < routePoints.size()) {
-        WgsCoordinate nextPoint = routePoints.get(dropoffPos);
-
-        return maintainsForwardProgress(prevPoint, passengerDropoff, nextPoint);
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Checks if inserting a new point maintains forward progress.
-   */
-  private boolean maintainsForwardProgress(
-    WgsCoordinate previous,
-    WgsCoordinate newPoint,
-    WgsCoordinate next
-  ) {
-    // Skip check if inserting at an existing point (newPoint equals next or previous)
-    // This avoids undefined bearing calculations from a point to itself
-    if (newPoint.equals(next) || newPoint.equals(previous)) {
-      return true;
-    }
-
-    // Calculate intended direction (previous → next)
-    double intendedBearing = DirectionUtils.getAzimuth(
-      previous.asJtsCoordinate(),
-      next.asJtsCoordinate()
-    );
-
-    // Calculate detour directions
-    double bearingToNew = DirectionUtils.getAzimuth(
-      previous.asJtsCoordinate(),
-      newPoint.asJtsCoordinate()
-    );
-    double bearingFromNew = DirectionUtils.getAzimuth(
-      newPoint.asJtsCoordinate(),
-      next.asJtsCoordinate()
-    );
-
-    // Check deviations
-    double deviationToNew = DirectionUtils.bearingDifference(intendedBearing, bearingToNew);
-    double deviationFromNew = DirectionUtils.bearingDifference(intendedBearing, bearingFromNew);
-
-    // Allow some deviation but not complete reversal
-    return (
-      deviationToNew <= FORWARD_PROGRESS_TOLERANCE_DEGREES &&
-      deviationFromNew <= FORWARD_PROGRESS_TOLERANCE_DEGREES
-    );
   }
 
   /**
