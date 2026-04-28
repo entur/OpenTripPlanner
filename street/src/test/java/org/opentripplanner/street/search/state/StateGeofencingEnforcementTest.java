@@ -3,6 +3,7 @@ package org.opentripplanner.street.search.state;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
+import static org.opentripplanner.street.model.StreetModelFactory.streetEdge;
 
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -60,8 +61,10 @@ class StateGeofencingEnforcementTest {
   private State createRentingState(String network, GeofencingZone... zones) {
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var v = intersectionVertex(1, 1);
+    var v2 = intersectionVertex(2, 2);
+    var edge = streetEdge(v, v2);
     var s0 = new State(v, req);
-    var editor = s0.edit(null);
+    var editor = s0.edit(edge);
 
     // Transition to RENTING_FLOATING with a specific network
     editor.beginFloatingVehicleRenting(RentalFormFactor.SCOOTER_STANDING, null, network, false);
