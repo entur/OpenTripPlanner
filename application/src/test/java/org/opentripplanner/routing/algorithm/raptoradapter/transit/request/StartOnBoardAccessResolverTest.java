@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.api.request.TripLocation;
 import org.opentripplanner.routing.api.request.TripOnDateReference;
@@ -710,6 +711,57 @@ class StartOnBoardAccessResolverTest {
 
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
+  }
+
+  /**
+   * Passing a stop ID which doesn't allow boarding should throw
+   */
+  @Test
+  void throwsWhenBoardingNotPossibleAtStop() {
+    var env = ENV_BUILDER.addTrip(
+      TripInput.of("T1")
+        .addStop(STOP_A, "10:00")
+        .addStop(STOP_B, "10:05", "10:05", PickDrop.NONE, PickDrop.SCHEDULED)
+        .addStop(STOP_C, "10:10")
+    ).build();
+
+    var resolver = new StartOnBoardAccessResolver(env.transitService());
+    var tripLocation = TripLocation.of(
+      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
+      STOP_B.getId()
+    );
+
+    var patternSearch = env.raptorRequestData();
+
+    assertThrows(IllegalArgumentException.class, () ->
+      resolver.resolve(tripLocation, patternSearch)
+    );
+  }
+
+  /**
+   * Passing a stop ID which doesn't allow boarding should throw
+   */
+  @Test
+  void throwsWhenBoardingNotPossibleAtStopWithAimedDepartureTime() {
+    var env = ENV_BUILDER.addTrip(
+      TripInput.of("T1")
+        .addStop(STOP_A, "10:00")
+        .addStop(STOP_B, "10:05", "10:05", PickDrop.NONE, PickDrop.SCHEDULED)
+        .addStop(STOP_C, "10:10")
+    ).build();
+
+    var resolver = new StartOnBoardAccessResolver(env.transitService());
+    var tripLocation = TripLocation.of(
+      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
+      STOP_B.getId(),
+      toInstant(10 * 3600 + 5 * 60)
+    );
+
+    var patternSearch = env.raptorRequestData();
+
+    assertThrows(IllegalArgumentException.class, () ->
+      resolver.resolve(tripLocation, patternSearch)
+    );
   }
 
   /**

@@ -250,8 +250,12 @@ public class BoardingLocationResolver {
     List<BoardingLocationInPatternReference> stopPositions = new ArrayList<>();
     for (int stopIndex : stopIndices) {
       for (int stopPos : tripSchedule.findDepartureStopPositions(0, stopIndex)) {
-        int boardingTime = tripSchedule.getOriginalTripTimes().getScheduledDepartureTime(stopPos);
-        stopPositions.add(new BoardingLocationInPatternReference(stopIndex, stopPos, boardingTime));
+        if (tripSchedule.pattern().boardingPossibleAt(stopPos)) {
+          int boardingTime = tripSchedule.getOriginalTripTimes().getScheduledDepartureTime(stopPos);
+          stopPositions.add(
+            new BoardingLocationInPatternReference(stopIndex, stopPos, boardingTime)
+          );
+        }
       }
     }
 
@@ -291,7 +295,10 @@ public class BoardingLocationResolver {
   ) {
     for (int stopIndex : stopIndices) {
       for (int stopPos : tripSchedule.findDepartureStopPositions(boardingTimeSeconds, stopIndex)) {
-        if (tripSchedule.departure(stopPos) == boardingTimeSeconds) {
+        if (
+          tripSchedule.departure(stopPos) == boardingTimeSeconds &&
+          tripSchedule.pattern().boardingPossibleAt(stopPos)
+        ) {
           return new BoardingLocationInPatternReference(stopIndex, stopPos, boardingTimeSeconds);
         }
       }
