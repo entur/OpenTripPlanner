@@ -105,6 +105,27 @@ public record GeofencingZone(
   }
 
   /**
+   * Two zones are equal if they have the same id and priority. The geometry and restriction
+   * fields are intentionally excluded — they are expensive to compare (JTS Geometry processes
+   * all coordinates) and the id+priority pair uniquely identifies a zone within a feed.
+   */
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof GeofencingZone other)) {
+      return false;
+    }
+    return priority == other.priority && id.equals(other.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return 31 * id.hashCode() + priority;
+  }
+
+  /**
    * Resolve the effective value of a restriction field across overlapping zones for a given
    * network, using per-field precedence. For each field independently, the highest-priority zone
    * (lowest priority value) that specifies (non-null) the field wins.
