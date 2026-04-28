@@ -22,6 +22,7 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.utils.collection.ListSection;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -275,6 +276,20 @@ public class RouteRequest implements Serializable {
    */
   public boolean allowTransferOptimization() {
     return !isViaSearch() || via.stream().allMatch(ViaLocation::isPassThroughLocation);
+  }
+
+  /**
+   * Returns {@code true} when the request has no way to reach transit on at least one of the
+   * access and egress sides. A side is unreachable when its street mode is
+   * {@link StreetMode#NOT_SET} and the corresponding endpoint is not a stop (a stop endpoint
+   * provides a zero-distance access/egress, so it does not need a street mode).
+   */
+  public boolean cannotReachTransit() {
+    boolean accessUnreachable =
+      journey.access().mode() == StreetMode.NOT_SET && (from == null || from.stopId == null);
+    boolean egressUnreachable =
+      journey.egress().mode() == StreetMode.NOT_SET && (to == null || to.stopId == null);
+    return accessUnreachable || egressUnreachable;
   }
 
   /**
