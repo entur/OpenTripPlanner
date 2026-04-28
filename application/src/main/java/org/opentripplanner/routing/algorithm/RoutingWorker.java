@@ -2,7 +2,6 @@ package org.opentripplanner.routing.algorithm;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -15,7 +14,6 @@ import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.grouppriority.TransitGroupPriorityItineraryDecorator;
 import org.opentripplanner.model.plan.paging.cursor.PageCursorInput;
-import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.raptor.api.request.SearchParams;
 import org.opentripplanner.routing.algorithm.filterchain.ItineraryListFilterChain;
 import org.opentripplanner.routing.algorithm.mapping.PagingServiceFactory;
@@ -24,7 +22,6 @@ import org.opentripplanner.routing.algorithm.mapping.RoutingResponseMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSearchDays;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.FilterTransitWhenDirectModeIsEmpty;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.TransitRouter;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.DirectFlexRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.DirectStreetRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -42,7 +39,6 @@ import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
-import org.opentripplanner.transit.service.TransitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -368,24 +364,5 @@ public class RoutingWorker {
   private LinkingContext createLinkingContext(TemporaryVerticesContainer container) {
     var linkingRequest = LinkingContextRequestMapper.map(request);
     return serverContext.linkingContextFactory().create(container, linkingRequest);
-  }
-
-  private static RouteRequest amendOnBoardAccessRequestWithExactBoardingTime(
-    RouteRequest request,
-    TransitService transitService,
-    ZoneId zoneId,
-    RaptorTuningParameters tuningParameters
-  ) {
-    var fromLocation = request.from();
-    if (fromLocation == null || fromLocation.tripLocation == null) {
-      throw new IllegalArgumentException();
-    }
-
-    var boardingDateTime = new StartOnBoardAccessResolver(transitService).resolveBoardingDateTime(
-      fromLocation.tripLocation,
-      zoneId
-    );
-    var iterationStep = Duration.ofSeconds(tuningParameters.iterationDepartureStepInSeconds());
-    return request.copyOf().withOnBoardAccessAt(boardingDateTime, iterationStep).buildRequest();
   }
 }
