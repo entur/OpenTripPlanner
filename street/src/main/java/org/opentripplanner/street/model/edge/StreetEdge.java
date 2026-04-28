@@ -1102,6 +1102,10 @@ public class StreetEdge
     if (!s0.isRentingVehicle() || s0.getRequest().arriveBy()) {
       return false;
     }
+    // If zones didn't change during traversal, no new zone was entered
+    if (s0.getCurrentGeofencingZones() == traversedState.getCurrentGeofencingZones()) {
+      return false;
+    }
     String network = s0.getVehicleRentalNetwork();
     for (var zone : traversedState.getCurrentGeofencingZones()) {
       if (
@@ -1146,6 +1150,9 @@ public class StreetEdge
       return false;
     }
     if (s0.getVehicleRentalState() != VehicleRentalState.RENTING_FLOATING) {
+      return false;
+    }
+    if (s0.getCurrentGeofencingZones() == traversedState.getCurrentGeofencingZones()) {
       return false;
     }
     for (var zone : traversedState.getCurrentGeofencingZones()) {
@@ -1274,7 +1281,7 @@ public class StreetEdge
       return null;
     }
 
-    if (s0.getRequest().mode().includesRenting()) {
+    if (s0.getRequest().mode().includesRenting() && !fromv.getGeofencingBoundaries().isEmpty()) {
       s1.updateGeofencingZones(fromv, tov, s0.getRequest().arriveBy());
     }
 
