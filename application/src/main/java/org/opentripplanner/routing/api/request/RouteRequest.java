@@ -279,16 +279,12 @@ public class RouteRequest implements Serializable {
   }
 
   /**
-   * Returns {@code true} when running a transit search for this request would be pointless, either
-   * because the caller has explicitly disabled transit or because the request has no way to reach
-   * transit on at least one of the access and egress sides. A side is unreachable when its street
-   * mode is {@link StreetMode#NOT_SET} and the corresponding endpoint is not a stop (a stop
-   * endpoint provides a zero-distance access/egress, so it does not need a street mode).
+   * Returns {@code true} when the request has no way to reach transit on at least one of the
+   * access and egress sides. A side is unreachable when its street mode is
+   * {@link StreetMode#NOT_SET} and the corresponding endpoint is not a stop (a stop endpoint
+   * provides a zero-distance access/egress, so it does not need a street mode).
    */
   public boolean cannotReachTransit() {
-    if (!journey.transit().enabled()) {
-      return true;
-    }
     boolean accessUnreachable =
       journey.access().mode() == StreetMode.NOT_SET && (from == null || from.stopId == null);
     boolean egressUnreachable =
