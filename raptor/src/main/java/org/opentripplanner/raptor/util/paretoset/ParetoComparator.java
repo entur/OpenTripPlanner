@@ -2,26 +2,23 @@ package org.opentripplanner.raptor.util.paretoset;
 
 /// Compares two elements in a {@link ParetoSet} for Pareto dominance.
 ///
-/// A comparison between a `left` and `right` element can produce four outcomes:
+/// A comparison between a `left` and `right` element can produce four mutually exclusive outcomes:
 ///
-/// - **Left dominates right** `≺`: at least one left criterion dominates and no right
-///   criterion dominates.
-/// - **Right dominates left** `≻`: at least one right criterion dominates and no left
-///   criterion dominates.
-/// - **Mutual dominance** `∥`: at least one left criteria dominates right and at
-///   least one right criteria dominates left
-/// - **No dominance** `≡`: all criteria are equal, or neither side dominates.
+/// - {@link ParetoDominance#LEFT}
+/// - {@link ParetoDominance#RIGHT}
+/// - {@link ParetoDominance#MUTUAL}
+/// - {@link ParetoDominance#NONE}
 ///
-/// Implementations only need to provide one directional check in
+/// Implementations only need to provide one directional check by implementing
 /// {@link #leftDominanceExist(Object, Object)}.
 ///
-/// @param <T> the Pareto set element type
+/// @param <T> the Pareto set element type.
 ///
 @FunctionalInterface
 public interface ParetoComparator<T> {
   /**
-   * Returns {@code true} if at least one criterion in {@code left} dominates the corresponding
-   * criterion in {@code right}.
+   * Returns {@code true} if at least one criterion in {@code left} is better then the
+   * corresponding criterion in {@code right}.
    */
   boolean leftDominanceExist(T left, T right);
 

@@ -3,8 +3,8 @@ package org.opentripplanner.raptor.util.paretoset;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.raptor.util.paretoset.ParetoDominance.BOTH;
 import static org.opentripplanner.raptor.util.paretoset.ParetoDominance.LEFT;
+import static org.opentripplanner.raptor.util.paretoset.ParetoDominance.MUTUAL;
 import static org.opentripplanner.raptor.util.paretoset.ParetoDominance.NONE;
 import static org.opentripplanner.raptor.util.paretoset.ParetoDominance.RIGHT;
 
@@ -36,6 +36,6 @@ public class ParetoComparatorTest {
     assertEquals(NONE, COMPARATOR.compare(A_5_5, A_5_5));
     assertEquals(LEFT, COMPARATOR.compare(C_3_5, B_5_5));
     assertEquals(RIGHT, COMPARATOR.compare(A_5_5, C_3_5));
-    assertEquals(BOTH, COMPARATOR.compare(C_3_5, D_5_3));
+    assertEquals(MUTUAL, COMPARATOR.compare(C_3_5, D_5_3));
   }
 }

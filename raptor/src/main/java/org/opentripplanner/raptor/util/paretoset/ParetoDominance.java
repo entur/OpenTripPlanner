@@ -1,18 +1,17 @@
 package org.opentripplanner.raptor.util.paretoset;
 
-/// Pareto Dominance can have 4 values when comparing two values `x`, `y`. Remember
-/// x and y can be vectors with one or more criterias.
+/// Pareto Dominance can have 4 values when comparing two values `x`, `y`. The 4 values are
+/// mutually exclusive. Remember x and y can be vectors with one or more criteria.
 public enum ParetoDominance {
-  /// Left-Dominance (`x` ≺ `y`), when `x` is strictly better than`y`.
+  /// Left-Dominance (`x` ≺ `y`), when `x` is strictly better than`y`. `[1, 1, 3]` ≺ `[1, 7, 3]`.
   LEFT('≺'),
-  /// Right-Dominance (`x` ≻ `y`), when `y` is strictly better than`x`.
+  /// Right-Dominance (`x` ≻ `y`), when `y` is strictly better than`x`. `[1, 7, 3]` ≻ `[1, 1, 3]`.
   RIGHT('≻'),
-  /// Both Dominate Each Other (Incomparable/Indifferent)  (`x` ∥ `y`). Neither solution is
-  /// superior to the other. Both solutions are part of the Pareto optimal set (Pareto front). For
-  /// two vectors `v` and `u` this happens when the `v` is better in one criteria, and `u` is
-  /// better in another: `[1, 7, 3]` ∥ `[7, 1, 3]`.
-  BOTH('∥'),
-  /// No Dominate (Pareto Equivalent)  (`x` ≡ `y`). Neither `x` dominates `y` nor `y` dominates
+  /// Mutual-Dominance (Incomparable/Indifferent)  (`x` ∥ `y`). Neither solution is superior to the
+  /// other. Both solutions are part of the Pareto optimal set (Pareto front). This happens when
+  /// the `x` is better in one criteria, and `y` is better in another: `[1, 7, 3]` ∥ `[7, 1, 3]`.
+  MUTUAL('∥'),
+  /// No Dominate (Strictly equal)  (`x` ≡ `y`). Neither `x` dominates `y` nor `y` dominates
   /// `x`, AND `x` and `y` are equal in all objective values: `[1, 7, 3]` ≡ `[1, 7, 3]`.
   NONE('≡');
 
@@ -22,12 +21,12 @@ public enum ParetoDominance {
     this.symbol = symbol;
   }
 
-  /**
-   * Create a dominance value from two directional dominance flags.
-   */
+  /// Create a dominance value from two directional dominance flags. For `x`(left) and `y`(right):
+  /// @param leftDominanceExist `x` has at least one criteria that is better than `y`.
+  /// @param rightDominanceExist `y` has at least one criteria that is better than `x`.
   public static ParetoDominance of(boolean leftDominanceExist, boolean rightDominanceExist) {
     if (leftDominanceExist) {
-      return rightDominanceExist ? BOTH : LEFT;
+      return rightDominanceExist ? MUTUAL : LEFT;
     } else {
       return rightDominanceExist ? RIGHT : NONE;
     }

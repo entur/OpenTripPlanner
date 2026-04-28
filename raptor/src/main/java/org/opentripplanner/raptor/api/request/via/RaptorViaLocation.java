@@ -94,7 +94,7 @@ public final class RaptorViaLocation {
           var b = list.get(j);
           // If NOT both values dominate each other, at least one should be dropped
           var dominance = comparator.compare(a, b);
-          if (dominance != ParetoDominance.BOTH) {
+          if (dominance != ParetoDominance.MUTUAL) {
             throw new IllegalArgumentException(
               "All connection need to be pareto-optimal: %s %s %s".formatted(a, dominance, b)
             );
