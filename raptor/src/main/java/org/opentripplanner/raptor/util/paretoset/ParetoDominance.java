@@ -21,9 +21,9 @@ public enum ParetoDominance {
     this.symbol = symbol;
   }
 
-  /**
-   * Create a dominance value from two directional dominance flags.
-   */
+  /// Create a dominance value from two directional dominance flags. For `x`(left) and `y`(right):
+  /// @param leftDominanceExist `x` has at least one criteria that is better than `y`.
+  /// @param rightDominanceExist `y` has at least one criteria that is better than `x`.
   public static ParetoDominance of(boolean leftDominanceExist, boolean rightDominanceExist) {
     if (leftDominanceExist) {
       return rightDominanceExist ? MUTUAL : LEFT;
