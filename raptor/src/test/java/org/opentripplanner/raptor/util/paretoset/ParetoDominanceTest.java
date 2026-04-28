@@ -35,7 +35,7 @@ class ParetoDominanceTest {
   }
 
   @Test
-  void testToSting() {
+  void testToString() {
     assertEquals("≺", LEFT.toString());
     assertEquals("≻", RIGHT.toString());
     assertEquals("≡", NONE.toString());

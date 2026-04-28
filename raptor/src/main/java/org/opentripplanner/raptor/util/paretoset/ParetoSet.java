@@ -111,7 +111,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
           notifyElementRejected(newValue, it);
           return false;
         case NONE:
-          // newValue is equivalent with an existing value
+          // newValue is strictly equal to an existing value
           notifyElementRejected(newValue, it);
           return false;
       }

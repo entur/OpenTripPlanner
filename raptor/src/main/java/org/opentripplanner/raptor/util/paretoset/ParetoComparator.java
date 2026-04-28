@@ -8,9 +8,9 @@ package org.opentripplanner.raptor.util.paretoset;
 ///   criterion dominates.
 /// - **Right dominates left** `≻`: at least one right criterion dominates and no left
 ///   criterion dominates.
-/// - **Mutual dominance** `∥`: at least one left criteria dominates right and at
-///   least one right criteria dominates left
-/// - **No dominance** `≡`: all criteria are equal, or neither side dominates.
+/// - **Mutual dominance** `∥`: at least one left criterion dominates right and at
+///   least one right criterion dominates left
+/// - **No dominance** `≡`: all criteria are equal.
 ///
 /// Implementations only need to provide one directional check in
 /// {@link #leftDominanceExist(Object, Object)}.

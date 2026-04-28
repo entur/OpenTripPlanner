@@ -1,7 +1,7 @@
 package org.opentripplanner.raptor.util.paretoset;
 
 /// Pareto Dominance can have 4 values when comparing two values `x`, `y`. Remember
-/// x and y can be vectors with one or more criterias.
+/// x and y can be vectors with one or more criteria.
 public enum ParetoDominance {
   /// Left-Dominance (`x` ≺ `y`), when `x` is strictly better than`y`.
   LEFT('≺'),
@@ -12,7 +12,7 @@ public enum ParetoDominance {
   /// two vectors `v` and `u` this happens when the `v` is better in one criteria, and `u` is
   /// better in another: `[1, 7, 3]` ≡ `[7, 1, 3]`.
   BOTH('∥'),
-  /// No Dominate (Pareto Equivalent)  (`x` ≡ `y`). Neither `x` dominates `y` nor `y` dominates
+  /// No Dominate (Strictly equal)  (`x` ≡ `y`). Neither `x` dominates `y` nor `y` dominates
   /// `x`, AND `x` and `y` are equal in all objective values: `[1, 7, 3]` ≡ `[1, 7, 3]`.
   NONE('≡');
 
