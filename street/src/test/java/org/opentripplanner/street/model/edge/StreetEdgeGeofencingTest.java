@@ -49,6 +49,14 @@ class StreetEdgeGeofencingTest {
     false
   );
 
+  static GeofencingZone NO_DROP_OFF_ZONE_TIER_2 = new GeofencingZone(
+    new FeedScopedId(NETWORK_TIER, "b-park"),
+    null,
+    null,
+    true,
+    false
+  );
+
   static GeofencingZone NO_TRAVERSAL_ZONE = new GeofencingZone(
     new FeedScopedId(NETWORK_TIER, "no-traverse"),
     null,
@@ -178,6 +186,156 @@ class StreetEdgeGeofencingTest {
       var continueRiding = results[1];
       assertEquals(RENTING_FLOATING, continueRiding.getVehicleRentalState());
       assertEquals(SCOOTER, continueRiding.getBackMode());
+    }
+
+    /**
+     * A committed rider approaching a no-traversal zone boundary is forced to drop the
+     * vehicle and walk. Tests the pre-traversal trigger at line 344.
+     */
+    @Test
+    public void forwardNoTraversalBoundaryForcesDropForCommittedRider() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+
+      var edge = streetEdge(V1, V2);
+      var state = initialState(V1, NETWORK_TIER, false);
+
+      var results = edge.traverse(state);
+      assertEquals(1, results.length);
+      assertEquals(HAVE_RENTED, results[0].getVehicleRentalState());
+    }
+
+    /**
+     * When a committed rider already has a no-traversal zone in state (from a previous
+     * boundary crossing), subsequent edges force drop+walk via isTraversalBannedByCurrentZones.
+     */
+    @Test
+    public void forwardTraversalBanWhenZoneAlreadyInState() {
+      // No boundaries on vertices — the zone is already in state
+      var edge = streetEdge(V1, V2);
+      var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_TRAVERSAL_ZONE));
+
+      var results = edge.traverse(state);
+      assertEquals(1, results.length);
+      assertEquals(HAVE_RENTED, results[0].getVehicleRentalState());
+      assertEquals(WALK, results[0].getBackMode());
+    }
+
+    /**
+     * When a rider is already inside a no-drop-off zone and approaches a second one,
+     * no fork is offered — the rider continues riding through.
+     */
+    @Test
+    public void noForkWhenAlreadyInsideNoDropOffZone() {
+      // V2→V3 boundary for a second no-drop-off zone
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER_2, true));
+      V3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER_2, false));
+
+      var edge = streetEdge(V1, V2);
+      // Rider already inside the first no-drop-off zone
+      var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_DROP_OFF_ZONE_TIER));
+
+      var results = edge.traverse(state);
+      assertEquals(1, results.length);
+      assertEquals(RENTING_FLOATING, results[0].getVehicleRentalState());
+      assertEquals(SCOOTER, results[0].getBackMode());
+    }
+
+    /**
+     * A generic (null-network) RENTING_FLOATING crossing a zone boundary forks into
+     * per-network committed branches plus a generic continuation.
+     */
+    @Test
+    public void genericStateForkAtZoneBoundary() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var edge = streetEdge(V1, V2);
+      var state = initialState(V1, null, false);
+
+      var results = edge.traverse(state);
+      assertEquals(2, results.length);
+
+      // Committed branch for TIER network
+      var committed = Arrays.stream(results)
+        .filter(s -> NETWORK_TIER.equals(s.getVehicleRentalNetwork()))
+        .findFirst();
+      assertTrue(committed.isPresent());
+      assertEquals(RENTING_FLOATING, committed.get().getVehicleRentalState());
+
+      // Generic continuation with updated committedNetworks
+      var generic = Arrays.stream(results)
+        .filter(s -> s.getVehicleRentalNetwork() == null)
+        .findFirst();
+      assertTrue(generic.isPresent());
+      assertTrue(generic.get().getCommittedNetworks().contains(NETWORK_TIER));
+    }
+
+    /**
+     * When a generic state has already committed TIER, crossing a TIER zone boundary
+     * should not create a duplicate committed branch.
+     */
+    @Test
+    public void genericStateForkSkipsAlreadyCommittedNetwork() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var edge = streetEdge(V1, V2);
+      var state = initialStateWithCommittedNetworks(V1, Set.of(NETWORK_TIER));
+
+      var results = edge.traverse(state);
+      // Only the generic continuation — no new committed branch
+      assertEquals(1, results.length);
+      assertEquals(RENTING_FLOATING, results[0].getVehicleRentalState());
+      // Still generic (null network)
+      assertEquals(null, results[0].getVehicleRentalNetwork());
+    }
+
+    /**
+     * A generic state crossing a no-traversal zone boundary does not trigger the generic
+     * fork (no-traversal zones are skipped by isGenericBoundaryForkTrigger). Instead, the
+     * post-traversal zone entry trigger detects the no-traversal zone and force-drops.
+     */
+    @Test
+    public void genericStateForcedDropAtNoTraversalZone() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+
+      var edge = streetEdge(V1, V2);
+      var state = initialState(V1, null, false);
+
+      var results = edge.traverse(state);
+      // Generic state: tov.isGeofencingNoTraversalBoundary returns false (null network),
+      // but updateGeofencingZones adds the zone to state. Then isForwardZoneEntryTrigger
+      // fires (traversalBanned=true, network=null matches), forcing a drop.
+      assertEquals(1, results.length);
+      assertEquals(HAVE_RENTED, results[0].getVehicleRentalState());
+    }
+
+    /**
+     * A committed RENTING_FLOATING state at a no-drop-off boundary takes the drop/ride
+     * fork, not the generic boundary fork. The generic fork only fires for null-network states.
+     */
+    @Test
+    public void committedStateDoesNotTriggerGenericFork() {
+      // Boundary on V2 (entering=true) / V3 (entering=false). Edge V1→V2, tov=V2.
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var edge = streetEdge(V1, V2);
+      var state = initialState(V1, NETWORK_TIER, false);
+
+      var results = edge.traverse(state);
+      // Drop + ride branches from the no-drop-off fork (not generic fork)
+      assertEquals(2, results.length);
+      var dropped = Arrays.stream(results)
+        .filter(s -> s.getVehicleRentalState() == HAVE_RENTED)
+        .findFirst();
+      assertTrue(dropped.isPresent());
+      var riding = Arrays.stream(results)
+        .filter(s -> s.getVehicleRentalState() == RENTING_FLOATING)
+        .findFirst();
+      assertTrue(riding.isPresent());
     }
   }
 
@@ -441,6 +599,71 @@ class StreetEdgeGeofencingTest {
       assertEquals(0, states.length);
     }
 
+    /**
+     * When a HAVE_RENTED walker has no zones in state, the arriveBy boundary fork trigger
+     * returns false (early return). Normal walking traversal occurs.
+     */
+    @Test
+    public void arriveByBoundaryForkNoOpWhenNoZonesInState() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var edge = streetEdge(V1, V2);
+      var req = makeArriveByRequest(Collections.emptySet(), Collections.emptySet());
+      // HAVE_RENTED walker with EMPTY zones
+      var haveRentedState = makeHaveRentedState(V2, req, Collections.emptySet());
+
+      var states = edge.traverse(haveRentedState);
+      assertEquals(1, states.length);
+      assertEquals(HAVE_RENTED, states[0].getVehicleRentalState());
+      assertEquals(WALK, states[0].currentMode());
+    }
+
+    /**
+     * When a walker exits one zone but remains inside another (overlapping zones),
+     * the deferred fork only creates branches for the exited zone's network.
+     */
+    @Test
+    public void deferredForkOnlyForksExitedZoneNetworks() {
+      // Boundary at V1/V2 for TIER zone only (not BIRD)
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var boundaryEdge = streetEdge(V1, V2);
+      var deferredEdge = streetEdge(V4, V1);
+      var req = makeArriveByRequest(Collections.emptySet(), Collections.emptySet());
+      // Walker inside both TIER and BIRD zones
+      var haveRentedState = makeHaveRentedState(
+        V2,
+        req,
+        Set.of(NO_DROP_OFF_ZONE_TIER, NO_DROP_OFF_ZONE_BIRD)
+      );
+
+      // Step 1: boundary fork — exits TIER zone, still inside BIRD
+      var boundaryStates = boundaryEdge.traverse(haveRentedState);
+      assertEquals(1, boundaryStates.length);
+      var walkingAtV1 = boundaryStates[0];
+      // TIER was exited, BIRD remains
+      assertTrue(walkingAtV1.getCurrentGeofencingZones().contains(NO_DROP_OFF_ZONE_BIRD));
+      assertFalse(walkingAtV1.getCurrentGeofencingZones().contains(NO_DROP_OFF_ZONE_TIER));
+
+      // Step 2: deferred fork — should fork TIER only (not BIRD)
+      var states = deferredEdge.traverse(walkingAtV1);
+      assertTrue(states.length >= 2);
+
+      // TIER committed branch exists
+      var tierState = Arrays.stream(states)
+        .filter(s -> NETWORK_TIER.equals(s.getVehicleRentalNetwork()))
+        .findFirst();
+      assertTrue(tierState.isPresent());
+
+      // No BIRD committed branch (BIRD zone was not exited)
+      var birdState = Arrays.stream(states)
+        .filter(s -> NETWORK_BIRD.equals(s.getVehicleRentalNetwork()))
+        .findFirst();
+      assertFalse(birdState.isPresent());
+    }
+
     private static StreetSearchRequest makeArriveByRequest(
       Set<String> allowedNetworks,
       Set<String> bannedNetworks
@@ -478,6 +701,43 @@ class StreetEdgeGeofencingTest {
       network,
       false
     );
+    return editor.makeState();
+  }
+
+  private State initialStateWithZones(
+    Vertex startVertex,
+    String network,
+    boolean arriveBy,
+    Set<GeofencingZone> zones
+  ) {
+    var req = StreetSearchRequest.of()
+      .withMode(StreetMode.SCOOTER_RENTAL)
+      .withArriveBy(arriveBy)
+      .build();
+    var editor = new StateEditor(startVertex, req);
+    editor.beginFloatingVehicleRenting(
+      RentalFormFactor.SCOOTER,
+      PropulsionType.ELECTRIC,
+      network,
+      false
+    );
+    editor.initializeGeofencingZones(zones);
+    return editor.makeState();
+  }
+
+  private State initialStateWithCommittedNetworks(
+    Vertex startVertex,
+    Set<String> committedNetworks
+  ) {
+    var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
+    var editor = new StateEditor(startVertex, req);
+    editor.beginFloatingVehicleRenting(
+      RentalFormFactor.SCOOTER,
+      PropulsionType.ELECTRIC,
+      null,
+      false
+    );
+    editor.setCommittedNetworks(committedNetworks);
     return editor.makeState();
   }
 }
