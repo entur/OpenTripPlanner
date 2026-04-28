@@ -8,15 +8,14 @@ import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.routing.api.request.request.filter.SelectRequest;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilterRequest;
-import org.opentripplanner.transit.model.basic.MainAndSubMode;
+import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
 import org.opentripplanner.utils.collection.CollectionUtils;
 import org.opentripplanner.utils.collection.ListUtils;
 
 class FilterMapper {
 
   static List<TransitFilter> mapFilters(
-    // TODO(tkalvas) List<NarrowedTransitMode>
-    List<MainAndSubMode> modes,
+    List<NarrowedTransitMode> modes,
     List<GraphQLTypes.GraphQLTransitFilterInput> filters
   ) {
     var filterRequests = new ArrayList<TransitFilter>();
@@ -37,15 +36,13 @@ class FilterMapper {
 
       // in the GTFS API modes can only be included but not excluded.
       if (CollectionUtils.isEmpty(includes)) {
-        // TODO(tkalvas) .withNarrowedTransportModes
-        var modeSelect = SelectRequest.of().withTransportModes(modes).build();
+        var modeSelect = SelectRequest.of().withNarrowedTransportModes(modes).build();
         filterRequestBuilder.addSelect(modeSelect);
       } else {
         // for every inclusion we also need to add the modes, otherwise the filter will not work
         for (var selectInput : ListUtils.nullSafeImmutableList(includes)) {
           var builder = SelectRequestMapper.mapSelectRequest(selectInput, "include");
-          // TODO(tkalvas) .withNarrowedTransportModes
-          builder.withTransportModes(modes);
+          builder.withNarrowedTransportModes(modes);
           filterRequestBuilder.addSelect(builder.build());
         }
       }
