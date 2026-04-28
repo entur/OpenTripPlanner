@@ -15,6 +15,7 @@ import org.opentripplanner.utils.collection.ListUtils;
 class FilterMapper {
 
   static List<TransitFilter> mapFilters(
+    // TODO(tkalvas) List<NarrowedTransitMode>
     List<MainAndSubMode> modes,
     List<GraphQLTypes.GraphQLTransitFilterInput> filters
   ) {
@@ -36,12 +37,14 @@ class FilterMapper {
 
       // in the GTFS API modes can only be included but not excluded.
       if (CollectionUtils.isEmpty(includes)) {
+        // TODO(tkalvas) .withNarrowedTransportModes
         var modeSelect = SelectRequest.of().withTransportModes(modes).build();
         filterRequestBuilder.addSelect(modeSelect);
       } else {
         // for every inclusion we also need to add the modes, otherwise the filter will not work
         for (var selectInput : ListUtils.nullSafeImmutableList(includes)) {
           var builder = SelectRequestMapper.mapSelectRequest(selectInput, "include");
+          // TODO(tkalvas) .withNarrowedTransportModes
           builder.withTransportModes(modes);
           filterRequestBuilder.addSelect(builder.build());
         }

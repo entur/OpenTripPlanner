@@ -144,6 +144,7 @@ public class ModePreferencesMapper {
         .stream()
         .map(mode -> new MainAndSubMode(mode.getMode()))
         .toList();
+      // TODO(tkalvas) modes, remove var mainModes completely
       var filters = FilterMapper.mapFilters(mainModes, graphQlFilters);
       journey.withTransit(b -> b.withFilters(filters));
     }

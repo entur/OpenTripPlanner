@@ -22,6 +22,10 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
     return true;
   }
 
+  public TransitMode mainMode() {
+    return this.mode.getMode();
+  }
+
   @Override
   public boolean match(
     TransitMode transitMode,
