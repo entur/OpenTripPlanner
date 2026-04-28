@@ -424,28 +424,26 @@ public class StreetEdge
 
     State state = editor != null ? editor.makeState() : null;
 
-    // Forward: entering a restricted zone (no-drop-off or no-traversal).
-    // For no-traversal: drop and walk (rider can't continue riding).
-    // For no-drop-off: just continue riding. Dropping inside the zone is never valid.
-    // The pre-traversal fork at the zone boundary already offers the drop-at-boundary
-    // option, so this post-traversal check only needs to handle no-traversal zones and
-    // let no-drop-off zones pass through (the rider continues riding normally).
-    if (state != null && isForwardZoneEntryTrigger(s0, state)) {
-      if (isForwardTraversalBanTrigger(s0, state)) {
-        StateEditor afterTraversal = doTraverse(s0, TraverseMode.WALK, false);
-        if (afterTraversal != null) {
-          afterTraversal.dropFloatingVehicle(
-            state.vehicleRentalFormFactor(),
-            state.rentalVehiclePropulsionType(),
-            state.getVehicleRentalNetwork(),
-            state.getRequest().arriveBy()
-          );
-          return State.ofNullable(afterTraversal.makeState());
-        }
+    // Forward: entered a no-traversal zone during traversal. Drop and walk.
+    // Handles both committed and generic states. Must run BEFORE the generic boundary
+    // fork below, because generic states entering a no-traversal zone must be dropped,
+    // not forked into committed branches.
+    if (state != null && isForwardNoTraversalEntryTrigger(s0, state)) {
+      StateEditor afterTraversal = doTraverse(s0, TraverseMode.WALK, false);
+      if (afterTraversal != null) {
+        afterTraversal.dropFloatingVehicle(
+          state.vehicleRentalFormFactor(),
+          state.rentalVehiclePropulsionType(),
+          state.getVehicleRentalNetwork(),
+          state.getRequest().arriveBy()
+        );
+        return State.ofNullable(afterTraversal.makeState());
       }
     }
 
     // Generic state boundary fork: generic RENTING_FLOATING crossing a zone boundary
+    // into a non-traversal-banned zone. The traversalBanned guard is load-bearing:
+    // no-traversal zones are handled by isForwardNoTraversalEntryTrigger above.
     if (state != null && isGenericBoundaryForkTrigger(s0, state)) {
       return performGenericBoundaryFork(s0, state);
     }
@@ -1092,10 +1090,19 @@ public class StreetEdge
 
   /**
    * Whether a forward renting state entered a new no-traversal zone during traversal.
-   * When true, only the walk+drop branch should be returned (riding into the zone is blocked).
+   * Applies to both committed and generic states. When true, the rider is forced to drop
+   * the vehicle and walk.
+   * <p>
+   * No-drop-off zones are NOT matched here — the pre-traversal fork
+   * ({@link Vertex#isGeofencingNoDropOffBoundary}) handles the drop-at-boundary option,
+   * and the generic boundary fork ({@link #isGenericBoundaryForkTrigger}) handles
+   * network commitment. No-drop-off zones entering the state need no post-traversal action.
    */
-  private boolean isForwardTraversalBanTrigger(State s0, State traversedState) {
+  private boolean isForwardNoTraversalEntryTrigger(State s0, State traversedState) {
     if (!s0.isRentingVehicle() || s0.getRequest().arriveBy()) {
+      return false;
+    }
+    if (s0.getCurrentGeofencingZones() == traversedState.getCurrentGeofencingZones()) {
       return false;
     }
     String network = s0.getVehicleRentalNetwork();
@@ -1113,7 +1120,12 @@ public class StreetEdge
   }
 
   /**
-   * Whether a generic RENTING_FLOATING state crossed a boundary entering a new zone.
+   * Whether a generic RENTING_FLOATING state crossed a boundary entering a new zone that
+   * requires network commitment. Only matches non-traversal-banned zones — no-traversal
+   * zones are handled by {@link #isForwardNoTraversalEntryTrigger} which runs first and
+   * forces a drop. The {@code !traversalBanned} guard here is self-sufficient: even if
+   * the ordering changed, forking into a no-traversal zone would be wrong because the
+   * committed branches couldn't legally traverse it.
    */
   private boolean isGenericBoundaryForkTrigger(State s0, State traversedState) {
     if (s0.getVehicleRentalNetwork() != null) {
