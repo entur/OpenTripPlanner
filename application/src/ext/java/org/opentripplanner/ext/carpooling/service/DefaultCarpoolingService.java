@@ -24,7 +24,6 @@ import org.opentripplanner.ext.carpooling.routing.ViableAccessEgress;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
 import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
 import org.opentripplanner.framework.model.TimeAndCost;
-import org.opentripplanner.graph_builder.module.nearbystops.StopResolver;
 import org.opentripplanner.graph_builder.module.nearbystops.StreetNearbyStopFinder;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
@@ -36,6 +35,7 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
@@ -62,10 +62,10 @@ import org.slf4j.LoggerFactory;
  * The service executes routing requests in three distinct phases:
  * <ol>
  *   <li><strong>Pre-filtering ({@link FilterChain}):</strong> Quickly eliminates incompatible
- *       trips based on capacity, time windows, direction, and distance.</li>
+ *       trips based on capacity, time windows, and distance.</li>
  *   <li><strong>Position Finding ({@link InsertionPositionFinder}):</strong> For trips that
  *       pass filtering, identifies viable pickup/dropoff position pairs using fast heuristics
- *       (capacity, direction, beeline delay estimates). No routing is performed in this phase.</li>
+ *       (capacity, beeline delay estimates). No routing is performed in this phase.</li>
  *   <li><strong>Insertion Evaluation ({@link InsertionEvaluator}):</strong> For viable positions,
  *       computes actual routes using A* street routing. Evaluates all feasible insertion positions
  *       and selects the one minimizing additional travel time while satisfying delay constraints.</li>
@@ -139,7 +139,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * This method executes the full three-phase carpooling algorithm:
    * <ol>
    *   <li><strong>Pre-filtering:</strong> All trips from the repository are filtered by capacity,
-   *       time window, direction, and distance to quickly eliminate incompatible matches.</li>
+   *       time window, and distance to quickly eliminate incompatible matches.</li>
    *   <li><strong>Position finding:</strong> For each surviving trip, viable pickup/dropoff
    *       insertion positions are identified using beeline heuristics (no routing).</li>
    *   <li><strong>Insertion evaluation:</strong> Viable positions are evaluated with A* street
@@ -297,7 +297,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * @param streetRequest
    * @param accessOrEgress whether this is an access leg (origin to transit) or egress leg
    *        (transit to destination)
-   * @param stopResolver used for nearby stop search
+   * @param transitServiceResolver used for nearby stop search
    * @param linkingContext pre-linked vertices for the passenger's origin and destination
    * @param transitSearchTimeZero the reference time for computing relative start/end times
    *        used by Raptor
@@ -310,7 +310,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     RouteRequest request,
     StreetRequest streetRequest,
     AccessEgressType accessOrEgress,
-    StopResolver stopResolver,
+    TransitServiceResolver transitServiceResolver,
     LinkingContext linkingContext,
     ZonedDateTime transitSearchTimeZero
   ) throws RoutingValidationException {
@@ -374,7 +374,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
       }
 
       var streetNearbyStopFinder = StreetNearbyStopFinder.of(
-        stopResolver,
         MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS,
         0
       );
@@ -388,7 +387,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
           accessOrEgress.isEgress()
         )
         .stream()
-        .filter(stop -> !(stop.stop instanceof AreaStop))
+        .filter(stop -> !(transitServiceResolver.getStopLocation(stop.stopId) instanceof AreaStop))
         .toList();
 
       var nearbyStopsWithVertices = new HashMap<NearbyStop, Vertex>();
@@ -448,11 +447,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
             .keySet()
             .stream()
             .map(nearbyStop -> {
+              var stop = transitServiceResolver.getStopLocation(nearbyStop.stopId);
               var pickUpCoord = accessOrEgress.isAccess()
                 ? passengerCoordinates
-                : nearbyStop.stop.getCoordinate();
+                : stop.getCoordinate();
               var dropOffCoord = accessOrEgress.isAccess()
-                ? nearbyStop.stop.getCoordinate()
+                ? stop.getCoordinate()
                 : passengerCoordinates;
 
               var viablePositions = positionFinder.findViablePositions(
@@ -484,6 +484,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .stream()
         .map(it ->
           createCarpoolAccessEgress(
+            transitServiceResolver,
             it,
             transitSearchTimeZero,
             /*
@@ -513,6 +514,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   }
 
   private CarpoolAccessEgress createCarpoolAccessEgress(
+    TransitServiceResolver transitServiceResolver,
     InsertionCandidate insertionCandidate,
     ZonedDateTime transitSearchTimeZero,
     Double carpoolReluctance
@@ -534,7 +536,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     );
 
     return new CarpoolAccessEgress(
-      insertionCandidate.transitStop().stop.getIndex(),
+      transitServiceResolver.getStopLocation(insertionCandidate.transitStop().stopId).getIndex(),
       passengerRideDuration,
       relativeStartTime,
       relativeEndTime,

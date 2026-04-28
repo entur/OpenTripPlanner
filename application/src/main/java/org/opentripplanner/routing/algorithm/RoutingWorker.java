@@ -66,15 +66,10 @@ public class RoutingWorker {
   @Nullable
   private LinkingContext currentLinkingContext = null;
 
-  public RoutingWorker(
-    OtpServerRequestContext serverContext,
-    RoutingWorkerRequest workerRequest,
-    ZoneId zoneId
-  ) {
+  public RoutingWorker(OtpServerRequestContext serverContext, RoutingWorkerRequest workerRequest) {
     this.request = workerRequest.request();
     this.transitSearchTimeZero = workerRequest.transitSearchTimeZero();
     this.additionalSearchDays = workerRequest.additionalSearchDays();
-
     this.serverContext = serverContext;
     this.debugTimingAggregator = new DebugTimingAggregator(
       serverContext.meterRegistry(),

@@ -1,6 +1,5 @@
 package org.opentripplanner.routing.service;
 
-import java.time.ZoneId;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.framework.time.ZoneIdFallback;
 import org.opentripplanner.model.plan.Itinerary;
@@ -29,11 +28,17 @@ public class DefaultRoutingService implements RoutingService {
 
   private final OtpServerRequestContext serverContext;
 
-  private final ZoneId timeZone;
+  private final RequestPreProcessor requestPreProcessor;
 
   public DefaultRoutingService(OtpServerRequestContext serverContext) {
     this.serverContext = serverContext;
-    this.timeZone = ZoneIdFallback.zoneId(serverContext.transitService().getTimeZone());
+
+    var timeZone = ZoneIdFallback.zoneId(serverContext.transitService().getTimeZone());
+
+    this.requestPreProcessor = new RequestPreProcessor(
+      serverContext.raptorTuningParameters(),
+      timeZone
+    );
   }
 
   @Override
@@ -41,7 +46,7 @@ public class DefaultRoutingService implements RoutingService {
     LOG.debug("Request: {}", request);
     OTPRequestTimeoutException.checkForTimeout();
     request.validateOriginAndDestination();
-    var worker = new RoutingWorker(serverContext, mapRequest(request), timeZone);
+    var worker = new RoutingWorker(serverContext, mapRequest(request));
     var response = worker.route();
     logResponse(response);
     return response;
@@ -51,23 +56,15 @@ public class DefaultRoutingService implements RoutingService {
   public ViaRoutingResponse route(RouteViaRequest request) {
     LOG.debug("Request: {}", request);
     OTPRequestTimeoutException.checkForTimeout();
-    var viaRoutingWorker = new ViaRoutingWorker(request, req -> {
-      return new RoutingWorker(
-        serverContext,
-        mapRequest(req),
-        serverContext.transitService().getTimeZone()
-      ).route();
-    });
+    var viaRoutingWorker = new ViaRoutingWorker(request, req ->
+      new RoutingWorker(serverContext, mapRequest(req)).route()
+    );
     // TODO: Add output logging here, see route(..) method
     return viaRoutingWorker.route();
   }
 
   private RoutingWorkerRequest mapRequest(RouteRequest request) {
-    return new RequestPreProcessor(
-      serverContext.transitService(),
-      serverContext.raptorTuningParameters(),
-      timeZone
-    ).computeRequest(request);
+    return requestPreProcessor.computeRequest(request);
   }
 
   private void logResponse(RoutingResponse response) {
