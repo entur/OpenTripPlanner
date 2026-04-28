@@ -19,8 +19,10 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
+import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.street.model.vertex.SplitterVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
@@ -336,6 +338,78 @@ class StreetEdgeGeofencingTest {
         .filter(s -> s.getVehicleRentalState() == RENTING_FLOATING)
         .findFirst();
       assertTrue(riding.isPresent());
+    }
+
+    /**
+     * When a boundary-crossing edge is split at a point inside the zone (simulating a
+     * destination linked mid-edge), the split vertex receives the correct boundary extension
+     * and the pre-traversal fork fires on the approach edge.
+     */
+    @Test
+    public void splitVertexInsideZoneGetsBoundaryExtension() {
+      // V1 (outside) → V2 (inside no-drop-off zone). Boundary extensions on both.
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var edge = streetEdge(V1, V2);
+      var splitVertex = new SplitterVertex("split", 0.5, 0.5, edge.getName());
+
+      // Split point is inside the zone
+      edge.splitNonDestructively(splitVertex, LinkingDirection.BIDIRECTIONAL, coord ->
+        Set.of(NO_DROP_OFF_ZONE_TIER)
+      );
+
+      // Split vertex should have entering=false (inside the zone)
+      var boundaries = splitVertex.getGeofencingBoundaries();
+      assertFalse(boundaries.isEmpty());
+      var boundary = boundaries
+        .stream()
+        .filter(b -> b.zone().equals(NO_DROP_OFF_ZONE_TIER))
+        .findFirst();
+      assertTrue(boundary.isPresent());
+      assertFalse(boundary.get().entering());
+    }
+
+    /**
+     * When a boundary-crossing edge is split at a point outside the zone, the split vertex
+     * receives entering=true so that the boundary-crossing temporary edge (split→tov) has
+     * correct pairing.
+     */
+    @Test
+    public void splitVertexOutsideZoneGetsBoundaryExtension() {
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE_TIER, false));
+
+      var edge = streetEdge(V1, V2);
+      var splitVertex = new SplitterVertex("split", 0.5, 0.5, edge.getName());
+
+      // Split point is outside the zone
+      edge.splitNonDestructively(splitVertex, LinkingDirection.BIDIRECTIONAL, coord -> Set.of());
+
+      var boundaries = splitVertex.getGeofencingBoundaries();
+      assertFalse(boundaries.isEmpty());
+      var boundary = boundaries
+        .stream()
+        .filter(b -> b.zone().equals(NO_DROP_OFF_ZONE_TIER))
+        .findFirst();
+      assertTrue(boundary.isPresent());
+      assertTrue(boundary.get().entering());
+    }
+
+    /**
+     * Non-boundary edges (no geofencing extensions on either vertex) produce no boundary
+     * extensions on the split vertex, even with a zone lookup.
+     */
+    @Test
+    public void splitVertexOnNonBoundaryEdgeHasNoBoundaries() {
+      var edge = streetEdge(V1, V2);
+      var splitVertex = new SplitterVertex("split", 0.5, 0.5, edge.getName());
+
+      edge.splitNonDestructively(splitVertex, LinkingDirection.BIDIRECTIONAL, coord ->
+        Set.of(NO_DROP_OFF_ZONE_TIER)
+      );
+
+      assertTrue(splitVertex.getGeofencingBoundaries().isEmpty());
     }
   }
 

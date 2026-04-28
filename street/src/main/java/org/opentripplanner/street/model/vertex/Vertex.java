@@ -366,7 +366,6 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
         addBusinessAreaBorderNetwork(network);
       }
     }
-    this.geofencingBoundaries = other.geofencingBoundaries;
   }
 
   /**

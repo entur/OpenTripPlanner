@@ -8,9 +8,13 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import javax.annotation.Nullable;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.geometry.CompactLineStringUtils;
@@ -741,6 +745,21 @@ public class StreetEdge
 
   /** Split this street edge and return the resulting street edges. The original edge is kept. */
   public SplitStreetEdge splitNonDestructively(SplitterVertex v, LinkingDirection direction) {
+    return splitNonDestructively(v, direction, null);
+  }
+
+  /**
+   * Split this street edge and return the resulting street edges. The original edge is kept.
+   * If a zone lookup is provided and this edge has geofencing boundary extensions, the split
+   * vertex receives the correct boundary extension based on spatial containment.
+   *
+   * @param zoneLookup spatial lookup returning zones containing a coordinate, or null to skip
+   */
+  public SplitStreetEdge splitNonDestructively(
+    SplitterVertex v,
+    LinkingDirection direction,
+    @Nullable Function<Coordinate, Set<GeofencingZone>> zoneLookup
+  ) {
     SplitLineString geoms = GeometryUtils.splitGeometryAtPoint(getGeometry(), v.getCoordinate());
 
     StreetEdge e1 = null;
@@ -775,7 +794,47 @@ public class StreetEdge
       copyRentalRestrictionsToSplitEdge(e2);
     }
 
+    propagateGeofencingBoundariesToSplitVertex(v, zoneLookup);
+
     return new SplitStreetEdge(e1, e2);
+  }
+
+  /**
+   * When a boundary-crossing edge is split, the split vertex needs the correct geofencing
+   * boundary extension so that boundary pairing and pre-traversal fork triggers work on the
+   * resulting temporary edges. Uses a spatial lookup to determine which side of the boundary
+   * the split point is on: entering=true if outside the zone, entering=false if inside.
+   */
+  private void propagateGeofencingBoundariesToSplitVertex(
+    SplitterVertex v,
+    @Nullable Function<Coordinate, Set<GeofencingZone>> zoneLookup
+  ) {
+    var fromBoundaries = fromv.getGeofencingBoundaries();
+    var toBoundaries = tov.getGeofencingBoundaries();
+    if (fromBoundaries.isEmpty() && toBoundaries.isEmpty()) {
+      return;
+    }
+    if (zoneLookup == null) {
+      return;
+    }
+    var zonesAtSplitPoint = zoneLookup.apply(v.getCoordinate());
+    var handled = new HashSet<GeofencingZone>();
+    for (var boundary : fromBoundaries) {
+      handled.add(boundary.zone());
+      boolean splitPointInsideZone = zonesAtSplitPoint.contains(boundary.zone());
+      v.addGeofencingBoundary(
+        new GeofencingBoundaryExtension(boundary.zone(), !splitPointInsideZone)
+      );
+    }
+    for (var boundary : toBoundaries) {
+      if (handled.contains(boundary.zone())) {
+        continue;
+      }
+      boolean splitPointInsideZone = zonesAtSplitPoint.contains(boundary.zone());
+      v.addGeofencingBoundary(
+        new GeofencingBoundaryExtension(boundary.zone(), !splitPointInsideZone)
+      );
+    }
   }
 
   public Optional<Edge> createPartialEdge(StreetVertex from, StreetVertex to) {

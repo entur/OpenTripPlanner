@@ -510,7 +510,7 @@ public class VertexLinker {
     // existing vertices
     var newEdges = scope == Scope.PERMANENT
       ? originalEdge.splitDestructively(v)
-      : originalEdge.splitNonDestructively(v, direction);
+      : originalEdge.splitNonDestructively(v, direction, graph::getGeofencingZonesContaining);
 
     if (scope != Scope.PERMANENT) {
       newEdges.forEach(tempEdges::addEdge);
@@ -531,6 +531,7 @@ public class VertexLinker {
         graph.removeEdge(originalEdge);
       }
     }
+
     return v;
   }
 
