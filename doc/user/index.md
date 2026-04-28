@@ -64,7 +64,7 @@ your own OTP instance, the best place to start is the [Basic Tutorial](Basic-Tut
 
 # Getting help
 
-The fastest way to get help is to use our [Gitter chat room](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im) where most of the core developers are. Bug reports may be filed via the Github [issue tracker](https://github.com/openplans/OpenTripPlanner/issues). The issue tracker is not intended for support questions or discussions. Please use the chat for this purpose. The OpenTripPlanner [mailing list](http://groups.google.com/group/opentripplanner-users) is treated as a legacy communications channel and used almost exclusively for project announcements. Again, please direct development and support discussions to the Gitter chat.
+The fastest way to get help is to use our [Gitter chat room](https://gitter.im/opentripplanner/OpenTripPlanner) where most of the core developers are. Bug reports may be filed via the Github [issue tracker](https://github.com/openplans/OpenTripPlanner/issues). The issue tracker is not intended for support questions or discussions. Please use the chat for this purpose. The OpenTripPlanner [mailing list](http://groups.google.com/group/opentripplanner-users) is treated as a legacy communications channel and used almost exclusively for project announcements. Again, please direct development and support discussions to the Gitter chat.
 
 # Financial and In-Kind Support
 

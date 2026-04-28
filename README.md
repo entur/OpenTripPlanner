@@ -1,6 +1,6 @@
 ## Overview
 
-[![Join the chat at https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im](https://badges.gitter.im/opentripplanner/OpenTripPlanner.svg)](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im)
+[![Join the chat at https://gitter.im/opentripplanner/OpenTripPLanner](https://badges.gitter.im/opentripplanner/OpenTripPlanner.svg)](https://gitter.im/opentripplanner/OpenTripPlanner)
 [![Matrix](https://img.shields.io/matrix/opentripplanner%3Amatrix.org?label=Matrix%20chat&?cacheSeconds=172800)](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im)
 [![codecov](https://codecov.io/gh/opentripplanner/OpenTripPlanner/branch/dev-2.x/graph/badge.svg?token=ak4PbIKgZ1)](https://codecov.io/gh/opentripplanner/OpenTripPlanner)
 [![Commit activity](https://img.shields.io/github/commit-activity/y/opentripplanner/OpenTripPlanner)](https://github.com/opentripplanner/OpenTripPlanner/graphs/contributors)
@@ -60,7 +60,7 @@ the [main documentation](http://docs.opentripplanner.org/en/dev-2.x/), including
 
 ## Getting in Touch
 
-The fastest way to get help is to use our [Gitter chat room](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im) where most of the core developers
+The fastest way to get help is to use our [Gitter chat room](https://gitter.im/opentripplanner/OpenTripPlanner) where most of the core developers
 are. Bug reports may be filed via the Github [issue tracker](https://github.com/openplans/OpenTripPlanner/issues). The OpenTripPlanner [mailing list](http://groups.google.com/group/opentripplanner-users)
 is used almost exclusively for project announcements. The mailing list and issue tracker are not
 intended for support questions or discussions. Please use the chat for this purpose. Other details

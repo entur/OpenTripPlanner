@@ -9,7 +9,7 @@ assignees: ''
 
 **NOTE:** this issue system is intended for reporting bugs and tracking progress in software
 development. For all other usage and software development questions or discussion, please post a
-question in our chat room: https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im.
+question in our chat room: https://gitter.im/opentripplanner/OpenTripPlanner.
 
 
 ## Expected behavior

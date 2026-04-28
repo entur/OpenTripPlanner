@@ -69,7 +69,7 @@ be more appropriate for these purposes.
 
 ## Talk to an expert about OTP
 
-Everyone interested in OTP is welcome to post questions on the [Gitter chat](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im)
+Everyone interested in OTP is welcome to post questions on the [Gitter chat](https://gitter.im/opentripplanner/OpenTripPlanner)
 or [OpenTripPlanner-users group](https://groups.google.com/g/opentripplanner-users).
 
 If you’re looking for a conversation with an individual from a similar organizational type, you can 

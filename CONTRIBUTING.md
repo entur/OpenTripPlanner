@@ -7,7 +7,7 @@ Please read the guidelines carefully to make sure you follow our contribution pr
 
 - If you have any questions about problems you are encountering with code, deployment,
 documentation, or development coordination, please don't hesitate to post to the
-[OpenTripPlanner Gitter chat](https://matrix.to/#/#opentripplanner_OpenTripPlanner:gitter.im).
+[OpenTripPlanner Gitter chat](https://gitter.im/opentripplanner/OpenTripPlanner).
 - There are twice-weekly developer meetings to discuss and coordinate contributions in more detail.
 See the [calendar](https://calendar.google.com/calendar/u/0/embed?src=ormbltvsqb6adl80ejgudt0glc@group.calendar.google.com)
 or [iCal link](https://calendar.google.com/calendar/ical/ormbltvsqb6adl80ejgudt0glc@group.calendar.google.com/public/basic.ics)
