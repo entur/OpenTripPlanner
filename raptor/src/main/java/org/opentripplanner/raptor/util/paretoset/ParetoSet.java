@@ -101,7 +101,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       T it = elements[i];
 
       switch (comparator.compare(newValue, it)) {
-        case BOTH:
+        case MUTUAL:
           continue loop;
         case LEFT:
           removeDominatedElementsFromRestOfSetAndAddNewElement(newValue, i);
@@ -154,7 +154,7 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
       var it = elements[i];
 
       switch (comparator.compare(newValue, it)) {
-        case BOTH:
+        case MUTUAL:
           continue loop;
         case LEFT:
           return true;
