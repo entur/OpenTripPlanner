@@ -9,9 +9,9 @@ import org.opentripplanner.osm.OsmProvider;
 public class OsmWayBuilder {
 
   private long id;
-  private final Map<String, String> tags = new HashMap<>();
+  private Map<String, String> tags = new HashMap<>();
   private OsmProvider osmProvider;
-  private final TLongList nodes = new TLongArrayList();
+  private TLongList nodes = new TLongArrayList();
 
   public OsmWayBuilder() {}
 
@@ -52,6 +52,9 @@ public class OsmWayBuilder {
   }
 
   public OsmWay build() {
-    return new OsmWay(id, tags, osmProvider, nodes);
+    var ret = new OsmWay(id, tags, osmProvider, nodes);
+    this.tags = null;
+    this.nodes = null;
+    return ret;
   }
 }

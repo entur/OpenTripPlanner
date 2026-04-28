@@ -52,6 +52,8 @@ public class OsmNodeBuilder {
   }
 
   public OsmNode build() {
-    return new OsmNode(id, lat, lon, tags, osmProvider);
+    var ret = new OsmNode(id, lat, lon, tags, osmProvider);
+    this.tags = null;
+    return ret;
   }
 }

@@ -45,6 +45,9 @@ public class OsmRelationBuilder {
   }
 
   public OsmRelation build() {
-    return new OsmRelation(id, tags, osmProvider, members);
+    var ret = new OsmRelation(id, tags, osmProvider, members);
+    this.tags = null;
+    this.members = null;
+    return ret;
   }
 }
