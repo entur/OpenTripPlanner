@@ -1281,10 +1281,7 @@ public class StreetEdge
       return null;
     }
 
-    if (
-      s0.getRequest().mode().includesRenting() &&
-      !fromv.getGeofencingBoundaries().isEmpty()
-    ) {
+    if (s0.getRequest().mode().includesRenting() && !fromv.getGeofencingBoundaries().isEmpty()) {
       s1.updateGeofencingZones(fromv, tov, s0.getRequest().arriveBy());
     }
 
