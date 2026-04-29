@@ -3,6 +3,7 @@ package org.opentripplanner.apis.gtfs;
 import java.time.Instant;
 import java.util.Locale;
 import javax.annotation.Nullable;
+import org.apache.commons.lang3.NotImplementedException;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLFilterPlaceType;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLFormFactor;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLInputField;
@@ -42,8 +43,9 @@ public class GraphQLUtils {
       case OUTSIDE_BOUNDS -> GraphQLRoutingErrorCode.OUTSIDE_BOUNDS;
       case OUTSIDE_SERVICE_PERIOD -> GraphQLRoutingErrorCode.OUTSIDE_SERVICE_PERIOD;
       case WALKING_BETTER_THAN_TRANSIT -> GraphQLRoutingErrorCode.WALKING_BETTER_THAN_TRANSIT;
-      // On-board access is not supported in the GTFS GraphQL API
-      case ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME -> null;
+      case ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME -> throw new NotImplementedException(
+        "Start-on-board access is not supported in the GTFS GraphQL API yet."
+      );
     };
   }
 
