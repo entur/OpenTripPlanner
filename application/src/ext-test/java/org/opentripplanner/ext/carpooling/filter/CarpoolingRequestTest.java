@@ -76,14 +76,14 @@ class CarpoolingRequestTest {
   }
 
   @Test
-  void isAccess_accessOrEgressIsNull_returnsFalse() {
+  void isAccessEgressRequest_accessOrEgressIsNull_returnsFalse() {
     var request = buildCarpoolingRequest(false, PICKUP, DROPOFF, DATE_TIME, null);
 
-    assertFalse(request.isAccess());
+    assertFalse(request.isAccessEgressRequest());
   }
 
   @Test
-  void isAccess_accessOrEgressIsAccess_returnsTrue() {
+  void isAccessEgressRequest_accessOrEgressIsAccess_returnsTrue() {
     var request = buildCarpoolingRequest(
       false,
       PICKUP,
@@ -92,11 +92,11 @@ class CarpoolingRequestTest {
       AccessEgressType.ACCESS
     );
 
-    assertTrue(request.isAccess());
+    assertTrue(request.isAccessEgressRequest());
   }
 
   @Test
-  void isAccess_accessOrEgressIsEgress_returnsFalse() {
+  void isAccessEgressRequest_accessOrEgressIsEgress_returnsTrue() {
     var request = buildCarpoolingRequest(
       false,
       PICKUP,
@@ -105,7 +105,73 @@ class CarpoolingRequestTest {
       AccessEgressType.EGRESS
     );
 
-    assertFalse(request.isAccess());
+    assertTrue(request.isAccessEgressRequest());
+  }
+
+  @Test
+  void isAccessRequest_accessOrEgressIsNull_returnsFalse() {
+    var request = buildCarpoolingRequest(false, PICKUP, DROPOFF, DATE_TIME, null);
+
+    assertFalse(request.isAccessRequest());
+  }
+
+  @Test
+  void isAccessRequest_accessOrEgressIsAccess_returnsTrue() {
+    var request = buildCarpoolingRequest(
+      false,
+      PICKUP,
+      DROPOFF,
+      DATE_TIME,
+      AccessEgressType.ACCESS
+    );
+
+    assertTrue(request.isAccessRequest());
+  }
+
+  @Test
+  void isAccessRequest_accessOrEgressIsEgress_returnsFalse() {
+    var request = buildCarpoolingRequest(
+      false,
+      PICKUP,
+      DROPOFF,
+      DATE_TIME,
+      AccessEgressType.EGRESS
+    );
+
+    assertFalse(request.isAccessRequest());
+  }
+
+  @Test
+  void isEgressRequest_accessOrEgressIsNull_returnsFalse() {
+    var request = buildCarpoolingRequest(false, PICKUP, DROPOFF, DATE_TIME, null);
+
+    assertFalse(request.isEgressRequest());
+  }
+
+  @Test
+  void isEgressRequest_accessOrEgressIsAccess_returnsFalse() {
+    var request = buildCarpoolingRequest(
+      false,
+      PICKUP,
+      DROPOFF,
+      DATE_TIME,
+      AccessEgressType.ACCESS
+    );
+
+    assertFalse(request.isEgressRequest());
+  }
+
+  @Test
+  void isEgressRequest_accessOrEgressIsEgress_returnsTrue() {
+    var request = buildCarpoolingRequest(
+      false,
+      PICKUP,
+      DROPOFF,
+      DATE_TIME,
+      AccessEgressType.EGRESS
+    );
+
+    assertTrue(request.isEgressRequest());
   }
 
   @Test
