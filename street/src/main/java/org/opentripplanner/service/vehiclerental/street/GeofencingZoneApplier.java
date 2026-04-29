@@ -7,14 +7,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
+import org.opentripplanner.street.model.vertex.Vertex;
 
 /**
  * Applies geofencing zone restrictions to the street graph. For restricted zones,
@@ -120,6 +124,8 @@ public class GeofencingZoneApplier {
   ) {
     var edgesUpdated = new HashMap<StreetEdge, GeofencingBoundaryExtension>();
     var gf = GeometryUtils.getGeometryFactory();
+    // Reusable Point to avoid allocating a new object per covers() call
+    var reusablePoint = gf.createPoint(new Coordinate(0, 0));
 
     for (GeofencingZone zone : zones) {
       var geom = zone.geometry();
@@ -132,19 +138,21 @@ public class GeofencingZoneApplier {
       // edges are filtered out cheaply: both vertices inside → fromInZone == toInZone → skip.
       Collection<Edge> candidates = findEdgesForEnvelope.apply(zoneBBox);
 
+      // Cache vertex containment per zone. Edges share vertices (typically 3-4 edges per
+      // vertex), so caching avoids redundant PreparedGeometry.covers() calls.
+      var vertexInZone = new HashMap<Vertex, Boolean>();
+
       for (var e : candidates) {
         if (e instanceof StreetEdge streetEdge) {
-          var fromCoord = streetEdge.getFromVertex().getCoordinate();
-          var toCoord = streetEdge.getToVertex().getCoordinate();
+          var fromVertex = streetEdge.getFromVertex();
+          var toVertex = streetEdge.getToVertex();
 
-          boolean fromMayBeInZone = zoneBBox.contains(fromCoord);
-          boolean toMayBeInZone = zoneBBox.contains(toCoord);
-          if (!fromMayBeInZone && !toMayBeInZone) {
-            continue;
-          }
-
-          boolean fromInZone = fromMayBeInZone && preparedZone.covers(gf.createPoint(fromCoord));
-          boolean toInZone = toMayBeInZone && preparedZone.covers(gf.createPoint(toCoord));
+          boolean fromInZone = vertexInZone.computeIfAbsent(fromVertex, v ->
+            isVertexInZone(v.getCoordinate(), zoneBBox, preparedZone, reusablePoint)
+          );
+          boolean toInZone = vertexInZone.computeIfAbsent(toVertex, v ->
+            isVertexInZone(v.getCoordinate(), zoneBBox, preparedZone, reusablePoint)
+          );
 
           if (fromInZone != toInZone) {
             var ext = new GeofencingBoundaryExtension(zone, toInZone);
@@ -155,6 +163,21 @@ public class GeofencingZoneApplier {
       }
     }
     return edgesUpdated;
+  }
+
+  private static boolean isVertexInZone(
+    Coordinate coord,
+    Envelope zoneBBox,
+    PreparedGeometry preparedZone,
+    Point reusablePoint
+  ) {
+    if (!zoneBBox.contains(coord)) {
+      return false;
+    }
+    reusablePoint.getCoordinateSequence().setOrdinate(0, 0, coord.x);
+    reusablePoint.getCoordinateSequence().setOrdinate(0, 1, coord.y);
+    reusablePoint.geometryChanged();
+    return preparedZone.covers(reusablePoint);
   }
 
   /**
