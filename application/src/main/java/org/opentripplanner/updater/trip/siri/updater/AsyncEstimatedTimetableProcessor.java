@@ -33,12 +33,11 @@ public class AsyncEstimatedTimetableProcessor {
    * @return a future indicating when the changes are applied.
    */
   public Future<?> processSiriData(ServiceDelivery serviceDelivery) {
-    return saveResultOnGraph.execute(context ->
+    return saveResultOnGraph.execute(() ->
       updateResultConsumer.accept(
         estimatedTimetableHandler.applyUpdate(
           serviceDelivery.getEstimatedTimetableDeliveries(),
-          UpdateIncrementality.DIFFERENTIAL,
-          context
+          UpdateIncrementality.DIFFERENTIAL
         )
       )
     );

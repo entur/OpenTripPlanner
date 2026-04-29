@@ -10,7 +10,6 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehicleparking.model.VehicleParkingSpaces;
 import org.opentripplanner.updater.GraphWriterRunnable;
-import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.DataSource;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -65,7 +64,7 @@ public class VehicleParkingAvailabilityUpdater extends PollingGraphUpdater {
     }
 
     @Override
-    public void run(RealTimeUpdateContext context) {
+    public void run() {
       updates.forEach(this::handleUpdate);
     }
 

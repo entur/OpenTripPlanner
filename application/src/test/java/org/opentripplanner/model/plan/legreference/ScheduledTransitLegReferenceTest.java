@@ -15,13 +15,11 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
@@ -29,7 +27,6 @@ import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 
 class ScheduledTransitLegReferenceTest {
@@ -70,12 +67,7 @@ class ScheduledTransitLegReferenceTest {
       .withRegularStop(stop3b)
       .build();
     TimetableRepository timetableRepository = new TimetableRepository(siteRepository);
-    timetableRepository.setUpdaterManager(
-      new GraphUpdaterManager(
-        new DefaultRealTimeUpdateContext(new Graph(), timetableRepository, new TimetableSnapshot()),
-        List.of()
-      )
-    );
+    timetableRepository.setUpdaterManager(new GraphUpdaterManager(List.of()));
     // build transit data
     CalendarServiceData calendarServiceData = new CalendarServiceData();
     timetableRepository.updateCalendarServiceData(calendarServiceData);

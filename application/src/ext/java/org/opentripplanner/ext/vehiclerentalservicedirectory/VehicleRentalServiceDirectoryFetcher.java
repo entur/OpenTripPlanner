@@ -20,6 +20,7 @@ import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.framework.io.OtpHttpClientException;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.vehicle_rental.VehicleRentalUpdater;
@@ -45,15 +46,18 @@ public class VehicleRentalServiceDirectoryFetcher {
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
   private final VertexLinker vertexLinker;
+  private final Graph graph;
   private final VehicleRentalRepository repository;
   private final OtpHttpClientFactory otpHttpClientFactory;
 
   public VehicleRentalServiceDirectoryFetcher(
     VertexLinker vertexLinker,
+    Graph graph,
     VehicleRentalRepository repository,
     OtpHttpClientFactory otpHttpClientFactory
   ) {
     this.vertexLinker = vertexLinker;
+    this.graph = graph;
     this.repository = repository;
     this.otpHttpClientFactory = otpHttpClientFactory;
   }
@@ -61,6 +65,7 @@ public class VehicleRentalServiceDirectoryFetcher {
   public static List<GraphUpdater> createUpdatersFromEndpoint(
     VehicleRentalServiceDirectoryFetcherParameters parameters,
     VertexLinker vertexLinker,
+    Graph graph,
     VehicleRentalRepository repository
   ) {
     LOG.info("Fetching GBFS v3 manifest from {}", parameters.getUrl());
@@ -79,6 +84,7 @@ public class VehicleRentalServiceDirectoryFetcher {
 
     var serviceDirectory = new VehicleRentalServiceDirectoryFetcher(
       vertexLinker,
+      graph,
       repository,
       otpHttpClientFactory
     );
@@ -179,7 +185,13 @@ public class VehicleRentalServiceDirectoryFetcher {
       vehicleRentalParameters.sourceParameters(),
       otpHttpClientFactory
     );
-    return new VehicleRentalUpdater(vehicleRentalParameters, dataSource, vertexLinker, repository);
+    return new VehicleRentalUpdater(
+      vehicleRentalParameters,
+      dataSource,
+      vertexLinker,
+      graph,
+      repository
+    );
   }
 
   private static GBFSManifest loadManifest(

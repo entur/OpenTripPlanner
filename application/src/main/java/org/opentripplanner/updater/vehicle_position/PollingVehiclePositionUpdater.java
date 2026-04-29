@@ -3,10 +3,13 @@ package org.opentripplanner.updater.vehicle_position;
 import com.google.transit.realtime.GtfsRealtime.VehiclePosition;
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.standalone.config.routerconfig.updaters.VehiclePositionsUpdaterConfig;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +31,16 @@ public class PollingVehiclePositionUpdater extends PollingGraphUpdater {
 
   private final String feedId;
   private final RealtimeVehicleRepository realtimeVehicleRepository;
-  private final boolean fuzzyTripMatching;
+  private final TransitService transitService;
+
+  @Nullable
+  private final GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher;
 
   public PollingVehiclePositionUpdater(
     VehiclePositionsUpdaterParameters params,
-    RealtimeVehicleRepository realtimeVehicleRepository
+    RealtimeVehicleRepository realtimeVehicleRepository,
+    TransitService transitService,
+    @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher
   ) {
     super(params);
     this.vehiclePositionSource = new GtfsRealtimeHttpVehiclePositionSource(
@@ -40,8 +48,9 @@ public class PollingVehiclePositionUpdater extends PollingGraphUpdater {
       params.headers()
     );
     this.realtimeVehicleRepository = realtimeVehicleRepository;
+    this.transitService = transitService;
     this.feedId = params.feedId();
-    this.fuzzyTripMatching = params.fuzzyTripMatching();
+    this.fuzzyTripMatcher = params.fuzzyTripMatching() ? fuzzyTripMatcher : null;
     this.vehiclePositionFeatures = params.vehiclePositionFeatures();
 
     LOG.info(
@@ -63,9 +72,10 @@ public class PollingVehiclePositionUpdater extends PollingGraphUpdater {
     // Handle updating trip positions via graph writer runnable
     var runnable = new VehiclePositionUpdaterRunnable(
       realtimeVehicleRepository,
+      transitService,
       vehiclePositionFeatures,
       feedId,
-      fuzzyTripMatching,
+      fuzzyTripMatcher,
       updates
     );
     updateGraph(runnable);

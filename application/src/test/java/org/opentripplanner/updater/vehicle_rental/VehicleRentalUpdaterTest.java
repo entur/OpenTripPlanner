@@ -16,8 +16,6 @@ import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
@@ -38,7 +36,7 @@ class VehicleRentalUpdaterTest {
   @Test
   void failingDataSourceCountsAsPrimed() {
     var source = new FailingDataSource();
-    var updater = new VehicleRentalUpdater(PARAMS, source, null, SERVICE);
+    var updater = new VehicleRentalUpdater(PARAMS, source, null, new Graph(), SERVICE);
 
     assertFalse(updater.isPrimed());
     var manager = new MockManager(updater);
@@ -55,7 +53,7 @@ class VehicleRentalUpdaterTest {
   @Disabled
   void failingSetup() {
     var source = new FailingSetupDataSource();
-    var updater = new VehicleRentalUpdater(PARAMS, source, null, SERVICE);
+    var updater = new VehicleRentalUpdater(PARAMS, source, null, new Graph(), SERVICE);
 
     assertFalse(updater.isPrimed());
     var manager = new MockManager(updater);
@@ -68,10 +66,7 @@ class VehicleRentalUpdaterTest {
   static class MockManager extends GraphUpdaterManager {
 
     public MockManager(VehicleRentalUpdater updater) {
-      super(
-        new DefaultRealTimeUpdateContext(new Graph(), new TimetableRepository()),
-        List.of(updater)
-      );
+      super(List.of(updater));
     }
 
     @Override

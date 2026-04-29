@@ -24,7 +24,6 @@ import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.updater.GraphWriterRunnable;
-import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.DataSource;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -45,6 +44,7 @@ public class VehicleParkingUpdater extends PollingGraphUpdater {
   private final DataSource<VehicleParking> source;
   private final List<VehicleParking> oldVehicleParkings = new ArrayList<>();
   private final VertexLinker linker;
+  private final Graph graph;
 
   private final VehicleParkingRepository parkingRepository;
 
@@ -52,12 +52,14 @@ public class VehicleParkingUpdater extends PollingGraphUpdater {
     VehicleParkingUpdaterParameters parameters,
     DataSource<VehicleParking> source,
     VertexLinker vertexLinker,
+    Graph graph,
     VehicleParkingRepository parkingRepository
   ) {
     super(parameters);
     this.source = source;
     // Creation of network linker library will not modify the graph
     this.linker = vertexLinker;
+    this.graph = graph;
     // Adding a vehicle parking station service needs a graph writer runnable
     this.parkingRepository = parkingRepository;
 
@@ -93,14 +95,14 @@ public class VehicleParkingUpdater extends PollingGraphUpdater {
     }
 
     @Override
-    public void run(RealTimeUpdateContext context) {
+    public void run() {
       // Apply stations to graph
       /* Add any new park and update space available for existing parks */
       Set<VehicleParking> toAdd = new HashSet<>();
       Set<VehicleParking> toLink = new HashSet<>();
       Set<VehicleParking> toRemove = new HashSet<>();
 
-      var vehicleParkingHelper = new VehicleParkingHelper(context.graph());
+      var vehicleParkingHelper = new VehicleParkingHelper(graph);
 
       for (VehicleParking updatedVehicleParking : updatedVehicleParkings) {
         var operational = updatedVehicleParking.getState().equals(VehicleParkingState.OPERATIONAL);
@@ -128,7 +130,7 @@ public class VehicleParkingUpdater extends PollingGraphUpdater {
           tempEdgesByPark.get(oldVehicleParking).forEach(DisposableEdgeCollection::disposeEdges);
           verticesByPark
             .get(oldVehicleParking)
-            .forEach(v -> removeVehicleParkingEdgesFromGraph(v, context.graph()));
+            .forEach(v -> removeVehicleParkingEdgesFromGraph(v, graph));
           verticesByPark.remove(oldVehicleParking);
         }
 

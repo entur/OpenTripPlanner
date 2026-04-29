@@ -13,5 +13,5 @@ public interface GraphWriterRunnable {
   /**
    * This function is executed to modify the graph.
    */
-  void run(RealTimeUpdateContext context);
+  void run();
 }

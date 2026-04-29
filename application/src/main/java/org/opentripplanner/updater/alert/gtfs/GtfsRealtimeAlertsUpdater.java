@@ -11,6 +11,7 @@ import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,15 +28,18 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater implements Tr
   private final TransitAlertService transitAlertService;
   private final HttpHeaders headers;
   private final OtpHttpClient otpHttpClient;
+  private final GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher;
   private Long lastTimestamp = Long.MIN_VALUE;
 
   public GtfsRealtimeAlertsUpdater(
     GtfsRealtimeAlertsUpdaterParameters config,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher
   ) {
     super(config);
     this.url = config.url();
     this.headers = HttpHeaders.of().acceptProtobuf().add(config.headers()).build();
+    this.fuzzyTripMatcher = fuzzyTripMatcher;
     TransitAlertService transitAlertService = new TransitAlertServiceImpl(timetableRepository);
 
     this.transitAlertService = transitAlertService;
@@ -74,7 +78,7 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater implements Tr
     }
 
     // Handle update in graph writer runnable
-    updateGraph(context -> updateHandler.update(feed, context.gtfsRealtimeFuzzyTripMatcher()));
+    updateGraph(() -> updateHandler.update(feed, fuzzyTripMatcher));
 
     lastTimestamp = feedTimestamp;
   }

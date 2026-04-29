@@ -1,9 +1,11 @@
 package org.opentripplanner.updater.trip.siri.updater;
 
 import java.util.List;
-import org.opentripplanner.updater.RealTimeUpdateContext;
+import javax.annotation.Nullable;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.siri.EntityResolver;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
@@ -13,7 +15,12 @@ import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 public class EstimatedTimetableHandler {
 
   private final SiriRealTimeTripUpdateAdapter adapter;
-  private final boolean fuzzyTripMatching;
+
+  @Nullable
+  private final SiriFuzzyTripMatcher fuzzyTripMatcher;
+
+  private final EntityResolver entityResolver;
+
   /**
    * The ID for the static feed to which these real time updates are applied
    */
@@ -21,11 +28,13 @@ public class EstimatedTimetableHandler {
 
   public EstimatedTimetableHandler(
     SiriRealTimeTripUpdateAdapter adapter,
-    boolean fuzzyTripMatching,
+    @Nullable SiriFuzzyTripMatcher fuzzyTripMatcher,
+    EntityResolver entityResolver,
     String feedId
   ) {
     this.adapter = adapter;
-    this.fuzzyTripMatching = fuzzyTripMatching;
+    this.fuzzyTripMatcher = fuzzyTripMatcher;
+    this.entityResolver = entityResolver;
     this.feedId = feedId;
   }
 
@@ -34,12 +43,11 @@ public class EstimatedTimetableHandler {
    */
   public UpdateResult applyUpdate(
     List<EstimatedTimetableDeliveryStructure> estimatedTimetableDeliveries,
-    UpdateIncrementality updateMode,
-    RealTimeUpdateContext context
+    UpdateIncrementality updateMode
   ) {
     return adapter.applyEstimatedTimetable(
-      fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
-      context.entityResolver(feedId),
+      fuzzyTripMatcher,
+      entityResolver,
       feedId,
       updateMode,
       estimatedTimetableDeliveries

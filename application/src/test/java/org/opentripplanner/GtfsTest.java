@@ -45,10 +45,8 @@ import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.Deduplicator;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.TimetableSnapshotParameters;
 import org.opentripplanner.updater.alert.gtfs.AlertsUpdateHandler;
@@ -203,12 +201,7 @@ public abstract class GtfsTest {
     alertsUpdateHandler = new AlertsUpdateHandler(false);
     graph = new Graph();
     timetableRepository = new TimetableRepository(new SiteRepository());
-    timetableRepository.setUpdaterManager(
-      new GraphUpdaterManager(
-        new DefaultRealTimeUpdateContext(new Graph(), timetableRepository, new TimetableSnapshot()),
-        List.of()
-      )
-    );
+    timetableRepository.setUpdaterManager(new GraphUpdaterManager(List.of()));
     TransferRepository transferRepository = TransferServiceTestFactory.defaultTransferRepository();
 
     GtfsModule gtfsGraphBuilderImpl = GtfsModule.forTest(

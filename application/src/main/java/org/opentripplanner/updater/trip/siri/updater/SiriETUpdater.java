@@ -2,9 +2,12 @@ package org.opentripplanner.updater.trip.siri.updater;
 
 import java.util.List;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.trip.siri.EntityResolver;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
@@ -35,6 +38,8 @@ public class SiriETUpdater extends PollingGraphUpdater {
   public SiriETUpdater(
     SiriETUpdaterParameters config,
     SiriRealTimeTripUpdateAdapter adapter,
+    @Nullable SiriFuzzyTripMatcher siriFuzzyTripMatcher,
+    EntityResolver entityResolver,
     EstimatedTimetableSource source,
     Consumer<UpdateResult> metricsConsumer
   ) {
@@ -49,7 +54,8 @@ public class SiriETUpdater extends PollingGraphUpdater {
 
     estimatedTimetableHandler = new EstimatedTimetableHandler(
       adapter,
-      config.fuzzyTripMatching(),
+      config.fuzzyTripMatching() ? siriFuzzyTripMatcher : null,
+      entityResolver,
       feedId
     );
 
@@ -75,8 +81,8 @@ public class SiriETUpdater extends PollingGraphUpdater {
         List<EstimatedTimetableDeliveryStructure> etds =
           serviceDelivery.getEstimatedTimetableDeliveries();
         if (etds != null) {
-          updateGraph(context -> {
-            var result = estimatedTimetableHandler.applyUpdate(etds, incrementality, context);
+          updateGraph(() -> {
+            var result = estimatedTimetableHandler.applyUpdate(etds, incrementality);
             ResultLogger.logUpdateResult(feedId, "siri-et", result);
             metricsConsumer.accept(result);
             if (markPrimed) {

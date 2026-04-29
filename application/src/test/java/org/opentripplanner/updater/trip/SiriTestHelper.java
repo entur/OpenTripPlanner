@@ -4,11 +4,13 @@ import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL
 
 import java.util.List;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
+import org.opentripplanner.transit.service.DefaultTransitService;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.trip.siri.EntityResolver;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
@@ -17,6 +19,7 @@ public class SiriTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
   private final SiriRealTimeTripUpdateAdapter siriAdapter;
+  private final TransitService realTimeTransitService;
 
   SiriTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
@@ -24,6 +27,10 @@ public class SiriTestHelper {
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager()
+    );
+    this.realTimeTransitService = new DefaultTransitService(
+      transitTestEnvironment.timetableRepository(),
+      transitTestEnvironment.timetableSnapshotManager().getTimetableSnapshotBuffer()
     );
   }
 
@@ -55,21 +62,20 @@ public class SiriTestHelper {
   ) {
     UpdateResult updateResult = getEstimatedTimetableHandler(fuzzyMatching).applyUpdate(
       updates,
-      DIFFERENTIAL,
-      new DefaultRealTimeUpdateContext(
-        new Graph(),
-        transitTestEnvironment.timetableRepository(),
-        transitTestEnvironment.timetableSnapshotManager().getTimetableSnapshotBuffer()
-      )
+      DIFFERENTIAL
     );
     commitTimetableSnapshot();
     return updateResult;
   }
 
   private EstimatedTimetableHandler getEstimatedTimetableHandler(boolean fuzzyMatching) {
+    SiriFuzzyTripMatcher matcher = fuzzyMatching
+      ? new SiriFuzzyTripMatcher(realTimeTransitService)
+      : null;
     return new EstimatedTimetableHandler(
       siriAdapter,
-      fuzzyMatching,
+      matcher,
+      new EntityResolver(realTimeTransitService, transitTestEnvironment.feedId()),
       transitTestEnvironment.feedId()
     );
   }

@@ -63,16 +63,9 @@ public class GraphUpdaterManager implements WriteToGraphCallback, GraphUpdaterSt
   private final List<GraphUpdater> updaterList = new ArrayList<>();
 
   /**
-   * The Graph that will be updated.
-   */
-  private final RealTimeUpdateContext realtimeUpdateContext;
-
-  /**
    * Constructor.
-   *
    */
-  public GraphUpdaterManager(RealTimeUpdateContext context, List<GraphUpdater> updaters) {
-    this.realtimeUpdateContext = context;
+  public GraphUpdaterManager(List<GraphUpdater> updaters) {
     // Thread factories used to create new threads, giving them more human-readable names.
     var graphWriterThreadFactory = new ThreadFactoryBuilder().setNameFormat("graph-writer").build();
     this.scheduler = Executors.newSingleThreadScheduledExecutor(graphWriterThreadFactory);
@@ -184,7 +177,7 @@ public class GraphUpdaterManager implements WriteToGraphCallback, GraphUpdaterSt
   public Future<?> execute(GraphWriterRunnable runnable) {
     return scheduler.submit(() -> {
       try {
-        runnable.run(realtimeUpdateContext);
+        runnable.run();
       } catch (Exception e) {
         LOG.error("Error while running graph writer {}:", runnable.getClass().getName(), e);
       }

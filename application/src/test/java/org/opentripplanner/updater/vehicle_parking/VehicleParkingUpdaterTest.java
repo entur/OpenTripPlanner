@@ -24,7 +24,6 @@ import org.opentripplanner.street.model.edge.StreetVehicleParkingLink;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.spi.DataSource;
@@ -34,7 +33,6 @@ class VehicleParkingUpdaterTest {
 
   private DataSource<VehicleParking> dataSource;
   private Graph graph;
-  private DefaultRealTimeUpdateContext realTimeUpdateContext;
 
   private VehicleParkingUpdater vehicleParkingUpdater;
   private VehicleParkingRepository parkingRepository;
@@ -47,7 +45,6 @@ class VehicleParkingUpdaterTest {
     graph = graphData.getGraph();
     TimetableRepository timetableRepository = graphData.getTimetableRepository();
     parkingRepository = new DefaultVehicleParkingRepository();
-    realTimeUpdateContext = new DefaultRealTimeUpdateContext(graph, timetableRepository);
 
     dataSource = (DataSource<VehicleParking>) Mockito.mock(DataSource.class);
     when(dataSource.update()).thenReturn(true);
@@ -80,6 +77,7 @@ class VehicleParkingUpdaterTest {
       parameters,
       dataSource,
       VertexLinkerTestFactory.of(graph),
+      graph,
       parkingRepository
     );
   }
@@ -268,12 +266,12 @@ class VehicleParkingUpdaterTest {
     class GraphUpdaterMock extends GraphUpdaterManager {
 
       public GraphUpdaterMock(List<GraphUpdater> updaters) {
-        super(realTimeUpdateContext, updaters);
+        super(updaters);
       }
 
       @Override
       public Future<?> execute(GraphWriterRunnable runnable) {
-        runnable.run(realTimeUpdateContext);
+        runnable.run();
         return Futures.immediateVoidFuture();
       }
     }

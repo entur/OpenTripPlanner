@@ -4,13 +4,14 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.opentripplanner.updater.GraphWriterRunnable;
-import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 
 public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
 
@@ -21,7 +22,8 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
    */
   private final List<TripUpdate> updates;
 
-  private final boolean fuzzyTripMatching;
+  @Nullable
+  private final GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher;
 
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
@@ -32,7 +34,7 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
 
   public TripUpdateGraphWriterRunnable(
     GtfsRealTimeTripUpdateAdapter adapter,
-    boolean fuzzyTripMatching,
+    @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
     UpdateIncrementality updateIncrementality,
@@ -41,7 +43,7 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
     Consumer<UpdateResult> sendMetrics
   ) {
     this.adapter = adapter;
-    this.fuzzyTripMatching = fuzzyTripMatching;
+    this.fuzzyTripMatcher = fuzzyTripMatcher;
     this.forwardsDelayPropagationType = forwardsDelayPropagationType;
     this.backwardsDelayPropagationType = backwardsDelayPropagationType;
     this.updateIncrementality = updateIncrementality;
@@ -51,9 +53,9 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
   }
 
   @Override
-  public void run(RealTimeUpdateContext context) {
+  public void run() {
     var result = adapter.applyTripUpdates(
-      fuzzyTripMatching ? context.gtfsRealtimeFuzzyTripMatcher() : null,
+      fuzzyTripMatcher,
       forwardsDelayPropagationType,
       backwardsDelayPropagationType,
       updateIncrementality,

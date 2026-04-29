@@ -10,11 +10,13 @@ import org.opentripplanner.framework.retry.OtpRetryBuilder;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.PollingGraphUpdaterParameters;
 import org.opentripplanner.updater.support.siri.SiriLoader;
 import org.opentripplanner.updater.trip.UrlUpdaterParameters;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +49,8 @@ public class SiriSXUpdater extends PollingGraphUpdater implements TransitAlertPr
   public SiriSXUpdater(
     Parameters config,
     TimetableRepository timetableRepository,
+    SiriFuzzyTripMatcher siriFuzzyTripMatcher,
+    TransitService transitService,
     SiriLoader siriLoader
   ) {
     super(config);
@@ -64,6 +68,8 @@ public class SiriSXUpdater extends PollingGraphUpdater implements TransitAlertPr
     this.updateHandler = new SiriAlertsUpdateHandler(
       config.feedId(),
       transitAlertService,
+      siriFuzzyTripMatcher,
+      transitService,
       config.earlyStart()
     );
     siriHttpLoader = siriLoader;
@@ -143,8 +149,8 @@ public class SiriSXUpdater extends PollingGraphUpdater implements TransitAlertPr
           // that would be most tolerant of non-versioned application-wide storage since they don't
           // participate in routing and are tacked on to already-completed routing responses.
 
-          updateGraph(context -> {
-            updateHandler.update(serviceDelivery, context);
+          updateGraph(() -> {
+            updateHandler.update(serviceDelivery);
             if (markPrimed) {
               primed = true;
             }

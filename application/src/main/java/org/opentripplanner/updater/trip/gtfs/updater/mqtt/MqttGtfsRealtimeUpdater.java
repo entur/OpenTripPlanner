@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
@@ -27,6 +28,7 @@ import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.gtfs.updater.TripUpdateGraphWriterRunnable;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -65,13 +67,15 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
   private final Consumer<UpdateResult> recordMetrics;
   private WriteToGraphCallback saveResultOnGraph;
 
-  private final boolean fuzzyTripMatching;
+  @Nullable
+  private final GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher;
 
   private Mqtt5AsyncClient client;
 
   public MqttGtfsRealtimeUpdater(
     MqttGtfsRealtimeUpdaterParameters parameters,
-    GtfsRealTimeTripUpdateAdapter adapter
+    GtfsRealTimeTripUpdateAdapter adapter,
+    @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher
   ) {
     this.configRef = parameters.configRef();
     this.url = parameters.url();
@@ -82,7 +86,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
     this.backwardsDelayPropagationType = parameters.backwardsDelayPropagationType();
     this.adapter = adapter;
     // Set properties of realtime data snapshot source
-    this.fuzzyTripMatching = parameters.fuzzyTripMatching();
+    this.fuzzyTripMatcher = parameters.fuzzyTripMatching() ? fuzzyTripMatcher : null;
     this.recordMetrics = TripUpdateMetrics.streaming(parameters);
     LOG.info("Creating streaming GTFS-RT TripUpdate updater subscribing to MQTT broker at {}", url);
   }
@@ -197,7 +201,7 @@ public class MqttGtfsRealtimeUpdater implements GraphUpdater {
       saveResultOnGraph.execute(
         new TripUpdateGraphWriterRunnable(
           adapter,
-          fuzzyTripMatching,
+          fuzzyTripMatcher,
           forwardsDelayPropagationType,
           backwardsDelayPropagationType,
           updateIncrementality,

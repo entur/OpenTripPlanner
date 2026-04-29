@@ -6,8 +6,10 @@ import javax.annotation.Nullable;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.alert.siri.SiriAlertsUpdateHandler;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.ServiceDelivery;
@@ -22,12 +24,16 @@ public class SiriAzureSXUpdater implements SiriAzureMessageHandler {
 
   public SiriAzureSXUpdater(
     SiriAzureSXUpdaterParameters config,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    SiriFuzzyTripMatcher siriFuzzyTripMatcher,
+    TransitService transitService
   ) {
     this.transitAlertService = new TransitAlertServiceImpl(timetableRepository);
     this.updateHandler = new SiriAlertsUpdateHandler(
       config.feedId(),
       transitAlertService,
+      siriFuzzyTripMatcher,
+      transitService,
       Duration.ZERO
     );
   }
@@ -45,7 +51,7 @@ public class SiriAzureSXUpdater implements SiriAzureMessageHandler {
       LOG.info("Empty Siri SX message {}", messageId);
       return null;
     } else {
-      return saveResultOnGraph.execute(context -> updateHandler.update(serviceDelivery, context));
+      return saveResultOnGraph.execute(() -> updateHandler.update(serviceDelivery));
     }
   }
 

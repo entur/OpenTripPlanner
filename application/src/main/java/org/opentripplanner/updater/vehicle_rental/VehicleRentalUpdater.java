@@ -21,6 +21,7 @@ import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.linking.VertexLinker;
@@ -31,7 +32,6 @@ import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 import org.opentripplanner.streetadapter.VertexFactory;
 import org.opentripplanner.updater.GraphWriterRunnable;
-import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
@@ -62,6 +62,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
   private final Map<FeedScopedId, VehicleRentalPlaceVertex> verticesByStation = new HashMap<>();
   private final Map<FeedScopedId, DisposableEdgeCollection> tempEdgesByStation = new HashMap<>();
   private final VertexLinker linker;
+  private final Graph graph;
 
   private final VehicleRentalRepository service;
 
@@ -69,6 +70,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     VehicleRentalUpdaterParameters parameters,
     VehicleRentalDataSource source,
     VertexLinker vertexLinker,
+    Graph graph,
     VehicleRentalRepository repository
   ) throws IllegalArgumentException {
     super(parameters);
@@ -84,6 +86,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
     // Creation of network linker library will not modify the graph
     this.linker = vertexLinker;
+    this.graph = graph;
 
     // Adding a vehicle rental station service needs a graph writer runnable
     this.service = repository;
@@ -162,10 +165,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     }
 
     @Override
-    public void run(RealTimeUpdateContext context) {
+    public void run() {
       // Apply stations to graph
       Set<FeedScopedId> stationSet = new HashSet<>();
-      var vertexFactory = new VertexFactory(context.graph());
+      var vertexFactory = new VertexFactory(graph);
 
       /* add any new stations and update vehicle counts for existing stations */
       for (VehicleRentalPlace station : stations) {
@@ -245,7 +248,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
         latestModifiedEdges.forEach(StreetEdge::removeRentalExtension);
 
-        var updater = new GeofencingVertexUpdater(context.graph()::findEdges);
+        var updater = new GeofencingVertexUpdater(graph::findEdges);
         latestModifiedEdges = updater.applyGeofencingZones(geofencingZones);
         latestAppliedGeofencingZones = geofencingZones;
 

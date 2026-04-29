@@ -38,9 +38,12 @@ import org.opentripplanner.framework.io.OtpHttpClientException;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
+import org.opentripplanner.updater.trip.siri.EntityResolver;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -155,17 +158,31 @@ public class SiriAzureUpdater implements GraphUpdater {
 
   public static SiriAzureUpdater createETUpdater(
     SiriAzureETUpdaterParameters config,
-    SiriRealTimeTripUpdateAdapter adapter
+    SiriRealTimeTripUpdateAdapter adapter,
+    SiriFuzzyTripMatcher siriFuzzyTripMatcher,
+    EntityResolver entityResolver
   ) {
-    var messageHandler = new SiriAzureETUpdater(config, adapter);
+    var messageHandler = new SiriAzureETUpdater(
+      config,
+      adapter,
+      siriFuzzyTripMatcher,
+      entityResolver
+    );
     return new SiriAzureUpdater(config, messageHandler);
   }
 
   public static SiriAzureUpdater createSXUpdater(
     SiriAzureSXUpdaterParameters config,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    SiriFuzzyTripMatcher siriFuzzyTripMatcher,
+    TransitService transitService
   ) {
-    var messageHandler = new SiriAzureSXUpdater(config, timetableRepository);
+    var messageHandler = new SiriAzureSXUpdater(
+      config,
+      timetableRepository,
+      siriFuzzyTripMatcher,
+      transitService
+    );
     return new SxWrapper(config, messageHandler);
   }
 

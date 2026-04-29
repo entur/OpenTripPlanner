@@ -18,9 +18,9 @@ import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
@@ -28,8 +28,11 @@ import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.TimetableSnapshotFlush;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
+import org.opentripplanner.updater.trip.siri.EntityResolver;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdater;
 import org.opentripplanner.updater.vehicle_parking.AvailabilityDataSourceFactory;
@@ -60,6 +63,23 @@ public class UpdaterConfigurator {
   private final VehicleParkingRepository parkingRepository;
   private final TimetableSnapshotManager snapshotManager;
 
+  /**
+   * Long-lived transit service that exposes both scheduled data and real-time updates applied so
+   * far, including those not yet committed in a published snapshot. Shared by all updaters.
+   */
+  private final TransitService realTimeTransitService;
+
+  /**
+   * Shared GTFS-RT fuzzy trip matcher. Stateless and cheap to construct.
+   */
+  private final GtfsRealtimeFuzzyTripMatcher gtfsRealtimeFuzzyTripMatcher;
+
+  /**
+   * Shared SIRI fuzzy trip matcher. Lazily constructed on first use because building its caches
+   * iterates the full set of trips.
+   */
+  private SiriFuzzyTripMatcher siriFuzzyTripMatcher;
+
   private UpdaterConfigurator(
     Graph graph,
     DeduplicatorService deduplicator,
@@ -82,6 +102,11 @@ public class UpdaterConfigurator {
     this.parkingRepository = parkingRepository;
     this.snapshotManager = snapshotManager;
     this.carpoolingRepository = carpoolingRepository;
+    this.realTimeTransitService = new DefaultTransitService(
+      timetableRepository,
+      snapshotManager.getTimetableSnapshotBuffer()
+    );
+    this.gtfsRealtimeFuzzyTripMatcher = new GtfsRealtimeFuzzyTripMatcher(realTimeTransitService);
   }
 
   public static void configure(
@@ -122,11 +147,7 @@ public class UpdaterConfigurator {
       )
     );
 
-    TimetableSnapshot timetableSnapshotBuffer = snapshotManager.getTimetableSnapshotBuffer();
-    GraphUpdaterManager updaterManager = new GraphUpdaterManager(
-      new DefaultRealTimeUpdateContext(graph, timetableRepository, timetableSnapshotBuffer),
-      updaters
-    );
+    GraphUpdaterManager updaterManager = new GraphUpdaterManager(updaters);
 
     configureTimetableSnapshotFlush(updaterManager, snapshotManager);
 
@@ -163,6 +184,7 @@ public class UpdaterConfigurator {
     return VehicleRentalServiceDirectoryFetcher.createUpdatersFromEndpoint(
       parameters,
       linker,
+      graph,
       vehicleRentalRepository
     );
   }
@@ -184,38 +206,88 @@ public class UpdaterConfigurator {
           configItem.sourceParameters(),
           otpHttpClientFactory
         );
-        updaters.add(new VehicleRentalUpdater(configItem, source, linker, vehicleRentalRepository));
+        updaters.add(
+          new VehicleRentalUpdater(configItem, source, linker, graph, vehicleRentalRepository)
+        );
       }
     }
     for (var configItem : updatersParameters.getGtfsRealtimeAlertsUpdaterParameters()) {
-      updaters.add(new GtfsRealtimeAlertsUpdater(configItem, timetableRepository));
+      updaters.add(
+        new GtfsRealtimeAlertsUpdater(configItem, timetableRepository, gtfsRealtimeFuzzyTripMatcher)
+      );
     }
     for (var configItem : updatersParameters.getPollingStoptimeUpdaterParameters()) {
-      updaters.add(new PollingTripUpdater(configItem, provideGtfsAdapter()));
+      updaters.add(
+        new PollingTripUpdater(configItem, provideGtfsAdapter(), gtfsRealtimeFuzzyTripMatcher)
+      );
     }
     for (var configItem : updatersParameters.getVehiclePositionsUpdaterParameters()) {
-      updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
+      updaters.add(
+        new PollingVehiclePositionUpdater(
+          configItem,
+          realtimeVehicleRepository,
+          realTimeTransitService,
+          gtfsRealtimeFuzzyTripMatcher
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          provideSiriAdapter(),
+          siriFuzzyTripMatcher(),
+          provideEntityResolver(configItem.feedId())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
       updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          provideSiriAdapter(),
+          siriFuzzyTripMatcher(),
+          provideEntityResolver(configItem.feedId())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
-      updaters.add(new SiriETGooglePubsubUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETGooglePubsubUpdater(
+          configItem,
+          provideSiriAdapter(),
+          siriFuzzyTripMatcher(),
+          provideEntityResolver(configItem.feedId())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriSXUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
+      updaters.add(
+        SiriUpdaterModule.createSiriSXUpdater(
+          configItem,
+          timetableRepository,
+          siriFuzzyTripMatcher(),
+          realTimeTransitService
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriSXLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
+      updaters.add(
+        SiriUpdaterModule.createSiriSXUpdater(
+          configItem,
+          timetableRepository,
+          siriFuzzyTripMatcher(),
+          realTimeTransitService
+        )
+      );
     }
     for (var configItem : updatersParameters.getMqttGtfsRealtimeUpdaterParameters()) {
-      updaters.add(new MqttGtfsRealtimeUpdater(configItem, provideGtfsAdapter()));
+      updaters.add(
+        new MqttGtfsRealtimeUpdater(configItem, provideGtfsAdapter(), gtfsRealtimeFuzzyTripMatcher)
+      );
     }
     for (var configItem : updatersParameters.getVehicleParkingUpdaterParameters()) {
       switch (configItem.updateType()) {
@@ -224,7 +296,9 @@ public class UpdaterConfigurator {
             configItem,
             openingHoursCalendarService
           );
-          updaters.add(new VehicleParkingUpdater(configItem, source, linker, parkingRepository));
+          updaters.add(
+            new VehicleParkingUpdater(configItem, source, linker, graph, parkingRepository)
+          );
         }
         case AVAILABILITY_ONLY -> {
           var source = AvailabilityDataSourceFactory.create(configItem);
@@ -235,13 +309,34 @@ public class UpdaterConfigurator {
       }
     }
     for (var configItem : updatersParameters.getSiriAzureETUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriAzureUpdater.createETUpdater(
+          configItem,
+          provideSiriAdapter(),
+          siriFuzzyTripMatcher(),
+          provideEntityResolver(configItem.feedId())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriAzureSXUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createSXUpdater(configItem, timetableRepository));
+      updaters.add(
+        SiriAzureUpdater.createSXUpdater(
+          configItem,
+          timetableRepository,
+          siriFuzzyTripMatcher(),
+          realTimeTransitService
+        )
+      );
     }
     for (var configItem : updatersParameters.getMqttSiriETUpdaterParameters()) {
-      updaters.add(new SiriETMqttUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETMqttUpdater(
+          configItem,
+          provideSiriAdapter(),
+          siriFuzzyTripMatcher(),
+          provideEntityResolver(configItem.feedId())
+        )
+      );
     }
 
     return updaters;
@@ -258,6 +353,21 @@ public class UpdaterConfigurator {
       snapshotManager,
       () -> LocalDate.now(timetableRepository.getTimeZone())
     );
+  }
+
+  private EntityResolver provideEntityResolver(String feedId) {
+    return new EntityResolver(realTimeTransitService, feedId);
+  }
+
+  /**
+   * Lazily build the SIRI fuzzy trip matcher. Caches are populated from the timetable on first
+   * call, so we defer construction until at least one SIRI updater needs it.
+   */
+  private synchronized SiriFuzzyTripMatcher siriFuzzyTripMatcher() {
+    if (siriFuzzyTripMatcher == null) {
+      siriFuzzyTripMatcher = new SiriFuzzyTripMatcher(realTimeTransitService);
+    }
+    return siriFuzzyTripMatcher;
   }
 
   /**

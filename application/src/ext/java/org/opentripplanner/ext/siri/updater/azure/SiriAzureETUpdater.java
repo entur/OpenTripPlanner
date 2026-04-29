@@ -10,6 +10,8 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
+import org.opentripplanner.updater.trip.siri.EntityResolver;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,18 +24,25 @@ public class SiriAzureETUpdater implements SiriAzureMessageHandler {
 
   private final SiriRealTimeTripUpdateAdapter adapter;
   private final Consumer<UpdateResult> recordMetrics;
-  private final boolean fuzzyTripMatching;
+
+  @Nullable
+  private final SiriFuzzyTripMatcher fuzzyTripMatcher;
+
+  private final EntityResolver entityResolver;
   private final String feedId;
 
   private WriteToGraphCallback writeToGraphCallback;
 
   public SiriAzureETUpdater(
     SiriAzureETUpdaterParameters config,
-    SiriRealTimeTripUpdateAdapter adapter
+    SiriRealTimeTripUpdateAdapter adapter,
+    @Nullable SiriFuzzyTripMatcher siriFuzzyTripMatcher,
+    EntityResolver entityResolver
   ) {
     this.adapter = adapter;
     this.recordMetrics = TripUpdateMetrics.streaming(config);
-    this.fuzzyTripMatching = config.isFuzzyTripMatching();
+    this.fuzzyTripMatcher = config.isFuzzyTripMatching() ? siriFuzzyTripMatcher : null;
+    this.entityResolver = entityResolver;
     this.feedId = Objects.requireNonNull(config.feedId(), "feedId must not be null");
   }
 
@@ -55,10 +64,10 @@ public class SiriAzureETUpdater implements SiriAzureMessageHandler {
   }
 
   private Future<?> processMessage(List<EstimatedTimetableDeliveryStructure> updates) {
-    return writeToGraphCallback.execute(context -> {
+    return writeToGraphCallback.execute(() -> {
       var result = adapter.applyEstimatedTimetable(
-        fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
-        context.entityResolver(feedId),
+        fuzzyTripMatcher,
+        entityResolver,
         feedId,
         UpdateIncrementality.DIFFERENTIAL,
         updates
