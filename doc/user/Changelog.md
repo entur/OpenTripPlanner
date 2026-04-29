@@ -27,7 +27,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add NO_DIRECT_MODE_CONNECTION routing error code for direct-only searches [#7494](https://github.com/opentripplanner/OpenTripPlanner/pull/7494)
 - De-duplicate boardinglocations on areas [#7508](https://github.com/opentripplanner/OpenTripPlanner/pull/7508)
 - Speed up tag lookup during OSM processing [#7536](https://github.com/opentripplanner/OpenTripPlanner/pull/7536)
-- Include entrances that are part of a stop area relation, change build config field `includeOsmSubwayEntrance` to `includeOsmStationEntrance` [#7170](https://github.com/opentripplanner/OpenTripPlanner/pull/7170)
+- Include entrances that are part of a stop area relation, change build config field `includeOsmSubwayEntrances` to `includeOsmStationEntrances` [#7170](https://github.com/opentripplanner/OpenTripPlanner/pull/7170)
 - Add application warmup feature to run routing queries during startup [#7509](https://github.com/opentripplanner/OpenTripPlanner/pull/7509)
 - Add `startupRetryPeriod` to GBFS feed configuration [#7525](https://github.com/opentripplanner/OpenTripPlanner/pull/7525)
 - Add support for transit group priority in the GTFS API [#7451](https://github.com/opentripplanner/OpenTripPlanner/pull/7451)
