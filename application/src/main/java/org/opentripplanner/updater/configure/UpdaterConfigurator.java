@@ -361,9 +361,10 @@ public class UpdaterConfigurator {
 
   /**
    * Lazily build the SIRI fuzzy trip matcher. Caches are populated from the timetable on first
-   * call, so we defer construction until at least one SIRI updater needs it.
+   * call, so we defer construction until at least one SIRI updater needs it. Not thread-safe; all
+   * calls happen sequentially during {@link #configure()} on the startup thread.
    */
-  private synchronized SiriFuzzyTripMatcher provideSiriFuzzyTripMatcher() {
+  private SiriFuzzyTripMatcher provideSiriFuzzyTripMatcher() {
     if (siriFuzzyTripMatcher == null) {
       siriFuzzyTripMatcher = new SiriFuzzyTripMatcher(realTimeTransitService);
     }
