@@ -1186,7 +1186,11 @@ public class StreetEdge
     }
 
     // Create committed branches
+    var request = s0.getRequest();
     for (String network : newZoneNetworks) {
+      if (!isNetworkAllowedByRequest(network, request)) {
+        continue;
+      }
       var committed = doTraverse(s0, s0.currentMode(), false);
       if (committed != null) {
         committed.commitToNetwork(network);
