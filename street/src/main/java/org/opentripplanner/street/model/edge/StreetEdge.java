@@ -312,8 +312,8 @@ public class StreetEdge
   public State[] traverse(State s0) {
     final StateEditor editor;
 
-    final boolean arriveByRental =
-      s0.getRequest().mode().includesRenting() && s0.getRequest().arriveBy();
+    final boolean rentalMode = s0.getRequest().mode().includesRenting();
+    final boolean arriveByRental = rentalMode && s0.getRequest().arriveBy();
 
     // ArriveBy: traversal ban (BusinessAreaBorder + no-traversal zone in state + boundary zone entry)
     if (
@@ -340,7 +340,7 @@ public class StreetEdge
     // If drop-off is also banned here (overlapping no-drop-off zone), this branch is a
     // dead end — return empty so the A* uses the branch that dropped outside the zone.
     else if (
-      s0.getRequest().mode().includesRenting() &&
+      rentalMode &&
       s0.isRentingVehicle() &&
       tov.isGeofencingNoTraversalBoundary(s0)
     ) {
@@ -365,7 +365,7 @@ public class StreetEdge
     // If the rider is already inside a restricted zone (e.g., adjacent no-drop-off zones),
     // dropping here is invalid — just continue riding.
     else if (
-      s0.getRequest().mode().includesRenting() &&
+      rentalMode &&
       s0.isRentingVehicle() &&
       tov.isGeofencingNoDropOffBoundary(s0)
     ) {
@@ -400,7 +400,7 @@ public class StreetEdge
     // Forward: drop vehicle for BusinessAreaBorder or zone already in state.
     // If drop-off is also banned (overlapping no-drop-off zone), this is a dead end.
     else if (
-      s0.getRequest().mode().includesRenting() &&
+      rentalMode &&
       (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())
     ) {
       if (s0.isDropOffBannedByCurrentZones()) {
