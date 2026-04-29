@@ -236,7 +236,7 @@ public class UpdaterConfigurator {
         SiriUpdaterModule.createSiriETUpdater(
           configItem,
           provideSiriAdapter(),
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           provideEntityResolver(configItem.feedId())
         )
       );
@@ -249,7 +249,7 @@ public class UpdaterConfigurator {
         SiriUpdaterModule.createSiriETUpdater(
           configItem,
           provideSiriAdapter(),
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           provideEntityResolver(configItem.feedId())
         )
       );
@@ -259,7 +259,7 @@ public class UpdaterConfigurator {
         new SiriETGooglePubsubUpdater(
           configItem,
           provideSiriAdapter(),
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           provideEntityResolver(configItem.feedId())
         )
       );
@@ -269,7 +269,7 @@ public class UpdaterConfigurator {
         SiriUpdaterModule.createSiriSXUpdater(
           configItem,
           timetableRepository,
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           realTimeTransitService
         )
       );
@@ -279,7 +279,7 @@ public class UpdaterConfigurator {
         SiriUpdaterModule.createSiriSXUpdater(
           configItem,
           timetableRepository,
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           realTimeTransitService
         )
       );
@@ -313,7 +313,7 @@ public class UpdaterConfigurator {
         SiriAzureUpdater.createETUpdater(
           configItem,
           provideSiriAdapter(),
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           provideEntityResolver(configItem.feedId())
         )
       );
@@ -323,7 +323,7 @@ public class UpdaterConfigurator {
         SiriAzureUpdater.createSXUpdater(
           configItem,
           timetableRepository,
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           realTimeTransitService
         )
       );
@@ -333,7 +333,7 @@ public class UpdaterConfigurator {
         new SiriETMqttUpdater(
           configItem,
           provideSiriAdapter(),
-          siriFuzzyTripMatcher(),
+          provideSiriFuzzyTripMatcher(),
           provideEntityResolver(configItem.feedId())
         )
       );
@@ -363,7 +363,7 @@ public class UpdaterConfigurator {
    * Lazily build the SIRI fuzzy trip matcher. Caches are populated from the timetable on first
    * call, so we defer construction until at least one SIRI updater needs it.
    */
-  private synchronized SiriFuzzyTripMatcher siriFuzzyTripMatcher() {
+  private synchronized SiriFuzzyTripMatcher provideSiriFuzzyTripMatcher() {
     if (siriFuzzyTripMatcher == null) {
       siriFuzzyTripMatcher = new SiriFuzzyTripMatcher(realTimeTransitService);
     }
