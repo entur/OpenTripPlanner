@@ -12,6 +12,7 @@ public class TripOnServiceDateBuilder
   private Trip trip;
   private LocalDate serviceDate;
   private TripAlteration tripAlteration;
+  private boolean extraJourney;
   private List<TripOnServiceDate> replacementFor = List.of();
 
   TripOnServiceDateBuilder(FeedScopedId id) {
@@ -23,6 +24,7 @@ public class TripOnServiceDateBuilder
     this.trip = original.getTrip();
     this.serviceDate = original.getServiceDate();
     this.tripAlteration = original.getTripAlteration();
+    this.extraJourney = original.isExtraJourney();
     this.replacementFor = new ArrayList<>(original.getReplacementFor());
   }
 
@@ -41,6 +43,11 @@ public class TripOnServiceDateBuilder
     return this;
   }
 
+  public TripOnServiceDateBuilder withExtraJourney(boolean extraJourney) {
+    this.extraJourney = extraJourney;
+    return this;
+  }
+
   public TripOnServiceDateBuilder withReplacementFor(List<TripOnServiceDate> replacementFor) {
     this.replacementFor = replacementFor;
     return this;
@@ -56,6 +63,10 @@ public class TripOnServiceDateBuilder
 
   public TripAlteration getTripAlteration() {
     return tripAlteration;
+  }
+
+  public boolean isExtraJourney() {
+    return extraJourney;
   }
 
   public List<TripOnServiceDate> getReplacementFor() {

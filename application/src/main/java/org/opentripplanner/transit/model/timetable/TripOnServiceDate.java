@@ -16,6 +16,7 @@ public class TripOnServiceDate
   private final Trip trip;
   private final LocalDate serviceDate;
   private final TripAlteration tripAlteration;
+  private final boolean extraJourney;
   private final List<TripOnServiceDate> replacementFor;
 
   TripOnServiceDate(TripOnServiceDateBuilder builder) {
@@ -23,6 +24,7 @@ public class TripOnServiceDate
     this.trip = builder.getTrip();
     this.serviceDate = builder.getServiceDate();
     this.tripAlteration = builder.getTripAlteration();
+    this.extraJourney = builder.isExtraJourney();
     this.replacementFor = builder.getReplacementFor();
   }
 
@@ -42,6 +44,10 @@ public class TripOnServiceDate
     return tripAlteration;
   }
 
+  public boolean isExtraJourney() {
+    return extraJourney;
+  }
+
   public List<TripOnServiceDate> getReplacementFor() {
     return replacementFor;
   }
@@ -53,6 +59,7 @@ public class TripOnServiceDate
       Objects.equals(this.trip, other.trip) &&
       Objects.equals(this.serviceDate, other.serviceDate) &&
       Objects.equals(this.tripAlteration, other.tripAlteration) &&
+      this.extraJourney == other.extraJourney &&
       Objects.equals(this.replacementFor, other.replacementFor)
     );
   }

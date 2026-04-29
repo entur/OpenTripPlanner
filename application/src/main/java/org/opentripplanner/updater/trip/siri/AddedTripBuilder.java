@@ -64,6 +64,7 @@ class AddedTripBuilder {
   private final boolean isJourneyPredictionInaccurate;
   private final OccupancyEnumeration occupancy;
   private final boolean cancellation;
+  private final boolean extraJourney;
   private final String shortName;
   private final String headsign;
   private final List<TripOnServiceDate> replacedTrips;
@@ -115,6 +116,7 @@ class AddedTripBuilder {
     isJourneyPredictionInaccurate = TRUE.equals(estimatedVehicleJourney.isPredictionInaccurate());
     occupancy = estimatedVehicleJourney.getOccupancy();
     cancellation = TRUE.equals(estimatedVehicleJourney.isCancellation());
+    extraJourney = TRUE.equals(estimatedVehicleJourney.isExtraJourney());
     headsign = getFirstStringFromList(estimatedVehicleJourney.getDestinationNames());
 
     this.calls = calls;
@@ -145,6 +147,7 @@ class AddedTripBuilder {
     boolean isJourneyPredictionInaccurate,
     OccupancyEnumeration occupancy,
     boolean cancellation,
+    boolean extraJourney,
     String shortName,
     String headsign,
     List<TripOnServiceDate> replacedTrips,
@@ -167,6 +170,7 @@ class AddedTripBuilder {
     this.isJourneyPredictionInaccurate = isJourneyPredictionInaccurate;
     this.occupancy = occupancy;
     this.cancellation = cancellation;
+    this.extraJourney = extraJourney;
     this.shortName = shortName;
     this.headsign = headsign;
     this.replacedTrips = replacedTrips;
@@ -270,6 +274,7 @@ class AddedTripBuilder {
     var tripOnServiceDate = TripOnServiceDate.of(tripOnServiceDateId)
       .withTrip(trip)
       .withServiceDate(serviceDate)
+      .withExtraJourney(extraJourney)
       .withReplacementFor(replacedTrips)
       .build();
 

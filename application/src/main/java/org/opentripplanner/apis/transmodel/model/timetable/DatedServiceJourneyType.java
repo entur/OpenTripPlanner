@@ -78,6 +78,15 @@ public class DatedServiceJourneyType {
       )
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
+          .name("extraJourney")
+          .description(
+            "Whether this dated service journey was added as an extra journey via a SIRI ET real-time update"
+          )
+          .type(new GraphQLNonNull(Scalars.GraphQLBoolean))
+          .dataFetcher(environment -> tripOnServiceDate(environment).isExtraJourney())
+      )
+      .field(
+        GraphQLFieldDefinition.newFieldDefinition()
           .name("replacementFor")
           .description("List of the dated service journeys this dated service journeys replaces")
           .deprecate("Use replacementForRelation")
