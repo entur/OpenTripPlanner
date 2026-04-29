@@ -144,25 +144,49 @@ public class GeofencingZoneApplier {
 
       for (var e : candidates) {
         if (e instanceof StreetEdge streetEdge) {
-          var fromVertex = streetEdge.getFromVertex();
-          var toVertex = streetEdge.getToVertex();
-
-          boolean fromInZone = vertexInZone.computeIfAbsent(fromVertex, v ->
-            isVertexInZone(v.getCoordinate(), zoneBBox, preparedZone, reusablePoint)
+          addBoundaryIfCrossing(
+            streetEdge,
+            zone,
+            zoneBBox,
+            preparedZone,
+            reusablePoint,
+            vertexInZone,
+            edgesUpdated
           );
-          boolean toInZone = vertexInZone.computeIfAbsent(toVertex, v ->
-            isVertexInZone(v.getCoordinate(), zoneBBox, preparedZone, reusablePoint)
-          );
-
-          if (fromInZone != toInZone) {
-            var ext = new GeofencingBoundaryExtension(zone, toInZone);
-            streetEdge.addGeofencingBoundary(ext);
-            edgesUpdated.put(streetEdge, ext);
-          }
         }
       }
     }
     return edgesUpdated;
+  }
+
+  private static void addBoundaryIfCrossing(
+    StreetEdge streetEdge,
+    GeofencingZone zone,
+    Envelope zoneBBox,
+    PreparedGeometry preparedZone,
+    Point reusablePoint,
+    Map<Vertex, Boolean> vertexInZone,
+    Map<StreetEdge, GeofencingBoundaryExtension> edgesUpdated
+  ) {
+    var fromVertex = streetEdge.getFromVertex();
+    var toVertex = streetEdge.getToVertex();
+
+    boolean fromInZone = vertexInZone.computeIfAbsent(fromVertex, v ->
+      isVertexInZone(v.getCoordinate(), zoneBBox, preparedZone, reusablePoint)
+    );
+    boolean toInZone = vertexInZone.computeIfAbsent(toVertex, v ->
+      isVertexInZone(v.getCoordinate(), zoneBBox, preparedZone, reusablePoint)
+    );
+
+    if (fromInZone != toInZone) {
+      var ext = new GeofencingBoundaryExtension(zone, toInZone);
+      streetEdge.addGeofencingBoundary(ext);
+      // Also add to tov with opposite entering flag so that the pairing check
+      // in updateGeofencingZones works for all vertices, including permanent
+      // split vertices that may only be tov of boundary-crossing edges.
+      toVertex.addGeofencingBoundary(new GeofencingBoundaryExtension(zone, !toInZone));
+      edgesUpdated.put(streetEdge, ext);
+    }
   }
 
   private static boolean isVertexInZone(

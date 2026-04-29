@@ -358,7 +358,9 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   }
 
   /**
-   * Copy all rental restriction data from another vertex to this one.
+   * Copy business area border data from another vertex to this one.
+   * Geofencing boundaries are NOT copied — they require spatial computation
+   * based on the vertex's actual position (see VertexLinker.createSplitVertex).
    */
   public void copyRentalRestrictionsFrom(Vertex other) {
     if (other.businessAreaBorder != null) {
@@ -366,7 +368,6 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
         addBusinessAreaBorderNetwork(network);
       }
     }
-    this.geofencingBoundaries = other.geofencingBoundaries;
   }
 
   /**
