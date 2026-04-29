@@ -10,7 +10,7 @@ class UnitsTest {
   @Test
   void reluctance() {
     assertEquals(0.0, Units.reluctance(0.0));
-    assertEquals(1.12, Units.reluctance(1.1234));
+    assertEquals(1.1, Units.reluctance(1.1234));
     assertEquals(2.1, Units.reluctance(2.1234));
     assertEquals(10.0, Units.reluctance(10.1234));
     var ex = assertThrows(IllegalArgumentException.class, () -> Units.reluctance(-0.01));
@@ -20,6 +20,17 @@ class UnitsTest {
   @Test
   void normalizedFactor() {
     assertEquals(0.0, Units.normalizedFactor(0.0, 0.0, 8.0));
+    // Step 0.1 below 3.0; ties round half-up.
+    assertEquals(1.9, Units.normalizedFactor(1.94, 0.0, 10.0));
+    assertEquals(2.0, Units.normalizedFactor(1.95, 0.0, 10.0));
+    // Step 0.5 in [3.0, 10.0).
+    assertEquals(3.0, Units.normalizedFactor(3.2, 0.0, 10.0));
+    assertEquals(3.5, Units.normalizedFactor(3.3, 0.0, 10.0));
+    // Step 1.0 at and above 10.0.
+    assertEquals(10.0, Units.normalizedFactor(10.4, 0.0, 100.0));
+    assertEquals(11.0, Units.normalizedFactor(10.5, 0.0, 100.0));
+    // BigDecimal-pinned rounding avoids IEEE-754 drift at boundaries (2.05 / 0.1 -> 2.1).
+    assertEquals(2.1, Units.normalizedFactor(2.05, 0.0, 10.0));
     var ex = assertThrows(IllegalArgumentException.class, () ->
       Units.normalizedFactor(0.999, 1.0, 8.0)
     );
@@ -37,8 +48,15 @@ class UnitsTest {
   @Test
   void speed() {
     assertEquals(0.1, Units.speed(0.0));
-    assertEquals(1.12, Units.speed(1.1234));
+    // Step 0.05 below 2 m/s.
+    assertEquals(1.10, Units.speed(1.1234));
+    assertEquals(1.40, Units.speed(1.38));
+    assertEquals(1.40, Units.speed(1.42));
+    // Tie at 1.425 rounds half-up to 1.45.
+    assertEquals(1.45, Units.speed(1.425));
+    // Step 0.1 in [2, 10).
     assertEquals(2.1, Units.speed(2.1234));
+    // Step 1.0 at and above 10 m/s.
     assertEquals(10.0, Units.speed(10.1234));
     var ex = assertThrows(IllegalArgumentException.class, () -> Units.speed(-0.01));
     assertEquals("Negative speed not expected: -0.01 m/s", ex.getMessage());

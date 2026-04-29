@@ -65,6 +65,22 @@ public class DoubleUtils {
   }
 
   /**
+   * Round {@code value} to the nearest multiple of {@code step}, with ties rounded up.
+   * BigDecimal is used to avoid floating-point bias at bucket boundaries (e.g. so that
+   * {@code 2.05 / 0.1} is treated as exactly 20.5 and rounds to 2.1 rather than drifting
+   * to 2.0 through IEEE-754 representation of 0.1).
+   */
+  public static double roundToStep(double value, double step) {
+    if (Double.isNaN(value) || Double.isInfinite(value)) {
+      return value;
+    }
+    return BigDecimal.valueOf(value)
+      .divide(BigDecimal.valueOf(step), 0, RoundingMode.HALF_UP)
+      .multiply(BigDecimal.valueOf(step))
+      .doubleValue();
+  }
+
+  /**
    * Compare two doubles for equality - this is equivalent of
    * <pre>
    * Double.compare(a, b) == 0
