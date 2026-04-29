@@ -116,9 +116,7 @@ public class StartOnBoardAccessResolver {
       targetSeconds
     );
 
-    var tripTimes = transitService
-      .findTimetable(tripPattern, serviceDate)
-      .getTripTimesWithScheduleFallback(trip);
+    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
     if (tripTimes == null) {
       throw new IllegalArgumentException(
         "Trip %s not found in timetable for pattern %s on date %s".formatted(
@@ -209,9 +207,7 @@ public class StartOnBoardAccessResolver {
     LocalDate serviceDate,
     int targetSeconds
   ) {
-    var tripTimes = transitService
-      .findTimetable(tripPattern, serviceDate)
-      .getTripTimesWithScheduleFallback(trip);
+    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
     if (tripTimes == null) {
       throw new IllegalArgumentException(
         "Trip %s not found in timetable for pattern %s on date %s".formatted(
