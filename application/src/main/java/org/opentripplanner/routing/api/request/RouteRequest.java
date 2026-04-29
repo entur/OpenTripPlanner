@@ -235,13 +235,13 @@ public class RouteRequest implements Serializable {
   public void validateOriginAndDestination() {
     List<RoutingError> routingErrors = new ArrayList<>(2);
 
-    if (from == null || !from.isSpecified()) {
+    if (from == null) {
       routingErrors.add(
         new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.FROM_PLACE)
       );
     }
 
-    if (to == null || !to.isSpecified()) {
+    if (to == null) {
       routingErrors.add(new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.TO_PLACE));
     }
 
@@ -286,9 +286,9 @@ public class RouteRequest implements Serializable {
    */
   public boolean cannotReachTransit() {
     boolean accessUnreachable =
-      journey.access().mode() == StreetMode.NOT_SET && (from == null || from.stopId == null);
+      journey.access().mode() == StreetMode.NOT_SET && (from == null || from.stopId() == null);
     boolean egressUnreachable =
-      journey.egress().mode() == StreetMode.NOT_SET && (to == null || to.stopId == null);
+      journey.egress().mode() == StreetMode.NOT_SET && (to == null || to.stopId() == null);
     return accessUnreachable || egressUnreachable;
   }
 
@@ -536,13 +536,13 @@ public class RouteRequest implements Serializable {
 
     List<RoutingError> routingErrors = new ArrayList<>(2);
 
-    if (from == null || !from.isSpecified()) {
+    if (from == null) {
       routingErrors.add(
         new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.FROM_PLACE)
       );
     }
 
-    if (to == null || !to.isSpecified()) {
+    if (to == null) {
       routingErrors.add(new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.TO_PLACE));
     }
     return routingErrors;
