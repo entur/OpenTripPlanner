@@ -25,6 +25,9 @@ data:
             },
             "parking" : {
               "cost" : 120
+            },
+            "rental" : {
+              "useAvailabilityInformation" : true
             }
           },
           "car" : {
@@ -32,7 +35,13 @@ data:
             "decelerationSpeed" : 2.9,
             "accelerationSpeed" : 2.9,
             "rental" : {
-              "dropOffTime" : "120s"
+              "dropOffTime" : "120s",
+              "useAvailabilityInformation" : true
+            }
+          },
+          "scooter" : {
+            "rental" : {
+              "useAvailabilityInformation" : true
             }
           },
           "walk" : {
