@@ -310,114 +310,20 @@ public class StreetEdge
 
   @Override
   public State[] traverse(State s0) {
-    final StateEditor editor;
-
     final boolean rentalMode = s0.getRequest().mode().includesRenting();
-    final boolean arriveByRental = rentalMode && s0.getRequest().arriveBy();
 
-    // ArriveBy: traversal ban (BusinessAreaBorder + no-traversal zone in state + boundary zone entry)
-    if (
-      arriveByRental &&
-      (tov.rentalTraversalBanned(s0) ||
-        s0.isTraversalBannedByCurrentZones() ||
-        isArriveByNoTraversalEntry(s0))
-    ) {
-      return State.empty();
-    }
-    // ArriveBy: consolidated boundary fork for HAVE_RENTED walkers exiting restricted zones.
-    // Only produces the walking branch — renting branches are deferred to the next edge
-    // so their backEdge is outside the zone (not the boundary-crossing edge).
-    else if (arriveByRental && isArriveByBoundaryForkTrigger(s0)) {
-      return performArriveByBoundaryFork(s0);
-    }
-    // ArriveBy: deferred renting fork — creates RENTING_FLOATING states one edge after the
-    // zone boundary, so the backEdge is safely outside the zone in the forward itinerary.
-    else if (arriveByRental && isDeferredRentingForkTrigger(s0)) {
-      return performDeferredRentingFork(s0);
-    }
-    // Forward: drop when approaching a no-traversal zone.
-    // The rider must stop — traversal is banned inside the zone.
-    // If drop-off is also banned here (overlapping no-drop-off zone), this branch is a
-    // dead end — return empty so the A* uses the branch that dropped outside the zone.
-    else if (
-      rentalMode &&
-      s0.isRentingVehicle() &&
-      tov.isGeofencingNoTraversalBoundary(s0)
-    ) {
-      if (s0.isDropOffBannedByCurrentZones()) {
-        return State.empty();
-      }
-      editor = doTraverse(s0, s0.currentMode(), false);
-      if (editor != null) {
-        editor.dropFloatingVehicle(
-          s0.vehicleRentalFormFactor(),
-          s0.rentalVehiclePropulsionType(),
-          s0.getVehicleRentalNetwork(),
-          s0.getRequest().arriveBy()
-        );
+    // Geofencing: handle zone boundary forks, traversal bans, and drop-off restrictions.
+    // Returns a final State[] when geofencing produces or blocks results, or null to
+    // fall through to normal traversal.
+    if (rentalMode) {
+      State[] geofencingResult = traverseWithGeofencing(s0);
+      if (geofencingResult != null) {
+        return geofencingResult;
       }
     }
-    // Forward: fork when approaching a no-drop-off zone from OUTSIDE all restricted zones.
-    // One branch drops the vehicle here (last vertex outside zone), the other continues
-    // riding into the zone. The A* picks the drop branch when the destination is inside
-    // the zone (can't drop off there), and the ride branch when the destination is outside
-    // (rider can traverse the zone and drop off on the other side).
-    // If the rider is already inside a restricted zone (e.g., adjacent no-drop-off zones),
-    // dropping here is invalid — just continue riding.
-    else if (
-      rentalMode &&
-      s0.isRentingVehicle() &&
-      tov.isGeofencingNoDropOffBoundary(s0)
-    ) {
-      if (s0.isDropOffBannedByCurrentZones()) {
-        // Already inside a no-drop-off zone — can't drop here, just ride through
-        if (canTraverse(s0.currentMode())) {
-          editor = doTraverse(s0, s0.currentMode(), false);
-        } else {
-          editor = null;
-        }
-      } else {
-        // Outside all restricted zones — fork: drop or continue riding
-        StateEditor dropEditor = doTraverse(s0, s0.currentMode(), false);
-        State dropState = null;
-        if (dropEditor != null) {
-          dropEditor.dropFloatingVehicle(
-            s0.vehicleRentalFormFactor(),
-            s0.rentalVehiclePropulsionType(),
-            s0.getVehicleRentalNetwork(),
-            s0.getRequest().arriveBy()
-          );
-          dropState = dropEditor.makeState();
-        }
-        State rideState = null;
-        if (canTraverse(s0.currentMode())) {
-          StateEditor rideEditor = doTraverse(s0, s0.currentMode(), false);
-          rideState = rideEditor != null ? rideEditor.makeState() : null;
-        }
-        return State.ofNullable(dropState, rideState);
-      }
-    }
-    // Forward: drop vehicle for BusinessAreaBorder or zone already in state.
-    // If drop-off is also banned (overlapping no-drop-off zone), this is a dead end.
-    else if (
-      rentalMode &&
-      (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())
-    ) {
-      if (s0.isDropOffBannedByCurrentZones()) {
-        return State.empty();
-      }
-      editor = doTraverse(s0, TraverseMode.WALK, false);
-      if (editor != null) {
-        editor.dropFloatingVehicle(
-          s0.vehicleRentalFormFactor(),
-          s0.rentalVehiclePropulsionType(),
-          s0.getVehicleRentalNetwork(),
-          s0.getRequest().arriveBy()
-        );
-      }
-    }
-    // Bicycle mode handling
-    else if (s0.currentMode() == TraverseMode.BICYCLE) {
+
+    final StateEditor editor;
+    if (s0.currentMode() == TraverseMode.BICYCLE) {
       if (canTraverse(TraverseMode.BICYCLE)) {
         editor = doTraverse(s0, TraverseMode.BICYCLE, false);
       } else if (canTraverse(TraverseMode.WALK)) {
@@ -433,7 +339,161 @@ public class StreetEdge
 
     State state = editor != null ? editor.makeState() : null;
 
-    // Forward: entered a no-traversal zone during traversal. Drop and walk.
+    if (canPickupAndDrive(s0) && canTraverse(TraverseMode.CAR)) {
+      StateEditor inCar = doTraverse(s0, TraverseMode.CAR, false);
+      if (inCar != null) {
+        driveAfterPickup(s0, inCar);
+        State forkState = inCar.makeState();
+        // Return both the original WALK state, along with the new IN_CAR state
+        return State.ofNullable(forkState, state);
+      }
+    }
+
+    if (
+      canDropOffAfterDriving(s0) &&
+      !getPermission().allows(TraverseMode.CAR) &&
+      canTraverse(TraverseMode.WALK)
+    ) {
+      StateEditor dropOff = doTraverse(s0, TraverseMode.WALK, false);
+      if (dropOff != null) {
+        dropOffAfterDriving(s0, dropOff);
+        // Only the walk state is returned, since traversing by car was not possible
+        return dropOff.makeStateArray();
+      }
+    }
+
+    return State.ofNullable(state);
+  }
+
+  /**
+   * Handle geofencing zone restrictions during edge traversal. Checks zone boundaries,
+   * traversal bans, and drop-off restrictions for both forward and arrive-by rental searches.
+   * <p>
+   * Returns a final {@code State[]} when geofencing determines the outcome (block, fork, or
+   * forced drop-off), or {@code null} when no geofencing restriction applies and normal
+   * traversal should proceed.
+   * <p>
+   * The trigger ordering is significant:
+   * <ol>
+   *   <li>ArriveBy traversal bans (unconditional block)</li>
+   *   <li>ArriveBy boundary fork (walking branch only, renting deferred)</li>
+   *   <li>ArriveBy deferred renting fork (one edge after boundary)</li>
+   *   <li>Forward no-traversal boundary (forced drop before zone)</li>
+   *   <li>Forward no-drop-off boundary (fork: drop or continue riding)</li>
+   *   <li>Forward BusinessAreaBorder / traversal ban in state (forced drop)</li>
+   *   <li>Normal traversal, then post-traversal checks:</li>
+   *   <li>Forward no-traversal entry trigger (forced drop after crossing)</li>
+   *   <li>Generic boundary fork (commit to network)</li>
+   * </ol>
+   */
+  private State[] traverseWithGeofencing(State s0) {
+    final boolean arriveBy = s0.getRequest().arriveBy();
+
+    // === ArriveBy triggers ===
+
+    if (arriveBy) {
+      // Traversal ban (BusinessAreaBorder + no-traversal zone in state + boundary zone entry)
+      if (
+        tov.rentalTraversalBanned(s0) ||
+        s0.isTraversalBannedByCurrentZones() ||
+        isArriveByNoTraversalEntry(s0)
+      ) {
+        return State.empty();
+      }
+      // Consolidated boundary fork for HAVE_RENTED walkers exiting restricted zones.
+      // Only produces the walking branch — renting branches are deferred to the next edge
+      // so their backEdge is outside the zone (not the boundary-crossing edge).
+      if (isArriveByBoundaryForkTrigger(s0)) {
+        return performArriveByBoundaryFork(s0);
+      }
+      // Deferred renting fork — creates RENTING_FLOATING states one edge after the
+      // zone boundary, so the backEdge is safely outside the zone in the forward itinerary.
+      if (isDeferredRentingForkTrigger(s0)) {
+        return performDeferredRentingFork(s0);
+      }
+    }
+
+    // === Forward pre-traversal triggers ===
+
+    // Drop when approaching a no-traversal zone.
+    // The rider must stop — traversal is banned inside the zone.
+    // If drop-off is also banned here (overlapping no-drop-off zone), this branch is a
+    // dead end — return empty so the A* uses the branch that dropped outside the zone.
+    if (s0.isRentingVehicle() && tov.isGeofencingNoTraversalBoundary(s0)) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        return State.empty();
+      }
+      StateEditor editor = doTraverse(s0, s0.currentMode(), false);
+      if (editor != null) {
+        editor.dropFloatingVehicle(
+          s0.vehicleRentalFormFactor(),
+          s0.rentalVehiclePropulsionType(),
+          s0.getVehicleRentalNetwork(),
+          arriveBy
+        );
+      }
+      return State.ofNullable(editor != null ? editor.makeState() : null);
+    }
+
+    // Fork when approaching a no-drop-off zone from OUTSIDE all restricted zones.
+    // One branch drops the vehicle here (last vertex outside zone), the other continues
+    // riding into the zone. The A* picks the drop branch when the destination is inside
+    // the zone (can't drop off there), and the ride branch when the destination is outside
+    // (rider can traverse the zone and drop off on the other side).
+    // If the rider is already inside a restricted zone (e.g., adjacent no-drop-off zones),
+    // dropping here is invalid — just continue riding.
+    if (s0.isRentingVehicle() && tov.isGeofencingNoDropOffBoundary(s0)) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        // Already inside a no-drop-off zone — can't drop here, just ride through
+        return null;
+      }
+      // Outside all restricted zones — fork: drop or continue riding
+      StateEditor dropEditor = doTraverse(s0, s0.currentMode(), false);
+      State dropState = null;
+      if (dropEditor != null) {
+        dropEditor.dropFloatingVehicle(
+          s0.vehicleRentalFormFactor(),
+          s0.rentalVehiclePropulsionType(),
+          s0.getVehicleRentalNetwork(),
+          arriveBy
+        );
+        dropState = dropEditor.makeState();
+      }
+      State rideState = null;
+      if (canTraverse(s0.currentMode())) {
+        StateEditor rideEditor = doTraverse(s0, s0.currentMode(), false);
+        rideState = rideEditor != null ? rideEditor.makeState() : null;
+      }
+      return State.ofNullable(dropState, rideState);
+    }
+
+    // Drop vehicle for BusinessAreaBorder or zone already in state.
+    // If drop-off is also banned (overlapping no-drop-off zone), this is a dead end.
+    if (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones()) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        return State.empty();
+      }
+      StateEditor editor = doTraverse(s0, TraverseMode.WALK, false);
+      if (editor != null) {
+        editor.dropFloatingVehicle(
+          s0.vehicleRentalFormFactor(),
+          s0.rentalVehiclePropulsionType(),
+          s0.getVehicleRentalNetwork(),
+          arriveBy
+        );
+      }
+      return State.ofNullable(editor != null ? editor.makeState() : null);
+    }
+
+    // === Normal traversal + post-traversal triggers ===
+
+    if (!canTraverse(s0.currentMode())) {
+      return null;
+    }
+    StateEditor editor = doTraverse(s0, s0.currentMode(), false);
+    State state = editor != null ? editor.makeState() : null;
+
+    // Entered a no-traversal zone during traversal. Drop and walk.
     // Handles both committed and generic states. Must run BEFORE the generic boundary
     // fork below, because generic states entering a no-traversal zone must be dropped,
     // not forked into committed branches.
@@ -461,30 +521,8 @@ public class StreetEdge
       return performGenericBoundaryFork(s0, state);
     }
 
-    if (canPickupAndDrive(s0) && canTraverse(TraverseMode.CAR)) {
-      StateEditor inCar = doTraverse(s0, TraverseMode.CAR, false);
-      if (inCar != null) {
-        driveAfterPickup(s0, inCar);
-        State forkState = inCar.makeState();
-        // Return both the original WALK state, along with the new IN_CAR state
-        return State.ofNullable(forkState, state);
-      }
-    }
-
-    if (
-      canDropOffAfterDriving(s0) &&
-      !getPermission().allows(TraverseMode.CAR) &&
-      canTraverse(TraverseMode.WALK)
-    ) {
-      StateEditor dropOff = doTraverse(s0, TraverseMode.WALK, false);
-      if (dropOff != null) {
-        dropOffAfterDriving(s0, dropOff);
-        // Only the walk state is returned, since traversing by car was not possible
-        return dropOff.makeStateArray();
-      }
-    }
-
-    return State.ofNullable(state);
+    // No geofencing restriction applied — return null to fall through to normal traversal
+    return null;
   }
 
   /**
