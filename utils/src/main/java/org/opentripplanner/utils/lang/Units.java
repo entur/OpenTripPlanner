@@ -13,7 +13,7 @@ import java.util.Locale;
  *   <li>slack - Time/slack/duration. Unit: seconds (s)</li>
  *   <li>speed - Unit: meters per second (m/s)</li>
  *   <li>acceleration - Unit: meters per second squared (m/s^2)</li>
- *   <li>ratio - Unit: meters per second squared (m/s^2)</li>
+ *   <li>ratio - Unit: scalar</li>
  * </ul>
  *
  * @deprecated Convert primitive types to type-safe value objects. The need for this class should
