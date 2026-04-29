@@ -31,6 +31,11 @@ class UnitsTest {
     assertEquals(11.0, Units.normalizedFactor(10.5, 0.0, 100.0));
     // BigDecimal-pinned rounding avoids IEEE-754 drift at boundaries (2.05 / 0.1 -> 2.1).
     assertEquals(2.1, Units.normalizedFactor(2.05, 0.0, 10.0));
+    // Negative values: step is picked from absolute value, half-up rounds away from zero.
+    assertEquals(-1.9, Units.normalizedFactor(-1.94, -10.0, 0.0));
+    assertEquals(-2.1, Units.normalizedFactor(-2.05, -10.0, 0.0));
+    assertEquals(-3.5, Units.normalizedFactor(-3.3, -10.0, 0.0));
+    assertEquals(-11.0, Units.normalizedFactor(-10.5, -100.0, 0.0));
     var ex = assertThrows(IllegalArgumentException.class, () ->
       Units.normalizedFactor(0.999, 1.0, 8.0)
     );

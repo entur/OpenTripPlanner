@@ -63,10 +63,10 @@ class LinearFunctionSerializationTest {
 
   @Test
   void serialize() {
-    assertEquals("0s + 0.00 t", LinearFunctionSerialization.serialize(Duration.ZERO, 0));
-    assertEquals("2m9s + 0.01 t", LinearFunctionSerialization.serialize(D2_h_9_s, 0.0111));
-    assertEquals("1h + 0.11 t", LinearFunctionSerialization.serialize(D1_h, 0.111));
-    assertEquals("1h + 1.11 t", LinearFunctionSerialization.serialize(D1_h, 1.111));
+    assertEquals("0s + 0.0 t", LinearFunctionSerialization.serialize(Duration.ZERO, 0));
+    assertEquals("2m9s + 0.0 t", LinearFunctionSerialization.serialize(D2_h_9_s, 0.0111));
+    assertEquals("1h + 0.1 t", LinearFunctionSerialization.serialize(D1_h, 0.111));
+    assertEquals("1h + 1.1 t", LinearFunctionSerialization.serialize(D1_h, 1.111));
     assertEquals("1h + 2.1 t", LinearFunctionSerialization.serialize(D1_h, 2.111));
   }
 

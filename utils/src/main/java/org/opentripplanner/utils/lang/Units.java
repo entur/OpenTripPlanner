@@ -70,12 +70,11 @@ public class Units {
   }
 
   /**
-   * Convert a factor to string using the normalized number of digits.
+   * Convert a factor to string using the same precision as the bucket grid in
+   * {@link #normalizedFactor(double, double, double)}: 1 decimal below 10.0, 0 decimals
+   * at or above 10.0.
    */
   public static String factorToString(double value) {
-    if (abs(value) < 2.0) {
-      return String.format(Locale.ROOT, "%.2f", value);
-    }
     if (abs(value) < 10.0) {
       return String.format(Locale.ROOT, "%.1f", value);
     }
