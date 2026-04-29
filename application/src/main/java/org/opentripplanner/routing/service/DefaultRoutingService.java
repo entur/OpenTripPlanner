@@ -6,6 +6,7 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.RequestPreProcessor;
 import org.opentripplanner.routing.algorithm.RoutingWorker;
 import org.opentripplanner.routing.algorithm.RoutingWorkerRequest;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.algorithm.via.ViaRoutingWorker;
 import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -36,6 +37,7 @@ public class DefaultRoutingService implements RoutingService {
     var timeZone = ZoneIdFallback.zoneId(serverContext.transitService().getTimeZone());
 
     this.requestPreProcessor = new RequestPreProcessor(
+      serverContext.transitService(),
       serverContext.raptorTuningParameters(),
       timeZone
     );

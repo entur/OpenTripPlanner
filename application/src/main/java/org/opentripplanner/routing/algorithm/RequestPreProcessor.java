@@ -1,11 +1,14 @@
 package org.opentripplanner.routing.algorithm;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Objects;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSearchDays;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
@@ -15,11 +18,17 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  */
 public final class RequestPreProcessor {
 
+  private final TransitService transitService;
   private final RaptorTuningParameters tuningParameters;
   private final ZoneId zoneId;
 
-  public RequestPreProcessor(RaptorTuningParameters tuningParameters, ZoneId zoneId) {
+  public RequestPreProcessor(
+    TransitService transitService,
+    RaptorTuningParameters tuningParameters,
+    ZoneId zoneId
+  ) {
     this.tuningParameters = tuningParameters;
+    this.transitService = transitService;
     this.zoneId = zoneId;
   }
 
@@ -29,6 +38,9 @@ public final class RequestPreProcessor {
    */
   public RoutingWorkerRequest computeRequest(RouteRequest originalRequest) {
     var request = originalRequest.withPageCursor();
+    if (request.isOnBoardAccessRequest()) {
+      request = prepareRequestForStartOnBoardAccess(request);
+    }
     var transitSearchTimeZero = ServiceDateUtils.asStartOfService(request.dateTime(), zoneId);
     var additionalSearchDays = createAdditionalSearchDays(tuningParameters, zoneId, request);
     return new RoutingWorkerRequest(request, transitSearchTimeZero, additionalSearchDays);
@@ -50,5 +62,31 @@ public final class RequestPreProcessor {
       maxWindow,
       request.preferences().system().maxJourneyDuration()
     );
+  }
+
+  /**
+   * This prepares the request for a start-on-board raptor search by setting its dateTime to the
+   * resolved boarding time and the search window to the given iteration step duration. The boarding
+   * time is resolved based on timetable data from {@link TransitService} (see
+   * {@link StartOnBoardAccessResolver#resolveBoardingDateTime}). This produces exactly one Raptor
+   * iteration at the boarding time while keeping a valid search window for the filter chain.
+   */
+  private RouteRequest prepareRequestForStartOnBoardAccess(RouteRequest request) {
+    var fromLocation = request.from();
+    if (fromLocation == null || fromLocation.tripLocation == null) {
+      throw new IllegalArgumentException();
+    }
+
+    var boardingDateTime = new StartOnBoardAccessResolver(transitService).resolveBoardingDateTime(
+      fromLocation.tripLocation,
+      zoneId
+    );
+    var iterationStep = Duration.ofSeconds(tuningParameters.iterationDepartureStepInSeconds());
+
+    var requestBuilder = request.copyOf();
+    requestBuilder.withDateTime(boardingDateTime);
+    requestBuilder.withSearchWindow(iterationStep);
+
+    return requestBuilder.buildRequest();
   }
 }
