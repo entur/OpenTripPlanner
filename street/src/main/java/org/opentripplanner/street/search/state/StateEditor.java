@@ -389,6 +389,11 @@ public class StateEditor {
    * (same zone, opposite entering flag). If paired, adds or removes the zone from state.
    */
   public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
+    // Build the new zone set in a single pass. The mutable HashSet is only created when
+    // we find the first paired boundary, and Set.copyOf is called once at the end —
+    // avoiding intermediate immutable copies when multiple zones overlap on one edge.
+    HashSet<GeofencingZone> newZones = null;
+
     for (var boundary : fromVertex.getGeofencingBoundaries()) {
       // Paired check: tov must have same zone with opposite entering flag
       boolean paired = false;
@@ -404,14 +409,19 @@ public class StateEditor {
       if (!paired) {
         continue;
       }
+      if (newZones == null) {
+        newZones = new HashSet<>(stateData.currentGeofencingZones);
+      }
       boolean effectiveEntering = boundary.entering() ^ arriveBy;
-      cloneStateDataAsNeeded();
-      var newZones = new HashSet<>(stateData.currentGeofencingZones);
       if (effectiveEntering) {
         newZones.add(boundary.zone());
       } else {
         newZones.remove(boundary.zone());
       }
+    }
+
+    if (newZones != null) {
+      cloneStateDataAsNeeded();
       stateData.currentGeofencingZones = Set.copyOf(newZones);
     }
   }
