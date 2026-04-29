@@ -1,9 +1,8 @@
 package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -13,6 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.calendar.CalendarServiceData;
@@ -31,7 +31,7 @@ import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
 import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
 
 class ModifiedTripBuilderTest {
@@ -70,7 +70,7 @@ class ModifiedTripBuilderTest {
     .withStopPattern(TimetableRepositoryForTest.stopPattern(STOP_A_1, STOP_B_1, STOP_C_1))
     .build();
 
-  private static final FeedScopedId SERVICE_ID = TimetableRepositoryForTest.id("CAL_1");
+  private static final FeedScopedId SERVICE_ID = FeedScopedIdForTestFactory.id("CAL_1");
 
   private static final Trip TRIP = TimetableRepositoryForTest.trip("TRIP")
     .withRoute(ROUTE)
@@ -161,15 +161,14 @@ class ModifiedTripBuilderTest {
       null,
       false,
       "DATASOURCE"
-    ).build();
+    );
 
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.TOO_FEW_STOPS, result.failureValue().errorType());
+    assertFailure(UpdateErrorType.TOO_FEW_STOPS, result::build);
   }
 
   @Test
   void testUpdateCancellation() {
-    var result = new ModifiedTripBuilder(
+    var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
       SERVICE_DATE,
@@ -200,9 +199,6 @@ class ModifiedTripBuilderTest {
       "DATASOURCE"
     ).build();
 
-    assertTrue(result.isSuccess(), "Update should succeed");
-
-    TripUpdate tripUpdate = result.successValue();
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
     TripTimes updatedTimes = tripUpdate.tripTimes();
     assertEquals(RealTimeState.CANCELED, updatedTimes.getRealTimeState());
@@ -210,7 +206,7 @@ class ModifiedTripBuilderTest {
 
   @Test
   void testUpdateSameStops() {
-    var result = new ModifiedTripBuilder(
+    var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
       SERVICE_DATE,
@@ -241,9 +237,6 @@ class ModifiedTripBuilderTest {
       "DATASOURCE"
     ).build();
 
-    assertTrue(result.isSuccess(), "Update should succeed");
-
-    TripUpdate tripUpdate = result.successValue();
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
     TripTimes updatedTimes = tripUpdate.tripTimes();
     assertEquals(secondsInDay(10, 1), updatedTimes.getArrivalTime(0));
@@ -257,7 +250,7 @@ class ModifiedTripBuilderTest {
 
   @Test
   void testUpdateValidationFailure() {
-    var result = new ModifiedTripBuilder(
+    var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
       SERVICE_DATE,
@@ -286,13 +279,9 @@ class ModifiedTripBuilderTest {
       null,
       false,
       "DATASOURCE"
-    ).build();
+    );
 
-    assertFalse(result.isSuccess(), "Update should fail");
-    UpdateError updateError = result.failureValue();
-
-    // Check that values are copied over
-    assertEquals(UpdateError.UpdateErrorType.NEGATIVE_DWELL_TIME, updateError.errorType());
+    var updateError = assertFailure(UpdateErrorType.NEGATIVE_DWELL_TIME, tripUpdate::build);
     assertEquals(1, updateError.stopIndex());
   }
 
@@ -302,7 +291,7 @@ class ModifiedTripBuilderTest {
    */
   @Test
   void testUpdateSameStopsDepartEarly() {
-    var result = new ModifiedTripBuilder(
+    var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
       SERVICE_DATE,
@@ -333,9 +322,6 @@ class ModifiedTripBuilderTest {
       "DATASOURCE"
     ).build();
 
-    assertTrue(result.isSuccess(), "Update should succeed");
-
-    TripUpdate tripUpdate = result.successValue();
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
     TripTimes updatedTimes = tripUpdate.tripTimes();
     assertEquals(secondsInDay(9, 58), updatedTimes.getArrivalTime(0));
@@ -349,7 +335,7 @@ class ModifiedTripBuilderTest {
 
   @Test
   void testUpdateUpdatedStop() {
-    var result = new ModifiedTripBuilder(
+    var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
       SERVICE_DATE,
@@ -380,9 +366,6 @@ class ModifiedTripBuilderTest {
       "DATASOURCE"
     ).build();
 
-    assertTrue(result.isSuccess(), "Update should succeed");
-
-    TripUpdate tripUpdate = result.successValue();
     StopPattern stopPattern = tripUpdate.stopPattern();
     assertNotEquals(PATTERN.getStopPattern(), stopPattern);
     assertEquals(STOP_A_2, stopPattern.getStop(0));
@@ -412,9 +395,7 @@ class ModifiedTripBuilderTest {
       entityResolver
     );
 
-    // Assert
-    assertTrue(result.isSuccess());
-    assertEquals(PATTERN.getStopPattern(), result.successValue());
+    assertEquals(PATTERN.getStopPattern(), result);
   }
 
   @Test
@@ -431,10 +412,9 @@ class ModifiedTripBuilderTest {
     );
 
     // Assert
-    assertTrue(result.isSuccess());
-    assertNotEquals(PATTERN.getStopPattern(), result.successValue());
+    assertNotEquals(PATTERN.getStopPattern(), result);
 
-    var newPattern = PATTERN.copy().withStopPattern(result.successValue()).build();
+    var newPattern = PATTERN.copy().withStopPattern(result).build();
     assertEquals(STOP_A_2, newPattern.getStop(0));
     assertEquals(STOP_B_1, newPattern.getStop(1));
     assertEquals(STOP_C_1, newPattern.getStop(2));
@@ -448,19 +428,18 @@ class ModifiedTripBuilderTest {
   @Test
   void testCreateStopPatternDifferentStationCall() {
     // Stop on non-pattern stop, without parent station should be rejected
-    var result = ModifiedTripBuilder.createStopPattern(
-      PATTERN,
-      List.of(
-        TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
-        TestCall.of().withStopPointRef(STOP_D.getId().getId()).build(),
-        TestCall.of().withStopPointRef(STOP_C_1.getId().getId()).build()
-      ),
-      entityResolver
-    );
 
-    // Assert
-    assertTrue(result.isFailure());
-    assertEquals(UpdateError.UpdateErrorType.STOP_MISMATCH, result.failureValue().errorType());
+    assertFailure(UpdateErrorType.STOP_MISMATCH, () ->
+      ModifiedTripBuilder.createStopPattern(
+        PATTERN,
+        List.of(
+          TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
+          TestCall.of().withStopPointRef(STOP_D.getId().getId()).build(),
+          TestCall.of().withStopPointRef(STOP_C_1.getId().getId()).build()
+        ),
+        entityResolver
+      )
+    );
   }
 
   @Test
@@ -477,10 +456,9 @@ class ModifiedTripBuilderTest {
     );
 
     // Assert
-    assertTrue(result.isSuccess());
-    assertNotEquals(PATTERN.getStopPattern(), result.successValue());
+    assertNotEquals(PATTERN.getStopPattern(), result);
 
-    var newPattern = PATTERN.copy().withStopPattern(result.successValue()).build();
+    var newPattern = PATTERN.copy().withStopPattern(result).build();
     assertEquals(STOP_A_1, newPattern.getStop(0));
     assertEquals(STOP_B_1, newPattern.getStop(1));
     assertEquals(STOP_C_1, newPattern.getStop(2));
@@ -512,10 +490,9 @@ class ModifiedTripBuilderTest {
     );
 
     // Assert
-    assertTrue(result.isSuccess());
-    assertNotEquals(PATTERN.getStopPattern(), result.successValue());
+    assertNotEquals(PATTERN.getStopPattern(), result);
 
-    var newPattern = PATTERN.copy().withStopPattern(result.successValue()).build();
+    var newPattern = PATTERN.copy().withStopPattern(result).build();
     assertEquals(STOP_A_1, newPattern.getStop(0));
     assertEquals(STOP_B_1, newPattern.getStop(1));
     assertEquals(STOP_C_1, newPattern.getStop(2));

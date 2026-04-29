@@ -12,17 +12,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.routing.linking.DisposableEdgeCollection;
-import org.opentripplanner.routing.linking.VertexLinker;
+import org.opentripplanner.framework.retry.OtpRetry;
+import org.opentripplanner.framework.retry.OtpRetryBuilder;
+import org.opentripplanner.framework.retry.OtpRetryException;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.street.linking.DisposableEdgeCollection;
+import org.opentripplanner.street.linking.LinkingDirection;
+import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
-import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
@@ -46,6 +49,8 @@ import org.slf4j.LoggerFactory;
 public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   private static final Logger LOG = LoggerFactory.getLogger(VehicleRentalUpdater.class);
+  private static final Duration RETRY_INTERVAL = Duration.ofSeconds(5);
+  private static final int RETRY_BACKOFF_MULTIPLIER = 1;
 
   private final Throttle unlinkedPlaceThrottle;
 
@@ -83,10 +88,21 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
     // Adding a vehicle rental station service needs a graph writer runnable
     this.service = repository;
 
+    OtpRetry retry = new OtpRetryBuilder()
+      .withName("%s updater setup".formatted(nameForLogging))
+      .withMaxAttempts((int) parameters.startupRetryPeriod().dividedBy(RETRY_INTERVAL))
+      .withInitialRetryInterval(RETRY_INTERVAL)
+      .withBackoffMultiplier(RETRY_BACKOFF_MULTIPLIER)
+      .withRetryableException(UpdaterConstructionException.class::isInstance)
+      .build();
+
     try {
       // Do any setup if needed
-      source.setup();
-    } catch (UpdaterConstructionException e) {
+      retry.execute(source::setup);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      LOG.warn("Updater setup interrupted: {}", nameForLogging, e);
+    } catch (OtpRetryException e) {
       LOG.warn("Unable to setup updater: {}", nameForLogging, e);
     }
 

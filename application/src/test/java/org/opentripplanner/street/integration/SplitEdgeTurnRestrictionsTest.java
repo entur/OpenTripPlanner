@@ -20,13 +20,13 @@ import org.opentripplanner.routing.api.request.request.StreetRequest;
 import org.opentripplanner.routing.graphfinder.NoopSiteResolver;
 import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
-import org.opentripplanner.routing.linking.TemporaryVerticesContainer;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
@@ -178,7 +178,7 @@ public class SplitEdgeTurnRestrictionsTest {
       var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
-      var gpf = new GraphPathFinder(null);
+      var gpf = new GraphPathFinder();
       var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
 
       GraphPathToItineraryMapper graphPathToItineraryMapper = new GraphPathToItineraryMapper(

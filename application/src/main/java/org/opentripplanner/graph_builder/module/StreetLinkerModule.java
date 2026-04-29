@@ -10,13 +10,13 @@ import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.ParkAndRideEntranceRemoved;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
-import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.linking.VehicleParkingHelper;
+import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.street.model.edge.LinkingDirection;
 import org.opentripplanner.street.model.edge.StreetStationCentroidLink;
 import org.opentripplanner.street.model.edge.StreetTransitEntranceLink;
 import org.opentripplanner.street.model.edge.StreetTransitStopLink;
@@ -181,7 +181,7 @@ public class StreetLinkerModule implements GraphBuilderModule {
    * <p>
    * This does not apply to zones as street vertices store which zones they are part of.
    *
-   * @see https://github.com/opentripplanner/OpenTripPlanner/issues/5498
+   * @link https://github.com/opentripplanner/OpenTripPlanner/issues/5498
    */
   private void linkToDriveableEdge(TransitStopVertex tStop) {
     vertexLinker.linkVertexPermanently(

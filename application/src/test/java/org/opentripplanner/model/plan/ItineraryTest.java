@@ -15,6 +15,7 @@ import java.util.List;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.basic.Cost;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.SystemNotice;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
@@ -26,6 +27,9 @@ import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 public class ItineraryTest implements PlanTestConstants {
 
   private static final Cost COST = Cost.costOfSeconds(720);
+  private static final double DISTANCE_DELTA = 0.01;
+  // Geometry-based distance from PlanTestConstants A (5.0, 8.0) to B (6.0, 8.5)
+  private static final double A_TO_B_DISTANCE = 124205.32;
 
   @Test
   void testDerivedFieldsWithWalkingOnly() {
@@ -71,8 +75,8 @@ public class ItineraryTest implements PlanTestConstants {
     assertEquals(newTime(T11_00), firstLeg.startTime());
     assertEquals(newTime(T11_10), firstLeg.endTime());
     assertEquals(TransitMode.BUS, result.transitLeg(0).mode());
-    assertEquals(TimetableRepositoryForTest.id("55"), firstLeg.trip().getId());
-    assertEquals(7500, firstLeg.distanceMeters(), 1E-3);
+    assertEquals(FeedScopedIdForTestFactory.id("55"), firstLeg.trip().getId());
+    assertEquals(A_TO_B_DISTANCE, firstLeg.distanceMeters(), DISTANCE_DELTA);
 
     assertEquals("A ~ BUS 55 11:00 11:10 ~ B [C₁720]", result.toStr());
   }
@@ -96,8 +100,8 @@ public class ItineraryTest implements PlanTestConstants {
     assertEquals(newTime(T11_05), firstLeg.startTime());
     assertEquals(newTime(T11_15), firstLeg.endTime());
     assertEquals(TransitMode.RAIL, result.transitLeg(0).mode());
-    assertEquals(TimetableRepositoryForTest.id("20"), firstLeg.trip().getId());
-    assertEquals(15_000, firstLeg.distanceMeters(), 1E-3);
+    assertEquals(FeedScopedIdForTestFactory.id("20"), firstLeg.trip().getId());
+    assertEquals(A_TO_B_DISTANCE, firstLeg.distanceMeters(), DISTANCE_DELTA);
 
     assertEquals("A ~ RAIL R2 11:05 11:15 ~ B [C₁720]", result.toStr());
   }
@@ -207,8 +211,8 @@ public class ItineraryTest implements PlanTestConstants {
   void normalization() {
     var zoneId = ZoneId.of("Europe/Oslo");
     var model = TimetableRepositoryForTest.of();
-    var stopA = model.stop("A").build();
-    var stopB = model.stop("B").build();
+    var stopA = model.stop("A", 60.0, 10.0).build();
+    var stopB = model.stop("B", 60.0, 10.01).build();
     var stopPattern = TimetableRepositoryForTest.stopPattern(stopA, stopB);
     var trip = TimetableRepositoryForTest.trip("trip1").build();
     var tripPattern = TimetableRepositoryForTest.tripPattern("p", trip.getRoute())
@@ -229,7 +233,6 @@ public class ItineraryTest implements PlanTestConstants {
           .withTripPattern(tripPattern)
           .withBoardStopIndexInPattern(0)
           .withAlightStopIndexInPattern(1)
-          .withDistanceMeters(17.5)
           .withServiceDate(startTime.toLocalDate())
           .withZoneId(zoneId)
           .build()

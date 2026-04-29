@@ -1,15 +1,16 @@
 package org.opentripplanner.routing.algorithm.mapping;
 
-import static org.opentripplanner.raptor.api.model.RaptorCostConverter.toOtpDomainCost;
+import static org.opentripplanner.raptor.spi.RaptorCostConverter.toOtpDomainCost;
 
 import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.ext.carpooling.internal.CarpoolItineraryMapper;
+import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.GenericLocation;
@@ -17,7 +18,6 @@ import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.leg.FrequencyTransitLegBuilder;
-import org.opentripplanner.model.plan.leg.LegConstructionSupport;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLegBuilder;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.leg.UnknownPathLeg;
@@ -28,10 +28,8 @@ import org.opentripplanner.raptor.api.path.PathLeg;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.path.TransferPathLeg;
 import org.opentripplanner.raptor.api.path.TransitPathLeg;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultRaptorTransfer;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.Transfer;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.OptimizedPath;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -42,12 +40,15 @@ import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.Edge;
+import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
+import org.opentripplanner.transfer.regular.model.DefaultRaptorTransfer;
+import org.opentripplanner.transfer.regular.model.Transfer;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.service.TransitService;
@@ -70,6 +71,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
 
   private final GraphPathToItineraryMapper graphPathToItineraryMapper;
   private final TransitService transitService;
+  private final CarpoolItineraryMapper carpoolItineraryMapper;
 
   /**
    * Constructs an itinerary mapper for a request and a set of results
@@ -100,6 +102,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       graph.ellipsoidToGeoidDifference
     );
     this.transitService = transitService;
+    this.carpoolItineraryMapper = new CarpoolItineraryMapper(transitSearchTimeZero);
   }
 
   public Itinerary createItinerary(RaptorPath<T> path) {
@@ -197,6 +200,12 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       return List.of();
     }
 
+    if (accessPathLeg.access() instanceof CarpoolAccessEgress) {
+      return carpoolItineraryMapper
+        .toItinerary((CarpoolAccessEgress) accessPathLeg.access())
+        .legs();
+    }
+
     var subItinerary = mapAccessEgressPathLeg(accessPathLeg.access());
 
     if (subItinerary.legs().isEmpty()) {
@@ -233,12 +242,6 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       pathLeg.toStop()
     );
 
-    var distanceMeters = LegConstructionSupport.computeDistanceMeters(
-      tripSchedule.getOriginalTripPattern(),
-      boardStopIndexInPattern,
-      alightStopIndexInPattern
-    );
-
     if (tripSchedule.isFrequencyBasedTrip()) {
       int frequencyHeadwayInSeconds = tripSchedule.frequencyHeadwayInSeconds();
       return new FrequencyTransitLegBuilder()
@@ -248,7 +251,6 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
         .withAlightStopIndexInPattern(alightStopIndexInPattern)
         .withStartTime(createZonedDateTime(pathLeg.fromTime() + frequencyHeadwayInSeconds))
         .withEndTime(createZonedDateTime(pathLeg.toTime()))
-        .withDistanceMeters(distanceMeters)
         .withServiceDate(tripSchedule.getServiceDate())
         .withZoneId(transitSearchTimeZero.getZone().normalized())
         .withTransferFromPreviousLeg(
@@ -281,7 +283,6 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       .withAlightStopIndexInPattern(alightStopIndexInPattern)
       .withStartTime(createZonedDateTime(pathLeg.fromTime()))
       .withEndTime(createZonedDateTime(pathLeg.toTime()))
-      .withDistanceMeters(distanceMeters)
       .withServiceDate(tripSchedule.getServiceDate())
       .withZoneId(transitSearchTimeZero.getZone().normalized())
       .withTripOnServiceDate(tripOnServiceDate)
@@ -363,6 +364,10 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       return null;
     }
 
+    if (egressPathLeg.egress() instanceof CarpoolAccessEgress) {
+      return carpoolItineraryMapper.toItinerary((CarpoolAccessEgress) egressPathLeg.egress());
+    }
+
     var subItinerary = mapAccessEgressPathLeg(egressPathLeg.egress());
 
     if (subItinerary.legs().isEmpty()) {
@@ -391,7 +396,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
           .withTo(to)
           .withDistanceMeters(transfer.getDistanceMeters())
           .withGeneralizedCost(toOtpDomainCost(pathLeg.c1()))
-          .withGeometry(GeometryUtils.makeLineString(transfer.getCoordinates()))
+          .withGeometry(transfer.getGeometry())
           .withWalkSteps(List.of())
           .build()
       );
@@ -446,7 +451,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       }
     }
     State[] states = transferStates.toArray(State[]::new);
-    var graphPath = new GraphPath<>(states[states.length - 1]);
+    var graphPath = new StreetPath(states[states.length - 1]);
     var subItinerary = graphPathToItineraryMapper.generateItinerary(graphPath, request);
     return subItinerary.legs();
   }
@@ -466,7 +471,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
   }
 
   private Place mapPlace(GenericLocation location) {
-    return Place.normal(location.lat, location.lng, new NonLocalizedString(location.label));
+    return Place.normal(location.wgsCoordinate(), new NonLocalizedString(location.label()));
   }
 
   private ZonedDateTime createZonedDateTime(int timeInSeconds) {
@@ -491,8 +496,8 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
   private Itinerary mapAccessEgressPathLeg(RaptorAccessEgress accessEgress) {
     return accessEgress
       .findOriginal(RoutingAccessEgress.class)
-      .map(RoutingAccessEgress::getLastState)
-      .map(GraphPath::new)
+      .map(RoutingAccessEgress::getFinalState)
+      .map(StreetPath::new)
       .map(path -> graphPathToItineraryMapper.generateItinerary(path, request))
       .orElseThrow();
   }

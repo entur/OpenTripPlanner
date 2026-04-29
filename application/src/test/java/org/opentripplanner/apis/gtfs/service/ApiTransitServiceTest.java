@@ -2,7 +2,7 @@ package org.opentripplanner.apis.gtfs.service;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
@@ -44,9 +44,9 @@ class ApiTransitServiceTest {
   private static final String TRIP_2_ID = "TestTrip2";
 
   private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of(SERVICE_DATE);
-  private final RegularStop STOP_A = envBuilder.stop("A");
-  private final RegularStop STOP_B = envBuilder.stop("B");
-  private final RegularStop STOP_C = envBuilder.stop("C");
+  private final RegularStop STOP_A = envBuilder.stop("A", b -> b.withCoordinate(60.0, 10.0));
+  private final RegularStop STOP_B = envBuilder.stop("B", b -> b.withCoordinate(60.0, 10.01));
+  private final RegularStop STOP_C = envBuilder.stop("C", b -> b.withCoordinate(60.0, 10.02));
 
   private final TripInput TRIP1_INPUT = TripInput.of(TRIP_1_ID)
     .addStop(STOP_A, "12:00:00", "12:00:00")
@@ -88,7 +88,7 @@ class ApiTransitServiceTest {
    * Tests that you get a single {@link TripTimeOnDate} for a stop in a pattern even if several
    * trips in the pattern have the same stop skipped.
    *
-   * @see https://github.com/opentripplanner/OpenTripPlanner/issues/6654
+   * @link https://github.com/opentripplanner/OpenTripPlanner/issues/6654
    */
   @Test
   void skipStopInMultipleTripsInPattern() {
@@ -140,16 +140,15 @@ class ApiTransitServiceTest {
       .withEndTime(ANY_TIME)
       .withServiceDate(SERVICE_DATE)
       .withZoneId(env.timeZone())
-      .withDistanceMeters(1000)
       .withBoardStopIndexInPattern(0)
       .withAlightStopIndexInPattern(2)
       .build();
     var calls = service.findStopCalls(leg);
     assertEquals(
       "[" +
-        "TripTimeOnDate{trip: Trip{F:TestTrip1 RRoute1}, stopPosition: 0, arrival: 12:00, departure: 12:00, serviceDate: 2024-05-08}, " +
-        "TripTimeOnDate{trip: Trip{F:TestTrip1 RRoute1}, stopPosition: 1, arrival: 12:30, departure: 12:30, serviceDate: 2024-05-08}, " +
-        "TripTimeOnDate{trip: Trip{F:TestTrip1 RRoute1}, stopPosition: 2, arrival: 13:00, departure: 13:00, serviceDate: 2024-05-08}" +
+        "TripTimeOnDate{trip: Trip{F:TestTrip1 TestTrip1}, stopPosition: 0, arrival: 12:00, departure: 12:00, serviceDate: 2024-05-08}, " +
+        "TripTimeOnDate{trip: Trip{F:TestTrip1 TestTrip1}, stopPosition: 1, arrival: 12:30, departure: 12:30, serviceDate: 2024-05-08}, " +
+        "TripTimeOnDate{trip: Trip{F:TestTrip1 TestTrip1}, stopPosition: 2, arrival: 13:00, departure: 13:00, serviceDate: 2024-05-08}" +
         "]",
       calls.toString()
     );

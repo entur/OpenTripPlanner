@@ -3,11 +3,11 @@ package org.opentripplanner.ext.flex.trip;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.ext.flex.trip.UnscheduledTrip.isUnscheduledTrip;
 import static org.opentripplanner.ext.flex.trip.UnscheduledTripTest.TestCase.tc;
 import static org.opentripplanner.model.PickDrop.NONE;
 import static org.opentripplanner.model.StopTime.MISSING_VALUE;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
 
 import java.util.Collections;
 import java.util.List;
@@ -566,11 +566,11 @@ class UnscheduledTripTest {
       .build()
       .trip();
 
-    assertTrue(trip.isBoardingPossible(AREA_STOP1));
-    assertFalse(trip.isAlightingPossible(AREA_STOP1));
+    assertTrue(trip.isBoardingPossible(AREA_STOP1.getId()));
+    assertFalse(trip.isAlightingPossible(AREA_STOP1.getId()));
 
-    assertFalse(trip.isBoardingPossible(AREA_STOP2));
-    assertTrue(trip.isAlightingPossible(AREA_STOP2));
+    assertFalse(trip.isBoardingPossible(AREA_STOP2.getId()));
+    assertTrue(trip.isAlightingPossible(AREA_STOP2.getId()));
   }
 
   private static String timeToString(int time) {

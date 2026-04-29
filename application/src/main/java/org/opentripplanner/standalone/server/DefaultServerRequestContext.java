@@ -8,7 +8,6 @@ import org.opentripplanner.apis.gtfs.GtfsApiParameters;
 import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.transmodel.TransmodelAPIParameters;
 import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
-import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
@@ -28,7 +27,6 @@ import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
-import org.opentripplanner.routing.linking.VertexLinker;
 import org.opentripplanner.routing.service.DefaultRoutingService;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
@@ -42,6 +40,7 @@ import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transit.service.TransitService;
@@ -103,9 +102,6 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Nullable
   private final StopConsolidationService stopConsolidationService;
 
-  @Nullable
-  private final TraverseVisitor traverseVisitor;
-
   private final TriasApiParameters triasApiParameters;
 
   private final OjpApiParameters ojpApiParameters;
@@ -159,7 +155,6 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     @Nullable @TransmodelSchema GraphQLSchema transmodelSchema,
     @Nullable SorlandsbanenNorwayService sorlandsbanenService,
     @Nullable StopConsolidationService stopConsolidationService,
-    @Nullable TraverseVisitor traverseVisitor,
     TransmodelAPIParameters transmodelAPIParameters
   ) {
     this.debugUiConfig = debugUiConfig;
@@ -197,7 +192,6 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     this.gtfsSchema = gtfsSchema;
     this.sorlandsbanenService = sorlandsbanenService;
     this.stopConsolidationService = stopConsolidationService;
-    this.traverseVisitor = traverseVisitor;
     this.transmodelAPIParameters = transmodelAPIParameters;
   }
 
@@ -296,11 +290,6 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Override
   public MeterRegistry meterRegistry() {
     return meterRegistry;
-  }
-
-  @Override
-  public TraverseVisitor traverseVisitor() {
-    return traverseVisitor;
   }
 
   @Override

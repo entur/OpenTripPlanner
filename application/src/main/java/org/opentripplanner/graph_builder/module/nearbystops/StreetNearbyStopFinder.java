@@ -2,8 +2,6 @@ package org.opentripplanner.graph_builder.module.nearbystops;
 
 import static java.util.Objects.requireNonNull;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -11,40 +9,30 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.astar.strategy.MaxCountTerminationStrategy;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.graphfinder.NearbyStopFactory;
 import org.opentripplanner.street.model.StreetMode;
-import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
-import org.opentripplanner.street.model.edge.StreetEdge;
-import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.StreetSearchBuilder;
-import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
-import org.opentripplanner.transit.model.site.AreaStop;
 
 public class StreetNearbyStopFinder implements NearbyStopFinder {
 
   private final Duration durationLimit;
   private final int maxStopCount;
-  private final StopResolver stopResolver;
   private final Collection<ExtensionRequestContext> extensionRequestContexts;
   private final Set<Vertex> ignoreVertices;
-  private final NearbyStopFactory nearbyStopFactory;
 
   /**
    * Construct a NearbyStopFinder for the given graph and search radius.
@@ -54,18 +42,15 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
    * @param ignoreVertices   A set of stop vertices to ignore and not return NearbyStops for.
    */
   private StreetNearbyStopFinder(
-    StopResolver stopResolver,
     Duration durationLimit,
     int maxStopCount,
     Collection<ExtensionRequestContext> extensionRequestContexts,
     Set<Vertex> ignoreVertices
   ) {
-    this.stopResolver = requireNonNull(stopResolver);
     this.durationLimit = requireNonNull(durationLimit);
     this.maxStopCount = requireNonNull(maxStopCount);
     this.extensionRequestContexts = requireNonNull(extensionRequestContexts);
     this.ignoreVertices = requireNonNull(ignoreVertices);
-    this.nearbyStopFactory = new NearbyStopFactory(stopResolver::getRegularStop);
   }
 
   /**
@@ -74,8 +59,8 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
    * @param maxStopCount The maximum stops to return. 0 means no limit. Regardless of the
    *                     maxStopCount we will always return all the directly connected stops.
    */
-  public static Builder of(StopResolver stopResolver, Duration durationLimit, int maxStopCount) {
-    return new Builder(stopResolver, durationLimit, maxStopCount);
+  public static Builder of(Duration durationLimit, int maxStopCount) {
+    return new Builder(durationLimit, maxStopCount);
   }
 
   /**
@@ -109,7 +94,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
   ) {
     OTPRequestTimeoutException.checkForTimeout();
 
-    List<NearbyStop> stopsFound = nearbyStopFactory.nearbyStopsForTransitStopVerticesFiltered(
+    List<NearbyStop> stopsFound = NearbyStopFactory.nearbyStopsForTransitStopVerticesFiltered(
       Sets.difference(originVertices, ignoreVertices),
       reverseDirection,
       request,
@@ -124,10 +109,13 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
     }
     stopsFound = new ArrayList<>(stopsFound);
 
+    var visitor = new NearbyStopFinderVisitor(originVertices, ignoreVertices, reverseDirection);
+
     var streetSearch = StreetSearchBuilder.of()
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(durationLimit))
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
+      .withTraverseVisitor(visitor)
       .withRequest(
         StreetSearchRequestMapper.map(request)
           .withMode(streetMode)
@@ -144,44 +132,14 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       );
     }
 
-    ShortestPathTree<State, Edge, Vertex> spt = streetSearch.getShortestPathTree();
+    streetSearch.getShortestPathTree();
 
-    // Only used if OTPFeature.FlexRouting.isOn()
-    Multimap<AreaStop, State> locationsMap = ArrayListMultimap.create();
-
-    if (spt != null) {
-      // TODO use GenericAStar and a traverseVisitor? Add an earliestArrival switch to genericAStar?
-      for (State state : spt.getAllStates()) {
-        Vertex targetVertex = state.getVertex();
-        if (originVertices.contains(targetVertex) || ignoreVertices.contains(targetVertex)) {
-          continue;
-        }
-        if (targetVertex instanceof TransitStopVertex tsv && state.isFinal()) {
-          var stop = requireNonNull(stopResolver.getRegularStop(tsv.getId()));
-          stopsFound.add(NearbyStop.nearbyStopForState(state, stop));
-        }
-        if (
-          OTPFeature.FlexRouting.isOn() &&
-          targetVertex instanceof StreetVertex streetVertex &&
-          !streetVertex.areaStops().isEmpty()
-        ) {
-          for (FeedScopedId id : targetVertex.areaStops()) {
-            AreaStop areaStop = Objects.requireNonNull(stopResolver.getAreaStop(id));
-            // This is for a simplification, so that we only return one vertex from each
-            // stop location. All vertices are added to the multimap, which is filtered
-            // below, so that only the closest vertex is added to stopsFound
-            if (canBoardFlex(state, reverseDirection)) {
-              locationsMap.put(areaStop, state);
-            }
-          }
-        }
-      }
-    }
+    stopsFound.addAll(visitor.transitStopsFound());
 
     if (OTPFeature.FlexRouting.isOn()) {
-      for (var locationStates : locationsMap.asMap().entrySet()) {
-        AreaStop areaStop = locationStates.getKey();
-        Collection<State> states = locationStates.getValue();
+      for (var statesForAreaStopIds : visitor.statesForAreaStopIds().asMap().entrySet()) {
+        var areaStopId = statesForAreaStopIds.getKey();
+        var states = statesForAreaStopIds.getValue();
         // Select the vertex from all vertices that are reachable per AreaStop by taking
         // the minimum walking distance
         State min = Collections.min(states, Comparator.comparing(State::getWeight));
@@ -193,21 +151,11 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
           min = min.getBackState();
         }
 
-        stopsFound.add(NearbyStop.nearbyStopForState(min, areaStop));
+        stopsFound.add(NearbyStop.nearbyStopForState(min, areaStopId));
       }
     }
 
     return stopsFound;
-  }
-
-  private boolean canBoardFlex(State state, boolean reverse) {
-    Collection<Edge> edges = reverse
-      ? state.getVertex().getIncoming()
-      : state.getVertex().getOutgoing();
-
-    return edges
-      .stream()
-      .anyMatch(e -> e instanceof StreetEdge se && se.getPermission().allows(TraverseMode.CAR));
   }
 
   /**
@@ -235,16 +183,14 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
     private final int maxStopCount;
     private Collection<ExtensionRequestContext> extensionRequestContexts = List.of();
     private Set<Vertex> ignoreVertices = Set.of();
-    private final StopResolver stopResolver;
 
-    public Builder(StopResolver stopResolver, Duration durationLimit, int maxStopCount) {
-      this.stopResolver = stopResolver;
+    public Builder(Duration durationLimit, int maxStopCount) {
       this.durationLimit = durationLimit;
       this.maxStopCount = maxStopCount;
     }
 
     /**
-     * The search can adjusted using extentions. Each extention may provide its own request context.
+     * The search can adjusted using extensions. Each extention may provide its own request context.
      * Set the context here.
      * <p>
      * @see org.opentripplanner.street.model.edge.StreetEdgeCostExtension
@@ -266,7 +212,6 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
 
     public StreetNearbyStopFinder build() {
       return new StreetNearbyStopFinder(
-        stopResolver,
         durationLimit,
         maxStopCount,
         extensionRequestContexts,

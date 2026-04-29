@@ -277,9 +277,9 @@ public class StopImpl implements GraphQLDataFetchers.GraphQLStop {
           TransitService transitService = getTransitService(environment);
           GraphQLTypes.GraphQLStopStopTimesForPatternArgs args =
             new GraphQLTypes.GraphQLStopStopTimesForPatternArgs(environment.getArguments());
-          TripPattern pattern = transitService.getTripPattern(
-            FeedScopedId.parse(args.getGraphQLId())
-          );
+          TripPattern pattern = FeedScopedId.parseOptional(args.getGraphQLId())
+            .map(transitService::getTripPattern)
+            .orElse(null);
 
           if (pattern == null) {
             return null;
@@ -444,7 +444,12 @@ public class StopImpl implements GraphQLDataFetchers.GraphQLStop {
             .filter(transfer -> maxDistance == null || transfer.getDistanceMeters() < maxDistance)
             .filter(transfer -> transfer.to instanceof RegularStop)
             .map(transfer ->
-              new NearbyStop(transfer.to, transfer.getDistanceMeters(), transfer.getEdges(), null)
+              new NearbyStop(
+                transfer.to.getId(),
+                transfer.getDistanceMeters(),
+                transfer.getEdges(),
+                null
+              )
             )
             .collect(Collectors.toList());
         },

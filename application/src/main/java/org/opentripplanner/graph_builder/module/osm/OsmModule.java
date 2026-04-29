@@ -126,7 +126,7 @@ public class OsmModule implements GraphBuilderModule {
       osmdb,
       graph,
       params.boardingAreaRefTags(),
-      params.includeOsmSubwayEntrances(),
+      params.includeOsmStationEntrances(),
       issueStore
     );
     for (var provider : providers) {
@@ -257,7 +257,7 @@ public class OsmModule implements GraphBuilderModule {
     Collection<OsmArea> areas,
     Multimap<OsmNode, OsmWay> barriers
   ) {
-    Map<OsmArea, Set<OsmLevel>> areasLevels = new HashMap<>(areas.size());
+    Map<OsmArea, Set<OsmLevel>> areasLevels = HashMap.newHashMap(areas.size());
     for (OsmArea area : areas) {
       areasLevels.put(area, osmdb.getLevelSetForEntity(area.parent));
     }
@@ -433,6 +433,7 @@ public class OsmModule implements GraphBuilderModule {
           osmEndNode.hasTag("ele") ||
           osmEndNode.isBoardingLocation() ||
           osmEndNode.isBarrier() ||
+          osmEndNode.isEntrance() ||
           vertexGenerator.nodesInBarrierWays().containsKey(osmEndNode)
         ) {
           segmentCoordinates.add(osmEndNode.getCoordinate());

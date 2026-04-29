@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.standalone.config.routerconfig.updaters.VehiclePositionsUpdaterConfig.VehiclePositionFeature.OCCUPANCY;
 import static org.opentripplanner.standalone.config.routerconfig.updaters.VehiclePositionsUpdaterConfig.VehiclePositionFeature.POSITION;
 import static org.opentripplanner.standalone.config.routerconfig.updaters.VehiclePositionsUpdaterConfig.VehiclePositionFeature.STOP_POSITION;
-import static org.opentripplanner.updater.spi.UpdateError.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN;
+import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor;
@@ -17,14 +17,17 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
 import org.opentripplanner.standalone.config.routerconfig.updaters.VehiclePositionsUpdaterConfig;
@@ -35,6 +38,7 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 
@@ -50,7 +54,7 @@ public class RealtimeVehicleMatcherTest {
   );
   ZoneId zoneId = ZoneIds.BERLIN;
   String tripId = "trip1";
-  FeedScopedId scopedTripId = TimetableRepositoryForTest.id(tripId);
+  FeedScopedId scopedTripId = FeedScopedIdForTestFactory.id(tripId);
 
   @Test
   public void matchRealtimeVehiclesToTrip() {
@@ -81,8 +85,9 @@ public class RealtimeVehicleMatcherTest {
     testVehiclePositions(posWithoutServiceDate);
   }
 
-  @Test
-  public void tripNotFoundInPattern() {
+  @ParameterizedTest
+  @ValueSource(booleans = { true, false })
+  void tripNotFoundInPattern(boolean hasStopTimes) {
     var service = new DefaultRealtimeVehicleService(null);
 
     final String secondTripId = "trip2";
@@ -90,7 +95,9 @@ public class RealtimeVehicleMatcherTest {
     var trip1 = TimetableRepositoryForTest.trip(tripId).build();
     var trip2 = TimetableRepositoryForTest.trip(secondTripId).build();
 
-    var stopTimes = testModel.stopTimesEvery5Minutes(3, trip1, "11:00");
+    List<StopTime> stopTimes = hasStopTimes
+      ? testModel.stopTimesEvery5Minutes(3, trip1, "11:00")
+      : List.of();
     var pattern = tripPattern(trip1, stopTimes);
 
     // Map positions to trips in feed
@@ -99,13 +106,16 @@ public class RealtimeVehicleMatcherTest {
       ignored -> trip2,
       ignored -> pattern,
       (id, time) -> pattern,
+      ignored -> Set.of(),
       service,
       zoneId,
       null,
       FEATURES
     );
 
-    var positions = List.of(vehiclePosition(secondTripId));
+    var positions = hasStopTimes
+      ? List.of(vehiclePosition(secondTripId))
+      : List.of(vehiclePosition(secondTripId, null));
     var result = matcher.applyRealtimeVehicleUpdates(positions);
 
     assertEquals(1, result.failed());
@@ -117,7 +127,7 @@ public class RealtimeVehicleMatcherTest {
     var service = new DefaultRealtimeVehicleService(null);
 
     var tripId = "trip1";
-    var scopedTripId = TimetableRepositoryForTest.id(tripId);
+    var scopedTripId = FeedScopedIdForTestFactory.id(tripId);
     var trip1 = TimetableRepositoryForTest.trip(tripId).build();
 
     var stopTimes = List.of(
@@ -136,6 +146,7 @@ public class RealtimeVehicleMatcherTest {
       tripForId::get,
       patternForTrip::get,
       (id, time) -> patternForTrip.get(id),
+      ignored -> null,
       service,
       zoneId,
       null,
@@ -193,6 +204,7 @@ public class RealtimeVehicleMatcherTest {
       tripForId::get,
       patternForTrip::get,
       (id, time) -> patternForTrip.get(id),
+      ignored -> null,
       service,
       zoneId,
       null,
@@ -241,6 +253,7 @@ public class RealtimeVehicleMatcherTest {
       tripForId::get,
       patternForTrip::get,
       (id, time) -> patternForTrip.get(id),
+      ignored -> null,
       service,
       zoneId,
       null,
@@ -263,8 +276,8 @@ public class RealtimeVehicleMatcherTest {
 
     var tripId1 = "trip1";
     var tripId2 = "trip2";
-    var scopedTripId1 = TimetableRepositoryForTest.id(tripId1);
-    var scopedTripId2 = TimetableRepositoryForTest.id(tripId2);
+    var scopedTripId1 = FeedScopedIdForTestFactory.id(tripId1);
+    var scopedTripId2 = FeedScopedIdForTestFactory.id(tripId2);
 
     var trip1 = TimetableRepositoryForTest.trip(tripId1).build();
     var trip2 = TimetableRepositoryForTest.trip(tripId2).build();
@@ -297,6 +310,7 @@ public class RealtimeVehicleMatcherTest {
       tripForId::get,
       patternForTrip::get,
       (id, time) -> patternForTrip.get(id),
+      ignored -> null,
       service,
       zoneId,
       null,
@@ -324,31 +338,46 @@ public class RealtimeVehicleMatcherTest {
 
   static Stream<Arguments> inferenceTestCases() {
     return Stream.of(
-      Arguments.of("2022-04-05T15:26:04+02:00", "2022-04-05"),
-      Arguments.of("2022-04-06T00:26:04+02:00", "2022-04-05"),
-      Arguments.of("2022-04-06T10:26:04+02:00", "2022-04-06")
+      Arguments.of("2022-04-05T15:26:04+02:00", null, "2022-04-05"),
+      Arguments.of("2022-04-06T00:26:04+02:00", null, "2022-04-05"),
+      Arguments.of("2022-04-06T10:26:04+02:00", null, "2022-04-06"),
+      Arguments.of("2022-04-05T15:26:04+02:00", Set.of("2022-04-05"), "2022-04-05"),
+      Arguments.of("2022-04-06T00:26:04+02:00", Set.of(), null),
+      Arguments.of("2022-04-06T00:26:04+02:00", Set.of("2022-04-05"), "2022-04-05"),
+      Arguments.of("2022-04-06T00:26:04+02:00", Set.of("2022-04-05", "2022-04-06"), null),
+      Arguments.of("2022-04-06T00:26:04+02:00", Set.of("2022-04-06"), "2022-04-06")
     );
   }
 
-  @ParameterizedTest(name = "{0} should resolve to {1}")
+  @ParameterizedTest(name = "{0} + serviceDates={1} should resolve to {2}")
   @MethodSource("inferenceTestCases")
-  void inferServiceDayOfTripAt6(String time, String expectedDate) {
+  void inferServiceDayOfTripAt6(String time, Set<String> serviceDateStrings, String expectedDate) {
     var trip = TimetableRepositoryForTest.trip(tripId).build();
+    var hasTripTimes = serviceDateStrings == null;
 
-    var sixOclock = (int) Duration.ofHours(18).toSeconds();
-    var fivePast6 = sixOclock + 300;
+    ScheduledTripTimes tripTimes = null;
+    Set<LocalDate> serviceDates = null;
+    if (hasTripTimes) {
+      var sixOclock = (int) Duration.ofHours(18).toSeconds();
+      var fivePast6 = sixOclock + 300;
+      var stopTimes = List.of(
+        testModel.stopTime(trip, 0, sixOclock),
+        testModel.stopTime(trip, 1, fivePast6)
+      );
+      tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator());
+    } else {
+      serviceDates = serviceDateStrings.stream().map(LocalDate::parse).collect(Collectors.toSet());
+    }
+    var instant = OffsetDateTime.parse(time).toInstant();
 
-    var stopTimes = List.of(
-      testModel.stopTime(trip, 0, sixOclock),
-      testModel.stopTime(trip, 1, fivePast6)
+    var inferredDate = RealtimeVehiclePatternMatcher.inferServiceDate(
+      tripTimes,
+      serviceDates,
+      zoneId,
+      instant
     );
 
-    var tripTimes = TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator());
-
-    var instant = OffsetDateTime.parse(time).toInstant();
-    var inferredDate = RealtimeVehiclePatternMatcher.inferServiceDate(tripTimes, zoneId, instant);
-
-    assertEquals(LocalDate.parse(expectedDate), inferredDate);
+    assertEquals(expectedDate == null ? null : LocalDate.parse(expectedDate), inferredDate);
   }
 
   @Test
@@ -375,23 +404,32 @@ public class RealtimeVehicleMatcherTest {
 
   private static TripPattern tripPattern(Trip trip, List<StopTime> stopTimes) {
     var stopPattern = new StopPattern(stopTimes);
-    var pattern = TripPattern.of(trip.getId())
+    return TripPattern.of(trip.getId())
       .withStopPattern(stopPattern)
       .withRoute(ROUTE)
       .withScheduledTimeTableBuilder(builder ->
-        builder.addTripTimes(TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator()))
+        stopTimes.isEmpty()
+          ? builder
+          : builder.addTripTimes(TripTimesFactory.tripTimes(trip, stopTimes, new Deduplicator()))
       )
       .build();
-    return pattern;
   }
 
-  private static VehiclePosition vehiclePosition(String tripId1) {
+  private static VehiclePosition vehiclePosition(String tripId1, String startDate) {
+    TripDescriptor.Builder tripBuilder = TripDescriptor.newBuilder().setTripId(tripId1);
+    if (startDate != null) {
+      tripBuilder.setStartDate(startDate);
+    }
     return VehiclePosition.newBuilder()
-      .setTrip(TripDescriptor.newBuilder().setTripId(tripId1).setStartDate("20220314").build())
+      .setTrip(tripBuilder.build())
       .setStopId("stop-1")
       .setPosition(
         GtfsRealtime.Position.newBuilder().setLatitude(1).setLongitude(1).setBearing(30).build()
       )
       .build();
+  }
+
+  private static VehiclePosition vehiclePosition(String tripId1) {
+    return vehiclePosition(tripId1, "20220314");
   }
 }
