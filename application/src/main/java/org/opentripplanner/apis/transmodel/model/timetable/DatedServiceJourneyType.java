@@ -72,7 +72,9 @@ public class DatedServiceJourneyType {
       .field(
         GraphQLFieldDefinition.newFieldDefinition()
           .name("tripAlteration")
-          .description("Alterations specified on the Trip in the planned data")
+          .description(
+            "Alterations specified on the Trip in the planned data. Note: realtime alterations are not included"
+          )
           .type(EnumTypes.SERVICE_ALTERATION)
           .dataFetcher(environment -> tripOnServiceDate(environment).getTripAlteration())
       )
