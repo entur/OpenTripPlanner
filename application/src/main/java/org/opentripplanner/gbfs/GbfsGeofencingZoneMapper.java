@@ -9,6 +9,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.geojson.MultiPolygon;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.operation.valid.IsValidOp;
+import org.locationtech.jts.operation.valid.TopologyValidationError;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
@@ -68,6 +70,15 @@ public abstract class GbfsGeofencingZoneMapper<F, R> {
     Geometry geometry;
     try {
       geometry = GeometryUtils.convertGeoJsonToJtsGeometry(featureGeometry(feature));
+      TopologyValidationError validation = new IsValidOp(geometry).getValidationError();
+      if (validation != null) {
+        LOG.warn(
+          "Invalid JTS geometry feature={}, zoneIndex={} validation={}",
+          feature,
+          zoneIndex,
+          validation
+        );
+      }
     } catch (UnsupportedGeometryException e) {
       LOG.error("Could not convert geofencing zone", e);
       return Collections.emptyList();
