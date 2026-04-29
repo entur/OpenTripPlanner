@@ -335,13 +335,18 @@ public class StreetEdge
     else if (arriveByRental && isDeferredRentingForkTrigger(s0)) {
       return performDeferredRentingFork(s0);
     }
-    // Forward: unconditional drop when approaching a no-traversal zone.
+    // Forward: drop when approaching a no-traversal zone.
     // The rider must stop — traversal is banned inside the zone.
+    // If drop-off is also banned here (overlapping no-drop-off zone), this branch is a
+    // dead end — return empty so the A* uses the branch that dropped outside the zone.
     else if (
       s0.getRequest().mode().includesRenting() &&
       s0.isRentingVehicle() &&
       tov.isGeofencingNoTraversalBoundary(s0)
     ) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        return State.empty();
+      }
       editor = doTraverse(s0, s0.currentMode(), false);
       if (editor != null) {
         editor.dropFloatingVehicle(
@@ -392,11 +397,15 @@ public class StreetEdge
         return State.ofNullable(dropState, rideState);
       }
     }
-    // Forward: drop vehicle for BusinessAreaBorder or zone already in state
+    // Forward: drop vehicle for BusinessAreaBorder or zone already in state.
+    // If drop-off is also banned (overlapping no-drop-off zone), this is a dead end.
     else if (
       s0.getRequest().mode().includesRenting() &&
       (tov.rentalTraversalBanned(s0) || s0.isTraversalBannedByCurrentZones())
     ) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        return State.empty();
+      }
       editor = doTraverse(s0, TraverseMode.WALK, false);
       if (editor != null) {
         editor.dropFloatingVehicle(
@@ -428,7 +437,11 @@ public class StreetEdge
     // Handles both committed and generic states. Must run BEFORE the generic boundary
     // fork below, because generic states entering a no-traversal zone must be dropped,
     // not forked into committed branches.
+    // If drop-off is also banned (overlapping no-drop-off zone), this branch is a dead end.
     if (state != null && isForwardNoTraversalEntryTrigger(s0, state)) {
+      if (s0.isDropOffBannedByCurrentZones()) {
+        return State.empty();
+      }
       StateEditor afterTraversal = doTraverse(s0, TraverseMode.WALK, false);
       if (afterTraversal != null) {
         afterTraversal.dropFloatingVehicle(

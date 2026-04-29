@@ -206,6 +206,109 @@ class StreetEdgeGeofencingTest {
     }
 
     /**
+     * When a rider is inside a no-drop-off zone and hits a no-traversal boundary, they
+     * cannot drop (drop-off banned) and cannot continue (traversal banned). This branch
+     * is a dead end — the A* should use the branch that dropped outside the no-drop-off zone.
+     */
+    @Test
+    public void noTraversalBoundaryInsideNoDropOffZoneIsDeadEnd() {
+      // V2 is the no-traversal boundary (entering=true)
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+      V3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+
+      var edge = streetEdge(V1, V2);
+      // Rider is inside a no-drop-off zone (zone already in state)
+      var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_DROP_OFF_ZONE_TIER));
+
+      var results = edge.traverse(state);
+      // Dead end: can't traverse (no-traversal ahead) and can't drop (inside no-drop-off zone)
+      assertEquals(0, results.length);
+    }
+
+    /**
+     * Same scenario but via the post-traversal trigger: a committed rider crosses a
+     * no-traversal boundary during traversal while inside a no-drop-off zone.
+     */
+    @Test
+    public void postTraversalNoTraversalEntryInsideNoDropOffZoneIsDeadEnd() {
+      // Boundary on V1/V2 for no-traversal zone — zone is entered during traversal
+      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
+      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
+
+      var edge = streetEdge(V1, V2);
+      // Committed rider inside a no-drop-off zone
+      var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_DROP_OFF_ZONE_TIER));
+
+      var results = edge.traverse(state);
+      // Dead end: post-traversal trigger detects no-traversal entry, but drop-off is banned
+      assertEquals(0, results.length);
+    }
+
+    /**
+     * When a rider is inside a no-drop-off zone and has a no-traversal zone already in
+     * state (from a prior boundary crossing), the traversal-ban-in-state drop is blocked.
+     */
+    @Test
+    public void traversalBanInStateInsideNoDropOffZoneIsDeadEnd() {
+      // No-drop-off zone with traversalBanned=null (unspecified) so it doesn't override
+      // the no-traversal zone's traversalBanned=true via per-field precedence.
+      // No-drop-off zone: dropOffBanned=true, traversalBanned=null (unspecified).
+      // Higher priority (lower value) so its dropOffBanned wins per-field precedence.
+      var noDropOffOnly = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "no-dropoff-only"),
+        null,
+        null,
+        true,
+        null,
+        null,
+        false,
+        null,
+        null,
+        0
+      );
+      // No-traversal zone: traversalBanned=true, dropOffBanned=null (unspecified).
+      var noTraversalOnly = new GeofencingZone(
+        new FeedScopedId(NETWORK_TIER, "no-traverse-only"),
+        null,
+        null,
+        null,
+        true,
+        null,
+        false,
+        null,
+        null,
+        1
+      );
+
+      var edge = streetEdge(V1, V2);
+      // Rider has both zones in state: can't traverse (no-traversal) and can't drop (no-drop-off)
+      var state = initialStateWithZones(
+        V1,
+        NETWORK_TIER,
+        false,
+        Set.of(noDropOffOnly, noTraversalOnly)
+      );
+
+      var results = edge.traverse(state);
+      assertEquals(0, results.length);
+    }
+
+    /**
+     * Same scenario but triggered by a BusinessAreaBorder on tov: rider is inside a
+     * no-drop-off zone and hits a business area border.
+     */
+    @Test
+    public void businessAreaBorderInsideNoDropOffZoneIsDeadEnd() {
+      V2.addBusinessAreaBorderNetwork(NETWORK_TIER);
+
+      var edge = streetEdge(V1, V2);
+      var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_DROP_OFF_ZONE_TIER));
+
+      var results = edge.traverse(state);
+      assertEquals(0, results.length);
+    }
+
+    /**
      * When a committed rider already has a no-traversal zone in state (from a previous
      * boundary crossing), subsequent edges force drop+walk via isTraversalBannedByCurrentZones.
      */
