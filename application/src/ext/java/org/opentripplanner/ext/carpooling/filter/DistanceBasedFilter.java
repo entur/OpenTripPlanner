@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  * the driver's journey, while rejecting passengers whose journey is far off any part of the
  * driver's path.
  */
-public class DistanceBasedFilter implements TripFilter {
+public class DistanceBasedFilter implements CarpoolTripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(DistanceBasedFilter.class);
 
@@ -34,7 +34,17 @@ public class DistanceBasedFilter implements TripFilter {
   }
 
   @Override
-  public boolean accepts(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow) {
+  public boolean isCandidateTrip(
+    CarpoolTrip trip,
+    CarpoolingRequest request,
+    Duration searchWindow
+  ) {
+    return request.isAccessEgressRequest()
+      ? isProximateForAccessEgress(trip, request)
+      : isProximateForDirect(trip, request);
+  }
+
+  private boolean isProximateForDirect(CarpoolTrip trip, CarpoolingRequest request) {
     var passengerPickup = request.getPassengerPickup();
     var passengerDropoff = request.getPassengerDropoff();
     List<WgsCoordinate> routePoints = trip.routePoints();
@@ -44,7 +54,6 @@ public class DistanceBasedFilter implements TripFilter {
       return false;
     }
 
-    // Check each segment of the route
     for (int i = 0; i < routePoints.size() - 1; i++) {
       WgsCoordinate segmentStart = routePoints.get(i);
       WgsCoordinate segmentEnd = routePoints.get(i + 1);
@@ -60,7 +69,6 @@ public class DistanceBasedFilter implements TripFilter {
         segmentEnd.asJtsCoordinate()
       );
 
-      // Accept if either passenger location is within threshold of this segment
       if (
         pickupDistanceToSegment <= maxDistanceMeters ||
         dropoffDistanceToSegment <= maxDistanceMeters
@@ -88,15 +96,10 @@ public class DistanceBasedFilter implements TripFilter {
   }
 
   // length of the trip is longer than the length from the trip to the passenger
-  @Override
-  public boolean acceptsAccessEgress(
-    CarpoolTrip trip,
-    CarpoolingRequest request,
-    Duration searchWindow
-  ) {
+  private boolean isProximateForAccessEgress(CarpoolTrip trip, CarpoolingRequest request) {
     var tripStart = trip.routePoints().getFirst().asJtsCoordinate();
     var tripEnd = trip.routePoints().getLast().asJtsCoordinate();
-    var passengerCoordJts = request.isAccess()
+    var passengerCoordJts = request.isAccessRequest()
       ? request.getPassengerPickup().asJtsCoordinate()
       : request.getPassengerDropoff().asJtsCoordinate();
 
