@@ -510,7 +510,7 @@ public class VertexLinker {
     // existing vertices
     var newEdges = scope == Scope.PERMANENT
       ? originalEdge.splitDestructively(v)
-      : originalEdge.splitNonDestructively(v, direction);
+      : originalEdge.splitNonDestructively(v, direction, graph::getGeofencingZonesContaining);
 
     if (scope != Scope.PERMANENT) {
       newEdges.forEach(tempEdges::addEdge);
@@ -531,6 +531,7 @@ public class VertexLinker {
         graph.removeEdge(originalEdge);
       }
     }
+
     return v;
   }
 
@@ -554,8 +555,19 @@ public class VertexLinker {
     } else {
       v = splitterVertex(originalEdge, x, y, uniqueSplitLabel);
     }
-    v.addRentalRestriction(originalEdge.getFromVertex().rentalRestrictions());
-    v.addRentalRestriction(originalEdge.getToVertex().rentalRestrictions());
+    v.copyRentalRestrictionsFrom(originalEdge.getFromVertex());
+    // Also copy from tov if it has different restrictions
+    var toVertex = originalEdge.getToVertex();
+    if (toVertex.getBusinessAreaBorder() != null) {
+      for (var network : toVertex.getBusinessAreaBorder().networks()) {
+        v.addBusinessAreaBorderNetwork(network);
+      }
+    }
+    for (var boundary : toVertex.getGeofencingBoundaries()) {
+      if (!v.getGeofencingBoundaries().contains(boundary)) {
+        v.addGeofencingBoundary(boundary);
+      }
+    }
 
     return v;
   }
