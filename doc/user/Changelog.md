@@ -34,6 +34,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Set default fares to  [#7545](https://github.com/opentripplanner/OpenTripPlanner/pull/7545)
 - Reduce memory consumption when parsing very large NeTEx files [#7563](https://github.com/opentripplanner/OpenTripPlanner/pull/7563)
 - Remove relation route name application [#7539](https://github.com/opentripplanner/OpenTripPlanner/pull/7539)
+- Skip transit search when no access or egress mode is set [#7547](https://github.com/opentripplanner/OpenTripPlanner/pull/7547)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
