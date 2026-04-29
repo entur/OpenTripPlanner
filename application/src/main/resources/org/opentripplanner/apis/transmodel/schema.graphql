@@ -171,7 +171,7 @@ type Contact {
 type DatedServiceJourney {
   "Returns scheduled passingTimes for this dated service journey, updated with real-time-updates (if available). "
   estimatedCalls: [EstimatedCall!]! @timingData
-  "Whether this dated service journey was added as an extra journey via a SIRI ET real-time update"
+  "Whether this is an extra journey, either from planned data or added in realtime"
   extraJourney: Boolean!
   id: ID!
   "JourneyPattern for the dated service journey."

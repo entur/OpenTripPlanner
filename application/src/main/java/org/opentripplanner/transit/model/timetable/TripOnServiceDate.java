@@ -16,7 +16,7 @@ public class TripOnServiceDate
   private final Trip trip;
   private final LocalDate serviceDate;
   private final TripAlteration tripAlteration;
-  private final boolean extraJourney;
+  private final boolean realtimeExtraJourney;
   private final List<TripOnServiceDate> replacementFor;
 
   TripOnServiceDate(TripOnServiceDateBuilder builder) {
@@ -24,7 +24,7 @@ public class TripOnServiceDate
     this.trip = builder.getTrip();
     this.serviceDate = builder.getServiceDate();
     this.tripAlteration = builder.getTripAlteration();
-    this.extraJourney = builder.isExtraJourney();
+    this.realtimeExtraJourney = builder.isRealtimeExtraJourney();
     this.replacementFor = builder.getReplacementFor();
   }
 
@@ -44,8 +44,15 @@ public class TripOnServiceDate
     return tripAlteration;
   }
 
+  /**
+   * Whether this is an extra journey, either in the planned data or added with a realtime update.
+   */
   public boolean isExtraJourney() {
-    return extraJourney;
+    return TripAlteration.EXTRA_JOURNEY.equals(tripAlteration) || realtimeExtraJourney;
+  }
+
+  boolean isRealtimeExtraJourney() {
+    return realtimeExtraJourney;
   }
 
   public List<TripOnServiceDate> getReplacementFor() {
@@ -59,7 +66,7 @@ public class TripOnServiceDate
       Objects.equals(this.trip, other.trip) &&
       Objects.equals(this.serviceDate, other.serviceDate) &&
       Objects.equals(this.tripAlteration, other.tripAlteration) &&
-      this.extraJourney == other.extraJourney &&
+      this.realtimeExtraJourney == other.realtimeExtraJourney &&
       Objects.equals(this.replacementFor, other.replacementFor)
     );
   }
