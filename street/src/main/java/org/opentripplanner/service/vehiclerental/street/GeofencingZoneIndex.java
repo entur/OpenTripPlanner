@@ -35,7 +35,10 @@ public class GeofencingZoneIndex {
   }
 
   /**
-   * Returns all zones whose geometry contains the given coordinate.
+   * Returns all zones whose geometry covers the given coordinate. Uses {@code covers()}
+   * (not {@code contains()}) to include points on the zone boundary, matching the semantics
+   * of {@link GeofencingZoneApplier#isVertexInZone} which uses {@code covers()} for
+   * boundary detection during graph building.
    */
   @SuppressWarnings("unchecked")
   public Set<GeofencingZone> getZonesContaining(Coordinate coord) {
@@ -43,7 +46,7 @@ public class GeofencingZoneIndex {
     List<GeofencingZone> candidates = index.query(new Envelope(coord));
     return candidates
       .stream()
-      .filter(z -> preparedGeometries.get(z).contains(point))
+      .filter(z -> preparedGeometries.get(z).covers(point))
       .collect(Collectors.toSet());
   }
 }

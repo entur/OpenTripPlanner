@@ -52,6 +52,19 @@ class GeofencingZoneIndexTest {
   }
 
   @Test
+  void pointOnZoneBoundaryIsIncluded() {
+    // A point exactly on the polygon boundary should be classified as inside,
+    // matching GeofencingZoneApplier.isVertexInZone which uses covers().
+    // Use the first vertex of the Oslo polygon (which is on its boundary).
+    var boundaryCoord = new Coordinate(10.62535658370308, 59.961055202323195);
+    var zones = index.getZonesContaining(boundaryCoord);
+    assertTrue(
+      zones.contains(oslo),
+      "Point on zone boundary should be included (covers semantics)"
+    );
+  }
+
+  @Test
   void emptyIndex() {
     var emptyIndex = new GeofencingZoneIndex(List.of());
     var zones = emptyIndex.getZonesContaining(new Coordinate(10.7, 59.9));
