@@ -225,7 +225,14 @@ public abstract class OsmEntity {
    * Is the tag defined?
    */
   public boolean hasTag(String tag) {
+    if(this.isTagLess()){
+      return false;
+    }
     return getTag(tag) != null;
+  }
+
+  boolean isTagLess() {
+    return this.tags == null;
   }
 
   /**
@@ -326,7 +333,7 @@ public abstract class OsmEntity {
    */
   @Nullable
   public String getTag(String tag) {
-    if(this.tags.isEmpty()){
+    if(this.isTagLess()){
       return null;
     }
     tag = tag.toLowerCase();
@@ -490,7 +497,7 @@ public abstract class OsmEntity {
    * Checks if a tag contains the specified value.
    */
   public boolean isTag(String tag, String value) {
-    return value != null && value.equals(tags.get(tag.toLowerCase()));
+    return !isTagLess() && value != null && value.equals(tags.get(tag.toLowerCase()));
   }
 
   /**
@@ -511,7 +518,7 @@ public abstract class OsmEntity {
    */
   @Nullable
   public I18NString getAssumedName() {
-    if (tags.containsKey("name")) {
+    if (hasTag("name")) {
       return TranslatedString.getDeduplicatedI18NString(
         this.generateI18NForPattern("{name}"),
         false
@@ -525,8 +532,9 @@ public abstract class OsmEntity {
     if (creativeName != null) {
       return this.creativeName;
     }
-    if (tags.containsKey("ref")) {
-      return new NonLocalizedString(tags.get("ref"));
+    var ref = getTag("ref");
+    if (ref != null) {
+      return new NonLocalizedString(ref);
     }
     return null;
   }

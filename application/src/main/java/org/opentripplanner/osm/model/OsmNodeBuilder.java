@@ -6,7 +6,7 @@ import org.opentripplanner.osm.OsmProvider;
 
 public class OsmNodeBuilder {
 
-  private static final Map<String, String> EMPTY_TAGS = Map.of();
+  private static final Map<String, String> EMPTY_TAGS = null;
   private long id;
   private double lat;
   private double lon;
