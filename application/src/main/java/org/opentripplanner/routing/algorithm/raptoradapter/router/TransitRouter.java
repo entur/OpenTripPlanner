@@ -52,9 +52,15 @@ public class TransitRouter {
   private final AdditionalSearchDays additionalSearchDays;
   private final ViaCoordinateTransferFactory viaTransferResolver;
   private final LinkingContext linkingContext;
-  private final AccessEgressFetcher fetchAccessEgress;
-  private final RaptorTransitData raptorTransitData;
-  private final RaptorRoutingRequestTransitData requestTransitDataProvider;
+
+  @Nullable
+  private AccessEgressFetcher fetchAccessEgress = null;
+
+  @Nullable
+  private RaptorTransitData raptorTransitData = null;
+
+  @Nullable
+  private RaptorRoutingRequestTransitData requestTransitDataProvider = null;
 
   private TransitRouter(
     RouteRequest request,
@@ -75,20 +81,23 @@ public class TransitRouter {
     this.viaTransferResolver = serverContext.viaTransferResolver();
     this.linkingContext = linkingContext;
 
-    this.raptorTransitData = request.preferences().transit().ignoreRealtimeUpdates()
-      ? serverContext.transitService().getRaptorTransitData()
-      : serverContext.transitService().getRealtimeRaptorTransitData();
-    this.requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
+    // Skip the creation of raptor transit data when the request cannot use transit
+    if (request.journey().transit().enabled() && !request.cannotReachTransit()) {
+      this.raptorTransitData = request.preferences().transit().ignoreRealtimeUpdates()
+        ? serverContext.transitService().getRaptorTransitData()
+        : serverContext.transitService().getRealtimeRaptorTransitData();
+      this.requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
 
-    this.fetchAccessEgress = new AccessEgressFetcher(
-      request,
-      serverContext,
-      transitSearchTimeZero,
-      additionalSearchDays,
-      linkingContext,
-      carpoolingService,
-      requestTransitDataProvider
-    );
+      this.fetchAccessEgress = new AccessEgressFetcher(
+        request,
+        serverContext,
+        transitSearchTimeZero,
+        additionalSearchDays,
+        linkingContext,
+        carpoolingService,
+        requestTransitDataProvider
+      );
+    }
   }
 
   public static TransitRouterResult route(
@@ -116,8 +125,11 @@ public class TransitRouter {
   }
 
   private TransitRouterResult route() {
-    // Skip the creation of raptor transit data when the request cannot use transit
-    if (!request.journey().transit().enabled() || request.cannotReachTransit()) {
+    // Skip the transit search if transit data and related services are null. This means transit
+    // is disabled for the request or no transit stops are reachable with access/egress.
+    if (
+      raptorTransitData == null || requestTransitDataProvider == null || fetchAccessEgress == null
+    ) {
       return new TransitRouterResult(List.of(), null);
     }
 
