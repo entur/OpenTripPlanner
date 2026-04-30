@@ -98,6 +98,12 @@ class StreetIndex {
     return edgeIndex.query(env, scope).toList();
   }
 
+  java.util.Set<Edge> findEdgesAlongLineStrings(Collection<LineString> lineStrings) {
+    var candidates = edgeIndex.queryAlongLineStrings(lineStrings, Scope.PERMANENT);
+    candidates.removeIf(e -> !e.isReachableFromGraph());
+    return candidates;
+  }
+
   void insert(Edge edge, Scope scope) {
     edgeIndex.insert(edge, scope);
   }
