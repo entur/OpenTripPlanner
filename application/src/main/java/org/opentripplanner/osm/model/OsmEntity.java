@@ -173,7 +173,7 @@ public abstract class OsmEntity {
       "foot"
     );
 
-  private final Map<String, String> tags;
+  protected final Map<String, String> tags;
 
   protected final long id;
 
@@ -326,6 +326,9 @@ public abstract class OsmEntity {
    */
   @Nullable
   public String getTag(String tag) {
+    if(this.tags.isEmpty()){
+      return null;
+    }
     tag = tag.toLowerCase();
     return tags.get(tag);
   }
