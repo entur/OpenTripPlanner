@@ -2,6 +2,7 @@ package org.opentripplanner.ext.carpooling.routing;
 
 import java.time.Duration;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
@@ -30,15 +31,23 @@ public record InsertionCandidate(
   List<GraphPath<State, Edge, Vertex>> routeSegments,
   Duration stopDuration,
   NearbyStop transitStop,
-  Duration totalTripDuration
+  Duration totalTripDuration,
+  @Nullable GraphPath<State, Edge, Vertex> walkToPickup,
+  @Nullable GraphPath<State, Edge, Vertex> walkFromDropoff
 ) {
+  /**
+   * Convenience constructor that derives {@code totalTripDuration} from the route segments and
+   * stop duration.
+   */
   public InsertionCandidate(
     CarpoolTrip trip,
     int pickupPosition,
     int dropoffPosition,
     List<GraphPath<State, Edge, Vertex>> routeSegments,
     Duration stopDuration,
-    NearbyStop transitStop
+    NearbyStop transitStop,
+    @Nullable GraphPath<State, Edge, Vertex> walkToPickup,
+    @Nullable GraphPath<State, Edge, Vertex> walkFromDropoff
   ) {
     this(
       trip,
@@ -47,7 +56,9 @@ public record InsertionCandidate(
       routeSegments,
       stopDuration,
       transitStop,
-      computeTotalTripDuration(routeSegments, stopDuration)
+      computeTotalTripDuration(routeSegments, stopDuration),
+      walkToPickup,
+      walkFromDropoff
     );
   }
 
@@ -104,12 +115,12 @@ public record InsertionCandidate(
   }
 
   /**
-   * Calculates the duration of the passenger's ride from pickup arrival to dropoff.
-   * Includes the boarding dwell at the pickup (when there are pickup segments preceding it),
-   * travel time through shared segments, and stop delays at intermediate stops between shared
-   * segments. The no-pickup-segments case (passenger boarding at the trip origin) cannot occur
-   * today — the search never places {@code pickupPosition == 0} — but the branch guards against
-   * it by omitting the boarding dwell.
+   * Calculates the duration of the passenger's ride from pickup arrival to dropoff. Includes the
+   * boarding dwell at the pickup, travel time through shared segments, and stop delays between
+   * shared segments. When {@code pickupPosition == 0} the boarding dwell is omitted: the carpooling
+   * module defines a trip as starting the moment the car trip starts, so charging a dwell here
+   * would be inconsistent with {@link #getDurationUntilPickupArrival()} and with the rest of the
+   * module.
    */
   public Duration getPassengerRideDuration() {
     Duration boardingDwell = pickupPosition == 0 ? Duration.ZERO : stopDuration;
@@ -120,11 +131,10 @@ public record InsertionCandidate(
     List<GraphPath<State, Edge, Vertex>> segments,
     Duration stopDuration
   ) {
-    return segments
-      .stream()
-      .map(GraphPathUtils::calculateDuration)
-      .reduce(Duration.ZERO, Duration::plus)
-      .plus(stopDuration.multipliedBy(Math.max(0, segments.size() - 1)));
+    long segmentSeconds = segments.stream().mapToLong(GraphPath::getDuration).sum();
+    return Duration.ofSeconds(segmentSeconds).plus(
+      stopDuration.multipliedBy(Math.max(0, segments.size() - 1))
+    );
   }
 
   @Override

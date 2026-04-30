@@ -11,7 +11,6 @@ import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createSimpl
 import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 
 class InsertionCandidateTest {
 
@@ -32,6 +31,8 @@ class InsertionCandidateTest {
       2,
       List.of(originToPickup, pickupToDropoff, dropoffToDestination),
       STOP_DURATION,
+      null,
+      null,
       null
     );
 
@@ -44,7 +45,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(5);
 
-    var candidate = new InsertionCandidate(trip, 2, 4, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 2, 4, segments, STOP_DURATION, null, null, null);
 
     var pickupSegments = candidate.getPickupSegments();
     assertEquals(2, pickupSegments.size());
@@ -56,7 +57,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(trip, 0, 2, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 0, 2, segments, STOP_DURATION, null, null, null);
 
     var pickupSegments = candidate.getPickupSegments();
     assertTrue(pickupSegments.isEmpty());
@@ -67,7 +68,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(5);
 
-    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null, null, null);
 
     var sharedSegments = candidate.getSharedSegments();
     assertEquals(2, sharedSegments.size());
@@ -79,7 +80,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(trip, 1, 2, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 1, 2, segments, STOP_DURATION, null, null, null);
 
     var sharedSegments = candidate.getSharedSegments();
     assertEquals(1, sharedSegments.size());
@@ -90,7 +91,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(5);
 
-    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null, null, null);
 
     var dropoffSegments = candidate.getDropoffSegments();
     assertEquals(2, dropoffSegments.size());
@@ -102,7 +103,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 1, 3, segments, STOP_DURATION, null, null, null);
 
     var dropoffSegments = candidate.getDropoffSegments();
     assertTrue(dropoffSegments.isEmpty());
@@ -113,7 +114,7 @@ class InsertionCandidateTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(trip, 1, 2, segments, STOP_DURATION, null);
+    var candidate = new InsertionCandidate(trip, 1, 2, segments, STOP_DURATION, null, null, null);
 
     var str = candidate.toString();
     assertTrue(str.contains("pickup@1"));
@@ -130,10 +131,19 @@ class InsertionCandidateTest {
   void durations_noPickupSegments_singleSharedSegment() {
     var stopDuration = Duration.ofMinutes(2);
     var sharedPath = createGraphPath(Duration.ofMinutes(10));
-    var sharedDuration = GraphPathUtils.calculateDuration(sharedPath);
+    var sharedDuration = Duration.ofSeconds(sharedPath.getDuration());
 
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var candidate = new InsertionCandidate(trip, 0, 1, List.of(sharedPath), stopDuration, null);
+    var candidate = new InsertionCandidate(
+      trip,
+      0,
+      1,
+      List.of(sharedPath),
+      stopDuration,
+      null,
+      null,
+      null
+    );
 
     assertEquals(Duration.ofMinutes(10), sharedDuration);
     assertEquals(Duration.ZERO, candidate.getDurationUntilPickupArrival());
@@ -150,8 +160,8 @@ class InsertionCandidateTest {
     var pickupPath = createGraphPath(Duration.ofMinutes(8));
     var sharedPath = createGraphPath(Duration.ofMinutes(15));
 
-    var pickupDuration = GraphPathUtils.calculateDuration(pickupPath);
-    var sharedDuration = GraphPathUtils.calculateDuration(sharedPath);
+    var pickupDuration = Duration.ofSeconds(pickupPath.getDuration());
+    var sharedDuration = Duration.ofSeconds(sharedPath.getDuration());
 
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var candidate = new InsertionCandidate(
@@ -160,6 +170,8 @@ class InsertionCandidateTest {
       2,
       List.of(pickupPath, sharedPath),
       stopDuration,
+      null,
+      null,
       null
     );
 
@@ -179,10 +191,10 @@ class InsertionCandidateTest {
     var shared0 = createGraphPath(Duration.ofMinutes(10));
     var shared1 = createGraphPath(Duration.ofMinutes(12));
 
-    var pickup0Duration = GraphPathUtils.calculateDuration(pickup0);
-    var pickup1Duration = GraphPathUtils.calculateDuration(pickup1);
-    var shared0Duration = GraphPathUtils.calculateDuration(shared0);
-    var shared1Duration = GraphPathUtils.calculateDuration(shared1);
+    var pickup0Duration = Duration.ofSeconds(pickup0.getDuration());
+    var pickup1Duration = Duration.ofSeconds(pickup1.getDuration());
+    var shared0Duration = Duration.ofSeconds(shared0.getDuration());
+    var shared1Duration = Duration.ofSeconds(shared1.getDuration());
 
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var candidate = new InsertionCandidate(
@@ -191,6 +203,8 @@ class InsertionCandidateTest {
       4,
       List.of(pickup0, pickup1, shared0, shared1),
       stopDuration,
+      null,
+      null,
       null
     );
 
@@ -219,6 +233,8 @@ class InsertionCandidateTest {
       2,
       List.of(shared0, shared1),
       Duration.ofMinutes(1),
+      null,
+      null,
       null
     );
     var candidateLarge = new InsertionCandidate(
@@ -227,6 +243,8 @@ class InsertionCandidateTest {
       2,
       List.of(shared0, shared1),
       Duration.ofMinutes(5),
+      null,
+      null,
       null
     );
 

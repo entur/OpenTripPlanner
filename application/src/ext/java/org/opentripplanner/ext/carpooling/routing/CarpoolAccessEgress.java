@@ -2,7 +2,9 @@ package org.opentripplanner.ext.carpooling.routing;
 
 import java.time.Duration;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
+import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
@@ -15,45 +17,77 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
 
   /**
    * The Raptor departure time of this access/egress leg, in seconds since
-   * {@code transitSearchTimeZero}. For a carpool leg this is the moment the car arrives at the
-   * pickup: the passenger must be ready by this instant, since the driver is on a committed
-   * schedule and cannot wait. The boarding dwell at the pickup is part of
-   * {@link #durationInSeconds}, not of the time before departure.
+   * {@code transitSearchTimeZero}. This is the moment the passenger leaves the origin side of the
+   * leg: the start of an optional walk to the carpool pickup, or — when no walk is needed — the
+   * moment the carpool itself arrives at the pickup. The driver runs on a committed schedule, so
+   * Raptor cannot delay this time.
    */
-  private final int departureTimeOfPassenger;
+  private final int passengerDepartureTime;
 
   /**
    * The Raptor arrival time of this access/egress leg, in seconds since
-   * {@code transitSearchTimeZero}. For a carpool leg this is the moment the car reaches the
-   * dropoff (the transit stop for access, the passenger's destination for egress), after
-   * boarding dwell and shared travel.
+   * {@code transitSearchTimeZero}. This is the moment the passenger reaches the destination side
+   * of the leg: the end of an optional walk from the carpool dropoff, or — when no walk is needed
+   * — the moment the carpool reaches the dropoff. Equal to
+   * {@code passengerDepartureTime + walkSeconds + rideSeconds}.
    */
-  private final int arrivalTimeOfPassenger;
+  private final int passengerArrivalTime;
+
   private final int stop;
+  private final int rideSeconds;
   private final int durationInSeconds;
   private final int c1;
-  private final List<GraphPath<State, Edge, Vertex>> segments;
+
+  @Nullable
+  private final GraphPath<State, Edge, Vertex> walkToPickup;
+
+  private final List<GraphPath<State, Edge, Vertex>> sharedSegments;
+
+  @Nullable
+  private final GraphPath<State, Edge, Vertex> walkFromDropoff;
+
   private final TimeAndCost penalty;
   private final double totalWeight;
   private final double carpoolReluctance;
 
+  /**
+   * Builds an access/egress leg from a passenger-side departure time and the durations implied by
+   * the supplied paths and ride. The walk portion is the combined duration of {@code walkToPickup}
+   * and {@code walkFromDropoff} (zero when either path is {@code null}); the ride portion is the
+   * caller-supplied {@code rideDuration} (typically {@code InsertionCandidate.getPassengerRideDuration()},
+   * which already accounts for boarding dwell and intermediate stops). The arrival time and total
+   * duration are derived from these — there is no implicit invariant tying the caller's clock
+   * arithmetic to the path durations.
+   * <p>
+   * The walk paths' A* weights are used as-is for the walk portion of the cost; they already
+   * encode the user's walk preferences (reluctance, safety, slope, ...) from the search that
+   * produced them. The ride portion is billed at {@code carpoolReluctance}.
+   */
   public CarpoolAccessEgress(
     int stop,
-    Duration duration,
-    int departureTimeOfPassenger,
-    int arrivalTimeOfPassenger,
-    List<GraphPath<State, Edge, Vertex>> segments,
+    int passengerDepartureTime,
+    @Nullable GraphPath<State, Edge, Vertex> walkToPickup,
+    List<GraphPath<State, Edge, Vertex>> sharedSegments,
+    Duration rideDuration,
+    @Nullable GraphPath<State, Edge, Vertex> walkFromDropoff,
     TimeAndCost penalty,
-    Double carpoolReluctance
+    double carpoolReluctance
   ) {
-    this.departureTimeOfPassenger = departureTimeOfPassenger;
-    this.arrivalTimeOfPassenger = arrivalTimeOfPassenger;
     this.stop = stop;
-    this.durationInSeconds = (int) duration.getSeconds();
+    this.walkToPickup = walkToPickup;
+    this.sharedSegments = sharedSegments;
+    this.walkFromDropoff = walkFromDropoff;
+    int walkSeconds = (int) (GraphPathUtils.durationOrZero(walkToPickup).getSeconds() +
+      GraphPathUtils.durationOrZero(walkFromDropoff).getSeconds());
+    this.rideSeconds = (int) rideDuration.getSeconds();
+    this.durationInSeconds = walkSeconds + this.rideSeconds;
+    this.passengerDepartureTime = passengerDepartureTime;
+    this.passengerArrivalTime = passengerDepartureTime + this.durationInSeconds;
     this.carpoolReluctance = carpoolReluctance;
-    this.totalWeight = this.durationInSeconds * carpoolReluctance;
+    double walkWeight =
+      GraphPathUtils.weightOrZero(walkToPickup) + GraphPathUtils.weightOrZero(walkFromDropoff);
+    this.totalWeight = walkWeight + this.rideSeconds * carpoolReluctance;
     this.c1 = RaptorCostConverter.toRaptorCost(this.totalWeight);
-    this.segments = segments;
     this.penalty = penalty;
   }
 
@@ -74,18 +108,18 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
 
   @Override
   public int earliestDepartureTime(int requestedDepartureTime) {
-    if (requestedDepartureTime > departureTimeOfPassenger) {
+    if (requestedDepartureTime > passengerDepartureTime) {
       return RaptorConstants.TIME_NOT_SET;
     }
-    return departureTimeOfPassenger;
+    return passengerDepartureTime;
   }
 
   @Override
   public int latestArrivalTime(int requestedArrivalTime) {
-    if (requestedArrivalTime < arrivalTimeOfPassenger) {
+    if (requestedArrivalTime < passengerArrivalTime) {
       return RaptorConstants.TIME_NOT_SET;
     }
-    return arrivalTimeOfPassenger;
+    return passengerArrivalTime;
   }
 
   @Override
@@ -93,22 +127,23 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     return true;
   }
 
-  public int getDepartureTimeOfPassenger() {
-    return departureTimeOfPassenger;
+  public int getPassengerDepartureTime() {
+    return passengerDepartureTime;
   }
 
-  public int getArrivalTimeOfPassenger() {
-    return arrivalTimeOfPassenger;
+  public int getPassengerArrivalTime() {
+    return passengerArrivalTime;
   }
 
   @Override
   public RoutingAccessEgress withPenalty(TimeAndCost penalty) {
     return new CarpoolAccessEgress(
       this.stop,
-      Duration.ofSeconds(this.durationInSeconds),
-      this.departureTimeOfPassenger,
-      this.arrivalTimeOfPassenger,
-      this.segments,
+      this.passengerDepartureTime,
+      this.walkToPickup,
+      this.sharedSegments,
+      Duration.ofSeconds(this.rideSeconds),
+      this.walkFromDropoff,
       penalty,
       this.carpoolReluctance
     );
@@ -135,8 +170,18 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     return this.penalty;
   }
 
-  public List<GraphPath<State, Edge, Vertex>> getSegments() {
-    return this.segments;
+  @Nullable
+  public GraphPath<State, Edge, Vertex> walkToPickup() {
+    return this.walkToPickup;
+  }
+
+  public List<GraphPath<State, Edge, Vertex>> sharedSegments() {
+    return this.sharedSegments;
+  }
+
+  @Nullable
+  public GraphPath<State, Edge, Vertex> walkFromDropoff() {
+    return this.walkFromDropoff;
   }
 
   public double getTotalWeight() {
