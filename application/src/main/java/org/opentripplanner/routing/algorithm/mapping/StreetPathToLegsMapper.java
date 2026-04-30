@@ -2,6 +2,7 @@ package org.opentripplanner.routing.algorithm.mapping;
 
 import static org.opentripplanner.street.search.state.VehicleRentalState.RENTING_FLOATING;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
@@ -9,15 +10,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
-import org.opentripplanner.astar.model.GraphPath;
-import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.time.ZoneIdFallback;
-import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.leg.ElevationProfile;
@@ -49,7 +48,7 @@ import org.opentripplanner.street.search.state.State;
  * parts of itineraries containing transit, while the whole transit itinerary is produced by
  * {@link RaptorPathToItineraryMapper}.
  */
-public class GraphPathToItineraryMapper {
+public class StreetPathToLegsMapper {
 
   private final SiteResolver siteResolver;
   private final ZoneId timeZone;
@@ -57,7 +56,7 @@ public class GraphPathToItineraryMapper {
   private final StreetDetailsService streetDetailsService;
   private final double ellipsoidToGeoidDifference;
 
-  public GraphPathToItineraryMapper(
+  public StreetPathToLegsMapper(
     SiteResolver siteResolver,
     ZoneId timeZone,
     StreetNotesService streetNotesService,
@@ -97,40 +96,44 @@ public class GraphPathToItineraryMapper {
   }
 
   /**
-   * Generates a TripPlan from a set of paths
+   * Generates {@link Leg}s from a {@link StreetPath}. If the whole path is traversed with a
+   * singular street mode, this will return a single leg. Each change of street mode within a path
+   * generates a new leg. Note, walking a bike does not cause a new leg to be generated. The legs
+   * are returned in the order they are traversed in the path.
    */
-  public List<Itinerary> mapItineraries(List<StreetPath> paths, RouteRequest request) {
-    List<Itinerary> itineraries = new LinkedList<>();
-    for (var path : paths) {
-      Itinerary itinerary = generateItinerary(path, request);
-      if (itinerary.legs().isEmpty()) {
-        continue;
-      }
-      itineraries.add(itinerary);
-    }
-
-    return itineraries;
+  public List<Leg> map(StreetPath path, RouteRequest request) {
+    return map(path, request, null);
   }
 
   /**
-   * Generate an itinerary from a {@link GraphPath}. This method first slices the list of states at
-   * the leg boundaries. These smaller state arrays are then used to generate legs.
+   * Generates {@link Leg}s from a {@link StreetPath}. If the whole path is traversed with a
+   * singular street mode, this will return a single leg. Each change of street mode within a path
+   * generates a new leg. Note, walking a bike does not cause a new leg to be generated. The legs
+   * are returned in the order they are traversed in the path.
    *
-   * @param path The graph path to base the itinerary on
-   * @return The generated itinerary
+   * @param startTime The legs are time shifted to so that the first leg starts at this time and the
+   *                  next legs have the same delay as the first leg. If this is null, no time
+   *                  shifting happens.
    */
-  public Itinerary generateItinerary(StreetPath path, RouteRequest request) {
+  public List<Leg> map(StreetPath path, RouteRequest request, @Nullable ZonedDateTime startTime) {
     List<Leg> legs = new ArrayList<>();
     WalkStep previousStep = null;
-    for (var subPath : slicePath(path)) {
+    var subPaths = slicePath(path);
+    if (subPaths.isEmpty()) {
+      return List.of();
+    }
+    var delay = startTime != null
+      ? Duration.between(subPaths.getFirst().startTime(), startTime)
+      : null;
+    for (var subPath : subPaths) {
       if (
         OTPFeature.FlexRouting.isOn() && subPath.states().get(1).backEdge instanceof FlexTripEdge
       ) {
-        legs.add(generateFlexLeg(subPath));
+        legs.add(generateFlexLeg(subPath, delay));
         previousStep = null;
         continue;
       }
-      StreetLeg leg = generateLeg(subPath, previousStep, request);
+      StreetLeg leg = generateLeg(subPath, previousStep, request, delay);
       legs.add(leg);
 
       List<WalkStep> walkSteps = leg.listWalkSteps();
@@ -140,16 +143,7 @@ public class GraphPathToItineraryMapper {
         previousStep = null;
       }
     }
-
-    var cost = Cost.costOfSeconds(path.lastState().weight);
-    var builder = Itinerary.ofDirect(legs).withGeneralizedCost(cost);
-
-    builder.withArrivedAtDestinationWithRentedVehicle(
-      path.lastState().isRentingVehicleFromStation()
-    );
-    builder.addElevationChange(path.calculateElevations());
-
-    return builder.build();
+    return legs;
   }
 
   /**
@@ -313,21 +307,19 @@ public class GraphPathToItineraryMapper {
   /**
    * Generate a flex leg from the states belonging to the flex leg
    */
-  private Leg generateFlexLeg(StreetPath path) {
+  private Leg generateFlexLeg(StreetPath path, @Nullable Duration delay) {
     var states = path.states();
     State fromState = states.get(0);
     State toState = states.get(1);
     FlexTripEdge flexEdge = (FlexTripEdge) toState.backEdge;
-    ZonedDateTime startTime = fromState.getTime().atZone(timeZone);
-    ZonedDateTime endTime = toState.getTime().atZone(timeZone);
     int generalizedCost = (int) (toState.getWeight() - fromState.getWeight());
 
     return FlexibleTransitLeg.of()
       .withFlexTripEdge(flexEdge)
       .withFromStop(siteResolver.getStopLocation(flexEdge.fromStopId()))
       .withToStop(siteResolver.getStopLocation(flexEdge.toStopId()))
-      .withStartTime(startTime)
-      .withEndTime(endTime)
+      .withStartTime(getTimeWithDelay(fromState, delay))
+      .withEndTime(getTimeWithDelay(toState, delay))
       .withGeneralizedCost(generalizedCost)
       .build();
   }
@@ -340,7 +332,12 @@ public class GraphPathToItineraryMapper {
    *                     calculated correctly
    * @return The generated leg
    */
-  private StreetLeg generateLeg(StreetPath subPath, WalkStep previousStep, RouteRequest request) {
+  private StreetLeg generateLeg(
+    StreetPath subPath,
+    WalkStep previousStep,
+    RouteRequest request,
+    @Nullable Duration delay
+  ) {
     var states = subPath.states();
 
     State firstState = states.get(0);
@@ -368,8 +365,8 @@ public class GraphPathToItineraryMapper {
 
     StreetLegBuilder leg = StreetLeg.of()
       .withMode(resolveMode(states))
-      .withStartTime(startTimeState.getTime().atZone(timeZone))
-      .withEndTime(lastState.getTime().atZone(timeZone))
+      .withStartTime(getTimeWithDelay(startTimeState, delay))
+      .withEndTime(getTimeWithDelay(lastState, delay))
       .withFrom(makePlace(firstState, request))
       .withTo(makePlace(lastState, request))
       .withDistanceMeters(subPath.distanceMeters())
@@ -426,5 +423,12 @@ public class GraphPathToItineraryMapper {
     var p = builder.build();
 
     return p.isAllYUnknown() ? null : p;
+  }
+
+  private ZonedDateTime getTimeWithDelay(State state, @Nullable Duration delay) {
+    if (delay != null) {
+      return state.getTime().atZone(timeZone).plus(delay);
+    }
+    return state.getTime().atZone(timeZone);
   }
 }
