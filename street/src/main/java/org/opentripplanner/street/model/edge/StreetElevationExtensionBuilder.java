@@ -96,8 +96,7 @@ public class StreetElevationExtensionBuilder {
   }
 
   private StreetElevationExtension buildInternal() {
-    boolean slopeLimit = permission.allows(StreetTraversalPermission.CAR);
-    SlopeCosts costs = ElevationUtils.getSlopeCosts(elevationProfile, slopeLimit);
+    SlopeCosts costs = ElevationUtils.getSlopeCosts(elevationProfile, true);
 
     var effectiveBikeDistanceFactor = costs.slopeSpeedFactor;
     var effectiveBikeWorkFactor = costs.slopeWorkFactor;
