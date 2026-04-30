@@ -10,6 +10,10 @@ import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 
 class RaptorTripScheduleTest {
 
+  /**
+   * Trips that mix fixed and flex schedules use -999 for those stop times that use a flexible
+   * window.
+   */
   private static final int NOT_SET = -999;
 
   private final TestTripSchedule subject = TestTripSchedule.schedule(
