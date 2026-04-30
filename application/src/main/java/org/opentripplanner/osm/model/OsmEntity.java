@@ -293,6 +293,9 @@ public abstract class OsmEntity {
    * or a parent mode, either with a directional suffix or not, empty if it is not specified.
    */
   protected Optional<Permission> checkModePermission(String mode, TraverseDirection direction) {
+    if(isTagLess()){
+      return Optional.empty();
+    }
     // check if the exact directional tag allows or denies access
     if (direction != DIRECTIONLESS) {
       if (isExplicitlyAllowed(mode + direction.tagSuffix())) {
