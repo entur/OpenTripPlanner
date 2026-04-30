@@ -10,7 +10,6 @@ import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTR
 
 import java.time.Duration;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -37,6 +36,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  */
 public abstract class OsmEntity {
 
+  private static final Pattern I18N_PATTERN = Pattern.compile("\\{(.*?)}");
   /**
    * highway=* values that we don't want to even consider when building the graph.
    */
@@ -176,10 +176,6 @@ public abstract class OsmEntity {
   private final Map<String, String> tags;
 
   protected final long id;
-  private static final Pattern I18N_PATTERN = Pattern.compile("\\{(.*?)}");
-
-  /* To save memory this is only created when an entity actually has tags. */
-  private Map<String, String> tags;
 
   private final OsmProvider osmProvider;
 
