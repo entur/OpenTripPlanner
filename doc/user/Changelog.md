@@ -36,6 +36,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Remove relation route name application [#7539](https://github.com/opentripplanner/OpenTripPlanner/pull/7539)
 - Skip transit search when no access or egress mode is set [#7547](https://github.com/opentripplanner/OpenTripPlanner/pull/7547)
 - Skip leg rebuild when fare/alert decoration would be a no-op [#7546](https://github.com/opentripplanner/OpenTripPlanner/pull/7546)
+- Replace C2-based pass-through with via-connection chaining [#7496](https://github.com/opentripplanner/OpenTripPlanner/pull/7496)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
