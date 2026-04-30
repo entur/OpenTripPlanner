@@ -213,7 +213,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
   }
 
   private GenericLocation location(FeedScopedId id) {
-    return new GenericLocation(null, id, null, null);
+    return GenericLocation.fromStopId(id);
   }
 
   private GenericLocation location(String id) {

@@ -3,6 +3,7 @@ package org.opentripplanner.apis.transmodel.mapping;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 import javax.annotation.Nullable;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.apis.transmodel.model.framework.DatedServiceJourneyReferenceInputType;
@@ -21,10 +22,9 @@ class GenericLocationMapper {
     this.idMapper = idMapper;
   }
 
-  /**
-   * Maps a GraphQL Location input type to a GenericLocation
-   */
-  GenericLocation toGenericLocation(Map<String, Object> m) {
+  /// Maps a GraphQL Location input type to a GenericLocation.
+  /// Returns an empty result If the input does not contain a coordinate or an id.
+  Optional<GenericLocation> toGenericLocation(Map<String, Object> m) {
     Map<String, Object> coordinates = (Map<String, Object>) m.get("coordinates");
     Double lat = null;
     Double lon = null;
@@ -40,7 +40,17 @@ class GenericLocationMapper {
 
     TripLocation tripLocation = mapTripLocation((Map<String, Object>) m.get("onBoardLocation"));
 
-    return new GenericLocation(name, stopId, lat, lon, tripLocation);
+    if (stopId != null && lat != null && lon != null) {
+      return Optional.of(GenericLocation.fromStopIdWithFallback(stopId, lat, lon, name));
+    } else if (stopId != null) {
+      return Optional.of(GenericLocation.fromStopId(stopId, name));
+    } else if (lat != null && lon != null) {
+      return Optional.of(GenericLocation.fromCoordinate(lat, lon, name));
+    } else if (tripLocation != null) {
+      return Optional.of(GenericLocation.fromTripLocation(tripLocation, name));
+    } else {
+      return Optional.empty();
+    }
   }
 
   @Nullable

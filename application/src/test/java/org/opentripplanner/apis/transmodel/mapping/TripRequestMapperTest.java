@@ -453,7 +453,9 @@ public class TripRequestMapperTest implements PlanTestConstants {
     arguments.put("to", Map.of("place", "F:Quay:2"));
 
     var request = MAPPER.createRequest(executionContext(arguments));
-    assertNotNull(request.from().tripLocation);
+    var from = request.from();
+    assertNotNull(from);
+    assertNotNull(from.tripLocation());
   }
 
   @Test

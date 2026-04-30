@@ -472,7 +472,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
   }
 
   private Place mapPlace(GenericLocation location) {
-    return Place.normal(location.lat, location.lng, new NonLocalizedString(location.label));
+    return Place.normal(location.wgsCoordinate(), new NonLocalizedString(location.label()));
   }
 
   private ZonedDateTime createZonedDateTime(int timeInSeconds) {

@@ -85,7 +85,7 @@ class AccessEgressFetcher {
 
   RoutingOnBoardAccess fetchStartOnBoardAccess() {
     var from = request.from();
-    var onBoardTripLocation = from != null ? from.tripLocation : null;
+    var onBoardTripLocation = from != null ? from.tripLocation() : null;
     if (onBoardTripLocation == null) {
       throw new IllegalArgumentException(
         "Cannot fetch start-on-board-access for a request without an on-board trip location"

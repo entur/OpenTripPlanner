@@ -73,12 +73,13 @@ public final class RequestPreProcessor {
    */
   private RouteRequest prepareRequestForStartOnBoardAccess(RouteRequest request) {
     var fromLocation = request.from();
-    if (fromLocation == null || fromLocation.tripLocation == null) {
+    var tripLocation = fromLocation != null ? fromLocation.tripLocation() : null;
+    if (tripLocation == null) {
       throw new IllegalArgumentException();
     }
 
     var boardingDateTime = new StartOnBoardAccessResolver(transitService).resolveBoardingDateTime(
-      fromLocation.tripLocation,
+      tripLocation,
       zoneId
     );
     var iterationStep = Duration.ofSeconds(tuningParameters.iterationDepartureStepInSeconds());
