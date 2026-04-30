@@ -1,8 +1,11 @@
 package org.opentripplanner.street.model.edge;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.street.model.StreetTraversalPermission.PEDESTRIAN_AND_BICYCLE;
+import static org.opentripplanner.street.model.elevation.ElevationProfiles.STEEP_ELEVATION_PROFILE;
 
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +16,7 @@ import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
+import org.opentripplanner.street.model.elevation.ElevationProfiles;
 
 class StreetElevationExtensionBuilderTest {
 
@@ -35,6 +39,7 @@ class StreetElevationExtensionBuilderTest {
       StreetModelFactory.V2.getCoordinate(),
     }
   );
+
   private StreetEdgeBuilder<?> streetEdgeBuilder;
 
   @BeforeEach
@@ -99,5 +104,20 @@ class StreetElevationExtensionBuilderTest {
       streetElevationExtensionFromStreetEdge.get().toString(),
       "Street elevation profiles built from StreetEdge and from StreetEdgeBuilder should be identical"
     );
+  }
+
+  @Test
+  void downhill() {
+    var extension = StreetElevationExtensionBuilder.of(
+      streetEdgeBuilder
+        .withPermission(PEDESTRIAN_AND_BICYCLE)
+        .withBicycleSafetyFactor(3)
+    )
+      .withElevationProfile(STEEP_ELEVATION_PROFILE)
+      .withDistanceInMeters(50)
+      .build()
+      .orElseThrow();
+
+    assertThat(extension.getEffectiveBikeDistance()).isGreaterThan(0);
   }
 }

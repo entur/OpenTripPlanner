@@ -1,8 +1,10 @@
 package org.opentripplanner.street.model.elevation;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.opentripplanner.street.model.elevation.ElevationProfiles.STEEP_ELEVATION_PROFILE;
 
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -30,6 +32,12 @@ public class ElevationUtilsTest {
     );
     costs = ElevationUtils.getSlopeCosts(seq, false);
     assertEquals(1.00992634231424500668, costs.lengthMultiplier);
+  }
+
+  @Test
+  public void bikeCost() {
+    var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE, false);
+    assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
   }
 
   @Test
