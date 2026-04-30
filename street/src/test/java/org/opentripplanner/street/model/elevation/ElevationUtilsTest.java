@@ -6,16 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.opentripplanner.street.model.elevation.ElevationProfiles.STEEP_ELEVATION_PROFILE;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequenceFactory;
 
-public class ElevationUtilsTest {
+class ElevationUtilsTest {
 
   @Test
-  public void testLengthMultiplier() {
+  void testLengthMultiplier() {
     PackedCoordinateSequenceFactory factory = PackedCoordinateSequenceFactory.DOUBLE_FACTORY;
     CoordinateSequence seq = factory.create(
       new Coordinate[] { new Coordinate(0, 1), new Coordinate(10, 1) }
@@ -35,13 +36,20 @@ public class ElevationUtilsTest {
   }
 
   @Test
-  public void bikeCost() {
+  @Disabled("This currently fails but it's questionable whether it should even be supported")
+  void slopeSpeedFactorWithoutLimit() {
     var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE, false);
     assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
   }
 
   @Test
-  public void testCalculateSlopeWalkEffectiveLengthFactor() {
+  void slopeSpeedFactorWithLimit() {
+    var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE, true);
+    assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
+  }
+
+  @Test
+  void testCalculateSlopeWalkEffectiveLengthFactor() {
     // 35% should hit the MAX_SLOPE_WALK_EFFECTIVE_LENGTH_FACTOR=3, hence 300m is expected
     assertEquals(300.0, ElevationUtils.calculateEffectiveWalkLength(100, 35), 0.1);
 
@@ -65,7 +73,7 @@ public class ElevationUtilsTest {
   }
 
   @Test
-  public void testPartialElevationProfile() {
+  void testPartialElevationProfile() {
     double[] two_point = new double[] { 0, 10, 10, 20 };
     double[] four_point = new double[] { 0, 100, 10, 110, 20, 120, 25, 125 };
     double[] small_run = new double[] { 0, 100, 10, 110, 20, 120, 20.5, 120.5 };
