@@ -2353,7 +2353,7 @@ input Modes {
 input OnBoardLocationInput {
   "Identifies the service journey and service date, either by service journey ID and service date, or by a dated service journey ID."
   datedServiceJourneyReference: DatedServiceJourneyReference!
-  "Identifies the point in the journey pattern where the traveler is considered to be boarding, or the last stop passed."
+  "Identifies the point in the journey pattern where the traveler is considered to be boarding, or the last stop passed. Note that cancelled stops are not allowed unless includePlannedCancellations/includeRealtimeCancellations are set accordingly."
   pointInJourneyPatternReference: PointInJourneyPatternReference!
 }
 

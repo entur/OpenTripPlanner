@@ -29,7 +29,9 @@ public class OnBoardLocationInputType {
           .name("pointInJourneyPatternReference")
           .description(
             "Identifies the point in the journey pattern where the traveler is " +
-              "considered to be boarding, or the last stop passed."
+              "considered to be boarding, or the last stop passed. Note that cancelled stops " +
+              "are not allowed unless includePlannedCancellations/includeRealtimeCancellations " +
+              "are set accordingly."
           )
           .type(new GraphQLNonNull(PointInJourneyPatternReferenceInputType.create(dateTimeScalar)))
           .build()
