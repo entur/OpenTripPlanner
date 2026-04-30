@@ -13,10 +13,8 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li>Lower bound: {@code itinerary.startTime >= T} — the itinerary must not depart before
  *       the requested time.</li>
- *   <li>Upper bound: {@code itinerary.startTime <= T + searchWindow + maxWalkTime} — the
- *       itinerary must not depart too far into the future. A 15-minute walk buffer accounts for
- *       the passenger walking to the pickup point. For egress legs the upper bound is relaxed
- *       by an additional 24 hours because the actual transit arrival time is unknown.</li>
+ *   <li>Upper bound: {@code itinerary.startTime <= T + searchWindow} — the itinerary must not
+ *       depart too far into the future.</li>
  * </ul>
  * The upper bound is only enforced when {@code searchWindow} is non-null.
  */
@@ -49,12 +47,7 @@ public class DepartAfterItineraryFilter implements CarpoolItineraryFilter {
     }
 
     if (searchWindow != null) {
-      var upperBound = requestedDepartureTime
-        .plus(searchWindow)
-        .plus(CarpoolTripFilter.MAX_WALK_TIME);
-      if (request.isEgressRequest()) {
-        upperBound = upperBound.plus(CarpoolTripFilter.EGRESS_SLACK);
-      }
+      var upperBound = requestedDepartureTime.plus(searchWindow);
       if (startTime.isAfter(upperBound)) {
         LOG.debug(
           "Itinerary {} rejected by depart-after post-filter: departs at {}, which is after upper bound {}",
