@@ -51,12 +51,12 @@ class DepartAfterItineraryFilterTest {
   }
 
   // ---------------------------------------------------------------------------
-  // Depart After, direct routing — window: [T, T + searchWindow + maxWalkTime]
+  // Depart After, direct routing — window: [T, T + searchWindow]
   // ---------------------------------------------------------------------------
 
   @Test
   void isValidItinerary_departAfterDirect_returnsTrue() {
-    // Itinerary departs 30 min after T — comfortably within the T+45 min upper bound.
+    // Itinerary departs 30 min after T — comfortably within the T+30 min upper bound.
     assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(10, 30)), WINDOW));
   }
 
@@ -73,14 +73,14 @@ class DepartAfterItineraryFilterTest {
 
   @Test
   void isValidItinerary_departAfterDirect_itineraryDepartsAtUpperBound_returnsTrue() {
-    // T=10:15 → upper bound = 10:15 + 30 + 15 = 11:00 = itinerary departure.
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(10, 15)), WINDOW));
+    // T=10:30 → upper bound = 10:30 + 30 = 11:00 = itinerary departure.
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(10, 30)), WINDOW));
   }
 
   @Test
   void isValidItinerary_departAfterDirect_itineraryDepartsJustPastUpperBound_returnsFalse() {
-    // T=10:14 → upper bound = 10:59 < 11:00.
-    assertFalse(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(10, 14)), WINDOW));
+    // T=10:29 → upper bound = 10:59 < 11:00.
+    assertFalse(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(10, 29)), WINDOW));
   }
 
   @Test
@@ -105,19 +105,18 @@ class DepartAfterItineraryFilterTest {
   }
 
   // ---------------------------------------------------------------------------
-  // Depart After, egress — upper bound extended by 24 h
+  // Depart After, egress — same upper bound as direct
   // ---------------------------------------------------------------------------
 
   @Test
   void isValidItinerary_departAfterEgress_returnsTrue() {
-    // T=09:30 → direct upper = 10:15 < 11:00, but egress upper = next day 10:15 > 11:00.
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterEgress(at(9, 30)), WINDOW));
+    // T=10:30 → upper bound = 11:00 = itinerary departure.
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterEgress(at(10, 30)), WINDOW));
   }
 
   @Test
-  void isValidItinerary_departAfterEgress_itineraryPastEgressSlack_returnsFalse() {
-    // T = 25 h before the itinerary departure → egress upper = T + 24 h 45 min = 10 min before
-    // the itinerary starts.
+  void isValidItinerary_departAfterEgress_itineraryPastUpperBound_returnsFalse() {
+    // T = 25 h before the itinerary departure → upper = T + 30 min = far before itinerary start.
     var T = ZonedDateTime.of(SERVICE_DAY, LocalTime.of(11, 0), UTC).minusHours(25).toInstant();
     assertFalse(FILTER.isValidItinerary(driveItinerary(), departAfterEgress(T), WINDOW));
   }
