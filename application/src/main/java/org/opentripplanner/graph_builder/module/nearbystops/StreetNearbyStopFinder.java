@@ -139,7 +139,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
         var areaStopId = statesForAreaStopIds.getKey();
         var min = statesForAreaStopIds.getValue();
 
-        // If the best min for this AreaStop is a SplitterVertex, we want to get the
+        // If the best state for this AreaStop is a SplitterVertex, we want to get the
         // TemporaryStreetLocation instead. This allows us to reach SplitterVertices in both
         // directions when routing later.
         if (min.getBackState().getVertex() instanceof TemporaryStreetLocation) {
