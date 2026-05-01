@@ -17,6 +17,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.locationtech.jts.linearref.LocationIndexedLine;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -554,8 +556,48 @@ public class VertexLinker {
     } else {
       v = splitterVertex(originalEdge, x, y, uniqueSplitLabel);
     }
-    v.addRentalRestriction(originalEdge.getFromVertex().rentalRestrictions());
-    v.addRentalRestriction(originalEdge.getToVertex().rentalRestrictions());
+    v.copyRentalRestrictionsFrom(originalEdge.getFromVertex());
+    // Also copy from tov if it has different restrictions
+    var toVertex = originalEdge.getToVertex();
+    if (toVertex.getBusinessAreaBorder() != null) {
+      for (var network : toVertex.getBusinessAreaBorder().networks()) {
+        v.addBusinessAreaBorderNetwork(network);
+      }
+    }
+    // Compute geofencing boundaries spatially for the split vertex.
+    // The entering flag encodes position: outside=true, inside=false.
+    // Blind-copying from parent vertices would give the wrong flag when
+    // the split point is on the opposite side of the zone boundary.
+    var fromBoundaries = originalEdge.getFromVertex().getGeofencingBoundaries();
+    var toBoundaries = toVertex.getGeofencingBoundaries();
+    if (!fromBoundaries.isEmpty() || !toBoundaries.isEmpty()) {
+      var splitCoord = new Coordinate(x, y);
+      var containingZones = graph.getGeofencingZonesContaining(splitCoord);
+      var boundaryZones = new HashSet<GeofencingZone>();
+      for (var b : fromBoundaries) {
+        boundaryZones.add(b.zone());
+      }
+      for (var b : toBoundaries) {
+        boundaryZones.add(b.zone());
+      }
+      var fromVertex = originalEdge.getFromVertex();
+      for (var zone : boundaryZones) {
+        boolean splitInZone = containingZones.contains(zone);
+        v.addGeofencingBoundary(new GeofencingBoundaryExtension(zone, !splitInZone));
+
+        // If the split vertex is inside the zone but the parent edge's fromVertex
+        // has no boundary for this zone (e.g., a permanent SplitterVertex in a
+        // concave corner where all permanent neighbors are outside the zone),
+        // add the missing boundary to fromVertex. Without this, the pairing check
+        // in updateGeofencingZones would fail and the zone would never enter state.
+        if (splitInZone) {
+          boolean fromvHasBoundary = fromBoundaries.stream().anyMatch(b -> b.zone().equals(zone));
+          if (!fromvHasBoundary) {
+            fromVertex.addGeofencingBoundary(new GeofencingBoundaryExtension(zone, true));
+          }
+        }
+      }
+    }
 
     return v;
   }

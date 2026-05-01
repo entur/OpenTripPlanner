@@ -59,8 +59,10 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
       return false;
     }
 
-    // we cannot compare the states where one is inside a "no-drop off" zone and one isn't
-    if (a.isInsideNoRentalDropOffArea() != b.isInsideNoRentalDropOffArea()) {
+    // Two generic renting states: a superset of committed networks dominates a subset.
+    // A state that has already forked off committed branches for more networks has
+    // strictly more coverage — the subset would eventually fork the same branches.
+    if (!a.getCommittedNetworks().containsAll(b.getCommittedNetworks())) {
       return false;
     }
 

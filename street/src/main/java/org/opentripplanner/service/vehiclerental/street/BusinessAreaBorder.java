@@ -1,60 +1,54 @@
 package org.opentripplanner.service.vehiclerental.street;
 
-import java.util.EnumSet;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.search.state.State;
 
 /**
- * Traversal is banned since this location is the border of a business area.
+ * Marks a vertex as being on the border of one or more rental networks' business areas.
+ * Traversal is banned for vehicles of any matching network — they cannot leave
+ * their business area. Enforced via {@code Vertex.rentalTraversalBanned(State)}.
+ *
+ * @deprecated Business areas are an OTP-specific concept not defined in the GBFS spec.
+ *     They are inferred from GBFS zones with no restrictions, but this inference is
+ *     unreliable and the enforcement logic is not standardized. Disable via the
+ *     {@code geofencingBusinessAreaBorders} updater configuration option.
+ *     May be removed in a future version.
  */
-public final class BusinessAreaBorder implements RentalRestrictionExtension {
+@Deprecated
+public final class BusinessAreaBorder {
 
-  private final String network;
+  private final Set<String> networks;
 
-  public BusinessAreaBorder(String network) {
-    this.network = network;
+  public BusinessAreaBorder() {
+    this.networks = new HashSet<>();
   }
 
-  @Override
+  public void addNetwork(String network) {
+    networks.add(network);
+  }
+
+  public void removeNetwork(String network) {
+    networks.remove(network);
+  }
+
+  public boolean isEmpty() {
+    return networks.isEmpty();
+  }
+
   public boolean traversalBanned(State state) {
-    if (state.getRequest().arriveBy()) {
-      // TODO: since in the arrive by search we don't know the rental network yet, we disallow it for _all_ networks
-      // there will be another PR fixing this
-      return state.isRentingVehicle();
-    } else {
-      return state.isRentingVehicle() && network.equals(state.getVehicleRentalNetwork());
+    if (!state.isRentingVehicle()) {
+      return false;
     }
+    // Generic (uncommitted) states pass through freely — enforcement is deferred
+    // to their committed branches which have a known network.
+    if (state.getVehicleRentalNetwork() == null) {
+      return false;
+    }
+    return networks.contains(state.getVehicleRentalNetwork());
   }
 
-  @Override
-  public boolean dropOffBanned(State state) {
-    return false;
-  }
-
-  @Override
-  public Set<RestrictionType> debugTypes() {
-    return EnumSet.of(RestrictionType.BUSINESS_AREA_BORDER);
-  }
-
-  @Override
-  public List<RentalRestrictionExtension> toList() {
-    return List.of(this);
-  }
-
-  @Override
-  public boolean hasRestrictions() {
-    return true;
-  }
-
-  @Override
-  public Set<String> noDropOffNetworks() {
-    return Set.of();
-  }
-
-  @Override
-  public List<String> networks() {
-    return List.of(network);
+  public Set<String> networks() {
+    return Set.copyOf(networks);
   }
 }
