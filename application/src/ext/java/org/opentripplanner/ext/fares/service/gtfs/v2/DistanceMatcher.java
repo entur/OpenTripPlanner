@@ -10,8 +10,10 @@ class DistanceMatcher {
     // If no valid distance type is given, do not consider distances in fare computation
     FareDistance distance = rule.fareDistance();
     if (distance instanceof FareDistance.Stops(int min, int max)) {
-      var numStops = leg.listIntermediateStops().size();
-      return numStops >= min && max > numStops;
+      // the board stop does not contribute towards the final count, but the alight stop does
+      // therefore we add 1
+      var numStops = leg.listIntermediateStops().size() + 1;
+      return numStops >= min && max >= numStops;
     } else {
       return true;
     }
