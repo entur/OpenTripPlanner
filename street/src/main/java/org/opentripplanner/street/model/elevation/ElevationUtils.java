@@ -83,11 +83,9 @@ public class ElevationUtils {
   };
 
   /**
-   * @param elev       The elevation profile, where each (x, y) is (distance along edge, elevation)
-   * @param slopeLimit Whether the slope should be limited to 0.35, which is the max slope for
-   *                   streets that take cars.
+   * @param elev The elevation profile, where each (x, y) is (distance along edge, elevation)
    */
-  public static SlopeCosts getSlopeCosts(CoordinateSequence elev, boolean slopeLimit) {
+  public static SlopeCosts getSlopeCosts(CoordinateSequence elev) {
     Coordinate[] coordinates = elev.toCoordinateArray();
     boolean flattened = false;
     double maxSlope = 0;
@@ -111,13 +109,11 @@ public class ElevationUtils {
       }
       double slope = rise / run;
       // Baldwin St in Dunedin, NZ, is the steepest street
-      // on earth, and has a grade of 35%.  So for streets
-      // which allow cars, we set the limit to 35%.  Footpaths
-      // are sometimes steeper, so we turn slopeLimit off for them.
-      // But we still need some sort of limit, because the energy
+      // on earth, and has a grade of 35%. Therefore we set the limit to 35%.
+      // We need _some_ sort of limit, because the energy
       // usage approximation breaks down at extreme slopes, and
       // gives negative weights
-      if ((slopeLimit && (slope > 0.35 || slope < -0.35)) || slope > 1.0 || slope < -1.0) {
+      if (slope > 0.35 || slope < -0.35) {
         slope = 0;
         flattened = true;
       }

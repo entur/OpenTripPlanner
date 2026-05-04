@@ -87,7 +87,7 @@ public class StreetElevationExtensionBuilder {
   }
 
   private StreetElevationExtension buildInternal() {
-    SlopeCosts costs = ElevationUtils.getSlopeCosts(elevationProfile, true);
+    SlopeCosts costs = ElevationUtils.getSlopeCosts(elevationProfile);
 
     var effectiveBikeDistanceFactor = costs.slopeSpeedFactor;
     var effectiveBikeWorkFactor = costs.slopeWorkFactor;

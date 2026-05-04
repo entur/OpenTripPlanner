@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.opentripplanner.street.model.elevation.ElevationProfiles.STEEP_ELEVATION_PROFILE;
 
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
@@ -21,30 +20,23 @@ class ElevationUtilsTest {
     CoordinateSequence seq = factory.create(
       new Coordinate[] { new Coordinate(0, 1), new Coordinate(10, 1) }
     );
-    SlopeCosts costs = ElevationUtils.getSlopeCosts(seq, false);
+    SlopeCosts costs = ElevationUtils.getSlopeCosts(seq);
     assertEquals(1.0, costs.lengthMultiplier);
 
     seq = factory.create(new Coordinate[] { new Coordinate(0, 1), new Coordinate(10, 2) });
-    costs = ElevationUtils.getSlopeCosts(seq, false);
+    costs = ElevationUtils.getSlopeCosts(seq);
     assertEquals(1.00498756211208902702, costs.lengthMultiplier);
 
     seq = factory.create(
       new Coordinate[] { new Coordinate(0, 1), new Coordinate(10, 2), new Coordinate(15, 1) }
     );
-    costs = ElevationUtils.getSlopeCosts(seq, false);
+    costs = ElevationUtils.getSlopeCosts(seq);
     assertEquals(1.00992634231424500668, costs.lengthMultiplier);
   }
 
   @Test
-  @Disabled("This currently fails but it's questionable whether it should even be supported")
-  void slopeSpeedFactorWithoutLimit() {
-    var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE, false);
-    assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
-  }
-
-  @Test
   void slopeSpeedFactorWithLimit() {
-    var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE, true);
+    var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE);
     assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
   }
 
