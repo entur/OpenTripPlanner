@@ -80,6 +80,10 @@ public class TestTransitLegBuilder {
     return withRoute(route);
   }
 
+  public TestTransitLegBuilder withNetwork(GroupOfRoutes network) {
+    return withNetwork(network.getId());
+  }
+
   public TestTransitLegBuilder withIntermediateStops(FeedScopedId... stopIds) {
     this.intermediateStops = Arrays.stream(stopIds)
       .map(TestStopLocation::new)

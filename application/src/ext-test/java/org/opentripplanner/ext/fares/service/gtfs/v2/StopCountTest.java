@@ -40,7 +40,6 @@ class StopCountTest implements PlanTestConstants, FareTestConstants {
     return TestTransitLeg.of()
       .withStartTime("10:00")
       .withEndTime("11:00")
-      .withNetwork(NETWORK_A.getId())
       .withIntermediateStops(stopIds)
       .build();
   }
