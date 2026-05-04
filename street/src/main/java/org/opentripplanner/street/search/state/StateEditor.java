@@ -154,15 +154,21 @@ public class StateEditor {
 
   public void incrementWeight(double weight) {
     if (Double.isInfinite(weight) || Double.isNaN(weight)) {
-      throw new IllegalArgumentException(
-        "A state's weight is being incremented by " + weight + " while traversing edge " + backEdge
+      LOG.warn(
+        "A state's weight is being incremented by {} while traversing edge {}",
+        weight,
+        backEdge
       );
-    }
-    if (weight < 0) {
-      throw new IllegalArgumentException(
-        "A state's weight is being incremented by a negative amount while traversing edge " +
-          backEdge
+      defectiveTraversal = true;
+      return;
+    } else if (weight < 0) {
+      LOG.warn(
+        "A state's weight is being incremented by negative amount {} while traversing edge {}",
+        weight,
+        backEdge
       );
+      defectiveTraversal = true;
+      return;
     }
     this.weight += weight;
   }
