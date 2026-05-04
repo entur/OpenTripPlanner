@@ -10,12 +10,6 @@ import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 
 class RaptorTripScheduleTest {
 
-  /**
-   * Trips that mix fixed and flex schedules use -999 for those stop times that use a flexible
-   * window.
-   */
-  private static final int NOT_SET = -999;
-
   private final TestTripSchedule subject = TestTripSchedule.schedule(
     TestTripPattern.pattern("L23", 1, 1, 2, 3, 5, 8, 1)
   )
@@ -56,8 +50,7 @@ class RaptorTripScheduleTest {
     var subject = TestTripSchedule.schedule(
       TestTripPattern.of("flex-with-repeating-stops", 1, 1, 2, 3).restrictions("* * - *").build()
     )
-      .arrivals(time("09:00"), time("09:10"), NOT_SET, time("09:30"))
-      .departures(time("09:01"), time("09:11"), NOT_SET, time("09:31"))
+      .times(time("09:00"), time("09:10"), RaptorConstants.TIME_NOT_SET, time("09:30"))
       .build();
 
     assertEquals(0, subject.findArrivalStopPosition(time("09:06"), 1));
@@ -68,8 +61,7 @@ class RaptorTripScheduleTest {
     var subject = TestTripSchedule.schedule(
       TestTripPattern.of("restricted-repeating-stops", 1, 1, 1, 3).restrictions("* A * *").build()
     )
-      .arrivals(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
-      .departures(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
+      .times(time("09:00"), time("09:10"), time("09:15"), time("09:30"))
       .build();
 
     assertEquals(2, subject.findDepartureStopPosition(time("09:09"), 1));
