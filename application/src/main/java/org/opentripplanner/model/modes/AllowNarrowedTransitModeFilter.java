@@ -22,7 +22,7 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
     return true;
   }
 
-  public TransitMode mainMode() {
+  TransitMode mainMode() {
     return this.mode.getMode();
   }
 
