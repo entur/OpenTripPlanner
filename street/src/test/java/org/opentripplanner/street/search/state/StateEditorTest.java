@@ -3,7 +3,7 @@ package org.opentripplanner.street.search.state;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Nested;
@@ -45,7 +45,8 @@ public class StateEditorTest {
     StateEditor stateEditor = new StateEditor(vertex, StreetSearchRequest.of().build());
 
     stateEditor.setTimeSeconds(0);
-    assertThrows(IllegalArgumentException.class, () -> stateEditor.incrementWeight(Double.NaN));
+    stateEditor.incrementWeight(Double.NaN);
+    assertNull(stateEditor.makeState());
   }
 
   @Test
@@ -53,9 +54,8 @@ public class StateEditorTest {
     StateEditor stateEditor = new StateEditor(vertex, StreetSearchRequest.of().build());
 
     stateEditor.setTimeSeconds(0);
-    assertThrows(IllegalArgumentException.class, () ->
-      stateEditor.incrementWeight(Double.NEGATIVE_INFINITY)
-    );
+    stateEditor.incrementWeight(Double.NEGATIVE_INFINITY);
+    assertNull(stateEditor.makeState());
   }
 
   @Nested
