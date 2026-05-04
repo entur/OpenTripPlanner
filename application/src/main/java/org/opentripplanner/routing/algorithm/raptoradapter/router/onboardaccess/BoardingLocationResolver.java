@@ -29,7 +29,7 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * Resolves a {@link org.opentripplanner.routing.api.request.TripLocation} to an exact stop index
  * and a stop position in pattern for a given pattern
  */
-public class BoardingLocationResolver {
+class BoardingLocationResolver {
 
   private final TransitService transitService;
 

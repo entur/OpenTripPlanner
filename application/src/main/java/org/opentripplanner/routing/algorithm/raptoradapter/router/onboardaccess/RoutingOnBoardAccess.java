@@ -1,11 +1,11 @@
-package org.opentripplanner.routing.algorithm.raptoradapter.transit;
+package org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess;
 
 import java.util.Objects;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.BoardingLocationResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.street.search.state.State;
 
 public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, RoutingAccessEgress {
