@@ -49,11 +49,11 @@ class StopCountNetworkTest implements PlanTestConstants, FareTestConstants {
     );
   }
 
-  private static TestTransitLeg leg(GroupOfRoutes networkA) {
+  private static TestTransitLeg leg(GroupOfRoutes network) {
     return TestTransitLeg.of()
       .withStartTime("10:00")
       .withEndTime("11:00")
-      .withNetwork(networkA)
+      .withNetwork(network)
       .withIntermediateStops(id(1))
       .build();
   }
