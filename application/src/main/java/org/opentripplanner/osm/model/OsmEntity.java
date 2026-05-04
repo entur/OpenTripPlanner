@@ -173,7 +173,8 @@ public abstract class OsmEntity {
       "foot"
     );
 
-  protected final Map<String, String> tags;
+  @Nullable
+  private final Map<String, String> tags;
 
   protected final long id;
 
@@ -191,7 +192,7 @@ public abstract class OsmEntity {
   /**
    * Constructor for immutable OsmEntity
    */
-  protected OsmEntity(long id, Map<String, String> tags, OsmProvider osmProvider) {
+  protected OsmEntity(long id, @Nullable Map<String, String> tags, OsmProvider osmProvider) {
     this.id = id;
     // calling Map.copyOf here costs about 10% of parsing performance, so we use
     // Collections.unmodifiableMap in the getter
@@ -218,19 +219,26 @@ public abstract class OsmEntity {
    * The tags of an entity (immutable).
    */
   public Map<String, String> getTags() {
-    return Collections.unmodifiableMap(tags);
+    if (this.tags == null) {
+      return Map.of();
+    } else {
+      return Collections.unmodifiableMap(tags);
+    }
   }
 
   /**
    * Is the tag defined?
    */
   public boolean hasTag(String tag) {
-    if(this.isTagLess()){
+    if (this.isTagLess()) {
       return false;
     }
     return getTag(tag) != null;
   }
 
+  /**
+   * Does the entity contain any tags at all?
+   */
   boolean isTagLess() {
     return this.tags == null;
   }
@@ -262,13 +270,6 @@ public abstract class OsmEntity {
     return isTrue(getTag(tag));
   }
 
-  /**
-   * Returns true if bicycle dismounts are forced.
-   */
-  public boolean isBicycleDismountForced() {
-    return isTag("bicycle", "dismount");
-  }
-
   public boolean isSidewalk() {
     return isTag("footway", "sidewalk") && isTag("highway", "footway");
   }
@@ -293,7 +294,7 @@ public abstract class OsmEntity {
    * or a parent mode, either with a directional suffix or not, empty if it is not specified.
    */
   protected Optional<Permission> checkModePermission(String mode, TraverseDirection direction) {
-    if(isTagLess()){
+    if (isTagLess()) {
       return Optional.empty();
     }
     // check if the exact directional tag allows or denies access
@@ -336,7 +337,7 @@ public abstract class OsmEntity {
    */
   @Nullable
   public String getTag(String tag) {
-    if(this.isTagLess()){
+    if (this.isTagLess()) {
       return null;
     }
     tag = tag.toLowerCase();
@@ -735,6 +736,9 @@ public abstract class OsmEntity {
    * @return whether the node is a place used to board a public transport vehicle
    */
   public boolean isBoardingLocation() {
+    if (isTagLess()) {
+      return false;
+    }
     return (
       isOneOfTags("highway", HIGHWAY_BOARDING_LOCATION_VALUES) ||
       isOneOfTags("railway", RAILWAY_BOARDING_LOCATION_VALUES) ||
