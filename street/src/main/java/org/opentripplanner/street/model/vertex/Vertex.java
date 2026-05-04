@@ -13,8 +13,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.state.State;
@@ -36,7 +37,11 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   private transient Edge[] incoming = new Edge[0];
 
   private transient Edge[] outgoing = new Edge[0];
-  private RentalRestrictionExtension rentalRestrictions = RentalRestrictionExtension.NO_RESTRICTION;
+
+  @javax.annotation.Nullable
+  private BusinessAreaBorder businessAreaBorder;
+
+  private List<GeofencingBoundaryExtension> geofencingBoundaries = List.of();
 
   /* CONSTRUCTORS */
 
@@ -55,8 +60,11 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
       sb.append(" lat,lng=").append(this.getCoordinate().y);
       sb.append(",").append(this.getCoordinate().x);
     }
-    if (!rentalRestrictions.toList().isEmpty()) {
-      sb.append(", traversalExtension=").append(rentalRestrictions);
+    if (businessAreaBorder != null) {
+      sb.append(", businessAreaBorder=").append(businessAreaBorder);
+    }
+    if (!geofencingBoundaries.isEmpty()) {
+      sb.append(", geofencingBoundaries=").append(geofencingBoundaries.size());
     }
     sb.append("}");
     return sb.toString();
@@ -249,23 +257,117 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   }
 
   public boolean rentalTraversalBanned(State currentState) {
-    return rentalRestrictions.traversalBanned(currentState);
+    return businessAreaBorder != null && businessAreaBorder.traversalBanned(currentState);
   }
 
-  public void addRentalRestriction(RentalRestrictionExtension ext) {
-    rentalRestrictions = rentalRestrictions.add(ext);
+  /**
+   * Whether this vertex is on the boundary of a no-traversal geofencing zone for the
+   * vehicle network the given state is currently renting. Used as a forward-only pre-traversal
+   * check to unconditionally stop the rider one edge before the zone.
+   */
+  public boolean isGeofencingNoTraversalBoundary(State currentState) {
+    return hasGeofencingBoundaryMatching(currentState, true);
   }
 
-  public RentalRestrictionExtension rentalRestrictions() {
-    return rentalRestrictions;
+  /**
+   * Whether this vertex is on the boundary of a no-drop-off (but not no-traversal) geofencing
+   * zone for the vehicle network the given state is currently renting. Used as a forward-only
+   * pre-traversal check to fork: one branch drops the vehicle here (outside the zone), the
+   * other continues riding into the zone.
+   */
+  public boolean isGeofencingNoDropOffBoundary(State currentState) {
+    return hasGeofencingBoundaryMatching(currentState, false);
   }
 
-  public boolean rentalDropOffBanned(State currentState) {
-    return rentalRestrictions.dropOffBanned(currentState);
+  private boolean hasGeofencingBoundaryMatching(State currentState, boolean traversalBanned) {
+    if (geofencingBoundaries.isEmpty() || !currentState.isRentingVehicle()) {
+      return false;
+    }
+    String network = currentState.getVehicleRentalNetwork();
+    if (network == null) {
+      return false;
+    }
+    for (var boundary : geofencingBoundaries) {
+      if (!boundary.zone().id().getFeedId().equals(network)) {
+        continue;
+      }
+      // Only match entering=true boundaries. This vertex is the fromv of an edge whose
+      // natural direction enters the zone. The pre-traversal check fires on an edge whose
+      // tov is this vertex, so the rider rides TO this vertex (outside the zone) and drops.
+      if (!boundary.entering()) {
+        continue;
+      }
+      if (traversalBanned) {
+        if (Boolean.TRUE.equals(boundary.zone().traversalBanned())) {
+          return true;
+        }
+      } else {
+        if (
+          Boolean.TRUE.equals(boundary.zone().dropOffBanned()) &&
+          !Boolean.TRUE.equals(boundary.zone().traversalBanned())
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
-  public void removeRentalRestriction(RentalRestrictionExtension ext) {
-    rentalRestrictions = rentalRestrictions.remove(ext);
+  public void addBusinessAreaBorderNetwork(String network) {
+    if (businessAreaBorder == null) {
+      businessAreaBorder = new BusinessAreaBorder();
+    }
+    businessAreaBorder.addNetwork(network);
+  }
+
+  public void removeBusinessAreaBorderNetwork(String network) {
+    if (businessAreaBorder != null) {
+      businessAreaBorder.removeNetwork(network);
+      if (businessAreaBorder.isEmpty()) {
+        businessAreaBorder = null;
+      }
+    }
+  }
+
+  @javax.annotation.Nullable
+  public BusinessAreaBorder getBusinessAreaBorder() {
+    return businessAreaBorder;
+  }
+
+  public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    if (geofencingBoundaries.contains(ext)) {
+      return;
+    }
+    var newList = new ArrayList<>(geofencingBoundaries);
+    newList.add(ext);
+    geofencingBoundaries = List.copyOf(newList);
+  }
+
+  public List<GeofencingBoundaryExtension> getGeofencingBoundaries() {
+    return geofencingBoundaries;
+  }
+
+  public void removeGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    var newList = new ArrayList<>(geofencingBoundaries);
+    newList.remove(ext);
+    geofencingBoundaries = List.copyOf(newList);
+  }
+
+  public void removeAllBusinessAreaBorders() {
+    this.businessAreaBorder = null;
+  }
+
+  /**
+   * Copy business area border data from another vertex to this one.
+   * Geofencing boundaries are NOT copied — they require spatial computation
+   * based on the vertex's actual position (see VertexLinker.createSplitVertex).
+   */
+  public void copyRentalRestrictionsFrom(Vertex other) {
+    if (other.businessAreaBorder != null) {
+      for (var network : other.businessAreaBorder.networks()) {
+        addBusinessAreaBorderNetwork(network);
+      }
+    }
   }
 
   /**

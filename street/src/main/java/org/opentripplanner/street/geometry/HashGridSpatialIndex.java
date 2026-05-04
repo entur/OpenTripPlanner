@@ -5,6 +5,7 @@ import gnu.trove.set.TLongSet;
 import gnu.trove.set.hash.TLongHashSet;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -101,6 +102,26 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
       return false;
     });
     return new ArrayList<>(ret);
+  }
+
+  /**
+   * Query all bins touched by the segments of the given line strings in a single pass.
+   * Much faster than calling {@link #query(Envelope)} per segment because it uses a single
+   * result set and avoids per-segment allocation overhead.
+   */
+  public Set<T> queryAlongLineStrings(Collection<LineString> lineStrings) {
+    final Set<T> result = new HashSet<>(1024);
+    for (LineString ls : lineStrings) {
+      Coordinate[] coords = ls.getCoordinates();
+      for (int i = 0; i < coords.length - 1; i++) {
+        Envelope env = new Envelope(coords[i], coords[i + 1]);
+        visit(env, false, (bin, mapKey) -> {
+          result.addAll(bin);
+          return false;
+        });
+      }
+    }
+    return result;
   }
 
   @Override

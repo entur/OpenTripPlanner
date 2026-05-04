@@ -8,6 +8,7 @@ import static org.opentripplanner.street.search.state.VehicleRentalState.RENTING
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.street.mapping.StreetModeToFormFactorMapper;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
@@ -54,8 +55,8 @@ public class StateData implements Cloneable {
   /** This boolean is set to true upon transition from a normal street to a no-through-traffic street. */
   protected boolean enteredNoThroughTrafficArea;
 
-  protected boolean insideNoRentalDropOffArea = false;
-  public Set<String> noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
+  protected Set<GeofencingZone> currentGeofencingZones = Set.of();
+  protected Set<String> committedNetworks = Set.of();
 
   /** Private constructor, use static methods to get a set of initial states. */
   private StateData(StreetMode requestMode) {
