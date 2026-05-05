@@ -46,6 +46,7 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
 
   private final int durationInSeconds;
   private final int c1;
+  private final int timePenalty;
   private final double totalWeight;
 
   private final InsertionCandidate insertionCandidate;
@@ -76,6 +77,7 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     this.insertionCandidate = insertionCandidate;
     this.penalty = penalty;
     this.carpoolReluctance = carpoolReluctance;
+    this.timePenalty = penalty.isZero() ? RaptorConstants.TIME_NOT_SET : penalty.timeInSeconds();
 
     var walkToPickup = insertionCandidate.walkToPickup();
     var walkFromDropoff = insertionCandidate.walkFromDropoff();
@@ -88,7 +90,7 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     double walkWeight =
       GraphPathUtils.weightOrZero(walkToPickup) + GraphPathUtils.weightOrZero(walkFromDropoff);
     this.totalWeight = walkWeight + rideSeconds * carpoolReluctance;
-    this.c1 = RaptorCostConverter.toRaptorCost(this.totalWeight);
+    this.c1 = RaptorCostConverter.toRaptorCost(this.totalWeight) + penalty.cost().toCentiSeconds();
   }
 
   @Override
@@ -114,6 +116,11 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   @Override
   public int durationInSeconds() {
     return this.durationInSeconds;
+  }
+
+  @Override
+  public int timePenalty() {
+    return this.timePenalty;
   }
 
   /**
@@ -166,10 +173,14 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   /**
    * Returns a copy of this leg with the given Raptor penalty applied on top. Used by Raptor's
    * access-egress penalty pass; everything else (stop, time anchor, candidate, reluctance) is
-   * preserved unchanged.
+   * preserved unchanged. The penalty's cost is folded into {@link #c1()} and its time is exposed
+   * via {@link #timePenalty()}, mirroring {@code DefaultAccessEgress}.
    */
   @Override
   public RoutingAccessEgress withPenalty(TimeAndCost penalty) {
+    if (this.penalty != TimeAndCost.ZERO) {
+      throw new IllegalStateException("Can not add penalty twice...");
+    }
     return new CarpoolAccessEgress(
       this.stop,
       this.passengerDepartureTime,

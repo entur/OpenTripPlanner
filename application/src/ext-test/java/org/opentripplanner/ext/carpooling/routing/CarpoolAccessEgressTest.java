@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.carpooling.routing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.ext.carpooling.CarpoolGraphPathBuilder.createGraphPath;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_CENTER;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NORTH;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.framework.model.TimeAndCost;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -79,12 +81,15 @@ class CarpoolAccessEgressTest {
   }
 
   /**
-   * {@code withPenalty} installs the new penalty and preserves everything else. The leg's intrinsic
-   * c1 and duration are computed from walks + ride only — Raptor adds the penalty separately — so
-   * they must stay unchanged across the copy.
+   * {@code withPenalty} installs the new penalty and preserves the leg's stop and time anchors.
+   * Mirroring {@code DefaultAccessEgress}, the penalty's cost is folded into {@link
+   * CarpoolAccessEgress#c1()} (Raptor itself does not propagate the time-penalty into c1) and the
+   * penalty's time is exposed via {@link CarpoolAccessEgress#timePenalty()}. The wall-clock
+   * {@code durationInSeconds} is unchanged because the time-penalty is virtual time inside Raptor,
+   * not part of the leg's actual duration.
    */
   @Test
-  void withPenaltyInstallsPenaltyAndPreservesLeg() {
+  void withPenaltyFoldsCostIntoC1AndExposesTimePenalty() {
     var original = newAccessEgress(
       1_000,
       createGraphPath(Duration.ofSeconds(80)),
@@ -98,10 +103,39 @@ class CarpoolAccessEgressTest {
 
     assertEquals(newPenalty, withPenalty.penalty());
     assertEquals(original.stop(), withPenalty.stop());
-    assertEquals(original.c1(), withPenalty.c1());
+    assertEquals(original.c1() + newPenalty.cost().toCentiSeconds(), withPenalty.c1());
+    assertEquals((int) newPenalty.time().toSeconds(), withPenalty.timePenalty());
     assertEquals(original.durationInSeconds(), withPenalty.durationInSeconds());
     assertEquals(original.getPassengerDepartureTime(), withPenalty.getPassengerDepartureTime());
     assertEquals(original.getPassengerArrivalTime(), withPenalty.getPassengerArrivalTime());
+  }
+
+  /** Without a penalty, {@code timePenalty()} returns the Raptor sentinel {@code TIME_NOT_SET}. */
+  @Test
+  void timePenaltyDefaultsToTimeNotSet() {
+    var subject = newAccessEgress(0, null, Duration.ofSeconds(300), null, 1.0);
+
+    assertEquals(RaptorConstants.TIME_NOT_SET, subject.timePenalty());
+  }
+
+  /**
+   * {@code withPenalty} is a one-shot decoration. Calling it on a leg that already has a non-zero
+   * penalty would otherwise re-fold a cost into {@code c1} and silently discard the previous
+   * penalty, so the second application throws — matching {@code DefaultAccessEgress}.
+   */
+  @Test
+  void canNotAddPenaltyTwice() {
+    var subject = newAccessEgress(
+      1_000,
+      createGraphPath(Duration.ofSeconds(80)),
+      Duration.ofSeconds(60),
+      createGraphPath(Duration.ofSeconds(40)),
+      1.0
+    );
+    var penalty = new TimeAndCost(Duration.ofSeconds(30), Cost.costOfSeconds(45));
+    var withPenalty = subject.withPenalty(penalty);
+
+    assertThrows(IllegalStateException.class, () -> withPenalty.withPenalty(penalty));
   }
 
   /**
