@@ -45,7 +45,7 @@ class AccessEgressFetcher {
   private final TransitServiceResolver transitServiceResolver;
   private final AccessEgressMapper accessEgressMapper;
   private final CarpoolingService carpoolingService;
-  private final RaptorRoutingRequestTransitData requestTransitDataProvider;
+  private final StartOnBoardAccessResolver startOnBoardAccessResolver;
 
   /**
    * Creates an {@code AccessEgressFetcher} for a single route request.
@@ -71,8 +71,8 @@ class AccessEgressFetcher {
     this.linkingContext = linkingContext;
     this.carpoolingService = carpoolingService;
     this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
-    this.requestTransitDataProvider = requestTransitDataProvider;
     this.accessEgressMapper = new AccessEgressMapper(transitServiceResolver);
+    this.startOnBoardAccessResolver = new StartOnBoardAccessResolver(requestTransitDataProvider);
   }
 
   Collection<? extends RoutingAccessEgress> fetchAccess() {
@@ -100,7 +100,7 @@ class AccessEgressFetcher {
       onBoardTripLocation.tripOnDateReference()
     );
     var stopIndices = lookupStopIndices(onBoardTripLocation.stopLocationId());
-    return new StartOnBoardAccessResolver(requestTransitDataProvider).resolve(
+    return startOnBoardAccessResolver.resolve(
       tripAndServiceDate,
       stopIndices,
       onBoardTripLocation.aimedDepartureTime(),
