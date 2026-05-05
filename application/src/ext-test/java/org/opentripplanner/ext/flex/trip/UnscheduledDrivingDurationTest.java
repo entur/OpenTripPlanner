@@ -9,9 +9,9 @@ import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner._support.geometry.LineStrings;
-import org.opentripplanner.ext.flex.FlexStopTimesForTest;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPath;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
+import org.opentripplanner.model.FlexStopTimesFactory;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.routing.api.request.framework.TimePenalty;
 
@@ -23,7 +23,7 @@ class UnscheduledDrivingDurationTest {
     boardStopPosition,
     alightStopPosition
   ) -> new FlexPath(10_000, (int) Duration.ofMinutes(10).toSeconds(), () -> LineStrings.SIMPLE);
-  private static final StopTime STOP_TIME = FlexStopTimesForTest.area("10:00", "18:00");
+  private static final StopTime STOP_TIME = FlexStopTimesFactory.area("10:00", "18:00");
 
   @Test
   void noPenalty() {

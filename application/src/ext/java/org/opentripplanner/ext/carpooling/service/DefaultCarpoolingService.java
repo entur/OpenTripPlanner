@@ -336,10 +336,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
       or the passenger's destination if the request is for egress
      */
     GenericLocation passengerLocation = accessOrEgress.isAccess() ? request.from() : request.to();
-    WgsCoordinate passengerCoordinates = new WgsCoordinate(
-      passengerLocation.lat,
-      passengerLocation.lng
-    );
+    WgsCoordinate passengerCoordinates = passengerLocation.wgsCoordinate();
 
     var passengerDepartureTime = request.dateTime();
 
@@ -501,12 +498,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private void validateRequest(RouteRequest request) throws RoutingValidationException {
     Objects.requireNonNull(request.from());
     Objects.requireNonNull(request.to());
-    if (request.from().lat == null || request.from().lng == null) {
+    if (request.from().wgsCoordinate() == null) {
       throw new RoutingValidationException(
         List.of(new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.FROM_PLACE))
       );
     }
-    if (request.to().lat == null || request.to().lng == null) {
+    if (request.to().wgsCoordinate() == null) {
       throw new RoutingValidationException(
         List.of(new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.TO_PLACE))
       );
