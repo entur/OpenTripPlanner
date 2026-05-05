@@ -53,11 +53,9 @@ public final class TripPatternBuilder
     this.stopPatternModifiedInRealTime = original.isStopPatternModifiedInRealTime();
     this.realTimeTripPattern = original.isRealTimeTripPattern();
     this.originalTripPattern = original.getOriginalTripPattern();
-    this.hopGeometries = original.getGeometry() == null
-      ? null
-      : IntStream.range(0, original.numberOfStops() - 1)
-          .mapToObj(original::getHopGeometry)
-          .toList();
+    this.hopGeometries = IntStream.range(0, original.numberOfStops() - 1)
+      .mapToObj(original::getHopGeometry)
+      .toList();
   }
 
   public TripPatternBuilder withName(String name) {

@@ -16,11 +16,13 @@ import org.opentripplanner.transit.model.site.StopLocation;
  * between any two stop positions in O(1) instead of re-running the haversine sum over the
  * pattern geometry on every leg construction.
  * <p>
- * When no shape data is available at construction, the per-hop geometry is materialized as
- * a straight line between consecutive stops and compressed through the same pipeline as real
- * shape data. A {@code fromShape} flag preserves the null-return of
- * {@link #concatenatedGeometry()} so that GraphQL resolvers can still distinguish
- * "shape available" from "no shape".
+ * When no shape data is available at construction, the per-hop geometry is materialized as a
+ * straight line between consecutive stops and compressed through the same pipeline as real shape
+ * data. This matches the behaviour the importers already expose ({@link
+ * org.opentripplanner.netex.mapping.ServiceLinkMapper} for NeTEx, the GTFS {@link
+ * org.opentripplanner.graph_builder.module.geometry.GeometryProcessor#createHopGeometries} for
+ * GTFS), so {@link #concatenatedGeometry()} returns a non-null geometry for any pattern with at
+ * least one hop, regardless of whether the source data carried a shape.
  */
 final class TripPatternGeometry implements Serializable {
 
@@ -37,21 +39,9 @@ final class TripPatternGeometry implements Serializable {
    */
   private final int[] cumulativeDistanceMeters;
 
-  /**
-   * True iff the pattern was built with real shape data. When false, the stored hops are
-   * synthesized straight lines and {@link #concatenatedGeometry()} returns {@code null} to
-   * preserve the historical "no shape available" sentinel on the public API.
-   */
-  private final boolean fromShape;
-
-  private TripPatternGeometry(
-    byte[][] hopGeometries,
-    int[] cumulativeDistanceMeters,
-    boolean fromShape
-  ) {
+  private TripPatternGeometry(byte[][] hopGeometries, int[] cumulativeDistanceMeters) {
     this.hopGeometries = hopGeometries;
     this.cumulativeDistanceMeters = cumulativeDistanceMeters;
-    this.fromShape = fromShape;
   }
 
   /**
@@ -66,9 +56,8 @@ final class TripPatternGeometry implements Serializable {
     int numberOfStops = stopPattern.getSize();
     double[] cumulativeDouble = new double[numberOfStops];
     byte[][] compressed = new byte[Math.max(numberOfStops - 1, 0)][];
-    boolean fromShape = hopGeometries != null;
 
-    if (fromShape) {
+    if (hopGeometries != null) {
       for (int i = 0; i < hopGeometries.size(); i++) {
         LineString hop = hopGeometries.get(i);
         cumulativeDouble[i + 1] =
@@ -91,7 +80,7 @@ final class TripPatternGeometry implements Serializable {
     for (int i = 0; i < numberOfStops; i++) {
       cumulativeMeters[i] = (int) Math.round(cumulativeDouble[i]);
     }
-    return new TripPatternGeometry(compressed, cumulativeMeters, fromShape);
+    return new TripPatternGeometry(compressed, cumulativeMeters);
   }
 
   /**
@@ -126,14 +115,13 @@ final class TripPatternGeometry implements Serializable {
   }
 
   /**
-   * Return the concatenated geometry of all hops, or {@code null} when the pattern was built
-   * without shape data or has no hops. The null-return preserves existing behaviour for
-   * GraphQL field resolvers that expose the full-pattern geometry and treat null as "no shape
-   * available".
+   * Return the concatenated geometry of all hops, or {@code null} for a degenerate pattern with
+   * no hops (one stop or fewer). For shapeless patterns the returned geometry is composed of the
+   * synthetic straight lines between consecutive stops.
    */
   @Nullable
   LineString concatenatedGeometry() {
-    if (!fromShape || hopGeometries.length == 0) {
+    if (hopGeometries.length == 0) {
       return null;
     }
     return geometryBetween(0, hopGeometries.length);

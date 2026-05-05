@@ -181,16 +181,24 @@ class TripPatternGeometryTest {
   }
 
   @Test
-  void concatenatedGeometryReturnsNullWhenShapeMissing() {
+  void concatenatedGeometrySynthesizesStraightLineWhenShapeMissing() {
+    // After aligning GTFS with NeTEx (#7571), shapeless patterns expose a non-null straight-line
+    // geometry made of one 2-point segment per hop, rather than the historical null sentinel.
     var subject = TripPatternGeometry.of(STOP_PATTERN, null);
 
-    assertNull(subject.concatenatedGeometry());
+    LineString full = subject.concatenatedGeometry();
+    assertNotNull(full);
+    // Two hops of 2 points each, with the duplicated junction at B dropped → 3 points.
+    assertEquals(3, full.getNumPoints());
+    assertEquals(STOP_A.getLat(), full.getCoordinateN(0).y, 1e-4);
+    assertEquals(STOP_C.getLat(), full.getCoordinateN(2).y, 1e-4);
   }
 
   @Test
   void factoryAcceptsSingleStopPattern() {
     // Degenerate edge case: a pattern with a single stop has no hops. cumulative must still exist
-    // and distanceBetween(0,0) must return 0 without throwing.
+    // and distanceBetween(0,0) must return 0 without throwing. concatenatedGeometry has nothing
+    // to concatenate, so it falls through to null.
     StopPattern singleStop = stopPattern(STOP_A);
     var subject = TripPatternGeometry.of(singleStop, null);
 
@@ -201,8 +209,8 @@ class TripPatternGeometryTest {
   @Test
   void factoryAcceptsEmptyHopGeometries() {
     // A non-null but empty list must be treated the same as the single-stop degenerate case:
-    // factory succeeds, distanceBetween(0,0) is zero, getConcatenatedGeometry is null
-    // (the length==0 branch, not the null branch).
+    // factory succeeds, distanceBetween(0,0) is zero, concatenatedGeometry is null because there
+    // are no hops to concatenate.
     StopPattern singleStop = stopPattern(STOP_A);
     var subject = TripPatternGeometry.of(singleStop, List.of());
 

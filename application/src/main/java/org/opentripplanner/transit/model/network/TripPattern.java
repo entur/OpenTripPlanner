@@ -225,6 +225,13 @@ public final class TripPattern
       : stopPattern.copyOf();
   }
 
+  /**
+   * The concatenated hop geometry of the whole pattern. For patterns built without shape data
+   * (GTFS without {@code shapes.txt}, NeTEx without ServiceLink projections, real-time added
+   * trips), this is composed of straight-line segments between consecutive stops. Returns
+   * {@code null} only for degenerate patterns with no hops (one stop or fewer).
+   */
+  @Nullable
   public LineString getGeometry() {
     return patternGeometry.concatenatedGeometry();
   }
