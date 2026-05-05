@@ -298,9 +298,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       LOG.debug("Found {} viable insertion candidates", insertionCandidates.size());
 
+      var carpoolReluctance = request.preferences().car().reluctance();
       itineraries = insertionCandidates
         .stream()
-        .map(itineraryMapper::toItinerary)
+        .map(candidate -> itineraryMapper.toItinerary(candidate, carpoolReluctance))
         .filter(Objects::nonNull)
         .toList();
     }

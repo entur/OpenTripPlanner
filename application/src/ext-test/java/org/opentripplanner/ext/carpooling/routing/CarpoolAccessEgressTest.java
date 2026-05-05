@@ -52,7 +52,6 @@ class CarpoolAccessEgressTest {
     double expectedWeight =
       walkToPickup.getWeight() + walkFromDropoff.getWeight() + rideSeconds * carpoolReluctance;
     assertEquals(RaptorCostConverter.toRaptorCost(expectedWeight), accessEgress.c1());
-    assertEquals(expectedWeight, accessEgress.getTotalWeight());
   }
 
   /** With no walk, the cost reduces to {@code (sharedSegmentSeconds + dwell) * carpoolReluctance}. */

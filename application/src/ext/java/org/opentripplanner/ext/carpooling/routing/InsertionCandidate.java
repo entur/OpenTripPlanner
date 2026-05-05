@@ -123,6 +123,14 @@ public record InsertionCandidate(
     return totalSegmentDuration(getSharedSegments(), stopDuration).plus(stopDuration);
   }
 
+  /**
+   * Generalized cost of the passenger's ride in raw weight units (seconds-equivalent), equal to
+   * {@link #getPassengerRideDuration()} multiplied by {@code carpoolReluctance}.
+   */
+  public double getPassengerRideWeight(double carpoolReluctance) {
+    return getPassengerRideDuration().getSeconds() * carpoolReluctance;
+  }
+
   private static Duration totalSegmentDuration(
     List<GraphPath<State, Edge, Vertex>> segments,
     Duration stopDuration

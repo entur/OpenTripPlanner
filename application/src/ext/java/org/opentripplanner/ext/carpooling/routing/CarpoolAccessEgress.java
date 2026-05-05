@@ -47,7 +47,6 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   private final int durationInSeconds;
   private final int c1;
   private final int timePenalty;
-  private final double totalWeight;
 
   private final InsertionCandidate insertionCandidate;
   private final TimeAndCost penalty;
@@ -89,8 +88,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
 
     double walkWeight =
       GraphPathUtils.weightOrZero(walkToPickup) + GraphPathUtils.weightOrZero(walkFromDropoff);
-    this.totalWeight = walkWeight + rideSeconds * carpoolReluctance;
-    this.c1 = RaptorCostConverter.toRaptorCost(this.totalWeight) + penalty.cost().toCentiSeconds();
+    double totalWeight = walkWeight + insertionCandidate.getPassengerRideWeight(carpoolReluctance);
+    this.c1 = RaptorCostConverter.toRaptorCost(totalWeight) + penalty.cost().toCentiSeconds();
   }
 
   @Override
@@ -263,12 +262,11 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   }
 
   /**
-   * The pre-Raptor generalized cost of this leg in seconds-equivalent (walk weights + reluctance-
-   * weighted ride seconds), before conversion to Raptor's centi-second unit. Useful for tests and
-   * debug logging that want to see the cost in user-preference units rather than Raptor's int
-   * encoding.
+   * Cost of the carpool ride portion only (excluding walks and penalty), in raw weight units. The
+   * itinerary mapper uses this for {@code CarpoolLeg.generalizedCost} so the displayed cost agrees
+   * with the ride contribution to {@link #c1()}.
    */
-  public double getTotalWeight() {
-    return this.totalWeight;
+  public double getPassengerRideWeight() {
+    return insertionCandidate.getPassengerRideWeight(carpoolReluctance);
   }
 }

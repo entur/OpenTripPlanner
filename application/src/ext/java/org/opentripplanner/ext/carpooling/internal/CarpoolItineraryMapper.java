@@ -70,11 +70,13 @@ public class CarpoolItineraryMapper {
    *
    * @param candidate the insertion candidate containing route segments, trip details, and
    *        optional walk paths around the carpool pickup/dropoff
+   * @param carpoolReluctance multiplier applied to ride seconds when computing the carpool leg's
+   *        {@code generalizedCost}.
    * @return an itinerary for the passenger's journey, or {@code null} if the candidate has no
    *         shared segments (a safety check that should not trigger for valid candidates)
    */
   @Nullable
-  public Itinerary toItinerary(InsertionCandidate candidate) {
+  public Itinerary toItinerary(InsertionCandidate candidate, double carpoolReluctance) {
     var sharedSegments = candidate.getSharedSegments();
     if (sharedSegments.isEmpty()) {
       return null;
@@ -86,14 +88,16 @@ public class CarpoolItineraryMapper {
       candidate.walkToPickup(),
       candidate.walkFromDropoff(),
       carpoolStart,
-      carpoolEnd
+      carpoolEnd,
+      candidate.getPassengerRideWeight(carpoolReluctance)
     );
   }
 
   private static CarpoolLeg buildCarpoolLeg(
     List<GraphPath<State, Edge, Vertex>> sharedSegments,
     ZonedDateTime startTime,
-    ZonedDateTime endTime
+    ZonedDateTime endTime,
+    double rideWeight
   ) {
     var firstSegment = sharedSegments.getFirst();
     var lastSegment = sharedSegments.getLast();
@@ -113,7 +117,7 @@ public class CarpoolItineraryMapper {
       .withTo(Place.normal(toVertex, new NonLocalizedString("Carpool alighting")))
       .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
-      .withGeneralizedCost((int) lastSegment.getWeight())
+      .withGeneralizedCost((int) rideWeight)
       .build();
   }
 
@@ -160,7 +164,8 @@ public class CarpoolItineraryMapper {
       accessEgress.walkToPickup(),
       accessEgress.walkFromDropoff(),
       accessEgress.getCarpoolStart(),
-      accessEgress.getCarpoolEnd()
+      accessEgress.getCarpoolEnd(),
+      accessEgress.getPassengerRideWeight()
     );
   }
 
@@ -174,14 +179,15 @@ public class CarpoolItineraryMapper {
     @Nullable GraphPath<State, Edge, Vertex> walkToPickup,
     @Nullable GraphPath<State, Edge, Vertex> walkFromDropoff,
     ZonedDateTime carpoolStart,
-    ZonedDateTime carpoolEnd
+    ZonedDateTime carpoolEnd,
+    double rideWeight
   ) {
     List<Leg> legs = new ArrayList<>(3);
     if (walkToPickup != null) {
       var walkStart = carpoolStart.minusSeconds(walkToPickup.getDuration());
       legs.add(buildWalkLeg(walkToPickup, walkStart, carpoolStart));
     }
-    legs.add(buildCarpoolLeg(sharedSegments, carpoolStart, carpoolEnd));
+    legs.add(buildCarpoolLeg(sharedSegments, carpoolStart, carpoolEnd, rideWeight));
     if (walkFromDropoff != null) {
       var walkEnd = carpoolEnd.plusSeconds(walkFromDropoff.getDuration());
       legs.add(buildWalkLeg(walkFromDropoff, carpoolEnd, walkEnd));
