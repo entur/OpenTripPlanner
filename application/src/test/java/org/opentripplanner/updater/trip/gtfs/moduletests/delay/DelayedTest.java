@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
@@ -11,7 +12,6 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 
@@ -54,7 +54,7 @@ class DelayedTest implements RealtimeTestConstants {
     assertEquals(DELAY, trip1Realtime.getArrivalDelay(STOP_SEQUENCE));
     assertEquals(DELAY, trip1Realtime.getDepartureDelay(STOP_SEQUENCE));
 
-    assertEquals(RealTimeState.SCHEDULED, trip1Scheduled.getRealTimeState());
+    assertTrue(trip1Scheduled.isScheduled());
 
     assertEquals(
       "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
@@ -140,7 +140,7 @@ class DelayedTest implements RealtimeTestConstants {
       scheduledTripTimes.isCanceledOrDeleted(),
       "Original trip times should not be canceled in scheduled time table"
     );
-    assertEquals(RealTimeState.SCHEDULED, scheduledTripTimes.getRealTimeState());
+    assertTrue(scheduledTripTimes.isScheduled());
 
     assertNotNull(
       realtimeTripTimes,

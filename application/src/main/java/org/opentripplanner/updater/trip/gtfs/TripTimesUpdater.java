@@ -16,7 +16,6 @@ import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.StopPattern;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Timetable;
@@ -146,9 +145,7 @@ class TripTimesUpdater {
 
     tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
 
-    // Make sure that updated trip times have the correct real time state
-    builder.withRealTimeState(RealTimeState.UPDATED);
-
+    builder.updateTrip();
     // Validate for non-increasing times. Log error if present.
     try {
       var result = builder.build();
@@ -170,7 +167,8 @@ class TripTimesUpdater {
     Trip trip,
     TripUpdate tripUpdate,
     List<StopAndStopTimeUpdate> stopAndStopTimeUpdates,
-    RealTimeState realTimeState,
+    boolean added,
+    boolean modified,
     int serviceCode
   ) throws UpdateException {
     // Calculate seconds since epoch on GTFS midnight (noon minus 12h) of service date
@@ -241,7 +239,13 @@ class TripTimesUpdater {
     }
 
     // Set service code of new trip times
-    builder.withServiceCode(serviceCode).withRealTimeState(realTimeState);
+    builder.withServiceCode(serviceCode);
+    if (added) {
+      builder.addTrip();
+    }
+    if (modified) {
+      builder.modifyTrip();
+    }
 
     tripUpdate.tripHeadsign().ifPresent(builder::withTripHeadsign);
     tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);

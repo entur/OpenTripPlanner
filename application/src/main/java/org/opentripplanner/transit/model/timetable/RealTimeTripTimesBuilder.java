@@ -17,9 +17,6 @@ public class RealTimeTripTimesBuilder {
   private final Integer[] arrivalTimes;
   private final Integer[] departureTimes;
 
-  @Nullable
-  private RealTimeState realTimeState;
-
   private final StopRealTimeState[] stopRealTimeStates;
 
   private final BitSet extraCalls;
@@ -35,7 +32,11 @@ public class RealTimeTripTimesBuilder {
   @Nullable
   private Accessibility wheelchairAccessibility;
 
-  private boolean updated;
+  private boolean realTimeUpdated = false;
+  private boolean canceled = false;
+  private boolean added = false;
+  private boolean modified = false;
+  private boolean deleted = false;
 
   /**
    * This constructor takes a ScheduledTripTimes (not base TripTimes) to enforce creating a new
@@ -125,13 +126,13 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withArrivalTime(int stop, int time) {
-    updated = true;
+    realTimeUpdated = true;
     arrivalTimes[stop] = time;
     return this;
   }
 
   public RealTimeTripTimesBuilder withArrivalDelay(int stop, int delay) {
-    updated = true;
+    realTimeUpdated = true;
     arrivalTimes[stop] = getScheduledArrivalTime(stop) + delay;
     return this;
   }
@@ -168,35 +169,64 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withDepartureTime(int stop, int time) {
-    updated = true;
+    realTimeUpdated = true;
     departureTimes[stop] = time;
     return this;
   }
 
   public RealTimeTripTimesBuilder withDepartureDelay(int stop, int delay) {
-    updated = true;
+    realTimeUpdated = true;
     departureTimes[stop] = getScheduledDepartureTime(stop) + delay;
     return this;
   }
 
-  public RealTimeState realTimeState() {
-    if (realTimeState == null) {
-      return updated ? RealTimeState.UPDATED : RealTimeState.SCHEDULED;
-    }
-    return realTimeState;
-  }
-
-  public RealTimeTripTimesBuilder withRealTimeState(RealTimeState realTimeState) {
-    this.realTimeState = realTimeState;
+  public RealTimeTripTimesBuilder updateTrip() {
+    this.realTimeUpdated = true;
     return this;
   }
 
+  public RealTimeTripTimesBuilder modifyTrip() {
+    this.modified = true;
+    this.realTimeUpdated = true;
+    return this;
+  }
+
+  boolean isModified() {
+    return modified;
+  }
+
+  public RealTimeTripTimesBuilder addTrip() {
+    this.added = true;
+    this.realTimeUpdated = true;
+    return this;
+  }
+
+  boolean isAdded() {
+    return added;
+  }
+
   public RealTimeTripTimesBuilder cancelTrip() {
-    return withRealTimeState(RealTimeState.CANCELED);
+    this.canceled = true;
+    this.realTimeUpdated = true;
+    return this;
+  }
+
+  boolean isCanceled() {
+    return canceled;
   }
 
   public RealTimeTripTimesBuilder deleteTrip() {
-    return withRealTimeState(RealTimeState.DELETED);
+    this.deleted = true;
+    this.realTimeUpdated = true;
+    return this;
+  }
+
+  boolean isDeleted() {
+    return deleted;
+  }
+
+  boolean isRealTimeUpdated() {
+    return realTimeUpdated;
   }
 
   public StopRealTimeState getStopRealTimeState(int stop) {

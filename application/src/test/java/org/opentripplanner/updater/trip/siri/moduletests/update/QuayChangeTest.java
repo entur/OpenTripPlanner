@@ -46,11 +46,13 @@ class QuayChangeTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "MODIFIED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
+      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Route1::001:RT[MODIFIED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
+      "F:Route1::001:RT[MODIFIED UPDATED]"
+    );
   }
 
   /**
@@ -75,7 +77,7 @@ class QuayChangeTest implements RealtimeTestConstants {
     var result1 = siri.applyEstimatedTimetable(quayChange);
     assertSuccess(result1);
     assertEquals(
-      "MODIFIED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
+      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
@@ -121,10 +123,12 @@ class QuayChangeTest implements RealtimeTestConstants {
     var result1 = siri.applyEstimatedTimetable(quayChange);
     assertSuccess(result1);
     assertEquals(
-      "MODIFIED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
+      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Route1::001:RT[MODIFIED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
+      "F:Route1::001:RT[MODIFIED UPDATED]"
+    );
 
     // Step 2: Keep quay change (still C) but with different delay
     var updatedTimes = siri
@@ -140,9 +144,11 @@ class QuayChangeTest implements RealtimeTestConstants {
     assertSuccess(result2);
     // Quay change must be preserved - still MODIFIED on RT pattern, not reverted to scheduled
     assertEquals(
-      "MODIFIED | A [R] 0:00:16 0:00:16 | C 0:00:35 0:00:35",
+      "MODIFIED UPDATED | A [R] 0:00:16 0:00:16 | C 0:00:35 0:00:35",
       env.tripData(TRIP_1_ID).showTimetable()
     );
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Route1::001:RT[MODIFIED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly(
+      "F:Route1::001:RT[MODIFIED UPDATED]"
+    );
   }
 }

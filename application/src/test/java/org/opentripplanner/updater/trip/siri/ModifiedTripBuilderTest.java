@@ -1,7 +1,9 @@
 package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 
 import java.time.LocalDate;
@@ -24,7 +26,6 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
@@ -201,7 +202,7 @@ class ModifiedTripBuilderTest {
 
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
     TripTimes updatedTimes = tripUpdate.tripTimes();
-    assertEquals(RealTimeState.CANCELED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.isCanceled());
   }
 
   @Test
@@ -245,7 +246,7 @@ class ModifiedTripBuilderTest {
     assertEquals(secondsInDay(10, 13), updatedTimes.getDepartureTime(1));
     assertEquals(secondsInDay(10, 22), updatedTimes.getArrivalTime(2));
     assertEquals(secondsInDay(10, 22), updatedTimes.getDepartureTime(2));
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertFalse(updatedTimes.isScheduled());
   }
 
   @Test
@@ -330,7 +331,7 @@ class ModifiedTripBuilderTest {
     assertEquals(secondsInDay(10, 13), updatedTimes.getDepartureTime(1));
     assertEquals(secondsInDay(10, 22), updatedTimes.getArrivalTime(2));
     assertEquals(secondsInDay(10, 22), updatedTimes.getDepartureTime(2));
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertFalse(updatedTimes.isScheduled());
   }
 
   @Test
@@ -379,7 +380,7 @@ class ModifiedTripBuilderTest {
     assertEquals(secondsInDay(10, 13), updatedTimes.getDepartureTime(1));
     assertEquals(secondsInDay(10, 22), updatedTimes.getArrivalTime(2));
     assertEquals(secondsInDay(10, 22), updatedTimes.getDepartureTime(2));
-    assertEquals(RealTimeState.MODIFIED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.isModified());
   }
 
   @Test

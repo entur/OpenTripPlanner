@@ -27,7 +27,6 @@ import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
@@ -263,7 +262,7 @@ class AddedTripBuilder {
     if (cancellation || stopPattern.isAllStopsNonRoutable()) {
       builder.cancelTrip();
     } else {
-      builder.withRealTimeState(RealTimeState.ADDED);
+      builder.addTrip();
     }
 
     /* Validate */

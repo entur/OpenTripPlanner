@@ -61,7 +61,7 @@ class ReEnabledStopTest implements RealtimeTestConstants {
 
     // The trip should be MODIFIED (new pattern) because stop B's pickup changed NONE -> SCHEDULED
     assertEquals(
-      "MODIFIED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
+      "MODIFIED UPDATED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 

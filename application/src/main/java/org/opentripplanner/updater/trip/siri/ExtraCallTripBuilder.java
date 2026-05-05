@@ -20,7 +20,6 @@ import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
@@ -174,7 +173,7 @@ class ExtraCallTripBuilder {
     if (cancellation || stopPattern.isAllStopsNonRoutable()) {
       builder.cancelTrip();
     } else {
-      builder.withRealTimeState(RealTimeState.MODIFIED);
+      builder.modifyTrip();
     }
 
     /* Validate */

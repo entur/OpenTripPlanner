@@ -21,7 +21,9 @@ import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
  * the position within the trip's TripPattern, not its GTFS stop sequence for example or Raptor
  * stop index. The stop position is 0(zero) based.
  */
-public interface TripTimes<T extends TripTimes> extends Serializable, Comparable<TripTimes> {
+public sealed interface TripTimes<T extends TripTimes>
+  extends Serializable, Comparable<TripTimes>
+  permits RealTimeTripTimes, ScheduledTripTimes {
   /**
    * Create a RealTimeTripTimesBuilder using the information, but not the times, from this
    * TripTimes.
@@ -108,9 +110,7 @@ public interface TripTimes<T extends TripTimes> extends Serializable, Comparable
 
   /**
    * Return {@code true} if the trip is unmodified, a scheduled trip from a published timetable.
-   * Return {@code false} if the trip is an updated, cancelled, or otherwise modified one. This
-   * method differs from {@link #getRealTimeState()} in that it checks whether real-time information
-   * is actually available.
+   * Return {@code false} if the trip is an updated, cancelled, or otherwise modified one.
    */
   boolean isScheduled();
 
@@ -125,13 +125,21 @@ public interface TripTimes<T extends TripTimes> extends Serializable, Comparable
   boolean isCanceled();
 
   /**
+   * Return {@code true} if added
+   */
+  boolean isAdded();
+
+  /**
+   * Return {@code true} if trip pattern was modified
+   */
+  boolean isModified();
+
+  /**
    * Return true if trip is soft-deleted, and should not be visible to the user
    */
   boolean isDeleted();
 
-  RealTimeState getRealTimeState();
-
-  boolean isCancelledStop(int stopPos);
+  boolean isCanceledStop(int stopPos);
 
   /// True if there is realtime information indicating that the trip has arrived at the stop.
   boolean hasArrived(int stopPosition);

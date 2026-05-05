@@ -26,7 +26,6 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.FareZone;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
@@ -241,11 +240,6 @@ public interface Leg {
    */
   default boolean isRealTimeUpdated() {
     return false;
-  }
-
-  @Nullable
-  default RealTimeState realTimeState() {
-    return null;
   }
 
   /**

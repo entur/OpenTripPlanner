@@ -145,11 +145,6 @@ class ScheduledTripTimesTest {
   }
 
   @Test
-  void getRealTimeState() {
-    assertEquals(RealTimeState.SCHEDULED, subject.getRealTimeState());
-  }
-
-  @Test
   void getNumStops() {
     assertEquals(3, subject.getNumStops());
   }

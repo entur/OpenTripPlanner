@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.extrajourney;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
@@ -19,7 +20,6 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.service.TransitService;
@@ -75,7 +75,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
+      "ADDED UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -100,7 +100,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[ADDED]"
+      "F:routeId::001:RT[ADDED UPDATED]"
     );
   }
 
@@ -122,7 +122,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
+      "ADDED UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -138,7 +138,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:new route ref::001:RT[ADDED]"
+      "F:new route ref::001:RT[ADDED UPDATED]"
     );
   }
 
@@ -211,7 +211,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(updates));
 
     assertEquals(
-      "ADDED | A [R] 0:02 0:02 | C 0:04 0:04",
+      "ADDED UPDATED | A [R] 0:02 0:02 | C 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -221,10 +221,10 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     // Original trip should not get canceled
     var originalTripTimes = env.tripData(TRIP_1_ID).tripTimes();
-    assertEquals(RealTimeState.SCHEDULED, originalTripTimes.getRealTimeState());
+    assertTrue(originalTripTimes.isScheduled());
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[ADDED]"
+      "F:routeId::001:RT[ADDED UPDATED]"
     );
   }
 
@@ -282,7 +282,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(siri.applyEstimatedTimetable(updates));
     assertEquals(
-      "ADDED | A [R] 0:02 0:02 | B 0:04 0:06 | C 0:08 0:08",
+      "ADDED UPDATED | A [R] 0:02 0:02 | B 0:04 0:06 | C 0:08 0:08",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -361,7 +361,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(siri.applyEstimatedTimetable(updates));
     assertEquals(
-      "ADDED | C [R,PI] 0:02 0:02 | D [PI] 0:04 0:04",
+      "ADDED UPDATED | C [R,PI] 0:02 0:02 | D [PI] 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }
@@ -428,7 +428,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     var creationResult = siri.applyEstimatedTimetable(creation);
     assertSuccess(creationResult);
     assertEquals(
-      "ADDED | C [R] 0:02 0:02 | D 0:04 0:04",
+      "ADDED UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
 

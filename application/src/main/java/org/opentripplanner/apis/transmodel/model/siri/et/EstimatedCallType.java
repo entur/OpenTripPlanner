@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.function.ToIntFunction;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.transmodel.mapping.OccupancyStatusMapper;
+import org.opentripplanner.apis.transmodel.mapping.RealtimeStateMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
@@ -159,7 +160,9 @@ public class EstimatedCallType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("realtimeState")
           .type(new GraphQLNonNull(EnumTypes.REALTIME_STATE))
-          .dataFetcher(env -> ((TripTimeOnDate) env.getSource()).getRealTimeState())
+          .dataFetcher(env ->
+            RealtimeStateMapper.map(((TripTimeOnDate) env.getSource()).getTripTimes())
+          )
           .build()
       )
       .field(

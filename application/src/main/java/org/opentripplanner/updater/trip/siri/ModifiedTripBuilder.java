@@ -17,7 +17,6 @@ import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
@@ -135,12 +134,8 @@ class ModifiedTripBuilder {
 
     applyUpdates(builder);
 
-    if (pattern.getStopPattern().equals(stopPattern)) {
-      // This is the first update, and StopPattern has not been changed
-      builder.withRealTimeState(RealTimeState.UPDATED);
-    } else {
-      // This update modified stopPattern
-      builder.withRealTimeState(RealTimeState.MODIFIED);
+    if (!pattern.getStopPattern().equals(stopPattern)) {
+      builder.modifyTrip();
     }
 
     int numStopsInUpdate = builder.numberOfStops();

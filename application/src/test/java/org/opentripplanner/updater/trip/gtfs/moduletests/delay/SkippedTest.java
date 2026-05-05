@@ -15,9 +15,8 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model._data.TripTimesStringBuilder;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
-import org.opentripplanner.transit.model.timetable.TripTimesStringBuilder;
 import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 
@@ -181,7 +180,7 @@ class SkippedTest implements RealtimeTestConstants {
       "Original trip times should be deleted in time table for service date"
     );
     // original trip should be deleted
-    assertEquals(RealTimeState.DELETED, scheduledTripTimes.getRealTimeState());
+    assertTrue(scheduledTripTimes.isDeleted());
   }
 
   private static void assertNewTripTimesIsUpdated(TransitTestEnvironment env, String tripId) {
@@ -201,7 +200,7 @@ class SkippedTest implements RealtimeTestConstants {
       tripTimes.isCanceledOrDeleted(),
       "Original trip times should not be canceled in scheduled time table"
     );
-    assertEquals(RealTimeState.SCHEDULED, tripTimes.getRealTimeState());
+    assertTrue(tripTimes.isScheduled());
     var tt = originalTimetableForToday.getTripTimes(id(tripId));
 
     assertNotNull(tt, "Original trip should be found in time table for service date");

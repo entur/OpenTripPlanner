@@ -40,24 +40,24 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(addedJourney(siri)));
 
     assertEquals(
-      "ADDED | A [R] 11:00 11:00 | B 11:10 11:10",
+      "ADDED UPDATED | A [R] 11:00 11:00 | B 11:10 11:10",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[ADDED]"
+      "F:routeId::001:RT[ADDED UPDATED]"
     );
 
     // cancel the added journey again, should add a cancelled trip to the raptor data
     assertSuccess(siri.applyEstimatedTimetable(cancelledJourney(siri)));
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[CANCELED]"
+      "F:routeId::001:RT[CANCELED UPDATED]"
     );
 
     assertEquals(
-      "CANCELED | A 11:00 11:00 | B 11:10 11:10",
+      "CANCELED UPDATED | A 11:00 11:00 | B 11:10 11:10",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }
@@ -88,7 +88,7 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(updates));
     // Individual stop [C] flags remain even though the trip is implicitly cancelled
     assertEquals(
-      "CANCELED | A [C,R] 11:00 11:00 | B [C] 11:10 11:10",
+      "CANCELED UPDATED | A [C,R] 11:00 11:00 | B [C] 11:10 11:10",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }

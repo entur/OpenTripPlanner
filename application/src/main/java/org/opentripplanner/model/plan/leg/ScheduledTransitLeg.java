@@ -32,7 +32,6 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -243,7 +242,7 @@ public class ScheduledTransitLeg implements TransitLeg {
   @Override
   public int departureDelay() {
     return (
-        tripTimes.isCancelledStop(boardStopPosInPattern) ||
+        tripTimes.isCanceledStop(boardStopPosInPattern) ||
         tripTimes.isNoDataStop(boardStopPosInPattern)
       )
       ? 0
@@ -253,7 +252,7 @@ public class ScheduledTransitLeg implements TransitLeg {
   @Override
   public int arrivalDelay() {
     return (
-        tripTimes.isCancelledStop(alightStopPosInPattern) ||
+        tripTimes.isCanceledStop(alightStopPosInPattern) ||
         tripTimes.isNoDataStop(alightStopPosInPattern)
       )
       ? 0
@@ -266,11 +265,6 @@ public class ScheduledTransitLeg implements TransitLeg {
       tripTimes.isRealTimeUpdated(boardStopPosInPattern) ||
       tripTimes.isRealTimeUpdated(alightStopPosInPattern)
     );
-  }
-
-  @Override
-  public RealTimeState realTimeState() {
-    return tripTimes.getRealTimeState();
   }
 
   @Override
