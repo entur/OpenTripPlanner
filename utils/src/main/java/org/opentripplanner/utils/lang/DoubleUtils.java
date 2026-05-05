@@ -65,17 +65,19 @@ public class DoubleUtils {
   }
 
   /**
-   * Round {@code value} to the nearest multiple of {@code step}, with ties rounded up.
-   * BigDecimal is used to avoid floating-point bias at bucket boundaries (e.g. so that
-   * {@code 2.05 / 0.1} is treated as exactly 20.5 and rounds to 2.1 rather than drifting
-   * to 2.0 through IEEE-754 representation of 0.1).
+   * Round {@code value} to the nearest multiple of {@code step}, with ties broken
+   * towards the even neighbour ({@link RoundingMode#HALF_EVEN}, a.k.a. banker's rounding).
+   * This is the IEEE 754 default and avoids systematic bias when many rounded values
+   * are summed or averaged. BigDecimal is used so that the input is treated as an exact
+   * decimal and ties are detected reliably (e.g. {@code 1.85 / 0.1} is exactly 18.5
+   * rather than drifting through IEEE-754 representation of 0.1).
    */
   public static double roundToStep(double value, double step) {
     if (Double.isNaN(value) || Double.isInfinite(value)) {
       return value;
     }
     return BigDecimal.valueOf(value)
-      .divide(BigDecimal.valueOf(step), 0, RoundingMode.HALF_UP)
+      .divide(BigDecimal.valueOf(step), 0, RoundingMode.HALF_EVEN)
       .multiply(BigDecimal.valueOf(step))
       .doubleValue();
   }

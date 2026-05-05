@@ -44,12 +44,13 @@ public class Units {
    * Bucketing is tiered so that fewer distinct request-cache keys are produced from
    * close-but-distinct client-supplied values:
    * <ul>
-   *   <li>step 0.1 for absolute value less than 3.0. Example: 1.94 -> 1.9, 1.95 -> 2.0</li>
+   *   <li>step 0.1 for absolute value less than 3.0. Example: 1.94 -> 1.9, 1.96 -> 2.0</li>
    *   <li>step 0.5 for absolute value in [3.0, 10.0). Example: 3.2 -> 3.0, 3.3 -> 3.5</li>
-   *   <li>step 1.0 for absolute value at or above 10.0. Example: 10.4 -> 10, 10.5 -> 11</li>
+   *   <li>step 1.0 for absolute value at or above 10.0. Example: 10.4 -> 10, 10.6 -> 11</li>
    * </ul>
-   * Rounding is half-up on ties, implemented via BigDecimal to avoid IEEE-754 bias at
-   * bucket boundaries.
+   * Ties are broken to the even neighbour (HALF_EVEN, banker's rounding), implemented
+   * via BigDecimal so that decimal inputs are pinned exactly and the tie detection is
+   * not subject to IEEE-754 drift.
    * <p>
    * Unit: scalar
    */
@@ -101,8 +102,9 @@ public class Units {
    *   <li>[10 .. 1 mach (340 m/s)) -> step 1.0 m/s.</li>
    *   <li>Greater than 1 Mach (speed of sound) -> throw IllegalArgumentException.</li>
    * </ol>
-   * Rounding is half-up on ties, via BigDecimal to avoid IEEE-754 bias at bucket
-   * boundaries.
+   * Ties are broken to the even neighbour (HALF_EVEN, banker's rounding), via
+   * BigDecimal so that decimal inputs are pinned exactly and the tie detection is not
+   * subject to IEEE-754 drift.
    *
    * <p>
    * Unit: meters per second (m/s)
