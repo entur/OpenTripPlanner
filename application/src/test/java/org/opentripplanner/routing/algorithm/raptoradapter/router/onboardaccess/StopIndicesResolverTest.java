@@ -31,8 +31,8 @@ class StopIndicesResolverTest {
       TripInput.of("T1").addStop(stopA, "10:00").addStop(stopB, "10:05")
     ).build();
 
-    var resolver = new TransitServiceStopIndexResolver(env.transitService());
-    var indices = resolver.lookupStopLocationIndexes(stopA.getId()).boxed().toList();
+    var resolver = new StopIndicesResolver(env.transitService());
+    var indices = resolver.resolve(stopA.getId()).boxed().toList();
 
     assertEquals(1, indices.size());
     assertEquals(stopA.getIndex(), indices.getFirst());
@@ -46,8 +46,8 @@ class StopIndicesResolverTest {
       TripInput.of("T1").addStop(stopA, "10:00").addStop(stopB, "10:05")
     ).build();
 
-    var resolver = new TransitServiceStopIndexResolver(env.transitService());
-    var indices = resolver.lookupStopLocationIndexes(id("StationA")).boxed().toList();
+    var resolver = new StopIndicesResolver(env.transitService());
+    var indices = resolver.resolve(id("StationA")).boxed().toList();
 
     assertEquals(1, indices.size());
     assertEquals(stopA.getIndex(), indices.getFirst());
@@ -62,11 +62,8 @@ class StopIndicesResolverTest {
       TripInput.of("T1").addStop(stopA1, "10:00").addStop(stopB, "10:05")
     ).build();
 
-    var resolver = new TransitServiceStopIndexResolver(env.transitService());
-    var indices = resolver
-      .lookupStopLocationIndexes(id("StationA"))
-      .boxed()
-      .collect(Collectors.toSet());
+    var resolver = new StopIndicesResolver(env.transitService());
+    var indices = resolver.resolve(id("StationA")).boxed().collect(Collectors.toSet());
 
     assertEquals(2, indices.size());
     assertEquals(true, indices.contains(stopA1.getIndex()));
@@ -81,9 +78,9 @@ class StopIndicesResolverTest {
         .addStop(ENV_BUILDER.stop("B"), "10:05")
     ).build();
 
-    var resolver = new TransitServiceStopIndexResolver(env.transitService());
+    var resolver = new StopIndicesResolver(env.transitService());
     assertThrows(EntityNotFoundException.class, () ->
-      resolver.lookupStopLocationIndexes(id("unknown")).boxed().toList()
+      resolver.resolve(id("unknown")).boxed().toList()
     );
   }
 }

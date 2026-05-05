@@ -8,12 +8,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.raptor.util.IntIterators;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.LookupStopIndexCallback;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.TripPatternForDates;
 import org.opentripplanner.routing.api.response.InputField;
@@ -26,8 +24,8 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * Resolves a {@link TripAndServiceDate} into a {@link RoutingOnBoardAccess} by locating the trip
  * in the Raptor timetable and finding the exact stop position within the trip schedule.
  *
- * <p>Callers must first resolve the trip via {@link TripAndServiceDateResolver} and provide a
- * {@link LookupStopIndexCallback} to resolve the stop location to raptor stop indices.
+ * <p>Callers must first resolve the trip via {@link TripAndServiceDateResolver} and resolve the
+ * stop location to Raptor stop indices before calling {@link #resolve}.
  */
 public class StartOnBoardAccessResolver {
 
@@ -39,13 +37,10 @@ public class StartOnBoardAccessResolver {
 
   public RoutingOnBoardAccess resolve(
     TripAndServiceDate tripAndServiceDate,
-    FeedScopedId stopLocationId,
-    LookupStopIndexCallback stopIndexCallback,
+    Collection<Integer> stopIndices,
     @Nullable Instant aimedDepartureTime,
     ZoneId timeZone
   ) {
-    var stopIndices = stopIndexCallback.lookupStopLocationIndexes(stopLocationId).boxed().toList();
-
     var raptorTimetable = getRaptorTimetableForTrip(stopIndices, tripAndServiceDate);
     var tripSchedule = findTripScheduleInTimetable(raptorTimetable, tripAndServiceDate);
     var tripScheduleIndexReference = raptorRequestTransitData.tripScheduleReference(tripSchedule);
