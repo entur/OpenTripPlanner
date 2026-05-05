@@ -3,6 +3,7 @@ package org.opentripplanner.gtfs.mapping;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
 import javax.annotation.Nullable;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.Area;
@@ -83,8 +84,8 @@ class FareLegRuleMapper {
     }
     return switch (distanceType) {
       case 0 -> new FareDistance.Stops(
-        fareLegRule.getMinDistance().intValue(),
-        fareLegRule.getMaxDistance().intValue()
+        optionalInt(fareLegRule.getMinDistance()).orElse(0),
+        optionalInt(fareLegRule.getMaxDistance()).orElse(Integer.MAX_VALUE)
       );
       case 1 -> throw new IllegalArgumentException("Distance type 1 is not supported");
       default -> null;
@@ -97,5 +98,13 @@ class FareLegRuleMapper {
     }
     var groupId = idFactory.createId(id, "fare leg rule's timeframe group id");
     return timeframeMapper.findTimeframes(groupId);
+  }
+
+  private static OptionalInt optionalInt(Double value) {
+    if (value == null) {
+      return OptionalInt.empty();
+    } else {
+      return OptionalInt.of(value.intValue());
+    }
   }
 }

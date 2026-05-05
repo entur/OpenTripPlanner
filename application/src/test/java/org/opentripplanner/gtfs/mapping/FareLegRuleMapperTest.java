@@ -35,6 +35,8 @@ class FareLegRuleMapperTest {
   private static List<TestCase> testCases() {
     return List.of(
       new TestCase(0, 1d, 10d, new Stops(1, 10)),
+      new TestCase(0, null, 8d, new Stops(0, 8)),
+      new TestCase(0, 2d, null, new Stops(2, Integer.MAX_VALUE)),
       new TestCase(null, null, null, null)
     );
   }
