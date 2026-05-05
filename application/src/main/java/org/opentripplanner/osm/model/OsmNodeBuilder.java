@@ -10,7 +10,8 @@ public class OsmNodeBuilder {
   private long id;
   private double lat;
   private double lon;
-  // the vast majority of nodes don't have any tags, so we start with an empty immutable map
+  // the vast majority of nodes don't have any tags, so we start with null, because that has no
+  // allocations at all
   private Map<String, String> tags = EMPTY_TAGS;
   private OsmProvider osmProvider;
 
