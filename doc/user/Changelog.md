@@ -38,6 +38,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Skip leg rebuild when fare/alert decoration would be a no-op [#7546](https://github.com/opentripplanner/OpenTripPlanner/pull/7546)
 - Replace C2-based pass-through with via-connection chaining [#7496](https://github.com/opentripplanner/OpenTripPlanner/pull/7496)
 - Improve Secret redaction for config File Logging [#7560](https://github.com/opentripplanner/OpenTripPlanner/pull/7560)
+- Always generate hop geometries in the GTFS graph builder [#7571](https://github.com/opentripplanner/OpenTripPlanner/pull/7571)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
