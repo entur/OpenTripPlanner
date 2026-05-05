@@ -314,8 +314,19 @@ public class InsertionEvaluator {
    * pickup insertion). A modified segment {@code [i, i+1)} either reuses an original segment
    * (when both endpoints fall in original points) or is one of the four newly created segments
    * around the inserted points.
+   * <p>
+   * The shift arithmetic below relies on {@code pickupPos < dropoffPos}: the pickup must be
+   * inserted strictly before the dropoff in the modified route. Upstream
+   * {@link InsertionPositionFinder} enforces this when generating positions; the guard here
+   * fails loud if a regression ever lets {@code pickupPos == dropoffPos} through, which would
+   * otherwise silently produce a route with the dropoff before the pickup.
    */
   private static int baselineSegmentIndex(int modifiedIndex, int pickupPos, int dropoffPos) {
+    if (pickupPos >= dropoffPos) {
+      throw new IllegalArgumentException(
+        "pickupPos (" + pickupPos + ") must be < dropoffPos (" + dropoffPos + ")"
+      );
+    }
     int i = modifiedIndex;
     if (i == pickupPos - 1 || i == pickupPos || i == dropoffPos - 1 || i == dropoffPos) {
       return -1;

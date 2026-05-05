@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.carpooling.routing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.ext.carpooling.CarpoolGraphPathBuilder.createGraphPath;
 import static org.opentripplanner.ext.carpooling.CarpoolGraphPathBuilder.createGraphPaths;
@@ -52,15 +53,31 @@ class InsertionCandidateTest {
     assertEquals(segments.subList(0, 2), pickupSegments);
   }
 
+  /**
+   * Pickup at position 0 would mean boarding at the driver's origin, which {@code
+   * InsertionPositionFinder} never produces (its loop starts at 1). The constructor enforces this
+   * because {@link InsertionCandidate#getPassengerRideDuration} unconditionally adds the boarding
+   * dwell, which only makes sense when the passenger boards mid-trip.
+   */
   @Test
-  void getPickupSegments_positionZero_returnsEmpty() {
+  void constructor_pickupAtOrigin_throws() {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var segments = createGraphPaths(3);
 
-    var candidate = new InsertionCandidate(trip, 0, 2, segments, STOP_DURATION, null, null, null);
+    assertThrows(IllegalArgumentException.class, () ->
+      new InsertionCandidate(trip, 0, 2, segments, STOP_DURATION, null, null, null)
+    );
+  }
 
-    var pickupSegments = candidate.getPickupSegments();
-    assertTrue(pickupSegments.isEmpty());
+  /** Dropoff must be strictly after pickup; equal positions would yield an empty shared ride. */
+  @Test
+  void constructor_dropoffNotAfterPickup_throws() {
+    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var segments = createGraphPaths(3);
+
+    assertThrows(IllegalArgumentException.class, () ->
+      new InsertionCandidate(trip, 2, 2, segments, STOP_DURATION, null, null, null)
+    );
   }
 
   @Test
