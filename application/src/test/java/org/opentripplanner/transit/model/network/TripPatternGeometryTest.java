@@ -2,7 +2,7 @@ package org.opentripplanner.transit.model.network;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.street.geometry.GeometryUtils.makeLineString;
 
@@ -198,24 +198,40 @@ class TripPatternGeometryTest {
   void factoryAcceptsSingleStopPattern() {
     // Degenerate edge case: a pattern with a single stop has no hops. cumulative must still exist
     // and distanceBetween(0,0) must return 0 without throwing. concatenatedGeometry has nothing
-    // to concatenate, so it falls through to null.
+    // to concatenate, so it returns an empty (but non-null) LineString.
     StopPattern singleStop = stopPattern(STOP_A);
     var subject = TripPatternGeometry.of(singleStop, null);
 
     assertEquals(0, subject.distanceBetween(0, 0));
-    assertNull(subject.concatenatedGeometry());
+    LineString empty = subject.concatenatedGeometry();
+    assertNotNull(empty);
+    assertTrue(empty.isEmpty());
   }
 
   @Test
   void factoryAcceptsEmptyHopGeometries() {
     // A non-null but empty list must be treated the same as the single-stop degenerate case:
-    // factory succeeds, distanceBetween(0,0) is zero, concatenatedGeometry is null because there
-    // are no hops to concatenate.
+    // factory succeeds, distanceBetween(0,0) is zero, concatenatedGeometry returns an empty
+    // (non-null) LineString because there are no hops to concatenate.
     StopPattern singleStop = stopPattern(STOP_A);
     var subject = TripPatternGeometry.of(singleStop, List.of());
 
     assertEquals(0, subject.distanceBetween(0, 0));
-    assertNull(subject.concatenatedGeometry());
+    LineString empty = subject.concatenatedGeometry();
+    assertNotNull(empty);
+    assertTrue(empty.isEmpty());
+  }
+
+  @Test
+  void factoryRejectsHopGeometriesWithWrongSize() {
+    // The number of hop geometries must match numberOfStops - 1; a mismatch is a caller bug
+    // and must be flagged eagerly rather than silently producing an inconsistent table.
+    assertThrows(IllegalArgumentException.class, () ->
+      TripPatternGeometry.of(STOP_PATTERN, List.of(HOP_GEOMETRIES.get(0)))
+    );
+    assertThrows(IllegalArgumentException.class, () ->
+      TripPatternGeometry.of(STOP_PATTERN, List.of())
+    );
   }
 
   @Test

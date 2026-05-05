@@ -54,8 +54,17 @@ final class TripPatternGeometry implements Serializable {
    */
   static TripPatternGeometry of(StopPattern stopPattern, @Nullable List<LineString> hopGeometries) {
     int numberOfStops = stopPattern.getSize();
+    int expectedHops = Math.max(numberOfStops - 1, 0);
+    if (hopGeometries != null && hopGeometries.size() != expectedHops) {
+      throw new IllegalArgumentException(
+        "hopGeometries size (%d) does not match the number of hops in the stop pattern (%d)".formatted(
+          hopGeometries.size(),
+          expectedHops
+        )
+      );
+    }
     double[] cumulativeDouble = new double[numberOfStops];
-    byte[][] compressed = new byte[Math.max(numberOfStops - 1, 0)][];
+    byte[][] compressed = new byte[expectedHops][];
 
     if (hopGeometries != null) {
       for (int i = 0; i < hopGeometries.size(); i++) {
@@ -115,15 +124,11 @@ final class TripPatternGeometry implements Serializable {
   }
 
   /**
-   * Return the concatenated geometry of all hops, or {@code null} for a degenerate pattern with
-   * no hops (one stop or fewer). For shapeless patterns the returned geometry is composed of the
-   * synthetic straight lines between consecutive stops.
+   * Return the concatenated geometry of all hops. For shapeless patterns the returned geometry is
+   * composed of the synthetic straight lines between consecutive stops; for degenerate patterns
+   * with no hops (one stop or fewer) the returned geometry is empty but never null.
    */
-  @Nullable
   LineString concatenatedGeometry() {
-    if (hopGeometries.length == 0) {
-      return null;
-    }
     return geometryBetween(0, hopGeometries.length);
   }
 }
