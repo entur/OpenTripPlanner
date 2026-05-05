@@ -14,6 +14,8 @@ import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.RoutingOnBoardAccess;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.TransitServiceStopIndexResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.TripAndServiceDateResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.FlexAccessEgressRouter;
@@ -92,8 +94,17 @@ class AccessEgressFetcher {
       );
     }
 
-    var resolver = new StartOnBoardAccessResolver(serverContext.transitService());
-    return resolver.resolve(onBoardTripLocation, requestTransitDataProvider);
+    var transitService = serverContext.transitService();
+    var tripAndServiceDate = new TripAndServiceDateResolver(transitService).resolve(
+      onBoardTripLocation.tripOnDateReference()
+    );
+    return new StartOnBoardAccessResolver(requestTransitDataProvider).resolve(
+      tripAndServiceDate,
+      onBoardTripLocation.stopLocationId(),
+      new TransitServiceStopIndexResolver(transitService),
+      onBoardTripLocation.aimedDepartureTime(),
+      transitService.getTimeZone()
+    );
   }
 
   private Collection<? extends RoutingAccessEgress> fetchAccessEgresses(AccessEgressType type) {

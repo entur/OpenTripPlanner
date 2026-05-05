@@ -18,7 +18,7 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
 
   public RoutingOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
-    BoardingLocationResolver.BoardingLocationInPatternReference tripLocationInScheduleReference
+    BoardingLocationInPatternReference tripLocationInScheduleReference
   ) {
     this.routeIndex = tripScheduleReference.routeIndex();
     this.tripScheduleIndex = tripScheduleReference.tripScheduleIndex();

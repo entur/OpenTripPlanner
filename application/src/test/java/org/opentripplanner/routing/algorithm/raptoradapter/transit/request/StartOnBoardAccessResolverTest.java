@@ -6,14 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
-import org.opentripplanner.routing.api.request.TripLocation;
-import org.opentripplanner.routing.api.request.TripOnDateReference;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.TripAndServiceDate;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TestLookupStopIndexCallback;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
@@ -28,23 +28,14 @@ class StartOnBoardAccessResolverTest {
   private static final LocalDate SERVICE_DATE = LocalDate.of(2024, 11, 1);
   private static final ZoneId TIME_ZONE = ZoneId.of("GMT");
 
-  private static final String STOP_A_ID = "A";
-  private static final String STOP_B_ID = "B";
-  private static final String STOP_C_ID = "C";
-
   private final TransitTestEnvironmentBuilder ENV_BUILDER = TransitTestEnvironment.of(
     SERVICE_DATE,
     TIME_ZONE
   );
-  private final RegularStop STOP_A = ENV_BUILDER.stop(STOP_A_ID);
-  private final RegularStop STOP_B = ENV_BUILDER.stop(STOP_B_ID);
-  private final RegularStop STOP_C = ENV_BUILDER.stop(STOP_C_ID);
 
-  private static Instant toInstant(int secondsSinceStartOfService) {
-    return ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(secondsSinceStartOfService)
-      .toInstant();
-  }
+  private final RegularStop STOP_A = ENV_BUILDER.stop("A");
+  private final RegularStop STOP_B = ENV_BUILDER.stop("B");
+  private final RegularStop STOP_C = ENV_BUILDER.stop("C");
 
   @Test
   void resolveSimpleOnBoardAccess() {
@@ -52,17 +43,26 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
+    );
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
     );
 
-    var patternSearch = env.raptorRequestData();
-    var result = resolver.resolve(tripLocation, patternSearch);
-
-    var tripData = env.tripData("T1");
-    var routingPattern = tripData.scheduledTripPattern().getRoutingTripPattern();
+    var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
     assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
     assertEquals(0, result.tripBoarding().tripScheduleIndex());
@@ -77,13 +77,24 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_A.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
-    var result = resolver.resolve(tripLocation, env.raptorRequestData());
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
+      STOP_A.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
@@ -98,15 +109,26 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_C.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        STOP_C.getId(),
+        lookupStopIndex,
+        null,
+        TIME_ZONE
+      )
     );
   }
 
@@ -116,52 +138,29 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_C.getId(),
-      toInstant(10 * 3600 + 10 * 60)
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
+    var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600 + 10 * 60)
+      .toInstant();
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
-    );
-  }
-
-  @Test
-  void throwsOnUnknownTrip() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("unknown"), SERVICE_DATE),
-      STOP_A.getId()
-    );
-
-    var patternSearch = env.raptorRequestData();
-    assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
-    );
-  }
-
-  @Test
-  void throwsOnUnknownStop() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      id("unknown-stop")
-    );
-
-    var patternSearch = env.raptorRequestData();
-    assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        STOP_C.getId(),
+        lookupStopIndex,
+        aimedDeparture,
+        TIME_ZONE
+      )
     );
   }
 
@@ -171,13 +170,24 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
-    var result = resolver.resolve(tripLocation, env.raptorRequestData());
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
     assertEquals(0, result.c1());
   }
 
@@ -187,15 +197,27 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId(),
-      toInstant(10 * 3600 + 5 * 60)
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
-    var patternSearch = env.raptorRequestData();
-    var result = resolver.resolve(tripLocation, patternSearch);
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600 + 5 * 60)
+      .toInstant();
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      aimedDeparture,
+      TIME_ZONE
+    );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
@@ -212,17 +234,30 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
     // STOP_B departs at 10:05, but we provide 10:00 — should fail
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId(),
-      toInstant(10 * 3600)
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
+    var wrongAimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600)
+      .toInstant();
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        STOP_B.getId(),
+        lookupStopIndex,
+        wrongAimedDeparture,
+        TIME_ZONE
+      )
     );
   }
 
@@ -232,15 +267,25 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     // Use ignoreRealtimeUpdates=true, mirroring the production flag in TransitRouter
-    var patternSearch = env.raptorRequestData(true);
-    var result = resolver.resolve(tripLocation, patternSearch);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData(true)).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
@@ -256,15 +301,24 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_A, "10:15")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_A.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
     assertThrows(RoutingValidationException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        STOP_A.getId(),
+        lookupStopIndex,
+        null,
+        TIME_ZONE
+      )
     );
   }
 
@@ -278,19 +332,44 @@ class StartOnBoardAccessResolverTest {
         .addStop(STOP_C, "10:20")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripRef = TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE);
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
+    );
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
 
     // First occurrence of STOP_A at 10:00
-    var firstOccurrence = TripLocation.of(tripRef, STOP_A.getId(), toInstant(10 * 3600));
-    var result1 = resolver.resolve(firstOccurrence, patternSearch);
+    var firstOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600)
+      .toInstant();
+    var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      STOP_A.getId(),
+      lookupStopIndex,
+      firstOccurrence,
+      TIME_ZONE
+    );
     assertEquals(0, result1.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600, result1.boardingTime());
 
     // Second occurrence of STOP_A at 10:15
-    var secondOccurrence = TripLocation.of(tripRef, STOP_A.getId(), toInstant(10 * 3600 + 15 * 60));
-    var result2 = resolver.resolve(secondOccurrence, patternSearch);
+    var secondOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600 + 15 * 60)
+      .toInstant();
+    var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      STOP_A.getId(),
+      lookupStopIndex,
+      secondOccurrence,
+      TIME_ZONE
+    );
     assertEquals(2, result2.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
   }
@@ -325,16 +404,26 @@ class StartOnBoardAccessResolverTest {
       .updateBuffer(RealTimeTripUpdate.of(realtimePattern, tripTimes, SERVICE_DATE).build());
     env.timetableSnapshotManager().purgeAndCommit();
 
-    // Transit service sees the realtime pattern, but patternSearch has only scheduled
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     // findPattern(trip, SERVICE_DATE) returns realtimePattern (not in index),
     // falls back to findPattern(trip) which returns scheduledPattern (in index)
-    var result = resolver.resolve(tripLocation, patternSearch);
+    var result = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
 
     assertEquals(
       scheduledPattern.getRoutingTripPattern().patternIndex(),
@@ -342,46 +431,6 @@ class StartOnBoardAccessResolverTest {
     );
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
-  }
-
-  /**
-   * Verify that resolveBoardingDateTime works when a realtime updater has modified the trip's
-   * stop pattern, moving it to a new TripPattern whose scheduled timetable is empty.
-   */
-  @Test
-  void resolveBoardingDateTimeWithRealtimeModifiedPattern() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var scheduledPattern = tripData.scheduledTripPattern();
-    var tripTimes = tripData.scheduledTripTimes();
-
-    // Realtime-modified pattern (empty scheduled timetable)
-    var realtimePattern = TripPattern.of(id("P1-rt"))
-      .withRoute(scheduledPattern.getRoute())
-      .withStopPattern(scheduledPattern.getStopPattern())
-      .withRealTimeStopPatternModified()
-      .build();
-
-    // Apply realtime update
-    env
-      .timetableSnapshotManager()
-      .updateBuffer(RealTimeTripUpdate.of(realtimePattern, tripTimes, SERVICE_DATE).build());
-    env.timetableSnapshotManager().purgeAndCommit();
-
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
-    );
-
-    var result = resolver.resolveBoardingDateTime(tripLocation, TIME_ZONE);
-
-    long expectedEpochSecond =
-      SERVICE_DATE.atStartOfDay(TIME_ZONE).toEpochSecond() + 10 * 3600 + 5 * 60;
-    assertEquals(expectedEpochSecond, result.getEpochSecond());
   }
 
   /**
@@ -397,16 +446,30 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(stopA, "10:00").addStop(stopB, "10:05").addStop(stopC, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData();
-
-    // Pass the station ID — should resolve to the child stop's position
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      id("StationB")
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        id("StationA"),
+        new int[] { stopA.getIndex() },
+        id("StationB"),
+        new int[] { stopB.getIndex() },
+        id("StationC"),
+        new int[] { stopC.getIndex() },
+        stopA.getId(),
+        new int[] { stopA.getIndex() },
+        stopB.getId(),
+        new int[] { stopB.getIndex() },
+        stopC.getId(),
+        new int[] { stopC.getIndex() }
+      )
     );
-
-    var result = resolver.resolve(tripLocation, patternSearch);
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
+      id("StationB"),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
@@ -417,7 +480,7 @@ class StartOnBoardAccessResolverTest {
    */
   @Test
   void resolveByStationIdWithMultipleChildStops() {
-    ENV_BUILDER.stopAtStation("SA1", "StationA");
+    var stopA1 = ENV_BUILDER.stopAtStation("SA1", "StationA");
     var stopA2 = ENV_BUILDER.stopAtStation("SA2", "StationA");
     var stopB = ENV_BUILDER.stopAtStation("SB1", "StationB");
     var stopC = ENV_BUILDER.stopAtStation("SC1", "StationC");
@@ -425,23 +488,40 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(stopA2, "10:00").addStop(stopB, "10:05").addStop(stopC, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData();
-
-    // Pass station ID — should find SA2 at position 1 (even though SA1 also belongs to StationA)
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      id("StationA")
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        id("StationA"),
+        new int[] { stopA1.getIndex(), stopA2.getIndex() },
+        id("StationB"),
+        new int[] { stopB.getIndex() },
+        id("StationC"),
+        new int[] { stopC.getIndex() },
+        stopA1.getId(),
+        new int[] { stopA1.getIndex() },
+        stopA2.getId(),
+        new int[] { stopA2.getIndex() },
+        stopB.getId(),
+        new int[] { stopB.getIndex() },
+        stopC.getId(),
+        new int[] { stopC.getIndex() }
+      )
     );
-
-    var result = resolver.resolve(tripLocation, patternSearch);
+    // Pass station ID — should find SA2 at position 0 (even though SA1 also belongs to StationA)
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
+      id("StationA"),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
     assertEquals(0, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600, result.boardingTime());
   }
 
   /**
    * Station with multiple child stops where the trip visits only one. Passing the stop ID for the
-   * wrong stop means we throw
+   * wrong stop means we throw.
    */
   @Test
   void resolveByStationIdWithMultipleChildStopsThrowsWhenWrongStopPassed() {
@@ -453,18 +533,35 @@ class StartOnBoardAccessResolverTest {
       TripInput.of("T1").addStop(stopA2, "10:00").addStop(stopB, "10:05").addStop(stopC, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData();
-
-    // A2 is the stop visited, but here we pass A1
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      stopA1.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        id("StationA"),
+        new int[] { stopA1.getIndex(), stopA2.getIndex() },
+        id("StationB"),
+        new int[] { stopB.getIndex() },
+        id("StationC"),
+        new int[] { stopC.getIndex() },
+        stopA1.getId(),
+        new int[] { stopA1.getIndex() },
+        stopA2.getId(),
+        new int[] { stopA2.getIndex() },
+        stopB.getId(),
+        new int[] { stopB.getIndex() },
+        stopC.getId(),
+        new int[] { stopC.getIndex() }
+      )
     );
-
-    // Should throw since A1 is not visited
+    // A2 is the stop visited, but here we pass A1
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        stopA1.getId(),
+        lookupStopIndex,
+        null,
+        TIME_ZONE
+      )
     );
   }
 
@@ -487,25 +584,63 @@ class StartOnBoardAccessResolverTest {
         .addStop(stopC, "10:20")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        id("StationA"),
+        new int[] { stopA1.getIndex(), stopA2.getIndex() },
+        id("StationB"),
+        new int[] { stopB.getIndex() },
+        id("StationC"),
+        new int[] { stopC.getIndex() },
+        stopA1.getId(),
+        new int[] { stopA1.getIndex() },
+        stopA2.getId(),
+        new int[] { stopA2.getIndex() },
+        stopB.getId(),
+        new int[] { stopB.getIndex() },
+        stopC.getId(),
+        new int[] { stopC.getIndex() }
+      )
+    );
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
-    var tripRef = TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE);
 
     // Without departure time — ambiguous, should throw
-    var ambiguous = TripLocation.of(tripRef, id("StationA"));
     assertThrows(RoutingValidationException.class, () ->
-      resolver.resolve(ambiguous, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        id("StationA"),
+        lookupStopIndex,
+        null,
+        TIME_ZONE
+      )
     );
 
     // With departure time for SA1 at 10:00 — should find position 0
-    var withTimeFirst = TripLocation.of(tripRef, id("StationA"), toInstant(10 * 3600));
-    var result1 = resolver.resolve(withTimeFirst, patternSearch);
+    var firstOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600)
+      .toInstant();
+    var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      id("StationA"),
+      lookupStopIndex,
+      firstOccurrence,
+      TIME_ZONE
+    );
     assertEquals(0, result1.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600, result1.boardingTime());
 
     // With departure time for SA2 at 10:15 — should find position 2
-    var withTime = TripLocation.of(tripRef, id("StationA"), toInstant(10 * 3600 + 15 * 60));
-    var result2 = resolver.resolve(withTime, patternSearch);
+    var secondOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600 + 15 * 60)
+      .toInstant();
+    var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      id("StationA"),
+      lookupStopIndex,
+      secondOccurrence,
+      TIME_ZONE
+    );
     assertEquals(2, result2.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
   }
@@ -556,14 +691,25 @@ class StartOnBoardAccessResolverTest {
     // And the scheduledTimetable still references the original
     assertSame(originalPattern, copiedPattern.getScheduledTimetable().getPattern());
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     // Should succeed by falling back to scheduledTimetable.getPattern() (the original)
-    var result = resolver.resolve(tripLocation, patternSearch);
+    var result = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
 
     assertEquals(
       originalPattern.getRoutingTripPattern().patternIndex(),
@@ -571,42 +717,6 @@ class StartOnBoardAccessResolverTest {
     );
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
-  }
-
-  /**
-   * Same as the copied-pattern test above, but for resolveBoardingDateTime which doesn't
-   * need the Raptor pattern index. This verifies the method works even when the pattern in
-   * the TransitService is a copy with a different RoutingTripPattern.
-   */
-  @Test
-  void resolveBoardingDateTimeWithCopiedPattern() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var originalPattern = tripData.scheduledTripPattern();
-
-    // Copy pattern with reused scheduledTimetable (same as TransitDataImportBuilder)
-    var copiedPattern = originalPattern
-      .copy()
-      .withName("copied")
-      .withScheduledTimeTable(originalPattern.getScheduledTimetable())
-      .build();
-    env.timetableRepository().addTripPattern(copiedPattern.getId(), copiedPattern);
-    env.timetableRepository().index();
-
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
-    );
-
-    var result = resolver.resolveBoardingDateTime(tripLocation, TIME_ZONE);
-
-    long expectedEpochSecond =
-      SERVICE_DATE.atStartOfDay(TIME_ZONE).toEpochSecond() + 10 * 3600 + 5 * 60;
-    assertEquals(expectedEpochSecond, result.getEpochSecond());
   }
 
   /**
@@ -651,16 +761,27 @@ class StartOnBoardAccessResolverTest {
       .updateBuffer(RealTimeTripUpdate.of(realtimePattern, tripTimes, SERVICE_DATE).build());
     env.timetableSnapshotManager().purgeAndCommit();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     // findPattern(trip, date) → realtimePattern (not in index)
     // findPattern(trip) → copiedPattern (not in index)
     // copiedPattern.scheduledTimetable.getPattern() → originalPattern (in index!)
-    var result = resolver.resolve(tripLocation, patternSearch);
+    var result = new StartOnBoardAccessResolver(patternSearch).resolve(
+      tripAndServiceDate,
+      STOP_B.getId(),
+      lookupStopIndex,
+      null,
+      TIME_ZONE
+    );
 
     assertEquals(
       originalPattern.getRoutingTripPattern().patternIndex(),
@@ -692,29 +813,37 @@ class StartOnBoardAccessResolverTest {
       )
       .build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        stopA.getId(),
+        new int[] { stopA.getIndex() },
+        stopB.getId(),
+        new int[] { stopB.getIndex() },
+        stopC.getId(),
+        new int[] { stopC.getIndex() }
+      )
+    );
     // Compute the aimed departure instant using start-of-service (noon-minus-12h),
     // which is what a correct client would send
     var aimedDeparture = ServiceDateUtils.asStartOfService(dstDate, dstZone)
       .plusSeconds(10 * 3600 + 5 * 60)
       .toInstant();
 
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), dstDate),
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
+    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      tripAndServiceDate,
       stopB.getId(),
-      aimedDeparture
+      lookupStopIndex,
+      aimedDeparture,
+      dstZone
     );
-
-    var patternSearch = env.raptorRequestData();
-    var result = resolver.resolve(tripLocation, patternSearch);
 
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
   /**
-   * Passing a stop ID which doesn't allow boarding should throw
+   * Passing a stop ID which doesn't allow boarding should throw.
    */
   @Test
   void throwsWhenBoardingNotPossibleAtStop() {
@@ -725,21 +854,31 @@ class StartOnBoardAccessResolverTest {
         .addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId()
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
-
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        STOP_B.getId(),
+        lookupStopIndex,
+        null,
+        TIME_ZONE
+      )
     );
   }
 
   /**
-   * Passing a stop ID which doesn't allow boarding should throw
+   * Passing a stop ID which doesn't allow boarding should throw.
    */
   @Test
   void throwsWhenBoardingNotPossibleAtStopWithAimedDepartureTime() {
@@ -750,17 +889,29 @@ class StartOnBoardAccessResolverTest {
         .addStop(STOP_C, "10:10")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      STOP_B.getId(),
-      toInstant(10 * 3600 + 5 * 60)
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        STOP_A.getId(),
+        new int[] { STOP_A.getIndex() },
+        STOP_B.getId(),
+        new int[] { STOP_B.getIndex() },
+        STOP_C.getId(),
+        new int[] { STOP_C.getIndex() }
+      )
     );
-
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
-
+    var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+      .plusSeconds(10 * 3600 + 5 * 60)
+      .toInstant();
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        STOP_B.getId(),
+        lookupStopIndex,
+        aimedDeparture,
+        TIME_ZONE
+      )
     );
   }
 
@@ -771,21 +922,38 @@ class StartOnBoardAccessResolverTest {
   void throwsOnWrongStationId() {
     var stopA = ENV_BUILDER.stopAtStation("SA1", "StationA");
     var stopB = ENV_BUILDER.stopAtStation("SB1", "StationB");
-    ENV_BUILDER.stopAtStation("SC1", "StationC");
+    var stopC = ENV_BUILDER.stopAtStation("SC1", "StationC");
     var env = ENV_BUILDER.addTrip(
       TripInput.of("T1").addStop(stopA, "10:00").addStop(stopB, "10:05")
     ).build();
 
-    var resolver = new StartOnBoardAccessResolver(env.transitService());
-    var patternSearch = env.raptorRequestData();
-
-    // StationC has child stop SC1 which is not in the trip's pattern
-    var tripLocation = TripLocation.of(
-      TripOnDateReference.ofTripIdAndServiceDate(id("T1"), SERVICE_DATE),
-      id("StationC")
+    var lookupStopIndex = new TestLookupStopIndexCallback(
+      Map.of(
+        id("StationA"),
+        new int[] { stopA.getIndex() },
+        id("StationB"),
+        new int[] { stopB.getIndex() },
+        id("StationC"),
+        new int[] { stopC.getIndex() },
+        stopA.getId(),
+        new int[] { stopA.getIndex() },
+        stopB.getId(),
+        new int[] { stopB.getIndex() },
+        stopC.getId(),
+        new int[] { stopC.getIndex() }
+      )
     );
+    // StationC has child stop SC1 which is not in the trip's pattern
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var patternSearch = env.raptorRequestData();
     assertThrows(IllegalArgumentException.class, () ->
-      resolver.resolve(tripLocation, patternSearch)
+      new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        id("StationC"),
+        lookupStopIndex,
+        null,
+        TIME_ZONE
+      )
     );
   }
 }
