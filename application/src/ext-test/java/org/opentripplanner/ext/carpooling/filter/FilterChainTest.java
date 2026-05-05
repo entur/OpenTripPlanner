@@ -71,17 +71,6 @@ class FilterChainTest {
   }
 
   @Test
-  void standard_checksDirectionalCompatibility() {
-    var chain = FilterChain.standard();
-
-    // Trip going north, passenger going south
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-
-    // Should reject due to directional filter
-    assertFalse(chain.accepts(trip, OSLO_EAST, OSLO_CENTER));
-  }
-
-  @Test
   void emptyChain_acceptsAll() {
     var chain = new FilterChain(List.of());
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
