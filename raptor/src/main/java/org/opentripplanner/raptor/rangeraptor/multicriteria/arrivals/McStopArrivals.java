@@ -218,7 +218,7 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     int routeIndex = onBoardTripConstraint.routeIndex();
     var arrivalsForRoute = onBoardTripArrivalsByRouteQueue.get(routeIndex);
     if (arrivalsForRoute == null) {
-      arrivalsForRoute = new OnTripAccessArrivals<T>();
+      arrivalsForRoute = new OnTripAccessArrivals<>();
       onBoardTripArrivalsByRouteQueue.put(routeIndex, arrivalsForRoute);
     }
     arrivalsForRoute.add(boardingArrival, onBoardTripConstraint);
