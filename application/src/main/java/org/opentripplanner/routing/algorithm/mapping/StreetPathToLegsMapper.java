@@ -41,6 +41,7 @@ import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.utils.lang.IntUtils;
 
 /**
  * A mapper class used in converting internal GraphPaths to Itineraries, which are returned by the
@@ -312,7 +313,7 @@ public class StreetPathToLegsMapper {
     State fromState = states.get(0);
     State toState = states.get(1);
     FlexTripEdge flexEdge = (FlexTripEdge) toState.backEdge;
-    int generalizedCost = (int) (toState.getWeight() - fromState.getWeight());
+    int generalizedCost = IntUtils.round(toState.getWeight() - fromState.getWeight());
 
     return FlexibleTransitLeg.of()
       .withFlexTripEdge(flexEdge)
@@ -371,7 +372,7 @@ public class StreetPathToLegsMapper {
       .withFrom(makePlace(firstState, request))
       .withTo(makePlace(lastState, request))
       .withDistanceMeters(subPath.distanceMeters())
-      .withGeneralizedCost((int) (subPath.weight() + extraWeight))
+      .withGeneralizedCost(IntUtils.round(subPath.weight() + extraWeight))
       .withGeometry(subPath.geometry())
       .withElevationProfile(
         makeElevation(subPath.edges(), firstState.getRequest().geoidElevation())

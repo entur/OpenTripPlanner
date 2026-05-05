@@ -146,12 +146,7 @@ public class FlexRouter {
       var startTime = startOfTime.plusSeconds(it.startTime());
       var path = new StreetPath(it.state());
       var legs = streetPathToLegsMapper.map(path, request, startTime);
-      var itinerary = LegsToItineraryMapper.map(
-        legs,
-        false,
-        path.calculateElevations(),
-        path.weight()
-      );
+      var itinerary = LegsToItineraryMapper.map(legs, false, path.calculateElevations());
       itinerary.ifPresent(itineraries::add);
     }
     return itineraries;

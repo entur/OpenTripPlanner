@@ -13,15 +13,13 @@ public class LegsToItineraryMapper {
   public static Optional<Itinerary> map(
     List<Leg> legs,
     boolean arrivedAtDestinationWithRentedVehicle,
-    @Nullable ElevationChange elevationChange,
-    double weight
+    @Nullable ElevationChange elevationChange
   ) {
     if (legs.isEmpty()) {
       return Optional.empty();
     }
     // TODO there is some mismatch between leg and path costs which we probably should resolve
-    // var cost = Cost.costOfSeconds(legs.stream().mapToDouble(Leg::generalizedCost).sum());
-    var cost = Cost.costOfSeconds(weight);
+    var cost = Cost.costOfSeconds(legs.stream().mapToDouble(Leg::generalizedCost).sum());
     var builder = Itinerary.ofDirect(legs).withGeneralizedCost(cost);
 
     builder.withArrivedAtDestinationWithRentedVehicle(arrivedAtDestinationWithRentedVehicle);

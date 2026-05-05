@@ -211,12 +211,7 @@ public class BarrierRoutingTest {
     var itineraries = paths
       .stream()
       .map(path ->
-        LegsToItineraryMapper.map(
-          streetPathToLegsMapper.map(path, request),
-          false,
-          null,
-          path.weight()
-        ).get()
+        LegsToItineraryMapper.map(streetPathToLegsMapper.map(path, request), false, null).get()
       )
       .toList();
 

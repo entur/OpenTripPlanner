@@ -61,8 +61,7 @@ public class DirectStreetRouter {
         var itinerary = LegsToItineraryMapper.map(
           legs,
           path.lastState().isRentingVehicleFromStation(),
-          path.calculateElevations(),
-          path.weight()
+          path.calculateElevations()
         );
         itinerary.ifPresent(itineraries::add);
       }

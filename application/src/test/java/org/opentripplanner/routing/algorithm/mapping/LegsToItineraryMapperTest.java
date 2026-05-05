@@ -44,7 +44,7 @@ class LegsToItineraryMapperTest {
     );
     var path = new StreetPath(state);
     var legs = mapper.map(path, RouteRequest.defaultValue());
-    var itin = LegsToItineraryMapper.map(legs, false, null, path.weight()).get();
+    var itin = LegsToItineraryMapper.map(legs, false, null).get();
     assertFalse(itin.isSearchWindowAware());
   }
 }
