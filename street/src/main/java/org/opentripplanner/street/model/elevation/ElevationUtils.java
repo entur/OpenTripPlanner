@@ -89,9 +89,18 @@ public class ElevationUtils {
     5.5464612133430242E-02,
   };
 
-  /**
-   * @param elev The elevation profile, where each (x, y) is (distance along edge, elevation)
-   */
+  /// Compute the slope costs for an elevation profile, taking into account that mixing raster elevation
+  /// with OSM data often leads to glitches that cause very high slopes and in turn to negative costs.
+  ///
+  /// We have [analysed](https://github.com/opentripplanner/OpenTripPlanner/pull/7579#pullrequestreview-4226004340)
+  /// if these glitches more commonly lead to edges that are too sloped when in reality they are
+  /// flat or the other way around: the result is that it's more common for slopes to be artificially
+  /// steep.
+  ///
+  /// For this reason we set the slope for an elevation segment to zero if it exceeds the limit
+  /// of +/- 35%.
+  ///
+  /// @param elev The elevation profile, where each (x, y) is (distance along edge, elevation)
   public static SlopeCosts getSlopeCosts(CoordinateSequence elev) {
     Coordinate[] coordinates = elev.toCoordinateArray();
     boolean flattened = false;
