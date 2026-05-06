@@ -31,7 +31,7 @@ public class StartOnBoardBoardingTimeResolver {
 
   public Instant resolve(
     TripAndServiceDate tripAndServiceDate,
-    FeedScopedId stopLocationId,
+    FeedScopedId stopOrStationId,
     @Nullable Instant aimedDepartureTime,
     ZoneId timeZone
   ) {
@@ -52,7 +52,7 @@ public class StartOnBoardBoardingTimeResolver {
 
     int stopPosInPattern = findStopPositionInPattern(
       tripPattern,
-      stopLocationId,
+      stopOrStationId,
       trip,
       serviceDate,
       targetSeconds
@@ -75,7 +75,7 @@ public class StartOnBoardBoardingTimeResolver {
 
   private int findStopPositionInPattern(
     TripPattern tripPattern,
-    FeedScopedId stopLocationId,
+    FeedScopedId stopOrStationId,
     Trip trip,
     java.time.LocalDate serviceDate,
     @Nullable Integer aimedDepartureTime
@@ -83,18 +83,18 @@ public class StartOnBoardBoardingTimeResolver {
     int stopPos = aimedDepartureTime != null
       ? findStopPositionByDepartureTime(
           tripPattern,
-          stopLocationId,
+          stopOrStationId,
           trip,
           serviceDate,
           aimedDepartureTime
         )
-      : findSingleStopPosition(tripPattern, stopLocationId, trip);
+      : findSingleStopPosition(tripPattern, stopOrStationId, trip);
 
     int lastStopPos = tripPattern.numberOfStops() - 1;
     if (stopPos == lastStopPos) {
       throw new IllegalArgumentException(
         "Cannot board at the last stop %s of trip %s — no further travel is possible".formatted(
-          stopLocationId,
+          stopOrStationId,
           trip.getId()
         )
       );
@@ -105,7 +105,7 @@ public class StartOnBoardBoardingTimeResolver {
 
   private int findStopPositionByDepartureTime(
     TripPattern tripPattern,
-    FeedScopedId stopLocationId,
+    FeedScopedId stopOrStationId,
     Trip trip,
     java.time.LocalDate serviceDate,
     int targetSeconds
@@ -124,7 +124,7 @@ public class StartOnBoardBoardingTimeResolver {
     for (int i = 0; i < tripPattern.numberOfStops(); i++) {
       var stop = tripPattern.getStop(i);
       if (
-        !stop.getId().equals(stopLocationId) && !stop.getStationOrStopId().equals(stopLocationId)
+        !stop.getId().equals(stopOrStationId) && !stop.getStationOrStopId().equals(stopOrStationId)
       ) {
         continue;
       }
@@ -135,7 +135,7 @@ public class StartOnBoardBoardingTimeResolver {
 
     throw new IllegalArgumentException(
       "No stop %s with the provided departure time found in pattern for trip %s".formatted(
-        stopLocationId,
+        stopOrStationId,
         trip.getId()
       )
     );
@@ -143,13 +143,15 @@ public class StartOnBoardBoardingTimeResolver {
 
   private int findSingleStopPosition(
     TripPattern tripPattern,
-    FeedScopedId stopLocationId,
+    FeedScopedId stopOrStationId,
     Trip trip
   ) {
     var stopPositionInPattern = -1;
     for (int i = 0; i < tripPattern.numberOfStops(); i++) {
       var stop = tripPattern.getStop(i);
-      if (stop.getId().equals(stopLocationId) || stop.getStationOrStopId().equals(stopLocationId)) {
+      if (
+        stop.getId().equals(stopOrStationId) || stop.getStationOrStopId().equals(stopOrStationId)
+      ) {
         if (stopPositionInPattern >= 0) {
           throw new RoutingValidationException(
             List.of(
@@ -166,7 +168,10 @@ public class StartOnBoardBoardingTimeResolver {
 
     if (stopPositionInPattern < 0) {
       throw new IllegalArgumentException(
-        "Stop location %s not found in pattern for trip %s".formatted(stopLocationId, trip.getId())
+        "Stop or station %s not found in pattern for trip %s".formatted(
+          stopOrStationId,
+          trip.getId()
+        )
       );
     }
 
