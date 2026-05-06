@@ -1,4 +1,4 @@
-package org.opentripplanner;
+package org.opentripplanner.standalone.api;
 
 import static org.opentripplanner.standalone.configure.ConstructApplication.createRaptorTransitData;
 
@@ -36,7 +36,6 @@ import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeService;
 import org.opentripplanner.service.worldenvelope.model.WorldEnvelope;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.config.routerconfig.RaptorEnvironmentFactory;
