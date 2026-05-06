@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -105,6 +106,24 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
 
   public Collection<Edge> getIncoming() {
     return Arrays.asList(incoming);
+  }
+
+  public boolean checkIncoming(Predicate<Edge> check) {
+    for (var e : incoming) {
+      if (check.test(e)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public boolean checkOutgoing(Predicate<Edge> check) {
+    for (var e : outgoing) {
+      if (check.test(e)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public int getDegreeOut() {

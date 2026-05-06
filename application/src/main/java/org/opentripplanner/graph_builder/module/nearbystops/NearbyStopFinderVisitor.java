@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -30,6 +31,9 @@ import org.opentripplanner.utils.collection.MinMap;
  * post-scan filtering of {@code getAllStates()}.
  */
 class NearbyStopFinderVisitor implements TraverseVisitor<State, Edge> {
+
+  private static final Predicate<Edge> CAN_BOARD_FLEX_PREDICATE = e ->
+    e instanceof StreetEdge se && se.getPermission().allows(TraverseMode.CAR);
 
   private final Set<Vertex> originVertices;
   private final Set<Vertex> ignoreVertices;
@@ -90,12 +94,8 @@ class NearbyStopFinderVisitor implements TraverseVisitor<State, Edge> {
   }
 
   private boolean canBoardFlex(State state) {
-    var edges = reverseDirection
-      ? state.getVertex().getIncoming()
-      : state.getVertex().getOutgoing();
-
-    return edges
-      .stream()
-      .anyMatch(e -> e instanceof StreetEdge se && se.getPermission().allows(TraverseMode.CAR));
+    return reverseDirection
+      ? state.getVertex().checkIncoming(CAN_BOARD_FLEX_PREDICATE)
+      : state.getVertex().checkOutgoing(CAN_BOARD_FLEX_PREDICATE);
   }
 }
