@@ -32,7 +32,7 @@ public interface CarpoolTripFilter {
    *
    * @param trip         the carpool trip to evaluate
    * @param request      the passenger's journey preferences
-   * @param searchWindow the routing search window; may be {@code null}
+   * @param searchWindow the routing search window; guaranteed non-null by callers
    * @return {@code true} if the trip is a candidate, {@code false} otherwise
    */
   boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow);

@@ -85,12 +85,6 @@ class DepartAfterTripFilterTest {
     assertFalse(filter.isCandidateTrip(trip(), departAfterDirect(at(-46)), WINDOW));
   }
 
-  @Test
-  void isCandidateTrip_departAfterDirect_nullSearchWindow_returnsTrue() {
-    // Without a search window the upper bound is not enforced.
-    assertTrue(filter.isCandidateTrip(trip(), departAfterDirect(at(-180)), null));
-  }
-
   // ---------------------------------------------------------------------------
   // Depart After, access — same tight upper bound as direct
   // ---------------------------------------------------------------------------

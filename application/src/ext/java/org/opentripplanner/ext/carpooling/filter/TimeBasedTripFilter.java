@@ -93,9 +93,6 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  *   <li>{@code requestedDateTime == null}: pass-through (no filtering possible).</li>
- *   <li>{@code searchWindow == null}: the bound that depends on the search window (too-late for
- *       arriveBy=false, too-early for arriveBy=true) is skipped. The opposite-side bound still
- *       applies because it depends only on {@code requestedDateTime}.</li>
  * </ul>
  */
 public class TimeBasedTripFilter implements CarpoolTripFilter {
@@ -114,7 +111,7 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     }
 
     var tripStart = trip.startTime().toInstant();
-    var tripEnd = trip.endTime().toInstant();
+    var tripEnd = trip.latestEndTime().toInstant();
 
     return request.isArriveByRequest()
       ? acceptsArriveBy(trip, request, searchWindow, requestedDateTime, tripStart, tripEnd)
@@ -140,12 +137,10 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     if (tripStart.isAfter(lat)) {
       return reject(trip, "tripStart", tripStart, "is after LAT", lat);
     }
-    if (searchWindow != null) {
-      var slack = request.isAccessRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
-      var threshold = lat.minus(searchWindow).minus(slack);
-      if (tripEnd.isBefore(threshold)) {
-        return reject(trip, "tripEnd", tripEnd, "is before EAT − slack", threshold);
-      }
+    var slack = request.isAccessRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
+    var threshold = lat.minus(searchWindow).minus(slack);
+    if (tripEnd.isBefore(threshold)) {
+      return reject(trip, "tripEnd", tripEnd, "is before EAT − slack", threshold);
     }
     return true;
   }
@@ -169,12 +164,10 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     if (tripEnd.isBefore(edt)) {
       return reject(trip, "tripEnd", tripEnd, "is before EDT", edt);
     }
-    if (searchWindow != null) {
-      var slack = request.isEgressRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
-      var threshold = edt.plus(searchWindow).plus(slack);
-      if (tripStart.isAfter(threshold)) {
-        return reject(trip, "tripStart", tripStart, "is after LDT + slack", threshold);
-      }
+    var slack = request.isEgressRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
+    var threshold = edt.plus(searchWindow).plus(slack);
+    if (tripStart.isAfter(threshold)) {
+      return reject(trip, "tripStart", tripStart, "is after LDT + slack", threshold);
     }
     return true;
   }

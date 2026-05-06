@@ -77,8 +77,6 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  *   <li>{@code dateTime == null}: pass-through (no filtering possible).</li>
- *   <li>{@code searchWindow == null}: the too-late bound is skipped (LDT is undefined). The
- *       too-early bound still applies because it depends only on {@code dateTime}.</li>
  * </ul>
  */
 public class DepartAfterTripFilter implements CarpoolTripFilter {
@@ -102,12 +100,10 @@ public class DepartAfterTripFilter implements CarpoolTripFilter {
     if (tripEnd.isBefore(edt)) {
       return reject(trip, "tripEnd", tripEnd, "is before EDT", edt);
     }
-    if (searchWindow != null) {
-      var slack = request.isEgressRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
-      var threshold = edt.plus(searchWindow).plus(slack);
-      if (tripStart.isAfter(threshold)) {
-        return reject(trip, "tripStart", tripStart, "is after LDT + slack", threshold);
-      }
+    var slack = request.isEgressRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
+    var threshold = edt.plus(searchWindow).plus(slack);
+    if (tripStart.isAfter(threshold)) {
+      return reject(trip, "tripStart", tripStart, "is after LDT + slack", threshold);
     }
     return true;
   }

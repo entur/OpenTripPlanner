@@ -8,10 +8,13 @@ import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NOR
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_WEST;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createSimpleTrip;
 
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TripPreFiltersTest {
+
+  private static final Duration WINDOW = Duration.ofMinutes(30);
 
   @Test
   void isCandidateTrip_allFiltersAccept_returnsTrue() {
@@ -25,7 +28,7 @@ class TripPreFiltersTest {
       .withPassengerDropoff(OSLO_WEST)
       .build();
 
-    assertTrue(preFilter.isCandidateTrip(trip, request, null));
+    assertTrue(preFilter.isCandidateTrip(trip, request, WINDOW));
   }
 
   @Test
@@ -40,7 +43,7 @@ class TripPreFiltersTest {
       .withPassengerDropoff(OSLO_WEST)
       .build();
 
-    assertFalse(preFilter.isCandidateTrip(trip, request, null));
+    assertFalse(preFilter.isCandidateTrip(trip, request, WINDOW));
   }
 
   @Test
@@ -60,7 +63,7 @@ class TripPreFiltersTest {
       .build();
 
     var preFilter = new TripPreFilters(List.of(filter1, filter2, filter3));
-    preFilter.isCandidateTrip(trip, request, null);
+    preFilter.isCandidateTrip(trip, request, WINDOW);
 
     assertFalse(filter3Called[0], "Filter3 should not have been called due to short-circuit");
   }
@@ -81,7 +84,7 @@ class TripPreFiltersTest {
       .build();
 
     var preFilter = new TripPreFilters(List.of(filter1, filter2));
-    preFilter.isCandidateTrip(trip, request, null);
+    preFilter.isCandidateTrip(trip, request, WINDOW);
 
     assertFalse(filter2Called[0], "Filter2 should not have been called due to short-circuit");
   }
@@ -95,7 +98,7 @@ class TripPreFiltersTest {
       .withPassengerDropoff(OSLO_WEST)
       .build();
 
-    assertTrue(preFilter.isCandidateTrip(trip, request, null));
+    assertTrue(preFilter.isCandidateTrip(trip, request, WINDOW));
   }
 
   @Test
@@ -109,6 +112,6 @@ class TripPreFiltersTest {
       .withPassengerDropoff(OSLO_WEST)
       .build();
 
-    assertTrue(preFilter.isCandidateTrip(trip, request, null));
+    assertTrue(preFilter.isCandidateTrip(trip, request, WINDOW));
   }
 }

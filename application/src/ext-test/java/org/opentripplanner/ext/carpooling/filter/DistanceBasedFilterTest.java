@@ -16,11 +16,14 @@ import static org.opentripplanner.ext.carpooling.CarpoolingRequestTestData.acces
 import static org.opentripplanner.ext.carpooling.CarpoolingRequestTestData.directRequest;
 import static org.opentripplanner.ext.carpooling.CarpoolingRequestTestData.egressRequest;
 
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 
 class DistanceBasedFilterTest {
+
+  private static final Duration WINDOW = Duration.ofMinutes(30);
 
   private DistanceBasedFilter filter;
 
@@ -38,7 +41,7 @@ class DistanceBasedFilterTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var pickup = new WgsCoordinate(59.920, 10.760);
     var dropoff = new WgsCoordinate(59.940, 10.780);
-    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -46,7 +49,7 @@ class DistanceBasedFilterTest {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var pickup = new WgsCoordinate(59.920, 10.740);
     var dropoff = new WgsCoordinate(59.940, 10.760);
-    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -55,7 +58,7 @@ class DistanceBasedFilterTest {
     // Bergen — ~300 km away
     var pickup = new WgsCoordinate(60.39, 5.32);
     var dropoff = new WgsCoordinate(60.40, 5.33);
-    assertFalse(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertFalse(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -64,7 +67,7 @@ class DistanceBasedFilterTest {
     // > 50 km perpendicular west
     var pickup = new WgsCoordinate(59.9139, 9.5);
     var dropoff = new WgsCoordinate(59.9549, 9.5);
-    assertFalse(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertFalse(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -76,7 +79,7 @@ class DistanceBasedFilterTest {
     // pickup on route, dropoff ~55 km north — filter accepts if either end is within range
     var pickup = new WgsCoordinate(59.9, 10.75);
     var dropoff = new WgsCoordinate(59.9 + 0.5, 10.75);
-    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -86,7 +89,7 @@ class DistanceBasedFilterTest {
     var trip = createTripWithStops(LAKE_NORTH, java.util.List.of(stop1, stop2), LAKE_WEST);
     var pickup = new WgsCoordinate(59.9139, 10.735);
     var dropoff = new WgsCoordinate(59.9139, 10.720);
-    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertTrue(filter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -96,7 +99,7 @@ class DistanceBasedFilterTest {
     // ~80 km perpendicular — rejected by 50 km default, accepted by 100 km custom
     var pickup = new WgsCoordinate(59.920, 10.752 + 0.7);
     var dropoff = new WgsCoordinate(59.940, 10.772 + 0.7);
-    assertTrue(customFilter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertTrue(customFilter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   @Test
@@ -108,7 +111,7 @@ class DistanceBasedFilterTest {
     // ~30 km perpendicular — beyond the 20 km custom limit
     var pickup = new WgsCoordinate(59.9 + 0.27, 10.72);
     var dropoff = new WgsCoordinate(59.9 + 0.27, 10.78);
-    assertFalse(customFilter.isCandidateTrip(trip, directRequest(pickup, dropoff), null));
+    assertFalse(customFilter.isCandidateTrip(trip, directRequest(pickup, dropoff), WINDOW));
   }
 
   // ---------------------------------------------------------------------------
@@ -120,7 +123,7 @@ class DistanceBasedFilterTest {
     // Trip is long relative to the passenger's perpendicular distance from it.
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var passengerPickup = new WgsCoordinate(59.920, 10.760);
-    assertTrue(filter.isCandidateTrip(trip, accessRequest(passengerPickup), null));
+    assertTrue(filter.isCandidateTrip(trip, accessRequest(passengerPickup), WINDOW));
   }
 
   @Test
@@ -131,7 +134,7 @@ class DistanceBasedFilterTest {
     var tripEnd = new WgsCoordinate(59.901, 10.751);
     var trip = createSimpleTrip(tripStart, tripEnd);
     var passengerPickup = new WgsCoordinate(60.5, 11.0);
-    assertFalse(filter.isCandidateTrip(trip, accessRequest(passengerPickup), null));
+    assertFalse(filter.isCandidateTrip(trip, accessRequest(passengerPickup), WINDOW));
   }
 
   // ---------------------------------------------------------------------------
@@ -142,7 +145,7 @@ class DistanceBasedFilterTest {
   void isCandidateTrip_egress_passengerNearRoute_returnsTrue() {
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
     var passengerDropoff = new WgsCoordinate(59.920, 10.760);
-    assertTrue(filter.isCandidateTrip(trip, egressRequest(passengerDropoff), null));
+    assertTrue(filter.isCandidateTrip(trip, egressRequest(passengerDropoff), WINDOW));
   }
 
   @Test
@@ -151,7 +154,7 @@ class DistanceBasedFilterTest {
     var tripEnd = new WgsCoordinate(59.901, 10.751);
     var trip = createSimpleTrip(tripStart, tripEnd);
     var passengerDropoff = new WgsCoordinate(60.5, 11.0);
-    assertFalse(filter.isCandidateTrip(trip, egressRequest(passengerDropoff), null));
+    assertFalse(filter.isCandidateTrip(trip, egressRequest(passengerDropoff), WINDOW));
   }
 
   // ---------------------------------------------------------------------------

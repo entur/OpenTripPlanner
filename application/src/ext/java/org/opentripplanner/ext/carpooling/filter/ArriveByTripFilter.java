@@ -77,8 +77,6 @@ import org.slf4j.LoggerFactory;
  *
  * <ul>
  *   <li>{@code dateTime == null}: pass-through (no filtering possible).</li>
- *   <li>{@code searchWindow == null}: the too-early bound is skipped (EAT is undefined). The
- *       too-late bound still applies because it depends only on {@code dateTime}.</li>
  * </ul>
  */
 public class ArriveByTripFilter implements CarpoolTripFilter {
@@ -102,12 +100,10 @@ public class ArriveByTripFilter implements CarpoolTripFilter {
     if (tripStart.isAfter(lat)) {
       return reject(trip, "tripStart", tripStart, "is after LAT", lat);
     }
-    if (searchWindow != null) {
-      var slack = request.isAccessRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
-      var threshold = lat.minus(searchWindow).minus(slack);
-      if (tripEnd.isBefore(threshold)) {
-        return reject(trip, "tripEnd", tripEnd, "is before EAT − slack", threshold);
-      }
+    var slack = request.isAccessRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
+    var threshold = lat.minus(searchWindow).minus(slack);
+    if (tripEnd.isBefore(threshold)) {
+      return reject(trip, "tripEnd", tripEnd, "is before EAT − slack", threshold);
     }
     return true;
   }
