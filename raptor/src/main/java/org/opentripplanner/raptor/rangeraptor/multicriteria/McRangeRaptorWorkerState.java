@@ -130,7 +130,13 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
 
   public void addOnTripAccessStopArrival(RaptorStartOnBoardAccess access, int arrivalTime) {
     var arrival = stopArrivalFactory.createAccessStopArrival(arrivalTime, access);
-    arrivals.addOnBoardTripArrival(arrival, arrival.stop(), access.tripBoarding());
+    var boardingConstraint = access.tripBoarding();
+    arrivals.addOnBoardTripArrival(
+      arrival,
+      arrival.stop(),
+      boardingConstraint.stopPositionInPattern(),
+      boardingConstraint
+    );
   }
 
   /**

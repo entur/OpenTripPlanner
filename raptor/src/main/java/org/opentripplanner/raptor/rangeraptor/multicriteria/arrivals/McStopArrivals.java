@@ -206,27 +206,33 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
    * Also ensures the Pareto set for {@code applyToStopIndex} is initialised and marks the stop
    * as touched so the routing loop will visit it.
    *
-   * @param boardingArrival       the arrival state from which boarding occurs.
-   * @param applyToStopIndex      the stop where the on-board boarding should be applied.
-   * @param onBoardTripConstraint  the trip and stop-position constraint for the on-board access.
+   * @param boardingArrival            the arrival state from which boarding occurs.
+   * @param startRoutingAtStopIndex    the stop index where the new ride is applied in the
+   *                                   algorithm. The next stop in pattern will be the first
+   *                                   possible stop to alight. The boarding might be at an earlier
+   *                                   stop.
+   * @param startRoutingAtStopPosition Same as above, but the stop position in the trip pattern.
+   * @param boardingConstraint         the trip and stop-position for where the boarding happens.
    */
   public void addOnBoardTripArrival(
     ArrivalView<T> boardingArrival,
-    int applyToStopIndex,
-    RaptorTripScheduleStopPosition onBoardTripConstraint
+    int startRoutingAtStopIndex,
+    int startRoutingAtStopPosition,
+    RaptorTripScheduleStopPosition boardingConstraint
   ) {
-    int routeIndex = onBoardTripConstraint.routeIndex();
+    int routeIndex = boardingConstraint.routeIndex();
     var arrivalsForRoute = onBoardTripArrivalsByRouteQueue.get(routeIndex);
+
     if (arrivalsForRoute == null) {
       arrivalsForRoute = new OnTripAccessArrivals<>();
       onBoardTripArrivalsByRouteQueue.put(routeIndex, arrivalsForRoute);
     }
-    arrivalsForRoute.add(boardingArrival, onBoardTripConstraint);
+    arrivalsForRoute.add(boardingArrival, startRoutingAtStopPosition, boardingConstraint);
 
     // Then update the state, both touchedStops and init the pareto-set for the given stop to
     // prevent NPE when the state is fetched later. The set is empty, which is ok.
-    findOrCreateSet(applyToStopIndex);
-    touchedStops.set(applyToStopIndex);
+    findOrCreateSet(startRoutingAtStopIndex);
+    touchedStops.set(startRoutingAtStopIndex);
   }
 
   /* private methods */

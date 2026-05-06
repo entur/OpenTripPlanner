@@ -230,12 +230,18 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
           transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
         }
       }
-      // attempt to board using on-board trip access
+
+      // attempt to board using on-board trip access/pass-though. This happens after
+      // the alight at the given stop position.
       if (onBoardArrivals != null && onBoardArrivals.arrivalExistForStopPosition(stopPos)) {
         for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
           var boarding = arrival.boardingConstraint();
           var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
-          transitWorker.boardWithStartOnBoardAccess(arrival.accessStopArrival(), trip, stopPos);
+          transitWorker.boardWithStartOnBoardAccess(
+            arrival.accessStopArrival(),
+            trip,
+            boarding.stopPositionInPattern()
+          );
         }
       }
 

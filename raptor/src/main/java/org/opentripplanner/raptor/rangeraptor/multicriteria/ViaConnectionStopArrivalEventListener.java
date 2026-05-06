@@ -150,20 +150,30 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     if (!alightArrival.arrivedBy(TRANSIT)) {
       return;
     }
-    T trip = alightArrival.transitPath().trip();
+    var transitPath = alightArrival.transitPath();
+    T trip = transitPath.trip();
     var info = tripInfoProvider.apply(trip);
 
     var arrivalAtBoardStop = alightArrival.previous();
-    int passThroughStopPos = trip.findDepartureStopPosition(
+    int boardingStopPos = trip.findDepartureStopPosition(
       arrivalAtBoardStop.arrivalTime(),
+      transitPath.boardStop()
+    );
+    int startRoutingAtStopPosition = trip.findArrivalStopPosition(
+      alightArrival.arrivalTime(),
       alightArrival.stop()
     );
-    var onBoardTripConstraint = new RaptorTripScheduleStopPosition(
+    var boardingConstraint = new RaptorTripScheduleStopPosition(
       info.routeIndex(),
       info.tripScheduleIndex(),
-      passThroughStopPos
+      boardingStopPos
     );
-    next.addOnBoardTripArrival(arrivalAtBoardStop, alightArrival.stop(), onBoardTripConstraint);
+    next.addOnBoardTripArrival(
+      arrivalAtBoardStop,
+      alightArrival.stop(),
+      startRoutingAtStopPosition,
+      boardingConstraint
+    );
   }
 
   private void continueFromSameStopArrival(
