@@ -2331,7 +2331,7 @@ input Location {
   coordinates: InputCoordinates
   "The name of the location. This is pass-through informationand is not used in routing."
   name: String
-  "Identifies an on-board position on a specific transit trip. When set, the search starts from on-board the specified vehicle."
+  "Identifies an on-board position on a specific transit trip. When set, the search starts from on-board the specified vehicle. In this case, the dateTime parameter of the request is ignored, as the time is resolved based on timetable data instead."
   onBoardLocation: OnBoardLocationInput
   "The id of an element in the OTP model. Currently supports Quay, StopPlace, multimodal StopPlace, and GroupOfStopPlaces."
   place: String

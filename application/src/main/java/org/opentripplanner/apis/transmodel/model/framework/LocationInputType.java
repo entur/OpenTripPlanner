@@ -51,7 +51,9 @@ public class LocationInputType {
           .name("onBoardLocation")
           .description(
             "Identifies an on-board position on a specific transit trip. " +
-              "When set, the search starts from on-board the specified vehicle."
+              "When set, the search starts from on-board the specified vehicle. " +
+              "In this case, the dateTime parameter of the request is ignored, as the time is " +
+              "resolved based on timetable data instead."
           )
           .type(OnBoardLocationInputType.create(dateTimeScalar))
           .build()
