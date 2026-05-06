@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess;
+package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

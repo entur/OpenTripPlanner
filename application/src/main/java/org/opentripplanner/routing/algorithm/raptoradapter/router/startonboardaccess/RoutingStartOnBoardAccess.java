@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess;
+package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
 import java.util.Objects;
 import org.opentripplanner.framework.model.TimeAndCost;

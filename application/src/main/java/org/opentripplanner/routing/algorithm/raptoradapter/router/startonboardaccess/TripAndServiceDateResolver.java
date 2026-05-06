@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess;
+package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
 import org.opentripplanner.routing.api.request.TripOnDateReference;
 import org.opentripplanner.transit.service.TransitService;
