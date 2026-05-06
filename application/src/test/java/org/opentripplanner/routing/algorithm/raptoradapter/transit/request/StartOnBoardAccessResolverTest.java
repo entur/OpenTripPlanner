@@ -48,7 +48,7 @@ class StartOnBoardAccessResolverTest {
   }
 
   @Test
-  void resolveSimpleOnBoardAccess() {
+  void resolvesSimpleOnBoardAccess() {
     var env = ENV_BUILDER.addTrip(
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
@@ -72,7 +72,7 @@ class StartOnBoardAccessResolverTest {
   }
 
   @Test
-  void resolveFirstStop() {
+  void resolvesFirstStop() {
     var env = ENV_BUILDER.addTrip(
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
@@ -130,7 +130,7 @@ class StartOnBoardAccessResolverTest {
   }
 
   @Test
-  void resolveWithAimedDepartureTimeOnUniqueStop() {
+  void resolvesWithAimedDepartureTimeOnUniqueStop() {
     var env = ENV_BUILDER.addTrip(
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
@@ -174,7 +174,7 @@ class StartOnBoardAccessResolverTest {
   }
 
   @Test
-  void resolveWithScheduledRaptorData() {
+  void resolvesWithScheduledRaptorData() {
     var env = ENV_BUILDER.addTrip(
       TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
     ).build();
@@ -201,7 +201,7 @@ class StartOnBoardAccessResolverTest {
    * picks the one that the trip actually visits.
    */
   @Test
-  void resolveWithMultipleStopIndicesPicksVisitedStop() {
+  void resolvesWithMultipleStopIndicesPicksVisitedStop() {
     var stopA1 = ENV_BUILDER.stop("A1");
     var stopA2 = ENV_BUILDER.stop("A2");
     var env = ENV_BUILDER.addTrip(
@@ -272,7 +272,7 @@ class StartOnBoardAccessResolverTest {
    * relative to start-of-service.
    */
   @Test
-  void resolveWithAimedDepartureTimeOnDstSpringForwardDay() {
+  void resolvesWithAimedDepartureTimeOnDstSpringForwardDay() {
     // Europe/Oslo moves clocks forward on 2024-03-31: clocks skip from 02:00 to 03:00
     var dstDate = LocalDate.of(2024, 3, 31);
     var dstZone = ZoneId.of("Europe/Oslo");
