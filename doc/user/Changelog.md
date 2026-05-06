@@ -41,6 +41,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Always generate hop geometries in the GTFS graph builder [#7571](https://github.com/opentripplanner/OpenTripPlanner/pull/7571)
 - Coarsen speed and reluctance values at the request level [#7569](https://github.com/opentripplanner/OpenTripPlanner/pull/7569)
 - Fix RAPTOR path building for flex patterns with duplicated stops [#7554](https://github.com/opentripplanner/OpenTripPlanner/pull/7554)
+- Precompute cumulative pattern distance for O(1) leg distance lookup [#7559](https://github.com/opentripplanner/OpenTripPlanner/pull/7559)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
