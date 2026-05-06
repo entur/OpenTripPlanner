@@ -43,7 +43,8 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *     (generating randomized schedules)
  * </ul>
  * <p>
- * This class originated as a rewrite of Conveyals RAPTOR code: https://github.com/conveyal/r5.
+ * This class originated as a rewrite of <a href="https://github.com/conveyal/r5">Conveyals RAPTOR
+ * code</a>.
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
