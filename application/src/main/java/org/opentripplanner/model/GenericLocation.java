@@ -151,9 +151,7 @@ public class GenericLocation {
   }
 
   /**
-   * When set, the location is on-board a specific trip. The trip is identified by the trip
-   * reference, the stop by the stop ID, and the stop position in the pattern may be disambiguated
-   * by the scheduled departure time (for ring lines).
+   * When set, the location is on-board a specific trip.
    */
   @Nullable
   public TripLocation tripLocation() {
