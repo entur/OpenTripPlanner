@@ -57,6 +57,7 @@ class StartOnBoardAccessResolverTest {
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(1), result.stop());
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
+    assertEquals(0, result.c1());
   }
 
   @Test
@@ -117,22 +118,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       )
     );
-  }
-
-  @Test
-  void resolveOnBoardAccessWithZeroCost() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
-      tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      null,
-      TIME_ZONE
-    );
-    assertEquals(0, result.c1());
   }
 
   @Test
