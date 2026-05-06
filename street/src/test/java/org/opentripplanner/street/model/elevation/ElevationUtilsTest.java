@@ -4,9 +4,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.opentripplanner.street.model.elevation.ElevationProfiles.STEEP_DOWNHILL_PROFILE;
 import static org.opentripplanner.street.model.elevation.ElevationProfiles.STEEP_ELEVATION_PROFILE;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
@@ -32,12 +36,6 @@ class ElevationUtilsTest {
     );
     costs = ElevationUtils.getSlopeCosts(seq);
     assertEquals(1.00992634231424500668, costs.lengthMultiplier);
-  }
-
-  @Test
-  void slopeSpeedFactorWithLimit() {
-    var slopeCosts = ElevationUtils.getSlopeCosts(STEEP_ELEVATION_PROFILE);
-    assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
   }
 
   @Test
@@ -107,6 +105,17 @@ class ElevationUtilsTest {
       20.25,
       new double[] { 0, 100.25, 9.75, 110, 19.75, 120, 20, 120.25 }
     );
+  }
+
+  private static List<PackedCoordinateSequence> slopeCases() {
+    return List.of(STEEP_ELEVATION_PROFILE, STEEP_DOWNHILL_PROFILE);
+  }
+
+  @ParameterizedTest
+  @MethodSource("slopeCases")
+  void nonNegativeSlopeSpeedFactorOnSteepProfiles(PackedCoordinateSequence seq) {
+    var slopeCosts = ElevationUtils.getSlopeCosts(seq);
+    assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
   }
 
   private static void assertPartialElevation(
