@@ -1,30 +1,24 @@
 package org.opentripplanner.transfer.regular.index;
 
-import static java.util.stream.Collectors.toMap;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
-import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.transfer.regular.model.DefaultRaptorTransfer;
-import org.opentripplanner.transfer.regular.model.Transfer;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 
 class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
 
-  private final List<List<Transfer>> forwardTransfers;
-  private List<List<TransferWithSource>> reversedTransfers;
+  private final List<List<PathTransfer>> forwardTransfers;
+  private List<List<PathTransfer>> reversedTransfers;
   private final Collection<DefaultRaptorTransfer>[] forwardRaptorTransfers;
 
   private final Collection<DefaultRaptorTransfer>[] reversedRaptorTransfers;
 
   private final StreetSearchRequest request;
 
-  private record TransferWithSource(Transfer transfer, int fromStopIndex) {}
-
   OnDemandRaptorTransferIndex(
-    List<List<Transfer>> transfersByStopIndex,
+    List<List<PathTransfer>> transfersByStopIndex,
     StreetSearchRequest request
   ) {
     this.request = request;
@@ -43,10 +37,9 @@ class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
         reversedTransfers.add(new ArrayList<>());
       }
 
-      for (var i = 0; i < forwardTransfers.size(); ++i) {
-        var transfers = forwardTransfers.get(i);
+      for (List<PathTransfer> transfers : forwardTransfers) {
         for (var transfer : transfers) {
-          reversedTransfers.get(transfer.getToStop()).add(new TransferWithSource(transfer, i));
+          reversedTransfers.get(transfer.to.getIndex()).add(transfer);
         }
       }
     }
@@ -74,30 +67,15 @@ class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
     initializeReversedTransfers();
 
     if (reversedRaptorTransfers[stopIndex] == null) {
-      reversedRaptorTransfers[stopIndex] = getReversedRaptorTransfers(
+      reversedRaptorTransfers[stopIndex] = RaptorTransferIndex.getRaptorTransfers(
+        request,
         reversedTransfers.get(stopIndex)
-      );
+      )
+        .stream()
+        .map(t -> t.reverseOf(stopIndex))
+        .toList();
     }
 
     return reversedRaptorTransfers[stopIndex];
-  }
-
-  private Collection<DefaultRaptorTransfer> getReversedRaptorTransfers(
-    List<TransferWithSource> transferWithSources
-  ) {
-    var mode = request.mode();
-    // The transfers are filtered so that there is only one possible directional transfer
-    // for a stop pair.
-    return transferWithSources
-      .stream()
-      .filter(s -> s.transfer.allowsMode(mode))
-      .flatMap(s ->
-        s.transfer
-          .asRaptorTransfer(request)
-          .stream()
-          .map(rt -> rt.reverseOf(s.fromStopIndex))
-      )
-      .collect(toMap(RaptorTransfer::stop, Function.identity(), (a, b) -> a.c1() < b.c1() ? a : b))
-      .values();
   }
 }
