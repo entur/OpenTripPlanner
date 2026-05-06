@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
+package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -10,8 +10,6 @@ import java.util.List;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.StartOnBoardAccessResolver;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripAndServiceDate;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
