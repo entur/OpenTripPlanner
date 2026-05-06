@@ -6,8 +6,8 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
- * Identifies a position on-board a specific transit trip. Used to start (or potentially end) a trip
- * planning search from on-board a vehicle.
+ * Identifies a position on-board a specific transit trip. Used to start a trip planning search
+ * from on-board a vehicle.
  * <p>
  * The stop location is always identified by its {@code stopLocationId}. A stop location can be a
  * quay or a stop place. Optionally, an
