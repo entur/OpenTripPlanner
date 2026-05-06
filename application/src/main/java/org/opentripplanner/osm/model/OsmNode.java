@@ -52,7 +52,7 @@ public class OsmNode extends OsmEntity {
    */
   public boolean isBarrier() {
     // the majority of nodes have no tags at all, so this yields a good speed-up
-    if (this.isTagLess()) {
+    if (this.isTagless()) {
       return false;
     }
     return overridePermissions(ALL) != ALL;
@@ -73,7 +73,7 @@ public class OsmNode extends OsmEntity {
    * @return True if this entity provides an entrance to a platform or similar entity
    */
   public boolean isEntrance() {
-    if (this.isTagLess()) {
+    if (this.isTagless()) {
       return false;
     }
     return (

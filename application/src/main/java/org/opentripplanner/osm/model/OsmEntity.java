@@ -230,16 +230,13 @@ public abstract class OsmEntity {
    * Is the tag defined?
    */
   public final boolean hasTag(String tag) {
-    if (this.isTagLess()) {
-      return false;
-    }
-    return getTag(tag) != null;
+    return !this.isTagless() && getTag(tag) != null;
   }
 
   /**
    * Does the entity contain any tags at all?
    */
-  final boolean isTagLess() {
+  final boolean isTagless() {
     return this.tags == null;
   }
 
@@ -294,7 +291,7 @@ public abstract class OsmEntity {
    * or a parent mode, either with a directional suffix or not, empty if it is not specified.
    */
   protected Optional<Permission> checkModePermission(String mode, TraverseDirection direction) {
-    if (isTagLess()) {
+    if (isTagless()) {
       return Optional.empty();
     }
     // check if the exact directional tag allows or denies access
@@ -337,7 +334,7 @@ public abstract class OsmEntity {
    */
   @Nullable
   public final String getTag(String tag) {
-    if (this.isTagLess()) {
+    if (this.isTagless()) {
       return null;
     }
     tag = tag.toLowerCase();
@@ -501,7 +498,7 @@ public abstract class OsmEntity {
    * Checks if a tag contains the specified value.
    */
   public final boolean isTag(String tag, String value) {
-    return !isTagLess() && value != null && value.equals(tags.get(tag.toLowerCase()));
+    return !isTagless() && value != null && value.equals(tags.get(tag.toLowerCase()));
   }
 
   /**
@@ -736,7 +733,7 @@ public abstract class OsmEntity {
    * @return whether the node is a place used to board a public transport vehicle
    */
   public boolean isBoardingLocation() {
-    if (isTagLess()) {
+    if (isTagless()) {
       return false;
     }
     return (
