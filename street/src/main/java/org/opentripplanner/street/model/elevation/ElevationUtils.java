@@ -39,6 +39,13 @@ public class ElevationUtils {
     5.0000000000000000E+03,
     5.0000000000000000E+03,
   };
+
+  /// Maximum slope of 35% after which elevation data is considered unreliable. It is based
+  /// on the steepest drivable road,
+  /// [Baldwin Street in New Zealand](https://en.wikipedia.org/wiki/Baldwin_Street)
+  private static final double MAX_UPHILL_SLOPE = 0.35;
+  private static final double MAX_DOWNHILL_SLOPE = -MAX_UPHILL_SLOPE;
+
   private static final double[] TY = {
     -3.4999999999999998E-01,
     -3.4999999999999998E-01,
@@ -113,7 +120,7 @@ public class ElevationUtils {
       // We need _some_ sort of limit, because the energy
       // usage approximation breaks down at extreme slopes, and
       // gives negative weights
-      if (slope > 0.35 || slope < -0.35) {
+      if (slope > MAX_UPHILL_SLOPE || slope < MAX_DOWNHILL_SLOPE) {
         slope = 0;
         flattened = true;
       }
