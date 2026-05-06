@@ -54,7 +54,7 @@ public class RoutingWorker {
   /** An object that accumulates profiling and debugging info for inclusion in the response. */
   private final DebugTimingAggregator debugTimingAggregator;
 
-  private RouteRequest request;
+  private final RouteRequest request;
   private final OtpServerRequestContext serverContext;
   private final ZonedDateTime transitSearchTimeZero;
   private final AdditionalSearchDays additionalSearchDays;
