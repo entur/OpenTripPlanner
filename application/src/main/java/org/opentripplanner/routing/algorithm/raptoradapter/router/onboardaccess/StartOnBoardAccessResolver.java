@@ -21,7 +21,7 @@ import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
- * Resolves a {@link TripAndServiceDate} into a {@link RoutingOnBoardAccess} by locating the trip
+ * Resolves a {@link TripAndServiceDate} into a {@link RoutingStartOnBoardAccess} by locating the trip
  * in the Raptor timetable and finding the exact stop position within the trip schedule.
  *
  * <p>Callers must first resolve the trip via {@link TripAndServiceDateResolver} and resolve the
@@ -35,7 +35,7 @@ public class StartOnBoardAccessResolver {
     this.raptorRequestTransitData = raptorRequestTransitData;
   }
 
-  public RoutingOnBoardAccess resolve(
+  public RoutingStartOnBoardAccess resolve(
     TripAndServiceDate tripAndServiceDate,
     Collection<Integer> stopIndices,
     @Nullable Instant aimedDepartureTime,
@@ -60,7 +60,7 @@ public class StartOnBoardAccessResolver {
       stopIndices
     );
 
-    return new RoutingOnBoardAccess(tripScheduleIndexReference, boardingLocation);
+    return new RoutingStartOnBoardAccess(tripScheduleIndexReference, boardingLocation);
   }
 
   private RaptorTimeTable<TripSchedule> getRaptorTimetableForTrip(

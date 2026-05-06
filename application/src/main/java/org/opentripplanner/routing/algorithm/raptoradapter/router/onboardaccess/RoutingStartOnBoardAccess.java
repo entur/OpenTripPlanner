@@ -8,7 +8,8 @@ import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
 import org.opentripplanner.street.search.state.State;
 
-public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, RoutingAccessEgress {
+public final class RoutingStartOnBoardAccess
+  implements RaptorStartOnBoardAccess, RoutingAccessEgress {
 
   private final int routeIndex;
   private final int tripScheduleIndex;
@@ -16,7 +17,7 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
   private final int stop;
   private final int boardingTime;
 
-  public RoutingOnBoardAccess(
+  public RoutingStartOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
     BoardingLocationInPatternReference tripLocationInScheduleReference
   ) {
@@ -86,7 +87,7 @@ public final class RoutingOnBoardAccess implements RaptorStartOnBoardAccess, Rou
     if (obj == null || obj.getClass() != this.getClass()) {
       return false;
     }
-    var that = (RoutingOnBoardAccess) obj;
+    var that = (RoutingStartOnBoardAccess) obj;
     return (
       this.routeIndex == that.routeIndex &&
       this.tripScheduleIndex == that.tripScheduleIndex &&

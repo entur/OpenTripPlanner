@@ -13,7 +13,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.RoutingOnBoardAccess;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.RoutingStartOnBoardAccess;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StopIndicesResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.TripAndServiceDateResolver;
@@ -76,7 +76,7 @@ class AccessEgressFetcher {
   }
 
   Collection<? extends RoutingAccessEgress> fetchAccess() {
-    if (request.isOnBoardAccessRequest()) {
+    if (request.isStartOnBoardAccessRequest()) {
       return List.of(fetchStartOnBoardAccess());
     }
     return fetchAccessEgresses(ACCESS);
@@ -86,7 +86,7 @@ class AccessEgressFetcher {
     return fetchAccessEgresses(EGRESS);
   }
 
-  RoutingOnBoardAccess fetchStartOnBoardAccess() {
+  RoutingStartOnBoardAccess fetchStartOnBoardAccess() {
     var from = request.from();
     var onBoardTripLocation = from != null ? from.tripLocation() : null;
     if (onBoardTripLocation == null) {

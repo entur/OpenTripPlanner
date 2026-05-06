@@ -39,7 +39,7 @@ public final class RequestPreProcessor {
    */
   public RoutingWorkerRequest computeRequest(RouteRequest originalRequest) {
     var request = originalRequest.withPageCursor();
-    if (request.isOnBoardAccessRequest()) {
+    if (request.isStartOnBoardAccessRequest()) {
       request = prepareRequestForStartOnBoardAccess(request);
     }
     var transitSearchTimeZero = ServiceDateUtils.asStartOfService(request.dateTime(), zoneId);

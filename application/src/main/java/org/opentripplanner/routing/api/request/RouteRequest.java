@@ -303,7 +303,7 @@ public class RouteRequest implements Serializable {
    * Return {@code true} if the origin is on-board a transit vehicle rather than a geographic
    * location.
    */
-  public boolean isOnBoardAccessRequest() {
+  public boolean isStartOnBoardAccessRequest() {
     return from != null && from.isOnBoard();
   }
 
