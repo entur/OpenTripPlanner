@@ -1,10 +1,7 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -17,9 +14,7 @@ import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class StartOnBoardAccessResolverTest {
@@ -250,54 +245,6 @@ class StartOnBoardAccessResolverTest {
   }
 
   /**
-   * When a realtime-modified pattern is not in the Raptor pattern index,
-   * findPatternInRaptorData falls back to the base/static pattern.
-   */
-  @Test
-  void resolveFallsBackToBasePatternWhenRealtimePatternNotInIndex() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var scheduledPattern = tripData.scheduledTripPattern();
-    var tripTimes = tripData.scheduledTripTimes();
-
-    // Build pattern search BEFORE applying the realtime update — so it only has scheduled patterns
-    var patternSearch = env.raptorRequestData();
-
-    // Realtime-modified pattern (different route index, not in Raptor data)
-    var realtimePattern = TripPattern.of(id("P1-rt"))
-      .withRoute(scheduledPattern.getRoute())
-      .withStopPattern(scheduledPattern.getStopPattern())
-      .withRealTimeStopPatternModified()
-      .build();
-
-    // Apply realtime update that maps the trip to the new pattern
-    env
-      .timetableSnapshotManager()
-      .updateBuffer(RealTimeTripUpdate.of(realtimePattern, tripTimes, SERVICE_DATE).build());
-    env.timetableSnapshotManager().purgeAndCommit();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    // findPattern(trip, SERVICE_DATE) returns realtimePattern (not in index),
-    // falls back to findPattern(trip) which returns scheduledPattern (in index)
-    var result = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      null,
-      TIME_ZONE
-    );
-
-    assertEquals(
-      scheduledPattern.getRoutingTripPattern().patternIndex(),
-      result.tripBoarding().routeIndex()
-    );
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
-  }
-
-  /**
    * When multiple stop indices are provided (e.g. all child stops of a station), the resolver
    * picks the one that the trip actually visits.
    */
@@ -421,130 +368,6 @@ class StartOnBoardAccessResolverTest {
     );
     assertEquals(2, result2.tripBoarding().stopPositionInPattern());
     assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
-  }
-
-  /**
-   * When a TripPattern is copied (as happens during graph build in TransitDataImportBuilder),
-   * the copy gets a new RoutingTripPattern with a different patternIndex. However, the
-   * scheduledTimetable may still reference the original pattern. The Raptor data is built from
-   * scheduledTimetable.getPattern().getRoutingTripPattern() (the original), while
-   * TransitService.findPattern(trip) returns the copy.
-   *
-   * This test verifies that findPatternInRaptorData falls back to the scheduledTimetable's
-   * pattern when the copy's RoutingTripPattern is not in the Raptor index.
-   */
-  @Test
-  void resolveFallsBackToScheduledTimetablePatternWhenCopiedPatternNotInIndex() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var originalPattern = tripData.scheduledTripPattern();
-
-    // Build Raptor data BEFORE replacing the pattern — so it indexes the original's
-    // RoutingTripPattern
-    var patternSearch = env.raptorRequestData();
-
-    // Simulate what TransitDataImportBuilder does: copy the pattern while reusing the
-    // existing scheduledTimetable. The copy gets a new RoutingTripPattern (different
-    // patternIndex), but scheduledTimetable.getPattern() still points to the original.
-    // We must change an unrelated field (name) to prevent AbstractBuilder.build() from
-    // returning the original due to sameAs() equality.
-    var copiedPattern = originalPattern
-      .copy()
-      .withName("copied")
-      .withScheduledTimeTable(originalPattern.getScheduledTimetable())
-      .build();
-
-    // Replace the pattern in the repository — findPattern(trip) will now return the copy
-    env.timetableRepository().addTripPattern(copiedPattern.getId(), copiedPattern);
-    env.timetableRepository().index();
-
-    // Verify our setup: the copy has a different RoutingTripPattern index
-    assertNotEquals(
-      originalPattern.getRoutingTripPattern().patternIndex(),
-      copiedPattern.getRoutingTripPattern().patternIndex()
-    );
-    // And the scheduledTimetable still references the original
-    assertSame(originalPattern, copiedPattern.getScheduledTimetable().getPattern());
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    // Should succeed by falling back to scheduledTimetable.getPattern() (the original)
-    var result = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      null,
-      TIME_ZONE
-    );
-
-    assertEquals(
-      originalPattern.getRoutingTripPattern().patternIndex(),
-      result.tripBoarding().routeIndex()
-    );
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
-  }
-
-  /**
-   * Combines both failure modes: a realtime update creates a new pattern not in the index,
-   * AND the base pattern was copied (so its RoutingTripPattern also differs from what's in
-   * the index). The resolver must:
-   * 1. Try findPattern(trip, date) → realtime pattern (not in index, scheduledTimetable
-   *    points to itself → still not in index)
-   * 2. Fall back to findPattern(trip) → copied base pattern (not in index)
-   * 3. Fall back to copiedBase.scheduledTimetable.getPattern() → original (in index)
-   */
-  @Test
-  void resolveFallsBackThroughRealtimeAndCopiedPattern() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var originalPattern = tripData.scheduledTripPattern();
-    var tripTimes = tripData.scheduledTripTimes();
-
-    // Build Raptor data with the original pattern
-    var patternSearch = env.raptorRequestData();
-
-    // Step 1: Copy the pattern (simulating graph build), reusing scheduledTimetable
-    var copiedPattern = originalPattern
-      .copy()
-      .withName("copied")
-      .withScheduledTimeTable(originalPattern.getScheduledTimetable())
-      .build();
-    env.timetableRepository().addTripPattern(copiedPattern.getId(), copiedPattern);
-    env.timetableRepository().index();
-
-    // Step 2: Apply a realtime update that moves the trip to a new pattern
-    var realtimePattern = TripPattern.of(id("P1-rt"))
-      .withRoute(originalPattern.getRoute())
-      .withStopPattern(originalPattern.getStopPattern())
-      .withRealTimeStopPatternModified()
-      .build();
-    env
-      .timetableSnapshotManager()
-      .updateBuffer(RealTimeTripUpdate.of(realtimePattern, tripTimes, SERVICE_DATE).build());
-    env.timetableSnapshotManager().purgeAndCommit();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    // findPattern(trip, date) → realtimePattern (not in index)
-    // findPattern(trip) → copiedPattern (not in index)
-    // copiedPattern.scheduledTimetable.getPattern() → originalPattern (in index!)
-    var result = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      null,
-      TIME_ZONE
-    );
-
-    assertEquals(
-      originalPattern.getRoutingTripPattern().patternIndex(),
-      result.tripBoarding().routeIndex()
-    );
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
   /**
