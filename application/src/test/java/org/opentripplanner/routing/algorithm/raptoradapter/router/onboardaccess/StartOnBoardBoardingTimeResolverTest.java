@@ -7,6 +7,7 @@ import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
@@ -135,54 +136,6 @@ class StartOnBoardBoardingTimeResolverTest {
         TIME_ZONE
       )
     );
-  }
-
-  @Test
-  void throwsOnRingLineWithStopIdOnly() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_A, "10:15")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    assertThrows(RoutingValidationException.class, () ->
-      new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
-        tripAndServiceDate,
-        STOP_A.getId(),
-        null,
-        TIME_ZONE
-      )
-    );
-  }
-
-  @Test
-  void resolvesRingLineWithAimedDepartureTime() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1")
-        .addStop(STOP_A, "10:00")
-        .addStop(STOP_B, "10:05")
-        .addStop(STOP_A, "10:15")
-        .addStop(STOP_C, "10:20")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-
-    // First occurrence of STOP_A at 10:00
-    var result1 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
-      tripAndServiceDate,
-      STOP_A.getId(),
-      toInstant(10 * 3600),
-      TIME_ZONE
-    );
-    assertEquals(expectedEpochSecond(10 * 3600), result1.getEpochSecond());
-
-    // Second occurrence of STOP_A at 10:15
-    var result2 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
-      tripAndServiceDate,
-      STOP_A.getId(),
-      toInstant(10 * 3600 + 15 * 60),
-      TIME_ZONE
-    );
-    assertEquals(expectedEpochSecond(10 * 3600 + 15 * 60), result2.getEpochSecond());
   }
 
   @Test
@@ -315,5 +268,56 @@ class StartOnBoardBoardingTimeResolverTest {
     long expectedEpochSecond =
       ServiceDateUtils.asStartOfService(dstDate, dstZone).toEpochSecond() + 10 * 3600 + 5 * 60;
     assertEquals(expectedEpochSecond, result.getEpochSecond());
+  }
+
+  @Nested
+  class RingLine {
+    @Test
+    void resolvesOnRingLineWithDepartureTime() {
+      var env = ENV_BUILDER.addTrip(
+        TripInput.of("T1")
+          .addStop(STOP_A, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(STOP_A, "10:15")
+          .addStop(STOP_C, "10:20")
+      ).build();
+
+      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+
+      // First occurrence of STOP_A at 10:00
+      var result1 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+        tripAndServiceDate,
+        STOP_A.getId(),
+        toInstant(10 * 3600),
+        TIME_ZONE
+      );
+      assertEquals(expectedEpochSecond(10 * 3600), result1.getEpochSecond());
+
+      // Second occurrence of STOP_A at 10:15
+      var result2 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+        tripAndServiceDate,
+        STOP_A.getId(),
+        toInstant(10 * 3600 + 15 * 60),
+        TIME_ZONE
+      );
+      assertEquals(expectedEpochSecond(10 * 3600 + 15 * 60), result2.getEpochSecond());
+    }
+
+    @Test
+    void throwsOnRingLineWithoutDepartureTime() {
+      var env = ENV_BUILDER.addTrip(
+        TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_A, "10:15")
+      ).build();
+
+      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+      assertThrows(RoutingValidationException.class, () ->
+        new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+          tripAndServiceDate,
+          STOP_A.getId(),
+          null,
+          TIME_ZONE
+        )
+      );
+    }
   }
 }

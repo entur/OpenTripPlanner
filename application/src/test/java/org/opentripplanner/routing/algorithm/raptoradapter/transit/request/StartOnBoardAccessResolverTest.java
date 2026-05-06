@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.onboardaccess.StartOnBoardAccessResolver;
@@ -195,60 +196,6 @@ class StartOnBoardAccessResolverTest {
     assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
-  @Test
-  void throwsOnRingLineWithSingleIndex() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_A, "10:15")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
-    assertThrows(RoutingValidationException.class, () ->
-      new StartOnBoardAccessResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_A.getIndex()),
-        null,
-        TIME_ZONE
-      )
-    );
-  }
-
-  @Test
-  void resolveRingLineWithScheduledDepartureTime() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1")
-        .addStop(STOP_A, "10:00")
-        .addStop(STOP_B, "10:05")
-        .addStop(STOP_A, "10:15")
-        .addStop(STOP_C, "10:20")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
-
-    // First occurrence of STOP_A at 10:00
-    var firstOccurrence = toInstant(10 * 3600);
-    var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(STOP_A.getIndex()),
-      firstOccurrence,
-      TIME_ZONE
-    );
-    assertEquals(0, result1.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600, result1.boardingTime());
-
-    // Second occurrence of STOP_A at 10:15
-    var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
-    var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(STOP_A.getIndex()),
-      secondOccurrence,
-      TIME_ZONE
-    );
-    assertEquals(2, result2.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
-  }
-
   /**
    * When multiple stop indices are provided (e.g. all child stops of a station), the resolver
    * picks the one that the trip actually visits.
@@ -316,59 +263,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       )
     );
-  }
-
-  /**
-   * When multiple stop indices both appear in the trip (e.g. two child stops of a station on a
-   * ring line), passing no departure time is ambiguous and must throw. Passing a departure time
-   * disambiguates.
-   */
-  @Test
-  void throwsWithAmbiguousMultipleIndicesWithoutDepartureTime() {
-    var stopA1 = ENV_BUILDER.stop("A1");
-    var stopA2 = ENV_BUILDER.stop("A2");
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1")
-        .addStop(stopA1, "10:00")
-        .addStop(STOP_B, "10:05")
-        .addStop(stopA2, "10:15")
-        .addStop(STOP_C, "10:20")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
-
-    // Without departure time — both A1 (pos 0) and A2 (pos 2) match, ambiguous
-    assertThrows(RoutingValidationException.class, () ->
-      new StartOnBoardAccessResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(stopA1.getIndex(), stopA2.getIndex()),
-        null,
-        TIME_ZONE
-      )
-    );
-
-    // With departure time for A1 at 10:00 — should find position 0
-    var firstOccurrence = toInstant(10 * 3600);
-    var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(stopA1.getIndex(), stopA2.getIndex()),
-      firstOccurrence,
-      TIME_ZONE
-    );
-    assertEquals(0, result1.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600, result1.boardingTime());
-
-    // With departure time for A2 at 10:15 — should find position 2
-    var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
-    var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
-      tripAndServiceDate,
-      List.of(stopA1.getIndex(), stopA2.getIndex()),
-      secondOccurrence,
-      TIME_ZONE
-    );
-    assertEquals(2, result2.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
   }
 
   /**
@@ -458,5 +352,119 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       )
     );
+  }
+
+  @Nested
+  class RingLine {
+
+    @Test
+    void resolvesOnRingLineWithDepartureTime() {
+      var env = ENV_BUILDER.addTrip(
+        TripInput.of("T1")
+          .addStop(STOP_A, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(STOP_A, "10:15")
+          .addStop(STOP_C, "10:20")
+      ).build();
+
+      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+      var patternSearch = env.raptorRequestData();
+
+      // First occurrence of STOP_A at 10:00
+      var firstOccurrence = toInstant(10 * 3600);
+      var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(STOP_A.getIndex()),
+        firstOccurrence,
+        TIME_ZONE
+      );
+      assertEquals(0, result1.tripBoarding().stopPositionInPattern());
+      assertEquals(10 * 3600, result1.boardingTime());
+
+      // Second occurrence of STOP_A at 10:15
+      var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
+      var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(STOP_A.getIndex()),
+        secondOccurrence,
+        TIME_ZONE
+      );
+      assertEquals(2, result2.tripBoarding().stopPositionInPattern());
+      assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
+    }
+
+    @Test
+    void throwsOnRingLineWithoutDepartureTime() {
+      var env = ENV_BUILDER.addTrip(
+        TripInput.of("T1")
+          .addStop(STOP_A, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(STOP_A, "10:15")
+      ).build();
+
+      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+      var patternSearch = env.raptorRequestData();
+      assertThrows(RoutingValidationException.class, () ->
+        new StartOnBoardAccessResolver(patternSearch).resolve(
+          tripAndServiceDate,
+          List.of(STOP_A.getIndex()),
+          null,
+          TIME_ZONE
+        )
+      );
+    }
+
+    /**
+     * When multiple stop indices both appear in the trip (e.g. two child stops of a station on a
+     * ring line), passing no departure time is ambiguous and must throw. Passing a departure time
+     * would disambiguate.
+     */
+    @Test
+    void throwsOnRingLineMultipleIndicesWithoutDepartureTime() {
+      var stopA1 = ENV_BUILDER.stop("A1");
+      var stopA2 = ENV_BUILDER.stop("A2");
+      var env = ENV_BUILDER.addTrip(
+        TripInput.of("T1")
+          .addStop(stopA1, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(stopA2, "10:15")
+          .addStop(STOP_C, "10:20")
+      ).build();
+
+      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+      var patternSearch = env.raptorRequestData();
+
+      // Without departure time — both A1 (pos 0) and A2 (pos 2) match, ambiguous
+      assertThrows(RoutingValidationException.class, () ->
+        new StartOnBoardAccessResolver(patternSearch).resolve(
+          tripAndServiceDate,
+          List.of(stopA1.getIndex(), stopA2.getIndex()),
+          null,
+          TIME_ZONE
+        )
+      );
+
+      // With departure time for A1 at 10:00 — should find position 0
+      var firstOccurrence = toInstant(10 * 3600);
+      var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(stopA1.getIndex(), stopA2.getIndex()),
+        firstOccurrence,
+        TIME_ZONE
+      );
+      assertEquals(0, result1.tripBoarding().stopPositionInPattern());
+      assertEquals(10 * 3600, result1.boardingTime());
+
+      // With departure time for A2 at 10:15 — should find position 2
+      var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
+      var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(stopA1.getIndex(), stopA2.getIndex()),
+        secondOccurrence,
+        TIME_ZONE
+      );
+      assertEquals(2, result2.tripBoarding().stopPositionInPattern());
+      assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
+    }
   }
 }
