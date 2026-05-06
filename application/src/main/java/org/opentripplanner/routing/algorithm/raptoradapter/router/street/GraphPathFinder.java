@@ -33,10 +33,7 @@ class GraphPathFinder {
     this.maxCarSpeed = maxCarSpeed;
   }
 
-  List<StreetPath> find(
-    RouteRequest request,
-    LinkingContext linkingContext
-  ) {
+  List<StreetPath> find(RouteRequest request, LinkingContext linkingContext) {
     Set<Vertex> from = linkingContext.findVertices(request.from());
     Set<Vertex> to = linkingContext.findVertices(request.to());
     OTPRequestTimeoutException.checkForTimeout();

@@ -18,13 +18,12 @@ import org.junit.jupiter.api.function.Executable;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
+import org.opentripplanner.TestServerContext;
 import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
-import org.opentripplanner.TestServerContext;
-import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.DirectStreetRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
@@ -38,9 +37,6 @@ import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
-import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
-import org.opentripplanner.transfer.regular.internal.TransferIndex;
-import org.opentripplanner.transit.service.TimetableRepository;
 
 public class BarrierRoutingTest {
 
@@ -196,12 +192,7 @@ public class BarrierRoutingTest {
     var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
     var linkingRequest = LinkingContextRequestMapper.map(request);
     var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
-    var ctx = TestServerContext.createServerContext(
-      graph,
-      new TimetableRepository(),
-      new DefaultTransferRepository(new TransferIndex()),
-      new DefaultFareService()
-    );
+    var ctx = TestServerContext.ofGraph(graph);
 
     var itineraries = DirectStreetRouter.route(ctx, request, linkingContext);
 

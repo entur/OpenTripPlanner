@@ -12,7 +12,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.TestServerContext;
-import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.DirectStreetRouter;
@@ -24,9 +23,6 @@ import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.test.support.ResourceLoader;
-import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
-import org.opentripplanner.transfer.regular.internal.TransferIndex;
-import org.opentripplanner.transit.service.TimetableRepository;
 
 class WalkRoutingTest {
 
@@ -94,12 +90,7 @@ class WalkRoutingTest {
       var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
-      var ctx = TestServerContext.createServerContext(
-        graph,
-        new TimetableRepository(),
-        new DefaultTransferRepository(new TransferIndex()),
-        new DefaultFareService()
-      );
+      var ctx = TestServerContext.ofGraph(graph);
       return DirectStreetRouter.route(ctx, request, linkingContext);
     }
   }
