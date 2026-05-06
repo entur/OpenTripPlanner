@@ -219,7 +219,7 @@ public abstract class OsmEntity {
    * The tags of an entity (immutable).
    */
   public Map<String, String> getTags() {
-    if (this.tags == null) {
+    if (this.isTagless()) {
       return Map.of();
     } else {
       return Collections.unmodifiableMap(tags);
@@ -800,6 +800,7 @@ public abstract class OsmEntity {
    * Values are split by semicolons.
    */
   public Set<String> getMultiTagValues(Set<String> refTags) {
+    // we try to keep the allocations low, so only allocate a small hash set by default
     Set<String> result = HashSet.newHashSet(2);
     for (var tag : refTags) {
       var value = getTag(tag);
