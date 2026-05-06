@@ -116,7 +116,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   @Override
   public RaptorRouterResult<T> results() {
     arrivals.debugStateInfo();
-    return new McRaptorRouterResult<T>(arrivals, paths);
+    return new McRaptorRouterResult<>(arrivals, paths);
   }
 
   Iterable<? extends McStopArrival<T>> listStopArrivalsPreviousRound(int stop) {
@@ -128,9 +128,9 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     return arrivals.consumeOnTripStopArrivalsForRoute(routeIndex);
   }
 
-  public void addOnTripAccessStopArrival(RaptorStartOnBoardAccess accessPath, int arrivalTime) {
-    var arrival = stopArrivalFactory.createAccessStopArrival(arrivalTime, accessPath);
-    arrivals.addOnBoardTripArrival(arrival, arrival.stop(), accessPath.tripBoarding());
+  public void addOnTripAccessStopArrival(RaptorStartOnBoardAccess access, int arrivalTime) {
+    var arrival = stopArrivalFactory.createAccessStopArrival(arrivalTime, access);
+    arrivals.addOnBoardTripArrival(arrival, arrival.stop(), access.tripBoarding());
   }
 
   /**
