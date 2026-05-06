@@ -52,7 +52,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+    var result = new StartOnBoardAccessResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
       List.of(STOP_B.getIndex()),
       null,
@@ -76,7 +76,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+    var result = new StartOnBoardAccessResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
       List.of(STOP_A.getIndex()),
       null,
@@ -97,7 +97,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
+    var patternSearch = env.raptorRoutingRequestTransitData();
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
         tripAndServiceDate,
@@ -115,7 +115,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
+    var patternSearch = env.raptorRoutingRequestTransitData();
     var aimedDeparture = toInstant(10 * 3600 + 10 * 60);
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
@@ -135,7 +135,7 @@ class StartOnBoardAccessResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var aimedDeparture = toInstant(10 * 3600 + 5 * 60);
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+    var result = new StartOnBoardAccessResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
       List.of(STOP_B.getIndex()),
       aimedDeparture,
@@ -159,7 +159,7 @@ class StartOnBoardAccessResolverTest {
 
     // STOP_B departs at 10:05, but we provide 10:00 — should fail
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
+    var patternSearch = env.raptorRoutingRequestTransitData();
     var wrongAimedDeparture = toInstant(10 * 3600);
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
@@ -169,29 +169,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       )
     );
-  }
-
-  @Test
-  void resolvesWithScheduledRaptorData() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    // Use ignoreRealtimeUpdates=true, mirroring the production flag in TransitRouter
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData(true)).resolve(
-      tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      null,
-      TIME_ZONE
-    );
-
-    var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
-
-    assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(routingPattern.stopIndex(1), result.stop());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
   /**
@@ -208,7 +185,7 @@ class StartOnBoardAccessResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     // Pass both A1 and A2; only A2 is in the trip, so position 0 should be found
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+    var result = new StartOnBoardAccessResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
       List.of(stopA1.getIndex(), stopA2.getIndex()),
       null,
@@ -230,7 +207,7 @@ class StartOnBoardAccessResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     assertThrows(IllegalArgumentException.class, () ->
-      new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+      new StartOnBoardAccessResolver(env.raptorRoutingRequestTransitData()).resolve(
         tripAndServiceDate,
         List.of(),
         null,
@@ -252,7 +229,7 @@ class StartOnBoardAccessResolverTest {
 
     // A1 is not visited by the trip
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
+    var patternSearch = env.raptorRoutingRequestTransitData();
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
         tripAndServiceDate,
@@ -289,7 +266,7 @@ class StartOnBoardAccessResolverTest {
     var aimedDeparture = toInstant(10 * 3600 + 5 * 60, dstDate, dstZone);
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
-    var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
+    var result = new StartOnBoardAccessResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
       List.of(stopB.getIndex()),
       aimedDeparture,
@@ -313,7 +290,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
+    var patternSearch = env.raptorRoutingRequestTransitData();
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
         tripAndServiceDate,
@@ -338,7 +315,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRequestData();
+    var patternSearch = env.raptorRoutingRequestTransitData();
     var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
       .plusSeconds(10 * 3600 + 5 * 60)
       .toInstant();
@@ -366,7 +343,7 @@ class StartOnBoardAccessResolverTest {
       ).build();
 
       var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-      var patternSearch = env.raptorRequestData();
+      var patternSearch = env.raptorRoutingRequestTransitData();
 
       // First occurrence of STOP_A at 10:00
       var firstOccurrence = toInstant(10 * 3600);
@@ -401,7 +378,7 @@ class StartOnBoardAccessResolverTest {
       ).build();
 
       var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-      var patternSearch = env.raptorRequestData();
+      var patternSearch = env.raptorRoutingRequestTransitData();
       assertThrows(RoutingValidationException.class, () ->
         new StartOnBoardAccessResolver(patternSearch).resolve(
           tripAndServiceDate,
@@ -430,7 +407,7 @@ class StartOnBoardAccessResolverTest {
       ).build();
 
       var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-      var patternSearch = env.raptorRequestData();
+      var patternSearch = env.raptorRoutingRequestTransitData();
 
       // Without departure time — both A1 (pos 0) and A2 (pos 2) match, ambiguous
       assertThrows(RoutingValidationException.class, () ->
