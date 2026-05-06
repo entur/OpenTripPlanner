@@ -108,6 +108,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     transfersCache.clear();
   }
 
+  @SuppressWarnings("RedundantLabeledSwitchRuleCodeBlock")
   @Override
   public void notifyElementAccepted(ArrivalView<T> newElement) {
     var arrival = (McStopArrival<T>) newElement;
@@ -132,7 +133,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     }
   }
 
-  /// We need to continue pass-through connections, even if they are better arrivals in the
+  /// We need to continue pass-through connections, even if better arrivals exist in the
   /// stop arrivals at the given stop - so we ignore the fact that the alighting is rejected.
   @Override
   public void notifyElementRejected(ArrivalView<T> arrival, ArrivalView<T> rejectedByElement) {
@@ -143,26 +144,26 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     }
   }
 
-  private void continueOnSameTripInNextSegment(ArrivalView<T> arrival) {
-    if (!arrival.arrivedBy(TRANSIT)) {
-      next.addStopArrival((McStopArrival<T>) arrival);
+  /// @param alightArrival Must be a transit arrival, if not it is ignored.
+  @SuppressWarnings("DataFlowIssue")
+  private void continueOnSameTripInNextSegment(ArrivalView<T> alightArrival) {
+    if (!alightArrival.arrivedBy(TRANSIT)) {
       return;
     }
-    T trip = arrival.transitPath().trip();
+    T trip = alightArrival.transitPath().trip();
     var info = tripInfoProvider.apply(trip);
 
-    var boardingArrival = arrival.previous();
+    var arrivalAtBoardStop = alightArrival.previous();
     int passThroughStopPos = trip.findDepartureStopPosition(
-      boardingArrival.arrivalTime(),
-      arrival.stop()
+      arrivalAtBoardStop.arrivalTime(),
+      alightArrival.stop()
     );
     var onBoardTripConstraint = new RaptorTripScheduleStopPosition(
       info.routeIndex(),
       info.tripScheduleIndex(),
       passThroughStopPos
     );
-
-    next.addOnBoardTripArrival(boardingArrival, arrival.stop(), onBoardTripConstraint);
+    next.addOnBoardTripArrival(arrivalAtBoardStop, alightArrival.stop(), onBoardTripConstraint);
   }
 
   private void continueFromSameStopArrival(
