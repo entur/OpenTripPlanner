@@ -66,9 +66,9 @@ class WalkRoutingTest {
     var backwardResults = route(roundabout, start, end, time, true);
     assertEquals(1, backwardResults.size());
     // duration should be the same for every parametrized offset
-    long expected = 11;
-    assertEquals(expected, forwardResults.getFirst().totalDuration().toSeconds());
-    assertEquals(expected, backwardResults.getFirst().totalDuration().toSeconds());
+    long expected = 11000;
+    assertEquals(expected, forwardResults.getFirst().totalDuration().toMillis());
+    assertEquals(expected, backwardResults.getFirst().totalDuration().toMillis());
   }
 
   private static List<Itinerary> route(
