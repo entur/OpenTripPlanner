@@ -3,6 +3,7 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
@@ -30,6 +31,20 @@ class StartOnBoardAccessResolverTest {
   private final RegularStop STOP_A = ENV_BUILDER.stop("A");
   private final RegularStop STOP_B = ENV_BUILDER.stop("B");
   private final RegularStop STOP_C = ENV_BUILDER.stop("C");
+
+  private static Instant toInstant(
+    int secondsSinceStartOfService,
+    LocalDate serviceDate,
+    ZoneId timeZone
+  ) {
+    return ServiceDateUtils.asStartOfService(serviceDate, timeZone)
+      .plusSeconds(secondsSinceStartOfService)
+      .toInstant();
+  }
+
+  private static Instant toInstant(int secondsSinceStartOfService) {
+    return toInstant(secondsSinceStartOfService, SERVICE_DATE, TIME_ZONE);
+  }
 
   @Test
   void resolveSimpleOnBoardAccess() {
@@ -102,9 +117,7 @@ class StartOnBoardAccessResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
-    var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600 + 10 * 60)
-      .toInstant();
+    var aimedDeparture = toInstant(10 * 3600 + 10 * 60);
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
         tripAndServiceDate,
@@ -122,9 +135,7 @@ class StartOnBoardAccessResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600 + 5 * 60)
-      .toInstant();
+    var aimedDeparture = toInstant(10 * 3600 + 5 * 60);
     var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(
       tripAndServiceDate,
       List.of(STOP_B.getIndex()),
@@ -150,9 +161,7 @@ class StartOnBoardAccessResolverTest {
     // STOP_B departs at 10:05, but we provide 10:00 — should fail
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRequestData();
-    var wrongAimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600)
-      .toInstant();
+    var wrongAimedDeparture = toInstant(10 * 3600);
     assertThrows(IllegalArgumentException.class, () ->
       new StartOnBoardAccessResolver(patternSearch).resolve(
         tripAndServiceDate,
@@ -218,9 +227,7 @@ class StartOnBoardAccessResolverTest {
     var patternSearch = env.raptorRequestData();
 
     // First occurrence of STOP_A at 10:00
-    var firstOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600)
-      .toInstant();
+    var firstOccurrence = toInstant(10 * 3600);
     var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
       tripAndServiceDate,
       List.of(STOP_A.getIndex()),
@@ -231,9 +238,7 @@ class StartOnBoardAccessResolverTest {
     assertEquals(10 * 3600, result1.boardingTime());
 
     // Second occurrence of STOP_A at 10:15
-    var secondOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600 + 15 * 60)
-      .toInstant();
+    var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
     var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
       tripAndServiceDate,
       List.of(STOP_A.getIndex()),
@@ -344,9 +349,7 @@ class StartOnBoardAccessResolverTest {
     );
 
     // With departure time for A1 at 10:00 — should find position 0
-    var firstOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600)
-      .toInstant();
+    var firstOccurrence = toInstant(10 * 3600);
     var result1 = new StartOnBoardAccessResolver(patternSearch).resolve(
       tripAndServiceDate,
       List.of(stopA1.getIndex(), stopA2.getIndex()),
@@ -357,9 +360,7 @@ class StartOnBoardAccessResolverTest {
     assertEquals(10 * 3600, result1.boardingTime());
 
     // With departure time for A2 at 10:15 — should find position 2
-    var secondOccurrence = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600 + 15 * 60)
-      .toInstant();
+    var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
     var result2 = new StartOnBoardAccessResolver(patternSearch).resolve(
       tripAndServiceDate,
       List.of(stopA1.getIndex(), stopA2.getIndex()),
@@ -392,11 +393,8 @@ class StartOnBoardAccessResolverTest {
       )
       .build();
 
-    // Compute the aimed departure instant using start-of-service (noon-minus-12h),
-    // which is what a correct client would send
-    var aimedDeparture = ServiceDateUtils.asStartOfService(dstDate, dstZone)
-      .plusSeconds(10 * 3600 + 5 * 60)
-      .toInstant();
+    // Aimed departure time is given with respect to the date and time zone of the client
+    var aimedDeparture = toInstant(10 * 3600 + 5 * 60, dstDate, dstZone);
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
     var result = new StartOnBoardAccessResolver(env.raptorRequestData()).resolve(

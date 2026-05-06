@@ -30,10 +30,18 @@ class StartOnBoardBoardingTimeResolverTest {
   private final RegularStop STOP_B = ENV_BUILDER.stop("B");
   private final RegularStop STOP_C = ENV_BUILDER.stop("C");
 
-  private static Instant toInstant(int secondsSinceStartOfService) {
-    return ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
+  private static Instant toInstant(
+    int secondsSinceStartOfService,
+    LocalDate serviceDate,
+    ZoneId timeZone
+  ) {
+    return ServiceDateUtils.asStartOfService(serviceDate, timeZone)
       .plusSeconds(secondsSinceStartOfService)
       .toInstant();
+  }
+
+  private static Instant toInstant(int secondsSinceStartOfService) {
+    return toInstant(secondsSinceStartOfService, SERVICE_DATE, TIME_ZONE);
   }
 
   private static long expectedEpochSecond(int secondsSinceStartOfService) {
@@ -293,11 +301,8 @@ class StartOnBoardBoardingTimeResolverTest {
       )
       .build();
 
-    // Compute the aimed departure instant using start-of-service (noon-minus-12h),
-    // which is what a correct client would send
-    var aimedDeparture = ServiceDateUtils.asStartOfService(dstDate, dstZone)
-      .plusSeconds(10 * 3600 + 5 * 60)
-      .toInstant();
+    // Aimed departure time is given with respect to the date and time zone of the client
+    var aimedDeparture = toInstant(10 * 3600 + 5 * 60, dstDate, dstZone);
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
