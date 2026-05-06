@@ -121,8 +121,8 @@ class RaptorTransferIndexTest {
     Consumer<RaptorTransferIndex> verifier
   ) {
     for (var index : List.of(
-      RaptorTransferIndex.createInitialSetup(DATA, streetSearchRequest),
-      RaptorTransferIndex.createRequestScope(DATA, streetSearchRequest)
+      new PreCachedRaptorTransferIndex(DATA, streetSearchRequest, false),
+      new OnDemandRaptorTransferIndex(DATA, streetSearchRequest)
     )) {
       verifier.accept(index);
     }

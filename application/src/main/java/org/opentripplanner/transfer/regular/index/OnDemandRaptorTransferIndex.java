@@ -72,7 +72,7 @@ class OnDemandRaptorTransferIndex implements RaptorTransferIndex {
         reversedTransfers.get(stopIndex)
       )
         .stream()
-        .map(t -> t.reverseOf(stopIndex))
+        .map(t -> t.reverseOf(t.transfer().from.getIndex()))
         .toList();
     }
 

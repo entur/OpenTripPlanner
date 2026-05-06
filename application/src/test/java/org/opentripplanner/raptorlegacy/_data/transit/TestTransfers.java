@@ -2,10 +2,8 @@ package org.opentripplanner.raptorlegacy._data.transit;
 
 import static org.opentripplanner.raptor.spi.RaptorCostConverter.toRaptorCost;
 
-import org.opentripplanner.transfer.regular.model.DefaultRaptorTransfer;
-
 /**
- * Simple factory to create {@link DefaultRaptorTransfer}s for unit-testing.
+ * Simple factory to create {@link TestTransfer}s for unit-testing.
  * <p>
  * <b>Note!</b> The created transfer does NOT have a AStar path (list of edges).
  */
