@@ -17,18 +17,18 @@ import org.slf4j.LoggerFactory;
  *
  * <h3>Request window</h3>
  *
- * The passenger's window is derived from {@code request.dateTime()} and the {@code searchWindow}.
- * Which two of EDT/LDT/EAT/LAT exist depends on {@code arriveBy}:
+ * The passenger's window is derived from {@code request.getRequestedDateTime()} and the
+ * {@code searchWindow}. Which two of EDT/LDT/EAT/LAT exist depends on {@code arriveBy}:
  *
  * <ul>
  *   <li><strong>EDT</strong> — earliest departure time. Defined when {@code arriveBy = false} as
- *       {@code dateTime}. The passenger does not depart from origin before EDT.</li>
+ *       {@code requestedDateTime}. The passenger does not depart from origin before EDT.</li>
  *   <li><strong>LDT</strong> — latest departure time. Defined when {@code arriveBy = false} as
- *       {@code dateTime + searchWindow}. The passenger departs by LDT.</li>
+ *       {@code requestedDateTime + searchWindow}. The passenger departs by LDT.</li>
  *   <li><strong>LAT</strong> — latest arrival time. Defined when {@code arriveBy = true} as
- *       {@code dateTime}. The passenger arrives at destination by LAT.</li>
+ *       {@code requestedDateTime}. The passenger arrives at destination by LAT.</li>
  *   <li><strong>EAT</strong> — earliest arrival time. Defined when {@code arriveBy = true} as
- *       {@code dateTime − searchWindow}. The passenger does not arrive before EAT.</li>
+ *       {@code requestedDateTime − searchWindow}. The passenger does not arrive before EAT.</li>
  * </ul>
  *
  * <h3>Slack constants</h3>
@@ -92,10 +92,10 @@ import org.slf4j.LoggerFactory;
  * <h3>Behavior with missing inputs</h3>
  *
  * <ul>
- *   <li>{@code dateTime == null}: pass-through (no filtering possible).</li>
+ *   <li>{@code requestedDateTime == null}: pass-through (no filtering possible).</li>
  *   <li>{@code searchWindow == null}: the bound that depends on the search window (too-late for
  *       arriveBy=false, too-early for arriveBy=true) is skipped. The opposite-side bound still
- *       applies because it depends only on {@code dateTime}.</li>
+ *       applies because it depends only on {@code requestedDateTime}.</li>
  * </ul>
  */
 public class TimeBasedTripFilter implements CarpoolTripFilter {
@@ -108,8 +108,8 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     CarpoolingRequest request,
     Duration searchWindow
   ) {
-    var dateTime = request.getRequestedDateTime();
-    if (dateTime == null) {
+    var requestedDateTime = request.getRequestedDateTime();
+    if (requestedDateTime == null) {
       return true;
     }
 
@@ -117,12 +117,12 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     var tripEnd = trip.endTime().toInstant();
 
     return request.isArriveByRequest()
-      ? acceptsArriveBy(trip, request, searchWindow, dateTime, tripStart, tripEnd)
-      : acceptsDepartAfter(trip, request, searchWindow, dateTime, tripStart, tripEnd);
+      ? acceptsArriveBy(trip, request, searchWindow, requestedDateTime, tripStart, tripEnd)
+      : acceptsDepartAfter(trip, request, searchWindow, requestedDateTime, tripStart, tripEnd);
   }
 
   /**
-   * Rules for {@code arriveBy = true}: dateTime is LAT; EAT = LAT − searchWindow.
+   * Rules for {@code arriveBy = true}: requestedDateTime is LAT; EAT = LAT − searchWindow.
    * <ul>
    *   <li>Too late: {@code tripStart > LAT} for all leg types.</li>
    *   <li>Too early: {@code tripEnd < EAT − slack} where slack is {@code T} for access (transit +
@@ -151,7 +151,7 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
   }
 
   /**
-   * Rules for {@code arriveBy = false}: dateTime is EDT; LDT = EDT + searchWindow.
+   * Rules for {@code arriveBy = false}: requestedDateTime is EDT; LDT = EDT + searchWindow.
    * <ul>
    *   <li>Too early: {@code tripEnd < EDT} for all leg types.</li>
    *   <li>Too late: {@code tripStart > LDT + slack} where slack is {@code T} for egress (access +
