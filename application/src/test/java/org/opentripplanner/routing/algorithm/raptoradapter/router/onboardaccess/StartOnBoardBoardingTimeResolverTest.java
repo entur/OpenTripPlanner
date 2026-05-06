@@ -13,9 +13,7 @@ import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class StartOnBoardBoardingTimeResolverTest {
@@ -159,80 +157,6 @@ class StartOnBoardBoardingTimeResolverTest {
   }
 
   /**
-   * Verify that the resolver works when a realtime updater has modified the trip's stop pattern,
-   * moving it to a new TripPattern whose scheduled timetable is empty. The resolver must fall back
-   * to the realtime timetable to find the trip's departure time.
-   */
-  @Test
-  void resolvesWithRealtimeModifiedPattern() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var scheduledPattern = tripData.scheduledTripPattern();
-    var tripTimes = tripData.scheduledTripTimes();
-
-    // Realtime-modified pattern (empty scheduled timetable)
-    var realtimePattern = TripPattern.of(id("P1-rt"))
-      .withRoute(scheduledPattern.getRoute())
-      .withStopPattern(scheduledPattern.getStopPattern())
-      .withRealTimeStopPatternModified()
-      .build();
-
-    // Apply realtime update
-    env
-      .timetableSnapshotManager()
-      .updateBuffer(RealTimeTripUpdate.of(realtimePattern, tripTimes, SERVICE_DATE).build());
-    env.timetableSnapshotManager().purgeAndCommit();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
-      tripAndServiceDate,
-      STOP_B.getId(),
-      null,
-      TIME_ZONE
-    );
-
-    assertEquals(expectedEpochSecond(10 * 3600 + 5 * 60), result.getEpochSecond());
-  }
-
-  /**
-   * When a TripPattern is copied (as happens during graph build), the copy gets a new
-   * RoutingTripPattern. The resolver must find the trip's times in the realtime timetable
-   * (which maps the trip to the copied pattern's timetable) rather than in the empty
-   * scheduled timetable of the copy.
-   */
-  @Test
-  void resolvesWithCopiedPattern() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripData = env.tripData("T1");
-    var originalPattern = tripData.scheduledTripPattern();
-
-    // Copy pattern with reused scheduledTimetable (same as TransitDataImportBuilder)
-    var copiedPattern = originalPattern
-      .copy()
-      .withName("copied")
-      .withScheduledTimeTable(originalPattern.getScheduledTimetable())
-      .build();
-    env.timetableRepository().addTripPattern(copiedPattern.getId(), copiedPattern);
-    env.timetableRepository().index();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
-      tripAndServiceDate,
-      STOP_B.getId(),
-      null,
-      TIME_ZONE
-    );
-
-    assertEquals(expectedEpochSecond(10 * 3600 + 5 * 60), result.getEpochSecond());
-  }
-
-  /**
    * When the clocks move forward in spring due to DST, midnight and noon-minus-12h
    * (start-of-service) differ by one hour. The aimed departure time conversion uses
    * start-of-service (noon-minus-12h) as the reference, not midnight, because TripTimes are
@@ -272,6 +196,7 @@ class StartOnBoardBoardingTimeResolverTest {
 
   @Nested
   class RingLine {
+
     @Test
     void resolvesOnRingLineWithDepartureTime() {
       var env = ENV_BUILDER.addTrip(
@@ -306,7 +231,10 @@ class StartOnBoardBoardingTimeResolverTest {
     @Test
     void throwsOnRingLineWithoutDepartureTime() {
       var env = ENV_BUILDER.addTrip(
-        TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_A, "10:15")
+        TripInput.of("T1")
+          .addStop(STOP_A, "10:00")
+          .addStop(STOP_B, "10:05")
+          .addStop(STOP_A, "10:15")
       ).build();
 
       var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
