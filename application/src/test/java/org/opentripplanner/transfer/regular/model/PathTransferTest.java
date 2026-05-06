@@ -19,7 +19,7 @@ import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.transit.model.site.RegularStop;
 
-class TransferTest {
+class PathTransferTest {
 
   private static final IntersectionVertex BERLIN_V = intersectionVertex(Coordinates.BERLIN);
   private static final IntersectionVertex BRANDENBURG_GATE_V = intersectionVertex(
