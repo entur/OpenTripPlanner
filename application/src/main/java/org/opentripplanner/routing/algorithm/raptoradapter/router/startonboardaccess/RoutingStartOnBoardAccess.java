@@ -17,7 +17,7 @@ public final class RoutingStartOnBoardAccess
   private final int stop;
   private final int boardingTime;
 
-  public RoutingStartOnBoardAccess(
+  RoutingStartOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
     BoardingLocationInPatternReference tripLocationInScheduleReference
   ) {
