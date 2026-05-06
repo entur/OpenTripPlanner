@@ -18,30 +18,29 @@ import org.junit.jupiter.api.function.Executable;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
-import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.walkstep.WalkStep;
-import org.opentripplanner.routing.algorithm.mapping.LegsToItineraryMapper;
-import org.opentripplanner.routing.algorithm.mapping.StreetPathToLegsMapper;
+import org.opentripplanner.TestServerContext;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.DirectStreetRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.graphfinder.NoopSiteResolver;
-import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
+import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
+import org.opentripplanner.transfer.regular.internal.TransferIndex;
+import org.opentripplanner.transit.service.TimetableRepository;
 
 public class BarrierRoutingTest {
 
@@ -197,23 +196,14 @@ public class BarrierRoutingTest {
     var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
     var linkingRequest = LinkingContextRequestMapper.map(request);
     var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
-    var gpf = new GraphPathFinder();
-    var paths = gpf.find(request, linkingContext);
-
-    StreetPathToLegsMapper streetPathToLegsMapper = new StreetPathToLegsMapper(
-      new NoopSiteResolver(),
-      ZoneIds.BERLIN,
-      graph.streetNotesService,
-      new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
-      graph.ellipsoidToGeoidDifference
+    var ctx = TestServerContext.createServerContext(
+      graph,
+      new TimetableRepository(),
+      new DefaultTransferRepository(new TransferIndex()),
+      new DefaultFareService()
     );
 
-    var itineraries = paths
-      .stream()
-      .map(path ->
-        LegsToItineraryMapper.map(streetPathToLegsMapper.map(path, request), false, null).get()
-      )
-      .toList();
+    var itineraries = DirectStreetRouter.route(ctx, request, linkingContext);
 
     assertAll(assertions.apply(itineraries));
 
