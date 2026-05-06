@@ -15,7 +15,6 @@ public final class RoutingStartOnBoardAccess
   private final int tripScheduleIndex;
   private final int stopPositionInPattern;
   private final int stop;
-  private final int boardingTime;
 
   RoutingStartOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
@@ -25,11 +24,6 @@ public final class RoutingStartOnBoardAccess
     this.tripScheduleIndex = tripScheduleReference.tripScheduleIndex();
     this.stopPositionInPattern = tripLocationInScheduleReference.stopPositionInPattern();
     this.stop = tripLocationInScheduleReference.stopIndex();
-    this.boardingTime = tripLocationInScheduleReference.boardingTimeSeconds();
-  }
-
-  public int boardingTime() {
-    return boardingTime;
   }
 
   @Override
@@ -92,13 +86,12 @@ public final class RoutingStartOnBoardAccess
       this.routeIndex == that.routeIndex &&
       this.tripScheduleIndex == that.tripScheduleIndex &&
       this.stopPositionInPattern == that.stopPositionInPattern &&
-      this.stop == that.stop &&
-      this.boardingTime == that.boardingTime
+      this.stop == that.stop
     );
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(routeIndex, tripScheduleIndex, stopPositionInPattern, stop, boardingTime);
+    return Objects.hash(routeIndex, tripScheduleIndex, stopPositionInPattern, stop);
   }
 }

@@ -65,7 +65,6 @@ class StartOnBoardAccessResolverTest {
     assertEquals(0, result.tripBoarding().tripScheduleIndex());
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(1), result.stop());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
     assertEquals(0, result.c1());
   }
 
@@ -87,7 +86,6 @@ class StartOnBoardAccessResolverTest {
 
     assertEquals(0, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(0), result.stop());
-    assertEquals(10 * 3600, result.boardingTime());
   }
 
   @Test
@@ -148,7 +146,6 @@ class StartOnBoardAccessResolverTest {
     assertEquals(0, result.tripBoarding().tripScheduleIndex());
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
     assertEquals(routingPattern.stopIndex(1), result.stop());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
   @Test
@@ -192,7 +189,6 @@ class StartOnBoardAccessResolverTest {
       TIME_ZONE
     );
     assertEquals(0, result.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600, result.boardingTime());
   }
 
   /**
@@ -274,7 +270,6 @@ class StartOnBoardAccessResolverTest {
     );
 
     assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(10 * 3600 + 5 * 60, result.boardingTime());
   }
 
   /**
@@ -354,7 +349,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       );
       assertEquals(0, result1.tripBoarding().stopPositionInPattern());
-      assertEquals(10 * 3600, result1.boardingTime());
 
       // Second occurrence of STOP_A at 10:15
       var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
@@ -365,7 +359,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       );
       assertEquals(2, result2.tripBoarding().stopPositionInPattern());
-      assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
     }
 
     @Test
@@ -428,7 +421,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       );
       assertEquals(0, result1.tripBoarding().stopPositionInPattern());
-      assertEquals(10 * 3600, result1.boardingTime());
 
       // With departure time for A2 at 10:15 — should find position 2
       var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
@@ -439,7 +431,6 @@ class StartOnBoardAccessResolverTest {
         TIME_ZONE
       );
       assertEquals(2, result2.tripBoarding().stopPositionInPattern());
-      assertEquals(10 * 3600 + 15 * 60, result2.boardingTime());
     }
   }
 }
