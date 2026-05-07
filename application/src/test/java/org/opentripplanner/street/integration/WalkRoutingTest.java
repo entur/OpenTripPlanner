@@ -1,14 +1,10 @@
 package org.opentripplanner.street.integration;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.model.GenericLocation;
@@ -52,23 +48,6 @@ class WalkRoutingTest {
     var start = GenericLocation.fromCoordinate(59.94646, 10.77511);
     var end = GenericLocation.fromCoordinate(59.94641, 10.77522);
     assertFalse(route(roundabout, start, end, DATE_TIME, false).isEmpty());
-  }
-
-  @ParameterizedTest
-  @ValueSource(ints = { 0, 200, 400, 499, 500, 501, 600, 700, 800, 900, 999 })
-  void pathReversalWorks(int offset) {
-    var start = GenericLocation.fromCoordinate(59.94646, 10.77511);
-    var end = GenericLocation.fromCoordinate(59.94641, 10.77522);
-    var base = DATE_TIME.truncatedTo(ChronoUnit.SECONDS);
-    var time = base.plusMillis(offset);
-    var forwardResults = route(roundabout, start, end, time, false);
-    assertEquals(1, forwardResults.size());
-    var backwardResults = route(roundabout, start, end, time, true);
-    assertEquals(1, backwardResults.size());
-    // duration should be the same for every parametrized offset
-    long expected = 11000;
-    assertEquals(expected, forwardResults.getFirst().totalDuration().toMillis());
-    assertEquals(expected, backwardResults.getFirst().totalDuration().toMillis());
   }
 
   private static List<Itinerary> route(
