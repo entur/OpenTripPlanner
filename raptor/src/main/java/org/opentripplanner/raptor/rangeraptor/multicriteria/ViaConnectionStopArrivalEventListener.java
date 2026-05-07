@@ -18,7 +18,6 @@ import org.opentripplanner.raptor.api.request.via.ViaConnection;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivalFactory;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.transit.ViaConnections;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
@@ -46,7 +45,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
 
   private final McStopArrivalFactory<T> stopArrivalFactory;
   private final List<ViaConnection> connections;
-  private final McStopArrivals<T> next;
+  private final McRangeRaptorWorkerState<T> next;
   private final List<McStopArrival<T>> transfersCache = new ArrayList<>();
   private final Function<T, RaptorTripScheduleReference> tripInfoProvider;
 
@@ -58,7 +57,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   private ViaConnectionStopArrivalEventListener(
     McStopArrivalFactory<T> stopArrivalFactory,
     List<ViaConnection> connections,
-    McStopArrivals<T> next,
+    McRangeRaptorWorkerState<T> next,
     Consumer<Runnable> publishTransfersEventHandler,
     Function<T, RaptorTripScheduleReference> tripInfoProvider
   ) {
@@ -78,7 +77,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   > createEventListeners(
     @Nullable ViaConnections viaConnections,
     McStopArrivalFactory<T> stopArrivalFactory,
-    McStopArrivals<T> nextLegStopArrivals,
+    McRangeRaptorWorkerState<T> nextSegmentState,
     Consumer<Runnable> onTransitComplete,
     Function<T, RaptorTripScheduleReference> tripInfoProvider
   ) {
@@ -92,7 +91,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
       var listener = new ViaConnectionStopArrivalEventListener<>(
         stopArrivalFactory,
         connections,
-        nextLegStopArrivals,
+        nextSegmentState,
         onTransitComplete,
         tripInfoProvider
       );
@@ -185,7 +184,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   }
 
   private void continueFromSameStopArrival(McStopArrival<T> arrival) {
-    next.addStopArrival(arrival);
+    next.addViaVisitArrival(arrival);
   }
 
   private void continueWithTransfer(McStopArrival<T> from, RaptorTransferViaConnection via) {

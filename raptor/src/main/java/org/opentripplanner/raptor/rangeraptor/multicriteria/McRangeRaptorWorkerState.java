@@ -6,6 +6,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
+import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
+import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -206,7 +208,36 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     arrivalsCache.clear();
   }
 
-  private void addStopArrival(McStopArrival<T> arrival) {
+  /**
+   * Add a stop arrival from a previous via segment's pass-through event. The arrival is queued for
+   * on-board trip continuation into the next segment.
+   */
+  void addOnBoardTripArrival(
+    ArrivalView<T> boardingArrival,
+    int startRoutingAtStopIndex,
+    int startRoutingAtStopPosition,
+    RaptorTripScheduleStopPosition boardingConstraint
+  ) {
+    arrivals.addOnBoardTripArrival(
+      boardingArrival,
+      startRoutingAtStopIndex,
+      startRoutingAtStopPosition,
+      boardingConstraint
+    );
+  }
+
+  /**
+   * Add a stop arrival from a previous via segment (visit-stop connection). The arrival is placed
+   * in the {@code arrivalsCache} so that it is committed at the end of this segment's
+   * {@code transitsForRoundComplete}, after {@link McStopArrivals#clearTouchedStopsAndSetStopMarkers()}
+   * has run. This ensures it is invisible to this segment's transit routing in the same round, but
+   * is picked up by transfers and the next transit round.
+   */
+  void addViaVisitArrival(McStopArrival<T> arrival) {
+    arrivalsCache.add(arrival);
+  }
+
+  void addStopArrival(McStopArrival<T> arrival) {
     // TODO: 2023-05-17 via pass through: this is a problem for passThrough searches
     //  we need to figure out how to perform heuristic optimization for those searches
     if (heuristics.rejectDestinationArrivalBasedOnHeuristic(arrival)) {
