@@ -22,7 +22,7 @@ final class TransferStopArrival<T extends RaptorTripSchedule> extends McStopArri
   ) {
     super(
       previousState,
-      // Transfers happens in tha same round as the previous transit
+      // Transfer happens in the same round as the previous transit
       previousState.round(),
       transferPath.stop(),
       arrivalTime,

@@ -27,7 +27,7 @@ public interface RaptorTransitDataProvider<T extends RaptorTripSchedule> {
 
   /**
    * This is the total number of trip patterns, it should be possible and all trip patterns must
-   * have a index ({@link RaptorTripPattern#patternIndex()}) < this value. Wholes are acceptable.
+   * have a index ({@link RaptorTripPattern#patternIndex()}) < this value. Holes are acceptable.
    */
   int numberOfTripPatterns();
 

@@ -15,6 +15,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.opentripplanner.transit.speed_test.model.testcase.TestCase;
+import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.DurationUtils;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
@@ -115,7 +116,7 @@ abstract class AbstractCsvFile<T> {
 
   protected int parseInt(String colName, int defaultValue) throws IOException {
     var value = parseString(colName);
-    return value == null || value.isBlank() ? defaultValue : Integer.parseInt(value);
+    return StringUtils.hasValue(value) ? defaultValue : Integer.parseInt(value);
   }
 
   protected double parseDouble(String colName) throws IOException {
