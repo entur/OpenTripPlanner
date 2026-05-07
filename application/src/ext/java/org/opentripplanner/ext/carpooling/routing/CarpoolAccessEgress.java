@@ -12,6 +12,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccess
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.transit.model.site.StopLocation;
 
 /**
  * Raptor access/egress adapter wrapping an {@link InsertionCandidate}: the candidate carries the
@@ -52,6 +53,12 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   private final TimeAndCost penalty;
   private final double carpoolReluctance;
 
+  @Nullable
+  private final StopLocation startStop;
+
+  @Nullable
+  private final StopLocation endStop;
+
   /**
    * @param stop Raptor stop index of the transit-side endpoint — the stop the passenger boards
    *        transit at (for access) or alights from transit at (for egress).
@@ -62,20 +69,30 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
    * @param penalty optional Raptor time/cost penalty added on top of the leg, applied via
    *        {@link #withPenalty(TimeAndCost)}; pass {@link TimeAndCost#ZERO} for no penalty.
    * @param carpoolReluctance multiplier on ride seconds when computing {@link #c1()}; the walk
-   *        portions use the walks' own A* weights and are not multiplied by this.
+   *        portions are billed at the walks' own A* weights and are not multiplied by this.
+   * @param startStop resolved {@link StopLocation} at the start of the chain when this is an
+   *        egress (carpool from a transit stop); {@code null} for an access. Used by the
+   *        itinerary mapper to label the first leg's {@code from} place with the stop name.
+   * @param endStop resolved {@link StopLocation} at the end of the chain when this is an
+   *        access (carpool to a transit stop); {@code null} for an egress. Used by the
+   *        itinerary mapper to label the last leg's {@code to} place with the stop name.
    */
   public CarpoolAccessEgress(
     int stop,
     int passengerDepartureTime,
     InsertionCandidate insertionCandidate,
     TimeAndCost penalty,
-    double carpoolReluctance
+    double carpoolReluctance,
+    @Nullable StopLocation startStop,
+    @Nullable StopLocation endStop
   ) {
     this.stop = stop;
     this.passengerDepartureTime = passengerDepartureTime;
     this.insertionCandidate = insertionCandidate;
     this.penalty = penalty;
     this.carpoolReluctance = carpoolReluctance;
+    this.startStop = startStop;
+    this.endStop = endStop;
     this.timePenalty = penalty.isZero() ? RaptorConstants.TIME_NOT_SET : penalty.timeInSeconds();
 
     var walkToPickup = insertionCandidate.walkToPickup();
@@ -185,8 +202,30 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
       this.passengerDepartureTime,
       this.insertionCandidate,
       penalty,
-      this.carpoolReluctance
+      this.carpoolReluctance,
+      this.startStop,
+      this.endStop
     );
+  }
+
+  /**
+   * Resolved {@link StopLocation} at the start of the chain (egress only). {@code null} for
+   * access. The itinerary mapper uses this to label the first leg's {@code from} place with the
+   * proper stop name.
+   */
+  @Nullable
+  public StopLocation startStop() {
+    return startStop;
+  }
+
+  /**
+   * Resolved {@link StopLocation} at the end of the chain (access only). {@code null} for
+   * egress. The itinerary mapper uses this to label the last leg's {@code to} place with the
+   * proper stop name.
+   */
+  @Nullable
+  public StopLocation endStop() {
+    return endStop;
   }
 
   /**

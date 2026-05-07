@@ -166,7 +166,9 @@ class CarpoolAccessEgressTest {
       passengerDepartureTime,
       candidate,
       TimeAndCost.ZERO,
-      carpoolReluctance
+      carpoolReluctance,
+      null,
+      null
     );
   }
 }

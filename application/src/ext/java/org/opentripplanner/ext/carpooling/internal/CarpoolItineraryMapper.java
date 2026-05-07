@@ -7,7 +7,6 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.basic.Cost;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
@@ -17,9 +16,12 @@ import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
+import org.opentripplanner.street.model.vertex.StreetVertex;
+import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.transit.model.site.StopLocation;
 
 /**
  * Maps carpooling insertion candidates to OTP itineraries for API responses.
@@ -50,6 +52,14 @@ import org.opentripplanner.street.search.state.State;
  * <em>not</em> shifted to match the passenger's requested departure time — the driver is on a
  * committed schedule and cannot wait. Whether the passenger should show up early or be matched
  * at all is a filtering concern upstream of this mapper.
+ *
+ * <h2>Place naming</h2>
+ * <p>
+ * Endpoints at a transit stop (for access/egress) are labeled with the stop's name via
+ * {@link Place#forStop(StopLocation)}. All other endpoints fall back to the same logic the
+ * core street-leg mapper uses for any mode: {@link StreetVertex#getIntersectionName()} for
+ * intersections (composed from OSM street names), and the vertex's pre-set
+ * name for {@link TemporaryStreetLocation}s (passenger origin/destination).
  *
  * <h2>Package Location</h2>
  * <p>
@@ -89,7 +99,9 @@ public class CarpoolItineraryMapper {
       candidate.walkFromDropoff(),
       carpoolStart,
       carpoolEnd,
-      candidate.getPassengerRideWeight(carpoolReluctance)
+      candidate.getPassengerRideWeight(carpoolReluctance),
+      null,
+      null
     );
   }
 
@@ -97,14 +109,10 @@ public class CarpoolItineraryMapper {
     List<GraphPath<State, Edge, Vertex>> sharedSegments,
     ZonedDateTime startTime,
     ZonedDateTime endTime,
-    double rideWeight
+    double rideWeight,
+    Place fromPlace,
+    Place toPlace
   ) {
-    var firstSegment = sharedSegments.getFirst();
-    var lastSegment = sharedSegments.getLast();
-
-    Vertex fromVertex = firstSegment.states.getFirst().getVertex();
-    Vertex toVertex = lastSegment.states.getLast().getVertex();
-
     var allEdges = sharedSegments
       .stream()
       .flatMap(seg -> seg.edges.stream())
@@ -113,8 +121,8 @@ public class CarpoolItineraryMapper {
     return CarpoolLeg.of()
       .withStartTime(startTime)
       .withEndTime(endTime)
-      .withFrom(Place.normal(fromVertex, new NonLocalizedString("Carpool boarding")))
-      .withTo(Place.normal(toVertex, new NonLocalizedString("Carpool alighting")))
+      .withFrom(fromPlace)
+      .withTo(toPlace)
       .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
       .withGeneralizedCost((int) rideWeight)
@@ -124,11 +132,10 @@ public class CarpoolItineraryMapper {
   private static StreetLeg buildWalkLeg(
     GraphPath<State, Edge, Vertex> walkPath,
     ZonedDateTime startTime,
-    ZonedDateTime endTime
+    ZonedDateTime endTime,
+    Place fromPlace,
+    Place toPlace
   ) {
-    Vertex fromVertex = walkPath.states.getFirst().getVertex();
-    Vertex toVertex = walkPath.states.getLast().getVertex();
-
     LineString geometry = GeometryUtils.concatenateLineStrings(walkPath.edges, Edge::getGeometry);
     double distance = walkPath.edges.stream().mapToDouble(Edge::getDistanceMeters).sum();
 
@@ -136,8 +143,8 @@ public class CarpoolItineraryMapper {
       .withMode(TraverseMode.WALK)
       .withStartTime(startTime)
       .withEndTime(endTime)
-      .withFrom(Place.normal(fromVertex, fromVertex.getName()))
-      .withTo(Place.normal(toVertex, toVertex.getName()))
+      .withFrom(fromPlace)
+      .withTo(toPlace)
       .withGeometry(geometry)
       .withDistanceMeters(distance)
       .withGeneralizedCost((int) walkPath.getWeight())
@@ -165,7 +172,9 @@ public class CarpoolItineraryMapper {
       accessEgress.walkFromDropoff(),
       accessEgress.getCarpoolStart(),
       accessEgress.getCarpoolEnd(),
-      accessEgress.getPassengerRideWeight()
+      accessEgress.getPassengerRideWeight(),
+      accessEgress.startStop(),
+      accessEgress.endStop()
     );
   }
 
@@ -173,6 +182,10 @@ public class CarpoolItineraryMapper {
    * Assembles a WALK + CARPOOL + WALK itinerary around the shared ride. Walk legs are omitted
    * when their corresponding path is {@code null}; the walk legs' outer times are derived from
    * {@code carpoolStart}/{@code carpoolEnd} plus the walk durations.
+   * <p>
+   * When {@code startStop}/{@code endStop} is non-null (access/egress only), the chain's
+   * outermost endpoint is labeled via {@link Place#forStop(StopLocation)}; otherwise it is
+   * resolved from the underlying vertex via {@link #makePlace(Vertex)}.
    */
   private static Itinerary buildItinerary(
     List<GraphPath<State, Edge, Vertex>> sharedSegments,
@@ -180,20 +193,62 @@ public class CarpoolItineraryMapper {
     @Nullable GraphPath<State, Edge, Vertex> walkFromDropoff,
     ZonedDateTime carpoolStart,
     ZonedDateTime carpoolEnd,
-    double rideWeight
+    double rideWeight,
+    @Nullable StopLocation startStop,
+    @Nullable StopLocation endStop
   ) {
+    Vertex pickupVertex = sharedSegments.getFirst().states.getFirst().getVertex();
+    Vertex dropoffVertex = sharedSegments.getLast().states.getLast().getVertex();
+    Place pickupPlace = makePlace(pickupVertex);
+    Place dropoffPlace = makePlace(dropoffVertex);
+
+    Place itineraryStart = startStop != null
+      ? Place.forStop(startStop)
+      : makePlace(walkToPickup != null ? walkToPickup.states.getFirst().getVertex() : pickupVertex);
+    Place itineraryEnd = endStop != null
+      ? Place.forStop(endStop)
+      : makePlace(
+          walkFromDropoff != null ? walkFromDropoff.states.getLast().getVertex() : dropoffVertex
+        );
+
+    Place carpoolFromPlace = walkToPickup != null ? pickupPlace : itineraryStart;
+    Place carpoolToPlace = walkFromDropoff != null ? dropoffPlace : itineraryEnd;
+
     List<Leg> legs = new ArrayList<>(3);
     if (walkToPickup != null) {
       var walkStart = carpoolStart.minusSeconds(walkToPickup.getDuration());
-      legs.add(buildWalkLeg(walkToPickup, walkStart, carpoolStart));
+      legs.add(buildWalkLeg(walkToPickup, walkStart, carpoolStart, itineraryStart, pickupPlace));
     }
-    legs.add(buildCarpoolLeg(sharedSegments, carpoolStart, carpoolEnd, rideWeight));
+    legs.add(
+      buildCarpoolLeg(
+        sharedSegments,
+        carpoolStart,
+        carpoolEnd,
+        rideWeight,
+        carpoolFromPlace,
+        carpoolToPlace
+      )
+    );
     if (walkFromDropoff != null) {
       var walkEnd = carpoolEnd.plusSeconds(walkFromDropoff.getDuration());
-      legs.add(buildWalkLeg(walkFromDropoff, carpoolEnd, walkEnd));
+      legs.add(buildWalkLeg(walkFromDropoff, carpoolEnd, walkEnd, dropoffPlace, itineraryEnd));
     }
 
     int totalCost = legs.stream().mapToInt(Leg::generalizedCost).sum();
     return Itinerary.ofDirect(legs).withGeneralizedCost(Cost.costOfSeconds(totalCost)).build();
+  }
+
+  /**
+   * Builds a {@link Place} from a vertex using the same naming logic the core street-leg
+   * mapper applies for any mode. {@link StreetVertex} intersections get the localized
+   * "corner of X and Y" name composed from the outgoing OSM street names (mode-agnostic);
+   * {@link TemporaryStreetLocation}s (passenger origin/destination) keep the name they were
+   * created with; everything else falls back to {@link Vertex#getName()}.
+   */
+  private static Place makePlace(Vertex vertex) {
+    if (vertex instanceof StreetVertex sv && !(vertex instanceof TemporaryStreetLocation)) {
+      return Place.normal(vertex, sv.getIntersectionName());
+    }
+    return Place.normal(vertex, vertex.getName());
   }
 }

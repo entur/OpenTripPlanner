@@ -49,6 +49,7 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transit.model.site.AreaStop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
@@ -566,7 +567,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
               Using the reluctance of mode car.
               TODO: Figure out whether carpooling should have its own reluctance variable
              */
-            request.preferences().car().reluctance()
+            request.preferences().car().reluctance(),
+            accessOrEgress
           )
         )
         .toList();
@@ -592,7 +594,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     TransitServiceResolver transitServiceResolver,
     InsertionCandidate insertionCandidate,
     ZonedDateTime transitSearchTimeZero,
-    double carpoolReluctance
+    double carpoolReluctance,
+    AccessEgressType accessOrEgress
   ) {
     var carpoolPickupTime = insertionCandidate
       .trip()
@@ -607,12 +610,20 @@ public class DefaultCarpoolingService implements CarpoolingService {
       passengerStartTime.toInstant()
     );
 
+    StopLocation transitStopLocation = transitServiceResolver.getStopLocation(
+      insertionCandidate.transitStop().stopId
+    );
+    StopLocation startStop = accessOrEgress.isEgress() ? transitStopLocation : null;
+    StopLocation endStop = accessOrEgress.isAccess() ? transitStopLocation : null;
+
     return new CarpoolAccessEgress(
-      transitServiceResolver.getStopLocation(insertionCandidate.transitStop().stopId).getIndex(),
+      transitStopLocation.getIndex(),
       passengerDepartureTime,
       insertionCandidate,
       TimeAndCost.ZERO,
-      carpoolReluctance
+      carpoolReluctance,
+      startStop,
+      endStop
     );
   }
 }
