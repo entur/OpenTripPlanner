@@ -84,7 +84,7 @@ data:
           {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/osm/static/osm_static_sweden_storlien_extract.pbf"}
         ],
         "dem" : [
-          {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/kartverket/heightData/norge_dem_50m_33.tif"}
+          {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/kartverket/heightData/norge_dem_10m_33_2026_05_01.tif"}
         ],
         "transitFeeds": [
           {
