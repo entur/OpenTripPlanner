@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.eclipse.imagen.ImageN;
+import org.eclipse.imagen.TileCache;
 import org.geotools.api.coverage.Coverage;
 import org.geotools.api.coverage.PointOutsideCoverageException;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
@@ -99,6 +101,11 @@ public class ElevationModule implements GraphBuilderModule {
    * data and machine settings, it might be faster to use a single processor.
    */
   private final boolean multiThreadElevationCalculations;
+  /**
+   * Memory budget (in megabytes) for the Imagen tile cache. Applied to
+   * {@link org.eclipse.imagen.ImageN#getDefaultInstance()} before any tile is fetched.
+   */
+  private final int elevationTileCacheSizeMB;
   // Keep track of the proportion of elevation fetch operations that fail so we can issue warnings. AtomicInteger is
   // used to provide thread-safe updating capabilities.
   private final AtomicInteger nPointsEvaluated = new AtomicInteger(0);
@@ -138,7 +145,8 @@ public class ElevationModule implements GraphBuilderModule {
       10,
       2000,
       true,
-      false
+      false,
+      100
     );
   }
 
@@ -153,7 +161,8 @@ public class ElevationModule implements GraphBuilderModule {
     double distanceBetweenSamplesM,
     double maxElevationPropagationMeters,
     boolean includeEllipsoidToGeoidDifference,
-    boolean multiThreadElevationCalculations
+    boolean multiThreadElevationCalculations,
+    int elevationTileCacheSizeMB
   ) {
     gridCoverageFactory = factory;
     this.graph = graph;
@@ -165,12 +174,14 @@ public class ElevationModule implements GraphBuilderModule {
     this.maxElevationPropagationMeters = maxElevationPropagationMeters;
     this.includeEllipsoidToGeoidDifference = includeEllipsoidToGeoidDifference;
     this.multiThreadElevationCalculations = multiThreadElevationCalculations;
+    this.elevationTileCacheSizeMB = elevationTileCacheSizeMB;
     this.distanceBetweenSamplesM = distanceBetweenSamplesM;
   }
 
   @Override
   public void buildGraph() {
     Instant start = Instant.now();
+    configureTileCache();
     gridCoverageFactory.fetchData(graph);
 
     graph.setDistanceBetweenElevationSamples(this.distanceBetweenSamplesM);
@@ -321,6 +332,28 @@ public class ElevationModule implements GraphBuilderModule {
     } else {
       LOG.warn("Not using cached elevations! This could take a while...");
     }
+  }
+
+  /**
+   * Resize the Imagen default tile cache to the configured budget. Run once before any DEM tile
+   * is fetched, so subsequent {@code getTile} calls hit the cache instead of re-decompressing.
+   * <p>
+   * Imagen's default cache is 16 MB, which is too small to hold the hot working set on regional
+   * DEMs and causes the elevation pass to spend most of its time re-decompressing TIFF tiles.
+   */
+  private void configureTileCache() {
+    long bytes = (long) elevationTileCacheSizeMB * 1024L * 1024L;
+    TileCache cache = ImageN.getDefaultInstance().getTileCache();
+    long previousBytes = cache.getMemoryCapacity();
+    if (previousBytes == bytes) {
+      return;
+    }
+    cache.setMemoryCapacity(bytes);
+    LOG.info(
+      "Imagen tile cache memory capacity set to {} MB (was {} MB)",
+      elevationTileCacheSizeMB,
+      previousBytes / (1024 * 1024)
+    );
   }
 
   private void updateElevationMetadata(Graph graph) {
