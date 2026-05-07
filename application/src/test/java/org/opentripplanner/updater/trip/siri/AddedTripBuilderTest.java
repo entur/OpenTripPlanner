@@ -135,7 +135,6 @@ class AddedTripBuilderTest {
       false,
       null,
       false,
-      false,
       SHORT_NAME,
       HEADSIGN,
       List.of(),
@@ -176,6 +175,7 @@ class AddedTripBuilderTest {
     );
     TripOnServiceDate tripOnServiceDate = tripUpdate.addedTripOnServiceDate();
     assertNotNull(tripOnServiceDate, "The TripUpdate should contain a new TripOnServiceDate");
+    assertTrue(tripOnServiceDate.isExtraJourney(), "The trip should be marked as extra journey");
 
     // Assert stop pattern
     var stopPattern = tripUpdate.stopPattern();
@@ -256,7 +256,6 @@ class AddedTripBuilderTest {
       false,
       null,
       false,
-      false,
       SHORT_NAME,
       HEADSIGN,
       List.of(),
@@ -286,7 +285,6 @@ class AddedTripBuilderTest {
       getCalls(11),
       false,
       null,
-      false,
       false,
       SHORT_NAME,
       HEADSIGN,
@@ -330,7 +328,6 @@ class AddedTripBuilderTest {
       false,
       null,
       false,
-      false,
       SHORT_NAME,
       HEADSIGN,
       List.of(),
@@ -364,7 +361,6 @@ class AddedTripBuilderTest {
       getCalls(10),
       false,
       null,
-      false,
       false,
       SHORT_NAME,
       HEADSIGN,
@@ -409,7 +405,6 @@ class AddedTripBuilderTest {
       getCalls(0),
       false,
       null,
-      false,
       false,
       SHORT_NAME,
       HEADSIGN,
@@ -464,7 +459,6 @@ class AddedTripBuilderTest {
       false,
       null,
       false,
-      false,
       SHORT_NAME,
       HEADSIGN,
       List.of(),
@@ -503,7 +497,6 @@ class AddedTripBuilderTest {
       calls,
       false,
       null,
-      false,
       false,
       SHORT_NAME,
       HEADSIGN,
@@ -549,7 +542,6 @@ class AddedTripBuilderTest {
       calls,
       false,
       null,
-      false,
       false,
       SHORT_NAME,
       HEADSIGN,
