@@ -123,6 +123,7 @@ final class Matchers {
 
     private final String typeName;
     private final Pattern[] patterns;
+    private final java.util.regex.Matcher[] matchers;
     private final Function<EntityAdapter, String> toValue;
 
     public RegExpMatcher(
@@ -132,14 +133,20 @@ final class Matchers {
     ) {
       this.typeName = typeName;
       this.patterns = regexps.stream().map(Pattern::compile).toArray(Pattern[]::new);
+      // The enclosing service is request-scoped and single-threaded
+      // (TransitGroupPriorityService is not thread-safe), so we can safely reuse
+      // one Matcher per Pattern across calls instead of allocating per match.
+      this.matchers = Arrays.stream(this.patterns)
+        .map(p -> p.matcher(""))
+        .toArray(java.util.regex.Matcher[]::new);
       this.toValue = toValue;
     }
 
     @Override
     public boolean match(EntityAdapter entity) {
       var value = toValue.apply(entity);
-      for (Pattern p : patterns) {
-        if (p.matcher(value).matches()) {
+      for (java.util.regex.Matcher m : matchers) {
+        if (m.reset(value).matches()) {
           return true;
         }
       }
