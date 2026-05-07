@@ -18,7 +18,6 @@ public class LegsToItineraryMapper {
     if (legs.isEmpty()) {
       return Optional.empty();
     }
-    // TODO there is some mismatch between leg and path costs which we probably should resolve
     var cost = Cost.costOfSeconds(legs.stream().mapToDouble(Leg::generalizedCost).sum());
     var builder = Itinerary.ofDirect(legs).withGeneralizedCost(cost);
 
