@@ -65,7 +65,6 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
 
     // Attach to the RR life cycle
     lifeCycle.onSetupIteration(_ -> setupIteration());
-    lifeCycle.onTransitsForRoundComplete(this::transitsForRoundComplete);
     lifeCycle.onTransfersForRoundComplete(this::transfersForRoundComplete);
   }
 
@@ -175,13 +174,12 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     arrivals.clearTouchedStopsAndSetStopMarkers();
   }
 
-  /** This method is called by the Worker life cycle */
-  private void transitsForRoundComplete() {
+  @Override
+  public void transitsForRoundComplete() {
     arrivals.clearTouchedStopsAndSetStopMarkers();
     commitCachedArrivals();
   }
 
-  /** This method is part of Worker life cycle */
   private void transfersForRoundComplete() {
     commitCachedArrivals();
   }
