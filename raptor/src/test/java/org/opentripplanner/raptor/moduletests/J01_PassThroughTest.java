@@ -262,7 +262,7 @@ class J01_PassThroughTest {
     // NOTE! There is a bug in the code for R1. OTP process the pass-through event in round 2, not
     // 1. This result in adding transferCost to the stop arrival at E. If the walking distance is
     // increased by 1 second then R1 will be dominated at E. The cost is calculated again by the
-    // path-mapper abd this time around the cost is correct as shown in the result.
+    // path-mapper and this time around the cost is correct as shown in the result.
     //
     // COST CALCULATION
     //
