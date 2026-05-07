@@ -173,6 +173,10 @@ public abstract class OsmEntity {
       "foot"
     );
 
+  /// This is nullable for performance reasons.
+  ///
+  /// You could use an empty map, but using null allows you to skip the lower-casing and hash lookup
+  /// per tag, which is the hottest path during OSM processing.
   @Nullable
   private final Map<String, String> tags;
 
