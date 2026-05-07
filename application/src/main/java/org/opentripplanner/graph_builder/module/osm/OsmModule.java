@@ -558,26 +558,21 @@ public class OsmModule implements GraphBuilderModule {
     var references = way.getMultiTagValues(params.boardingAreaRefTags());
     if (!way.isBoardingLocation() || references.isEmpty()) {
       return Optional.empty();
-    } else {
-      var nodeRefs = way.getNodeRefs();
-      var size = nodeRefs.size();
-      var nodes = new Coordinate[size];
-      for (int i = 0; i < size; i++) {
-        nodes[i] = osmdb.getNode(nodeRefs.get(i)).getCoordinate();
-      }
-
-      var geometryFactory = GeometryUtils.getGeometryFactory();
-
-      var geometry = geometryFactory.createLineString(nodes);
-
-      return Optional.of(
-        new Platform(
-          params.edgeNamer().getName(way, "platform " + way.getId()),
-          geometry,
-          references
-        )
-      );
     }
+    var nodeRefs = way.getNodeRefs();
+    var size = nodeRefs.size();
+    var nodes = new Coordinate[size];
+    for (int i = 0; i < size; i++) {
+      nodes[i] = osmdb.getNode(nodeRefs.get(i)).getCoordinate();
+    }
+
+    var geometryFactory = GeometryUtils.getGeometryFactory();
+
+    var geometry = geometryFactory.createLineString(nodes);
+
+    return Optional.of(
+      new Platform(params.edgeNamer().getName(way, "platform " + way.getId()), geometry, references)
+    );
   }
 
   private void validateBarriers() {
