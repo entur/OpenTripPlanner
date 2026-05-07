@@ -67,6 +67,11 @@ import org.opentripplanner.updater.GraphUpdaterStatus;
  */
 public interface TransitService {
   /**
+   * Get a transit service without any realtime info
+   */
+  TransitService getScheduledTransitService();
+
+  /**
    * @return empty if the trip doesn't exist in the timetable (e.g. real-time added)
    */
   Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip);
