@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.framework.model.TimeAndCost;
+import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
@@ -59,6 +60,12 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   @Nullable
   private final StopLocation endStop;
 
+  @Nullable
+  private final GenericLocation startLocation;
+
+  @Nullable
+  private final GenericLocation endLocation;
+
   /**
    * @param stop Raptor stop index of the transit-side endpoint — the stop the passenger boards
    *        transit at (for access) or alights from transit at (for egress).
@@ -76,6 +83,15 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
    * @param endStop resolved {@link StopLocation} at the end of the chain when this is an
    *        access (carpool to a transit stop); {@code null} for an egress. Used by the
    *        itinerary mapper to label the last leg's {@code to} place with the stop name.
+   * @param startLocation the user-side {@link GenericLocation} at the start of the chain when
+   *        this is an access (the passenger's origin); {@code null} for an egress. Used by the
+   *        itinerary mapper to label the first leg's {@code from} place with the user's
+   *        origin/destination label or the localized {@code "origin"}/{@code "destination"}
+   *        fallback — matching what regular WALK/CAR_PICKUP itineraries show at the same
+   *        position.
+   * @param endLocation symmetric to {@code startLocation}: the user-side {@link GenericLocation}
+   *        at the end of the chain when this is an egress (the passenger's destination);
+   *        {@code null} for an access.
    */
   public CarpoolAccessEgress(
     int stop,
@@ -84,7 +100,9 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     TimeAndCost penalty,
     double carpoolReluctance,
     @Nullable StopLocation startStop,
-    @Nullable StopLocation endStop
+    @Nullable StopLocation endStop,
+    @Nullable GenericLocation startLocation,
+    @Nullable GenericLocation endLocation
   ) {
     this.stop = stop;
     this.passengerDepartureTime = passengerDepartureTime;
@@ -93,6 +111,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
     this.carpoolReluctance = carpoolReluctance;
     this.startStop = startStop;
     this.endStop = endStop;
+    this.startLocation = startLocation;
+    this.endLocation = endLocation;
     this.timePenalty = penalty.isZero() ? RaptorConstants.TIME_NOT_SET : penalty.timeInSeconds();
 
     var walkToPickup = insertionCandidate.walkToPickup();
@@ -204,7 +224,9 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
       penalty,
       this.carpoolReluctance,
       this.startStop,
-      this.endStop
+      this.endStop,
+      this.startLocation,
+      this.endLocation
     );
   }
 
@@ -226,6 +248,25 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
   @Nullable
   public StopLocation endStop() {
     return endStop;
+  }
+
+  /**
+   * The user-side {@link GenericLocation} at the start of the chain (access only). {@code null}
+   * for egress. The itinerary mapper uses this to label the first leg's {@code from} place with
+   * the user's origin/destination label or the localized fallback name.
+   */
+  @Nullable
+  public GenericLocation startLocation() {
+    return startLocation;
+  }
+
+  /**
+   * Symmetric to {@link #startLocation()}: the user-side {@link GenericLocation} at the end of
+   * the chain (egress only). {@code null} for access.
+   */
+  @Nullable
+  public GenericLocation endLocation() {
+    return endLocation;
   }
 
   /**

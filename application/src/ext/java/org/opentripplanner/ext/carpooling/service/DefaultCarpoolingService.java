@@ -302,7 +302,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var carpoolReluctance = request.preferences().car().reluctance();
       itineraries = insertionCandidates
         .stream()
-        .map(candidate -> itineraryMapper.toItinerary(candidate, carpoolReluctance))
+        .map(candidate ->
+          itineraryMapper.toItinerary(candidate, carpoolReluctance, request.from(), request.to())
+        )
         .filter(Objects::nonNull)
         .toList();
     }
@@ -568,7 +570,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
               TODO: Figure out whether carpooling should have its own reluctance variable
              */
             request.preferences().car().reluctance(),
-            accessOrEgress
+            accessOrEgress,
+            request
           )
         )
         .toList();
@@ -595,7 +598,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     InsertionCandidate insertionCandidate,
     ZonedDateTime transitSearchTimeZero,
     double carpoolReluctance,
-    AccessEgressType accessOrEgress
+    AccessEgressType accessOrEgress,
+    RouteRequest request
   ) {
     var carpoolPickupTime = insertionCandidate
       .trip()
@@ -615,6 +619,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     );
     StopLocation startStop = accessOrEgress.isEgress() ? transitStopLocation : null;
     StopLocation endStop = accessOrEgress.isAccess() ? transitStopLocation : null;
+    GenericLocation startLocation = accessOrEgress.isAccess() ? request.from() : null;
+    GenericLocation endLocation = accessOrEgress.isEgress() ? request.to() : null;
 
     return new CarpoolAccessEgress(
       transitStopLocation.getIndex(),
@@ -623,7 +629,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
       TimeAndCost.ZERO,
       carpoolReluctance,
       startStop,
-      endStop
+      endStop,
+      startLocation,
+      endLocation
     );
   }
 }
