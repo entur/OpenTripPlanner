@@ -383,7 +383,7 @@ public class TestTransitData
     } else {
       if (WARNING_COUNTER.getAndIncrement() % 20 == 0) {
         System.err.println(
-          "[INFO] The debug logging for raptor module teste is off by default! " +
+          "[INFO] The debug logging for raptor module tests is off by default! " +
             "Add \"-DdebugRaptor\" to the command line to enable."
         );
       }
