@@ -206,6 +206,9 @@ public class ConstructApplication {
       routerConfig().updaterConfig()
     );
 
+    // Start application warmup — runs routing queries to warm up the application
+    factory.warmupLauncher().start();
+
     initEllipsoidToGeoidDifference();
 
     initializeTransferCache(routerConfig().transitTuningConfig(), timetableRepository());

@@ -64,11 +64,6 @@ public class TestTransitData
     setUpDebugToStdErr();
   }
 
-  /// Create an new instance and call {@link #withTimetables(String)}
-  public static TestTransitData of(String routeTimetables) {
-    return new TestTransitData().withTimetables(routeTimetables);
-  }
-
   public TestTransitData access(String... accessList) {
     access(Arrays.stream(accessList).map(TestAccessEgress::of).toArray(TestAccessEgress[]::new));
     return this;
@@ -388,7 +383,7 @@ public class TestTransitData
     } else {
       if (WARNING_COUNTER.getAndIncrement() % 20 == 0) {
         System.err.println(
-          "[INFO] The debug logging for raptor module teste is off by default! " +
+          "[INFO] The debug logging for raptor module tests is off by default! " +
             "Add \"-DdebugRaptor\" to the command line to enable."
         );
       }
