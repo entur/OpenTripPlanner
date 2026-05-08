@@ -39,6 +39,7 @@ import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.StreetElevationExtensionBuilder;
+import org.opentripplanner.street.model.elevation.ElevationProfileOutlierFilter;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.utils.lang.IntUtils;
 import org.opentripplanner.utils.logging.ProgressTracker;
@@ -104,6 +105,7 @@ public class ElevationModule implements GraphBuilderModule {
   private final AtomicInteger nPointsEvaluated = new AtomicInteger(0);
   private final AtomicInteger nPointsOutsideDEM = new AtomicInteger(0);
   private final double distanceBetweenSamplesM;
+  private final ElevationProfileOutlierFilter outlierFilter;
 
   /** A concurrent hashmap used for storing geoid difference values at various coordinates */
   private final ConcurrentHashMap<Integer, Double> geoidDifferenceCache = new ConcurrentHashMap<>();
@@ -138,7 +140,8 @@ public class ElevationModule implements GraphBuilderModule {
       10,
       2000,
       true,
-      false
+      false,
+      0
     );
   }
 
@@ -153,7 +156,8 @@ public class ElevationModule implements GraphBuilderModule {
     double distanceBetweenSamplesM,
     double maxElevationPropagationMeters,
     boolean includeEllipsoidToGeoidDifference,
-    boolean multiThreadElevationCalculations
+    boolean multiThreadElevationCalculations,
+    double elevationOutlierMaxSpikeHeight
   ) {
     gridCoverageFactory = factory;
     this.graph = graph;
@@ -166,6 +170,7 @@ public class ElevationModule implements GraphBuilderModule {
     this.includeEllipsoidToGeoidDifference = includeEllipsoidToGeoidDifference;
     this.multiThreadElevationCalculations = multiThreadElevationCalculations;
     this.distanceBetweenSamplesM = distanceBetweenSamplesM;
+    this.outlierFilter = new ElevationProfileOutlierFilter(elevationOutlierMaxSpikeHeight);
   }
 
   @Override
@@ -537,7 +542,7 @@ public class ElevationModule implements GraphBuilderModule {
   private void setEdgeElevationProfile(StreetEdge ee, PackedCoordinateSequence elevPCS) {
     try {
       StreetElevationExtensionBuilder.of(ee)
-        .withElevationProfile(elevPCS)
+        .withElevationProfile(outlierFilter.filtered(elevPCS))
         .withComputed(false)
         .build()
         .ifPresent(ee::setElevationExtension);

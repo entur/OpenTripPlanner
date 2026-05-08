@@ -4,6 +4,7 @@ import static org.opentripplanner.framework.application.OtpFileNames.BUILD_CONFI
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V1_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_1;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
@@ -180,6 +181,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   public final boolean writeCachedElevations;
   public final boolean includeEllipsoidToGeoidDifference;
   public final boolean multiThreadElevationCalculations;
+  public final double elevationOutlierMaxSpikeHeight;
   public final LocalDate transitServiceStart;
   public final LocalDate transitServiceEnd;
   public final ZoneId transitModelTimeZone;
@@ -487,6 +489,32 @@ public class BuildConfig implements OtpDataStoreConfig {
       .since(V1_5)
       .summary("The maximum distance to propagate elevation to vertices which have no elevation.")
       .asInt(2000);
+    elevationOutlierMaxSpikeHeight = root
+      .of("elevationOutlierMaxSpikeHeight")
+      .since(V2_10)
+      .summary(
+        "The maximum vertical deviation (in meters) tolerated for a single elevation sample."
+      )
+      .description(
+        """
+        When greater than zero, OTP scans the elevation profile of every street edge after
+        sampling the DEM and replaces each sample whose elevation deviates from a linear
+        interpolation of its immediate neighbors by more than this threshold. Endpoints are
+        checked against extrapolation from the two nearest interior samples.
+
+        This targets the failure mode where the road centreline brushes a cliff, retaining
+        wall, rooftop or NoData cell and the resulting per-sample elevation deviates by 5-15
+        m from the surrounding road surface — a 25 m segment with a 30-50% slope on an
+        otherwise normal road. The filter actively rewrites such samples; sustained real
+        climbs are untouched (each interior point already lies on its neighbor-to-neighbor
+        line, deviation is zero).
+
+        A value of `3.0` is a reasonable starting point: it catches single-sample DEM
+        glitches while leaving genuinely steep urban climbs intact. `0` disables the
+        filter.
+        """
+      )
+      .asDouble(0);
     boardingLocationTags = root
       .of("boardingLocationTags")
       .since(V2_2)
