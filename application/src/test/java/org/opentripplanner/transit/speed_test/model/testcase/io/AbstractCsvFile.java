@@ -116,7 +116,7 @@ abstract class AbstractCsvFile<T> {
 
   protected int parseInt(String colName, int defaultValue) throws IOException {
     var value = parseString(colName);
-    return StringUtils.hasValue(value) ? defaultValue : Integer.parseInt(value);
+    return StringUtils.hasValue(value) ? Integer.parseInt(value) : defaultValue;
   }
 
   protected double parseDouble(String colName) throws IOException {
