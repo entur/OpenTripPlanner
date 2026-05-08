@@ -309,11 +309,15 @@ public class BuildConfig implements OtpDataStoreConfig {
     elevationTileCacheSizeMB = root
       .of("elevationTileCacheSizeMB")
       .since(V2_10)
-      .summary("Memory budget in megabytes for the tile cache used during elevation processing.")
+      .summary(
+        "Memory budget in megabytes for the Imagen tile cache used during elevation processing."
+      )
       .description(
         """
-          Elevation sampling reads pixels from a tiled DEM through a tile cache.
-          Increase the cache size for large DEMs, lower for memory-constrained environments.
+        Elevation sampling reads pixels from a tiled DEM through Imagen's tile cache. Sizing the
+        cache to fit the DEM working set turns repeated tile decompressions into cache hits.
+        Increase for large DEMs, lower for memory-constrained environments. The cache lives
+        inside the JVM heap and must fit inside `-Xmx`.
         """
       )
       .asInt(100);

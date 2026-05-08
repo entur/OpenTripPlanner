@@ -64,6 +64,9 @@ import org.slf4j.LoggerFactory;
 public class ElevationModule implements GraphBuilderModule {
 
   private static final Logger LOG = LoggerFactory.getLogger(ElevationModule.class);
+
+  private static final long ONE_MEGABYTE = 1024L * 1024L;
+
   /**
    * The WGS84 CRS with longitude-first axis order. The first time a CRS lookup is
    * performed is surprisingly expensive (around 500ms), apparently due to  initializing
@@ -342,7 +345,7 @@ public class ElevationModule implements GraphBuilderModule {
    * DEMs and causes the elevation pass to spend most of its time re-decompressing TIFF tiles.
    */
   private void configureTileCache() {
-    long bytes = (long) elevationTileCacheSizeMB * 1024L * 1024L;
+    long bytes = elevationTileCacheSizeMB * ONE_MEGABYTE;
     TileCache cache = ImageN.getDefaultInstance().getTileCache();
     long previousBytes = cache.getMemoryCapacity();
     if (previousBytes == bytes) {
@@ -352,7 +355,7 @@ public class ElevationModule implements GraphBuilderModule {
     LOG.info(
       "Imagen tile cache memory capacity set to {} MB (was {} MB)",
       elevationTileCacheSizeMB,
-      previousBytes / (1024 * 1024)
+      previousBytes / ONE_MEGABYTE
     );
   }
 
