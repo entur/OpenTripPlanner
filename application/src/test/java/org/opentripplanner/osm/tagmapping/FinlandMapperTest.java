@@ -174,9 +174,10 @@ class FinlandMapperTest {
     assertEquals(9, wps.getDataForWay(wayWithBicycleSidePath).forward().walkSafety(), EPSILON);
     var wayWithFootSidePath = OsmWay.of().withTag("foot", "use_sidepath").build();
     assertEquals(9, wps.getDataForWay(wayWithFootSidePath).forward().walkSafety(), EPSILON);
-    var wayWithBoth = new OsmWay();
-    wayWithBoth.addTag("foot", "use_sidepath");
-    wayWithBoth.addTag("bicycle", "use_sidepath");
+    var wayWithBoth = OsmWay.of()
+      .withTag("foot", "use_sidepath")
+      .withTag("bicycle", "use_sidepath")
+      .build();
     assertEquals(9, wps.getDataForWay(wayWithBoth).forward().walkSafety(), EPSILON);
   }
 
