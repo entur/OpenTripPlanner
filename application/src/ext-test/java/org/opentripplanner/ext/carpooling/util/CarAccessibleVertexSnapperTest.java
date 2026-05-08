@@ -13,7 +13,7 @@ import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 
-class StoppableVertexSnapperTest extends GraphRoutingTest {
+class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
 
   private IntersectionVertex A;
   private IntersectionVertex B;
@@ -25,7 +25,7 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
    * <pre>
    *   A --(pedestrian)-- B --(pedestrian)-- C --(all modes)-- D
    * </pre>
-   * C and D are stoppable by a car (C thanks to the CD edge; D also via CD). A and B are on
+   * C and D are car-accessible (C thanks to the CD edge; D also via CD). A and B are on
    * pedestrian-only edges and cannot be reached by a driver.
    */
   @BeforeEach
@@ -60,8 +60,8 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
   }
 
   @Test
-  void alreadyStoppableVertex_returnsSameVertexWithoutWalk() {
-    var result = StoppableVertexSnapper.snapPickup(
+  void alreadyCarAccessibleVertex_returnsSameVertexWithoutWalk() {
+    var result = CarAccessibleVertexSnapper.snapPickup(
       StreetSearchRequest.DEFAULT,
       D,
       Duration.ofMinutes(10)
@@ -72,8 +72,8 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
   }
 
   @Test
-  void pedestrianOnlyVertex_withinBudget_snapsToNearestStoppable() {
-    var result = StoppableVertexSnapper.snapPickup(
+  void pedestrianOnlyVertex_withinBudget_snapsToNearestCarAccessible() {
+    var result = CarAccessibleVertexSnapper.snapPickup(
       StreetSearchRequest.DEFAULT,
       A,
       Duration.ofMinutes(10)
@@ -86,7 +86,7 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
 
   @Test
   void pedestrianOnlyVertex_budgetTooTight_returnsNull() {
-    var result = StoppableVertexSnapper.snapPickup(
+    var result = CarAccessibleVertexSnapper.snapPickup(
       StreetSearchRequest.DEFAULT,
       A,
       Duration.ofSeconds(5)
@@ -96,7 +96,7 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
 
   @Test
   void arriveBySearch_walksBackwardsAlongIncomingEdges() {
-    var result = StoppableVertexSnapper.snapDropoff(
+    var result = CarAccessibleVertexSnapper.snapDropoff(
       StreetSearchRequest.DEFAULT,
       A,
       Duration.ofMinutes(10)
@@ -104,25 +104,25 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
     assertNotNull(result);
     assertEquals(C, result.vertex());
     assertNotNull(result.walkPath());
-    // Walk path must be chronological: starts at C (the stoppable vertex) and ends at A.
+    // Walk path must be chronological: starts at C (the car-accessible vertex) and ends at A.
     assertEquals(C, result.walkPath().states.getFirst().getVertex());
     assertEquals(A, result.walkPath().states.getLast().getVertex());
     assertTrue(result.walkPath().getDuration() > 0);
   }
 
   /**
-   * A vertex with car edges in only one direction is not stoppable: the carpool driver picks up
-   * mid-route and must both arrive at and leave the pickup, so a pedestrian-zone vertex hanging
+   * A vertex with car edges in only one direction is not car-accessible: the carpool driver picks
+   * up mid-route and must both arrive at and leave the pickup, so a pedestrian-zone vertex hanging
    * off a one-way drivable exit (CAR outgoing only, no incoming) and the corresponding terminus
    * (CAR incoming only, no outgoing) both fail the predicate. The snapper must skip them and walk
    * on to a vertex with car edges in both directions.
    * <p>
    * Graph: {@code S --(ped)-- V --(one-way CAR forward)--> W --(ped only)-- X --(two-way CAR)-- Y}.
    * V has outgoing CAR but no incoming; W has incoming CAR but no outgoing; X is the first
-   * fully stoppable vertex (it has the X↔Y bidirectional drivable pair).
+   * fully car-accessible vertex (it has the X↔Y bidirectional drivable pair).
    */
   @Test
-  void halfStoppableVertexIsRejected() {
+  void halfCarAccessibleVertexIsRejected() {
     var holder = new IntersectionVertex[5];
     modelOf(
       new GraphRoutingTest.Builder() {
@@ -157,7 +157,7 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
             StreetTraversalPermission.PEDESTRIAN,
             StreetTraversalPermission.PEDESTRIAN
           );
-          // X↔Y: bidirectional ALL — X gets in-CAR (from Y) and out-CAR (to Y), so X is stoppable.
+          // X↔Y: bidirectional ALL — X gets in-CAR (from Y) and out-CAR (to Y), so X is car-accessible.
           street(
             holder[3],
             holder[4],
@@ -169,30 +169,35 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
       }
     );
 
-    var result = StoppableVertexSnapper.snapPickup(
+    var result = CarAccessibleVertexSnapper.snapPickup(
       StreetSearchRequest.DEFAULT,
       holder[0],
       Duration.ofMinutes(10)
     );
 
     assertNotNull(result);
-    assertEquals(holder[3], result.vertex(), "Should skip half-stoppable V and W and snap to X");
+    assertEquals(
+      holder[3],
+      result.vertex(),
+      "Should skip half-car-accessible V and W and snap to X"
+    );
   }
 
   /**
-   * The snap must minimize <em>generalized walk weight</em> across reachable stoppable vertices,
-   * not raw distance and not graph-traversal order. Two stoppable vertices are reachable from S:
-   * X is geometrically closer (50m) but reached via an edge with {@code walkSafetyFactor=10},
-   * while Y is twice as far (100m) along a normal-safety edge. By weight Y is cheaper (≈100
-   * weight units vs ≈500), so the snapper must return Y. A buggy implementation that returned
-   * the first stoppable vertex encountered by distance — or that paired the dominance function
-   * with a non-trivial heuristic that broke cost-ascending pop order — would land on X.
+   * The snap must minimize <em>generalized walk weight</em> across reachable car-accessible
+   * vertices, not raw distance and not graph-traversal order. Two car-accessible vertices are
+   * reachable from S: X is geometrically closer (50m) but reached via an edge with
+   * {@code walkSafetyFactor=10}, while Y is twice as far (100m) along a normal-safety edge. By
+   * weight Y is cheaper (≈100 weight units vs ≈500), so the snapper must return Y. A buggy
+   * implementation that returned the first car-accessible vertex encountered by distance — or
+   * that paired the dominance function with a non-trivial heuristic that broke cost-ascending
+   * pop order — would land on X.
    * <p>
    * <pre>
    *   S --(walk  50 m, safety x10)--> X &lt;--car--&gt; Xc        weight ~500
    *   S --(walk 100 m, safety  x1)--> Y &lt;--car--&gt; Yc        weight ~100  (cheaper)
    * </pre>
-   * Both X and Y are stoppable: their bidirectional CAR edges to Xc / Yc give them car-in
+   * Both X and Y are car-accessible: their bidirectional CAR edges to Xc / Yc give them car-in
    * <em>and</em> car-out. The S→X edge is half the distance but its safety factor blows the
    * weight up; S→Y wins despite being farther.
    */
@@ -228,7 +233,7 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
             StreetTraversalPermission.PEDESTRIAN
           );
 
-          // X ↔ Xc and Y ↔ Yc give X and Y bidirectional CAR access, making them stoppable.
+          // X ↔ Xc and Y ↔ Yc give X and Y bidirectional CAR access, making them car-accessible.
           street(
             holder[1],
             holder[2],
@@ -247,7 +252,7 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
       }
     );
 
-    var result = StoppableVertexSnapper.snapPickup(
+    var result = CarAccessibleVertexSnapper.snapPickup(
       StreetSearchRequest.DEFAULT,
       holder[0],
       Duration.ofMinutes(10)
@@ -276,8 +281,12 @@ class StoppableVertexSnapperTest extends GraphRoutingTest {
       .withWalk(b -> b.withReluctance(4.0))
       .build();
 
-    var lowResult = StoppableVertexSnapper.snapPickup(lowReluctance, A, Duration.ofMinutes(10));
-    var highResult = StoppableVertexSnapper.snapPickup(highReluctance, A, Duration.ofMinutes(10));
+    var lowResult = CarAccessibleVertexSnapper.snapPickup(lowReluctance, A, Duration.ofMinutes(10));
+    var highResult = CarAccessibleVertexSnapper.snapPickup(
+      highReluctance,
+      A,
+      Duration.ofMinutes(10)
+    );
 
     assertNotNull(lowResult);
     assertNotNull(highResult);

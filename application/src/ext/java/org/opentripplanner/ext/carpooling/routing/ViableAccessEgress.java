@@ -16,9 +16,9 @@ import org.opentripplanner.street.search.state.State;
  *
  * @param transitStop the nearby transit stop
  * @param transitVertex the street graph vertex where the driver stops to pick up or drop off the
- *        passenger at the transit-stop side (already snapped to a stoppable edge)
+ *        passenger at the transit-stop side (already snapped to a car-accessible vertex)
  * @param passengerVertex the street graph vertex where the driver stops at the passenger side
- *        — origin for access, destination for egress — already snapped to a stoppable edge
+ *        — origin for access, destination for egress — already snapped to a car-accessible vertex
  * @param accessEgress whether this represents access (origin to transit) or egress (transit to destination)
  * @param insertionPositions the viable pickup/dropoff positions on the carpool route
  * @param walkToPickup walk path from the passenger-side (or transit-stop-side) location to the

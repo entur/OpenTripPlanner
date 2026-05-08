@@ -25,8 +25,8 @@ import org.opentripplanner.ext.carpooling.routing.PassengerSnap;
 import org.opentripplanner.ext.carpooling.routing.TripWithViableAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.ViableAccessEgress;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.ext.carpooling.util.CarAccessibleVertexSnapper;
 import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
-import org.opentripplanner.ext.carpooling.util.StoppableVertexSnapper;
 import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.graph_builder.module.nearbystops.StreetNearbyStopFinder;
@@ -231,19 +231,19 @@ public class DefaultCarpoolingService implements CarpoolingService {
         return List.of();
       }
 
-      var pickupSnap = StoppableVertexSnapper.snapPickup(
+      var pickupSnap = CarAccessibleVertexSnapper.snapPickup(
         streetSearchRequest,
         passengerPickupVertex,
         maxWalkToCarpool
       );
-      var dropoffSnap = StoppableVertexSnapper.snapDropoff(
+      var dropoffSnap = CarAccessibleVertexSnapper.snapDropoff(
         streetSearchRequest,
         passengerDropoffVertex,
         maxWalkToCarpool
       );
       if (pickupSnap == null || dropoffSnap == null) {
         LOG.debug(
-          "No stoppable pickup/dropoff reachable within {} from passenger origin/destination",
+          "No car-accessible pickup/dropoff reachable within {} from passenger origin/destination",
           maxWalkToCarpool
         );
         return List.of();
@@ -410,19 +410,19 @@ public class DefaultCarpoolingService implements CarpoolingService {
       }
 
       var passengerSnap = accessOrEgress.isEgress()
-        ? StoppableVertexSnapper.snapDropoff(
+        ? CarAccessibleVertexSnapper.snapDropoff(
             streetSearchRequest,
             passengerAccessEgressVertex,
             maxWalkToCarpool
           )
-        : StoppableVertexSnapper.snapPickup(
+        : CarAccessibleVertexSnapper.snapPickup(
             streetSearchRequest,
             passengerAccessEgressVertex,
             maxWalkToCarpool
           );
       if (passengerSnap == null) {
         LOG.debug(
-          "No stoppable vertex reachable within {} from passenger coords {}",
+          "No car-accessible vertex reachable within {} from passenger coords {}",
           maxWalkToCarpool,
           passengerCoordinates
         );
@@ -460,15 +460,15 @@ public class DefaultCarpoolingService implements CarpoolingService {
         }
         byStopId.putIfAbsent(stop.stopId, stop);
       }
-      var stopSnaps = new HashMap<NearbyStop, StoppableVertexSnapper.SnapResult>();
+      var stopSnaps = new HashMap<NearbyStop, CarAccessibleVertexSnapper.SnapResult>();
       for (var stop : byStopId.values()) {
         var snap = accessOrEgress.isAccess()
-          ? StoppableVertexSnapper.snapDropoff(
+          ? CarAccessibleVertexSnapper.snapDropoff(
               streetSearchRequest,
               stop.state.getVertex(),
               maxWalkToCarpool
             )
-          : StoppableVertexSnapper.snapPickup(
+          : CarAccessibleVertexSnapper.snapPickup(
               streetSearchRequest,
               stop.state.getVertex(),
               maxWalkToCarpool

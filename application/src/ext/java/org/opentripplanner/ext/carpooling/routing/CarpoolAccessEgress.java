@@ -217,8 +217,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
 
   /**
    * Walk path from the passenger's origin (or transit stop, for egress) to the snapped pickup
-   * vertex. {@code null} when the origin/stop is already on a stoppable vertex and no walk is
-   * needed.
+   * vertex. {@code null} when the origin/stop is already on a car-accessible vertex and no walk
+   * is needed.
    */
   @Nullable
   public GraphPath<State, Edge, Vertex> walkToPickup() {
@@ -236,8 +236,8 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
 
   /**
    * Walk path from the snapped dropoff vertex to the passenger's destination (or transit stop, for
-   * access). {@code null} when the destination/stop is already on a stoppable vertex and no walk
-   * is needed.
+   * access). {@code null} when the destination/stop is already on a car-accessible vertex and no
+   * walk is needed.
    */
   @Nullable
   public GraphPath<State, Edge, Vertex> walkFromDropoff() {
