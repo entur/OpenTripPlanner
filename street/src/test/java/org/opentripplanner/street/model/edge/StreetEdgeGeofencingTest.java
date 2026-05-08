@@ -17,8 +17,8 @@ import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
 import org.opentripplanner.street.model.RentalFormFactor;
@@ -120,8 +120,7 @@ class StreetEdgeGeofencingTest {
       var edge = streetEdge(V1, V2);
       V2.addRentalRestriction(
         new GeofencingZoneExtension(
-          TestGeofencingZoneBuilder
-            .of(NETWORK_TIER, "a-park")
+          TestGeofencingZoneBuilder.of(NETWORK_TIER, "a-park")
             .withDropOffBanned(true)
             .withTraversalBanned(true)
             .build()
