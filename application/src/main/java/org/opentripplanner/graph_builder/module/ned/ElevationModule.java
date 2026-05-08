@@ -252,6 +252,15 @@ public class ElevationModule implements GraphBuilderModule {
       }
     }
 
+    int pointsOutsideDEM = nPointsOutsideDEM.get();
+    if (pointsOutsideDEM > 0) {
+      issueStore.add(
+        "ElevationProfilePointsOutsideDEM",
+        "Elevation lookup failed at %d sample points that lie outside the DEM coverage area.",
+        pointsOutsideDEM
+      );
+    }
+
     LOG.info(progress.completeMessage());
 
     // Iterate again to find edges that had elevation calculated.
@@ -484,7 +493,12 @@ public class ElevationModule implements GraphBuilderModule {
       );
 
       setEdgeElevationProfile(ee, elevPCS);
-    } catch (ElevationLookupException e) {
+    } catch (PointOutsideCoverageException _) {
+      // Do not create an issue for each edge that falls out of coverage
+      // (there can be many of them).
+      // The total number of ignored edges is reported in a single issue
+      // ElevationProfilePointsOutsideDEM.
+    } catch (ArrayIndexOutOfBoundsException | TransformException e) {
       issueStore.add(new ElevationProfileFailure(ee, e.getMessage()));
     }
   }
@@ -515,7 +529,11 @@ public class ElevationModule implements GraphBuilderModule {
           // point on the edge to initialize these other items.
           try {
             getElevation(coverage, examplarCoordinate);
-          } catch (ElevationLookupException e) {
+          } catch (
+            PointOutsideCoverageException
+            | ArrayIndexOutOfBoundsException
+            | TransformException e
+          ) {
             LOG.warn(
               "Error processing elevation for coordinate: {} due to error: {}",
               examplarCoordinate,
@@ -557,21 +575,9 @@ public class ElevationModule implements GraphBuilderModule {
    * @param c        the coordinate (NAD83)
    * @return elevation in meters
    */
-  private double getElevation(Coverage coverage, Coordinate c) throws ElevationLookupException {
-    try {
-      return getElevation(coverage, c.x, c.y);
-    } catch (
-      ArrayIndexOutOfBoundsException
-      | PointOutsideCoverageException
-      | TransformException e
-    ) {
-      // Each of the above exceptions can occur when finding the elevation at a coordinate.
-      // - The ArrayIndexOutOfBoundsException seems to occur at the edges of some elevation tiles that
-      //     might have areas with NoData. See https://github.com/opentripplanner/OpenTripPlanner/issues/2792
-      // - The PointOutsideCoverageException can be thrown for points that are outside of the elevation tile area.
-      // - The TransformException can occur when trying to compute the EllipsoidToGeoidDifference.
-      throw new ElevationLookupException(e);
-    }
+  private double getElevation(Coverage coverage, Coordinate c)
+    throws PointOutsideCoverageException, TransformException {
+    return getElevation(coverage, c.x, c.y);
   }
 
   /**
@@ -639,15 +645,5 @@ public class ElevationModule implements GraphBuilderModule {
       geoidDifferenceCache.put(hash, difference);
     }
     return difference;
-  }
-
-  /**
-   * A custom exception wrapper for all known elevation lookup exceptions
-   */
-  static class ElevationLookupException extends Exception {
-
-    public ElevationLookupException(Exception e) {
-      super(e);
-    }
   }
 }
