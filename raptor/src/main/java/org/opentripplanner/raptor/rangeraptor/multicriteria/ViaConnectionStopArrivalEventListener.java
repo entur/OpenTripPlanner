@@ -114,10 +114,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
 
     for (ViaConnection connection : connections) {
       switch (connection) {
-        case RaptorPassThroughViaConnection _ -> {
-          continueOnSameTripInNextSegment(arrival);
-          continueFromSameStopArrival(arrival);
-        }
+        case RaptorPassThroughViaConnection _ -> handlePassThroughViaConnection(arrival);
         case RaptorVisitStopViaConnection visitStop -> {
           continueFromSameStopArrival(arrival, visitStop);
         }
@@ -138,9 +135,14 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   public void notifyElementRejected(ArrivalView<T> arrival, ArrivalView<T> rejectedByElement) {
     for (ViaConnection connection : connections) {
       if (connection instanceof RaptorPassThroughViaConnection) {
-        continueOnSameTripInNextSegment(arrival);
+        handlePassThroughViaConnection((McStopArrival<T>) arrival);
       }
     }
+  }
+
+  private void handlePassThroughViaConnection(McStopArrival<T> arrival) {
+    continueOnSameTripInNextSegment(arrival);
+    continueFromSameStopArrivalFromPassThrough(arrival);
   }
 
   /// @param alightArrival Must be a transit arrival, if not it is ignored.
@@ -183,8 +185,17 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     continueFromSameStopArrival(d == 0 ? arrival : arrival.addSlackToArrivalTime(d));
   }
 
+  /// Only transit arrivals satisfy a pass-through via constraint. Walk arrivals must not be
+  /// forwarded to the next segment — they neither satisfy the constraint nor trigger valid
+  /// transfers (two consecutive transfer legs are not representable in a path).
+  private void continueFromSameStopArrivalFromPassThrough(McStopArrival<T> arrival) {
+    if (arrival.arrivedBy(TRANSIT)) {
+      continueFromSameStopArrival(arrival);
+    }
+  }
+
   private void continueFromSameStopArrival(McStopArrival<T> arrival) {
-    next.addViaVisitArrival(arrival);
+    next.addViaArrival(arrival);
   }
 
   private void continueWithTransfer(McStopArrival<T> from, RaptorTransferViaConnection via) {

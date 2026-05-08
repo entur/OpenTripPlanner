@@ -227,13 +227,13 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   /**
-   * Add a stop arrival from a previous via segment (visit-stop connection). The arrival is placed
-   * in the {@code arrivalsCache} so that it is committed at the end of this segment's
+   * Enqueue a stop arrival forwarded from the previous via segment. The arrival is placed in the
+   * {@code arrivalsCache} so that it is committed at the end of this segment's
    * {@code transitsForRoundComplete}, after {@link McStopArrivals#clearTouchedStopsAndSetStopMarkers()}
    * has run. This ensures it is invisible to this segment's transit routing in the same round, but
    * is picked up by transfers and the next transit round.
    */
-  void addViaVisitArrival(McStopArrival<T> arrival) {
+  void addViaArrival(McStopArrival<T> arrival) {
     arrivalsCache.add(arrival);
   }
 
