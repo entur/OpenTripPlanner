@@ -42,7 +42,12 @@ class GeofencingVertexUpdaterTest {
     null,
     Polygons.OSLO_FROGNER_PARK,
     true,
-    false
+    false,
+    null,
+    false,
+    null,
+    null,
+    0
   );
 
   MultiPolygon osloMultiPolygon = fac.createMultiPolygon(new Polygon[] { Polygons.OSLO });
@@ -51,7 +56,12 @@ class GeofencingVertexUpdaterTest {
     null,
     osloMultiPolygon,
     false,
-    false
+    false,
+    null,
+    true,
+    null,
+    null,
+    0
   );
 
   @Test

@@ -30,7 +30,7 @@ public final class GeofencingZoneExtension implements RentalRestrictionExtension
   public boolean traversalBanned(State state) {
     if (state.isRentingVehicle()) {
       return (
-        zone.traversalBanned() &&
+        Boolean.TRUE.equals(zone.traversalBanned()) &&
         (state.unknownRentalNetwork() ||
           zone.id().getFeedId().equals(state.getVehicleRentalNetwork()))
       );
@@ -43,7 +43,8 @@ public final class GeofencingZoneExtension implements RentalRestrictionExtension
   public boolean dropOffBanned(State state) {
     if (state.isRentingVehicle()) {
       return (
-        zone.dropOffBanned() && zone.id().getFeedId().equals(state.getVehicleRentalNetwork())
+        Boolean.TRUE.equals(zone.dropOffBanned()) &&
+        zone.id().getFeedId().equals(state.getVehicleRentalNetwork())
       );
     } else {
       return false;
@@ -53,10 +54,10 @@ public final class GeofencingZoneExtension implements RentalRestrictionExtension
   @Override
   public Set<RestrictionType> debugTypes() {
     var set = EnumSet.noneOf(RestrictionType.class);
-    if (zone.traversalBanned()) {
+    if (Boolean.TRUE.equals(zone.traversalBanned())) {
       set.add(RestrictionType.NO_TRAVERSAL);
     }
-    if (zone.dropOffBanned()) {
+    if (Boolean.TRUE.equals(zone.dropOffBanned())) {
       set.add(RestrictionType.NO_DROP_OFF);
     }
     return set;
@@ -79,7 +80,7 @@ public final class GeofencingZoneExtension implements RentalRestrictionExtension
 
   @Override
   public Set<String> noDropOffNetworks() {
-    if (zone.dropOffBanned()) {
+    if (Boolean.TRUE.equals(zone.dropOffBanned())) {
       return Set.of(zone.id().getFeedId());
     } else {
       return Set.of();

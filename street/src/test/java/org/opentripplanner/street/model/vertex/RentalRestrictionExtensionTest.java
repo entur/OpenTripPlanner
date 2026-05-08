@@ -6,8 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.CompositeRentalRestrictionExtension;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
@@ -19,7 +18,7 @@ class RentalRestrictionExtensionTest {
   RentalRestrictionExtension a = new BusinessAreaBorder("a");
   RentalRestrictionExtension b = new BusinessAreaBorder("b");
   RentalRestrictionExtension c = new GeofencingZoneExtension(
-    new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
+    TestGeofencingZoneBuilder.of(network, "a-park").noDropOff().build()
   );
 
   @Test

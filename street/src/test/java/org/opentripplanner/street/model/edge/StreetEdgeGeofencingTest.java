@@ -17,8 +17,7 @@ import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.GeofencingZoneExtension;
@@ -38,7 +37,7 @@ class StreetEdgeGeofencingTest {
   static String NETWORK_BIRD = "bird-oslo";
   static RentalRestrictionExtension NO_DROP_OFF_TIER = noDropOffRestriction(NETWORK_TIER);
   static RentalRestrictionExtension NO_TRAVERSAL = new GeofencingZoneExtension(
-    new GeofencingZone(new FeedScopedId(NETWORK_TIER, "a-park"), null, null, false, true)
+    TestGeofencingZoneBuilder.of(NETWORK_TIER, "a-park").noTraversal().build()
   );
   StreetVertex V1 = intersectionVertex("V1", 0, 0);
   StreetVertex V2 = intersectionVertex("V2", 1, 1);
@@ -121,7 +120,11 @@ class StreetEdgeGeofencingTest {
       var edge = streetEdge(V1, V2);
       V2.addRentalRestriction(
         new GeofencingZoneExtension(
-          new GeofencingZone(new FeedScopedId(NETWORK_TIER, "a-park"), null, null, true, true)
+          TestGeofencingZoneBuilder
+            .of(NETWORK_TIER, "a-park")
+            .withDropOffBanned(true)
+            .withTraversalBanned(true)
+            .build()
         )
       );
       State result = traverseFromV1(edge)[0];
@@ -449,7 +452,7 @@ class StreetEdgeGeofencingTest {
 
   private static GeofencingZoneExtension noDropOffRestriction(String networkTier) {
     return new GeofencingZoneExtension(
-      new GeofencingZone(new FeedScopedId(networkTier, "a-park"), null, null, true, false)
+      TestGeofencingZoneBuilder.of(networkTier, "a-park").noDropOff().build()
     );
   }
 
