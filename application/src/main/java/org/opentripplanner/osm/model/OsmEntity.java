@@ -737,6 +737,7 @@ public abstract class OsmEntity {
    * @return whether the node is a place used to board a public transport vehicle
    */
   public boolean isBoardingLocation() {
+    // the majority of nodes have no tags at all, so this yields a good speed-up
     if (isTagless()) {
       return false;
     }

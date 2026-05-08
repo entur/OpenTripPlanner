@@ -73,6 +73,7 @@ public class OsmNode extends OsmEntity {
    * @return True if this entity provides an entrance to a platform or similar entity
    */
   public boolean isEntrance() {
+    // the majority of nodes have no tags at all, so this yields a good speed-up
     if (this.isTagless()) {
       return false;
     }
