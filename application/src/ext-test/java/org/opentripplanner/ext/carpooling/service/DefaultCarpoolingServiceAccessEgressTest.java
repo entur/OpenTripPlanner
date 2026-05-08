@@ -49,7 +49,7 @@ import org.opentripplanner.transit.service.TransitService;
  * <p>
  * Graph layout (going east):
  * <pre>
- *                     T1     P2      T3       T5 (walk-only spur)
+ *                     T1     P2      T3       T5 (walk-only side branch)
  *                    / \     / \     / \      :
  *                    |   |   |   |   |   |    : (PEDESTRIAN only)
  *   P1 ---------- A ----- B ----- C ----- D ---------- P3
@@ -64,7 +64,7 @@ import org.opentripplanner.transit.service.TransitService;
  *     T2 = south of A-B midpoint (connected to A and B)
  *     T3 = north of C-D midpoint (connected to C and D)
  *     T4 = south of C-D midpoint (connected to C and D)
- *     T5 = north of D, reachable from D only via a walk-only spur
+ *     T5 = north of D, reachable from D only via a walk-only side branch
  *   Passenger locations:
  *     P1 = 50km west of A (connected to A)
  *     P2 = between B and C, north (connected to B and C)
@@ -151,7 +151,7 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
           biLink(iT3, stopT3);
           biLink(iT4, stopT4);
 
-          // T5 sits on a pedestrian-only spur off the drivable network: a car can drive
+          // T5 sits on a pedestrian-only side branch off the drivable network: a car can drive
           // to D but cannot continue to iT5, so a pure CAR nearby-stop search misses it.
           // CAR_PICKUP, which models walk -> drive -> walk, can drive to D and walk the
           // final stretch to reach stopT5.
@@ -579,12 +579,12 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
    * to leave the drivable network and walk the last stretch to a transit stop whose link
    * endpoint is reachable only via a pedestrian-only edge (e.g. a pedestrian-plaza stop).
    * <p>
-   * In this graph stopT5 is exactly such a stop: a walk-only spur off D. A pure CAR search
-   * would never reach it, so it would not appear in any access result. If the implementation
-   * regresses to using CAR here, this assertion will fail.
+   * In this graph stopT5 is exactly such a stop: a walk-only side branch off D. A pure CAR
+   * search would never reach it, so it would not appear in any access result. If the
+   * implementation regresses to using CAR here, this assertion will fail.
    */
   @Test
-  void accessFindsTransitStopReachableOnlyViaWalkOnlySpurFromDrivableNetwork() {
+  void accessFindsTransitStopReachableOnlyViaWalkOnlySideBranchFromDrivableNetwork() {
     var departureTime = SEARCH_TIME.plusMinutes(30);
     var trip = CarpoolTripTestData.createSimpleTripWithTime(coordA, coordD, departureTime);
     repository.upsertCarpoolTrip(trip);
@@ -610,17 +610,17 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
       "Access results should include stopT5, which is only reachable from the drivable " +
         "network by walking. If routeAccessEgress called findNearbyStops with " +
         "StreetMode.CAR instead of CAR_PICKUP the search could not leave the car network " +
-        "to walk the pedestrian-only spur to stopT5, and the stop would be missing here."
+        "to walk the pedestrian-only side branch to stopT5, and the stop would be missing here."
     );
 
-    // The carpool drops the passenger at D (the only drivable vertex incident to the spur)
+    // The carpool drops the passenger at D (the only drivable vertex incident to the side branch)
     // and the passenger must walk D -> iT5 -> stopT5. The result must therefore carry a
     // non-empty walk-from-dropoff segment.
     var walkFromDropoff = stopT5Result.walkFromDropoff();
     assertNotNull(
       walkFromDropoff,
       "stopT5 access result must include a walk-from-dropoff segment, since the carpool " +
-        "cannot drive past D and the passenger has to walk the pedestrian-only spur to T5"
+        "cannot drive past D and the passenger has to walk the pedestrian-only side branch to T5"
     );
     assertTrue(
       walkFromDropoff.getDuration() > 0,
@@ -629,7 +629,7 @@ class DefaultCarpoolingServiceAccessEgressTest extends GraphRoutingTest {
   }
 
   /**
-   * Counterpart to the walk-only-spur test: when both the passenger and the transit stop sit on
+   * Counterpart to the walk-only-side-branch test: when both the passenger and the transit stop sit on
    * the drivable network, the carpool can pick up at the passenger's location and drop off at
    * the stop's link vertex without any walking. Both {@code walkToPickup} and
    * {@code walkFromDropoff} must therefore be {@code null} (rather than zero-duration

@@ -50,12 +50,13 @@ import org.opentripplanner.transit.service.TransitService;
  *   <li>{@code D} — carpool trip destination (where the driver ends).
  *   <li>{@code B} — drivable mid-route intersection nearest to the passenger's origin; the snapper
  *       resolves it as the car-accessible pickup vertex because {@code P} sits on a
- *       pedestrian-only spur the car cannot enter.
+ *       pedestrian-only side branch the car cannot enter.
  *   <li>{@code C} — drivable mid-route intersection nearest to the passenger's destination; the
  *       snapper resolves it as the car-accessible dropoff vertex for the same reason.
- *   <li>{@code P} — passenger origin, off the drivable network on a pedestrian-only spur from B.
- *   <li>{@code Q} — passenger destination, off the drivable network on a pedestrian-only spur
- *       from C.
+ *   <li>{@code P} — passenger origin, off the drivable network on a pedestrian-only side branch
+ *       from B.
+ *   <li>{@code Q} — passenger destination, off the drivable network on a pedestrian-only side
+ *       branch from C.
  * </ul>
  *
  * The expected itinerary therefore walks {@code P → B}, drives {@code B → C} as a carpool leg,
@@ -95,7 +96,7 @@ class DefaultCarpoolingServiceWalkLegsTest extends GraphRoutingTest {
           biStreet(A, B, 500);
           biStreet(B, C, 1000);
           biStreet(C, D, 500);
-          // Passenger pickup and dropoff sit on pedestrian-only spurs off the main road.
+          // Passenger pickup and dropoff sit on pedestrian-only side branches off the main road.
           street(
             B,
             P,

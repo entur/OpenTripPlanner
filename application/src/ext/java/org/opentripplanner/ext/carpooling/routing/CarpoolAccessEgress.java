@@ -20,7 +20,7 @@ import org.opentripplanner.street.search.state.State;
  * <p>
  * The walk paths' A* weights are used as-is for the walk portion of the cost; they already encode
  * the user's walk preferences (reluctance, safety, slope, ...) from the search that produced them.
- * The ride portion is billed at {@code carpoolReluctance}.
+ * The ride portion is weighted by {@code carpoolReluctance}.
  */
 public class CarpoolAccessEgress implements RoutingAccessEgress {
 
@@ -62,7 +62,7 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
    * @param penalty optional Raptor time/cost penalty added on top of the leg, applied via
    *        {@link #withPenalty(TimeAndCost)}; pass {@link TimeAndCost#ZERO} for no penalty.
    * @param carpoolReluctance multiplier on ride seconds when computing {@link #c1()}; the walk
-   *        portions are billed at the walks' own A* weights and are not multiplied by this.
+   *        portions use the walks' own A* weights and are not multiplied by this.
    */
   public CarpoolAccessEgress(
     int stop,

@@ -148,12 +148,13 @@ public final class CarAccessibleVertexSnapper {
       .withMode(StreetMode.WALK)
       .withArriveBy(arriveBy)
       .build();
-    // Pin the heuristic explicitly: the termination strategy fires per state in cost-ascending
-    // order only when expansion is by g (actual weight), not by f = g + h. The trivial heuristic
-    // returns 0 so f == g; any other heuristic would let a state with smaller g be expanded after
-    // a state with larger g but smaller h, breaking the "first match is cheapest" guarantee.
-    // AStarBuilder defaults to TRIVIAL today, but we don't want a future default flip to silently
-    // break this snapper.
+    // Pin the heuristic explicitly: A* expands states in order of f = g + h, where g is the
+    // actual cost from the start, h is the heuristic's estimate of the remaining cost to the
+    // goal, and f is the resulting priority used to pick the next state. The termination
+    // strategy fires per state in cost-ascending order only when expansion is by g alone —
+    // i.e. when h = 0 and so f == g. The trivial heuristic returns 0 for every state, which
+    // satisfies that. Any other heuristic would let a state with smaller g be expanded after a
+    // state with larger g but smaller h, breaking the "first match is cheapest" guarantee.
     var builder = StreetSearchBuilder.of()
       .withRequest(request)
       .withHeuristic(RemainingWeightHeuristic.TRIVIAL)
@@ -163,7 +164,12 @@ public final class CarAccessibleVertexSnapper {
     // AStarBuilder picks the initial-state vertex set based on arriveBy: toVertices for a reverse
     // search, fromVertices for a forward one. Route vertexToSnap to the matching side or
     // createInitialStates receives null.
-    (arriveBy ? builder.withTo(vertexToSnap) : builder.withFrom(vertexToSnap)).run();
+    if (arriveBy) {
+      builder = builder.withTo(vertexToSnap);
+    } else {
+      builder = builder.withFrom(vertexToSnap);
+    }
+    builder.run();
 
     State best = foundRef[0];
     if (best == null) {
@@ -185,10 +191,6 @@ public final class CarAccessibleVertexSnapper {
    * edge — i.e. a car can both arrive at it and leave it. Both directions are required because
    * carpool pickups and dropoffs are mid-route insertions; a vertex with only one (e.g. the
    * pedestrian-side end of a one-way drivable exit) is unrouteable for the carpool A*.
-   * <p>
-   * No further restriction is consulted — speed limit, road class, OSM stopping/parking tags are
-   * not considered. This is consistent with how OTP's {@code CAR_PICKUP} mode chooses transition
-   * points.
    */
   private static boolean isCarAccessible(Vertex vertex) {
     return (
