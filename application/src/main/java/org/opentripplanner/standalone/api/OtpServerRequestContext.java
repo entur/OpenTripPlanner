@@ -124,7 +124,6 @@ public interface OtpServerRequestContext {
   default GraphFinder graphFinder() {
     return GraphFinder.getInstance(
       graph().hasStreets,
-      transitService()::getRegularStop,
       transitService()::findRegularStopsByBoundingBox,
       linkingContextFactory()
     );

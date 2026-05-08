@@ -5,6 +5,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.transit.service.TransitService;
+import org.opentripplanner.utils.collection.MinMap;
 
 /**
  * Filters nearby stops based on flex trip availability.
@@ -23,8 +24,7 @@ class FlexTripNearbyStopFilter implements NearbyStopFilter {
 
   @Override
   public boolean includeFromStop(FeedScopedId id, boolean reverseDirection) {
-    var stop = transitService.getStopLocation(id);
-    return !transitService.getFlexIndex().getFlexTripsByStop(stop).isEmpty();
+    return !transitService.getFlexIndex().getFlexTripsByStopId(id).isEmpty();
   }
 
   @Override
@@ -32,13 +32,13 @@ class FlexTripNearbyStopFilter implements NearbyStopFilter {
     Collection<NearbyStop> nearbyStops,
     boolean reverseDirection
   ) {
-    MinMap<FlexTrip<?, ?>, NearbyStop> closestStopForFlexTrip = new MinMap<>();
+    MinMap<FlexTrip<?, ?>, NearbyStop> closestStopForFlexTrip = MinMap.ofNaturalOrder();
     for (var it : nearbyStops) {
-      var stop = it.stop;
-      var flexTrips = transitService.getFlexIndex().getFlexTripsByStop(stop);
+      var stopId = it.stopId;
+      var flexTrips = transitService.getFlexIndex().getFlexTripsByStopId(stopId);
 
       for (FlexTrip<?, ?> trip : flexTrips) {
-        if (reverseDirection ? trip.isAlightingPossible(stop) : trip.isBoardingPossible(stop)) {
+        if (reverseDirection ? trip.isAlightingPossible(stopId) : trip.isBoardingPossible(stopId)) {
           closestStopForFlexTrip.putMin(trip, it);
         }
       }

@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link InsertionPositionFinder}.
- * Focuses on heuristic validation: capacity, directional compatibility, and beeline delays.
+ * Focuses on heuristic validation: capacity and beeline delays.
  */
 class InsertionPositionFinderTest {
 
@@ -41,16 +41,6 @@ class InsertionPositionFinderTest {
     var viablePositions = finder.findViablePositions(trip, OSLO_EAST, OSLO_NORTH, Duration.ZERO);
 
     assertFalse(viablePositions.isEmpty());
-  }
-
-  @Test
-  void findViablePositions_incompatibleDirection_rejectsPosition() {
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-
-    // Passenger going opposite direction (SOUTH→CENTER) when trip is CENTER→NORTH
-    var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_CENTER, Duration.ZERO);
-
-    assertTrue(viablePositions.isEmpty());
   }
 
   @Test
@@ -91,7 +81,7 @@ class InsertionPositionFinderTest {
     var viablePositions = finder.findViablePositions(trip, OSLO_SOUTH, OSLO_NORTH, Duration.ZERO);
 
     // Should evaluate multiple pickup/dropoff combinations
-    // Exact count depends on directional and beeline filtering
+    // Exact count depends on beeline filtering
     assertNotNull(viablePositions);
   }
 }
