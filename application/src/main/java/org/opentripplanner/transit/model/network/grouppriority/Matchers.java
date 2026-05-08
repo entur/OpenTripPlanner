@@ -26,6 +26,12 @@ import org.opentripplanner.transit.model.basic.TransitMode;
  * value in the "select", then the list of non-empty matchers is merged into
  * a `CompositeMatcher`. So, a new matcher is only created if the field in the
  * select is present.
+ * <p>
+ * THE MATCHERS PRODUCED BY THIS CLASS ARE NOT THREAD-SAFE. The regex matcher
+ * keeps a reusable {@link java.util.regex.Matcher} per pattern that is mutated
+ * on each {@code match} call; concurrent invocation would corrupt its state.
+ * The enclosing {@link TransitGroupPriorityService} is request-scoped and
+ * single-threaded, which is what makes this safe.
  */
 final class Matchers {
 
@@ -133,9 +139,6 @@ final class Matchers {
     ) {
       this.typeName = typeName;
       this.patterns = regexps.stream().map(Pattern::compile).toArray(Pattern[]::new);
-      // The enclosing service is request-scoped and single-threaded
-      // (TransitGroupPriorityService is not thread-safe), so we can safely reuse
-      // one Matcher per Pattern across calls instead of allocating per match.
       this.matchers = Arrays.stream(this.patterns)
         .map(p -> p.matcher(""))
         .toArray(java.util.regex.Matcher[]::new);
