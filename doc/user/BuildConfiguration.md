@@ -24,6 +24,7 @@ Sections follow that describe particular settings in more depth.
 | [configVersion](#configVersion)                                                             |       `string`       | Deployment version of the *build-config.json*.                                                                                                                 | *Optional* |                                   |  2.1  |
 | [dataImportReport](#dataImportReport)                                                       |       `boolean`      | Generate nice HTML report of Graph errors/warnings                                                                                                             | *Optional* | `false`                           |  2.0  |
 | [distanceBetweenElevationSamples](#distanceBetweenElevationSamples)                         |       `double`       | The distance between elevation samples in meters.                                                                                                              | *Optional* | `10.0`                            |  2.0  |
+| [elevationTileCacheSizeMB](#elevationTileCacheSizeMB)                                       |       `integer`      | Memory budget in megabytes for the Imagen tile cache used during elevation processing.                                                                         | *Optional* | `100`                             |  2.10 |
 | embedRouterConfig                                                                           |       `boolean`      | Embed the Router config in the graph, which allows it to be sent to a server fully configured over the wire.                                                   | *Optional* | `true`                            |  2.0  |
 | [graph](#graph)                                                                             |         `uri`        | URI to the graph object file for reading and writing.                                                                                                          | *Optional* |                                   |  2.0  |
 | [includeEllipsoidToGeoidDifference](#includeEllipsoidToGeoidDifference)                     |       `boolean`      | Include the Ellipsoid to Geoid difference in the calculations of every point along every StreetWithElevationEdge.                                              | *Optional* | `false`                           |  2.0  |
@@ -446,6 +447,19 @@ The reports are stored in the same location as the graph.
 The distance between elevation samples in meters.
 
 The default is the approximate resolution of 1/3 arc-second NED data. This should not be smaller than the horizontal resolution of the height data used.
+
+<h3 id="elevationTileCacheSizeMB">elevationTileCacheSizeMB</h3>
+
+**Since version:** `2.10` ∙ **Type:** `integer` ∙ **Cardinality:** `Optional` ∙ **Default value:** `100`   
+**Path:** / 
+
+Memory budget in megabytes for the Imagen tile cache used during elevation processing.
+
+Elevation sampling reads pixels from a tiled DEM through Imagen's tile cache. Sizing the
+cache to fit the DEM working set turns repeated tile decompressions into cache hits.
+Increase for large DEMs, lower for memory-constrained environments. The cache lives
+inside the JVM heap and must fit inside `-Xmx`.
+
 
 <h3 id="graph">graph</h3>
 
