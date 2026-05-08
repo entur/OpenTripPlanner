@@ -15,8 +15,7 @@ import static org.opentripplanner.street.search.state.VehicleRentalState.RENTING
 import java.util.Set;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
 import org.opentripplanner.service.vehiclerental.street.CompositeRentalRestrictionExtension;
@@ -55,7 +54,7 @@ class RentalRestrictionExtensionTest {
     var edge = streetEdge(V1, V2);
     V2.addRentalRestriction(
       new GeofencingZoneExtension(
-        new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, true)
+        TestGeofencingZoneBuilder.of(network, "a-park").withDropOffBanned(true).withTraversalBanned(true).build()
       )
     );
     var result = traverse(edge)[0];
@@ -79,7 +78,7 @@ class RentalRestrictionExtensionTest {
     );
     restrictedEdge.addRentalRestriction(
       new GeofencingZoneExtension(
-        new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
+        TestGeofencingZoneBuilder.of(network, "a-park").noDropOff().build()
       )
     );
 
@@ -106,7 +105,7 @@ class RentalRestrictionExtensionTest {
   public void dontFinishInNoDropOffZone() {
     var edge = streetEdge(V1, V2);
     var ext = new GeofencingZoneExtension(
-      new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
+      TestGeofencingZoneBuilder.of(network, "a-park").noDropOff().build()
     );
     V2.addRentalRestriction(ext);
     edge.addRentalRestriction(ext);
@@ -190,7 +189,7 @@ class RentalRestrictionExtensionTest {
     RentalRestrictionExtension a = new BusinessAreaBorder("a");
     RentalRestrictionExtension b = new BusinessAreaBorder("b");
     RentalRestrictionExtension c = new GeofencingZoneExtension(
-      new GeofencingZone(new FeedScopedId(network, "a-park"), null, null, true, false)
+      TestGeofencingZoneBuilder.of(network, "a-park").noDropOff().build()
     );
 
     @Test

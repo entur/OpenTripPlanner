@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType;
 import org.opentripplanner.service.vehiclerental.model.TestVehicleRentalStationBuilder;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
@@ -335,7 +335,7 @@ class VehicleRentalEdgeTest {
 
     private GeofencingZoneExtension noDropOffZone() {
       return new GeofencingZoneExtension(
-        new GeofencingZone(new FeedScopedId(NETWORK, "zone"), null, null, true, false)
+        TestGeofencingZoneBuilder.of(NETWORK, "zone").noDropOff().build()
       );
     }
   }
