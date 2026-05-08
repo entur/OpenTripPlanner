@@ -44,6 +44,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Precompute cumulative pattern distance for O(1) leg distance lookup [#7559](https://github.com/opentripplanner/OpenTripPlanner/pull/7559)
 - Expose that a SIRI added journey has an ExtraJourney alteration in Transmodel [#7385](https://github.com/opentripplanner/OpenTripPlanner/pull/7385)
 - Fix wrong context cast in Transmodel QuayAtDistanceType [#7582](https://github.com/opentripplanner/OpenTripPlanner/pull/7582)
+- Improve OTP warm-up [#7576](https://github.com/opentripplanner/OpenTripPlanner/pull/7576)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
