@@ -595,6 +595,15 @@ public class StreetEdge
     fromv.addRentalRestriction(ext);
   }
 
+  public void addBusinessAreaBorderNetwork(String network) {
+    fromv.addBusinessAreaBorderNetwork(network);
+  }
+
+  public void removeBusinessAreaBorderNetwork(String network) {
+    fromv.removeBusinessAreaBorderNetwork(network);
+    tov.removeBusinessAreaBorderNetwork(network);
+  }
+
   /**
    * Split this street edge and return the resulting street edges. After splitting, the original
    * edge will be removed from the graph.

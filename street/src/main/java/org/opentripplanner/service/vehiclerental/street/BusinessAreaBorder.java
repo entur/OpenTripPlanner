@@ -1,31 +1,52 @@
 package org.opentripplanner.service.vehiclerental.street;
 
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.search.state.State;
 
 /**
- * Traversal is banned since this location is the border of a business area.
+ * Marks a vertex as being on the border of one or more rental networks' business areas. Traversal
+ * is banned for vehicles of any matching network — they cannot leave their business area.
  */
 public final class BusinessAreaBorder implements RentalRestrictionExtension {
 
-  private final String network;
+  private final Set<String> networks;
+
+  public BusinessAreaBorder() {
+    this.networks = new HashSet<>();
+  }
 
   public BusinessAreaBorder(String network) {
-    this.network = network;
+    this.networks = new HashSet<>();
+    this.networks.add(network);
+  }
+
+  public void addNetwork(String network) {
+    networks.add(network);
+  }
+
+  public void removeNetwork(String network) {
+    networks.remove(network);
+  }
+
+  public boolean isEmpty() {
+    return networks.isEmpty();
   }
 
   @Override
   public boolean traversalBanned(State state) {
-    if (state.getRequest().arriveBy()) {
-      // TODO: since in the arrive by search we don't know the rental network yet, we disallow it for _all_ networks
-      // there will be another PR fixing this
-      return state.isRentingVehicle();
-    } else {
-      return state.isRentingVehicle() && network.equals(state.getVehicleRentalNetwork());
+    if (!state.isRentingVehicle()) {
+      return false;
     }
+    // Generic (uncommitted) states pass through freely — enforcement is deferred
+    // to their committed branches which have a known network.
+    if (state.getVehicleRentalNetwork() == null) {
+      return false;
+    }
+    return networks.contains(state.getVehicleRentalNetwork());
   }
 
   @Override
@@ -55,6 +76,6 @@ public final class BusinessAreaBorder implements RentalRestrictionExtension {
 
   @Override
   public List<String> networks() {
-    return List.of(network);
+    return List.copyOf(networks);
   }
 }

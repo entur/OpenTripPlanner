@@ -17,6 +17,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.locationtech.jts.linearref.LocationIndexedLine;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -556,6 +558,42 @@ public class VertexLinker {
     }
     v.addRentalRestriction(originalEdge.getFromVertex().rentalRestrictions());
     v.addRentalRestriction(originalEdge.getToVertex().rentalRestrictions());
+
+    // Copy business area borders from parent vertices
+    var fromBab = originalEdge.getFromVertex().getBusinessAreaBorder();
+    if (fromBab != null) {
+      for (var network : fromBab.networks()) {
+        v.addBusinessAreaBorderNetwork(network);
+      }
+    }
+    var toBab = originalEdge.getToVertex().getBusinessAreaBorder();
+    if (toBab != null) {
+      for (var network : toBab.networks()) {
+        v.addBusinessAreaBorderNetwork(network);
+      }
+    }
+
+    // Compute geofencing boundaries spatially for the split vertex.
+    // The entering flag encodes position: outside=true, inside=false.
+    // Blind-copying from parent vertices would give the wrong flag when
+    // the split point is on the opposite side of the zone boundary.
+    var fromBoundaries = originalEdge.getFromVertex().getGeofencingBoundaries();
+    var toBoundaries = originalEdge.getToVertex().getGeofencingBoundaries();
+    if (!fromBoundaries.isEmpty() || !toBoundaries.isEmpty()) {
+      var splitCoord = new Coordinate(x, y);
+      var containingZones = graph.getGeofencingZonesContaining(splitCoord);
+      var boundaryZones = new HashSet<GeofencingZone>();
+      for (var b : fromBoundaries) {
+        boundaryZones.add(b.zone());
+      }
+      for (var b : toBoundaries) {
+        boundaryZones.add(b.zone());
+      }
+      for (var zone : boundaryZones) {
+        boolean splitInZone = containingZones.contains(zone);
+        v.addGeofencingBoundary(new GeofencingBoundaryExtension(zone, !splitInZone));
+      }
+    }
 
     return v;
   }

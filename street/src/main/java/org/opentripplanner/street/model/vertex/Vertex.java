@@ -13,6 +13,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
@@ -37,6 +40,11 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
 
   private transient Edge[] outgoing = new Edge[0];
   private RentalRestrictionExtension rentalRestrictions = RentalRestrictionExtension.NO_RESTRICTION;
+
+  @javax.annotation.Nullable
+  private BusinessAreaBorder businessAreaBorder;
+
+  private List<GeofencingBoundaryExtension> geofencingBoundaries = List.of();
 
   /* CONSTRUCTORS */
 
@@ -266,6 +274,46 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
 
   public void removeRentalRestriction(RentalRestrictionExtension ext) {
     rentalRestrictions = rentalRestrictions.remove(ext);
+  }
+
+  public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
+    if (geofencingBoundaries.contains(ext)) {
+      return;
+    }
+    var newList = new ArrayList<>(geofencingBoundaries);
+    newList.add(ext);
+    geofencingBoundaries = List.copyOf(newList);
+  }
+
+  public List<GeofencingBoundaryExtension> getGeofencingBoundaries() {
+    return geofencingBoundaries;
+  }
+
+  public void removeGeofencingBoundariesForZones(Set<GeofencingZone> zones) {
+    var newList = new ArrayList<>(geofencingBoundaries);
+    newList.removeIf(ext -> zones.contains(ext.zone()));
+    geofencingBoundaries = List.copyOf(newList);
+  }
+
+  public void addBusinessAreaBorderNetwork(String network) {
+    if (businessAreaBorder == null) {
+      businessAreaBorder = new BusinessAreaBorder();
+    }
+    businessAreaBorder.addNetwork(network);
+  }
+
+  public void removeBusinessAreaBorderNetwork(String network) {
+    if (businessAreaBorder != null) {
+      businessAreaBorder.removeNetwork(network);
+      if (businessAreaBorder.isEmpty()) {
+        businessAreaBorder = null;
+      }
+    }
+  }
+
+  @javax.annotation.Nullable
+  public BusinessAreaBorder getBusinessAreaBorder() {
+    return businessAreaBorder;
   }
 
   /**
