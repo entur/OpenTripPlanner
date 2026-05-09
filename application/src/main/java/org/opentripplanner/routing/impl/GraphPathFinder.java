@@ -13,7 +13,7 @@ import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneIndex;
 import org.opentripplanner.street.model.StreetConstants;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.path.StreetPath;

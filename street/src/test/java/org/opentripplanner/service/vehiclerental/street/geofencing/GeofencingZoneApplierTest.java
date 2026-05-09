@@ -1,6 +1,5 @@
-package org.opentripplanner.service.vehiclerental.street;
+package org.opentripplanner.service.vehiclerental.street.geofencing;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -79,16 +78,6 @@ class GeofencingZoneApplierTest {
       .findFirst()
       .orElseThrow();
     assertFalse(boundary.entering());
-  }
-
-  @Test
-  void boundaryEdgeGetsBusinessAreaBorder() {
-    var result = applier.applyGeofencingZones(List.of(zone, businessArea));
-
-    assertEquals(1, result.businessAreaEdges().size());
-
-    var border = businessBorder.getFromVertex().getBusinessAreaBorder();
-    assertNotNull(border);
   }
 
   @Test

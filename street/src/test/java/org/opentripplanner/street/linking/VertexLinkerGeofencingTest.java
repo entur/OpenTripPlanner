@@ -3,6 +3,7 @@ package org.opentripplanner.street.linking;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
 import static org.opentripplanner.street.model.StreetModelFactory.streetEdge;
 
@@ -14,8 +15,8 @@ import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
-import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneIndex;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetConstants;
@@ -188,7 +189,7 @@ class VertexLinkerGeofencingTest {
         return sv;
       }
     }
-    throw new AssertionError("No SplitterVertex found connected to the temporary location");
+    return fail("No SplitterVertex found connected to the temporary location");
   }
 
   private static void registerZoneIndex(Graph graph) {
