@@ -5,7 +5,7 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
-import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
@@ -217,70 +217,19 @@ public class StateEditor {
     stateData.enteredNoThroughTrafficArea = true;
   }
 
-  // TODO: Remove in commit 4 when old per-edge system is deleted
-  public void leaveNoRentalDropOffArea() {
-    if (!stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-    cloneStateDataAsNeeded();
-    stateData.insideNoRentalDropOffArea = false;
-  }
-
-  // TODO: Remove in commit 4 when old per-edge system is deleted
-  public void enterNoRentalDropOffArea() {
-    if (stateData.insideNoRentalDropOffArea) {
-      return;
-    }
-    cloneStateDataAsNeeded();
-    stateData.insideNoRentalDropOffArea = true;
-  }
-
-  // TODO: Remove in commit 4 when old per-edge system is deleted
-  public void resetStartedInNoDropOffZone() {
-    cloneStateDataAsNeeded();
-    stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
-  }
-
   /**
    * Update geofencing zone tracking based on boundary extensions on the traversed edge.
-   * For each {@link GeofencingBoundaryExtension} on fromv, checks if tov has a paired extension
-   * (same zone, opposite entering flag). If paired, adds or removes the zone from state.
    */
   public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
-    // Build the new zone set in a single pass. The mutable HashSet is only created when
-    // we find the first paired boundary, and Set.copyOf is called once at the end —
-    // avoiding intermediate immutable copies when multiple zones overlap on one edge.
-    HashSet<GeofencingZone> newZones = null;
-
-    for (var boundary : fromVertex.getGeofencingBoundaries()) {
-      // Paired check: tov must have same zone with opposite entering flag
-      boolean paired = false;
-      for (var tovBoundary : toVertex.getGeofencingBoundaries()) {
-        if (
-          tovBoundary.zone().equals(boundary.zone()) &&
-          tovBoundary.entering() != boundary.entering()
-        ) {
-          paired = true;
-          break;
-        }
-      }
-      if (!paired) {
-        continue;
-      }
-      if (newZones == null) {
-        newZones = new HashSet<>(stateData.currentGeofencingZones);
-      }
-      boolean effectiveEntering = boundary.entering() ^ arriveBy;
-      if (effectiveEntering) {
-        newZones.add(boundary.zone());
-      } else {
-        newZones.remove(boundary.zone());
-      }
-    }
-
+    var newZones = GeofencingBoundaryExtension.resolveZoneTransitions(
+      fromVertex.getGeofencingBoundaries(),
+      toVertex.getGeofencingBoundaries(),
+      stateData.currentGeofencingZones,
+      arriveBy
+    );
     if (newZones != null) {
       cloneStateDataAsNeeded();
-      stateData.currentGeofencingZones = Set.copyOf(newZones);
+      stateData.currentGeofencingZones = newZones;
     }
   }
 
@@ -371,7 +320,6 @@ public class StateEditor {
       stateData.vehicleRentalNetwork = null;
       stateData.rentalVehicleFormFactor = null;
       stateData.rentalVehiclePropulsionType = null;
-      stateData.insideNoRentalDropOffArea = false;
     } else {
       stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
       stateData.currentMode = formFactor.traverseMode;

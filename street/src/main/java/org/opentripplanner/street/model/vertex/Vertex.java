@@ -14,10 +14,8 @@ import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
-import org.opentripplanner.service.vehiclerental.street.BusinessAreaBorder;
-import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
 import org.opentripplanner.street.geometry.WgsCoordinate;
-import org.opentripplanner.street.model.RentalRestrictionExtension;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.search.state.State;
@@ -39,10 +37,6 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   private transient Edge[] incoming = new Edge[0];
 
   private transient Edge[] outgoing = new Edge[0];
-  private RentalRestrictionExtension rentalRestrictions = RentalRestrictionExtension.NO_RESTRICTION;
-
-  @javax.annotation.Nullable
-  private BusinessAreaBorder businessAreaBorder;
 
   private List<GeofencingBoundaryExtension> geofencingBoundaries = List.of();
 
@@ -62,9 +56,6 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     if (this.getCoordinate() != null) {
       sb.append(" lat,lng=").append(this.getCoordinate().y);
       sb.append(",").append(this.getCoordinate().x);
-    }
-    if (!rentalRestrictions.toList().isEmpty()) {
-      sb.append(", traversalExtension=").append(rentalRestrictions);
     }
     sb.append("}");
     return sb.toString();
@@ -256,26 +247,6 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     );
   }
 
-  public boolean rentalTraversalBanned(State currentState) {
-    return rentalRestrictions.traversalBanned(currentState);
-  }
-
-  public void addRentalRestriction(RentalRestrictionExtension ext) {
-    rentalRestrictions = rentalRestrictions.add(ext);
-  }
-
-  public RentalRestrictionExtension rentalRestrictions() {
-    return rentalRestrictions;
-  }
-
-  public boolean rentalDropOffBanned(State currentState) {
-    return rentalRestrictions.dropOffBanned(currentState);
-  }
-
-  public void removeRentalRestriction(RentalRestrictionExtension ext) {
-    rentalRestrictions = rentalRestrictions.remove(ext);
-  }
-
   public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
     if (geofencingBoundaries.contains(ext)) {
       return;
@@ -293,53 +264,6 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     var newList = new ArrayList<>(geofencingBoundaries);
     newList.removeIf(ext -> zones.contains(ext.zone()));
     geofencingBoundaries = List.copyOf(newList);
-  }
-
-  /**
-   * Whether this vertex has a no-traversal zone boundary for the network the given state is
-   * renting. Used to fork at vehicle pickup to produce both a renting and walking branch.
-   */
-  public boolean isGeofencingNoTraversalBoundary(State currentState) {
-    if (geofencingBoundaries.isEmpty() || !currentState.isRentingVehicle()) {
-      return false;
-    }
-    String network = currentState.getVehicleRentalNetwork();
-    if (network == null) {
-      return false;
-    }
-    for (var boundary : geofencingBoundaries) {
-      if (!boundary.zone().id().getFeedId().equals(network)) {
-        continue;
-      }
-      if (!boundary.entering()) {
-        continue;
-      }
-      if (Boolean.TRUE.equals(boundary.zone().traversalBanned())) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public void addBusinessAreaBorderNetwork(String network) {
-    if (businessAreaBorder == null) {
-      businessAreaBorder = new BusinessAreaBorder();
-    }
-    businessAreaBorder.addNetwork(network);
-  }
-
-  public void removeBusinessAreaBorderNetwork(String network) {
-    if (businessAreaBorder != null) {
-      businessAreaBorder.removeNetwork(network);
-      if (businessAreaBorder.isEmpty()) {
-        businessAreaBorder = null;
-      }
-    }
-  }
-
-  @javax.annotation.Nullable
-  public BusinessAreaBorder getBusinessAreaBorder() {
-    return businessAreaBorder;
   }
 
   /**

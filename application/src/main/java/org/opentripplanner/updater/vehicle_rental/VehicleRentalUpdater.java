@@ -16,16 +16,15 @@ import org.opentripplanner.framework.retry.OtpRetryException;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneApplier;
-import org.opentripplanner.service.vehiclerental.street.GeofencingZoneIndex;
 import org.opentripplanner.service.vehiclerental.street.StreetVehicleRentalLink;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneApplier;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneIndex;
 import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.linking.LinkingDirection;
 import org.opentripplanner.street.linking.VertexLinker;
-import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
@@ -56,7 +55,6 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
   private final VehicleRentalDataSource source;
   private final String nameForLogging;
 
-  private Map<StreetEdge, String> latestBusinessAreaEdges = Map.of();
   private Set<Vertex> latestBoundaryVertices = Set.of();
   private GeofencingZoneIndex latestZoneIndex;
   private Set<GeofencingZone> latestAppliedGeofencingZones = Set.of();
@@ -224,7 +222,6 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         LOG.info("Computing geofencing zones for {}", nameForLogging);
         var start = System.currentTimeMillis();
 
-        latestBusinessAreaEdges.forEach(StreetEdge::removeBusinessAreaBorderNetwork);
         latestBoundaryVertices.forEach(vertex ->
           vertex.removeGeofencingBoundariesForZones(latestAppliedGeofencingZones)
         );
@@ -235,7 +232,6 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         // included so split vertices on those edges get boundary extensions.
         var applier = new GeofencingZoneApplier(env -> graph.findEdges(env, Scope.REQUEST), true);
         var result = applier.applyGeofencingZones(geofencingZones);
-        latestBusinessAreaEdges = result.businessAreaEdges();
         latestBoundaryVertices = result.boundaryVertices();
         latestZoneIndex = result.zoneIndex();
         latestAppliedGeofencingZones = geofencingZones;
@@ -246,10 +242,9 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);
         LOG.info(
-          "Geofencing zones computation took {}. {} boundary vertices, {} business area edges. For {}",
+          "Geofencing zones computation took {}. {} boundary vertices. For {}",
           DurationUtils.durationToStr(millis),
           latestBoundaryVertices.size(),
-          latestBusinessAreaEdges.size(),
           nameForLogging
         );
       }

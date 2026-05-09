@@ -10,6 +10,7 @@ import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.Propuls
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
 import org.opentripplanner.street.linking.DisposableEdgeCollection;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
@@ -198,7 +199,13 @@ public class VehicleRentalEdge extends Edge {
     // on the RENTING_FLOATING state which immediately hits dead ends at zone-adjacent edges.
     if (pickedUp && station.isFloatingVehicle() && !s0.getRequest().arriveBy()) {
       State rentingState = s1.makeState();
-      if (rentingState != null && stationVertex.isGeofencingNoTraversalBoundary(rentingState)) {
+      if (
+        rentingState != null &&
+        GeofencingBoundaryExtension.hasNoTraversalEntry(
+          stationVertex.getGeofencingBoundaries(),
+          rentingState.getVehicleRentalNetwork()
+        )
+      ) {
         StateEditor dropEditor = s0.edit(this);
         dropEditor.beginFloatingVehicleRenting(
           formFactor,

@@ -1,4 +1,4 @@
-package org.opentripplanner.service.vehiclerental.street;
+package org.opentripplanner.service.vehiclerental.street.geofencing;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,14 +7,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
-import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -56,37 +55,9 @@ public class GeofencingZoneApplier {
       .filter(z -> z.geometry() != null)
       .toList();
 
-    var businessAreaEdges = new HashMap<StreetEdge, String>();
-
     var boundaryVertices = addBoundaryExtensions(zonesWithGeometry);
 
-    if (applyBusinessAreas) {
-      var businessAreasByNetwork = geofencingZones
-        .stream()
-        .filter(GeofencingZone::isBusinessArea)
-        .collect(Collectors.groupingBy(z -> z.id().getFeedId()));
-
-      for (var entry : businessAreasByNetwork.entrySet()) {
-        var network = entry.getKey();
-        var polygons = entry
-          .getValue()
-          .stream()
-          .map(GeofencingZone::geometry)
-          .toArray(Geometry[]::new);
-
-        var unionOfBusinessAreas = GeometryUtils.getGeometryFactory()
-          .createGeometryCollection(polygons)
-          .union();
-
-        businessAreaEdges.putAll(applyBusinessAreaBorder(unionOfBusinessAreas, network));
-      }
-    }
-
-    return new GeofencingZoneApplierResult(
-      Map.copyOf(businessAreaEdges),
-      Set.copyOf(boundaryVertices),
-      zoneIndex
-    );
+    return new GeofencingZoneApplierResult(Set.copyOf(boundaryVertices), zoneIndex);
   }
 
   /**
@@ -182,35 +153,5 @@ public class GeofencingZoneApplier {
     reusablePoint.getCoordinateSequence().setOrdinate(0, 1, coord.y);
     reusablePoint.geometryChanged();
     return preparedZone.covers(reusablePoint);
-  }
-
-  private Map<StreetEdge, String> applyBusinessAreaBorder(Geometry polygon, String network) {
-    var edgesUpdated = new HashMap<StreetEdge, String>();
-    Set<Edge> candidates = Set.copyOf(findEdgesForEnvelope.apply(polygon.getEnvelopeInternal()));
-    var preparedPolygon = PreparedGeometryFactory.prepare(polygon);
-    var polygonBBox = polygon.getEnvelopeInternal();
-    var gf = GeometryUtils.getGeometryFactory();
-
-    for (var e : candidates) {
-      if (e instanceof StreetEdge streetEdge) {
-        var fromCoord = streetEdge.getFromVertex().getCoordinate();
-        var toCoord = streetEdge.getToVertex().getCoordinate();
-
-        boolean fromMayBeInZone = polygonBBox.contains(fromCoord);
-        boolean toMayBeInZone = polygonBBox.contains(toCoord);
-        if (!fromMayBeInZone && !toMayBeInZone) {
-          continue;
-        }
-
-        boolean fromInZone = fromMayBeInZone && preparedPolygon.covers(gf.createPoint(fromCoord));
-        boolean toInZone = toMayBeInZone && preparedPolygon.covers(gf.createPoint(toCoord));
-
-        if (fromInZone != toInZone) {
-          streetEdge.addBusinessAreaBorderNetwork(network);
-          edgesUpdated.put(streetEdge, network);
-        }
-      }
-    }
-    return edgesUpdated;
   }
 }

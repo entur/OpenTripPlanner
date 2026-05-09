@@ -71,12 +71,6 @@ public final class State implements AStarState<State, Edge, Vertex> {
     this.backState = null;
     this.backEdge = null;
     this.stateData = stateData;
-    // TODO: Remove in commit 4 when old per-edge system is deleted
-    if (request.arriveBy() && !vertex.rentalRestrictions().noDropOffNetworks().isEmpty()) {
-      this.stateData.noRentalDropOffZonesAtStartOfReverseSearch = vertex
-        .rentalRestrictions()
-        .noDropOffNetworks();
-    }
     this.traversalDistance_m = 0;
     this.time_ms = startTime.toEpochMilli();
   }
@@ -122,23 +116,8 @@ public final class State implements AStarState<State, Edge, Vertex> {
 
     for (Vertex vertex : vertices) {
       for (StateData stateData : StateData.getInitialStateDatas(streetSearchRequest)) {
-        // Kept-rental filter: skip RENTING_FROM_STATION if destination is in any restricted zone
-        if (
-          stateData.vehicleRentalState == VehicleRentalState.RENTING_FROM_STATION &&
-          !restrictedNetworks.isEmpty()
-        ) {
+        if (!stateData.applyGeofencingDestinationZones(destinationZones, restrictedNetworks)) {
           continue;
-        }
-        // Populate zone state on arriveBy rental initial states
-        if (!destinationZones.isEmpty()) {
-          stateData.currentGeofencingZones = Set.copyOf(destinationZones);
-        }
-        if (
-          stateData.vehicleRentalState == VehicleRentalState.RENTING_FLOATING &&
-          stateData.vehicleRentalNetwork == null &&
-          !restrictedNetworks.isEmpty()
-        ) {
-          stateData.committedNetworks = Set.copyOf(restrictedNetworks);
         }
         states.add(
           new State(vertex, streetSearchRequest.startTime(), stateData, streetSearchRequest)
@@ -261,9 +240,7 @@ public final class State implements AStarState<State, Edge, Vertex> {
   }
 
   private boolean vehicleRentalIsFinished() {
-    // Drop-off is banned if EITHER the old per-edge system OR the new zone-based system says so.
-    // TODO: Remove insideNoRentalDropOffArea check in commit 4 when old per-edge system is deleted
-    boolean dropOffBanned = stateData.insideNoRentalDropOffArea || isDropOffBannedByCurrentZones();
+    boolean dropOffBanned = isDropOffBannedByCurrentZones();
     return (
       stateData.vehicleRentalState == VehicleRentalState.HAVE_RENTED ||
       (stateData.vehicleRentalState == VehicleRentalState.RENTING_FLOATING && !dropOffBanned) ||
@@ -491,11 +468,6 @@ public final class State implements AStarState<State, Edge, Vertex> {
       }
     }
     return Optional.empty();
-  }
-
-  // TODO: Remove in commit 4 when old per-edge system is deleted
-  public boolean isInsideNoRentalDropOffArea() {
-    return stateData.insideNoRentalDropOffArea;
   }
 
   public Set<GeofencingZone> getCurrentGeofencingZones() {

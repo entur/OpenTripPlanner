@@ -55,10 +55,6 @@ public class StateData implements Cloneable {
   /** This boolean is set to true upon transition from a normal street to a no-through-traffic street. */
   protected boolean enteredNoThroughTrafficArea;
 
-  // TODO: Remove in commit 4 when old per-edge system is deleted
-  protected boolean insideNoRentalDropOffArea = false;
-  public Set<String> noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
-
   /**
    * The geofencing zones that currently contain this state's position. Updated at boundary
    * crossings by {@link StateEditor#updateGeofencingZones}. Used to enforce per-field restrictions
@@ -224,6 +220,35 @@ public class StateData implements Cloneable {
     }
 
     return res;
+  }
+
+  /**
+   * Apply geofencing initial state preparation for arriveBy searches. Populates zone tracking
+   * fields and filters out states that are incompatible with the destination's geofencing zones.
+   *
+   * @return false if this StateData should be excluded from initial states
+   */
+  boolean applyGeofencingDestinationZones(
+    Set<GeofencingZone> destinationZones,
+    Set<String> restrictedNetworks
+  ) {
+    // Skip RENTING_FROM_STATION if destination is in any restricted zone
+    if (vehicleRentalState == RENTING_FROM_STATION && !restrictedNetworks.isEmpty()) {
+      return false;
+    }
+    // Populate zone state on arriveBy rental initial states
+    if (!destinationZones.isEmpty()) {
+      currentGeofencingZones = Set.copyOf(destinationZones);
+    }
+    // Pre-populate committed networks for generic floating states
+    if (
+      vehicleRentalState == RENTING_FLOATING &&
+      vehicleRentalNetwork == null &&
+      !restrictedNetworks.isEmpty()
+    ) {
+      committedNetworks = Set.copyOf(restrictedNetworks);
+    }
+    return true;
   }
 
   protected StateData clone() {

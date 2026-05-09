@@ -1,4 +1,4 @@
-package org.opentripplanner.service.vehiclerental.street;
+package org.opentripplanner.service.vehiclerental.street.geofencing;
 
 import java.util.Collection;
 import java.util.HashMap;

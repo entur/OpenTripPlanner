@@ -1,4 +1,4 @@
-package org.opentripplanner.service.vehiclerental.street;
+package org.opentripplanner.service.vehiclerental.street.geofencing;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
