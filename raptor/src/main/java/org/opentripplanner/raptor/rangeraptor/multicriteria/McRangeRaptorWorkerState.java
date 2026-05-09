@@ -1,5 +1,8 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
+import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
+import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -41,7 +44,8 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   private final DestinationArrivalPaths<T> paths;
   private final HeuristicsProvider<T> heuristics;
   private final McStopArrivalFactory<T> stopArrivalFactory;
-  private final List<McStopArrival<T>> arrivalsCache = new ArrayList<>();
+  private final List<McStopArrival<T>> transitArrivalsCache = new ArrayList<>();
+  private final List<McStopArrival<T>> transferArrivalsCache = new ArrayList<>();
   private final RaptorCostCalculator<T> calculatorGeneralizedCost;
   private final RaptorTransitCalculator<T> transitCalculator;
 
@@ -164,14 +168,15 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
       c1
     );
 
-    arrivalsCache.add(transitState);
+    transitArrivalsCache.add(transitState);
   }
 
   /* private methods */
 
   /** This method is called by the Worker life cycle */
   private void setupIteration() {
-    arrivalsCache.clear();
+    transitArrivalsCache.clear();
+    transferArrivalsCache.clear();
     // clear all touched stops to avoid constant re-exploration
     arrivals.clearTouchedStopsAndSetStopMarkers();
   }
@@ -179,11 +184,11 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   @Override
   public void transitsForRoundComplete() {
     arrivals.clearTouchedStopsAndSetStopMarkers();
-    commitCachedArrivals();
+    commitTransitArrivals();
   }
 
   private void transfersForRoundComplete() {
-    commitCachedArrivals();
+    commitTransferArrivals();
   }
 
   private void transferToStop(
@@ -196,16 +201,24 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
       int arrivalTime = it.arrivalTime() + transferTimeInSeconds;
 
       if (!exceedsTimeLimit(arrivalTime)) {
-        arrivalsCache.add(stopArrivalFactory.createTransferStopArrival(it, transfer, arrivalTime));
+        var arrival = stopArrivalFactory.createTransferStopArrival(it, transfer, arrivalTime);
+        transferArrivalsCache.add(arrival);
       }
     }
   }
 
-  private void commitCachedArrivals() {
-    for (McStopArrival<T> arrival : arrivalsCache) {
+  private void commitTransitArrivals() {
+    for (McStopArrival<T> arrival : transitArrivalsCache) {
       addStopArrival(arrival);
     }
-    arrivalsCache.clear();
+    transitArrivalsCache.clear();
+  }
+
+  private void commitTransferArrivals() {
+    for (McStopArrival<T> arrival : transferArrivalsCache) {
+      addStopArrival(arrival);
+    }
+    transferArrivalsCache.clear();
   }
 
   /**
@@ -227,14 +240,31 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   /**
-   * Enqueue a stop arrival forwarded from the previous via segment. The arrival is placed in the
-   * {@code arrivalsCache} so that it is committed at the end of this segment's
-   * {@code transitsForRoundComplete}, after {@link McStopArrivals#clearTouchedStopsAndSetStopMarkers()}
-   * has run. This ensures it is invisible to this segment's transit routing in the same round, but
-   * is picked up by transfers and the next transit round.
+   * Enqueue a stop arrival forwarded from the previous via segment.
+   * <p>
+   * Transit arrivals go into {@code transitArrivalsCache}, committed at
+   * {@code transitsForRoundComplete} (after
+   * {@link McStopArrivals#clearTouchedStopsAndSetStopMarkers()}). This makes them invisible to
+   * this segment's transit routing in the same round but picked up by transfers and the next
+   * transit round.
+   * <p>
+   * Access arrivals are committed immediately via {@link #addStopArrival}, matching how the first
+   * segment seeds its own access stops. This allows the via stop to be used as a boarding point
+   * in the current round.
+   * <p>
+   * Walk-transfer arrivals go into {@code transferArrivalsCache}, committed at
+   * {@code transfersForRoundComplete} — after {@code applyTransfers} has already run. This
+   * prevents the stop from being treated as transit-touched, which would otherwise trigger
+   * walk transfers and produce consecutive transfer legs.
    */
   void addViaArrival(McStopArrival<T> arrival) {
-    arrivalsCache.add(arrival);
+    if (arrival.arrivedBy(TRANSIT)) {
+      transitArrivalsCache.add(arrival);
+    } else if (arrival.arrivedBy(ACCESS)) {
+      addStopArrival(arrival);
+    } else {
+      transferArrivalsCache.add(arrival);
+    }
   }
 
   void addStopArrival(McStopArrival<T> arrival) {

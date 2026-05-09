@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria;
 
+import static org.opentripplanner.raptor.api.view.PathLegType.TRANSFER;
 import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 import static org.opentripplanner.utils.collection.ListUtils.requireAtLeastNElements;
 
@@ -185,11 +186,11 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     continueFromSameStopArrival(d == 0 ? arrival : arrival.addSlackToArrivalTime(d));
   }
 
-  /// Only transit arrivals satisfy a pass-through via constraint. Walk arrivals must not be
-  /// forwarded to the next segment — they neither satisfy the constraint nor trigger valid
-  /// transfers (two consecutive transfer legs are not representable in a path).
+  /// Transit and access arrivals are forwarded to the next segment. Walk-transfer arrivals
+  /// are dropped: they do not satisfy the pass-through constraint on their own, and forwarding
+  /// them would produce two consecutive transfer legs, which is not representable in a path.
   private void continueFromSameStopArrivalFromPassThrough(McStopArrival<T> arrival) {
-    if (arrival.arrivedBy(TRANSIT)) {
+    if (!arrival.arrivedBy(TRANSFER)) {
       continueFromSameStopArrival(arrival);
     }
   }
