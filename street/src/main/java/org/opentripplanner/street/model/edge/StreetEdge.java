@@ -985,6 +985,11 @@ public class StreetEdge
     }
 
     if (s0.getRequest().mode().includesRenting()) {
+      // New boundary-based zone state tracking
+      if (!fromv.getGeofencingBoundaries().isEmpty()) {
+        s1.updateGeofencingZones(fromv, tov, s0.getRequest().arriveBy());
+      }
+      // TODO: Remove in commit 4 when old per-edge system is deleted
       if (tov.rentalDropOffBanned(s0)) {
         s1.enterNoRentalDropOffArea();
       } else if (s0.isInsideNoRentalDropOffArea() && !tov.rentalDropOffBanned(s0)) {

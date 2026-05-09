@@ -233,10 +233,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         // Use REQUEST scope to query both permanent and realtime edges.
         // Realtime edges are created by station linking (above) and must be
         // included so split vertices on those edges get boundary extensions.
-        var applier = new GeofencingZoneApplier(
-          env -> graph.findEdges(env, Scope.REQUEST),
-          true
-        );
+        var applier = new GeofencingZoneApplier(env -> graph.findEdges(env, Scope.REQUEST), true);
         var result = applier.applyGeofencingZones(geofencingZones);
         latestBusinessAreaEdges = result.businessAreaEdges();
         latestBoundaryVertices = result.boundaryVertices();
