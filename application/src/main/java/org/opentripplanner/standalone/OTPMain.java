@@ -2,6 +2,8 @@ package org.opentripplanner.standalone;
 
 import static org.opentripplanner.model.projectinfo.OtpProjectInfo.projectInfo;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import org.geotools.referencing.factory.DeferredAuthorityFactory;
@@ -108,6 +110,7 @@ public class OTPMain {
       "Searching for configuration and input files in {}",
       cli.getBaseDirectory().getAbsolutePath()
     );
+    setupDebugLogging(cli);
 
     // Init loading phase (Separate DI scope)
     var loadApp = new LoadApplication(cli);
@@ -244,5 +247,15 @@ public class OTPMain {
     projectInfo().otpConfigVersion = app.otpConfig().configVersion;
     projectInfo().buildConfigVersion = app.buildConfig().configVersion;
     projectInfo().routerConfigVersion = app.routerConfig().getConfigVersion();
+  }
+
+  private static void setupDebugLogging(CommandLineParameters params) {
+    if(params.debugRequest) {
+      var ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+      ctx
+        .getLogger("org.opentripplanner.routing.service.DefaultRoutingService")
+        .setLevel(Level.DEBUG);
+      ctx.getLogger("org.opentripplanner.raptor.RaptorService").setLevel(Level.DEBUG);
+    }
   }
 }
