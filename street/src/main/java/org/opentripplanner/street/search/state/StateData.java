@@ -8,6 +8,7 @@ import static org.opentripplanner.street.search.state.VehicleRentalState.RENTING
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.street.mapping.StreetModeToFormFactorMapper;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
@@ -54,8 +55,24 @@ public class StateData implements Cloneable {
   /** This boolean is set to true upon transition from a normal street to a no-through-traffic street. */
   protected boolean enteredNoThroughTrafficArea;
 
+  // TODO: Remove in commit 4 when old per-edge system is deleted
   protected boolean insideNoRentalDropOffArea = false;
   public Set<String> noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
+
+  /**
+   * The geofencing zones that currently contain this state's position. Updated at boundary
+   * crossings by {@link StateEditor#updateGeofencingZones}. Used to enforce per-field restrictions
+   * (no-traversal, no-drop-off) resolved via priority-based precedence.
+   */
+  protected Set<GeofencingZone> currentGeofencingZones = Set.of();
+
+  /**
+   * Networks for which this generic (null-network) RENTING_FLOATING state has already forked
+   * committed branches at zone boundaries. Prevents duplicate forking at subsequent boundary
+   * crossings for the same network. Participates in dominance: a state whose committedNetworks
+   * is a superset dominates one with a subset (it has already explored more network options).
+   */
+  protected Set<String> committedNetworks = Set.of();
 
   /** Private constructor, use static methods to get a set of initial states. */
   private StateData(StreetMode requestMode) {

@@ -59,7 +59,7 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
       return false;
     }
 
-    // we cannot compare the states where one is inside a "no-drop off" zone and one isn't
+    // TODO: Remove in commit 4 when old per-edge system is deleted
     if (a.isInsideNoRentalDropOffArea() != b.isInsideNoRentalDropOffArea()) {
       return false;
     }

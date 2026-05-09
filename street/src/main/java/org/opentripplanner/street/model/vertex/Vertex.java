@@ -295,6 +295,32 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     geofencingBoundaries = List.copyOf(newList);
   }
 
+  /**
+   * Whether this vertex has a no-traversal zone boundary for the network the given state is
+   * renting. Used to fork at vehicle pickup to produce both a renting and walking branch.
+   */
+  public boolean isGeofencingNoTraversalBoundary(State currentState) {
+    if (geofencingBoundaries.isEmpty() || !currentState.isRentingVehicle()) {
+      return false;
+    }
+    String network = currentState.getVehicleRentalNetwork();
+    if (network == null) {
+      return false;
+    }
+    for (var boundary : geofencingBoundaries) {
+      if (!boundary.zone().id().getFeedId().equals(network)) {
+        continue;
+      }
+      if (!boundary.entering()) {
+        continue;
+      }
+      if (Boolean.TRUE.equals(boundary.zone().traversalBanned())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   public void addBusinessAreaBorderNetwork(String network) {
     if (businessAreaBorder == null) {
       businessAreaBorder = new BusinessAreaBorder();

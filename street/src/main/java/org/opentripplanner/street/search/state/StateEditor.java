@@ -1,8 +1,11 @@
 package org.opentripplanner.street.search.state;
 
+import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.street.GeofencingBoundaryExtension;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
@@ -214,22 +217,127 @@ public class StateEditor {
     stateData.enteredNoThroughTrafficArea = true;
   }
 
+  // TODO: Remove in commit 4 when old per-edge system is deleted
   public void leaveNoRentalDropOffArea() {
     if (!stateData.insideNoRentalDropOffArea) {
       return;
     }
-
     cloneStateDataAsNeeded();
     stateData.insideNoRentalDropOffArea = false;
   }
 
+  // TODO: Remove in commit 4 when old per-edge system is deleted
   public void enterNoRentalDropOffArea() {
     if (stateData.insideNoRentalDropOffArea) {
       return;
     }
-
     cloneStateDataAsNeeded();
     stateData.insideNoRentalDropOffArea = true;
+  }
+
+  // TODO: Remove in commit 4 when old per-edge system is deleted
+  public void resetStartedInNoDropOffZone() {
+    cloneStateDataAsNeeded();
+    stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
+  }
+
+  /**
+   * Update geofencing zone tracking based on boundary extensions on the traversed edge.
+   * For each {@link GeofencingBoundaryExtension} on fromv, checks if tov has a paired extension
+   * (same zone, opposite entering flag). If paired, adds or removes the zone from state.
+   */
+  public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
+    // Build the new zone set in a single pass. The mutable HashSet is only created when
+    // we find the first paired boundary, and Set.copyOf is called once at the end —
+    // avoiding intermediate immutable copies when multiple zones overlap on one edge.
+    HashSet<GeofencingZone> newZones = null;
+
+    for (var boundary : fromVertex.getGeofencingBoundaries()) {
+      // Paired check: tov must have same zone with opposite entering flag
+      boolean paired = false;
+      for (var tovBoundary : toVertex.getGeofencingBoundaries()) {
+        if (
+          tovBoundary.zone().equals(boundary.zone()) &&
+          tovBoundary.entering() != boundary.entering()
+        ) {
+          paired = true;
+          break;
+        }
+      }
+      if (!paired) {
+        continue;
+      }
+      if (newZones == null) {
+        newZones = new HashSet<>(stateData.currentGeofencingZones);
+      }
+      boolean effectiveEntering = boundary.entering() ^ arriveBy;
+      if (effectiveEntering) {
+        newZones.add(boundary.zone());
+      } else {
+        newZones.remove(boundary.zone());
+      }
+    }
+
+    if (newZones != null) {
+      cloneStateDataAsNeeded();
+      stateData.currentGeofencingZones = Set.copyOf(newZones);
+    }
+  }
+
+  /**
+   * Whether drop-off is banned by the current geofencing zones in this editor's state data.
+   * Used to check zone state after traversal but before finalizing the state.
+   */
+  public boolean isDropOffBannedByCurrentZones() {
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      stateData.vehicleRentalNetwork,
+      GeofencingZone::dropOffBanned
+    );
+  }
+
+  /**
+   * Whether drop-off is banned by the current geofencing zones for a specific network.
+   * Used in the arrive-by deferred renting fork where the network hasn't been bound yet.
+   */
+  public boolean isDropOffBannedForNetwork(String network) {
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      network,
+      GeofencingZone::dropOffBanned
+    );
+  }
+
+  /**
+   * Initialize geofencing zones from pre-resolved zones on a vehicle rental vertex.
+   * Called at vehicle pickup time.
+   */
+  public void initializeGeofencingZones(Set<GeofencingZone> zones) {
+    cloneStateDataAsNeeded();
+    stateData.currentGeofencingZones = Set.copyOf(zones);
+  }
+
+  /**
+   * Bind this state to a specific vehicle rental network. Transitions a generic (null-network)
+   * RENTING_FLOATING state into a network-specific state.
+   */
+  public void bindToNetwork(String network) {
+    cloneStateDataAsNeeded();
+    stateData.vehicleRentalNetwork = network;
+  }
+
+  /**
+   * Record that this generic state has already forked a committed branch for the given network.
+   * Prevents duplicate forking at subsequent boundary crossings for the same network.
+   */
+  public void addCommittedNetwork(String network) {
+    if (stateData.committedNetworks.contains(network)) {
+      return;
+    }
+    cloneStateDataAsNeeded();
+    var newSet = new HashSet<>(stateData.committedNetworks);
+    newSet.add(network);
+    stateData.committedNetworks = Set.copyOf(newSet);
   }
 
   public void setBackMode(TraverseMode mode) {
@@ -397,11 +505,6 @@ public class StateEditor {
 
   public State getBackState() {
     return backState;
-  }
-
-  public void resetStartedInNoDropOffZone() {
-    cloneStateDataAsNeeded();
-    stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
   }
 
   /* PRIVATE METHODS */
