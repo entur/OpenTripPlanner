@@ -73,9 +73,7 @@ public class AccessPaths {
     RaptorProfile profile,
     SearchDirection searchDirection
   ) {
-    // On board access paths can not be filtered up-front to remove non-optimal accesses,
-    // and also cannot have time penalties, so we extract them from paths before removing.
-    var split = splitOutStartOnBoardPaths(paths);
+    var split = partitioningByStartOnBoard(paths);
     var onBoardAccessPaths = mapToStartOnBoardAccess(split.get(true));
 
     paths = split.get(false);
@@ -247,7 +245,12 @@ public class AccessPaths {
     return startOnBoardPaths.stream().map(RaptorStartOnBoardAccess.class::cast).toList();
   }
 
-  private static Map<Boolean, List<RaptorAccessEgress>> splitOutStartOnBoardPaths(
+  /// This method partition the input paths in two, the RaptorStartOnBoardAccess(key=true) in one
+  /// list and the rest in the other.
+  ///
+  /// Start on board access paths can not be filtered up-front to remove non-optimal accesses, and
+  /// also cannot have time penalties, so we extract them from paths before pressessing the rest.
+  private static Map<Boolean, List<RaptorAccessEgress>> partitioningByStartOnBoard(
     Collection<RaptorAccessEgress> paths
   ) {
     return paths

@@ -2,6 +2,8 @@ package org.opentripplanner.standalone;
 
 import static org.opentripplanner.model.projectinfo.OtpProjectInfo.projectInfo;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import org.geotools.referencing.factory.DeferredAuthorityFactory;
@@ -51,6 +53,9 @@ public class OTPMain {
     try {
       Thread.currentThread().setName("main");
       CommandLineParameters params = parseAndValidateCmdLine(args);
+      if (params.debugRequest) {
+        applyDebugRequestLogging();
+      }
       OtpStartupInfo.logInfo(params.logTaskInfo());
       startOTPServer(params);
     } catch (OtpAppException ae) {
@@ -93,6 +98,14 @@ public class OTPMain {
       System.exit(1);
     }
     return params;
+  }
+
+  private static void applyDebugRequestLogging() {
+    var ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+    ctx
+      .getLogger("org.opentripplanner.routing.service.DefaultRoutingService")
+      .setLevel(Level.DEBUG);
+    ctx.getLogger("org.opentripplanner.raptor.RaptorService").setLevel(Level.DEBUG);
   }
 
   /**

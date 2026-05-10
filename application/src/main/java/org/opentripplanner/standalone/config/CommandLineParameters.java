@@ -133,6 +133,12 @@ public class CommandLineParameters {
   )
   public boolean abortOnUnknownConfig = false;
 
+  @Parameter(
+    names = { "--debug-request" },
+    description = "Enable DEBUG logging for OTP request and Raptor request handling."
+  )
+  public boolean debugRequest = false;
+
   /**
    * The remaining single parameter after the switches is the directory with the configuration
    * files. This directory may contain other files like the graph, input data and report files.
