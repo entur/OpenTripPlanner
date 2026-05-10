@@ -45,6 +45,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Expose that a SIRI added journey has an ExtraJourney alteration in Transmodel [#7385](https://github.com/opentripplanner/OpenTripPlanner/pull/7385)
 - Fix wrong context cast in Transmodel QuayAtDistanceType [#7582](https://github.com/opentripplanner/OpenTripPlanner/pull/7582)
 - Improve OTP warm-up [#7576](https://github.com/opentripplanner/OpenTripPlanner/pull/7576)
+- Raptor McRaptor cleanup (part 2) [#7568](https://github.com/opentripplanner/OpenTripPlanner/pull/7568)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
