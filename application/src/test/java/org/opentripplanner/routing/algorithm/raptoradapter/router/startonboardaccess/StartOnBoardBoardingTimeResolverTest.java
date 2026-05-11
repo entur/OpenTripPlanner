@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.junit.jupiter.api.Nested;
@@ -14,41 +13,18 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class StartOnBoardBoardingTimeResolverTest {
 
   private static final LocalDate SERVICE_DATE = LocalDate.of(2024, 11, 1);
-  private static final ZoneId TIME_ZONE = ZoneId.of("GMT");
 
   private final TransitTestEnvironmentBuilder ENV_BUILDER = TransitTestEnvironment.of(
     SERVICE_DATE,
-    TIME_ZONE
+    ZoneId.of("GMT")
   );
   private final RegularStop STOP_A = ENV_BUILDER.stop("A");
   private final RegularStop STOP_B = ENV_BUILDER.stop("B");
   private final RegularStop STOP_C = ENV_BUILDER.stop("C");
-
-  private static Instant toInstant(
-    int secondsSinceStartOfService,
-    LocalDate serviceDate,
-    ZoneId timeZone
-  ) {
-    return ServiceDateUtils.asStartOfService(serviceDate, timeZone)
-      .plusSeconds(secondsSinceStartOfService)
-      .toInstant();
-  }
-
-  private static Instant toInstant(int secondsSinceStartOfService) {
-    return toInstant(secondsSinceStartOfService, SERVICE_DATE, TIME_ZONE);
-  }
-
-  private static long expectedEpochSecond(int secondsSinceStartOfService) {
-    return (
-      ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE).toEpochSecond() +
-      secondsSinceStartOfService
-    );
-  }
 
   @Test
   void resolvesSimpleBoardingTime() {
@@ -60,11 +36,10 @@ class StartOnBoardBoardingTimeResolverTest {
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
       tripAndServiceDate,
       STOP_B.getId(),
-      null,
-      TIME_ZONE
+      null
     );
 
-    assertEquals(expectedEpochSecond(10 * 3600 + 5 * 60), result.getEpochSecond());
+    assertEquals(10 * 3600 + 5 * 60, result);
   }
 
   @Test
@@ -77,11 +52,10 @@ class StartOnBoardBoardingTimeResolverTest {
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
       tripAndServiceDate,
       STOP_B.getId(),
-      toInstant(10 * 3600 + 5 * 60),
-      TIME_ZONE
+      10 * 3600 + 5 * 60
     );
 
-    assertEquals(expectedEpochSecond(10 * 3600 + 5 * 60), result.getEpochSecond());
+    assertEquals(10 * 3600 + 5 * 60, result);
   }
 
   @Test
@@ -96,8 +70,7 @@ class StartOnBoardBoardingTimeResolverTest {
       new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_B.getId(),
-        toInstant(10 * 3600),
-        TIME_ZONE
+        10 * 3600
       )
     );
   }
@@ -113,8 +86,7 @@ class StartOnBoardBoardingTimeResolverTest {
       new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_C.getId(),
-        null,
-        TIME_ZONE
+        null
       )
     );
   }
@@ -130,8 +102,7 @@ class StartOnBoardBoardingTimeResolverTest {
       new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_C.getId(),
-        toInstant(10 * 3600 + 10 * 60),
-        TIME_ZONE
+        10 * 3600 + 10 * 60
       )
     );
   }
@@ -149,22 +120,19 @@ class StartOnBoardBoardingTimeResolverTest {
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
       tripAndServiceDate,
       id("StationB"),
-      null,
-      TIME_ZONE
+      null
     );
 
-    assertEquals(expectedEpochSecond(10 * 3600 + 5 * 60), result.getEpochSecond());
+    assertEquals(10 * 3600 + 5 * 60, result);
   }
 
   /**
-   * When the clocks move forward in spring due to DST, midnight and noon-minus-12h
-   * (start-of-service) differ by one hour. The aimed departure time conversion uses
-   * start-of-service (noon-minus-12h) as the reference, not midnight, because TripTimes are
-   * relative to start-of-service.
+   * On a DST day where clocks spring forward, start-of-service (noon-minus-12h) differs from
+   * midnight. The resolver receives seconds already relative to start-of-service, so it resolves
+   * correctly regardless of DST — the conversion responsibility lies with the caller.
    */
   @Test
   void resolvesWithAimedDepartureTimeOnDstDay() {
-    // Europe/Oslo moves clocks forward on 2024-03-31: clocks skip from 02:00 to 03:00
     var dstDate = LocalDate.of(2024, 3, 31);
     var dstZone = ZoneId.of("Europe/Oslo");
     var dstEnvBuilder = TransitTestEnvironment.of(dstDate, dstZone);
@@ -178,20 +146,14 @@ class StartOnBoardBoardingTimeResolverTest {
       )
       .build();
 
-    // Aimed departure time is given with respect to the date and time zone of the client
-    var aimedDeparture = toInstant(10 * 3600 + 5 * 60, dstDate, dstZone);
-
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
       tripAndServiceDate,
       stopB.getId(),
-      aimedDeparture,
-      dstZone
+      10 * 3600 + 5 * 60
     );
 
-    long expectedEpochSecond =
-      ServiceDateUtils.asStartOfService(dstDate, dstZone).toEpochSecond() + 10 * 3600 + 5 * 60;
-    assertEquals(expectedEpochSecond, result.getEpochSecond());
+    assertEquals(10 * 3600 + 5 * 60, result);
   }
 
   @Nested
@@ -213,19 +175,17 @@ class StartOnBoardBoardingTimeResolverTest {
       var result1 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_A.getId(),
-        toInstant(10 * 3600),
-        TIME_ZONE
+        10 * 3600
       );
-      assertEquals(expectedEpochSecond(10 * 3600), result1.getEpochSecond());
+      assertEquals(10 * 3600, result1);
 
       // Second occurrence of STOP_A at 10:15
       var result2 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_A.getId(),
-        toInstant(10 * 3600 + 15 * 60),
-        TIME_ZONE
+        10 * 3600 + 15 * 60
       );
-      assertEquals(expectedEpochSecond(10 * 3600 + 15 * 60), result2.getEpochSecond());
+      assertEquals(10 * 3600 + 15 * 60, result2);
     }
 
     @Test
@@ -242,8 +202,7 @@ class StartOnBoardBoardingTimeResolverTest {
         new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
           tripAndServiceDate,
           STOP_A.getId(),
-          null,
-          TIME_ZONE
+          null
         )
       );
     }

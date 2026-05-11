@@ -82,12 +82,23 @@ public final class RequestPreProcessor {
     var tripAndServiceDate = new TripAndServiceDateResolver(transitService).resolve(
       tripLocation.tripOnDateReference()
     );
-    var boardingDateTime = new StartOnBoardBoardingTimeResolver(transitService).resolve(
+    var aimedDeparture = tripLocation.aimedDepartureTime();
+    Integer aimedDepartureSeconds = aimedDeparture == null
+      ? null
+      : ServiceDateUtils.secondsSinceStartOfTime(
+          ServiceDateUtils.asStartOfService(tripAndServiceDate.serviceDate(), zoneId),
+          aimedDeparture
+        );
+    int boardingTime = new StartOnBoardBoardingTimeResolver(transitService).resolve(
       tripAndServiceDate,
       tripLocation.stopLocationId(),
-      tripLocation.aimedDepartureTime(),
-      zoneId
+      aimedDepartureSeconds
     );
+    var boardingDateTime = ServiceDateUtils.toZonedDateTime(
+      tripAndServiceDate.serviceDate(),
+      zoneId,
+      boardingTime
+    ).toInstant();
     var iterationStep = Duration.ofSeconds(tuningParameters.iterationDepartureStepInSeconds());
 
     var requestBuilder = request.copyOf();

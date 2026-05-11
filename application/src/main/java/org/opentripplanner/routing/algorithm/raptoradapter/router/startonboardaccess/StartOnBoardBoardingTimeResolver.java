@@ -1,7 +1,5 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -12,11 +10,11 @@ import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
- * Resolves the boarding time for a start-on-board trip location as an {@link Instant}. This is
- * called early in the pipeline (before Raptor routing) to set the request's dateTime.
+ * Resolves the boarding time for a start-on-board trip location as seconds since service day
+ * start. This is called early in the pipeline (before Raptor routing) to set the request's
+ * dateTime.
  *
  * <p>Unlike {@link StartOnBoardAccessResolver}, this class does not need the Raptor pattern index
  * and operates entirely on {@link TransitService}.
@@ -29,11 +27,10 @@ public class StartOnBoardBoardingTimeResolver {
     this.transitService = transitService;
   }
 
-  public Instant resolve(
+  public int resolve(
     TripAndServiceDate tripAndServiceDate,
     FeedScopedId stopOrStationId,
-    @Nullable Instant aimedDepartureTime,
-    ZoneId timeZone
+    @Nullable Integer aimedDepartureTime
   ) {
     var trip = tripAndServiceDate.trip();
     var serviceDate = tripAndServiceDate.serviceDate();
@@ -45,19 +42,12 @@ public class StartOnBoardBoardingTimeResolver {
       );
     }
 
-    Integer targetSeconds = aimedDepartureTime == null
-      ? null
-      : ServiceDateUtils.secondsSinceStartOfTime(
-          ServiceDateUtils.asStartOfService(serviceDate, timeZone),
-          aimedDepartureTime
-        );
-
     int stopPosInPattern = findStopPositionInPattern(
       tripPattern,
       stopOrStationId,
       trip,
       serviceDate,
-      targetSeconds
+      aimedDepartureTime
     );
 
     var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
@@ -71,8 +61,7 @@ public class StartOnBoardBoardingTimeResolver {
       );
     }
 
-    int boardingTime = tripTimes.getScheduledDepartureTime(stopPosInPattern);
-    return ServiceDateUtils.toZonedDateTime(serviceDate, timeZone, boardingTime).toInstant();
+    return tripTimes.getScheduledDepartureTime(stopPosInPattern);
   }
 
   private int findStopPositionInPattern(
