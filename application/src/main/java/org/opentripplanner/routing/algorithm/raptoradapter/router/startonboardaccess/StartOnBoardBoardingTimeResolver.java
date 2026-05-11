@@ -45,10 +45,12 @@ public class StartOnBoardBoardingTimeResolver {
       );
     }
 
-    var serviceDateStart = ServiceDateUtils.asStartOfService(serviceDate, timeZone);
     Integer targetSeconds = aimedDepartureTime == null
       ? null
-      : (int) (aimedDepartureTime.getEpochSecond() - serviceDateStart.toEpochSecond());
+      : ServiceDateUtils.secondsSinceStartOfTime(
+          ServiceDateUtils.asStartOfService(serviceDate, timeZone),
+          aimedDepartureTime
+        );
 
     int stopPosInPattern = findStopPositionInPattern(
       tripPattern,
@@ -70,7 +72,7 @@ public class StartOnBoardBoardingTimeResolver {
     }
 
     int boardingTime = tripTimes.getScheduledDepartureTime(stopPosInPattern);
-    return serviceDateStart.plusSeconds(boardingTime).toInstant();
+    return ServiceDateUtils.toZonedDateTime(serviceDate, timeZone, boardingTime).toInstant();
   }
 
   private int findStopPositionInPattern(
