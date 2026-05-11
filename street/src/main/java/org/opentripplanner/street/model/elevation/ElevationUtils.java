@@ -124,8 +124,6 @@ public class ElevationUtils {
         continue;
       }
       double slope = rise / run;
-      // Baldwin St in Dunedin, NZ, is the steepest street
-      // on earth, and has a grade of 35%. Therefore we set the limit to 35%.
       // We need _some_ sort of limit, because the energy
       // usage approximation breaks down at extreme slopes, and
       // gives negative weights
