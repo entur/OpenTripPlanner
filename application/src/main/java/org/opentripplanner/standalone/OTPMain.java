@@ -250,7 +250,7 @@ public class OTPMain {
   }
 
   private static void setupDebugLogging(CommandLineParameters params) {
-    if(params.debugRequest) {
+    if (params.debugRequest) {
       var ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
       ctx
         .getLogger("org.opentripplanner.routing.service.DefaultRoutingService")
