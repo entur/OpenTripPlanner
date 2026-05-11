@@ -27,23 +27,22 @@ public class SlopeCostCalculator {
     MAX_SLOPE_WALK_EFFECTIVE_LENGTH_FACTOR
   );
 
-  /// Maximum slope of 35% after which elevation data is considered unreliable. It is based
-  /// on the steepest drivable road,
-  /// [Baldwin Street in New Zealand](https://en.wikipedia.org/wiki/Baldwin_Street)
-  private static final double MAX_SPLINE_SLOPE = 0.35;
-  private static final double MIN_SPLINE_SLOPE = -MAX_SPLINE_SLOPE;
+  /// Slopes steeper than 100% are treated as raster/OSM data glitches and flattened to zero.
+  /// No real road or path is that steep — footpaths and tracks in mountain terrain that
+  /// genuinely exceed 35% stay below this threshold.
+  private static final double MAX_ABS_SLOPE = 1.0;
 
-
-  /// Compute the slope costs for an elevation profile, taking into account that mixing raster elevation
-  /// with OSM data often leads to glitches that cause very high slopes and in turn to negative costs.
+  /// Compute the slope costs for an elevation profile.
   ///
-  /// We have [analysed](https://github.com/opentripplanner/OpenTripPlanner/pull/7579#pullrequestreview-4226004340)
-  /// if these glitches more commonly lead to edges that are too sloped when in reality they are
-  /// flat or the other way around: the result is that it's more common for slopes to be artificially
-  /// steep.
+  /// Slopes above ±100% ({@link #MAX_ABS_SLOPE}) are treated as raster/OSM data glitches and
+  /// flattened to zero — no real road or path is that steep, so the segment is dropped from
+  /// every cost computation and the {@code flattened} flag is set.
   ///
-  /// For this reason we set the slope for an elevation segment to zero if it exceeds the limit
-  /// of {@link #MAX_SPLINE_SLOPE} uphill or {@link #MIN_SPLINE_SLOPE} downhill.
+  /// Genuinely steep terrain (alpine footpaths, mountain tracks) between ±35% and ±100% keeps
+  /// its real slope for `maxSlope` (wheelchair reluctance), the bike energy formula, the Tobler
+  /// walking length and the length multiplier. Only the B-spline used for bicycle speed clamps
+  /// its input internally (see {@link BicycleSlopeSpeedFunction}); the rationale is in
+  /// [PR #7579](https://github.com/opentripplanner/OpenTripPlanner/pull/7579).
   ///
   /// @param elev The elevation profile, where each (x, y) is (distance along edge, elevation)
   public static SlopeCosts getSlopeCosts(CoordinateSequence elev) {
@@ -69,10 +68,8 @@ public class SlopeCostCalculator {
         continue;
       }
       double slope = rise / run;
-      // We need _some_ sort of limit, because the energy
-      // usage approximation breaks down at extreme slopes, and
-      // gives negative weights
-      if (slope > MAX_SPLINE_SLOPE || slope < MIN_SPLINE_SLOPE) {
+      // Slopes above 100% can only be raster/OSM glitches — drop the segment entirely.
+      if (slope > MAX_ABS_SLOPE || slope < -MAX_ABS_SLOPE) {
         slope = 0;
         flattened = true;
       }
@@ -124,7 +121,6 @@ public class SlopeCostCalculator {
   static double calculateEffectiveWalkLength(double run, double rise) {
     return run * TOBLER_WALKING_FUNCTION.calculateHorizontalWalkingDistanceMultiplier(run, rise);
   }
-
 
   private static double[] getLengthsFromElevation(CoordinateSequence elev) {
     double trueLength = 0;

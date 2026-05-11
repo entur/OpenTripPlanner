@@ -6,8 +6,24 @@ package org.opentripplanner.street.model.elevation;
  * <a href="http://www.analyticcycling.com/ForcesSpeed_Page.html">analyticcycling.com</a>.
  * The coefficient is a multiplier on flat-ground cycling speed: greater than {@code 1.0} on
  * a downhill, less than {@code 1.0} on an uphill.
+ * <p>
+ * The spline is defined on a bounded domain given by its knot vectors:
+ * <ul>
+ *   <li>slope: {@code [-0.35, +0.35]}, i.e. &plusmn;35% &mdash; see {@link #MIN_SLOPE} and
+ *       {@link #MAX_SLOPE}</li>
+ *   <li>altitude: {@code [0, 5000]} metres</li>
+ * </ul>
+ * Outside this range the spline extrapolates and can return negative coefficients, so
+ * {@link #coefficient(double, double)} clamps its slope argument to the valid range before
+ * evaluation.
  */
 public final class BicycleSlopeSpeedFunction {
+
+  /** Lower bound of the spline's slope domain (steepest downhill the spline is defined for). */
+  static final double MIN_SLOPE = -0.35;
+
+  /** Upper bound of the spline's slope domain (steepest uphill the spline is defined for). */
+  static final double MAX_SLOPE = 0.35;
 
   /** Altitude (x) knot vector. Bounds: {@code [0, 5000]} metres. */
   private static final double[] TX = {
@@ -69,7 +85,9 @@ public final class BicycleSlopeSpeedFunction {
   private BicycleSlopeSpeedFunction() {}
 
   /**
-   * Evaluate the spline at the given slope and altitude.
+   * Evaluate the spline at the given slope and altitude. The slope is clamped to
+   * {@code [MIN_SLOPE, MAX_SLOPE]} before evaluation to keep the spline inside its valid
+   * domain.
    *
    * @param slope    {@code rise / run} along the edge (no unit, e.g. {@code 0.05} for 5%)
    * @param altitude metres above sea level at the start of the segment
@@ -81,6 +99,8 @@ public final class BicycleSlopeSpeedFunction {
      * http://www.analyticcycling.com/ForcesSpeed_Page.html fixme: should clamp to local speed
      * limits (code is from ZunZun)
      */
+    slope = Math.clamp(slope, MIN_SLOPE, MAX_SLOPE);
+
     int nx = 7;
     int ny = 10;
     int kx = 2;

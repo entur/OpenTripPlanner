@@ -70,4 +70,59 @@ class SlopeCostCalculatorTest {
     var slopeCosts = SlopeCostCalculator.getSlopeCosts(seq);
     assertThat(slopeCosts.slopeSpeedFactor).isGreaterThan(0);
   }
+
+  /**
+   * Profiles with slopes between 35% and 100% are not glitches but genuine terrain (alpine
+   * footpaths, mountain tracks). The true slope must be preserved for {@code maxSlope} so that
+   * downstream consumers like wheelchair reluctance can still react to it.
+   */
+  @Test
+  void maxSlopeReflectsRealSlopeOn35To100PercentBand() {
+    var costs = SlopeCostCalculator.getSlopeCosts(STEEP_ELEVATION_PROFILE);
+    // STEEP_ELEVATION_PROFILE: segments with slope +0.52 and -0.72.
+    assertThat(costs.maxSlope).isWithin(1e-9).of(0.72);
+    assertThat(costs.flattened).isFalse();
+  }
+
+  /**
+   * Walking effective length is computed via Tobler's hiking function, which has its own
+   * cap. On a steep but genuine profile it must produce a penalty greater than on a flat
+   * profile of the same horizontal length.
+   */
+  @Test
+  void effectiveWalkFactorPenalisesGenuineSteepProfile() {
+    var steep = SlopeCostCalculator.getSlopeCosts(STEEP_ELEVATION_PROFILE);
+    var flat = SlopeCostCalculator.getSlopeCosts(flatProfile());
+    assertThat(steep.effectiveWalkFactor).isGreaterThan(flat.effectiveWalkFactor);
+  }
+
+  /** The bike energy formula is cubic and stays positive — but it must see the real uphill. */
+  @Test
+  void slopeWorkFactorPenalisesGenuineSteepUphill() {
+    var steep = SlopeCostCalculator.getSlopeCosts(STEEP_ELEVATION_PROFILE);
+    var flat = SlopeCostCalculator.getSlopeCosts(flatProfile());
+    assertThat(steep.slopeWorkFactor).isGreaterThan(flat.slopeWorkFactor);
+  }
+
+  /**
+   * The {@code flattened} flag means "this segment was discarded as bad data". It must fire
+   * only above the 100% glitch threshold, not for genuinely steep terrain in the 35–100%
+   * band.
+   */
+  @Test
+  void flattenedFlagSetOnlyAbove100Percent() {
+    var genuine = SlopeCostCalculator.getSlopeCosts(STEEP_ELEVATION_PROFILE);
+    assertThat(genuine.flattened).isFalse();
+
+    var glitch = SlopeCostCalculator.getSlopeCosts(STEEP_DOWNHILL_PROFILE);
+    assertThat(glitch.flattened).isTrue();
+    // Every segment in STEEP_DOWNHILL_PROFILE exceeds 100%, so all slopes are zeroed.
+    assertThat(glitch.maxSlope).isEqualTo(0.0);
+  }
+
+  private static PackedCoordinateSequence flatProfile() {
+    return new PackedCoordinateSequence.Double(
+      new Coordinate[] { new Coordinate(0, 100), new Coordinate(50, 100) }
+    );
+  }
 }
