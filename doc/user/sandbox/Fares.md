@@ -57,10 +57,8 @@ The classes and their maintainers are as follows:
 | HSLFareServiceImpl                         | HSL ([Viljami Nurminen](mailto:viljami.nurminen@cgi.com))  |
 | OrcaFareService                            | IBI Group ([Daniel Heppner](mailto:daniel.heppner@ibigroup.com))|
 
-For more complex scenarios or to handle vehicle rental fares, it is necessary to manually configure 
-fares using the `fares` section in `build-config.json`. You can combine different fares (for example 
-transit and vehicle-rental) by defining a `combinationStrategy` parameter, and a list of sub-fares 
-to combine (all fields starting with `fare` are considered to be sub-fares).
+For more complex scenarios, it is necessary to manually configure fares using the `fares` section 
+in `build-config.json`. 
 
 ```JSON
 // build-config.json
