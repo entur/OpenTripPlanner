@@ -98,7 +98,7 @@ public class ElevationUtils {
   /// steep.
   ///
   /// For this reason we set the slope for an elevation segment to zero if it exceeds the limit
-  /// of +/- 35%.
+  /// of {@link #MAX_UPHILL_SLOPE} uphill or {@link #MAX_DOWNHILL_SLOPE} downhill.
   ///
   /// @param elev The elevation profile, where each (x, y) is (distance along edge, elevation)
   public static SlopeCosts getSlopeCosts(CoordinateSequence elev) {
