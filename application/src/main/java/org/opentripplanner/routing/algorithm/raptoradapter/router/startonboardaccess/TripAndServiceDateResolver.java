@@ -5,7 +5,7 @@ import org.opentripplanner.transit.service.TransitService;
 
 /**
  * Resolves a {@link TripOnDateReference} to a {@link TripAndServiceDate}. Called up-front by both
- * {@link StartOnBoardAccessResolver} and {@link StartOnBoardBoardingTimeResolver} callers.
+ * {@link StartOnBoardAccessResolver} and {@link TripLocationResolver} callers.
  */
 public class TripAndServiceDateResolver {
 

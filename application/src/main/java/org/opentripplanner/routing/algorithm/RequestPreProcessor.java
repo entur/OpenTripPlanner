@@ -6,8 +6,8 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.AdditionalSearchDays;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.StartOnBoardBoardingTimeResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripAndServiceDateResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripLocationResolver;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -69,7 +69,7 @@ public final class RequestPreProcessor {
    * This prepares the request for a start-on-board raptor search by setting its dateTime to the
    * resolved boarding time and the search window to the given iteration step duration. The boarding
    * time is resolved based on timetable data from {@link TransitService} (see
-   * {@link StartOnBoardBoardingTimeResolver#resolve}). This produces exactly one Raptor
+   * {@link TripLocationResolver#resolve}). This produces exactly one Raptor
    * iteration at the boarding time while keeping a valid search window for the filter chain.
    */
   private RouteRequest prepareRequestForStartOnBoardAccess(RouteRequest request) {
@@ -89,7 +89,7 @@ public final class RequestPreProcessor {
           ServiceDateUtils.asStartOfService(tripAndServiceDate.serviceDate(), zoneId),
           aimedDeparture
         );
-    int boardingTime = new StartOnBoardBoardingTimeResolver(transitService).resolve(
+    int boardingTime = new TripLocationResolver(transitService).resolve(
       tripAndServiceDate,
       tripLocation.stopLocationId(),
       aimedDepartureSeconds

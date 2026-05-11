@@ -19,11 +19,11 @@ import org.opentripplanner.transit.service.TransitService;
  * <p>Unlike {@link StartOnBoardAccessResolver}, this class does not need the Raptor pattern index
  * and operates entirely on {@link TransitService}.
  */
-public class StartOnBoardBoardingTimeResolver {
+public class TripLocationResolver {
 
   private final TransitService transitService;
 
-  public StartOnBoardBoardingTimeResolver(TransitService transitService) {
+  public TripLocationResolver(TransitService transitService) {
     this.transitService = transitService;
   }
 

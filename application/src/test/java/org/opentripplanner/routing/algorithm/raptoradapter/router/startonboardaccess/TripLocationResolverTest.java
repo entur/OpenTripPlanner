@@ -15,7 +15,7 @@ import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
 
-class StartOnBoardBoardingTimeResolverTest {
+class TripLocationResolverTest {
 
   private static final LocalDate SERVICE_DATE = LocalDate.of(2024, 11, 1);
 
@@ -39,7 +39,7 @@ class StartOnBoardBoardingTimeResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+    var result = new TripLocationResolver(env.transitService()).resolve(
       tripAndServiceDate,
       STOP_B.getId(),
       null
@@ -55,7 +55,7 @@ class StartOnBoardBoardingTimeResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+    var result = new TripLocationResolver(env.transitService()).resolve(
       tripAndServiceDate,
       STOP_B.getId(),
       T10_05
@@ -73,7 +73,7 @@ class StartOnBoardBoardingTimeResolverTest {
     // STOP_B departs at 10:05, but we provide 10:00 — should fail
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     assertThrows(IllegalArgumentException.class, () ->
-      new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+      new TripLocationResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_B.getId(),
         T10_00
@@ -89,7 +89,7 @@ class StartOnBoardBoardingTimeResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     assertThrows(IllegalArgumentException.class, () ->
-      new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+      new TripLocationResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_C.getId(),
         null
@@ -105,7 +105,7 @@ class StartOnBoardBoardingTimeResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     assertThrows(IllegalArgumentException.class, () ->
-      new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+      new TripLocationResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_C.getId(),
         T10_10
@@ -123,7 +123,7 @@ class StartOnBoardBoardingTimeResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+    var result = new TripLocationResolver(env.transitService()).resolve(
       tripAndServiceDate,
       id("StationB"),
       null
@@ -153,7 +153,7 @@ class StartOnBoardBoardingTimeResolverTest {
       .build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
-    var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+    var result = new TripLocationResolver(env.transitService()).resolve(
       tripAndServiceDate,
       stopB.getId(),
       T10_05
@@ -178,7 +178,7 @@ class StartOnBoardBoardingTimeResolverTest {
       var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
 
       // First occurrence of STOP_A at 10:00
-      var result1 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+      var result1 = new TripLocationResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_A.getId(),
         T10_00
@@ -186,7 +186,7 @@ class StartOnBoardBoardingTimeResolverTest {
       assertEquals(T10_00, result1);
 
       // Second occurrence of STOP_A at 10:15
-      var result2 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+      var result2 = new TripLocationResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_A.getId(),
         T10_15
@@ -205,7 +205,7 @@ class StartOnBoardBoardingTimeResolverTest {
 
       var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
       assertThrows(RoutingValidationException.class, () ->
-        new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
+        new TripLocationResolver(env.transitService()).resolve(
           tripAndServiceDate,
           STOP_A.getId(),
           null
