@@ -49,6 +49,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Make elevation tile cache size configurable [#7589](https://github.com/opentripplanner/OpenTripPlanner/pull/7589)
 - Fix negative costs for steep bicycle and walk edges [#7579](https://github.com/opentripplanner/OpenTripPlanner/pull/7579)
 - Fix board stop for pass-through connections [#7592](https://github.com/opentripplanner/OpenTripPlanner/pull/7592)
+- Add Preparing DEM Data documentation page [#7606](https://github.com/opentripplanner/OpenTripPlanner/pull/7606)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
