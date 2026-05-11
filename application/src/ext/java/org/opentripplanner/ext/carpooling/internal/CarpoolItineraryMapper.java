@@ -2,7 +2,7 @@ package org.opentripplanner.ext.carpooling.internal;
 
 import java.time.ZonedDateTime;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;

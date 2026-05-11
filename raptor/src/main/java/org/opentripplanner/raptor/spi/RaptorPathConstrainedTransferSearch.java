@@ -1,6 +1,6 @@
 package org.opentripplanner.raptor.spi;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This interface is used by Raptor to create a path from the Raptor state. We do not keep
