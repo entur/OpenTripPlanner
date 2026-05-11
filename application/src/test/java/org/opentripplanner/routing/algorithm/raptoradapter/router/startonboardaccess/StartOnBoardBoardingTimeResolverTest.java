@@ -3,6 +3,7 @@ package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboarda
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.utils.time.TimeUtils.hm2time;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -26,6 +27,11 @@ class StartOnBoardBoardingTimeResolverTest {
   private final RegularStop STOP_B = ENV_BUILDER.stop("B");
   private final RegularStop STOP_C = ENV_BUILDER.stop("C");
 
+  private static final int T10_00 = hm2time(10, 0);
+  private static final int T10_05 = hm2time(10, 5);
+  private static final int T10_10 = hm2time(10, 10);
+  private static final int T10_15 = hm2time(10, 15);
+
   @Test
   void resolvesSimpleBoardingTime() {
     var env = ENV_BUILDER.addTrip(
@@ -39,7 +45,7 @@ class StartOnBoardBoardingTimeResolverTest {
       null
     );
 
-    assertEquals(10 * 3600 + 5 * 60, result);
+    assertEquals(T10_05, result);
   }
 
   @Test
@@ -52,10 +58,10 @@ class StartOnBoardBoardingTimeResolverTest {
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
       tripAndServiceDate,
       STOP_B.getId(),
-      10 * 3600 + 5 * 60
+      T10_05
     );
 
-    assertEquals(10 * 3600 + 5 * 60, result);
+    assertEquals(T10_05, result);
   }
 
   @Test
@@ -70,7 +76,7 @@ class StartOnBoardBoardingTimeResolverTest {
       new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_B.getId(),
-        10 * 3600
+        T10_00
       )
     );
   }
@@ -102,7 +108,7 @@ class StartOnBoardBoardingTimeResolverTest {
       new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_C.getId(),
-        10 * 3600 + 10 * 60
+        T10_10
       )
     );
   }
@@ -123,7 +129,7 @@ class StartOnBoardBoardingTimeResolverTest {
       null
     );
 
-    assertEquals(10 * 3600 + 5 * 60, result);
+    assertEquals(T10_05, result);
   }
 
   /**
@@ -150,10 +156,10 @@ class StartOnBoardBoardingTimeResolverTest {
     var result = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
       tripAndServiceDate,
       stopB.getId(),
-      10 * 3600 + 5 * 60
+      T10_05
     );
 
-    assertEquals(10 * 3600 + 5 * 60, result);
+    assertEquals(T10_05, result);
   }
 
   @Nested
@@ -175,17 +181,17 @@ class StartOnBoardBoardingTimeResolverTest {
       var result1 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_A.getId(),
-        10 * 3600
+        T10_00
       );
-      assertEquals(10 * 3600, result1);
+      assertEquals(T10_00, result1);
 
       // Second occurrence of STOP_A at 10:15
       var result2 = new StartOnBoardBoardingTimeResolver(env.transitService()).resolve(
         tripAndServiceDate,
         STOP_A.getId(),
-        10 * 3600 + 15 * 60
+        T10_15
       );
-      assertEquals(10 * 3600 + 15 * 60, result2);
+      assertEquals(T10_15, result2);
     }
 
     @Test
