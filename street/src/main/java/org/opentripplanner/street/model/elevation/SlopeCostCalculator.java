@@ -3,7 +3,7 @@ package org.opentripplanner.street.model.elevation;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 
-public class ElevationUtils {
+public class SlopeCostCalculator {
 
   /*
    * These numbers disagree with everything else I (David Turner) have read about the energy cost
