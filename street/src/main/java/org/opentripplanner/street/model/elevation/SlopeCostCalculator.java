@@ -3,6 +3,20 @@ package org.opentripplanner.street.model.elevation;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 
+/**
+ * Computes slope-related cost factors for an edge from its elevation profile.
+ * <p>
+ * Bicycle speed and safety derive from {@link BicycleSlopeSpeedFunction}, a quadratic
+ * B-spline fitted to analytical cycling data. The bike work cost uses a cubic energy term
+ * ({@link #ENERGY_PER_METER_ON_FLAT} + {@link #ENERGY_SLOPE_FACTOR}&middot;slope&sup3;) and
+ * the walking effective length uses {@link ToblersHikingFunction}.
+ * <p>
+ * Segments with a slope above &plusmn;100% are treated as raster/OSM data glitches and
+ * flattened to zero entirely (see {@link #MAX_ABS_SLOPE}); the real slope is preserved for
+ * everything between &plusmn;35% and &plusmn;100% so that wheelchair reluctance, walking
+ * length and bike energy still see genuine steep terrain. The B-spline itself clamps its
+ * input to &plusmn;35% internally to stay within its valid domain.
+ */
 public class SlopeCostCalculator {
 
   /*
