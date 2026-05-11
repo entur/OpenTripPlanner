@@ -108,22 +108,14 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     return Arrays.asList(incoming);
   }
 
+  /// Check if any of the incoming edges satisfy the predicate.
   public boolean checkIncoming(Predicate<Edge> check) {
-    for (var e : incoming) {
-      if (check.test(e)) {
-        return true;
-      }
-    }
-    return false;
+    return checkEdges(incoming, check);
   }
 
+  /// Check if any of the outgoing edges satisfy the predicate.
   public boolean checkOutgoing(Predicate<Edge> check) {
-    for (var e : outgoing) {
-      if (check.test(e)) {
-        return true;
-      }
-    }
-    return false;
+    return checkEdges(outgoing, check);
   }
 
   public int getDegreeOut() {
@@ -292,6 +284,15 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
    */
   public Set<FeedScopedId> areaStops() {
     return Set.of();
+  }
+
+  private boolean checkEdges(Edge[] edges, Predicate<Edge> check) {
+    for (var e : edges) {
+      if (check.test(e)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
