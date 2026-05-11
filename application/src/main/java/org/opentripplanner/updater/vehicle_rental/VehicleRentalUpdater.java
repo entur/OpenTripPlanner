@@ -33,6 +33,7 @@ import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
+import org.opentripplanner.updater.vehicle_rental.datasources.params.GbfsVehicleRentalDataSourceParameters;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -54,6 +55,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   private final VehicleRentalDataSource source;
   private final String nameForLogging;
+  private final boolean applyBusinessAreas;
 
   private Set<Vertex> latestBoundaryVertices = Set.of();
   private GeofencingZoneIndex latestZoneIndex;
@@ -80,6 +82,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       parameters.sourceParameters().url()
     );
     this.unlinkedPlaceThrottle = Throttle.ofOneSecond();
+    this.applyBusinessAreas = parameters.sourceParameters() instanceof
+        GbfsVehicleRentalDataSourceParameters gbfs
+      ? gbfs.geofencingBusinessAreaBorders()
+      : true;
 
     // Creation of network linker library will not modify the graph
     this.linker = vertexLinker;
@@ -230,7 +236,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         // Use REQUEST scope to query both permanent and realtime edges.
         // Realtime edges are created by station linking (above) and must be
         // included so split vertices on those edges get boundary extensions.
-        var applier = new GeofencingZoneApplier(env -> graph.findEdges(env, Scope.REQUEST), true);
+        var applier = new GeofencingZoneApplier(
+          env -> graph.findEdges(env, Scope.REQUEST),
+          applyBusinessAreas
+        );
         var result = applier.applyGeofencingZones(geofencingZones);
         latestBoundaryVertices = result.boundaryVertices();
         latestZoneIndex = result.zoneIndex();
