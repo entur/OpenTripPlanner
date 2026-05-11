@@ -84,5 +84,4 @@ class VertexTest {
     var v = StreetModelFactory.intersectionVertex("v", LAT, LON);
     assertFalse(v.checkOutgoing(e -> true));
   }
-
 }
