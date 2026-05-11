@@ -136,7 +136,7 @@ public class StartOnBoardAccessResolver {
     );
   }
 
-  private BoardingLocationInPatternReference getBoardingLocationInSchedule(
+  private LocationInTripPatternReference getBoardingLocationInSchedule(
     TripSchedule tripSchedule,
     TripAndServiceDate tripAndServiceDate,
     @Nullable Integer targetTimeSeconds,
@@ -144,7 +144,7 @@ public class StartOnBoardAccessResolver {
   ) {
     var targetTrip = tripSchedule.getOriginalTripTimes().getTrip();
 
-    BoardingLocationInPatternReference tripLocationReference = null;
+    LocationInTripPatternReference tripLocationReference = null;
     if (targetTrip.getId().equals(tripAndServiceDate.trip().getId())) {
       tripLocationReference = targetTimeSeconds == null
         ? findTripLocationInSchedule(tripSchedule, stopIndices)
@@ -178,18 +178,16 @@ public class StartOnBoardAccessResolver {
    * matches one of the given stop indices. Throws {@link RoutingValidationException} if the stop
    * appears more than once (ring line) — callers should retry with an aimed departure time.
    */
-  private BoardingLocationInPatternReference findTripLocationInSchedule(
+  private LocationInTripPatternReference findTripLocationInSchedule(
     TripSchedule tripSchedule,
     Collection<Integer> stopIndices
   ) {
-    List<BoardingLocationInPatternReference> stopPositions = new ArrayList<>();
+    List<LocationInTripPatternReference> stopPositions = new ArrayList<>();
     for (int stopIndex : stopIndices) {
       for (int stopPos : tripSchedule.findDepartureStopPositions(0, stopIndex)) {
         if (tripSchedule.pattern().boardingPossibleAt(stopPos)) {
           int boardingTime = tripSchedule.getOriginalTripTimes().getScheduledDepartureTime(stopPos);
-          stopPositions.add(
-            new BoardingLocationInPatternReference(stopIndex, stopPos, boardingTime)
-          );
+          stopPositions.add(new LocationInTripPatternReference(stopIndex, stopPos, boardingTime));
         }
       }
     }
@@ -221,7 +219,7 @@ public class StartOnBoardAccessResolver {
    * Find the exact trip location position in a trip schedule at a given boarding time.
    * Disambiguates multiple visits to the same stop (ring lines).
    */
-  private BoardingLocationInPatternReference findTripLocationInScheduleAtTime(
+  private LocationInTripPatternReference findTripLocationInScheduleAtTime(
     TripSchedule tripSchedule,
     Collection<Integer> stopIndices,
     int boardingTimeSeconds
@@ -232,7 +230,7 @@ public class StartOnBoardAccessResolver {
           tripSchedule.departure(stopPos) == boardingTimeSeconds &&
           tripSchedule.pattern().boardingPossibleAt(stopPos)
         ) {
-          return new BoardingLocationInPatternReference(stopIndex, stopPos, boardingTimeSeconds);
+          return new LocationInTripPatternReference(stopIndex, stopPos, boardingTimeSeconds);
         }
       }
     }

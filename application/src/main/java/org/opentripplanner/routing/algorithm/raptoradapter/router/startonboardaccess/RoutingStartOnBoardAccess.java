@@ -18,7 +18,7 @@ public final class RoutingStartOnBoardAccess
 
   RoutingStartOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
-    BoardingLocationInPatternReference tripLocationInScheduleReference
+    LocationInTripPatternReference tripLocationInScheduleReference
   ) {
     this.routeIndex = tripScheduleReference.routeIndex();
     this.tripScheduleIndex = tripScheduleReference.tripScheduleIndex();
