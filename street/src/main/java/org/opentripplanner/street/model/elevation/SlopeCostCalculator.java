@@ -40,8 +40,8 @@ public class SlopeCostCalculator {
   /// Maximum slope of 35% after which elevation data is considered unreliable. It is based
   /// on the steepest drivable road,
   /// [Baldwin Street in New Zealand](https://en.wikipedia.org/wiki/Baldwin_Street)
-  private static final double MAX_UPHILL_SLOPE = 0.35;
-  private static final double MAX_DOWNHILL_SLOPE = -MAX_UPHILL_SLOPE;
+  private static final double MAX_SPLINE_SLOPE = 0.35;
+  private static final double MIN_SPLINE_SLOPE = -MAX_SPLINE_SLOPE;
 
   private static final double[] TY = {
     -3.4999999999999998E-01,
@@ -95,7 +95,7 @@ public class SlopeCostCalculator {
   /// steep.
   ///
   /// For this reason we set the slope for an elevation segment to zero if it exceeds the limit
-  /// of {@link #MAX_UPHILL_SLOPE} uphill or {@link #MAX_DOWNHILL_SLOPE} downhill.
+  /// of {@link #MAX_SPLINE_SLOPE} uphill or {@link #MIN_SPLINE_SLOPE} downhill.
   ///
   /// @param elev The elevation profile, where each (x, y) is (distance along edge, elevation)
   public static SlopeCosts getSlopeCosts(CoordinateSequence elev) {
@@ -124,7 +124,7 @@ public class SlopeCostCalculator {
       // We need _some_ sort of limit, because the energy
       // usage approximation breaks down at extreme slopes, and
       // gives negative weights
-      if (slope > MAX_UPHILL_SLOPE || slope < MAX_DOWNHILL_SLOPE) {
+      if (slope > MAX_SPLINE_SLOPE || slope < MIN_SPLINE_SLOPE) {
         slope = 0;
         flattened = true;
       }
