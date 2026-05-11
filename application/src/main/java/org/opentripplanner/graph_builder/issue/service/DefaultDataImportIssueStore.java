@@ -22,7 +22,7 @@ public class DefaultDataImportIssueStore implements DataImportIssueStore {
   public DefaultDataImportIssueStore() {}
 
   @Override
-  public void add(DataImportIssue issue) {
+  public synchronized void add(DataImportIssue issue) {
     ISSUE_LOG.debug("{} - {}", issue.getType(), issue.getMessage());
     if (currentSource != null) {
       this.issues.add(new IssueWithSource(issue, currentSource));
@@ -47,18 +47,18 @@ public class DefaultDataImportIssueStore implements DataImportIssueStore {
   }
 
   @Override
-  public void startProcessingSource(String source) {
+  public synchronized void startProcessingSource(String source) {
     this.currentSource = source;
   }
 
   @Override
-  public void stopProcessingSource() {
+  public synchronized void stopProcessingSource() {
     this.currentSource = null;
   }
 
   @Override
-  public List<DataImportIssue> listIssues() {
-    return this.issues;
+  public synchronized List<DataImportIssue> listIssues() {
+    return List.copyOf(this.issues);
   }
 
   @Override
