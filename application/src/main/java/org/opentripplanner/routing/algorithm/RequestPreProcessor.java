@@ -89,7 +89,7 @@ public final class RequestPreProcessor {
           ServiceDateUtils.asStartOfService(tripAndServiceDate.serviceDate(), zoneId),
           aimedDeparture
         );
-    int boardingTime = new TripLocationResolver(transitService).resolve(
+    var locationInTripPattern = new TripLocationResolver(transitService).resolve(
       tripAndServiceDate,
       tripLocation.stopLocationId(),
       aimedDepartureSeconds
@@ -97,7 +97,7 @@ public final class RequestPreProcessor {
     var boardingDateTime = ServiceDateUtils.toZonedDateTime(
       tripAndServiceDate.serviceDate(),
       zoneId,
-      boardingTime
+      locationInTripPattern.boardingTimeSeconds()
     ).toInstant();
     var iterationStep = Duration.ofSeconds(tuningParameters.iterationDepartureStepInSeconds());
 

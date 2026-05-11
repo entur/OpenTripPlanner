@@ -45,7 +45,7 @@ class TripLocationResolverTest {
       null
     );
 
-    assertEquals(T10_05, result);
+    assertEquals(new LocationInTripPatternReference(STOP_B.getIndex(), 1, T10_05), result);
   }
 
   @Test
@@ -61,7 +61,7 @@ class TripLocationResolverTest {
       T10_05
     );
 
-    assertEquals(T10_05, result);
+    assertEquals(new LocationInTripPatternReference(STOP_B.getIndex(), 1, T10_05), result);
   }
 
   @Test
@@ -129,7 +129,7 @@ class TripLocationResolverTest {
       null
     );
 
-    assertEquals(T10_05, result);
+    assertEquals(new LocationInTripPatternReference(stopB.getIndex(), 1, T10_05), result);
   }
 
   /**
@@ -159,7 +159,7 @@ class TripLocationResolverTest {
       T10_05
     );
 
-    assertEquals(T10_05, result);
+    assertEquals(new LocationInTripPatternReference(stopB.getIndex(), 1, T10_05), result);
   }
 
   @Nested
@@ -183,7 +183,7 @@ class TripLocationResolverTest {
         STOP_A.getId(),
         T10_00
       );
-      assertEquals(T10_00, result1);
+      assertEquals(new LocationInTripPatternReference(STOP_A.getIndex(), 0, T10_00), result1);
 
       // Second occurrence of STOP_A at 10:15
       var result2 = new TripLocationResolver(env.transitService()).resolve(
@@ -191,7 +191,7 @@ class TripLocationResolverTest {
         STOP_A.getId(),
         T10_15
       );
-      assertEquals(T10_15, result2);
+      assertEquals(new LocationInTripPatternReference(STOP_A.getIndex(), 2, T10_15), result2);
     }
 
     @Test

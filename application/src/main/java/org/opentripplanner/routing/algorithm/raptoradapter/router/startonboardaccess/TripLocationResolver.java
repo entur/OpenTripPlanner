@@ -1,5 +1,7 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -12,12 +14,8 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
- * Resolves the boarding time for a start-on-board trip location as seconds since service day
- * start. This is called early in the pipeline (before Raptor routing) to set the request's
- * dateTime.
- *
- * <p>Unlike {@link StartOnBoardAccessResolver}, this class does not need the Raptor pattern index
- * and operates entirely on {@link TransitService}.
+ * Resolves a trip location from timetable based on the trip and service date, the id of the stop
+ * (or station), and an optional aimed departure time.
  */
 public class TripLocationResolver {
 
@@ -27,7 +25,16 @@ public class TripLocationResolver {
     this.transitService = transitService;
   }
 
-  public int resolve(
+  /**
+   * Resolve a {@link LocationInTripPatternReference} from timetable data.
+   * @param tripAndServiceDate The trip and service date for this location.
+   * @param stopOrStationId The stop or station id. The stop can be a regular stop or station,
+   *                        but not a multimodal stop or a group of stops.
+   * @param aimedDepartureTime An optional departure time used to disambiguate for trip's that pass
+   *                           by the same stop multiple times - forming a ring line. When provided,
+   *                           it must match the actual departure time of the stop exactly.
+   */
+  public LocationInTripPatternReference resolve(
     TripAndServiceDate tripAndServiceDate,
     FeedScopedId stopOrStationId,
     @Nullable Integer aimedDepartureTime
@@ -42,36 +49,23 @@ public class TripLocationResolver {
       );
     }
 
-    int stopPosInPattern = findStopPositionInPattern(
+    return findLocationInTripPattern(
       tripPattern,
       stopOrStationId,
       trip,
       serviceDate,
       aimedDepartureTime
     );
-
-    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
-    if (tripTimes == null) {
-      throw new IllegalArgumentException(
-        "Trip %s not found in timetable for pattern %s on date %s".formatted(
-          trip.getId(),
-          tripPattern.getId(),
-          serviceDate
-        )
-      );
-    }
-
-    return tripTimes.getScheduledDepartureTime(stopPosInPattern);
   }
 
-  private int findStopPositionInPattern(
+  private LocationInTripPatternReference findLocationInTripPattern(
     TripPattern tripPattern,
     FeedScopedId stopOrStationId,
     Trip trip,
-    java.time.LocalDate serviceDate,
+    LocalDate serviceDate,
     @Nullable Integer aimedDepartureTime
   ) {
-    int stopPos = aimedDepartureTime != null
+    var locationInTripPattern = aimedDepartureTime != null
       ? findStopPositionByDepartureTime(
           tripPattern,
           stopOrStationId,
@@ -79,10 +73,10 @@ public class TripLocationResolver {
           serviceDate,
           aimedDepartureTime
         )
-      : findSingleStopPosition(tripPattern, stopOrStationId, trip);
+      : findSingleStopPosition(tripPattern, stopOrStationId, trip, serviceDate);
 
     int lastStopPos = tripPattern.numberOfStops() - 1;
-    if (stopPos == lastStopPos) {
+    if (locationInTripPattern.stopPositionInPattern() == lastStopPos) {
       throw new IllegalArgumentException(
         "Cannot board at the last stop %s of trip %s — no further travel is possible".formatted(
           stopOrStationId,
@@ -91,14 +85,14 @@ public class TripLocationResolver {
       );
     }
 
-    return stopPos;
+    return locationInTripPattern;
   }
 
-  private int findStopPositionByDepartureTime(
+  private LocationInTripPatternReference findStopPositionByDepartureTime(
     TripPattern tripPattern,
     FeedScopedId stopOrStationId,
     Trip trip,
-    java.time.LocalDate serviceDate,
+    LocalDate serviceDate,
     int targetSeconds
   ) {
     var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
@@ -112,15 +106,19 @@ public class TripLocationResolver {
       );
     }
 
-    for (int i = 0; i < tripPattern.numberOfStops(); i++) {
-      var stop = tripPattern.getStop(i);
+    for (int stopPos = 0; stopPos < tripPattern.numberOfStops(); stopPos++) {
+      var stop = tripPattern.getStop(stopPos);
       if (
         !stop.getId().equals(stopOrStationId) && !stop.getStationOrStopId().equals(stopOrStationId)
       ) {
         continue;
       }
-      if (tripTimes.getScheduledDepartureTime(i) == targetSeconds) {
-        return i;
+      if (tripTimes.getScheduledDepartureTime(stopPos) == targetSeconds) {
+        return new LocationInTripPatternReference(
+          stop.getIndex(),
+          stopPos,
+          tripTimes.getScheduledDepartureTime(stopPos)
+        );
       }
     }
 
@@ -132,32 +130,50 @@ public class TripLocationResolver {
     );
   }
 
-  private int findSingleStopPosition(
+  private LocationInTripPatternReference findSingleStopPosition(
     TripPattern tripPattern,
     FeedScopedId stopOrStationId,
-    Trip trip
+    Trip trip,
+    LocalDate serviceDate
   ) {
-    var stopPositionInPattern = -1;
-    for (int i = 0; i < tripPattern.numberOfStops(); i++) {
-      var stop = tripPattern.getStop(i);
+    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
+    if (tripTimes == null) {
+      throw new IllegalArgumentException(
+        "Trip %s not found in timetable for pattern %s on date %s".formatted(
+          trip.getId(),
+          tripPattern.getId(),
+          serviceDate
+        )
+      );
+    }
+    var locations = new ArrayList<LocationInTripPatternReference>();
+    for (int stopPos = 0; stopPos < tripPattern.numberOfStops(); stopPos++) {
+      var stop = tripPattern.getStop(stopPos);
       if (
         stop.getId().equals(stopOrStationId) || stop.getStationOrStopId().equals(stopOrStationId)
       ) {
-        if (stopPositionInPattern >= 0) {
-          throw new RoutingValidationException(
-            List.of(
-              new RoutingError(
-                RoutingErrorCode.ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME,
-                InputField.FROM_PLACE
-              )
-            )
-          );
-        }
-        stopPositionInPattern = i;
+        locations.add(
+          new LocationInTripPatternReference(
+            stop.getIndex(),
+            stopPos,
+            tripTimes.getScheduledDepartureTime(stopPos)
+          )
+        );
       }
     }
 
-    if (stopPositionInPattern < 0) {
+    if (locations.size() > 1) {
+      throw new RoutingValidationException(
+        List.of(
+          new RoutingError(
+            RoutingErrorCode.ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME,
+            InputField.FROM_PLACE
+          )
+        )
+      );
+    }
+
+    if (locations.isEmpty()) {
       throw new IllegalArgumentException(
         "Stop or station %s not found in pattern for trip %s".formatted(
           stopOrStationId,
@@ -166,6 +182,6 @@ public class TripLocationResolver {
       );
     }
 
-    return stopPositionInPattern;
+    return locations.getFirst();
   }
 }
