@@ -5,7 +5,7 @@ import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 
 /**
- * This class creates and hold two {@code ParetoComparator}s witch is used in a single McRaptor
+ * This class creates and hold two {@code ParetoComparator}s which is used in a single McRaptor
  * search.
  *
  * The creation of the two {@link ParetoComparator}s should be done in such way that the JIT

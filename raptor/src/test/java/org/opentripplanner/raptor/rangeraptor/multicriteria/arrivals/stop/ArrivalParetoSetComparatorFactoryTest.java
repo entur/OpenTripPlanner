@@ -24,7 +24,7 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
   /// input (criteria to compare) with a given value(same as thefirst row).
   ///
   /// - `arrivalTime` : Arrive early is better
-  /// - ´round´ : The second column is the Raptor round, but it is the pareto-round witch is used
+  /// - ´round´ : The second column is the Raptor round, but it is the pareto-round which is used
   ///   in the pareto-set compare function.
   /// - `c1` : Lower c1 is better
   /// - `c2` : Lower c2 is better or used to relax c1
@@ -40,7 +40,7 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
   /// - With c1 & c2 `[arrivalTime, round, c1, c2, ...`
   /// - With c2 enable relaxed c1(+10) `[arrivalTime, round, c2 ? c1(+10) : c1, ...`
   ///
-  /// For each of the 6 pareto-function variations we determin the dominance
+  /// For each of the 6 pareto-function variations we determine the dominance
   /// `NONE | LEFFT | RIGHT | BOTH`. The last column consist a string with the expected result
   ///  for these 6 variants.
   ///

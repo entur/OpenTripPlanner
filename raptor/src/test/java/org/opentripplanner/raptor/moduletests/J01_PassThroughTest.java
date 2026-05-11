@@ -300,7 +300,7 @@ class J01_PassThroughTest {
     """
     This test fails, because the PathMapper does not know if we should board at the first or
     second time the trip visit stop A. The arrival state does not carry enough information
-    to determin this. In case there is no pass-though stop the algoritm should board at the
+    to determine this. In case there is no pass-though stop the algoritm should board at the
     second pass to allow for a late depature and short duration.
     """
   )
