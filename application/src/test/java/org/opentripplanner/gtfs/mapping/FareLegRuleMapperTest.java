@@ -59,13 +59,13 @@ class FareLegRuleMapperTest {
     fp.setFareProductId(productId);
     var internalProduct = productMapper.map(fp);
 
-    final var obaRule = baseRule();
-    obaRule.setFareProductId(fp.getFareProductId());
-    obaRule.setDistanceType(tc.distanceType);
-    obaRule.setMinDistance(tc.minDistance);
-    obaRule.setMaxDistance(tc.maxDistance);
+    var rule = baseRule();
+    rule.setFareProductId(fp.getFareProductId());
+    rule.setDistanceType(tc.distanceType);
+    rule.setMinDistance(tc.minDistance);
+    rule.setMaxDistance(tc.maxDistance);
 
-    var mappedRules = List.copyOf(ruleMapper.map(List.of(obaRule)));
+    var mappedRules = List.copyOf(ruleMapper.map(List.of(rule)));
     assertEquals(1, mappedRules.size());
 
     var otpRule = mappedRules.get(0);
