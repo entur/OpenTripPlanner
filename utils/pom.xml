@@ -24,8 +24,9 @@
     <dependencies>
         <!-- This is the ONLY allowed dependency -->
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Test dependencies -->
