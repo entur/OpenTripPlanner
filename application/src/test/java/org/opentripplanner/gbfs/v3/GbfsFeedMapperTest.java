@@ -40,6 +40,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       null,
       false,
+      true,
       false,
       RentalPickupType.ALL
     );
@@ -148,6 +149,7 @@ class GbfsFeedMapperTest {
         HttpHeaders.empty(),
         null,
         true,
+        true,
         false,
         RentalPickupType.ALL
       ),
@@ -210,6 +212,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       null,
       false,
+      true,
       false,
       RentalPickupType.ALL
     );
@@ -235,6 +238,7 @@ class GbfsFeedMapperTest {
       HttpHeaders.empty(),
       null,
       false,
+      true,
       false,
       RentalPickupType.ALL
     );

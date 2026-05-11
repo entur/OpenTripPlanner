@@ -25,8 +25,9 @@ import org.opentripplanner.street.model.vertex.Vertex;
 /**
  * Applies geofencing zone restrictions to the street graph. For restricted zones,
  * {@link GeofencingBoundaryExtension} is applied to boundary-crossing vertices for state-based
- * zone tracking. The business area implementation ({@link BusinessAreaBorder}) is pre-existing and
- * retained behind a feature flag.
+ * zone tracking. When {@code applyBusinessAreas} is false, boundary extensions are not created
+ * for business-area-only zones, disabling boundary enforcement while keeping the zones in the
+ * index for state tracking, speed limits, and debug tiles.
  */
 public class GeofencingZoneApplier {
 
@@ -56,9 +57,13 @@ public class GeofencingZoneApplier {
     // All zones with geometry get boundary extensions, not just restricted ones.
     // Permissive zones need boundary tracking so they enter/exit state correctly
     // and can contribute values via per-field precedence.
+    // When applyBusinessAreas is false, business-area-only zones are excluded from
+    // boundary detection so that BusinessAreaEnforcement never triggers, but the
+    // zones remain in the index for state tracking, speed limits, and debug tiles.
     var zonesWithGeometry = geofencingZones
       .stream()
       .filter(z -> z.geometry() != null)
+      .filter(z -> applyBusinessAreas || !z.isBusinessArea())
       .toList();
 
     var boundaryVertices = addBoundaryExtensions(zonesWithGeometry);

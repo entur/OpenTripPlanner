@@ -33,6 +33,7 @@ import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
+import org.opentripplanner.updater.vehicle_rental.datasources.params.GbfsVehicleRentalDataSourceParameters;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.Throttle;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -54,6 +55,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
 
   private final VehicleRentalDataSource source;
   private final String nameForLogging;
+  private final boolean applyBusinessAreas;
 
   private Set<Vertex> latestBoundaryVertices = Set.of();
   private GeofencingZoneIndex latestZoneIndex;
@@ -80,6 +82,10 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
       parameters.sourceParameters().url()
     );
     this.unlinkedPlaceThrottle = Throttle.ofOneSecond();
+    this.applyBusinessAreas = parameters.sourceParameters() instanceof
+        GbfsVehicleRentalDataSourceParameters gbfs
+      ? gbfs.geofencingBusinessAreaBorders()
+      : true;
 
     // Creation of network linker library will not modify the graph
     this.linker = vertexLinker;
@@ -233,7 +239,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         var applier = new GeofencingZoneApplier(
           ls -> graph.findEdgesAlongLineStrings(ls, Scope.REQUEST),
           env -> graph.findEdges(env, Scope.REQUEST),
-          true
+          applyBusinessAreas
         );
         var result = applier.applyGeofencingZones(geofencingZones);
         latestBoundaryVertices = result.boundaryVertices();
