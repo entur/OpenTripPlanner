@@ -7,7 +7,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionRepository;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionService;
 import org.opentripplanner.ext.emission.internal.itinerary.EmissionItineraryDecorator;

@@ -4,7 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
@@ -179,6 +179,11 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
   @Override
   public int numberOfStops() {
     return raptorTransitData.getStopCount();
+  }
+
+  @Override
+  public int numberOfTripPatterns() {
+    return patternIndex.size();
   }
 
   @Override

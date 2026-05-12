@@ -58,13 +58,13 @@
 
 
     <properties>
-        <otp.serialization.version.id>252</otp.serialization.version.id>
+        <otp.serialization.version.id>257</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.3</geotools.version>
         <google.dagger.version>2.59.2</google.dagger.version>
         <jackson.version>2.21.3</jackson.version>
-        <jaxb-runtime.version>4.0.7</jaxb-runtime.version>
+        <jaxb-runtime.version>4.0.8</jaxb-runtime.version>
         <jersey.version>3.1.11</jersey.version>
         <junit.version>6.0.3</junit.version>
         <micrometer.version>1.14.1</micrometer.version>
@@ -353,6 +353,11 @@
                         <artifactId>rewrite-static-analysis</artifactId>
                         <version>2.33.1</version>
                     </dependency>
+                    <dependency>
+                        <groupId>org.openrewrite.recipe</groupId>
+                        <artifactId>rewrite-migrate-java</artifactId>
+                        <version>3.34.1</version>
+                    </dependency>
                 </dependencies>
             </plugin>
             <plugin>
@@ -501,15 +506,11 @@
             </dependency>
 
             <dependency>
-                <!--
-                 This is implicitly used in the current OTP codebase. Should be disallowed and
-                 replaced with the standard annotation JARs. Leaving this for now to reduce number
-                 of changes.
-                -->
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>3.0.2</version>
+                <groupId>org.jspecify</groupId>
+                <artifactId>jspecify</artifactId>
+                <version>1.0.0</version>
             </dependency>
+
             <dependency>
                 <groupId>net.sf.trove4j</groupId>
                 <artifactId>trove4j</artifactId>

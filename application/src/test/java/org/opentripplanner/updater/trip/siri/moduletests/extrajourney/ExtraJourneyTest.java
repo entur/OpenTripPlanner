@@ -87,7 +87,12 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     Trip trip = transitService.getTrip(tripId);
     assertNotNull(trip);
     assertNotNull(transitService.findPattern(trip));
-    assertNotNull(transitService.getTripOnServiceDate(tripId));
+    var tripOnServiceDate = transitService.getTripOnServiceDate(tripId);
+    assertNotNull(tripOnServiceDate);
+    assertTrue(
+      tripOnServiceDate.isExtraJourney(),
+      "An extra journey should have extraJourney=true"
+    );
     assertNotNull(
       transitService.getTripOnServiceDate(
         new TripIdAndServiceDate(tripId, env.defaultServiceDate())

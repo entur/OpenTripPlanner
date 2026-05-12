@@ -1,6 +1,6 @@
 package org.opentripplanner.apis.transmodel;
 
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;

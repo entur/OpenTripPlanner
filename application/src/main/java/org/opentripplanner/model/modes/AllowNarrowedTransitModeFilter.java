@@ -1,7 +1,7 @@
 package org.opentripplanner.model.modes;
 
 import java.util.Objects;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
 import org.opentripplanner.transit.model.basic.ReplacementRequirement;
 import org.opentripplanner.transit.model.basic.SubMode;
@@ -20,6 +20,10 @@ public class AllowNarrowedTransitModeFilter implements AllowTransitModeFilter {
   @Override
   public boolean isModeSelective() {
     return true;
+  }
+
+  TransitMode mainMode() {
+    return this.mode.getMode();
   }
 
   @Override

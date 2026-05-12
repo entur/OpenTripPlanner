@@ -24,8 +24,9 @@
     <dependencies>
         <!-- This is the ONLY allowed dependency -->
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
+            <groupId>org.jspecify</groupId>
+            <artifactId>jspecify</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
         <!-- Test dependencies -->
@@ -38,6 +39,11 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-params</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.truth</groupId>
+            <artifactId>truth</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

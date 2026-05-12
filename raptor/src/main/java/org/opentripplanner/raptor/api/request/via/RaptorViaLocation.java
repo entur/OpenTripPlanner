@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.BitSet;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.raptor.util.paretoset.ParetoDominance;
 import org.opentripplanner.utils.lang.IntUtils;
@@ -98,7 +98,11 @@ public final class RaptorViaLocation {
           var dominance = comparator.compare(x, y);
           if (dominance != ParetoDominance.MUTUAL) {
             throw new IllegalArgumentException(
-              "All connection need to be pareto-optimal: %s %s %s".formatted(x, dominance, y)
+              "All connection need to be pareto-optimal: %s %s %s".formatted(
+                x,
+                dominance.symbol(),
+                y
+              )
             );
           }
         }

@@ -4,7 +4,7 @@ import static org.opentripplanner.utils.lang.OtpNumberFormat.formatTwoDecimals;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class DoubleUtils {
 
@@ -62,6 +62,24 @@ public class DoubleUtils {
    */
   public static double roundTo7Decimals(double value) {
     return roundToNDecimals(value, 7);
+  }
+
+  /**
+   * Round {@code value} to the nearest multiple of {@code step}, with ties broken
+   * towards the even neighbour ({@link RoundingMode#HALF_EVEN}, a.k.a. banker's rounding).
+   * This is the IEEE 754 default and avoids systematic bias when many rounded values
+   * are summed or averaged. BigDecimal is used so that the input is treated as an exact
+   * decimal and ties are detected reliably (e.g. {@code 1.85 / 0.1} is exactly 18.5
+   * rather than drifting through IEEE-754 representation of 0.1).
+   */
+  public static double roundToStep(double value, double step) {
+    if (Double.isNaN(value) || Double.isInfinite(value)) {
+      return value;
+    }
+    return BigDecimal.valueOf(value)
+      .divide(BigDecimal.valueOf(step), 0, RoundingMode.HALF_EVEN)
+      .multiply(BigDecimal.valueOf(step))
+      .doubleValue();
   }
 
   /**

@@ -3,13 +3,13 @@ package org.opentripplanner.ext.carpooling.configure;
 import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.internal.DefaultCarpoolingRepository;
 import org.opentripplanner.ext.carpooling.service.DefaultCarpoolingService;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.street.linking.VertexLinker;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.TransitService;
 
@@ -32,7 +32,7 @@ public class CarpoolingModule {
     @Nullable CarpoolingRepository repository,
     StreetLimitationParametersService streetLimitationParametersService,
     TransitService transitService,
-    VertexLinker vertexLinker
+    VertexCreationService vertexCreationService
   ) {
     if (OTPFeature.CarPooling.isOff()) {
       return null;
@@ -41,7 +41,7 @@ public class CarpoolingModule {
       repository,
       streetLimitationParametersService,
       transitService,
-      vertexLinker
+      vertexCreationService
     );
   }
 }

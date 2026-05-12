@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
@@ -21,7 +21,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.trans
 import org.opentripplanner.transfer.constrained.raptoradaptor.ConstrainedTransfersForPatterns;
 import org.opentripplanner.transfer.constrained.raptoradaptor.TransferIndexGenerator;
 import org.opentripplanner.transfer.regular.TransferRepository;
-import org.opentripplanner.transfer.regular.model.Transfer;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopTransferPriority;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -71,7 +71,7 @@ public class RaptorTransitDataMapper {
 
   private RaptorTransitData map(TransitTuningParameters tuningParameters) {
     HashMap<LocalDate, List<TripPatternForDate>> tripPatternsByStopByDate;
-    List<List<Transfer>> transfersByStopIndex;
+    List<List<PathTransfer>> transfersByStopIndex;
     ConstrainedTransfersForPatterns constrainedTransfers = null;
 
     LOG.info("Mapping raptorTransitData from TimetableRepository...");
@@ -178,8 +178,7 @@ public class RaptorTransitDataMapper {
   /**
    * Create static board/alight cost for Raptor to apply during transfer
    */
-  @Nullable
-  static int[] createStopBoardAlightTransferCosts(
+  static int@Nullable [] createStopBoardAlightTransferCosts(
     SiteRepository stops,
     TransitTuningParameters tuningParams
   ) {

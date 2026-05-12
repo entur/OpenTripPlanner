@@ -8,7 +8,7 @@ import jakarta.inject.Singleton;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.dataoverlay.EdgeUpdaterModule;
@@ -420,7 +420,8 @@ public class GraphBuilderModules {
       config.distanceBetweenElevationSamples,
       config.maxElevationPropagationMeters,
       config.includeEllipsoidToGeoidDifference,
-      config.multiThreadElevationCalculations
+      config.multiThreadElevationCalculations,
+      config.elevationTileCacheSizeMB
     );
   }
 
