@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
@@ -178,7 +178,8 @@ public class RaptorTransitDataMapper {
   /**
    * Create static board/alight cost for Raptor to apply during transfer
    */
-  static int@Nullable [] createStopBoardAlightTransferCosts(
+  @Nullable
+  static int[] createStopBoardAlightTransferCosts(
     SiteRepository stops,
     TransitTuningParameters tuningParams
   ) {

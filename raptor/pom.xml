@@ -34,9 +34,8 @@
 
         <!-- This is the ONLY allowed dependency -->
         <dependency>
-            <groupId>org.jspecify</groupId>
-            <artifactId>jspecify</artifactId>
-            <version>1.0.0</version>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
         </dependency>
         <dependency>
             <groupId>net.sf.trove4j</groupId>

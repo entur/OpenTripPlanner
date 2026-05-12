@@ -1,6 +1,6 @@
 package org.opentripplanner.ext.ojp.parameters;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public class OjpApiParameters {
 

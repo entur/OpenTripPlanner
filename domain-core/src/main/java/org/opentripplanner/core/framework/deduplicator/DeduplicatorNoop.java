@@ -2,7 +2,7 @@ package org.opentripplanner.core.framework.deduplicator;
 
 import java.util.BitSet;
 import java.util.List;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 class DeduplicatorNoop implements DeduplicatorService {
 
@@ -12,8 +12,9 @@ class DeduplicatorNoop implements DeduplicatorService {
     return original;
   }
 
+  @Nullable
   @Override
-  public int @Nullable[] deduplicateIntArray(int[] original) {
+  public int[] deduplicateIntArray(int[] original) {
     return original;
   }
 
@@ -23,13 +24,15 @@ class DeduplicatorNoop implements DeduplicatorService {
     return original;
   }
 
+  @Nullable
   @Override
-  public String @Nullable[] deduplicateStringArray(String[] original) {
+  public String[] deduplicateStringArray(String[] original) {
     return original;
   }
 
+  @Nullable
   @Override
-  public String @Nullable[][] deduplicateString2DArray(String[][] original) {
+  public String[][] deduplicateString2DArray(String[][] original) {
     return original;
   }
 
@@ -39,8 +42,9 @@ class DeduplicatorNoop implements DeduplicatorService {
     return original;
   }
 
+  @Nullable
   @Override
-  public <T> T @Nullable[] deduplicateObjectArray(Class<T> type, T[] original) {
+  public <T> T[] deduplicateObjectArray(Class<T> type, T[] original) {
     return original;
   }
 

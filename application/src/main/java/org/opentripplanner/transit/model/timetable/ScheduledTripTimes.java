@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -58,7 +58,8 @@ public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
    * Any number of array elements may point to the same I18NString instance if the headsign remains
    * unchanged between stops.
    */
-  private final I18NString@Nullable [] headsigns;
+  @Nullable
+  private final I18NString[] headsigns;
 
   /**
    * A 2D array of String containing zero or more Via messages displayed at each stop in the
@@ -67,7 +68,8 @@ public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
    * particular stop. These nulls are allowed to conserve memory in the common case where there are
    * few or no via messages.
    */
-  private final String@Nullable [][] headsignVias;
+  @Nullable
+  private final String[][] headsignVias;
 
   private final int[] gtfsSequenceOfStopIndex;
 

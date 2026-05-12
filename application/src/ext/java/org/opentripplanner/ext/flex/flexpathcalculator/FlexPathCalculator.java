@@ -1,6 +1,6 @@
 package org.opentripplanner.ext.flex.flexpathcalculator;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.street.model.vertex.Vertex;
 
 /**

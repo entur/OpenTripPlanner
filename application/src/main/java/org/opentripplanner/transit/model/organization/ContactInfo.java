@@ -1,7 +1,7 @@
 package org.opentripplanner.transit.model.organization;
 
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.TransitObject;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 

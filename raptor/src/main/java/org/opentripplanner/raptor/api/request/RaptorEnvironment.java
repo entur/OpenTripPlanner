@@ -1,7 +1,7 @@
 package org.opentripplanner.raptor.api.request;
 
 import java.util.concurrent.ExecutorService;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * The raptor environment provides a few hooks and integration points to the caller. The default

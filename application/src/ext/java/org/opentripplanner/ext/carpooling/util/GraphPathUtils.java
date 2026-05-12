@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.carpooling.util;
 
 import java.time.Duration;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;

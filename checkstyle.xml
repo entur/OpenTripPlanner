@@ -22,10 +22,5 @@
         </module>
         <module name="UnusedImports"/>
         <module name="UnusedLocalVariable"/>
-        <module name="IllegalImport">
-            <property name="illegalPkgs" value=""/>
-            <property name="illegalClasses" value="javax.annotation.Nullable"/>
-            <message key="import.illegal" value="Use org.jspecify.annotations.Nullable instead of javax.annotation.Nullable."/>
-        </module>
     </module>
 </module>

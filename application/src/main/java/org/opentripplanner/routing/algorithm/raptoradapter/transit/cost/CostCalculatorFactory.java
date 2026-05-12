@@ -1,13 +1,13 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.cost;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 
 public class CostCalculatorFactory {
 
   public static <T extends DefaultTripSchedule> RaptorCostCalculator<T> createCostCalculator(
     GeneralizedCostParameters generalizedCostParameters,
-    int@Nullable [] stopBoardAlightTransferCosts
+    @Nullable int[] stopBoardAlightTransferCosts
   ) {
     RaptorCostCalculator<T> calculator = new DefaultCostCalculator<>(
       generalizedCostParameters,

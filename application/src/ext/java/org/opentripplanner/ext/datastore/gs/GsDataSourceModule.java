@@ -3,7 +3,7 @@ package org.opentripplanner.ext.datastore.gs;
 import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.GoogleStorageDSRepository;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
 import org.opentripplanner.datastore.base.DataSourceRepository;

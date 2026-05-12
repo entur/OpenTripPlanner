@@ -1,7 +1,7 @@
 package org.opentripplanner.apis.gtfs.model;
 
 import java.time.LocalDate;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * See the API documentation for a discussion of {@code startInclusive} and {@code endExclusive}.

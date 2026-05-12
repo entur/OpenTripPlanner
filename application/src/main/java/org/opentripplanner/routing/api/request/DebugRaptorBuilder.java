@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.lang.StringUtils;
 
 public class DebugRaptorBuilder implements Serializable {

@@ -2,7 +2,7 @@ package org.opentripplanner.ext.carpooling.routing;
 
 import java.util.List;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
 import org.opentripplanner.street.model.vertex.Vertex;

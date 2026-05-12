@@ -11,7 +11,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -133,7 +133,7 @@ public class RouteRequestMapper {
   private static void setStreetPreferences(
     RoutingPreferencesBuilder preferences,
     boolean isTripPlannedForNow,
-    GraphQLTypes.@Nullable GraphQLPlanStreetPreferencesInput args,
+    @Nullable GraphQLTypes.GraphQLPlanStreetPreferencesInput args,
     DataFetchingEnvironment environment
   ) {
     setRentalAvailabilityPreferences(preferences, isTripPlannedForNow);
@@ -167,7 +167,7 @@ public class RouteRequestMapper {
 
   private static void setAccessibilityPreferences(
     RouteRequestBuilder requestBuilder,
-    GraphQLTypes.@Nullable GraphQLAccessibilityPreferencesInput preferenceArgs
+    @Nullable GraphQLTypes.GraphQLAccessibilityPreferencesInput preferenceArgs
   ) {
     if (preferenceArgs != null && preferenceArgs.getGraphQLWheelchair() != null) {
       requestBuilder.withJourney(j ->

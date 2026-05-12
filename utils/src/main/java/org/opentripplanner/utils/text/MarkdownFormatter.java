@@ -1,6 +1,6 @@
 package org.opentripplanner.utils.text;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This utility can be used to format Markdown text. This is useful when generating documentation.
