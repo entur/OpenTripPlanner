@@ -7,26 +7,25 @@ import org.opentripplanner.framework.error.OtpError;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
-import org.opentripplanner.graph_builder.issue.api.IssueWithSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Thread-safe implementation of {@link DataImportIssueStore}. NeTEx bundles are loaded in
+ * parallel, so {@link #add} and {@link #listIssues} synchronize on the internal list.
+ */
 @Singleton
 public class DefaultDataImportIssueStore implements DataImportIssueStore {
 
   private static final Logger ISSUE_LOG = LoggerFactory.getLogger(ISSUES_LOG_NAME);
-
   private final List<DataImportIssue> issues = new ArrayList<>();
-  private String currentSource = null;
 
   public DefaultDataImportIssueStore() {}
 
   @Override
-  public synchronized void add(DataImportIssue issue) {
-    ISSUE_LOG.debug("{} - {}", issue.getType(), issue.getMessage());
-    if (currentSource != null) {
-      this.issues.add(new IssueWithSource(issue, currentSource));
-    } else {
+  public void add(DataImportIssue issue) {
+    synchronized (issues) {
+      ISSUE_LOG.debug("{} - {}", issue.getType(), issue.getMessage());
       this.issues.add(issue);
     }
   }
@@ -47,18 +46,10 @@ public class DefaultDataImportIssueStore implements DataImportIssueStore {
   }
 
   @Override
-  public synchronized void startProcessingSource(String source) {
-    this.currentSource = source;
-  }
-
-  @Override
-  public synchronized void stopProcessingSource() {
-    this.currentSource = null;
-  }
-
-  @Override
-  public synchronized List<DataImportIssue> listIssues() {
-    return List.copyOf(this.issues);
+  public List<DataImportIssue> listIssues() {
+    synchronized (issues) {
+      return List.copyOf(this.issues);
+    }
   }
 
   @Override
