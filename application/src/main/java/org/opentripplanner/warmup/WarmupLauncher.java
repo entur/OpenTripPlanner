@@ -1,6 +1,6 @@
 package org.opentripplanner.warmup;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.GraphUpdaterManager;

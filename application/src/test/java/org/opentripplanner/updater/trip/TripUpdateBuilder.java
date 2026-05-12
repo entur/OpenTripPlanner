@@ -7,7 +7,7 @@ import de.mfdz.MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupT
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.opentripplanner.utils.time.TimeUtils;
 
@@ -420,7 +420,7 @@ public class TripUpdateBuilder {
     int departureDelay,
     StopTimeUpdate.ScheduleRelationship scheduleRelationShip,
     @Nullable DropOffPickupType pickDrop,
-    StopTimeUpdate.StopTimeProperties.@Nullable DropOffPickupType gtfsPickDrop,
+    @Nullable StopTimeUpdate.StopTimeProperties.DropOffPickupType gtfsPickDrop,
     @Nullable String headsign,
     @Nullable String scheduledArrivalTime,
     @Nullable String scheduledDepartureTime,

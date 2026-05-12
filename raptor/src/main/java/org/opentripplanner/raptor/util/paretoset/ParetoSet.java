@@ -6,7 +6,7 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This {@link java.util.Collection} store all pareto-optimal elements. The {@link #add(Object)}

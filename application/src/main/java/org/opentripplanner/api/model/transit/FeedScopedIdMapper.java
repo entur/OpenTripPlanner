@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.core.model.id.FeedScopedId;
 

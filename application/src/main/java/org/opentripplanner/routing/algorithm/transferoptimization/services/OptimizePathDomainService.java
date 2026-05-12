@@ -7,7 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.path.TransferPathLeg;
 import org.opentripplanner.raptor.api.path.TransitPathLeg;
@@ -81,7 +81,8 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
   /**
    * @see RaptorTransitData#getStopBoardAlightTransferCosts()
    */
-  private final int@Nullable [] stopBoardAlightTransferCosts;
+  @Nullable
+  private final int[] stopBoardAlightTransferCosts;
 
   private final double extraStopBoardAlightCostsFactor;
 
@@ -90,7 +91,7 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
     RaptorCostCalculator<T> costCalculator,
     RaptorSlackProvider slackProvider,
     @Nullable TransferWaitTimeCostCalculator waitTimeCostCalculator,
-    int@Nullable [] stopBoardAlightTransferCosts,
+    @Nullable int[] stopBoardAlightTransferCosts,
     double extraStopBoardAlightCostsFactor,
     PathTailFilter<T> filter,
     RaptorStopNameResolver stopNameTranslator

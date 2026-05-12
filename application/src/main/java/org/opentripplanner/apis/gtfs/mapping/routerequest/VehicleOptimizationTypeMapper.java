@@ -1,6 +1,6 @@
 package org.opentripplanner.apis.gtfs.mapping.routerequest;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
 
@@ -27,7 +27,8 @@ public class VehicleOptimizationTypeMapper {
     };
   }
 
-  public static GraphQLTypes.@Nullable GraphQLCyclingOptimizationType mapForBicycle(
+  @Nullable
+  public static GraphQLTypes.GraphQLCyclingOptimizationType mapForBicycle(
     VehicleRoutingOptimizeType type
   ) {
     return switch (type) {
@@ -39,7 +40,8 @@ public class VehicleOptimizationTypeMapper {
     };
   }
 
-  public static GraphQLTypes.@Nullable GraphQLScooterOptimizationType mapForScooter(
+  @Nullable
+  public static GraphQLTypes.GraphQLScooterOptimizationType mapForScooter(
     VehicleRoutingOptimizeType type
   ) {
     return switch (type) {

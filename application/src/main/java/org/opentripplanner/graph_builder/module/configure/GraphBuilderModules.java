@@ -8,7 +8,7 @@ import jakarta.inject.Singleton;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.dataoverlay.EdgeUpdaterModule;

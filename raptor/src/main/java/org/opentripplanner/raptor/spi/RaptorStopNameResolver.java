@@ -1,6 +1,6 @@
 package org.opentripplanner.raptor.spi;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Interface used to translate the raptor stop index to a string representation for the stop.

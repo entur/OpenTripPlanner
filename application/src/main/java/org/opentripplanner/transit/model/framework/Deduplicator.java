@@ -12,7 +12,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
@@ -69,7 +69,8 @@ public class Deduplicator implements DeduplicatorService, Serializable {
   }
 
   @Override
-  public int@Nullable [] deduplicateIntArray(int[] original) {
+  @Nullable
+  public int[] deduplicateIntArray(int[] original) {
     if (original == null) {
       return null;
     }
@@ -95,7 +96,8 @@ public class Deduplicator implements DeduplicatorService, Serializable {
   }
 
   @Override
-  public String@Nullable [] deduplicateStringArray(String[] original) {
+  @Nullable
+  public String[] deduplicateStringArray(String[] original) {
     if (original == null) {
       return null;
     }
@@ -109,7 +111,8 @@ public class Deduplicator implements DeduplicatorService, Serializable {
   }
 
   @Override
-  public String@Nullable [][] deduplicateString2DArray(String[][] original) {
+  @Nullable
+  public String[][] deduplicateString2DArray(String[][] original) {
     if (original == null) {
       return null;
     }
@@ -139,7 +142,8 @@ public class Deduplicator implements DeduplicatorService, Serializable {
   }
 
   @Override
-  public <T> T@Nullable [] deduplicateObjectArray(Class<T> type, T[] original) {
+  @Nullable
+  public <T> T[] deduplicateObjectArray(Class<T> type, T[] original) {
     if (original == null) {
       return null;
     }

@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.ext.vectortiles.VectorTilesResource;
 import org.opentripplanner.ext.vectortiles.VectorTilesResource.LayerType;
 import org.opentripplanner.ext.vectortiles.layers.LayerFilters;

@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.MissingNode;
 import java.io.Serializable;
 import java.util.List;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GtfsApiParameters;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.ojp.config.OjpApiConfig;

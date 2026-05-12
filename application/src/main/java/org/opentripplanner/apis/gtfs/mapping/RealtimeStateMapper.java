@@ -1,6 +1,6 @@
 package org.opentripplanner.apis.gtfs.mapping;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.transit.model.timetable.RealTimeState;
 

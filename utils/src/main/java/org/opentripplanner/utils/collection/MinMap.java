@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Decorate a HashMap that to track the smallest value for each key.

@@ -2,8 +2,8 @@ package org.opentripplanner.gbfs;
 
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
+import javax.annotation.Nullable;
 import org.geojson.MultiPolygon;
-import org.jspecify.annotations.Nullable;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;

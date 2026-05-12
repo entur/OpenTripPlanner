@@ -4,7 +4,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 
 /**

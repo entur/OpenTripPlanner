@@ -1,6 +1,6 @@
 package org.opentripplanner.transit.api.request;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 
 public class FindRegularStopsByBoundingBoxRequestBuilder {

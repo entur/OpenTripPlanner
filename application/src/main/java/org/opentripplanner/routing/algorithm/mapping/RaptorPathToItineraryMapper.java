@@ -48,7 +48,7 @@ import org.opentripplanner.street.search.state.StateEditor;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transfer.constrained.model.ConstrainedTransfer;
 import org.opentripplanner.transfer.regular.model.DefaultRaptorTransfer;
-import org.opentripplanner.transfer.regular.model.Transfer;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.service.TransitService;
@@ -373,7 +373,7 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
 
   private List<Leg> mapTransferLeg(
     PathLeg<T> pathLeg,
-    Transfer transfer,
+    PathTransfer transfer,
     TraverseMode transferMode,
     Place from,
     Place to

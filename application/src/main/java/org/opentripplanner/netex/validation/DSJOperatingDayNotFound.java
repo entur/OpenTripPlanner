@@ -1,6 +1,6 @@
 package org.opentripplanner.netex.validation;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.netex.issues.ObjectNotFound;
 import org.rutebanken.netex.model.DatedServiceJourney;

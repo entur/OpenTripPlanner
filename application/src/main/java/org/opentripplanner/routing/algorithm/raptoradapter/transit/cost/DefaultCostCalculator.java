@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.cost;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorCostConverter;
 import org.opentripplanner.raptor.spi.RaptorTransferConstraint;
@@ -24,7 +24,8 @@ public final class DefaultCostCalculator<T extends DefaultTripSchedule>
    * Costs for boarding and alighting at a given stop during transfer.
    * See RaptorTransitData.getStopBoardAlightTransferCosts()
    */
-  private final int@Nullable [] stopBoardAlightTransferCosts;
+  @Nullable
+  private final int[] stopBoardAlightTransferCosts;
 
   /**
    * Cost unit: SECONDS - The unit for all input parameters are in the OTP TRANSIT model cost unit
@@ -38,8 +39,8 @@ public final class DefaultCostCalculator<T extends DefaultTripSchedule>
     int boardCost,
     int transferCost,
     double waitReluctanceFactor,
-    double@Nullable [] transitReluctanceFactors,
-    int@Nullable [] stopBoardAlightTransferCosts
+    @Nullable double[] transitReluctanceFactors,
+    @Nullable int[] stopBoardAlightTransferCosts
   ) {
     this.boardCostOnly = RaptorCostConverter.toRaptorCost(boardCost);
     this.transferCostOnly = RaptorCostConverter.toRaptorCost(transferCost);
@@ -55,7 +56,7 @@ public final class DefaultCostCalculator<T extends DefaultTripSchedule>
 
   public DefaultCostCalculator(
     GeneralizedCostParameters params,
-    int@Nullable [] stopBoardAlightTransferCosts
+    @Nullable int[] stopBoardAlightTransferCosts
   ) {
     this(
       params.boardCost(),

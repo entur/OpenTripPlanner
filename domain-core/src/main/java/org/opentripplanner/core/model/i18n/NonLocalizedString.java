@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This is to support strings which can't be localized.

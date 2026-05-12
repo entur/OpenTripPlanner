@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>256</otp.serialization.version.id>
+        <otp.serialization.version.id>257</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.3</geotools.version>
@@ -353,11 +353,6 @@
                         <artifactId>rewrite-static-analysis</artifactId>
                         <version>2.33.1</version>
                     </dependency>
-                    <dependency>
-                        <groupId>org.openrewrite.recipe</groupId>
-                        <artifactId>rewrite-migrate-java</artifactId>
-                        <version>3.34.1</version>
-                    </dependency>
                 </dependencies>
             </plugin>
             <plugin>
@@ -472,7 +467,7 @@
                 <!-- This makes sure all google libraries are using compatible versions. -->
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.79.0</version>
+                <version>26.81.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -495,7 +490,7 @@
             <dependency>
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
-                <version>33.5.0-jre</version>
+                <version>33.6.0-jre</version>
             </dependency>
 
             <!-- Logging API -->
@@ -506,11 +501,15 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jspecify</groupId>
-                <artifactId>jspecify</artifactId>
-                <version>1.0.0</version>
+                <!--
+                 This is implicitly used in the current OTP codebase. Should be disallowed and
+                 replaced with the standard annotation JARs. Leaving this for now to reduce number
+                 of changes.
+                -->
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.2</version>
             </dependency>
-
             <dependency>
                 <groupId>net.sf.trove4j</groupId>
                 <artifactId>trove4j</artifactId>

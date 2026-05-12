@@ -1,7 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.ride;
 
 import java.util.function.Consumer;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
 import org.opentripplanner.raptor.api.view.PatternRideView;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.MultiCriteriaRoutingStrategy;

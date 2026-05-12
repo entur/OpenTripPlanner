@@ -2,7 +2,7 @@ package org.opentripplanner.transfer.constrained.raptoradaptor;
 
 import java.util.LinkedList;
 import java.util.List;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.spi.RaptorBoardOrAlightEvent;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;

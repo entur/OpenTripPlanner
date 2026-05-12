@@ -1,7 +1,7 @@
 package org.opentripplanner.gtfs.mapping;
 
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.onebusaway.gtfs.model.AgencyAndId;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.utils.lang.StringUtils;
