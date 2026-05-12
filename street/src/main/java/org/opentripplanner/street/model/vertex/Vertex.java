@@ -107,17 +107,17 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   }
 
   /// Get the list of incoming edges. If you only want to check if an edge which matches a predicate
-  /// exists, then use [Vertex#hasAnyIncomingMatching(Predicate)(Predicate)()] instead.
+  /// exists, then use [Vertex#hasAnyIncomingMatching(Predicate)] instead.
   public Collection<Edge> getIncoming() {
     return Arrays.asList(incoming);
   }
 
-  /// Check if any of the incoming edges satisfies the predicate.
+  /// Check if any of the incoming edges satisfy the predicate.
   public boolean hasAnyIncomingMatching(Predicate<Edge> check) {
     return checkEdges(incoming, check);
   }
 
-  /// Check if any of the outgoing edges satisfies the predicate.
+  /// Check if any of the outgoing edges satisfy the predicate.
   public boolean hasAnyOutgoingMatching(Predicate<Edge> check) {
     return checkEdges(outgoing, check);
   }
