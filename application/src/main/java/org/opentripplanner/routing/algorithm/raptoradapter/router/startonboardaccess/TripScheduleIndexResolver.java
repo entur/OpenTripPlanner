@@ -30,24 +30,39 @@ public class TripScheduleIndexResolver {
   /**
    * Resolve a {@link RaptorTripScheduleReference} in the Raptor timetable data. A trip schedule
    * reference will be returned if one exists in the raptor timetable that passes through one of the
-   * provided stop indices.
+   * provided stop indices, and the provided stop position allows boarding. If no trip is found, an
+   * IllegalArgumentException is thrown.
    *
    * @param tripAndServiceDate the trip and service date to look up
    * @param stopIndices the indices of the stop that the given trip passes through. This supports
    *                    searching on a single stop, or a station with multiple child stops. For a
    *                    single stop, pass a collection with a single stop index, and for a station,
    *                    pass a collection with all child stop indices.
+   * @param stopPositionInPattern the stop position in pattern for the stop (or station) the
+   *                              trip passes through. For ring-lines, that pass by the same stop
+   *                              several times, the stop position in pattern is necessary to rule
+   *                              out cases where the stop is canceled on one but not all the
+   *                              passes.
    */
   public RaptorTripScheduleReference resolve(
     TripAndServiceDate tripAndServiceDate,
-    Collection<Integer> stopIndices
+    Collection<Integer> stopIndices,
+    int stopPositionInPattern
   ) {
-    var raptorTimetable = getRaptorTimetableForTrip(stopIndices, tripAndServiceDate);
+    var raptorTimetable = getRaptorTimetableForTripAtStop(stopIndices, tripAndServiceDate);
+    if (!raptorTimetable.boardingPossibleAt(stopPositionInPattern)) {
+      throw new IllegalArgumentException(
+        "Boarding is not allowed at stop position %d for trip %s".formatted(
+          stopPositionInPattern,
+          tripAndServiceDate.trip()
+        )
+      );
+    }
     var tripSchedule = findTripScheduleInTimetable(raptorTimetable, tripAndServiceDate);
     return raptorRequestTransitData.tripScheduleReference(tripSchedule);
   }
 
-  private RaptorTimeTable<TripSchedule> getRaptorTimetableForTrip(
+  private TripPatternForDates getRaptorTimetableForTripAtStop(
     Collection<Integer> stopIndices,
     TripAndServiceDate tripAndServiceDate
   ) {

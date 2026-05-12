@@ -1,18 +1,18 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class TripScheduleIndexResolverTest {
 
@@ -28,20 +28,6 @@ class TripScheduleIndexResolverTest {
   private final RegularStop STOP_B = ENV_BUILDER.stop("B");
   private final RegularStop STOP_C = ENV_BUILDER.stop("C");
 
-  private static Instant toInstant(
-    int secondsSinceStartOfService,
-    LocalDate serviceDate,
-    ZoneId timeZone
-  ) {
-    return ServiceDateUtils.asStartOfService(serviceDate, timeZone)
-      .plusSeconds(secondsSinceStartOfService)
-      .toInstant();
-  }
-
-  private static Instant toInstant(int secondsSinceStartOfService) {
-    return toInstant(secondsSinceStartOfService, SERVICE_DATE, TIME_ZONE);
-  }
-
   @Test
   void resolvesSimpleOnBoardAccess() {
     var env = ENV_BUILDER.addTrip(
@@ -51,7 +37,8 @@ class TripScheduleIndexResolverTest {
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(STOP_B.getIndex())
+      List.of(STOP_B.getIndex()),
+      1
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -69,7 +56,8 @@ class TripScheduleIndexResolverTest {
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(STOP_A.getIndex())
+      List.of(STOP_A.getIndex()),
+      0
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -94,7 +82,8 @@ class TripScheduleIndexResolverTest {
     // Pass both A1 and A2. Only A2 is in the trip, but the pattern should be found nonetheless.
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(stopA1.getIndex(), stopA2.getIndex())
+      List.of(stopA1.getIndex(), stopA2.getIndex()),
+      0
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -116,7 +105,8 @@ class TripScheduleIndexResolverTest {
     assertThrows(IllegalArgumentException.class, () ->
       new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
         tripAndServiceDate,
-        List.of()
+        List.of(),
+        0
       )
     );
   }
@@ -138,7 +128,69 @@ class TripScheduleIndexResolverTest {
     assertThrows(IllegalArgumentException.class, () ->
       new TripScheduleIndexResolver(patternSearch).resolve(
         tripAndServiceDate,
-        List.of(stopA1.getIndex())
+        List.of(stopA1.getIndex()),
+        0
+      )
+    );
+  }
+
+  /**
+   * Passing a stop position where boarding is not allowed should throw.
+   */
+  @Test
+  void throwsWhenBoardingNotPossibleAtStop() {
+    var env = ENV_BUILDER.addTrip(
+      TripInput.of("T1")
+        .addStop(STOP_A, "10:00")
+        .addStop(STOP_B, "10:05", "10:05", PickDrop.NONE, PickDrop.SCHEDULED)
+        .addStop(STOP_C, "10:10")
+    ).build();
+
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var patternSearch = env.raptorRoutingRequestTransitData();
+    assertThrows(IllegalArgumentException.class, () ->
+      new TripScheduleIndexResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(STOP_B.getIndex()),
+        1
+      )
+    );
+  }
+
+  /**
+   * When there are multiple passes of the same stop, and only one of the passes disallows boarding,
+   * we should only throw when the given stop position disallows boarding.
+   */
+  @Test
+  void throwsOnlyWhenBoardingNotPossibleAtGivenStopPosition() {
+    var env = ENV_BUILDER.addTrip(
+      TripInput.of("T1")
+        .addStop(STOP_A, "10:00")
+        .addStop(STOP_B, "10:05", "10:05", PickDrop.NONE, PickDrop.SCHEDULED)
+        .addStop(STOP_C, "10:10")
+        .addStop(STOP_A, "10:15", "10:15")
+        .addStop(STOP_B, "10:20", "10:20")
+        .addStop(STOP_C, "10:25", "10:25")
+    ).build();
+
+    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var patternSearch = env.raptorRoutingRequestTransitData();
+
+    // Position 1 does not allow boarding
+    assertThrows(IllegalArgumentException.class, () ->
+      new TripScheduleIndexResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(STOP_B.getIndex()),
+        1
+      )
+    );
+
+    // Position 4 does allow boarding
+    assertDoesNotThrow(() ->
+      new TripScheduleIndexResolver(patternSearch).resolve(
+        tripAndServiceDate,
+        List.of(STOP_B.getIndex()),
+        4
       )
     );
   }

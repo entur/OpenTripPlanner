@@ -120,7 +120,11 @@ class AccessEgressFetcher {
     );
 
     var stopIndices = lookupStopIndices(onBoardTripLocation.stopLocationId());
-    var tripScheduleIndex = tripScheduleIndexResolver.resolve(tripAndServiceDate, stopIndices);
+    var tripScheduleIndex = tripScheduleIndexResolver.resolve(
+      tripAndServiceDate,
+      stopIndices,
+      tripLocation.stopPositionInPattern()
+    );
 
     return new RoutingStartOnBoardAccess(tripScheduleIndex, tripLocation);
   }
