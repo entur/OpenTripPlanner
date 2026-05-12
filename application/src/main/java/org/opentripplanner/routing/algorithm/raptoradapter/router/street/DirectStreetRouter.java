@@ -10,7 +10,6 @@ import org.opentripplanner.routing.algorithm.mapping.LegsToItineraryMapper;
 import org.opentripplanner.routing.algorithm.mapping.StreetPathToLegsMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.error.PathNotFoundException;
-import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
