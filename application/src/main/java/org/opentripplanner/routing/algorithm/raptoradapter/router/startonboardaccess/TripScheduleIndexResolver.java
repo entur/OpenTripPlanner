@@ -27,11 +27,11 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * <p>Callers must first resolve the trip via {@link TripAndServiceDateResolver} and resolve the
  * stop location to Raptor stop indices before calling {@link #resolve}.
  */
-public class StartOnBoardAccessResolver {
+public class TripScheduleIndexResolver {
 
   private final RaptorRoutingRequestTransitData raptorRequestTransitData;
 
-  public StartOnBoardAccessResolver(RaptorRoutingRequestTransitData raptorRequestTransitData) {
+  public TripScheduleIndexResolver(RaptorRoutingRequestTransitData raptorRequestTransitData) {
     this.raptorRequestTransitData = raptorRequestTransitData;
   }
 

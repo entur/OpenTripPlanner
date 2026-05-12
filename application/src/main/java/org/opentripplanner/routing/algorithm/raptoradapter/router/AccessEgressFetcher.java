@@ -14,9 +14,9 @@ import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.RoutingStartOnBoardAccess;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.StartOnBoardAccessResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.StopIndicesResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripAndServiceDateResolver;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripScheduleIndexResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressRouter;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.FlexAccessEgressRouter;
@@ -45,7 +45,7 @@ class AccessEgressFetcher {
   private final TransitServiceResolver transitServiceResolver;
   private final AccessEgressMapper accessEgressMapper;
   private final CarpoolingService carpoolingService;
-  private final StartOnBoardAccessResolver startOnBoardAccessResolver;
+  private final TripScheduleIndexResolver tripScheduleIndexResolver;
 
   /**
    * Creates an {@code AccessEgressFetcher} for a single route request.
@@ -72,7 +72,7 @@ class AccessEgressFetcher {
     this.carpoolingService = carpoolingService;
     this.transitServiceResolver = new TransitServiceResolver(serverContext.transitService());
     this.accessEgressMapper = new AccessEgressMapper(transitServiceResolver);
-    this.startOnBoardAccessResolver = new StartOnBoardAccessResolver(requestTransitDataProvider);
+    this.tripScheduleIndexResolver = new TripScheduleIndexResolver(requestTransitDataProvider);
   }
 
   Collection<? extends RoutingAccessEgress> fetchAccess() {
@@ -100,7 +100,7 @@ class AccessEgressFetcher {
       onBoardTripLocation.tripOnDateReference()
     );
     var stopIndices = lookupStopIndices(onBoardTripLocation.stopLocationId());
-    return startOnBoardAccessResolver.resolve(
+    return tripScheduleIndexResolver.resolve(
       tripAndServiceDate,
       stopIndices,
       onBoardTripLocation.aimedDepartureTime(),
