@@ -1,7 +1,6 @@
 package org.opentripplanner.transit.model.network;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.LineString;
@@ -114,13 +113,38 @@ final class TripPatternGeometry implements Serializable {
   /**
    * Return the concatenated hop geometry between the boarding and alighting stop positions.
    * Symmetric with {@link #distanceBetween(int, int)}.
+   * <p>
+   * Decodes each packed hop directly into a single result buffer instead of materializing one
+   * {@link LineString} per hop and concatenating afterwards. The shared stop coordinate at every
+   * hop seam (last coord of hop {@code i} == first coord of hop {@code i+1}) is emitted only once.
    */
   LineString geometryBetween(int boardingStopPosition, int alightingStopPosition) {
-    List<LineString> hops = new ArrayList<>(alightingStopPosition - boardingStopPosition);
-    for (int i = boardingStopPosition; i < alightingStopPosition; i++) {
-      hops.add(hopGeometry(i));
+    int numHops = alightingStopPosition - boardingStopPosition;
+    if (numHops <= 0) {
+      return GeometryUtils.emptyLineString();
     }
-    return GeometryUtils.concatenateLineStrings(hops);
+    int totalCoords = 0;
+    for (int i = boardingStopPosition; i < alightingStopPosition; i++) {
+      totalCoords += CompactLineStringUtils.coordinateCount(hopGeometries[i]);
+    }
+    // Each seam between two consecutive hops repeats one stop coordinate; emit it only once.
+    totalCoords -= (numHops - 1);
+    if (totalCoords <= 0) {
+      return GeometryUtils.emptyLineString();
+    }
+    double[] out = new double[totalCoords * 2];
+    int offset = 0;
+    for (int i = boardingStopPosition; i < alightingStopPosition; i++) {
+      offset = CompactLineStringUtils.decodeDeltaCoordinatesInto(
+        hopGeometries[i],
+        out,
+        offset,
+        0,
+        0,
+        i > boardingStopPosition
+      );
+    }
+    return GeometryUtils.makeLineString(out);
   }
 
   /**
