@@ -4,7 +4,7 @@ import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStrin
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;

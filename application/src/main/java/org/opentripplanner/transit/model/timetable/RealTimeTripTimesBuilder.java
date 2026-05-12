@@ -6,7 +6,7 @@ import static org.opentripplanner.transit.model.timetable.TimetableValidationErr
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.stream.IntStream;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.transit.model.framework.DataValidationException;

@@ -2,7 +2,7 @@ package org.opentripplanner.utils.collection;
 
 import java.util.Collection;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public class StreamUtils {
 
