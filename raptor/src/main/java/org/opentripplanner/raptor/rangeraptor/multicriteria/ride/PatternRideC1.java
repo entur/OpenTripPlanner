@@ -68,7 +68,7 @@ public class PatternRideC1<T extends RaptorTripSchedule> extends AbstractPattern
   }
 
   @Override
-  public int c2() {
+  public final int c2() {
     return RaptorCostCalculator.ZERO_COST;
   }
 

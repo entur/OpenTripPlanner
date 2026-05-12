@@ -48,7 +48,7 @@ public class PatternRideC2<T extends RaptorTripSchedule> extends AbstractPattern
         : l.compareC1(r));
   }
 
-  public int c2() {
+  public final int c2() {
     return c2;
   }
 

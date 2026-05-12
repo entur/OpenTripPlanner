@@ -97,31 +97,31 @@ public abstract class AbstractPatternRide<T extends RaptorTripSchedule>
     return prevArrival;
   }
 
-  public int boardStopIndex() {
+  public final int boardStopIndex() {
     return boardStopIndex;
   }
 
-  public int boardPos() {
+  public final int boardPos() {
     return boardPos;
   }
 
-  public int boardTime() {
+  public final int boardTime() {
     return boardTime;
   }
 
-  public int boardC1() {
+  public final int boardC1() {
     return boardC1;
   }
 
-  public int relativeC1() {
+  public final int relativeC1() {
     return relativeC1;
   }
 
-  public int tripSortIndex() {
+  public final int tripSortIndex() {
     return tripSortIndex;
   }
 
-  public T trip() {
+  public final T trip() {
     return trip;
   }
 
