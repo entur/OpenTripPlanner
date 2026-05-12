@@ -142,19 +142,18 @@ public final class CompactLineStringUtils {
     byte[] packedCoords,
     boolean reverse
   ) {
-    int[] coords = DlugoszVarLenIntPacker.unpack(packedCoords);
     double x0 = reverse ? xb : xa;
     double y0 = reverse ? yb : ya;
     double x1 = reverse ? xa : xb;
     double y1 = reverse ? ya : yb;
-    int intermediateCount = coords == null ? 0 : coords.length / 2;
+    int intermediateCount = coordinateCount(packedCoords);
     double[] c = new double[(intermediateCount + 2) * 2];
     c[0] = x0;
     c[1] = y0;
-    if (coords != null) {
+    if (intermediateCount > 0) {
       int oix = IntUtils.round(x0 * FIXED_FLOAT_MULT);
       int oiy = IntUtils.round(y0 * FIXED_FLOAT_MULT);
-      decodeDeltaCoordinates(coords, c, 2, oix, oiy);
+      decodeDeltaCoordinatesInto(packedCoords, c, 2, oix, oiy, false);
     }
     c[c.length - 2] = x1;
     c[c.length - 1] = y1;
@@ -167,40 +166,71 @@ public final class CompactLineStringUtils {
    * delta-encoded coordinates directly without adding/removing dummy endpoints.
    */
   public static LineString uncompactLineString(byte[] packedCoords, boolean reverse) {
-    int[] coords = DlugoszVarLenIntPacker.unpack(packedCoords);
-    if (coords == null || coords.length == 0) {
+    int intermediateCount = coordinateCount(packedCoords);
+    if (intermediateCount == 0) {
       return GeometryUtils.makeLineString(new double[0]);
     }
-    double[] c = new double[coords.length];
-    decodeDeltaCoordinates(coords, c, 0, 0, 0);
+    double[] c = new double[intermediateCount * 2];
+    decodeDeltaCoordinatesInto(packedCoords, c, 0, 0, 0, false);
     LineString out = GeometryUtils.makeLineString(c);
     return reverse ? out.reverse() : out;
   }
 
   /**
-   * Decode delta-encoded coordinate pairs into a flat double array.
-   *
-   * @param coords  Delta-encoded int pairs [dx0, dy0, dx1, dy1, ...]
-   * @param out     Target array to write decoded coordinates into (flat: [x0, y0, x1, y1, ...])
-   * @param offset  Starting index in {@code out} to write to
-   * @param oix     Initial x in fixed-point (start of delta chain)
-   * @param oiy     Initial y in fixed-point (start of delta chain)
+   * Number of coordinates encoded in {@code packedCoords} without decoding them. Use this to
+   * pre-size a target buffer for {@link #decodeDeltaCoordinatesInto}.
    */
-  private static void decodeDeltaCoordinates(
-    int[] coords,
+  public static int coordinateCount(byte[] packedCoords) {
+    return DlugoszVarLenIntPacker.countValues(packedCoords) / 2;
+  }
+
+  /**
+   * Decode delta-encoded coordinates from {@code packedCoords} directly into {@code out} starting
+   * at {@code offset}, returning the new offset (one past the last double written).
+   * <p>
+   * Streams through the packed bytes without allocating an intermediate {@code int[]} or boxing.
+   * Used by {@link #uncompactLineString} and by callers that concatenate several packed line
+   * strings into one buffer.
+   *
+   * @param packedCoords   the compact line string, or {@code null} / empty for a no-op
+   * @param out            target array to write decoded coordinates into (flat: [x0, y0, x1, y1, ...])
+   * @param offset         starting index in {@code out} to write to
+   * @param oix            initial x in fixed-point (start of delta chain)
+   * @param oiy            initial y in fixed-point (start of delta chain)
+   * @param skipFirstCoord skip writing the first decoded coordinate. Deltas still accumulate so the
+   *                       remaining coordinates land at their correct absolute positions. Used to
+   *                       drop the shared stop coord at hop seams in transit-pattern leg-geometry
+   *                       concatenation.
+   * @return the offset of the first unwritten slot in {@code out}
+   */
+  public static int decodeDeltaCoordinatesInto(
+    byte[] packedCoords,
     double[] out,
     int offset,
     int oix,
-    int oiy
+    int oiy,
+    boolean skipFirstCoord
   ) {
-    int count = coords.length / 2;
-    for (int i = 0; i < count; i++) {
-      int ix = oix + coords[i * 2];
-      int iy = oiy + coords[i * 2 + 1];
-      out[offset + i * 2] = ix / FIXED_FLOAT_MULT;
-      out[offset + i * 2 + 1] = iy / FIXED_FLOAT_MULT;
-      oix = ix;
-      oiy = iy;
+    if (packedCoords == null || packedCoords.length == 0) {
+      return offset;
     }
+    int writeIdx = offset;
+    boolean skip = skipFirstCoord;
+    int pos = 0;
+    while (pos < packedCoords.length) {
+      var dx = DlugoszVarLenIntPacker.decodeAt(packedCoords, pos);
+      pos = dx.nextPos();
+      var dy = DlugoszVarLenIntPacker.decodeAt(packedCoords, pos);
+      pos = dy.nextPos();
+      oix += dx.value();
+      oiy += dy.value();
+      if (skip) {
+        skip = false;
+        continue;
+      }
+      out[writeIdx++] = oix / FIXED_FLOAT_MULT;
+      out[writeIdx++] = oiy / FIXED_FLOAT_MULT;
+    }
+    return writeIdx;
   }
 }
