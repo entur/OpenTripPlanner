@@ -43,22 +43,34 @@ class RealtimeStateMapperTest {
 
   @Test
   void updatedReturnsUpdated() {
-    assertEquals(UPDATED, RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::updateTrip)));
+    assertEquals(
+      UPDATED,
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::updateTrip))
+    );
   }
 
   @Test
   void addedReturnsAdded() {
-    assertEquals(ADDED, RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::addTrip)));
+    assertEquals(
+      ADDED,
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::addTrip))
+    );
   }
 
   @Test
   void modifiedReturnsModified() {
-    assertEquals(MODIFIED, RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::modifyTrip)));
+    assertEquals(
+      MODIFIED,
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::modifyTrip))
+    );
   }
 
   @Test
   void canceledReturnsCanceled() {
-    assertEquals(CANCELED, RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::cancelTrip)));
+    assertEquals(
+      CANCELED,
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::cancelTrip))
+    );
   }
 
   /**
@@ -67,7 +79,10 @@ class RealtimeStateMapperTest {
    */
   @Test
   void deletedReturnsCanceled() {
-    assertEquals(CANCELED, RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::deleteTrip)));
+    assertEquals(
+      CANCELED,
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::deleteTrip))
+    );
   }
 
   // ---- Priority ordering ------------------------------------------------
