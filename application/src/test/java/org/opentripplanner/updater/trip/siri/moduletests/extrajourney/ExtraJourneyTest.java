@@ -75,7 +75,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "ADDED UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
+      "ADDED TIMES_UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -105,7 +105,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[ADDED UPDATED]"
+      "F:routeId::001:RT[ADDED TIMES_UPDATED]"
     );
   }
 
@@ -127,7 +127,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "ADDED UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
+      "ADDED TIMES_UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -143,7 +143,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:new route ref::001:RT[ADDED UPDATED]"
+      "F:new route ref::001:RT[ADDED TIMES_UPDATED]"
     );
   }
 
@@ -163,7 +163,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[UPDATED]"
+      "F:routeId::001:RT[TIMES_UPDATED]"
     );
   }
 
@@ -216,7 +216,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(updates));
 
     assertEquals(
-      "ADDED UPDATED | A [R] 0:02 0:02 | C 0:04 0:04",
+      "ADDED TIMES_UPDATED | A [R] 0:02 0:02 | C 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -229,7 +229,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertTrue(originalTripTimes.isScheduled());
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:routeId::001:RT[ADDED UPDATED]"
+      "F:routeId::001:RT[ADDED TIMES_UPDATED]"
     );
   }
 
@@ -287,7 +287,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(siri.applyEstimatedTimetable(updates));
     assertEquals(
-      "ADDED UPDATED | A [R] 0:02 0:02 | B 0:04 0:06 | C 0:08 0:08",
+      "ADDED TIMES_UPDATED | A [R] 0:02 0:02 | B 0:04 0:06 | C 0:08 0:08",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertEquals(
@@ -366,7 +366,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertSuccess(siri.applyEstimatedTimetable(updates));
     assertEquals(
-      "ADDED UPDATED | C [R,PI] 0:02 0:02 | D [PI] 0:04 0:04",
+      "ADDED TIMES_UPDATED | C [R,PI] 0:02 0:02 | D [PI] 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }
@@ -433,7 +433,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     var creationResult = siri.applyEstimatedTimetable(creation);
     assertSuccess(creationResult);
     assertEquals(
-      "ADDED UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
+      "ADDED TIMES_UPDATED | C [R] 0:02 0:02 | D 0:04 0:04",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
 
@@ -453,7 +453,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     var updateResult = siri.applyEstimatedTimetable(update);
     assertSuccess(updateResult);
     assertEquals(
-      "UPDATED | C 0:05 0:05 | D 0:07 0:07",
+      "TIMES_UPDATED | C 0:05 0:05 | D 0:07 0:07",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }

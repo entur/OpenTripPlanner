@@ -66,7 +66,7 @@ class CancelledStopOnDelayedTripTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "MODIFIED UPDATED | A 0:02 0:07 | B 0:09 0:09 | C [C] 0:11 0:11 | D 0:13 0:13",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A 0:02 0:07 | B 0:09 0:09 | C [C] 0:11 0:11 | D 0:13 0:13",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }

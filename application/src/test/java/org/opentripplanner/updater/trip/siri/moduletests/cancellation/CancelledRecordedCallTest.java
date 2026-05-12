@@ -46,7 +46,7 @@ class CancelledRecordedCallTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "MODIFIED UPDATED | A [C,R] 0:01:01 0:01:01 | B 0:01:10 0:01:10",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [C,R] 0:01:01 0:01:01 | B 0:01:10 0:01:10",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }

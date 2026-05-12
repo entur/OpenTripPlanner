@@ -13,7 +13,7 @@ public class TripTimesStateDecoder {
       stringBuilder.append("CANCELED ");
     }
     if (tripTimes.isModified()) {
-      stringBuilder.append("MODIFIED ");
+      stringBuilder.append("STOPPATTERN_MODIFIED ");
     }
     if (tripTimes.isDeleted()) {
       stringBuilder.append("DELETED ");
@@ -21,7 +21,7 @@ public class TripTimesStateDecoder {
     if (tripTimes.isScheduled()) {
       stringBuilder.append("SCHEDULED ");
     } else {
-      stringBuilder.append("UPDATED ");
+      stringBuilder.append("TIMES_UPDATED ");
     }
     return stringBuilder.toString().trim();
   }

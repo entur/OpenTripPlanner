@@ -52,7 +52,7 @@ class MultiTripPatternTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      "TIMES_UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     assertTrue(env.tripData(TRIP_2_ID).tripTimes().isScheduled());

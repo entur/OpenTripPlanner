@@ -23,7 +23,7 @@ class BoardingActivityWithCoordinateWithDriverTest implements RealtimeTestConsta
 
   /**
    * When a stop has COORDINATE_WITH_DRIVER pickup/dropoff and SIRI sends
-   * BOARDING/ALIGHTING boarding activities, the trip should stay UPDATED
+   * BOARDING/ALIGHTING boarding activities, the trip should stay TIMES_UPDATED
    * (not MODIFIED), because both are routable — SIRI boarding activities
    * are less specific than the planned PickDrop value.
    */
@@ -69,9 +69,9 @@ class BoardingActivityWithCoordinateWithDriverTest implements RealtimeTestConsta
     var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
 
-    // Trip should stay UPDATED — BOARDING/ALIGHTING should not override COORDINATE_WITH_DRIVER
+    // Trip should stay TIMES_UPDATED — BOARDING/ALIGHTING should not override COORDINATE_WITH_DRIVER
     assertEquals(
-      "UPDATED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
+      "TIMES_UPDATED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 

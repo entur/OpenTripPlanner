@@ -61,7 +61,7 @@ class DelayedTest implements RealtimeTestConstants {
       env.tripData(TRIP_1_ID).showScheduledTimetable()
     );
     assertEquals(
-      "UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
+      "TIMES_UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -84,7 +84,7 @@ class DelayedTest implements RealtimeTestConstants {
     assertSuccess(rt.applyTripUpdate(tripUpdate));
 
     assertEquals(
-      "UPDATED | A 10:01 10:01 | B 10:11 10:11",
+      "TIMES_UPDATED | A 10:01 10:01 | B 10:11 10:11",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -103,7 +103,7 @@ class DelayedTest implements RealtimeTestConstants {
     assertSuccess(rt.applyTripUpdate(tripUpdate));
 
     assertEquals(
-      "UPDATED | A [ND] 10:00 10:00 | B 10:11 10:11",
+      "TIMES_UPDATED | A [ND] 10:00 10:00 | B 10:11 10:11",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -152,7 +152,7 @@ class DelayedTest implements RealtimeTestConstants {
       tripData.showScheduledTimetable()
     );
     assertEquals(
-      "UPDATED | A 0:01 0:01:01 | B 0:02:10 0:02:31 | C 0:02:50 0:02:51",
+      "TIMES_UPDATED | A 0:01 0:01:01 | B 0:02:10 0:02:31 | C 0:02:50 0:02:51",
       tripData.showTimetable()
     );
   }

@@ -46,17 +46,17 @@ class QuayChangeTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:Route1::001:RT[MODIFIED UPDATED]"
+      "F:Route1::001:RT[STOPPATTERN_MODIFIED TIMES_UPDATED]"
     );
   }
 
   /**
-   * Change quay (B to C) producing a MODIFIED pattern, then send a second update referencing the
+   * Change quay (B to C) producing a STOPPATTERN_MODIFIED pattern, then send a second update referencing the
    * original stop B, reverting the pattern back to the scheduled one.
    */
   @Test
@@ -77,7 +77,7 @@ class QuayChangeTest implements RealtimeTestConstants {
     var result1 = siri.applyEstimatedTimetable(quayChange);
     assertSuccess(result1);
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
@@ -94,11 +94,11 @@ class QuayChangeTest implements RealtimeTestConstants {
     var result2 = siri.applyEstimatedTimetable(revert);
     assertSuccess(result2);
     assertEquals(
-      "UPDATED | A [R] 0:00:16 0:00:16 | B 0:00:30 0:00:30",
+      "TIMES_UPDATED | A [R] 0:00:16 0:00:16 | B 0:00:30 0:00:30",
       env.tripData(TRIP_1_ID).showTimetable()
     );
-    // Pattern reverts to the scheduled one (not an RT pattern), but trip state is UPDATED
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[UPDATED]");
+    // Pattern reverts to the scheduled one (not an RT pattern), but trip state is TIMES_UPDATED
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[TIMES_UPDATED]");
   }
 
   /**
@@ -123,11 +123,11 @@ class QuayChangeTest implements RealtimeTestConstants {
     var result1 = siri.applyEstimatedTimetable(quayChange);
     assertSuccess(result1);
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | C 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:Route1::001:RT[MODIFIED UPDATED]"
+      "F:Route1::001:RT[STOPPATTERN_MODIFIED TIMES_UPDATED]"
     );
 
     // Step 2: Keep quay change (still C) but with different delay
@@ -142,13 +142,13 @@ class QuayChangeTest implements RealtimeTestConstants {
 
     var result2 = siri.applyEstimatedTimetable(updatedTimes);
     assertSuccess(result2);
-    // Quay change must be preserved - still MODIFIED on RT pattern, not reverted to scheduled
+    // Quay change must be preserved - still STOPPATTERN_MODIFIED on RT pattern, not reverted to scheduled
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:16 0:00:16 | C 0:00:35 0:00:35",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:16 0:00:16 | C 0:00:35 0:00:35",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:Route1::001:RT[MODIFIED UPDATED]"
+      "F:Route1::001:RT[STOPPATTERN_MODIFIED TIMES_UPDATED]"
     );
   }
 }

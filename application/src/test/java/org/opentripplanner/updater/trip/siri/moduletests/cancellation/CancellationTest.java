@@ -98,7 +98,7 @@ class CancellationTest implements RealtimeTestConstants {
     changeQuayAndCancelTrip(siri, TRIP_1_ID);
 
     assertEquals(
-      "CANCELED UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      "CANCELED TIMES_UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -132,12 +132,12 @@ class CancellationTest implements RealtimeTestConstants {
     var creationResult = siri.applyEstimatedTimetable(creation);
     assertSuccess(creationResult);
     assertEquals(
-      "ADDED UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      "ADDED TIMES_UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:route-id::001:RT[ADDED UPDATED]"
+      "F:route-id::001:RT[ADDED TIMES_UPDATED]"
     );
 
     changeQuayAndCancelTrip(siri, ADDED_TRIP_ID);
@@ -145,12 +145,12 @@ class CancellationTest implements RealtimeTestConstants {
     // the arrival time on first stop is adjusted to the departure time to avoid negative dwell time
     // conversely the departure time on last stop is adjusted to the arrival time
     assertEquals(
-      "CANCELED UPDATED | A 0:00:11 0:00:11 | B 0:00:20 0:00:20",
+      "CANCELED TIMES_UPDATED | A 0:00:11 0:00:11 | B 0:00:20 0:00:20",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[SCHEDULED]",
-      "F:route-id::001:RT[CANCELED UPDATED]"
+      "F:route-id::001:RT[CANCELED TIMES_UPDATED]"
     );
   }
 
@@ -172,7 +172,7 @@ class CancellationTest implements RealtimeTestConstants {
     assertSuccess(modificationResult);
     TransitTestEnvironment transitTestEnvironment = siri.realtimeTestEnvironment();
     assertEquals(
-      "MODIFIED UPDATED | A 0:00:15 0:00:15 | D 0:00:25 0:00:25",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A 0:00:15 0:00:15 | D 0:00:25 0:00:25",
       transitTestEnvironment.tripData(tripId).showTimetable()
     );
 

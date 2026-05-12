@@ -46,14 +46,14 @@ class ExtraCallTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
 
   /**
    * Apply the same extra call update twice (identical message). Verifies idempotency: the trip
-   * times and the MODIFIED pattern are unchanged after the second application.
+   * times and the STOPPATTERN_MODIFIED pattern are unchanged after the second application.
    */
   @Test
   void testExtraCallMultipleTimes() {
@@ -66,7 +66,7 @@ class ExtraCallTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -91,7 +91,7 @@ class ExtraCallTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "CANCELED UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      "CANCELED TIMES_UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -100,7 +100,7 @@ class ExtraCallTest implements RealtimeTestConstants {
    * Add an extra call (A → D(extra) → B), then send a second update with the same extra call
    * but different times. Unlike {@link #testExtraCallMultipleTimes()} which replays an identical
    * message, this test verifies that updated times are actually applied while preserving the
-   * extra call and the MODIFIED pattern.
+   * extra call and the STOPPATTERN_MODIFIED pattern.
    */
   @Test
   void testExtraCallThenUpdateTimesKeepsExtraCall() {
@@ -112,11 +112,11 @@ class ExtraCallTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(extraCallUpdate));
 
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:route-id::001:RT[MODIFIED UPDATED]"
+      "F:route-id::001:RT[STOPPATTERN_MODIFIED TIMES_UPDATED]"
     );
 
     // Step 2: Send update with same extra call but different times
@@ -141,12 +141,14 @@ class ExtraCallTest implements RealtimeTestConstants {
 
     // Extra call D should still be present with updated times
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:16 0:00:16 | D [EC] 0:00:22 0:00:27 | B 0:00:35 0:00:35",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:16 0:00:16 | D [EC] 0:00:22 0:00:27 | B 0:00:35 0:00:35",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     var patterns = env.raptorData().summarizePatterns();
     assertThat(patterns).hasSize(1);
-    assertThat(patterns.stream().findFirst().get()).endsWith("[MODIFIED UPDATED]");
+    assertThat(patterns.stream().findFirst().get()).endsWith(
+      "[STOPPATTERN_MODIFIED TIMES_UPDATED]"
+    );
   }
 
   /**
@@ -163,11 +165,11 @@ class ExtraCallTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(extraCallUpdate));
 
     assertEquals(
-      "MODIFIED UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
+      "STOPPATTERN_MODIFIED TIMES_UPDATED | A [R] 0:00:15 0:00:15 | D [EC] 0:00:20 0:00:25 | B 0:00:33 0:00:33",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:route-id::001:RT[MODIFIED UPDATED]"
+      "F:route-id::001:RT[STOPPATTERN_MODIFIED TIMES_UPDATED]"
     );
 
     // Step 2: Send regular update without extra call — just A → B with updated times
@@ -183,12 +185,12 @@ class ExtraCallTest implements RealtimeTestConstants {
     var result = siri.applyEstimatedTimetable(revert);
     assertSuccess(result);
 
-    // Trip should revert to the scheduled pattern with UPDATED state
+    // Trip should revert to the scheduled pattern with TIMES_UPDATED state
     assertEquals(
-      "UPDATED | A [R] 0:00:16 0:00:16 | B 0:00:30 0:00:30",
+      "TIMES_UPDATED | A [R] 0:00:16 0:00:16 | B 0:00:30 0:00:30",
       env.tripData(TRIP_1_ID).showTimetable()
     );
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[UPDATED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[TIMES_UPDATED]");
   }
 
   @Test
