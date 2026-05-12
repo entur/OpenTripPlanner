@@ -38,50 +38,50 @@ class VertexTest {
   }
 
   @Test
-  void checkIncomingReturnsTrueWhenPredicateMatches() {
+  void hasAnyIncomingMatchingReturnsTrueWhenPredicateMatches() {
     var from = StreetModelFactory.intersectionVertex("from", LAT, LON);
     var to = StreetModelFactory.intersectionVertex("to", LAT + 0.01, LON + 0.01);
     StreetEdge edge = StreetModelFactory.streetEdge(from, to);
 
-    assertTrue(to.checkIncoming(e -> e == edge));
+    assertTrue(to.hasAnyIncomingMatching(e -> e == edge));
   }
 
   @Test
-  void checkIncomingReturnsFalseWhenPredicateDoesNotMatch() {
+  void hasAnyIncomingMatchingReturnsFalseWhenPredicateDoesNotMatch() {
     var from = StreetModelFactory.intersectionVertex("from", LAT, LON);
     var to = StreetModelFactory.intersectionVertex("to", LAT + 0.01, LON + 0.01);
     StreetModelFactory.streetEdge(from, to);
 
-    assertFalse(to.checkIncoming(Edge::isCrossing));
+    assertFalse(to.hasAnyIncomingMatching(Edge::isCrossing));
   }
 
   @Test
-  void checkIncomingReturnsFalseWhenNoEdges() {
+  void hasAnyIncomingMatchingReturnsFalseWhenNoEdges() {
     var v = StreetModelFactory.intersectionVertex("v", LAT, LON);
-    assertFalse(v.checkIncoming(e -> true));
+    assertFalse(v.hasAnyIncomingMatching(e -> true));
   }
 
   @Test
-  void checkOutgoingReturnsTrueWhenPredicateMatches() {
+  void hasAnyOutgoingMatchingReturnsTrueWhenPredicateMatches() {
     var from = StreetModelFactory.intersectionVertex("from", LAT, LON);
     var to = StreetModelFactory.intersectionVertex("to", LAT + 0.01, LON + 0.01);
     var edge = StreetModelFactory.streetEdge(from, to);
 
-    assertTrue(from.checkOutgoing(e -> e == edge));
+    assertTrue(from.hasAnyOutgoingMatching(e -> e == edge));
   }
 
   @Test
-  void checkOutgoingReturnsFalseWhenPredicateDoesNotMatch() {
+  void hasAnyOutgoingMatchingReturnsFalseWhenPredicateDoesNotMatch() {
     var from = StreetModelFactory.intersectionVertex("from", LAT, LON);
     var to = StreetModelFactory.intersectionVertex("to", LAT + 0.01, LON + 0.01);
     StreetModelFactory.streetEdge(from, to);
 
-    assertFalse(from.checkOutgoing(Edge::isCrossing));
+    assertFalse(from.hasAnyOutgoingMatching(Edge::isCrossing));
   }
 
   @Test
-  void checkOutgoingReturnsFalseWhenNoEdges() {
+  void hasAnyOutgoingMatchingReturnsFalseWhenNoEdges() {
     var v = StreetModelFactory.intersectionVertex("v", LAT, LON);
-    assertFalse(v.checkOutgoing(e -> true));
+    assertFalse(v.hasAnyOutgoingMatching(e -> true));
   }
 }

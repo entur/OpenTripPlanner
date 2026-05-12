@@ -62,7 +62,7 @@ public class SameEdgeAdjuster {
         if (
           incoming instanceof TemporaryFreeEdge &&
           fromVertex instanceof StreetVertex &&
-          fromVertex.checkIncoming(edge -> edge instanceof TemporaryPartialStreetEdge)
+          fromVertex.hasAnyIncomingMatching(edge -> edge instanceof TemporaryPartialStreetEdge)
         ) {
           // The vertex is connected with an TemporaryFreeEdge connector to the
           // TemporaryPartialStreetEdge

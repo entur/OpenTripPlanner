@@ -95,7 +95,7 @@ class NearbyStopFinderVisitor implements TraverseVisitor<State, Edge> {
 
   private boolean canBoardFlex(State state) {
     return reverseDirection
-      ? state.getVertex().checkIncoming(CAN_BOARD_FLEX_PREDICATE)
-      : state.getVertex().checkOutgoing(CAN_BOARD_FLEX_PREDICATE);
+      ? state.getVertex().hasAnyIncomingMatching(CAN_BOARD_FLEX_PREDICATE)
+      : state.getVertex().hasAnyOutgoingMatching(CAN_BOARD_FLEX_PREDICATE);
   }
 }
