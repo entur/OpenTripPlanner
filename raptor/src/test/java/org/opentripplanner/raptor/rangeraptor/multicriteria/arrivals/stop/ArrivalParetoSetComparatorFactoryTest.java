@@ -20,8 +20,8 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
 
   /// INPUT CRITERIA
   ///
-  /// This tests test the pareto-comparator produced by the factory. The 5 first colums are
-  /// input (criteria to compare) with a given value(same as thefirst row).
+  /// This test tests the pareto-comparator produced by the factory. The 5 first colums are
+  /// input (criteria to compare) with a given value(same as the first row).
   ///
   /// - `arrivalTime` : Arrive early is better
   /// - ´round´ : The second column is the Raptor round, but it is the pareto-round which is used
@@ -33,15 +33,15 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
   ///
   /// EXPECTED
   ///
-  /// The las column is
-  /// the expected result. The factory can create 4 variants of the factory with 2
-  /// pareto-comparators in each (with and without arrive-on-board `...]` or `..., arriveOnBoard]`):
+  /// The last column is the expected result. The factory can create 4 variants of the factory with
+  /// 2 pareto-comparators in each (with and without arrive-on-board `...]` or `...,
+  /// arriveOnBoard]`):
   /// - With c1 `[arrivalTime, round, c1, ...`
   /// - With c1 & c2 `[arrivalTime, round, c1, c2, ...`
   /// - With c2 enable relaxed c1(+10) `[arrivalTime, round, c2 ? c1(+10) : c1, ...`
   ///
   /// For each of the 6 pareto-function variations we determine the dominance
-  /// `NONE | LEFFT | RIGHT | BOTH`. The last column consist a string with the expected result
+  /// `NONE | LEFT | RIGHT | BOTH`. The last column consist a string with the expected result
   ///  for these 6 variants.
   ///
   ///
