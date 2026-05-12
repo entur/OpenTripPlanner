@@ -16,7 +16,7 @@ public final class RoutingStartOnBoardAccess
   private final int stopPositionInPattern;
   private final int stop;
 
-  RoutingStartOnBoardAccess(
+  public RoutingStartOnBoardAccess(
     RaptorTripScheduleReference tripScheduleReference,
     LocationInTripPatternReference tripLocationInScheduleReference
   ) {

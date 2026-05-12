@@ -7,10 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
@@ -54,18 +51,13 @@ class TripScheduleIndexResolverTest {
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      null,
-      TIME_ZONE
+      List.of(STOP_B.getIndex())
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
-    assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
-    assertEquals(0, result.tripBoarding().tripScheduleIndex());
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(routingPattern.stopIndex(1), result.stop());
-    assertEquals(0, result.c1());
+    assertEquals(routingPattern.patternIndex(), result.routeIndex());
+    assertEquals(0, result.tripScheduleIndex());
   }
 
   @Test
@@ -77,95 +69,13 @@ class TripScheduleIndexResolverTest {
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(STOP_A.getIndex()),
-      null,
-      TIME_ZONE
+      List.of(STOP_A.getIndex())
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
 
-    assertEquals(0, result.tripBoarding().stopPositionInPattern());
-    assertEquals(routingPattern.stopIndex(0), result.stop());
-  }
-
-  @Test
-  void throwsOnLastStop() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRoutingRequestTransitData();
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_C.getIndex()),
-        null,
-        TIME_ZONE
-      )
-    );
-  }
-
-  @Test
-  void throwsOnLastStopWithAimedDepartureTime() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRoutingRequestTransitData();
-    var aimedDeparture = toInstant(10 * 3600 + 10 * 60);
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_C.getIndex()),
-        aimedDeparture,
-        TIME_ZONE
-      )
-    );
-  }
-
-  @Test
-  void resolvesWithAimedDepartureTimeOnUniqueStop() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var aimedDeparture = toInstant(10 * 3600 + 5 * 60);
-    var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
-      tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      aimedDeparture,
-      TIME_ZONE
-    );
-
-    var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
-
-    assertEquals(routingPattern.patternIndex(), result.tripBoarding().routeIndex());
-    assertEquals(0, result.tripBoarding().tripScheduleIndex());
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-    assertEquals(routingPattern.stopIndex(1), result.stop());
-  }
-
-  @Test
-  void throwsOnWrongAimedDepartureTimeOnUniqueStop() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    // STOP_B departs at 10:05, but we provide 10:00 — should fail
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRoutingRequestTransitData();
-    var wrongAimedDeparture = toInstant(10 * 3600);
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_B.getIndex()),
-        wrongAimedDeparture,
-        TIME_ZONE
-      )
-    );
+    assertEquals(routingPattern.patternIndex(), result.routeIndex());
+    assertEquals(0, result.tripScheduleIndex());
   }
 
   /**
@@ -181,19 +91,20 @@ class TripScheduleIndexResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    // Pass both A1 and A2; only A2 is in the trip, so position 0 should be found
+    // Pass both A1 and A2. Only A2 is in the trip, but the pattern should be found nonetheless.
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(stopA1.getIndex(), stopA2.getIndex()),
-      null,
-      TIME_ZONE
+      List.of(stopA1.getIndex(), stopA2.getIndex())
     );
-    assertEquals(0, result.tripBoarding().stopPositionInPattern());
+
+    var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
+    assertEquals(routingPattern.patternIndex(), result.routeIndex());
+    assertEquals(0, result.tripScheduleIndex());
   }
 
   /**
    * When empty stop indices are provided (e.g. station without any child stops), the resolver
-   * picks the one that the trip actually visits.
+   * throws.
    */
   @Test
   void throwsWhenEmptyStopIndices() {
@@ -205,9 +116,7 @@ class TripScheduleIndexResolverTest {
     assertThrows(IllegalArgumentException.class, () ->
       new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
         tripAndServiceDate,
-        List.of(),
-        null,
-        TIME_ZONE
+        List.of()
       )
     );
   }
@@ -229,208 +138,8 @@ class TripScheduleIndexResolverTest {
     assertThrows(IllegalArgumentException.class, () ->
       new TripScheduleIndexResolver(patternSearch).resolve(
         tripAndServiceDate,
-        List.of(stopA1.getIndex()),
-        null,
-        TIME_ZONE
+        List.of(stopA1.getIndex())
       )
     );
-  }
-
-  /**
-   * When the clocks move forward in spring due to DST, midnight and noon-minus-12h
-   * (start-of-service) differ by one hour. The aimed departure time conversion uses
-   * start-of-service (noon-minus-12h) as the reference, not midnight, because TripTimes are
-   * relative to start-of-service.
-   */
-  @Test
-  void resolvesWithAimedDepartureTimeOnDstSpringForwardDay() {
-    // Europe/Oslo moves clocks forward on 2024-03-31: clocks skip from 02:00 to 03:00
-    var dstDate = LocalDate.of(2024, 3, 31);
-    var dstZone = ZoneId.of("Europe/Oslo");
-    var dstEnvBuilder = TransitTestEnvironment.of(dstDate, dstZone);
-    var stopA = dstEnvBuilder.stop("A");
-    var stopB = dstEnvBuilder.stop("B");
-    var stopC = dstEnvBuilder.stop("C");
-
-    var env = dstEnvBuilder
-      .addTrip(
-        TripInput.of("T1").addStop(stopA, "10:00").addStop(stopB, "10:05").addStop(stopC, "10:10")
-      )
-      .build();
-
-    // Aimed departure time is given with respect to the date and time zone of the client
-    var aimedDeparture = toInstant(10 * 3600 + 5 * 60, dstDate, dstZone);
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), dstDate);
-    var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
-      tripAndServiceDate,
-      List.of(stopB.getIndex()),
-      aimedDeparture,
-      dstZone
-    );
-
-    assertEquals(1, result.tripBoarding().stopPositionInPattern());
-  }
-
-  /**
-   * Passing a stop index where boarding is not allowed should throw.
-   */
-  @Test
-  void throwsWhenBoardingNotPossibleAtStop() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1")
-        .addStop(STOP_A, "10:00")
-        .addStop(STOP_B, "10:05", "10:05", PickDrop.NONE, PickDrop.SCHEDULED)
-        .addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRoutingRequestTransitData();
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_B.getIndex()),
-        null,
-        TIME_ZONE
-      )
-    );
-  }
-
-  /**
-   * Passing a stop index where boarding is not allowed should throw, even with an aimed departure
-   * time.
-   */
-  @Test
-  void throwsWhenBoardingNotPossibleAtStopWithAimedDepartureTime() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1")
-        .addStop(STOP_A, "10:00")
-        .addStop(STOP_B, "10:05", "10:05", PickDrop.NONE, PickDrop.SCHEDULED)
-        .addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRoutingRequestTransitData();
-    var aimedDeparture = ServiceDateUtils.asStartOfService(SERVICE_DATE, TIME_ZONE)
-      .plusSeconds(10 * 3600 + 5 * 60)
-      .toInstant();
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_B.getIndex()),
-        aimedDeparture,
-        TIME_ZONE
-      )
-    );
-  }
-
-  @Nested
-  class RingLine {
-
-    @Test
-    void resolvesOnRingLineWithDepartureTime() {
-      var env = ENV_BUILDER.addTrip(
-        TripInput.of("T1")
-          .addStop(STOP_A, "10:00")
-          .addStop(STOP_B, "10:05")
-          .addStop(STOP_A, "10:15")
-          .addStop(STOP_C, "10:20")
-      ).build();
-
-      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-      var patternSearch = env.raptorRoutingRequestTransitData();
-
-      // First occurrence of STOP_A at 10:00
-      var firstOccurrence = toInstant(10 * 3600);
-      var result1 = new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_A.getIndex()),
-        firstOccurrence,
-        TIME_ZONE
-      );
-      assertEquals(0, result1.tripBoarding().stopPositionInPattern());
-
-      // Second occurrence of STOP_A at 10:15
-      var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
-      var result2 = new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_A.getIndex()),
-        secondOccurrence,
-        TIME_ZONE
-      );
-      assertEquals(2, result2.tripBoarding().stopPositionInPattern());
-    }
-
-    @Test
-    void throwsOnRingLineWithoutDepartureTime() {
-      var env = ENV_BUILDER.addTrip(
-        TripInput.of("T1")
-          .addStop(STOP_A, "10:00")
-          .addStop(STOP_B, "10:05")
-          .addStop(STOP_A, "10:15")
-      ).build();
-
-      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-      var patternSearch = env.raptorRoutingRequestTransitData();
-      assertThrows(RoutingValidationException.class, () ->
-        new TripScheduleIndexResolver(patternSearch).resolve(
-          tripAndServiceDate,
-          List.of(STOP_A.getIndex()),
-          null,
-          TIME_ZONE
-        )
-      );
-    }
-
-    /**
-     * When multiple stop indices both appear in the trip (e.g. two child stops of a station on a
-     * ring line), passing no departure time is ambiguous and must throw. Passing a departure time
-     * would disambiguate.
-     */
-    @Test
-    void throwsOnRingLineMultipleIndicesWithoutDepartureTime() {
-      var stopA1 = ENV_BUILDER.stop("A1");
-      var stopA2 = ENV_BUILDER.stop("A2");
-      var env = ENV_BUILDER.addTrip(
-        TripInput.of("T1")
-          .addStop(stopA1, "10:00")
-          .addStop(STOP_B, "10:05")
-          .addStop(stopA2, "10:15")
-          .addStop(STOP_C, "10:20")
-      ).build();
-
-      var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-      var patternSearch = env.raptorRoutingRequestTransitData();
-
-      // Without departure time — both A1 (pos 0) and A2 (pos 2) match, ambiguous
-      assertThrows(RoutingValidationException.class, () ->
-        new TripScheduleIndexResolver(patternSearch).resolve(
-          tripAndServiceDate,
-          List.of(stopA1.getIndex(), stopA2.getIndex()),
-          null,
-          TIME_ZONE
-        )
-      );
-
-      // With departure time for A1 at 10:00 — should find position 0
-      var firstOccurrence = toInstant(10 * 3600);
-      var result1 = new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(stopA1.getIndex(), stopA2.getIndex()),
-        firstOccurrence,
-        TIME_ZONE
-      );
-      assertEquals(0, result1.tripBoarding().stopPositionInPattern());
-
-      // With departure time for A2 at 10:15 — should find position 2
-      var secondOccurrence = toInstant(10 * 3600 + 15 * 60);
-      var result2 = new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(stopA1.getIndex(), stopA2.getIndex()),
-        secondOccurrence,
-        TIME_ZONE
-      );
-      assertEquals(2, result2.tripBoarding().stopPositionInPattern());
-    }
   }
 }
