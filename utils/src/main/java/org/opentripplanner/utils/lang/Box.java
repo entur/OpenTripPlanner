@@ -2,7 +2,7 @@ package org.opentripplanner.utils.lang;
 
 import java.util.Objects;
 import java.util.function.Function;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * A box around a mutable value reference. This can be used inside a lambda or passed into

@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.model;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorValueType;
 import org.opentripplanner.raptor.api.path.TransitPathLeg;
 import org.opentripplanner.raptor.path.PathBuilder;
@@ -45,7 +45,7 @@ public class OptimizedPathTail<T extends RaptorTripSchedule>
     RaptorCostCalculator<T> costCalculator,
     int iterationDepartureTime,
     TransferWaitTimeCostCalculator waitTimeCostCalculator,
-    int@Nullable [] stopBoardAlightTransferCosts,
+    @Nullable int[] stopBoardAlightTransferCosts,
     double extraStopBoardAlightCostsFactor,
     RaptorStopNameResolver stopNameResolver
   ) {

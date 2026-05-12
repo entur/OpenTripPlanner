@@ -2,7 +2,7 @@ package org.opentripplanner.apis.gtfs.model;
 
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public sealed interface CallScheduledTime
   permits CallScheduledTime.TimeWindow, CallScheduledTime.ArrivalDepartureTime {

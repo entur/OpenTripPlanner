@@ -2,7 +2,7 @@ package org.opentripplanner.utils.lang;
 
 import java.util.function.Function;
 import java.util.function.Supplier;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * Simple generic utility functions.

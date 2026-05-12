@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public class CollectionUtils {
 

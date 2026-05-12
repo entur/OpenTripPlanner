@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.transfercache.RaptorRequestTransferCache;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
@@ -53,7 +53,8 @@ public class RaptorTransitData {
 
   private final TransferIndexGenerator transferIndexGenerator;
 
-  private final int@Nullable [] stopBoardAlightTransferCosts;
+  @Nullable
+  private final int[] stopBoardAlightTransferCosts;
 
   /**
    * Makes a shallow copy of the RaptorTransitData, except for the tripPatternsForDate, where a shallow
@@ -81,7 +82,7 @@ public class RaptorTransitData {
     RaptorRequestTransferCache transferCache,
     ConstrainedTransfersForPatterns constrainedTransfers,
     TransferIndexGenerator transferIndexGenerator,
-    int@Nullable [] stopBoardAlightTransferCosts
+    @Nullable int[] stopBoardAlightTransferCosts
   ) {
     this.tripPatternsRunningOnDate = new HashMap<>(tripPatternsRunningOnDate);
     this.transfersByStopIndex = transfersByStopIndex;
@@ -166,7 +167,8 @@ public class RaptorTransitData {
    * Costs for both boarding and alighting at a given stop during transfer. Note that this is in
    * raptor centi-second units.
    */
-  public int@Nullable [] getStopBoardAlightTransferCosts() {
+  @Nullable
+  public int[] getStopBoardAlightTransferCosts() {
     return stopBoardAlightTransferCosts;
   }
 

@@ -2,7 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.configure;
 
 import gnu.trove.map.TIntObjectMap;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.request.MultiCriteriaRequest;

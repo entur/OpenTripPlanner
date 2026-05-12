@@ -3,7 +3,7 @@ package org.opentripplanner.routing.api.response;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

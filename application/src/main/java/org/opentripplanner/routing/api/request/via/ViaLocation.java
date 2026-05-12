@@ -3,7 +3,7 @@ package org.opentripplanner.routing.api.request.via;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 

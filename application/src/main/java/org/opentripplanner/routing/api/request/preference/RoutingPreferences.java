@@ -5,7 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.io.Serializable;
 import java.util.Locale;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.utils.tostring.ToStringBuilder;

@@ -9,7 +9,7 @@ import graphql.schema.GraphQLScalarType;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public class DateScalarFactory {
 
