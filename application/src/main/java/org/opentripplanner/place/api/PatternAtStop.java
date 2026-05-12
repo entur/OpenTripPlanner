@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.api;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;

@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;

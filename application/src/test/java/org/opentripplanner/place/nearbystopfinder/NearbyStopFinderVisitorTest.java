@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.nearbystops;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -9,7 +9,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.street.model.StreetModelForTest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.search.request.StreetSearchRequest;

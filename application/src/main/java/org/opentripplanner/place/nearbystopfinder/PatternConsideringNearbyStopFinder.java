@@ -1,11 +1,12 @@
-package org.opentripplanner.graph_builder.module.transfer.filter;
+package org.opentripplanner.place.nearbystopfinder;
 
 import java.util.Collection;
 import java.util.List;
+import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.graph_builder.module.nearbystops.NearbyStopFinder;
+import org.opentripplanner.place.NearbyStopFinder;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -46,6 +47,13 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
     }
     this.filter = builder.build();
     this.delegateNearbyStopFinder = delegateNearbyStopFinder;
+  }
+
+  @Override
+  public List<NearbyStop> findNearbyStops(Coordinate coordinate, double radiusMeters) {
+    throw new UnsupportedOperationException(
+      "This method is currently unsupported for this implementation."
+    );
   }
 
   @Override

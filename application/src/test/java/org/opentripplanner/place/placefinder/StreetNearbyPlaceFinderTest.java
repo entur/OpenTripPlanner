@@ -1,14 +1,15 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.placefinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
+import org.opentripplanner.place.api.PatternAtStop;
+import org.opentripplanner.place.api.PlaceAtDistance;
+import org.opentripplanner.place.api.PlaceType;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
@@ -27,7 +28,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TransitService;
 
-class StreetGraphFinderTest extends GraphRoutingTest {
+class StreetNearbyPlaceFinderTest extends GraphRoutingTest {
 
   private TransitStopVertex S1;
   private TransitStopVertex S2;
@@ -40,7 +41,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
   private VehicleRentalPlaceVertex BR2;
 
   private TransitService transitService;
-  private StreetGraphFinder graphFinder;
+  private StreetNearbyPlaceFinder nearbyPlaceFinder;
   private Route R1;
   private Route R2;
   private TripPattern TP1;
@@ -131,18 +132,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
       otpModel.graph(),
       new VertexCreationService(vertexLinker)
     );
-    graphFinder = new StreetGraphFinder(linkingContextFactory);
-  }
-
-  @Test
-  void findClosestStops() {
-    var ns1 = new NearbyStop(S1.getId(), 0, null, null);
-    var ns2 = new NearbyStop(S2.getId(), 100, null, null);
-    var coordinate = new Coordinate(19.000, 47.500);
-
-    assertEquals(List.of(ns1), simplify(graphFinder.findClosestStops(coordinate, 10)));
-
-    assertEquals(List.of(ns1, ns2), simplify(graphFinder.findClosestStops(coordinate, 100)));
+    nearbyPlaceFinder = new StreetNearbyPlaceFinder(linkingContextFactory);
   }
 
   @Test
@@ -159,7 +149,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ps11, br1),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         10.0,
@@ -177,7 +167,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ps11, br1, carParking, ns2, bikeParking, ns3, br2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         200.0,
@@ -201,7 +191,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ps11),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         200.0,
@@ -226,7 +216,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ns2, ns3),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         200.0,
@@ -244,7 +234,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ns2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         200.0,
@@ -270,7 +260,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ps11, ns2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         100.0,
@@ -288,7 +278,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ps21, ps11, ns2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         100.0,
@@ -314,7 +304,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ps11, ns2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         100.0,
@@ -332,7 +322,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ps11, ns2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         100.0,
@@ -359,7 +349,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ps11, ns2, ns3),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         200.0,
@@ -377,7 +367,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(ns1, ps21, ns2, ns3),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         200.0,
@@ -401,7 +391,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(br1, br2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         300.0,
@@ -419,7 +409,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(br2),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         300.0,
@@ -442,7 +432,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       List.of(bikeParking),
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         300.0,
@@ -465,7 +455,7 @@ class StreetGraphFinderTest extends GraphRoutingTest {
 
     assertEquals(
       parkAndRides,
-      graphFinder.findClosestPlaces(
+      nearbyPlaceFinder.findClosestPlaces(
         47.500,
         19.000,
         300.0,
@@ -480,13 +470,6 @@ class StreetGraphFinderTest extends GraphRoutingTest {
         transitService
       )
     );
-  }
-
-  private List<NearbyStop> simplify(List<NearbyStop> closestStops) {
-    return closestStops
-      .stream()
-      .map(ns -> new NearbyStop(ns.stopId, ns.distance, null, null))
-      .collect(Collectors.toList());
   }
 
   private StopLocation stop(TransitStopVertex v) {

@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.transfer.filter;
+package org.opentripplanner.place.nearbystopfinder;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Set;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;

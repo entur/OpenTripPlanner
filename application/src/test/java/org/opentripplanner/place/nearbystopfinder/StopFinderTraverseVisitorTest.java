@@ -1,9 +1,10 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.street.search.state.TestStateBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.site.RegularStop;

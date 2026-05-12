@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.placefinder;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,6 +8,9 @@ import java.util.Set;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.place.api.PatternAtStop;
+import org.opentripplanner.place.api.PlaceAtDistance;
+import org.opentripplanner.place.api.PlaceType;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
@@ -24,7 +27,7 @@ import org.opentripplanner.transit.service.TransitService;
 /**
  * A TraverseVisitor used in finding various types of places while walking the street graph.
  */
-public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> {
+class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> {
 
   public final List<PlaceAtDistance> placesFound = new ArrayList<>();
   private final TransitService transitService;
@@ -63,7 +66,7 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
    *                                   null to disable the filtering.
    * @param maxResults                 Maximum number of results to return.
    */
-  public PlaceFinderTraverseVisitor(
+  PlaceFinderTraverseVisitor(
     TransitService transitService,
     List<TransitMode> filterByModes,
     List<PlaceType> filterByPlaceTypes,
@@ -126,7 +129,7 @@ public class PlaceFinderTraverseVisitor implements TraverseVisitor<State, Edge> 
    * of the place that is furthest away. This is to account for the fact that the a star does not
    * traverse edges ordered by distance.
    */
-  public SkipEdgeStrategy<State, Edge> getSkipEdgeStrategy() {
+  SkipEdgeStrategy<State, Edge> getSkipEdgeStrategy() {
     return (current, edge) -> {
       double furthestDistance = radiusMeters;
 

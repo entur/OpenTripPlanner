@@ -1,8 +1,10 @@
-package org.opentripplanner.graph_builder.module.nearbystops;
+package org.opentripplanner.place;
 
 import java.util.Collection;
+import java.util.List;
+import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.Vertex;
 
@@ -20,4 +22,12 @@ public interface NearbyStopFinder {
     StreetMode streetMode,
     boolean reverseDirection
   );
+
+  /**
+   * Search closest stops from a given coordinate, extending up to a specified max radius.
+   *
+   * @param coordinate   Origin
+   * @param radiusMeters Search radius from the origin in meters
+   */
+  List<NearbyStop> findNearbyStops(Coordinate coordinate, double radiusMeters);
 }

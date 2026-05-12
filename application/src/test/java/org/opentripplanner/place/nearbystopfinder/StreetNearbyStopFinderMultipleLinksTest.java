@@ -1,18 +1,18 @@
-package org.opentripplanner.graph_builder.module.nearbystops;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.opentripplanner.graph_builder.module.nearbystops.StreetNearbyStopFinderTest.sort;
+import static org.opentripplanner.place.nearbystopfinder.StreetNearbyStopFinderTest.sort;
 
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
@@ -61,7 +61,7 @@ class StreetNearbyStopFinderMultipleLinksTest extends GraphRoutingTest {
     // Max-stop-count should work correctly even though there are multiple links B <-> stopB
     var durationLimit = Duration.ofMinutes(10);
     var maxStopCount = 3;
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount).build();
+    var finder = StreetNearbyStopFinder.of(null, durationLimit, maxStopCount).build();
 
     var sortedNearbyStops = sort(
       finder.findNearbyStops(stopA, RouteRequest.defaultValue(), StreetMode.WALK, false)

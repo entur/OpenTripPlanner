@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -7,11 +7,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.TestOtpModel;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.transit.service.SiteRepository;
 
-class DirectGraphFinderTest extends GraphRoutingTest {
+class StraightLineNearbyStopFinderTest extends GraphRoutingTest {
 
   private SiteRepository siteRepository;
 
@@ -35,14 +36,14 @@ class DirectGraphFinderTest extends GraphRoutingTest {
   }
 
   @Test
-  void findClosestStops() {
+  void findNearbyStops() {
     var ns1 = new NearbyStop(S1.getId(), 0, null, null);
     var ns2 = new NearbyStop(S2.getId(), 1112, null, null);
 
-    var subject = new DirectGraphFinder(siteRepository::findRegularStops);
+    var subject = new StraightLineNearbyStopFinder(siteRepository::findRegularStops);
     var coordinate = new Coordinate(19.000, 47.500);
-    assertEquals(List.of(ns1), subject.findClosestStops(coordinate, 100));
+    assertEquals(List.of(ns1), subject.findNearbyStops(coordinate, 100));
 
-    assertEquals(List.of(ns1, ns2), subject.findClosestStops(coordinate, 2000));
+    assertEquals(List.of(ns1, ns2), subject.findNearbyStops(coordinate, 2000));
   }
 }

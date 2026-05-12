@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.nearbystops;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static java.util.Objects.requireNonNull;
 
@@ -12,7 +12,7 @@ import java.util.function.Predicate;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.vertex.StreetVertex;

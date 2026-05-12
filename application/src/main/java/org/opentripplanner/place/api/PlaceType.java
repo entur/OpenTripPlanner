@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.api;
 
 /**
  * A list of place types to be used for PlaceAtDistance

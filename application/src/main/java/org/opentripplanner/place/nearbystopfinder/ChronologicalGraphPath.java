@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.nearbystopfinder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +20,7 @@ import org.opentripplanner.street.search.state.State;
  * of the state chain via {@code State.reverse()}. This implementation avoids both by collecting
  * only the edges into a single {@code ArrayList} and reversing it in place.
  */
-class ChronologicalGraphPath {
+public class ChronologicalGraphPath {
 
   private final List<Edge> edges;
   private final double effectiveWalkDistance;
@@ -34,7 +34,7 @@ class ChronologicalGraphPath {
    * Walk the state chain and collect edges in chronological order (origin → destination), summing
    * up the effective walk distance along the way.
    */
-  static ChronologicalGraphPath of(State state) {
+  public static ChronologicalGraphPath of(State state) {
     double walkDistance = 0.0;
     var edges = new ArrayList<Edge>();
     for (State cur = state; cur != null; cur = cur.getBackState()) {
@@ -54,11 +54,11 @@ class ChronologicalGraphPath {
     return new ChronologicalGraphPath(edges, walkDistance);
   }
 
-  List<Edge> edges() {
+  public List<Edge> edges() {
     return edges;
   }
 
-  double effectiveWalkDistance() {
+  public double effectiveWalkDistance() {
     return effectiveWalkDistance;
   }
 }

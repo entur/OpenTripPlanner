@@ -1,11 +1,12 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.nearbystopfinder;
 
-import static org.opentripplanner.routing.graphfinder.NearbyStop.ofZeroDistance;
+import static org.opentripplanner.place.api.NearbyStop.ofZeroDistance;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;

@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.nearbystops;
+package org.opentripplanner.place.nearbystopfinder;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -11,11 +11,15 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.routing.linking.LinkingContextFactory;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
@@ -29,6 +33,8 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
   private TransitStopVertex stopB;
   private TransitStopVertex stopC;
   private TransitStopVertex stopD;
+
+  private LinkingContextFactory linkingContextFactory;
 
   @BeforeEach
   protected void setUp() throws Exception {
@@ -58,16 +64,37 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
           biLink(B, stopB);
           biLink(C, stopC);
           biLink(D, stopD);
+          var vertexLinker = VertexLinkerTestFactory.of(graph());
+          linkingContextFactory = new LinkingContextFactory(
+            graph(),
+            new VertexCreationService(vertexLinker)
+          );
         }
       }
     );
   }
 
   @Test
+  void findClosestStopsByCoordinate() {
+    var nearbyStopFinder = StreetNearbyStopFinder.of(linkingContextFactory).build();
+    var ns1 = new NearbyStop(stopA.getId(), 0, null, null);
+    var ns2 = new NearbyStop(stopB.getId(), 100, null, null);
+    var coordinate = ORIGIN.asJtsCoordinate();
+
+    assertEquals(List.of(ns1), simplify(nearbyStopFinder.findNearbyStops(coordinate, 10)));
+
+    assertEquals(List.of(ns1, ns2), simplify(nearbyStopFinder.findNearbyStops(coordinate, 100)));
+  }
+
+  @Test
   void testIsolatedStop() {
     var durationLimit = Duration.ofMinutes(10);
     var maxStopCount = 0;
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount).build();
+    var finder = StreetNearbyStopFinder.of(
+      linkingContextFactory,
+      durationLimit,
+      maxStopCount
+    ).build();
 
     var nearbyStops = finder.findNearbyStops(
       isolatedStop,
@@ -85,7 +112,11 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
   void testMultipleStops() {
     var durationLimit = Duration.ofMinutes(10);
     var maxStopCount = 0;
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount).build();
+    var finder = StreetNearbyStopFinder.of(
+      linkingContextFactory,
+      durationLimit,
+      maxStopCount
+    ).build();
 
     var sortedNearbyStops = sort(
       finder.findNearbyStops(stopA, RouteRequest.defaultValue(), StreetMode.WALK, false)
@@ -102,7 +133,11 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
   void testMaxStopCount() {
     var durationLimit = Duration.ofMinutes(10);
     var maxStopCount = 2;
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount).build();
+    var finder = StreetNearbyStopFinder.of(
+      linkingContextFactory,
+      durationLimit,
+      maxStopCount
+    ).build();
 
     var sortedNearbyStops = sort(
       finder.findNearbyStops(stopA, RouteRequest.defaultValue(), StreetMode.WALK, false)
@@ -123,7 +158,11 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
       .withPreferences(b -> b.withWalk(w -> w.withSpeed(1.0)))
       .buildDefault();
 
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount).build();
+    var finder = StreetNearbyStopFinder.of(
+      linkingContextFactory,
+      durationLimit,
+      maxStopCount
+    ).build();
     var sortedNearbyStops = sort(
       finder.findNearbyStops(stopA, routeRequest, StreetMode.WALK, false)
     );
@@ -138,7 +177,7 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
     var durationLimit = Duration.ofMinutes(10);
     var maxStopCount = 0;
     Set<Vertex> ignore = Set.of(stopA, stopB);
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount)
+    var finder = StreetNearbyStopFinder.of(linkingContextFactory, durationLimit, maxStopCount)
       .withIgnoreVertices(ignore)
       .build();
 
@@ -156,7 +195,7 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
     var durationLimit = Duration.ofMinutes(10);
     var maxStopCount = 1;
     Set<Vertex> ignore = Set.of(stopA, stopB);
-    var finder = StreetNearbyStopFinder.of(durationLimit, maxStopCount)
+    var finder = StreetNearbyStopFinder.of(linkingContextFactory, durationLimit, maxStopCount)
       .withIgnoreVertices(ignore)
       .build();
 
@@ -196,5 +235,12 @@ class StreetNearbyStopFinderTest extends GraphRoutingTest {
     assertEquals(expected, nearbyStop.state.getVertex());
     assertFalse(nearbyStop.edges.isEmpty());
     assertNotNull(nearbyStop.state.getBackState());
+  }
+
+  private List<NearbyStop> simplify(List<NearbyStop> closestStops) {
+    return closestStops
+      .stream()
+      .map(ns -> new NearbyStop(ns.stopId, ns.distance, null, null))
+      .collect(Collectors.toList());
   }
 }

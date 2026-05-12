@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.api;
 
 /**
  * A place of the types defined in PlaceType at a specified distance.

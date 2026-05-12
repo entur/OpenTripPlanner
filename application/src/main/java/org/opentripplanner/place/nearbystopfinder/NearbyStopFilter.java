@@ -1,8 +1,8 @@
-package org.opentripplanner.graph_builder.module.transfer.filter;
+package org.opentripplanner.place.nearbystopfinder;
 
 import java.util.Collection;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.place.api.NearbyStop;
 
 /**
  * Filters nearby stops for transfer generation based on trip patterns and flex trips.

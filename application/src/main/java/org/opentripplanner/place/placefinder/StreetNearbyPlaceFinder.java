@@ -1,15 +1,17 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place.placefinder;
 
 import static java.lang.Integer.min;
 
 import java.util.Comparator;
 import java.util.List;
-import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
 import org.opentripplanner.astar.spi.TraverseVisitor;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.place.NearbyPlaceFinder;
+import org.opentripplanner.place.api.PlaceAtDistance;
+import org.opentripplanner.place.api.PlaceType;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.LinkingContextRequest;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
@@ -23,27 +25,15 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
- * A GraphFinder which uses the street network to traverse the graph in order to find the nearest
- * stops and/or places from the origin.
+ * A nearby place finder which uses the street network to traverse the graph in order to find the
+ * nearest places from the origin.
  */
-public class StreetGraphFinder implements GraphFinder {
+public class StreetNearbyPlaceFinder implements NearbyPlaceFinder {
 
   private final LinkingContextFactory linkingContextFactory;
 
-  public StreetGraphFinder(LinkingContextFactory linkingContextFactory) {
+  public StreetNearbyPlaceFinder(LinkingContextFactory linkingContextFactory) {
     this.linkingContextFactory = linkingContextFactory;
-  }
-
-  @Override
-  public List<NearbyStop> findClosestStops(Coordinate coordinate, double radiusMeters) {
-    StopFinderTraverseVisitor visitor = new StopFinderTraverseVisitor(radiusMeters);
-    findClosestUsingStreets(
-      coordinate.getY(),
-      coordinate.getX(),
-      visitor,
-      visitor.getSkipEdgeStrategy()
-    );
-    return visitor.stopsFound();
   }
 
   @Override

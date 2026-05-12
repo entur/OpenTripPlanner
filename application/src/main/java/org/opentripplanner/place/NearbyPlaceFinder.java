@@ -1,43 +1,17 @@
-package org.opentripplanner.routing.graphfinder;
+package org.opentripplanner.place;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.routing.linking.LinkingContextFactory;
+import org.opentripplanner.place.api.PlaceAtDistance;
+import org.opentripplanner.place.api.PlaceType;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
- * Common interface between different types of GraphFinders, currently two types exist, one which
- * traverses the street network, and one which doesn't.
+ * Interface for finding places (stops, rental stations etc.).
  */
-public interface GraphFinder {
-  /**
-   * Get a new GraphFinder instance depending on whether the graph includes a street network or
-   * not.
-   */
-  static GraphFinder getInstance(
-    boolean graphHasStreets,
-    Function<Envelope, Collection<RegularStop>> queryNearbyStops,
-    LinkingContextFactory linkingContextFactory
-  ) {
-    return graphHasStreets
-      ? new StreetGraphFinder(linkingContextFactory)
-      : new DirectGraphFinder(queryNearbyStops);
-  }
-
-  /**
-   * Search closest stops from a given coordinate, extending up to a specified max radius.
-   *
-   * @param coordinate   Origin
-   * @param radiusMeters Search radius from the origin in meters
-   */
-  List<NearbyStop> findClosestStops(Coordinate coordinate, double radiusMeters);
-
+@FunctionalInterface
+public interface NearbyPlaceFinder {
   /**
    * Search closest places, including stops, bike rental stations, bike and car parking etc, from a
    * given coordinate, extending up to a specified max radius.
