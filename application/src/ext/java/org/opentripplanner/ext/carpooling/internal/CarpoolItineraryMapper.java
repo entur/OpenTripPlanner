@@ -2,6 +2,7 @@ package org.opentripplanner.ext.carpooling.internal;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.LineString;
@@ -20,6 +21,10 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
+import org.opentripplanner.transit.model.organization.ContactInfo;
+import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
+import org.opentripplanner.transit.model.timetable.booking.BookingMethod;
+import org.opentripplanner.transit.model.timetable.booking.BookingTime;
 
 /**
  * Maps carpooling insertion candidates to OTP itineraries for API responses.
@@ -89,7 +94,8 @@ public class CarpoolItineraryMapper {
       candidate.walkFromDropoff(),
       carpoolStart,
       carpoolEnd,
-      candidate.getPassengerRideWeight(carpoolReluctance)
+      candidate.getPassengerRideWeight(carpoolReluctance),
+      toBookingInfo(candidate.trip().publicContactInformation(), candidate.trip().startTime())
     );
   }
 
@@ -97,7 +103,8 @@ public class CarpoolItineraryMapper {
     List<GraphPath<State, Edge, Vertex>> sharedSegments,
     ZonedDateTime startTime,
     ZonedDateTime endTime,
-    double rideWeight
+    double rideWeight,
+    @Nullable BookingInfo bookingInfo
   ) {
     var firstSegment = sharedSegments.getFirst();
     var lastSegment = sharedSegments.getLast();
@@ -118,6 +125,7 @@ public class CarpoolItineraryMapper {
       .withGeometry(GeometryUtils.concatenateLineStrings(allEdges, Edge::getGeometry))
       .withDistanceMeters(allEdges.stream().mapToDouble(Edge::getDistanceMeters).sum())
       .withGeneralizedCost((int) rideWeight)
+      .withPickupBookingInfo(bookingInfo)
       .build();
   }
 
@@ -165,7 +173,8 @@ public class CarpoolItineraryMapper {
       accessEgress.walkFromDropoff(),
       accessEgress.getCarpoolStart(),
       accessEgress.getCarpoolEnd(),
-      accessEgress.getPassengerRideWeight()
+      accessEgress.getPassengerRideWeight(),
+      toBookingInfo(accessEgress.trip().publicContactInformation(), accessEgress.trip().startTime())
     );
   }
 
@@ -180,14 +189,15 @@ public class CarpoolItineraryMapper {
     @Nullable GraphPath<State, Edge, Vertex> walkFromDropoff,
     ZonedDateTime carpoolStart,
     ZonedDateTime carpoolEnd,
-    double rideWeight
+    double rideWeight,
+    @Nullable BookingInfo bookingInfo
   ) {
     List<Leg> legs = new ArrayList<>(3);
     if (walkToPickup != null) {
       var walkStart = carpoolStart.minusSeconds(walkToPickup.getDuration());
       legs.add(buildWalkLeg(walkToPickup, walkStart, carpoolStart));
     }
-    legs.add(buildCarpoolLeg(sharedSegments, carpoolStart, carpoolEnd, rideWeight));
+    legs.add(buildCarpoolLeg(sharedSegments, carpoolStart, carpoolEnd, rideWeight, bookingInfo));
     if (walkFromDropoff != null) {
       var walkEnd = carpoolEnd.plusSeconds(walkFromDropoff.getDuration());
       legs.add(buildWalkLeg(walkFromDropoff, carpoolEnd, walkEnd));
@@ -195,5 +205,47 @@ public class CarpoolItineraryMapper {
 
     int totalCost = legs.stream().mapToInt(Leg::generalizedCost).sum();
     return Itinerary.ofDirect(legs).withGeneralizedCost(Cost.costOfSeconds(totalCost)).build();
+  }
+
+  /**
+   * Builds the carpool leg's {@code pickupBookingInfo} from the trip's public-contact details.
+   * <p>
+   * {@code latestBookingTime} is a temporary placeholder: how a real booking deadline should be
+   * sourced for carpool trips is yet to be decided, so it is approximated by the trip's
+   * departure time-of-day at {@code daysPrior=0} — good enough until the source is settled. The
+   * {@code daysPrior=0} value is also load-bearing for the Transmodel API:
+   * {@code BookingArrangement.bookWhen} returns {@code "advanceAndDayOfTravel"} when
+   * {@code latestBookingTime.daysPrior == 0}, but collapses to {@code "timeOfTravelOnly"} if
+   * {@code latestBookingTime} is null — which would misrepresent the carpool product as not
+   * bookable in advance. See
+   * {@code org.opentripplanner.apis.transmodel.mapping.BookingInfoMapper#mapToBookWhen}.
+   *
+   * @param contact the trip's public-contact details, or {@code null} if the trip publishes none.
+   * @param tripStartTime the driver's trip start time; only the time-of-day is used, as the
+   *        placeholder source for {@code latestBookingTime}.
+   * @return a booking info populated with the contact details and derived booking methods
+   *         (CALL_OFFICE if phone is set, ONLINE if URL is set), or {@code null} when
+   *         {@code contact} is {@code null} or carries neither a phone number nor a booking URL —
+   *         i.e. when no actionable booking method can be derived. Consumers may therefore treat
+   *         a non-null return as "this leg has at least one booking method."
+   */
+  @Nullable
+  static BookingInfo toBookingInfo(@Nullable ContactInfo contact, ZonedDateTime tripStartTime) {
+    if (contact == null || (contact.getPhoneNumber() == null && contact.getBookingUrl() == null)) {
+      return null;
+    }
+    var bookingMethods = EnumSet.noneOf(BookingMethod.class);
+    if (contact.getPhoneNumber() != null) {
+      bookingMethods.add(BookingMethod.CALL_OFFICE);
+    }
+    if (contact.getBookingUrl() != null) {
+      bookingMethods.add(BookingMethod.ONLINE);
+    }
+
+    return BookingInfo.of()
+      .withContactInfo(contact)
+      .withBookingMethods(bookingMethods)
+      .withLatestBookingTime(new BookingTime(tripStartTime.toLocalTime(), 0))
+      .build();
   }
 }
