@@ -1,7 +1,7 @@
 package org.opentripplanner.standalone.configure;
 
 import jakarta.ws.rs.core.Application;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;

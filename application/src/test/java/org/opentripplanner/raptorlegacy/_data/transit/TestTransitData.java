@@ -8,7 +8,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorConstrainedTransfer;
@@ -93,6 +93,11 @@ public class TestTransitData
   @Override
   public int numberOfStops() {
     return routeIndexesByStopIndex.size();
+  }
+
+  @Override
+  public int numberOfTripPatterns() {
+    return routes.size();
   }
 
   @Override

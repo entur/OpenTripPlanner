@@ -4,6 +4,7 @@ import static org.opentripplanner.framework.application.OtpFileNames.BUILD_CONFI
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V1_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_1;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
@@ -17,7 +18,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.time.LocalDateInterval;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
@@ -180,6 +181,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   public final boolean writeCachedElevations;
   public final boolean includeEllipsoidToGeoidDifference;
   public final boolean multiThreadElevationCalculations;
+  public final int elevationTileCacheSizeMB;
   public final LocalDate transitServiceStart;
   public final LocalDate transitServiceEnd;
   public final ZoneId transitModelTimeZone;
@@ -304,6 +306,21 @@ public class BuildConfig implements OtpDataStoreConfig {
         """
       )
       .asBoolean(false);
+    elevationTileCacheSizeMB = root
+      .of("elevationTileCacheSizeMB")
+      .since(V2_10)
+      .summary(
+        "Memory budget in megabytes for the Imagen tile cache used during elevation processing."
+      )
+      .description(
+        """
+        Elevation sampling reads pixels from a tiled DEM through Imagen's tile cache. Sizing the
+        cache to fit the DEM working set turns repeated tile decompressions into cache hits.
+        Increase for large DEMs, lower for memory-constrained environments. The cache lives
+        inside the JVM heap and must fit inside `-Xmx`.
+        """
+      )
+      .asInt(100);
     osmCacheDataInMem = root
       .of("osmCacheDataInMem")
       .since(V2_0)

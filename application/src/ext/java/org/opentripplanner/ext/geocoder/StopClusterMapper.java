@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
@@ -91,9 +91,9 @@ class StopClusterMapper {
 
         return new LuceneStopCluster(
           primary.getId().toString(),
-          secondaryIds
+          secondaries
             .stream()
-            .map(id -> id.toString())
+            .map(id -> id.getId().toString())
             .toList(),
           names,
           codes,

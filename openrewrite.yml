@@ -9,3 +9,4 @@ recipeList:
   - org.openrewrite.staticanalysis.StringLiteralEquality
   - org.openrewrite.staticanalysis.RemoveUnusedLocalVariables
   - org.openrewrite.java.RemoveUnusedImports
+  - org.openrewrite.java.jspecify.MigrateToJSpecify

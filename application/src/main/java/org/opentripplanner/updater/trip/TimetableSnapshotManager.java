@@ -3,7 +3,7 @@ package org.opentripplanner.updater.trip;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
 import org.opentripplanner.routing.util.ConcurrentPublished;

@@ -8,7 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.basic.NormalizedCost;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.framework.model.TimeAndCost;
@@ -280,19 +280,6 @@ public class Itinerary implements ItinerarySortKey {
    */
   public boolean hasSystemNoticeTag(String tag) {
     return systemNotices.stream().map(SystemNotice::tag).anyMatch(tag::equals);
-  }
-
-  public Itinerary withTimeShiftToStartAt(ZonedDateTime afterTime) {
-    Duration duration = Duration.between(legs().getFirst().startTime(), afterTime);
-    List<Leg> timeShiftedLegs = legs()
-      .stream()
-      .map(leg -> leg.withTimeShift(duration))
-      .collect(Collectors.toList());
-    return new ItineraryBuilder(timeShiftedLegs, searchWindowAware)
-      .withGeneralizedCost(generalizedCost)
-      .withAccessPenalty(accessPenalty)
-      .withEgressPenalty(egressPenalty)
-      .build();
   }
 
   /** Total duration of the itinerary in seconds */
