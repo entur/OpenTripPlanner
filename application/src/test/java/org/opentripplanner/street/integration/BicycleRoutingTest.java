@@ -26,6 +26,7 @@ import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.VehicleRoutingOptimizeType;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
+import org.opentripplanner.transit.service.NoopSiteResolver;
 
 public class BicycleRoutingTest {
 

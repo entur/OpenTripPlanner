@@ -15,6 +15,7 @@ import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.model.StreetMode;
+import org.opentripplanner.transit.service.TransitServiceResolver;
 
 /**
  * Generates "direct" street routes, i.e. those that do not use transit and are on the street
