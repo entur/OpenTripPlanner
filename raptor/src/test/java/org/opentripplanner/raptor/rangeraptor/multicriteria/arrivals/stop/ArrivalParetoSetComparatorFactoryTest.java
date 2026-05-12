@@ -9,7 +9,6 @@ import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
 import org.opentripplanner.raptor.api.model.RelaxFunction;
-import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
 import org.opentripplanner.utils.time.TimeUtils;
 
 class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
@@ -41,7 +40,7 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
   /// - With c2 enable relaxed c1(+10) `[arrivalTime, round, c2 ? c1(+10) : c1, ...`
   ///
   /// For each of the 6 pareto-function variations we determine the dominance
-  /// `NONE | LEFT | RIGHT | BOTH`. The last column consist a string with the expected result
+  /// `NONE ≡ | LEFT ≺ | RIGHT ≻ | BOTH ∥`. The last column consist a string with the expected result
   ///  for these 6 variants.
   ///
   ///
@@ -49,46 +48,46 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
   @CsvSource(
     value = {
       // Case #1 - All criteria equals
-      "10:10 | 2 | 100 | 500 | false | NONE  NONE  - NONE  NONE  - NONE  NONE",
+      "10:10 | 2 | 100 | 500 | false |  ≡  ≡  ≡  ≡  ≡  ≡",
       // Case #2-6 - Single criteria better
-      "10:09 | 2 | 100 | 500 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 1 | 100 | 500 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 |  97 | 500 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 | 100 | 499 | false | NONE  NONE  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 | 100 | 500 | true  | NONE  LEFT  - NONE  LEFT  - NONE  LEFT",
+      "10:09 | 2 | 100 | 500 | false |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:10 | 1 | 100 | 500 | false |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:10 | 2 |  97 | 500 | false |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:10 | 2 | 100 | 499 | false |  ≡  ≡  ≺  ≺  ≺  ≺",
+      "10:10 | 2 | 100 | 500 | true  |  ≡  ≺  ≡  ≺  ≡  ≺",
       // Case #7-9 - arrivalPath-time & round
-      "10:09 | 1 | 100 | 500 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:09 | 3 | 100 | 500 | false | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:11 | 1 | 100 | 500 | false | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
+      "10:09 | 1 | 100 | 500 | false |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:09 | 3 | 100 | 500 | false |  ∥  ∥  ∥  ∥  ∥  ∥",
+      "10:11 | 1 | 100 | 500 | false |  ∥  ∥  ∥  ∥  ∥  ∥",
       // Case #10-12 - arrivalPath-time & c1
-      "10:09 | 2 |  99 | 500 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:11 | 2 |  99 | 500 | false | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:09 | 2 | 101 | 500 | false | BOTH  BOTH  - BOTH  BOTH  - BOTH  BOTH",
+      "10:09 | 2 |  99 | 500 | false |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:11 | 2 |  99 | 500 | false |  ∥  ∥  ∥  ∥  ∥  ∥",
+      "10:09 | 2 | 101 | 500 | false |  ∥  ∥  ∥  ∥  ∥  ∥",
       // Case #13-15 arrivalPath-time & c2
-      "10:09 | 2 | 100 | 499 | false | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:11 | 2 | 100 | 499 | false | RIGHT RIGHT - BOTH  BOTH  - BOTH  BOTH",
-      "10:09 | 2 | 100 | 501 | false | LEFT  LEFT  - BOTH  BOTH  - BOTH  BOTH",
+      "10:09 | 2 | 100 | 499 | false |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:11 | 2 | 100 | 499 | false |  ≻  ≻  ∥  ∥  ∥  ∥",
+      "10:09 | 2 | 100 | 501 | false |  ≺  ≺  ∥  ∥  ∥  ∥",
       // Case #16-17 arrivalPath-time & on-board
-      "10:09 | 2 | 100 | 500 | true  | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:11 | 2 | 100 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
+      "10:09 | 2 | 100 | 500 | true  |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:11 | 2 | 100 | 500 | true  |  ≻  ∥  ≻  ∥  ≻  ∥",
       // Case #18-19  ride & on-board
-      "10:10 | 1 | 100 | 500 | true  | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 3 | 100 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
+      "10:10 | 1 | 100 | 500 | true  |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:10 | 3 | 100 | 500 | true  |  ≻  ∥  ≻  ∥  ≻  ∥",
       // Case #20-21 - c1 & on-board
-      "10:10 | 2 |  99 | 500 | true  | LEFT  LEFT  - LEFT  LEFT  - LEFT  LEFT",
-      "10:10 | 2 | 101 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
+      "10:10 | 2 |  99 | 500 | true  |  ≺  ≺  ≺  ≺  ≺  ≺",
+      "10:10 | 2 | 101 | 500 | true  |  ≻  ∥  ≻  ∥  ≻  ∥",
       // Case #22-25 - c1 & c2
-      "10:10 | 2 | 102 | 500 | false | RIGHT RIGHT - RIGHT RIGHT - RIGHT RIGHT",
-      "10:10 | 2 | 103 | 500 | false | RIGHT RIGHT - RIGHT RIGHT - RIGHT RIGHT",
-      "10:10 | 2 | 109 | 499 | false | RIGHT RIGHT - BOTH  BOTH  - BOTH  BOTH",
-      "10:10 | 2 | 110 | 499 | false | RIGHT RIGHT - BOTH  BOTH  - RIGHT RIGHT",
+      "10:10 | 2 | 102 | 500 | false |  ≻  ≻  ≻  ≻  ≻  ≻",
+      "10:10 | 2 | 103 | 500 | false |  ≻  ≻  ≻  ≻  ≻  ≻",
+      "10:10 | 2 | 109 | 499 | false |  ≻  ≻  ∥  ∥  ∥  ∥",
+      "10:10 | 2 | 110 | 499 | false |  ≻  ≻  ∥  ∥  ≻  ≻",
       // Case #26-31 - c1, c2 & on-board
-      "10:10 | 2 | 100 | 500 | true  | NONE  LEFT  - NONE  LEFT  - NONE  LEFT",
-      "10:10 | 2 | 102 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
-      "10:10 | 2 | 103 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
-      "10:10 | 2 | 109 | 499 | true  | RIGHT BOTH  - BOTH  BOTH  - BOTH  BOTH",
-      "10:10 | 2 | 109 | 500 | true  | RIGHT BOTH  - RIGHT BOTH  - RIGHT BOTH",
-      "10:10 | 2 | 110 | 499 | true  | RIGHT BOTH  - BOTH  BOTH  - RIGHT BOTH",
+      "10:10 | 2 | 100 | 500 | true  |  ≡  ≺  ≡  ≺  ≡  ≺",
+      "10:10 | 2 | 102 | 500 | true  |  ≻  ∥  ≻  ∥  ≻  ∥",
+      "10:10 | 2 | 103 | 500 | true  |  ≻  ∥  ≻  ∥  ≻  ∥",
+      "10:10 | 2 | 109 | 499 | true  |  ≻  ∥  ∥  ∥  ∥  ∥",
+      "10:10 | 2 | 109 | 500 | true  |  ≻  ∥  ≻  ∥  ≻  ∥",
+      "10:10 | 2 | 110 | 499 | true  |  ≻  ∥  ∥  ∥  ≻  ∥",
     },
     delimiter = '|'
   )
@@ -113,9 +112,9 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
       )
     );
     for (var factory : factories) {
-      result.append(" - ").append(toStr(factory, left, right));
+      result.append("  ").append(toStr(factory, left, right));
     }
-    assertEquals(expexted, result.toString().substring(3).trim());
+    assertEquals(expexted, result.toString().trim());
   }
 
   static String toStr(
@@ -123,9 +122,10 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
     McStopArrival<?> left,
     McStopArrival<?> right
   ) {
-    return "%-5s %-5s".formatted(
-      Dominance.from(factory.compareArrivalTimeRoundAndCost(), left, right),
-      Dominance.from(factory.compareArrivalTimeRoundCostAndOnBoardArrival(), left, right)
+    return (
+      factory.compareArrivalTimeRoundAndCost().compare(left, right).symbol() +
+      "  " +
+      factory.compareArrivalTimeRoundCostAndOnBoardArrival().compare(left, right).symbol()
     );
   }
 
@@ -138,24 +138,5 @@ class ArrivalParetoSetComparatorFactoryTest implements RaptorTestConstants {
   ) {
     int arrTime = TimeUtils.time(arrivalTime);
     return TestStopArivalFactory.arrivalPath(DEPATURE_TIME, arrTime, round, c1, c2, arrivedOnBoard);
-  }
-
-  private static enum Dominance {
-    LEFT,
-    RIGHT,
-    BOTH,
-    NONE;
-
-    static Dominance from(
-      ParetoComparator<McStopArrival<?>> comp,
-      McStopArrival<?> left,
-      McStopArrival<?> right
-    ) {
-      if (comp.leftDominanceExist(left, right)) {
-        return comp.leftDominanceExist(right, left) ? Dominance.BOTH : Dominance.LEFT;
-      } else {
-        return comp.leftDominanceExist(right, left) ? Dominance.RIGHT : Dominance.NONE;
-      }
-    }
   }
 }
