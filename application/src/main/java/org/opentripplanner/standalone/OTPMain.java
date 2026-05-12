@@ -11,8 +11,10 @@ import org.geotools.util.WeakCollectionCleaner;
 import org.opentripplanner.framework.application.ApplicationShutdownSupport;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
+import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
+import org.opentripplanner.routing.service.DefaultRoutingService;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.configure.ConstructApplication;
@@ -250,12 +252,10 @@ public class OTPMain {
   }
 
   private static void setupDebugLogging(CommandLineParameters params) {
-    if (params.debugRequest) {
+    if (params.debugRequests) {
       var ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
-      ctx
-        .getLogger("org.opentripplanner.routing.service.DefaultRoutingService")
-        .setLevel(Level.DEBUG);
-      ctx.getLogger("org.opentripplanner.raptor.RaptorService").setLevel(Level.DEBUG);
+      ctx.getLogger(DefaultRoutingService.class).setLevel(Level.DEBUG);
+      ctx.getLogger(RaptorService.class).setLevel(Level.DEBUG);
     }
   }
 }

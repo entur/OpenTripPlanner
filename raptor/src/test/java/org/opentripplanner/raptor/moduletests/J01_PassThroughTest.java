@@ -258,8 +258,8 @@ class J01_PassThroughTest {
 
     // NOTE! We keep the cost calculation tight (2 cost points in favor of R1) to ensure the
     //       cost is handled correct in all steps during the algorithm, not just at the end where
-    //       we compate paths. The cost is "recalculated" in the PathMapper, so by keeping it tight
-    //       we are more likly to discover mistakes in the algorithm - if the cost is off.
+    //       we compare paths. The cost is "recalculated" in the PathMapper, so by keeping it tight
+    //       we are more likely to discover mistakes in the algorithm - if the cost is off.
     //
     // COST CALCULATION
     //

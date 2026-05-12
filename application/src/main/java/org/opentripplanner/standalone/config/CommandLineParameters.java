@@ -137,7 +137,7 @@ public class CommandLineParameters {
     names = { "--debugRequests" },
     description = "Enable debug logging for OTP request and Raptor request handling."
   )
-  public boolean debugRequest = false;
+  public boolean debugRequests = false;
 
   /**
    * The remaining single parameter after the switches is the directory with the configuration
