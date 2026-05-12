@@ -9,7 +9,7 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 /**
  * A {@link AbstractPatternRide} with support for c1 {@code generalized-cost}.
  */
-public class PatternRideC1<T extends RaptorTripSchedule> extends AbstractPatternRide<T> {
+public final class PatternRideC1<T extends RaptorTripSchedule> extends AbstractPatternRide<T> {
 
   // Pareto vector: [relativeCost, tripSortIndex]
 
