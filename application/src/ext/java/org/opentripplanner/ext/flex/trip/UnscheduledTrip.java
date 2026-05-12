@@ -72,7 +72,7 @@ public class UnscheduledTrip extends FlexTrip<UnscheduledTrip, UnscheduledTripBu
 
     DurationUtils.requireNonNegative(timePenalty.constant());
     DoubleUtils.requireNonNegative(timePenalty.coefficient());
-    if (timePenalty.coefficient() == 0 && timePenalty.constant().isZero()) {
+    if (timePenalty.isZero()) {
       throw new IllegalArgumentException(
         "Time penalty coefficient and constant cannot both be zero."
       );
