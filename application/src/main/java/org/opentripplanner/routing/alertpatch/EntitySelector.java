@@ -2,7 +2,7 @@ package org.opentripplanner.routing.alertpatch;
 
 import java.time.LocalDate;
 import java.util.Set;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.Direction;
 

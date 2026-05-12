@@ -5,7 +5,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.model.TripTimeOnDate;

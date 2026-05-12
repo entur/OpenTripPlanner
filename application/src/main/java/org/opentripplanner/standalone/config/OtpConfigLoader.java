@@ -7,7 +7,7 @@ import static org.opentripplanner.framework.application.OtpFileNames.ROUTER_CONF
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.File;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.standalone.config.framework.file.ConfigFileLoader;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.slf4j.Logger;

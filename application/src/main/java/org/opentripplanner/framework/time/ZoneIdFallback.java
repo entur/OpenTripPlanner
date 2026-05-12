@@ -1,7 +1,7 @@
 package org.opentripplanner.framework.time;
 
 import java.time.ZoneId;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.logging.Throttle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

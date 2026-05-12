@@ -1,7 +1,7 @@
 package org.opentripplanner.gtfs.graphbuilder;
 
 import java.io.InputStream;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.onebusaway.csv_entities.CsvInputSource;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.gtfs.config.GtfsFeedParameters;

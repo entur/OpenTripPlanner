@@ -1,7 +1,7 @@
 package org.opentripplanner.routing.api.request.via;
 
 import java.util.Collection;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 

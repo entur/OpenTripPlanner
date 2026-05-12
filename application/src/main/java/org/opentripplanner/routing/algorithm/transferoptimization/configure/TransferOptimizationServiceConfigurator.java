@@ -2,7 +2,7 @@ package org.opentripplanner.routing.algorithm.transferoptimization.configure;
 
 import java.util.List;
 import java.util.function.IntFunction;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.request.via.RaptorViaLocation;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
@@ -31,7 +31,8 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
   private final ConstrainedTransferService transferService;
   private final RaptorTransitDataProvider<T> transitDataProvider;
 
-  private final int@Nullable [] stopBoardAlightTransferCosts;
+  @Nullable
+  private final int[] stopBoardAlightTransferCosts;
 
   private final TransferOptimizationParameters config;
   private final List<RaptorViaLocation> viaLocations;
@@ -64,7 +65,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
     RaptorStopNameResolver stopNameResolver,
     ConstrainedTransferService transferService,
     RaptorTransitDataProvider<T> transitDataProvider,
-    int@Nullable [] stopBoardAlightTransferCosts,
+    @Nullable int[] stopBoardAlightTransferCosts,
     TransferOptimizationParameters config,
     List<RaptorViaLocation> viaLocations
   ) {

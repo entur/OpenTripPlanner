@@ -1,6 +1,6 @@
 package org.opentripplanner.datastore.api;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public interface GsParameters {
   /**

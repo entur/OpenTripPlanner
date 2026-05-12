@@ -4,7 +4,7 @@ import static org.opentripplanner.utils.lang.OtpNumberFormat.formatTwoDecimals;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public class DoubleUtils {
 

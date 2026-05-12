@@ -3,7 +3,7 @@ package org.opentripplanner.transit.model.basic;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This is used as a data container for when we want more accurate mode matching than is available

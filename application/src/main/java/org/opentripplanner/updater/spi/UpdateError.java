@@ -1,6 +1,6 @@
 package org.opentripplanner.updater.spi;
 
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**

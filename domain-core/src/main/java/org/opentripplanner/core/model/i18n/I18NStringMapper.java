@@ -1,7 +1,7 @@
 package org.opentripplanner.core.model.i18n;
 
 import java.util.Locale;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 public class I18NStringMapper {
 

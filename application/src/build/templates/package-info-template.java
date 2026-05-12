@@ -1,4 +1,4 @@
-@NullMarked
+@ParametersAreNonnullByDefault
 package org.opentripplanner;
 
-import org.jspecify.annotations.NullMarked;
+import javax.annotation.ParametersAreNonnullByDefault;

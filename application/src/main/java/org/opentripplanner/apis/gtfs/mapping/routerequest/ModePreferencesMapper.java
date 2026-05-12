@@ -8,7 +8,7 @@ import graphql.schema.DataFetchingEnvironment;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.mapping.TransitModeMapper;
 import org.opentripplanner.apis.support.InvalidInputException;
@@ -100,7 +100,7 @@ public class ModePreferencesMapper {
   }
 
   private static ReplacementRequirement map(
-    GraphQLTypes.@Nullable GraphQLReplacementFilterInput input
+    @Nullable GraphQLTypes.GraphQLReplacementFilterInput input
   ) {
     if (input == null || input.getGraphQLRequirement() == null) {
       return ReplacementRequirement.IGNORED;

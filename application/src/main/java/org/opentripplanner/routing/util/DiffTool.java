@@ -3,7 +3,7 @@ package org.opentripplanner.routing.util;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * This class provide a method for comparing to lists and create a diff between them.

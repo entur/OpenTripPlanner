@@ -2,7 +2,7 @@ package org.opentripplanner.datastore.api;
 
 import java.io.Closeable;
 import java.util.Collection;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 
 /**
  * A composite data source contain a collection of other {@link DataSource}s.

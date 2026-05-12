@@ -2,7 +2,7 @@ package org.opentripplanner.service.vehiclerental.model;
 
 import java.util.Objects;
 import java.util.function.Consumer;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

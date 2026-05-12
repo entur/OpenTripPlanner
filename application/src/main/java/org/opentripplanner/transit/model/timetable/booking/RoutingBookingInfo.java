@@ -2,7 +2,7 @@ package org.opentripplanner.transit.model.timetable.booking;
 
 import java.time.Duration;
 import java.util.Objects;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**

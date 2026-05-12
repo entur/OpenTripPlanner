@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.jspecify.annotations.Nullable;
+import javax.annotation.Nullable;
 import org.onebusaway.csv_entities.CsvInputSource;
 import org.opentripplanner.utils.lang.StringUtils;
 
