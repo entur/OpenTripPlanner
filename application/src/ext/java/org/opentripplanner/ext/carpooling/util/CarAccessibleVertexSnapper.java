@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.carpooling.util;
 
 import java.time.Duration;
-import javax.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
 import org.opentripplanner.astar.spi.SearchTerminationStrategy;
