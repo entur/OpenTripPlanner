@@ -1,6 +1,8 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
 import org.opentripplanner.routing.api.request.TripOnDateReference;
+import org.opentripplanner.routing.api.request.TripOnDateReferenceWithTripAndDate;
+import org.opentripplanner.routing.api.request.TripOnDateReferenceWithTripOnServiceDateId;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
@@ -16,28 +18,22 @@ public class TripAndServiceDateResolver {
   }
 
   public TripAndServiceDate resolve(TripOnDateReference reference) {
-    if (reference.tripOnServiceDateId() != null) {
-      var tripOnServiceDate = transitService.getTripOnServiceDate(reference.tripOnServiceDateId());
-      if (tripOnServiceDate == null) {
-        throw new IllegalArgumentException(
-          "TripOnServiceDate not found: " + reference.tripOnServiceDateId()
+    switch (reference) {
+      case TripOnDateReferenceWithTripOnServiceDateId ref:
+        var tripOnServiceDate = transitService.getTripOnServiceDate(ref.id());
+        if (tripOnServiceDate == null) {
+          throw new IllegalArgumentException("TripOnServiceDate not found: " + ref.id());
+        }
+        return new TripAndServiceDate(
+          tripOnServiceDate.getTrip(),
+          tripOnServiceDate.getServiceDate()
         );
-      }
-      return new TripAndServiceDate(
-        tripOnServiceDate.getTrip(),
-        tripOnServiceDate.getServiceDate()
-      );
-    } else if (reference.tripIdOnServiceDate() != null) {
-      var tripIdAndDate = reference.tripIdOnServiceDate();
-      var trip = transitService.getTrip(tripIdAndDate.tripId());
-      if (trip == null) {
-        throw new IllegalArgumentException("Trip not found: " + tripIdAndDate.tripId());
-      }
-      return new TripAndServiceDate(trip, tripIdAndDate.serviceDate());
+      case TripOnDateReferenceWithTripAndDate ref:
+        var trip = transitService.getTrip(ref.id());
+        if (trip == null) {
+          throw new IllegalArgumentException("Trip not found: " + ref.id());
+        }
+        return new TripAndServiceDate(trip, ref.serviceDate());
     }
-
-    throw new IllegalArgumentException(
-      "Either tripOnServiceDateId or tripIdOnServiceDate must be set on TripOnDateReference"
-    );
   }
 }

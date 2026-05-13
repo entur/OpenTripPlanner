@@ -1,9 +1,7 @@
 package org.opentripplanner.routing.api.request;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
@@ -18,31 +16,15 @@ class TripOnDateReferenceTest {
   @Test
   void createFromTripIdAndServiceDate() {
     var ref = TripOnDateReference.ofTripIdAndServiceDate(TRIP_ID, SERVICE_DATE);
-    assertNotNull(ref.tripIdOnServiceDate());
-    assertEquals(TRIP_ID, ref.tripIdOnServiceDate().tripId());
-    assertEquals(SERVICE_DATE, ref.tripIdOnServiceDate().serviceDate());
-    assertNull(ref.tripOnServiceDateId());
+    var typed = assertInstanceOf(TripOnDateReferenceWithTripAndDate.class, ref);
+    assertEquals(TRIP_ID, typed.id());
+    assertEquals(SERVICE_DATE, typed.serviceDate());
   }
 
   @Test
   void createFromTripOnDateId() {
     var ref = TripOnDateReference.ofTripOnServiceDateId(TRIP_ON_DATE_ID);
-    assertNull(ref.tripIdOnServiceDate());
-    assertEquals(TRIP_ON_DATE_ID, ref.tripOnServiceDateId());
-  }
-
-  @Test
-  void throwsWhenBothNull() {
-    assertThrows(IllegalArgumentException.class, () -> new TripOnDateReference(null, null));
-  }
-
-  @Test
-  void throwsWhenBothSet() {
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripOnDateReference(
-        new org.opentripplanner.transit.model.timetable.TripIdAndServiceDate(TRIP_ID, SERVICE_DATE),
-        TRIP_ON_DATE_ID
-      )
-    );
+    var typed = assertInstanceOf(TripOnDateReferenceWithTripOnServiceDateId.class, ref);
+    assertEquals(TRIP_ON_DATE_ID, typed.id());
   }
 }
