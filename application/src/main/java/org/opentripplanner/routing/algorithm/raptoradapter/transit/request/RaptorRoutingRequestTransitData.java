@@ -273,14 +273,4 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
     var routeIndices = activeTripPatternsPerStop.get(stopIndex);
     return Arrays.stream(routeIndices).mapToObj(patternIndex::get).toList();
   }
-
-  public Collection<TripPatternForDates> activeTripPatternsByStopIndices(
-    Collection<Integer> stopIndices
-  ) {
-    return stopIndices
-      .stream()
-      .flatMap(x -> Arrays.stream(activeTripPatternsPerStop.get(x)).boxed())
-      .map(patternIndex::get)
-      .toList();
-  }
 }

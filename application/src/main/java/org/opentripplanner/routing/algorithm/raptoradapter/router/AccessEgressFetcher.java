@@ -9,12 +9,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.ridehailing.RideHailingAccessShifter;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.RoutingStartOnBoardAccess;
-import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.StopIndicesResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripAndServiceDateResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripLocationResolver;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess.TripScheduleIndexResolver;
@@ -119,21 +117,9 @@ class AccessEgressFetcher {
       aimedDepartureSeconds
     );
 
-    var stopIndices = lookupStopIndices(onBoardTripLocation.stopLocationId());
-    var tripScheduleIndex = tripScheduleIndexResolver.resolve(
-      tripAndServiceDate,
-      stopIndices,
-      tripLocation.stopPositionInPattern()
-    );
+    var tripScheduleIndex = tripScheduleIndexResolver.resolve(tripAndServiceDate, tripLocation);
 
     return new RoutingStartOnBoardAccess(tripScheduleIndex, tripLocation);
-  }
-
-  private List<Integer> lookupStopIndices(FeedScopedId stopLocationId) {
-    return new StopIndicesResolver(serverContext.transitService())
-      .resolve(stopLocationId)
-      .boxed()
-      .toList();
   }
 
   private Collection<? extends RoutingAccessEgress> fetchAccessEgresses(AccessEgressType type) {

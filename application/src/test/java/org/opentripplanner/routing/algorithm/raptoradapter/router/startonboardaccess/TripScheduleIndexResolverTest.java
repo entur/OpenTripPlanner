@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
@@ -35,10 +34,10 @@ class TripScheduleIndexResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var location = new LocationInTripPatternReference(STOP_B.getIndex(), 1, 0);
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(STOP_B.getIndex()),
-      1
+      location
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -54,10 +53,10 @@ class TripScheduleIndexResolverTest {
     ).build();
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
+    var location = new LocationInTripPatternReference(STOP_A.getIndex(), 0, 0);
     var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
       tripAndServiceDate,
-      List.of(STOP_A.getIndex()),
-      0
+      location
     );
 
     var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
@@ -67,55 +66,11 @@ class TripScheduleIndexResolverTest {
   }
 
   /**
-   * When multiple stop indices are provided (e.g. all child stops of a station), the resolver
-   * picks the one that the trip actually visits.
-   */
-  @Test
-  void resolvesWithMultipleStopIndicesPicksVisitedStop() {
-    var stopA1 = ENV_BUILDER.stop("A1");
-    var stopA2 = ENV_BUILDER.stop("A2");
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(stopA2, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    // Pass both A1 and A2. Only A2 is in the trip, but the pattern should be found nonetheless.
-    var result = new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
-      tripAndServiceDate,
-      List.of(stopA1.getIndex(), stopA2.getIndex()),
-      0
-    );
-
-    var routingPattern = env.tripData("T1").scheduledTripPattern().getRoutingTripPattern();
-    assertEquals(routingPattern.patternIndex(), result.routeIndex());
-    assertEquals(0, result.tripScheduleIndex());
-  }
-
-  /**
-   * When empty stop indices are provided (e.g. station without any child stops), the resolver
+   * When the stop index in the location does not appear in any pattern for the trip, the resolver
    * throws.
    */
   @Test
-  void throwsWhenEmptyStopIndices() {
-    var env = ENV_BUILDER.addTrip(
-      TripInput.of("T1").addStop(STOP_A, "10:00").addStop(STOP_B, "10:05").addStop(STOP_C, "10:10")
-    ).build();
-
-    var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
-        tripAndServiceDate,
-        List.of(),
-        0
-      )
-    );
-  }
-
-  /**
-   * When none of the provided stop indices appear in the trip, the resolver throws.
-   */
-  @Test
-  void throwsWhenNoneOfStopIndicesMatchTripPattern() {
+  void throwsWhenStopIndexDoesNotMatchTripPattern() {
     var stopA1 = ENV_BUILDER.stop("A1");
     var stopA2 = ENV_BUILDER.stop("A2");
     var env = ENV_BUILDER.addTrip(
@@ -124,12 +79,11 @@ class TripScheduleIndexResolverTest {
 
     // A1 is not visited by the trip
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
-    var patternSearch = env.raptorRoutingRequestTransitData();
+    var location = new LocationInTripPatternReference(stopA1.getIndex(), 0, 0);
     assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
+      new TripScheduleIndexResolver(env.raptorRoutingRequestTransitData()).resolve(
         tripAndServiceDate,
-        List.of(stopA1.getIndex()),
-        0
+        location
       )
     );
   }
@@ -148,12 +102,9 @@ class TripScheduleIndexResolverTest {
 
     var tripAndServiceDate = new TripAndServiceDate(env.tripData("T1").trip(), SERVICE_DATE);
     var patternSearch = env.raptorRoutingRequestTransitData();
+    var location = new LocationInTripPatternReference(STOP_B.getIndex(), 1, 0);
     assertThrows(IllegalArgumentException.class, () ->
-      new TripScheduleIndexResolver(patternSearch).resolve(
-        tripAndServiceDate,
-        List.of(STOP_B.getIndex()),
-        1
-      )
+      new TripScheduleIndexResolver(patternSearch).resolve(tripAndServiceDate, location)
     );
   }
 
@@ -180,8 +131,7 @@ class TripScheduleIndexResolverTest {
     assertThrows(IllegalArgumentException.class, () ->
       new TripScheduleIndexResolver(patternSearch).resolve(
         tripAndServiceDate,
-        List.of(STOP_B.getIndex()),
-        1
+        new LocationInTripPatternReference(STOP_B.getIndex(), 1, 0)
       )
     );
 
@@ -189,8 +139,7 @@ class TripScheduleIndexResolverTest {
     assertDoesNotThrow(() ->
       new TripScheduleIndexResolver(patternSearch).resolve(
         tripAndServiceDate,
-        List.of(STOP_B.getIndex()),
-        4
+        new LocationInTripPatternReference(STOP_B.getIndex(), 4, 0)
       )
     );
   }

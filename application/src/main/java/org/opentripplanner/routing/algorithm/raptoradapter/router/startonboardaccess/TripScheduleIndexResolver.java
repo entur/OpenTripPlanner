@@ -1,7 +1,6 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.router.startonboardaccess;
 
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.Optional;
 import org.opentripplanner.raptor.spi.RaptorTimeTable;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
@@ -13,8 +12,8 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.TripP
 
 /**
  * Resolves a {@link RaptorTripScheduleReference} from a {@link TripAndServiceDate} in the Raptor
- * timetable data. Trips in the raptor timetables are indexed by stops, so stop indices must be
- * passed as well to perform the search.
+ * timetable data. Trips in the raptor timetables are indexed by stops, so the resolved stop index
+ * from {@link LocationInTripPatternReference} is used to perform the search.
  */
 public class TripScheduleIndexResolver {
 
@@ -29,31 +28,22 @@ public class TripScheduleIndexResolver {
 
   /**
    * Resolve a {@link RaptorTripScheduleReference} in the Raptor timetable data. A trip schedule
-   * reference will be returned if one exists in the raptor timetable that passes through one of the
-   * provided stop indices, and the provided stop position allows boarding. If no trip is found, an
-   * IllegalArgumentException is thrown.
+   * reference will be returned if the trip passes through the stop in {@code location} and boarding
+   * is possible at the given stop position. If no such trip is found, an IllegalArgumentException
+   * is thrown.
    *
    * @param tripAndServiceDate the trip and service date to look up
-   * @param stopIndices the indices of the stop that the given trip passes through. This supports
-   *                    searching on a single stop, or a station with multiple child stops. For a
-   *                    single stop, pass a collection with a single stop index, and for a station,
-   *                    pass a collection with all child stop indices.
-   * @param stopPositionInPattern the stop position in pattern for the stop (or station) the
-   *                              trip passes through. For ring-lines, that pass by the same stop
-   *                              several times, the stop position in pattern is necessary to rule
-   *                              out cases where the stop is canceled on one but not all the
-   *                              passes.
+   * @param location the resolved boarding location, containing the stop index and stop position
    */
   public RaptorTripScheduleReference resolve(
     TripAndServiceDate tripAndServiceDate,
-    Collection<Integer> stopIndices,
-    int stopPositionInPattern
+    LocationInTripPatternReference location
   ) {
-    var raptorTimetable = getRaptorTimetableForTripAtStop(stopIndices, tripAndServiceDate);
-    if (!raptorTimetable.boardingPossibleAt(stopPositionInPattern)) {
+    var raptorTimetable = getRaptorTimetableForTripAtStop(location.stopIndex(), tripAndServiceDate);
+    if (!raptorTimetable.boardingPossibleAt(location.stopPositionInPattern())) {
       throw new IllegalArgumentException(
         "Boarding is not allowed at stop position %d for trip %s".formatted(
-          stopPositionInPattern,
+          location.stopPositionInPattern(),
           tripAndServiceDate.trip()
         )
       );
@@ -63,11 +53,11 @@ public class TripScheduleIndexResolver {
   }
 
   private TripPatternForDates getRaptorTimetableForTripAtStop(
-    Collection<Integer> stopIndices,
+    int stopIndex,
     TripAndServiceDate tripAndServiceDate
   ) {
     return raptorRequestTransitData
-      .activeTripPatternsByStopIndices(stopIndices)
+      .activeTripPatternsPerStop(stopIndex)
       .stream()
       .filter(patternForDates ->
         tripPatternForDate(patternForDates, tripAndServiceDate.serviceDate())
