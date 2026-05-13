@@ -25,10 +25,7 @@ class GraphPathFinder {
 
   private final float maxCarSpeed;
 
-  public GraphPathFinder(
-    Collection<ExtensionRequestContext> extensionRequestContexts,
-    float maxCarSpeed
-  ) {
+  GraphPathFinder(Collection<ExtensionRequestContext> extensionRequestContexts, float maxCarSpeed) {
     this.extensionRequestContexts = Objects.requireNonNull(extensionRequestContexts);
     this.maxCarSpeed = maxCarSpeed;
   }
@@ -38,7 +35,7 @@ class GraphPathFinder {
     Set<Vertex> to = linkingContext.findVertices(request.to());
     OTPRequestTimeoutException.checkForTimeout();
 
-    var paths = getPaths(request, from, to);
+    var paths = findPaths(request, from, to);
 
     if (paths.isEmpty()) {
       throw new PathNotFoundException();
@@ -47,7 +44,7 @@ class GraphPathFinder {
     return paths;
   }
 
-  private List<StreetPath> getPaths(RouteRequest request, Set<Vertex> from, Set<Vertex> to) {
+  private List<StreetPath> findPaths(RouteRequest request, Set<Vertex> from, Set<Vertex> to) {
     StreetPreferences preferences = request.preferences().street();
 
     StreetSearchBuilder streetSearch = StreetSearchBuilder.of()
