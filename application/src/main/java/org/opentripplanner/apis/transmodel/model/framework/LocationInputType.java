@@ -14,7 +14,8 @@ public class LocationInputType {
         "Input format for specifying a location through either a place reference (id), coordinates " +
           "or both. If both place and coordinates are provided the place ref will be used if found, " +
           "coordinates will only be used if place is not known. " +
-          "Alternatively, an onBoardLocation can be used to start the search on-board a vehicle."
+          "Alternatively, a serviceJourneyLocation can be used to start the search on-board a vehicle," +
+          "or pinpoint a boarding on a specific dated service journey to start routing."
       )
       .field(
         GraphQLInputObjectField.newInputObjectField()
@@ -48,14 +49,15 @@ public class LocationInputType {
       )
       .field(
         GraphQLInputObjectField.newInputObjectField()
-          .name("onBoardLocation")
+          .name("serviceJourneyLocation")
           .description(
-            "Identifies an on-board position on a specific transit trip. " +
-              "When set, the search starts from on-board the specified vehicle. " +
+            "Identifies a location on a specific transit trip. " +
+              "When set, the search starts from the specified vehicle," +
+              "considered either to be starting on-board or boarding at the provided stop. " +
               "In this case, the dateTime parameter of the request is ignored, as the time is " +
               "resolved based on timetable data instead."
           )
-          .type(OnBoardLocationInputType.create(dateTimeScalar))
+          .type(ServiceJourneyLocationInputType.create(dateTimeScalar))
           .build()
       )
       .build();

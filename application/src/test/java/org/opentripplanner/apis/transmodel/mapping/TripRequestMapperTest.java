@@ -411,7 +411,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
   @Test
   void testOnBoardLocation() {
     var fromWithOnBoardLocation = Map.of(
-      "onBoardLocation",
+      "serviceJourneyLocation",
       Map.of(
         "datedServiceJourneyReference",
         Map.of(

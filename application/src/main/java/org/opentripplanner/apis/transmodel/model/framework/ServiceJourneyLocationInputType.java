@@ -5,15 +5,12 @@ import graphql.schema.GraphQLInputObjectType;
 import graphql.schema.GraphQLNonNull;
 import graphql.schema.GraphQLScalarType;
 
-public class OnBoardLocationInputType {
+public class ServiceJourneyLocationInputType {
 
   public static GraphQLInputObjectType create(GraphQLScalarType dateTimeScalar) {
     return GraphQLInputObjectType.newInputObject()
-      .name("OnBoardLocationInput")
-      .description(
-        "Identifies a position on-board a specific service journey. " +
-          "Used to start a trip planning search from on-board a vehicle."
-      )
+      .name("ServiceJourneyLocationInput")
+      .description("Identifies a specific dated service journey and a specific point within it.")
       .field(
         GraphQLInputObjectField.newInputObjectField()
           .name("datedServiceJourneyReference")
@@ -28,8 +25,7 @@ public class OnBoardLocationInputType {
         GraphQLInputObjectField.newInputObjectField()
           .name("pointInJourneyPatternReference")
           .description(
-            "Identifies the point in the journey pattern where the traveler is " +
-              "considered to be boarding, or the last stop passed. Note that cancelled stops " +
+            "Identifies a specific point in the journey pattern. Note that cancelled stops " +
               "are not allowed unless includePlannedCancellations/includeRealtimeCancellations " +
               "are set accordingly."
           )

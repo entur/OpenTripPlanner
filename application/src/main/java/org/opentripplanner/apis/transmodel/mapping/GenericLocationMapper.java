@@ -37,7 +37,9 @@ class GenericLocationMapper {
     String name = (String) m.get("name");
     name = name == null ? "" : name;
 
-    Map<String, Object> onBoardLocation = (Map<String, Object>) m.get("onBoardLocation");
+    Map<String, Object> serviceJourneyLocation = (Map<String, Object>) m.get(
+      "serviceJourneyLocation"
+    );
 
     if (stopId != null && lat != null && lon != null) {
       return Optional.of(GenericLocation.fromStopIdWithFallback(stopId, lat, lon, name));
@@ -45,8 +47,10 @@ class GenericLocationMapper {
       return Optional.of(GenericLocation.fromStopId(stopId, name));
     } else if (lat != null && lon != null) {
       return Optional.of(GenericLocation.fromCoordinate(lat, lon, name));
-    } else if (onBoardLocation != null) {
-      return Optional.of(GenericLocation.fromTripLocation(mapTripLocation(onBoardLocation), name));
+    } else if (serviceJourneyLocation != null) {
+      return Optional.of(
+        GenericLocation.fromTripLocation(mapTripLocation(serviceJourneyLocation), name)
+      );
     } else {
       return Optional.empty();
     }
