@@ -45,25 +45,6 @@ public class GenericLocation {
     this.tripLocation = tripLocation;
   }
 
-  public GenericLocation(
-    @Nullable String label,
-    @Nullable FeedScopedId stopId,
-    @Nullable Double lat,
-    @Nullable Double lng,
-    @Nullable TripLocation tripLocation
-  ) {
-    var coordinate = lat != null && lng != null ? new WgsCoordinate(lat, lng) : null;
-    if (stopId == null && coordinate == null && tripLocation == null) {
-      throw new IllegalArgumentException(
-        "GenericLocation requires either a stop id or a coordinate"
-      );
-    }
-    this.label = label;
-    this.stopId = stopId;
-    this.coordinate = coordinate;
-    this.tripLocation = tripLocation;
-  }
-
   public static GenericLocation fromStopId(FeedScopedId id) {
     Objects.requireNonNull(id);
     return new GenericLocation(null, id, null, null);
