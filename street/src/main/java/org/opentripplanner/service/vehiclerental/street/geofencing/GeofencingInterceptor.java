@@ -34,9 +34,10 @@ public class GeofencingInterceptor {
     List<GeofencingBoundaryExtension> toBoundaries,
     EdgeTraversal edge
   ) {
-    // Pre-guard: renting states inside no-traversal zones must drop or be blocked
+    // Pre-guard: renting states inside no-traversal zones must drop or be blocked.
+    // Station rentals can't legally drop mid-street, so they're blocked outright.
     if (s0.isRentingVehicle() && s0.isTraversalBannedByCurrentZones()) {
-      if (s0.isDropOffBannedByCurrentZones()) {
+      if (s0.isRentingVehicleFromStation() || s0.isDropOffBannedByCurrentZones()) {
         return State.empty();
       }
       return forceDrop(s0, edge);

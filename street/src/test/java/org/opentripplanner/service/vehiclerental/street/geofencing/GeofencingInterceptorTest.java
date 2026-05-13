@@ -69,6 +69,17 @@ class GeofencingInterceptorTest {
     return editor.makeState();
   }
 
+  private State createStationRentingState(GeofencingZone... zones) {
+    var req = StreetSearchRequest.of().withMode(StreetMode.BIKE_RENTAL).build();
+    var s0 = new State(v1, req);
+    var editor = s0.edit(setupEdge);
+    editor.beginVehicleRentingAtStation(RentalFormFactor.BICYCLE, null, NETWORK, false, false);
+    if (zones.length > 0) {
+      editor.initializeGeofencingZones(Set.of(zones));
+    }
+    return editor.makeState();
+  }
+
   @Nested
   class ForwardEnteringWithBoundaries {
 
@@ -275,6 +286,21 @@ class GeofencingInterceptorTest {
         VehicleRentalState.HAVE_RENTED,
         result[0].getVehicleRentalState(),
         "should transition to walking"
+      );
+    }
+
+    @Test
+    void blocksStationRentalInsideNoTraversalZone() {
+      // Station rentals can't legally drop mid-street, so the pre-guard must block
+      // rather than force-drop.
+      var state = createStationRentingState(NO_TRAVERSAL_ZONE);
+      var result = GeofencingInterceptor.apply(state, List.of(), List.of(), edgeTraversal);
+
+      assertNotNull(result);
+      assertEquals(
+        0,
+        result.length,
+        "station rental inside no-traversal zone must be blocked, not force-dropped"
       );
     }
 

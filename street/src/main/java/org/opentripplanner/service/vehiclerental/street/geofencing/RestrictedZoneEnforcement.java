@@ -76,6 +76,15 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
       return null;
     }
 
+    // Station rentals can't legally drop mid-street, so the floating-style fork doesn't apply.
+    // No-traversal: block outright. No-drop-off: irrelevant (no street drops anyway).
+    if (state.isRentingVehicleFromStation()) {
+      if (Boolean.TRUE.equals(zone.traversalBanned())) {
+        return State.empty();
+      }
+      return null;
+    }
+
     if (Boolean.TRUE.equals(zone.traversalBanned())) {
       return forwardEnteringNoTraversal(state, edge);
     }

@@ -65,6 +65,17 @@ class BusinessAreaEnforcementTest {
     return editor.makeState();
   }
 
+  private State createStationRentingState(GeofencingZone... zones) {
+    var req = StreetSearchRequest.of().withMode(StreetMode.BIKE_RENTAL).build();
+    var s0 = new State(v1, req);
+    var editor = s0.edit(setupEdge);
+    editor.beginVehicleRentingAtStation(RentalFormFactor.BICYCLE, null, NETWORK, false, false);
+    if (zones.length > 0) {
+      editor.initializeGeofencingZones(Set.of(zones));
+    }
+    return editor.makeState();
+  }
+
   private State createHaveRentedState(GeofencingZone... zones) {
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
     var s0 = new State(v1, req);
@@ -143,6 +154,40 @@ class BusinessAreaEnforcementTest {
       var state = createHaveRentedState(BUSINESS_AREA);
       var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, edgeTraversal);
       assertNull(result, "HAVE_RENTED should pass — not renting");
+    }
+  }
+
+  @Nested
+  class StationRentalForward {
+
+    @Test
+    void blockedExitingBusinessArea() {
+      var state = createStationRentingState(BUSINESS_AREA);
+      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, edgeTraversal);
+
+      assertNotNull(result);
+      assertEquals(
+        0,
+        result.length,
+        "station rentals can't drop mid-street to exit BA — must block"
+      );
+    }
+
+    @Test
+    void blockedExitingAtBoundary() {
+      var state = createStationRentingState(BUSINESS_AREA);
+      var result = ENFORCEMENT.evaluateForwardExitingAtBoundary(state, edgeTraversal);
+
+      assertNotNull(result);
+      assertEquals(0, result.length, "station rentals can't drop at BA boundary — must block");
+    }
+
+    @Test
+    void passesEnteringBusinessArea() {
+      var state = createStationRentingState();
+      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, true, false, state, edgeTraversal);
+
+      assertNull(result, "entering BA is fine for any rental type");
     }
   }
 

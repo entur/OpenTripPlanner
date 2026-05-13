@@ -49,6 +49,10 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
       if (!state.isRentingVehicle()) {
         return null;
       }
+      // Station rentals can't drop mid-street, so a mid-street BA exit is illegal.
+      if (state.isRentingVehicleFromStation()) {
+        return State.empty();
+      }
       return evaluateForwardExiting(state, edge);
     }
   }
@@ -86,6 +90,10 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
    * The tov is the last vertex inside the BA (entering=false), so the drop-off is inside.
    */
   State[] evaluateForwardExitingAtBoundary(State state, EdgeTraversal edge) {
+    // Station rentals can't drop mid-street, so a mid-street BA exit is illegal.
+    if (state.isRentingVehicleFromStation()) {
+      return State.empty();
+    }
     if (state.isDropOffBannedByCurrentZones()) {
       return State.empty();
     }

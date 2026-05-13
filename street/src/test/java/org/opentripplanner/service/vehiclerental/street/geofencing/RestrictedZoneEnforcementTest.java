@@ -73,6 +73,17 @@ class RestrictedZoneEnforcementTest {
     return editor.makeState();
   }
 
+  private State createStationRentingState(GeofencingZone... zones) {
+    var req = StreetSearchRequest.of().withMode(StreetMode.BIKE_RENTAL).build();
+    var s0 = new State(v1, req);
+    var editor = s0.edit(setupEdge);
+    editor.beginVehicleRentingAtStation(RentalFormFactor.BICYCLE, null, NETWORK, false, false);
+    if (zones.length > 0) {
+      editor.initializeGeofencingZones(Set.of(zones));
+    }
+    return editor.makeState();
+  }
+
   private State createHaveRentedState(GeofencingZone... zones) {
     // Build a HAVE_RENTED state: rent on setupEdge, drop off on testEdge
     var req = StreetSearchRequest.of().withMode(StreetMode.SCOOTER_RENTAL).build();
@@ -196,6 +207,27 @@ class RestrictedZoneEnforcementTest {
       var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, false, false, state, edgeTraversal);
 
       assertNull(result, "forward exiting restricted zone should pass through");
+    }
+  }
+
+  @Nested
+  class StationRentalForwardEntering {
+
+    @Test
+    void blockedAtNoTraversalZone() {
+      var state = createStationRentingState();
+      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, false, state, edgeTraversal);
+
+      assertNotNull(result);
+      assertEquals(0, result.length, "station rentals can't drop mid-street — must block");
+    }
+
+    @Test
+    void passesAtNoDropOffZone() {
+      var state = createStationRentingState();
+      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, true, false, state, edgeTraversal);
+
+      assertNull(result, "no-drop-off is irrelevant for station rentals — pass through");
     }
   }
 
