@@ -19,6 +19,9 @@ import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 
 /// A helper class for finding paths through the street graph.
+///
+/// It links the from/to, sets up the [StreetSearchBuilder], executes it,
+/// and throws an exception if no path is found.
 class GraphPathFinder {
 
   private final Collection<ExtensionRequestContext> extensionRequestContexts;
