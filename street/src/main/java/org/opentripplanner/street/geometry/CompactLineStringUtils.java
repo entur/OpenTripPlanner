@@ -168,7 +168,7 @@ public final class CompactLineStringUtils {
   public static LineString uncompactLineString(byte[] packedCoords, boolean reverse) {
     int intermediateCount = coordinateCount(packedCoords);
     if (intermediateCount == 0) {
-      return GeometryUtils.makeLineString(new double[0]);
+      return GeometryUtils.emptyLineString();
     }
     double[] c = new double[intermediateCount * 2];
     decodeDeltaCoordinatesInto(packedCoords, c, 0, 0, 0, false);
