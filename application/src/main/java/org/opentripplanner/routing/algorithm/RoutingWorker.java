@@ -270,9 +270,7 @@ public class RoutingWorker {
     }
     debugTimingAggregator.startedDirectCarpoolRouter();
     try {
-      return RoutingResult.ok(
-        serverContext.carpoolingService().routeDirect(request, linkingContext())
-      );
+      return RoutingResult.ok(serverContext.carpoolingService().routeDirect(request));
     } catch (RoutingValidationException e) {
       return RoutingResult.failed(e.getRoutingErrors());
     } finally {

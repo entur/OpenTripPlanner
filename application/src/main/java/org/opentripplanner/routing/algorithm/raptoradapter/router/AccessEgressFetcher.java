@@ -24,11 +24,11 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.Acces
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.RaptorRoutingRequestTransitData;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.graphfinder.TransitServiceResolver;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.utils.time.ServiceDateUtils;
+import org.opentripplanner.transit.service.TransitServiceResolver;
 
 /**
  * This class exposes methods for fetching access and egress legs for a request.
@@ -181,7 +181,6 @@ class AccessEgressFetcher {
         streetRequest,
         type,
         transitServiceResolver,
-        linkingContext,
         transitSearchTimeZero
       );
       results.addAll(carpoolAccessEgressList);
