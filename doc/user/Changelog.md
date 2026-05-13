@@ -52,6 +52,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add Preparing DEM Data documentation page [#7606](https://github.com/opentripplanner/OpenTripPlanner/pull/7606)
 - Fix thread-safety bug in DefaultDataImportIssueStore [#7608](https://github.com/opentripplanner/OpenTripPlanner/pull/7608)
 - Reuse regex Matcher in transit-group priority lookup [#7596](https://github.com/opentripplanner/OpenTripPlanner/pull/7596)
+- Speed up OSM processing some more [#7583](https://github.com/opentripplanner/OpenTripPlanner/pull/7583)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
