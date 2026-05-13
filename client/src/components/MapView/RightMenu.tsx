@@ -1,5 +1,6 @@
 import { Component } from 'react';
 import DebugLayerControl from './LayerControl';
+import { TraceSelector } from './TraceSelector';
 import { ControlPosition } from 'react-map-gl/maplibre';
 import debugLayerIcon from '../../static/img/graph.svg';
 import { MapRef } from 'react-map-gl/maplibre';
@@ -8,11 +9,13 @@ interface RightMenuProps {
   setInteractiveLayerIds: (interactiveLayerIds: string[]) => void;
   position: ControlPosition;
   mapRef: MapRef | null;
+  activeTraceId: string | null;
+  onSelectTrace: (traceId: string | null) => void;
 }
 
 interface RightMenuState {
   isSidebarOpen: boolean;
-  activeContent: 'debugLayer' | 'tripFilters' | null; // Track the active content
+  activeContent: 'debugLayer' | 'tripFilters' | null;
 }
 
 class RightMenu extends Component<RightMenuProps, RightMenuState> {
@@ -24,21 +27,19 @@ class RightMenu extends Component<RightMenuProps, RightMenuState> {
     };
   }
 
-  // Method to toggle the sidebar and set the active content
   toggleSidebar = (content: RightMenuState['activeContent']) => {
     this.setState((prevState) => ({
       isSidebarOpen: prevState.activeContent !== content || !prevState.isSidebarOpen,
-      activeContent: prevState.activeContent === content ? null : content, // Toggle content
+      activeContent: prevState.activeContent === content ? null : content,
     }));
   };
 
   render() {
     const { isSidebarOpen, activeContent } = this.state;
-    const { position, setInteractiveLayerIds, mapRef } = this.props;
+    const { position, setInteractiveLayerIds, mapRef, activeTraceId, onSelectTrace } = this.props;
 
     return (
       <div>
-        {/* Buttons to control sidebar */}
         <button
           onClick={() => this.toggleSidebar('debugLayer')}
           className={`sidebar-button right ${activeContent === 'debugLayer' ? 'active' : ''} ${
@@ -51,7 +52,6 @@ class RightMenu extends Component<RightMenuProps, RightMenuState> {
           <img src={debugLayerIcon} alt="Debug layer" title="Debug layer" style={{ width: '25px', height: '25px' }} />
         </button>
 
-        {/* Sidebar */}
         <div
           className="right-menu-container"
           style={{
@@ -68,7 +68,10 @@ class RightMenu extends Component<RightMenuProps, RightMenuState> {
           }}
         >
           {isSidebarOpen && activeContent === 'debugLayer' && (
-            <DebugLayerControl position={position} setInteractiveLayerIds={setInteractiveLayerIds} mapRef={mapRef} />
+            <>
+              <TraceSelector activeTraceId={activeTraceId} onSelectTrace={onSelectTrace} />
+              <DebugLayerControl position={position} setInteractiveLayerIds={setInteractiveLayerIds} mapRef={mapRef} />
+            </>
           )}
         </div>
       </div>

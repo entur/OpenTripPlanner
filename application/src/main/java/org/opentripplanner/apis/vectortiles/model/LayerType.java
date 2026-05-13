@@ -8,4 +8,6 @@ public enum LayerType {
   Edge,
   Vertex,
   Rental,
+  AStarTraceEdge,
+  AStarTraceVertex,
 }

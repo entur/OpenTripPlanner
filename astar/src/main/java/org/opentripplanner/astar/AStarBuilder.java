@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.opentripplanner.astar.spi.AStarEdge;
 import org.opentripplanner.astar.spi.AStarState;
+import org.opentripplanner.astar.spi.AStarTrace;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
@@ -31,6 +32,10 @@ public abstract class AStarBuilder<
     LOG.warn("No pre-start hook provided. Call withPreStartHook() to set one.");
   private RemainingWeightHeuristic<State> heuristic = RemainingWeightHeuristic.TRIVIAL;
   private SkipEdgeStrategy<State, Edge> skipEdgeStrategy;
+
+  @SuppressWarnings("unchecked")
+  private AStarTrace<State, Edge, Vertex> trace = AStarTrace.NOOP;
+
   private TraverseVisitor<State, Edge> traverseVisitor;
   private boolean arriveBy;
   private Set<Vertex> fromVertices;
@@ -61,6 +66,11 @@ public abstract class AStarBuilder<
 
   public Builder withSkipEdgeStrategy(SkipEdgeStrategy<State, Edge> skipEdgeStrategy) {
     this.skipEdgeStrategy = skipEdgeStrategy;
+    return builder;
+  }
+
+  public Builder withTrace(AStarTrace<State, Edge, Vertex> trace) {
+    this.trace = trace;
     return builder;
   }
 
@@ -128,6 +138,7 @@ public abstract class AStarBuilder<
       heuristic,
       preStartHook,
       skipEdgeStrategy,
+      trace,
       traverseVisitor,
       arriveBy,
       origin,

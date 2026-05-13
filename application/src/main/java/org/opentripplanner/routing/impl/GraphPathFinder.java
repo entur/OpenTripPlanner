@@ -4,8 +4,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
+import org.opentripplanner.inspector.vector.astar.AStarTraceStore;
+import org.opentripplanner.inspector.vector.astar.InMemoryAStarTrace;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.error.PathNotFoundException;
@@ -51,16 +55,28 @@ public class GraphPathFinder {
 
   private final float maxCarSpeed;
 
+  @Nullable
+  private final AStarTraceStore traceStore;
+
   public GraphPathFinder() {
-    this(List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED);
+    this(List.of(), StreetConstants.DEFAULT_MAX_CAR_SPEED, null);
   }
 
   public GraphPathFinder(
     Collection<ExtensionRequestContext> extensionRequestContexts,
     float maxCarSpeed
   ) {
+    this(extensionRequestContexts, maxCarSpeed, null);
+  }
+
+  public GraphPathFinder(
+    Collection<ExtensionRequestContext> extensionRequestContexts,
+    float maxCarSpeed,
+    @Nullable AStarTraceStore traceStore
+  ) {
     this.extensionRequestContexts = Objects.requireNonNull(extensionRequestContexts);
     this.maxCarSpeed = maxCarSpeed;
+    this.traceStore = traceStore;
   }
 
   /**
@@ -69,6 +85,11 @@ public class GraphPathFinder {
    */
   public List<StreetPath> getPaths(RouteRequest request, Set<Vertex> from, Set<Vertex> to) {
     StreetPreferences preferences = request.preferences().street();
+
+    InMemoryAStarTrace trace = null;
+    if (traceStore != null && OTPFeature.AStarTrace.isOn()) {
+      trace = new InMemoryAStarTrace(request.arriveBy());
+    }
 
     StreetSearchBuilder streetSearch = StreetSearchBuilder.of()
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
@@ -89,12 +110,25 @@ public class GraphPathFinder {
       .withFrom(from)
       .withTo(to);
 
+    if (trace != null) {
+      streetSearch.withTrace(trace);
+    }
+
     LOG.debug("rreq={}", request);
 
     long searchBeginTime = System.currentTimeMillis();
     LOG.debug("BEGIN SEARCH");
 
     var paths = streetSearch.getPathsToTarget();
+
+    if (trace != null) {
+      var description = "%s from %s to %s".formatted(
+        request.journey().direct().mode(),
+        request.from(),
+        request.to()
+      );
+      traceStore.addTrace(trace.toTraceData(description));
+    }
 
     LOG.debug("we have {} paths", paths.size());
     LOG.debug("END SEARCH ({} msec)", System.currentTimeMillis() - searchBeginTime);

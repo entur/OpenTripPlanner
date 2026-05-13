@@ -36,6 +36,8 @@ import org.opentripplanner.framework.io.HttpUtils;
 import org.opentripplanner.inspector.vector.LayerBuilder;
 import org.opentripplanner.inspector.vector.LayerParameters;
 import org.opentripplanner.inspector.vector.VectorTileResponseFactory;
+import org.opentripplanner.inspector.vector.astar.AStarTraceEdgeLayerBuilder;
+import org.opentripplanner.inspector.vector.astar.AStarTraceVertexLayerBuilder;
 import org.opentripplanner.inspector.vector.edge.EdgeLayerBuilder;
 import org.opentripplanner.inspector.vector.geofencing.GeofencingZonesLayerBuilder;
 import org.opentripplanner.inspector.vector.rental.RentalLayerBuilder;
@@ -62,6 +64,14 @@ public class DebugVectorTilesResource {
   private static final LayerParams EDGES = new LayerParams("edges", Edge);
   private static final LayerParams VERTICES = new LayerParams("vertices", Vertex);
   private static final LayerParams RENTAL = new LayerParams("rental", Rental);
+  private static final LayerParams ASTAR_TRACE_EDGES = new LayerParams(
+    "astarTraceEdges",
+    LayerType.AStarTraceEdge
+  );
+  private static final LayerParams ASTAR_TRACE_VERTICES = new LayerParams(
+    "astarTraceVertices",
+    LayerType.AStarTraceVertex
+  );
   private static final List<LayerParameters<LayerType>> DEBUG_LAYERS = List.of(
     REGULAR_STOPS,
     AREA_STOPS,
@@ -69,7 +79,9 @@ public class DebugVectorTilesResource {
     GEOFENCING_ZONES,
     EDGES,
     VERTICES,
-    RENTAL
+    RENTAL,
+    ASTAR_TRACE_EDGES,
+    ASTAR_TRACE_VERTICES
   );
   public static final String PATH = "/otp/debug/vectortiles/";
 
@@ -135,6 +147,10 @@ public class DebugVectorTilesResource {
       tileJsonUrl(base, List.of(GEOFENCING_ZONES))
     );
     var rentalSource = new VectorSource("rental", tileJsonUrl(base, List.of(RENTAL)));
+    var astarTraceSource = new VectorSource(
+      "astarTrace",
+      tileJsonUrl(base, List.of(ASTAR_TRACE_EDGES, ASTAR_TRACE_VERTICES))
+    );
 
     return DebugStyleSpec.build(
       REGULAR_STOPS.toVectorSourceLayer(stopsSource),
@@ -144,6 +160,8 @@ public class DebugVectorTilesResource {
       VERTICES.toVectorSourceLayer(streetSource),
       GEOFENCING_ZONES.toVectorSourceLayer(geofencingSource),
       RENTAL.toVectorSourceLayer(rentalSource),
+      ASTAR_TRACE_EDGES.toVectorSourceLayer(astarTraceSource),
+      ASTAR_TRACE_VERTICES.toVectorSourceLayer(astarTraceSource),
       serverContext.debugUiConfig().additionalBackgroundLayers()
     );
   }
@@ -192,6 +210,14 @@ public class DebugVectorTilesResource {
       );
       case Vertex -> new VertexLayerBuilder(context.graph(), layerParameters);
       case Rental -> new RentalLayerBuilder(context.vehicleRentalService(), layerParameters);
+      case AStarTraceEdge -> new AStarTraceEdgeLayerBuilder(
+        context.aStarTraceStore(),
+        layerParameters
+      );
+      case AStarTraceVertex -> new AStarTraceVertexLayerBuilder(
+        context.aStarTraceStore(),
+        layerParameters
+      );
     };
   }
 }

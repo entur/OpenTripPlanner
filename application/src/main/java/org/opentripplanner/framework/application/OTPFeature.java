@@ -21,6 +21,11 @@ public enum OTPFeature {
     "Starts a background thread to continuously publish metrics about alerts. Needs to be enabled together with `ActuatorAPI`."
   ),
   APIServerInfo(true, false, "Enable the server info endpoint."),
+  AStarTrace(
+    false,
+    true,
+    "Record A* search traces in memory for debug visualization in the debug UI."
+  ),
   APIUpdaterStatus(true, false, "Enable endpoint for graph updaters status."),
   ConsiderPatternsForDirectTransfers(
     true,

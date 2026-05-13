@@ -13,10 +13,11 @@ import { TripPattern, TripQuery, TripQueryVariables } from '../../gql/graphql.ts
 import { NavigationMarkers } from './NavigationMarkers.tsx';
 import { LegLines } from './LegLines.tsx';
 import { useMapDoubleClick } from './useMapDoubleClick.ts';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ContextMenuPopup } from './ContextMenuPopup.tsx';
 import { GeometryPropertyPopup } from './GeometryPropertyPopup.tsx';
 import RightMenu from './RightMenu.tsx';
+import { getTraceApiUrl, reloadTraceSource } from './TraceSelector.tsx';
 import { findSelectedDebugLayers } from '../../util/map.ts';
 import { FeatureSelectPopup } from './FeatureSelectPopup.tsx';
 
@@ -38,6 +39,55 @@ export function MapView({
   selectedTripPatternIndexes: number[];
   loading: boolean;
 }) {
+  const [activeTraceId, setActiveTraceId] = useState<string | null>(null);
+  const mapRef = useRef<MapRef>(null);
+
+  // Auto-load latest trace after each search completes
+  const prevResultRef = useRef(tripQueryResult);
+  useEffect(() => {
+    if (!tripQueryResult || tripQueryResult === prevResultRef.current) return;
+    prevResultRef.current = tripQueryResult;
+
+    // Delay to let the backend store the trace
+    const timerId = setTimeout(async () => {
+      try {
+        const response = await fetch(getTraceApiUrl('/'));
+        if (!response.ok) return;
+        const traces = await response.json();
+        if (traces.length > 0) {
+          const latestId = traces[0].id;
+          await fetch(getTraceApiUrl(`/${latestId}/activate`), { method: 'POST' });
+          setActiveTraceId(latestId);
+          if (mapRef.current) {
+            reloadTraceSource(mapRef.current);
+          }
+        }
+      } catch {
+        // trace endpoint not available
+      }
+    }, 500);
+    return () => clearTimeout(timerId);
+  }, [tripQueryResult]);
+
+  const onSelectTrace = useCallback(
+    async (traceId: string | null) => {
+      if (!traceId) {
+        setActiveTraceId(null);
+        return;
+      }
+      try {
+        await fetch(getTraceApiUrl(`/${traceId}/activate`), { method: 'POST' });
+        setActiveTraceId(traceId);
+        if (mapRef.current) {
+          reloadTraceSource(mapRef.current);
+        }
+      } catch {
+        // activation failed
+      }
+    },
+    [],
+  );
+
   const onMapDoubleClick = useMapDoubleClick({ tripQueryVariables, setTripQueryVariables });
   const [showContextPopup, setShowContextPopup] = useState<LngLat | null>(null);
   const [showPropsPopup, setShowPropsPopup] = useState<PopupData | null>(null);
@@ -52,7 +102,6 @@ export function MapView({
     },
   ) => {
     if (e.features) {
-      // if there are more than one feature, show a selection popup
       if (e.features.length == 1) {
         const feature = e.features[0];
         setShowPropsPopup({ coordinates: e.lngLat, feature: feature });
@@ -64,10 +113,6 @@ export function MapView({
   };
   const panToWorldEnvelopeIfRequired = (e: MapEvent) => {
     const map = e.target;
-    // if we are really far zoomed out and show the entire world it means that we are not starting
-    // in a location selected from the URL hash.
-    // in such a case we pan to the area that is specified in the tile bounds, which is
-    // provided by the WorldEnvelopeService
     if (map.getZoom() < 2) {
       const source = map.getSource('stops') as VectorTileSource;
       map.fitBounds(source.bounds, { animate: false });
@@ -80,17 +125,12 @@ export function MapView({
   };
 
   function handleMapLoad(e: MapEvent) {
-    // 1) Call your existing function
     panToWorldEnvelopeIfRequired(e);
-
     const selected = findSelectedDebugLayers(e.target);
     setInteractiveLayerIds(selected);
-
-    // 2) Add the native MapLibre attribution control
     onLoad(e);
   }
 
-  const mapRef = useRef<MapRef>(null); // Create a ref for MapRef
   return (
     <div className="map-container below-content">
       <Map
@@ -108,9 +148,7 @@ export function MapView({
         onMouseEnter={onMouseEnter}
         onMouseLeave={onMouseLeave}
         onClick={showFeaturePropPopup}
-        // put lat/long in URL and pan to it on page reload
         hash={true}
-        // disable pitching and rotating the map
         touchPitch={false}
         dragRotate={false}
         onLoad={handleMapLoad}
@@ -124,7 +162,13 @@ export function MapView({
           loading={loading}
         />
 
-        <RightMenu position="top-right" setInteractiveLayerIds={setInteractiveLayerIds} mapRef={mapRef?.current} />
+        <RightMenu
+          position="top-right"
+          setInteractiveLayerIds={setInteractiveLayerIds}
+          mapRef={mapRef?.current}
+          activeTraceId={activeTraceId}
+          onSelectTrace={onSelectTrace}
+        />
         {tripQueryResult?.trip.tripPatterns.length &&
           selectedTripPatternIndexes.map((index) => {
             const tripPattern = tripQueryResult.trip.tripPatterns[index];

@@ -137,6 +137,7 @@ public class DebugStyleSpec {
     StreetTraversalPermission.CAR,
   };
   private static final String WHEELCHAIR_GROUP = "Wheelchair accessibility";
+  private static final String ASTAR_TRACE_GROUP = "A* Trace";
 
   static StyleSpec build(
     VectorSourceLayer regularStops,
@@ -146,6 +147,8 @@ public class DebugStyleSpec {
     VectorSourceLayer vertices,
     VectorSourceLayer geofencingZones,
     VectorSourceLayer rental,
+    VectorSourceLayer astarTraceEdges,
+    VectorSourceLayer astarTraceVertices,
     List<BackgroundTileLayer> extraLayers
   ) {
     List<TileSource> vectorSources = Stream.of(
@@ -153,7 +156,8 @@ public class DebugStyleSpec {
       edges,
       vertices,
       geofencingZones,
-      rental
+      rental,
+      astarTraceEdges
     )
       .map(VectorSourceLayer::vectorSource)
       .map(TileSource.class::cast)
@@ -187,7 +191,8 @@ public class DebugStyleSpec {
         elevation(edges, vertices),
         elevators(edges, vertices),
         vertices(vertices),
-        stops(regularStops, areaStops, groupStops)
+        stops(regularStops, areaStops, groupStops),
+        astarTrace(astarTraceEdges, astarTraceVertices)
       )
     );
   }
@@ -677,6 +682,67 @@ public class DebugStyleSpec {
         .booleanFilter("wheelchairAccessible", false)
         .lineWidth(LINE_WIDTH)
         .lineOffset(LINE_OFFSET)
+        .minZoom(6)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden()
+    );
+  }
+
+  private static List<StyleBuilder> astarTrace(
+    VectorSourceLayer traceEdges,
+    VectorSourceLayer traceVertices
+  ) {
+    return List.of(
+      StyleBuilder.ofId("astar-trace-edge")
+        .group(ASTAR_TRACE_GROUP)
+        .typeLine()
+        .vectorSourceLayer(traceEdges)
+        .lineColorFromProperty("seqNorm", 0, 1.0)
+        .lineWidth(LINE_WIDTH)
+        .lineOpacity(0.7f)
+        .minZoom(6)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("astar-trace-blocked")
+        .group(ASTAR_TRACE_GROUP)
+        .typeLine()
+        .vectorSourceLayer(traceEdges)
+        .booleanFilter("blocked", true)
+        .lineColor(RED)
+        .lineWidth(LINE_WIDTH)
+        .lineOpacity(0.9f)
+        .minZoom(6)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("astar-trace-fork")
+        .group(ASTAR_TRACE_GROUP)
+        .typeLine()
+        .vectorSourceLayer(traceEdges)
+        .booleanFilter("fork", true)
+        .lineColor(ORANGE)
+        .lineWidth(LINE_WIDTH)
+        .lineOpacity(0.9f)
+        .minZoom(6)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("astar-trace-vertex")
+        .group(ASTAR_TRACE_GROUP)
+        .typeCircle()
+        .vectorSourceLayer(traceVertices)
+        .circleStroke(BLACK, CIRCLE_STROKE)
+        .circleRadius(MEDIUM_CIRCLE_RADIUS)
+        .circleColor(TEAL)
+        .minZoom(13)
+        .maxZoom(MAX_ZOOM)
+        .intiallyHidden(),
+      StyleBuilder.ofId("astar-trace-goal")
+        .group(ASTAR_TRACE_GROUP)
+        .typeCircle()
+        .vectorSourceLayer(traceVertices)
+        .booleanFilter("isGoal", true)
+        .circleStroke(BLACK, LARGE_CIRCLE_LINE_WIDTH)
+        .circleRadius(LARGE_CIRCLE_RADIUS)
+        .circleColor(BRIGHT_GREEN)
         .minZoom(6)
         .maxZoom(MAX_ZOOM)
         .intiallyHidden()

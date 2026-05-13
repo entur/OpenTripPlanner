@@ -19,6 +19,7 @@ import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
 import org.opentripplanner.framework.application.OTPFeature;
+import org.opentripplanner.inspector.vector.astar.AStarTraceStore;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
@@ -144,6 +145,9 @@ public interface OtpServerRequestContext {
   TransmodelAPIParameters transmodelAPIParameters();
 
   /* Sandbox modules */
+
+  @Nullable
+  AStarTraceStore aStarTraceStore();
 
   @Nullable
   CarpoolingService carpoolingService();

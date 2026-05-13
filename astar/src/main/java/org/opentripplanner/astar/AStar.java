@@ -12,6 +12,7 @@ import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.astar.spi.AStarEdge;
 import org.opentripplanner.astar.spi.AStarState;
+import org.opentripplanner.astar.spi.AStarTrace;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.astar.spi.DominanceFunction;
 import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
@@ -42,6 +43,7 @@ public class AStar<
   private final Runnable preSearchHook;
   private final SkipEdgeStrategy<State, Edge> skipEdgeStrategy;
   private final SearchTerminationStrategy<State> terminationStrategy;
+  private final AStarTrace<State, Edge, Vertex> trace;
   private final TraverseVisitor<State, Edge> traverseVisitor;
   private final StatisticsCallback<Vertex> statisticsCallback;
   private final Duration timeout;
@@ -57,6 +59,7 @@ public class AStar<
     RemainingWeightHeuristic<State> heuristic,
     Runnable preSearchHook,
     SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
+    AStarTrace<State, Edge, Vertex> trace,
     TraverseVisitor<State, Edge> traverseVisitor,
     boolean arriveBy,
     Set<Vertex> fromVertices,
@@ -69,6 +72,7 @@ public class AStar<
   ) {
     this.heuristic = heuristic;
     this.skipEdgeStrategy = skipEdgeStrategy;
+    this.trace = trace;
     this.traverseVisitor = traverseVisitor;
     this.fromVertices = fromVertices;
     this.toVertices = toVertices;
@@ -117,6 +121,7 @@ public class AStar<
     if (!spt.visit(u)) {
       // state has been dominated since it was added to the priority queue, so it is
       // not in any optimal path. drop it on the floor and try the next one.
+      trace.skipAlreadyDominated(u);
       return false;
     }
 
@@ -125,6 +130,7 @@ public class AStar<
     }
 
     nVisited += 1;
+    trace.dequeue(u);
 
     Vertex u_vertex = u.getVertex();
 
@@ -137,6 +143,7 @@ public class AStar<
       // Iterate over traversal results. When an edge leads nowhere (as indicated by
       // returning an empty array), the iteration is over.
       var states = edge.traverse(u);
+      trace.traverse(u, edge, states);
       for (var v : states) {
         // Could be: for (State v : traverseEdge...)
 
@@ -158,6 +165,9 @@ public class AStar<
             traverseVisitor.visitEnqueue();
           }
           pq.insert(v, estimate);
+          trace.enqueue(v, estimate);
+        } else {
+          trace.reject(v);
         }
       }
     }
@@ -203,6 +213,7 @@ public class AStar<
       }
       if (toVertices != null && toVertices.contains(u.getVertex()) && u.isFinal()) {
         targetAcceptedStates.add(u);
+        trace.goal(u);
 
         // Break out of the search if we've found the requested number of paths.
         // Currently, we can only find one path per search.
@@ -211,5 +222,6 @@ public class AStar<
     }
 
     statisticsCallback.searchFinished(fromVertices, toVertices, nVisited);
+    trace.searchComplete(nVisited);
   }
 }

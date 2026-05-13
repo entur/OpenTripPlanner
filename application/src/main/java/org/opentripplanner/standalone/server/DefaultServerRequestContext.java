@@ -18,6 +18,7 @@ import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
+import org.opentripplanner.inspector.vector.astar.AStarTraceStore;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
@@ -72,6 +73,9 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   private final WorldEnvelopeService worldEnvelopeService;
 
   /* Optional fields */
+
+  @Nullable
+  private final AStarTraceStore aStarTraceStore;
 
   @Nullable
   private final CarpoolingService carpoolingService;
@@ -145,6 +149,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     VertexLinker vertexLinker,
     ViaCoordinateTransferFactory viaTransferResolver,
     WorldEnvelopeService worldEnvelopeService,
+    @Nullable AStarTraceStore aStarTraceStore,
     @Nullable CarpoolingService carpoolingService,
     @Nullable DataOverlayParameterBindings dataOverlayParameterBindings,
     @Nullable ItineraryDecorator emissionItineraryDecorator,
@@ -183,6 +188,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     this.worldEnvelopeService = worldEnvelopeService;
 
     // Optional fields
+    this.aStarTraceStore = aStarTraceStore;
     this.carpoolingService = carpoolingService;
     this.dataOverlayParameterBindings = dataOverlayParameterBindings;
     this.emissionItineraryDecorator = emissionItineraryDecorator;
@@ -325,6 +331,12 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Override
   public TransmodelAPIParameters transmodelAPIParameters() {
     return transmodelAPIParameters;
+  }
+
+  @Nullable
+  @Override
+  public AStarTraceStore aStarTraceStore() {
+    return aStarTraceStore;
   }
 
   @Nullable

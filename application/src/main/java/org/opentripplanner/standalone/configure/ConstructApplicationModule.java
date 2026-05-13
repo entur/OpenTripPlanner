@@ -17,6 +17,8 @@ import org.opentripplanner.ext.interactivelauncher.api.LauncherRequestDecorator;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
+import org.opentripplanner.framework.application.OTPFeature;
+import org.opentripplanner.inspector.vector.astar.AStarTraceStore;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.ext.EmissionDecorator;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
@@ -71,7 +73,8 @@ public class ConstructApplicationModule {
     @Nullable SorlandsbanenNorwayService sorlandsbanenService,
     LauncherRequestDecorator launcherRequestDecorator,
     @Nullable LuceneIndex luceneIndex,
-    FareService fareService
+    FareService fareService,
+    @Nullable AStarTraceStore aStarTraceStore
   ) {
     var defaultRequest = launcherRequestDecorator.intercept(routerConfig.routingRequestDefaults());
 
@@ -82,7 +85,6 @@ public class ConstructApplicationModule {
     var vectorTileConfig = routerConfig.vectorTileConfig();
     var flexParameters = routerConfig.flexParameters();
     var transmodelAPIParameters = routerConfig.transmodelApi();
-
     return new DefaultServerRequestContext(
       debugUiConfig,
       fareService,
@@ -108,6 +110,7 @@ public class ConstructApplicationModule {
       viaTransferResolver,
       worldEnvelopeService,
       // Optional Sandbox services
+      aStarTraceStore,
       carpoolingService,
       dataOverlayParameterBindings,
       emissionItineraryDecorator,
@@ -126,5 +129,12 @@ public class ConstructApplicationModule {
   @Provides
   public FareService fareService(FareServiceFactory fareServiceFactory) {
     return fareServiceFactory.makeFareService();
+  }
+
+  @Singleton
+  @Provides
+  @Nullable
+  public AStarTraceStore aStarTraceStore() {
+    return OTPFeature.AStarTrace.isOn() ? new AStarTraceStore() : null;
   }
 }
