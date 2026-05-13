@@ -112,11 +112,6 @@ public class StreetPath {
     return p.isAllYUnknown() ? null : p;
   }
 
-  /// Get all the states of this path
-  public List<Edge> edges() {
-    return edges;
-  }
-
   /// Calculate the elevationGained and elevationLost
   public ElevationChange calculateElevations() {
     double elevationGained_m = 0.0;
