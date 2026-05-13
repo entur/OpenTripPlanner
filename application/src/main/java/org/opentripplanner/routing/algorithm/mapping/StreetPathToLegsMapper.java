@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
@@ -27,10 +26,7 @@ import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalEdge;
 import org.opentripplanner.service.vehiclerental.street.VehicleRentalPlaceVertex;
 import org.opentripplanner.street.internal.notes.StreetNotesService;
-import org.opentripplanner.street.model.edge.Edge;
-import org.opentripplanner.street.model.edge.StreetEdge;
 import org.opentripplanner.street.model.edge.VehicleParkingEdge;
-import org.opentripplanner.street.model.elevation.ElevationProfile;
 import org.opentripplanner.street.model.note.StreetNote;
 import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.model.vertex.StreetVertex;
@@ -234,42 +230,6 @@ public class StreetPathToLegsMapper {
       .orElse(TraverseMode.WALK);
   }
 
-  private static ElevationProfile encodeElevationProfileWithNaN(
-    Edge edge,
-    double distanceOffset,
-    double heightOffset
-  ) {
-    var elevations = encodeElevationProfile(edge, distanceOffset, heightOffset);
-    if (elevations.isEmpty()) {
-      return ElevationProfile.of()
-        .stepYUnknown(distanceOffset)
-        .stepYUnknown(distanceOffset + edge.getDistanceMeters())
-        .build();
-    }
-    return elevations;
-  }
-
-  private static ElevationProfile encodeElevationProfile(
-    Edge edge,
-    double distanceOffset,
-    double heightOffset
-  ) {
-    if (!(edge instanceof StreetEdge elevEdge)) {
-      return ElevationProfile.empty();
-    }
-    if (elevEdge.getElevationProfile() == null) {
-      return ElevationProfile.empty();
-    }
-
-    var out = ElevationProfile.of();
-    Coordinate[] coordArr = elevEdge.getElevationProfile().toCoordinateArray();
-    for (final Coordinate coordinate : coordArr) {
-      out.step(coordinate.x + distanceOffset, coordinate.y + heightOffset);
-    }
-
-    return out.build();
-  }
-
   /**
    * Make a {@link Place} to add to a {@link Leg}.
    *
@@ -375,7 +335,7 @@ public class StreetPathToLegsMapper {
       .withGeneralizedCost(IntUtils.round(subPath.weight() + extraWeight))
       .withGeometry(subPath.geometry())
       .withElevationProfile(
-        makeElevation(subPath.edges(), firstState.getRequest().geoidElevation())
+        subPath.elevation(firstState.getRequest().geoidElevation(), ellipsoidToGeoidDifference)
       )
       .withWalkSteps(walkSteps)
       .withRentedVehicle(firstState.isRentingVehicle())
@@ -407,24 +367,6 @@ public class StreetPathToLegsMapper {
         leg.withStreetNotes(streetNotes);
       }
     }
-  }
-
-  private ElevationProfile makeElevation(List<Edge> edges, boolean geoidElevation) {
-    var builder = ElevationProfile.of();
-
-    double heightOffset = geoidElevation ? ellipsoidToGeoidDifference : 0;
-
-    double distanceOffset = 0;
-    for (final Edge edge : edges) {
-      if (edge.getDistanceMeters() > 0) {
-        builder.add(encodeElevationProfileWithNaN(edge, distanceOffset, heightOffset));
-        distanceOffset += edge.getDistanceMeters();
-      }
-    }
-
-    var p = builder.build();
-
-    return p.isAllYUnknown() ? null : p;
   }
 
   private ZonedDateTime getTimeWithDelay(State state, @Nullable Duration delay) {
