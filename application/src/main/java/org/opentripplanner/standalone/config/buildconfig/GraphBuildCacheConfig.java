@@ -26,7 +26,7 @@ public class GraphBuildCacheConfig {
 
   /**
    * Root directory for cache files. {@code null} means "use the OTP base directory", resolved at
-   * runtime by {@code GraphBuildCacheManager}.
+   * runtime via {@link org.opentripplanner.graph_builder.GraphBuilderDataSources#getCacheDir}.
    */
   @Nullable
   public final URI path;

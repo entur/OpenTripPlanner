@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.EnumSet;
+import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -151,6 +152,15 @@ public class GraphBuilderDataSources implements Closeable {
 
   public CompositeDataSource getBuildReportDir() {
     return store.getBuildReportDir();
+  }
+
+  /**
+   * Returns a {@link CompositeDataSource} for the graph-build cache directory. When {@code path}
+   * is {@code null}, the OTP base directory is used. Works with any configured repository —
+   * local filesystem, GCS bucket, etc.
+   */
+  public CompositeDataSource getCacheDir(@Nullable URI path) {
+    return store.getCacheDir(path);
   }
 
   /**

@@ -165,6 +165,22 @@ public class OtpDataStore {
     return Optional.ofNullable(stopConsolidation);
   }
 
+  /**
+   * Returns a {@link CompositeDataSource} for the graph-build cache directory. When {@code path}
+   * is {@code null}, defaults to the OTP base directory (the same directory that contains
+   * {@code build-config.json}).
+   * <p>
+   * Using the data-store abstraction means the cache works with any configured repository —
+   * local filesystem, GCS bucket, etc.
+   */
+  public CompositeDataSource getCacheDir(@Nullable URI path) {
+    assertDataStoreIsOpened();
+    if (path != null) {
+      return findSourceUsingAllRepos(it -> it.findCompositeSource(path, UNKNOWN));
+    }
+    return localRepository.findCompositeSource(".", UNKNOWN);
+  }
+
   /* private methods */
   private void add(DataSource source) {
     if (source != null) {

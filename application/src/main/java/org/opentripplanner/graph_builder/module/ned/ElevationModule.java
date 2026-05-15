@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.ned;
 
 import static org.opentripplanner.routing.util.EllipsoidUtils.computeEllipsoidToGeoidDifference;
 
-import java.io.File;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -29,7 +28,6 @@ import org.opentripplanner.graph_builder.issues.Graphwide;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.module.cache.CacheTask;
 import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
-import org.opentripplanner.standalone.config.buildconfig.GraphBuildCacheConfig;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
 import org.opentripplanner.street.geometry.PolylineEncoder;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -132,7 +130,7 @@ public class ElevationModule implements GraphBuilderModule {
       factory,
       graph,
       DataImportIssueStore.NOOP,
-      new GraphBuildCacheManager(GraphBuildCacheConfig.DEFAULT, new File(".")),
+      GraphBuildCacheManager.NOOP,
       new HashMap<>(),
       10,
       2000,
@@ -283,7 +281,6 @@ public class ElevationModule implements GraphBuilderModule {
   @Override
   public void checkInputs() {
     gridCoverageFactory.checkInputs();
-
   }
 
   /**
