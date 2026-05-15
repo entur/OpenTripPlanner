@@ -83,7 +83,8 @@ public class GraphBuilderModules {
     StreetRepository streetRepository,
     VehicleParkingRepository vehicleParkingRepository,
     EdgeNamer edgeNamer,
-    DataImportIssueStore issueStore
+    DataImportIssueStore issueStore,
+    GraphBuildCacheManager cacheManager
   ) {
     List<OsmProvider> providers = new ArrayList<>();
     for (ConfiguredDataSource<
@@ -116,6 +117,7 @@ public class GraphBuilderModules {
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
       .withIncludeOsmStationEntrances(config.osmDefaults.includeOsmStationEntrances())
+      .withCacheManager(cacheManager)
       .withIssueStore(issueStore)
       .build();
   }
