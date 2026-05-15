@@ -9,10 +9,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ext.carpooling.CarpoolTripTestData;
@@ -24,14 +21,13 @@ import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
-import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TransitService;
@@ -75,7 +71,6 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
   private DefaultCarpoolingService service;
   private CarpoolingRepository repository;
-  private LinkingContext linkingContext;
 
   private WgsCoordinate coordB;
   private WgsCoordinate coordC;
@@ -143,33 +138,9 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     Graph graph = model.graph();
     var timetableRepository = model.timetableRepository();
     VertexLinker vertexLinker = VertexLinkerTestFactory.of(graph);
+    var vertexCreationService = new VertexCreationService(vertexLinker);
     TransitService transitService = new DefaultTransitService(timetableRepository);
     repository = new DefaultCarpoolingRepository();
-
-    var pickupLocation = GenericLocation.fromCoordinate(
-      passengerPickup.latitude(),
-      passengerPickup.longitude()
-    );
-    var dropoffLocation = GenericLocation.fromCoordinate(
-      passengerDropoff.latitude(),
-      passengerDropoff.longitude()
-    );
-    var farAwayLocation = GenericLocation.fromCoordinate(
-      farAwayDropoff.latitude(),
-      farAwayDropoff.longitude()
-    );
-    linkingContext = new LinkingContext(
-      Map.of(
-        pickupLocation,
-        Set.<Vertex>of(vertexPickup),
-        dropoffLocation,
-        Set.<Vertex>of(vertexDropoff),
-        farAwayLocation,
-        Set.<Vertex>of(vertexFarAway)
-      ),
-      Collections.emptySet(),
-      Collections.emptySet()
-    );
 
     StreetLimitationParametersService streetLimitationParams =
       new StreetLimitationParametersService() {
@@ -198,7 +169,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       repository,
       streetLimitationParams,
       transitService,
-      vertexLinker
+      vertexCreationService
     );
   }
 
@@ -227,7 +198,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
       .withJourney(j -> j.withDirect(new StreetRequest(StreetMode.WALK)))
       .buildRequest();
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertTrue(results.isEmpty());
   }
@@ -236,7 +207,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
   void returnsEmptyWhenNoCarpoolTripsInRepository() {
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertTrue(results.isEmpty());
   }
@@ -249,7 +220,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertTrue(results.isEmpty());
   }
@@ -262,7 +233,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertFalse(results.isEmpty(), "Should find direct results for a compatible trip");
 
@@ -283,7 +254,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, farAwayDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertTrue(
       results.isEmpty(),
@@ -304,7 +275,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertEquals(2, results.size(), "Should find exactly 2 results for 2 compatible trips");
   }
@@ -331,7 +302,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertFalse(results.isEmpty(), "Trip with intermediate stops should produce results");
 
@@ -362,7 +333,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
 
     var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertFalse(results.isEmpty(), "Should find results for trip with intermediate stops");
     assertEquals(1, results.size(), "Should find exactly one result");
@@ -446,7 +417,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     var expectedStartTime = actualPickupArrivalTime;
     var expectedEndTime = expectedStartTime.plus(stopDuration).plus(drivingPickupToDropoff);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertFalse(results.isEmpty(), "Trip within search window should produce a result");
 
@@ -500,7 +471,7 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
     var expectedStartTime = departureTime.plus(drivingToPickup);
     var expectedEndTime = expectedStartTime.plus(stopDuration).plus(drivingPickupToDropoff);
 
-    var results = service.routeDirect(request, linkingContext);
+    var results = service.routeDirect(request);
 
     assertFalse(results.isEmpty(), "Should find results");
 

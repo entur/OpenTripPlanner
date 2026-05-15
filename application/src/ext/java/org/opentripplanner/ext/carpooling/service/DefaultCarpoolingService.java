@@ -4,9 +4,11 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.filter.FilterChain;
@@ -19,15 +21,18 @@ import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
 import org.opentripplanner.ext.carpooling.routing.InsertionEvaluator;
 import org.opentripplanner.ext.carpooling.routing.InsertionPosition;
 import org.opentripplanner.ext.carpooling.routing.InsertionPositionFinder;
+import org.opentripplanner.ext.carpooling.routing.PassengerSnap;
 import org.opentripplanner.ext.carpooling.routing.TripWithViableAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.ViableAccessEgress;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.ext.carpooling.util.CarAccessibleVertexSnapper;
+import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
 import org.opentripplanner.framework.model.TimeAndCost;
-import org.opentripplanner.graph_builder.module.nearbystops.StopResolver;
-import org.opentripplanner.graph_builder.module.nearbystops.StreetNearbyStopFinder;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
+import org.opentripplanner.place.api.NearbyStop;
+import org.opentripplanner.place.nearbystopfinder.StreetNearbyStopFinder;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
@@ -35,16 +40,16 @@ import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
-import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
-import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.service.TransitService;
+import org.opentripplanner.transit.service.TransitServiceResolver;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,10 +67,10 @@ import org.slf4j.LoggerFactory;
  * The service executes routing requests in three distinct phases:
  * <ol>
  *   <li><strong>Pre-filtering ({@link FilterChain}):</strong> Quickly eliminates incompatible
- *       trips based on capacity, time windows, direction, and distance.</li>
+ *       trips based on capacity, time windows, and distance.</li>
  *   <li><strong>Position Finding ({@link InsertionPositionFinder}):</strong> For trips that
  *       pass filtering, identifies viable pickup/dropoff position pairs using fast heuristics
- *       (capacity, direction, beeline delay estimates). No routing is performed in this phase.</li>
+ *       (capacity, beeline delay estimates). No routing is performed in this phase.</li>
  *   <li><strong>Insertion Evaluation ({@link InsertionEvaluator}):</strong> For viable positions,
  *       computes actual routes using A* street routing. Evaluates all feasible insertion positions
  *       and selects the one minimizing additional travel time while satisfying delay constraints.</li>
@@ -74,7 +79,7 @@ import org.slf4j.LoggerFactory;
  * <h2>Component Dependencies</h2>
  * <ul>
  *   <li><strong>{@link CarpoolingRepository}:</strong> Source of available driver trips</li>
- *   <li><strong>{@link VertexLinker}:</strong> Links coordinates to graph vertices</li>
+ *   <li><strong>{@link VertexCreationService}:</strong> Links coordinates to graph vertices</li>
  *   <li><strong>{@link StreetLimitationParametersService}:</strong> Street routing configuration</li>
  *   <li><strong>{@link FilterChain}:</strong> Pre-screening filters</li>
  *   <li><strong>{@link InsertionPositionFinder}:</strong> Heuristic position filtering</li>
@@ -104,7 +109,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final FilterChain preFilters;
   private final CarpoolItineraryMapper itineraryMapper;
   private final InsertionPositionFinder positionFinder;
-  private final VertexLinker vertexLinker;
+  private final VertexCreationService vertexCreationService;
 
   /**
    * Creates a new carpooling service with the specified dependencies.
@@ -116,21 +121,22 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * @param streetLimitationParametersService provides street routing configuration including
    *        speed limits, must not be null
    * @param transitService provides timezone from GTFS agency data for time conversions, must not be null
-   * @param vertexLinker links coordinates to graph vertices, must not be null
+   * @param vertexCreationService creates request-scoped, bidirectionally-linked temporary vertices
+   *        from coordinates, must not be null
    * @throws NullPointerException if any parameter is null
    */
   public DefaultCarpoolingService(
     CarpoolingRepository repository,
     StreetLimitationParametersService streetLimitationParametersService,
     TransitService transitService,
-    VertexLinker vertexLinker
+    VertexCreationService vertexCreationService
   ) {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
     this.preFilters = FilterChain.standard();
     this.itineraryMapper = new CarpoolItineraryMapper();
     this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
-    this.vertexLinker = vertexLinker;
+    this.vertexCreationService = vertexCreationService;
   }
 
   /**
@@ -139,7 +145,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * This method executes the full three-phase carpooling algorithm:
    * <ol>
    *   <li><strong>Pre-filtering:</strong> All trips from the repository are filtered by capacity,
-   *       time window, direction, and distance to quickly eliminate incompatible matches.</li>
+   *       time window, and distance to quickly eliminate incompatible matches.</li>
    *   <li><strong>Position finding:</strong> For each surviving trip, viable pickup/dropoff
    *       insertion positions are identified using beeline heuristics (no routing).</li>
    *   <li><strong>Insertion evaluation:</strong> Viable positions are evaluated with A* street
@@ -148,14 +154,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * </ol>
    *
    * @param request the routing request. Must have {@link StreetMode#CARPOOL} as the direct mode.
-   * @param linkingContext pre-linked vertices for the passenger's origin and destination
    * @return a list of carpool itineraries, or an empty list if no viable matches are found
    *         or the direct mode is not CARPOOL
    * @throws RoutingValidationException if origin or destination coordinates are missing
    */
   @Override
-  public List<Itinerary> routeDirect(RouteRequest request, LinkingContext linkingContext)
-    throws RoutingValidationException {
+  public List<Itinerary> routeDirect(RouteRequest request) throws RoutingValidationException {
     if (!StreetMode.CARPOOL.equals(request.journey().direct().mode())) {
       return Collections.emptyList();
     }
@@ -206,25 +210,57 @@ public class DefaultCarpoolingService implements CarpoolingService {
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
       var router = new CarpoolStreetRouter(streetLimitationParametersService, request);
 
-      var streetVertexUtils = new StreetVertexUtils(this.vertexLinker, temporaryVerticesContainer);
-
-      var stopDuration = request.preferences().car().pickupTime();
-
-      var insertionEvaluator = new InsertionEvaluator(
-        linkingContext,
-        streetVertexUtils,
-        router,
-        stopDuration
+      var streetVertexUtils = new StreetVertexUtils(
+        this.vertexCreationService,
+        temporaryVerticesContainer
       );
 
-      // Find optimal insertions for remaining trips
+      var stopDuration = request.preferences().car().pickupTime();
+      var maxWalkToCarpool = request
+        .preferences()
+        .street()
+        .accessEgress()
+        .maxDuration()
+        .valueOf(StreetMode.WALK);
+      var streetSearchRequest = StreetSearchRequestMapper.map(request).build();
+
+      var passengerPickupVertex = streetVertexUtils.createPassengerVertex(passengerPickup);
+      var passengerDropoffVertex = streetVertexUtils.createPassengerVertex(passengerDropoff);
+      if (passengerPickupVertex == null || passengerDropoffVertex == null) {
+        LOG.warn("Could not link passenger origin/destination to graph");
+        return List.of();
+      }
+
+      var pickupSnap = CarAccessibleVertexSnapper.snapPickup(
+        streetSearchRequest,
+        passengerPickupVertex,
+        maxWalkToCarpool
+      );
+      var dropoffSnap = CarAccessibleVertexSnapper.snapDropoff(
+        streetSearchRequest,
+        passengerDropoffVertex,
+        maxWalkToCarpool
+      );
+      if (pickupSnap == null || dropoffSnap == null) {
+        LOG.debug(
+          "No car-accessible pickup/dropoff reachable within {} from passenger origin/destination",
+          maxWalkToCarpool
+        );
+        return List.of();
+      }
+
+      var insertionEvaluator = new InsertionEvaluator(router, stopDuration);
+
+      var snappedPickup = new WgsCoordinate(pickupSnap.vertex().getCoordinate());
+      var snappedDropoff = new WgsCoordinate(dropoffSnap.vertex().getCoordinate());
+
       var insertionCandidates = candidateTrips
         .stream()
         .map(trip -> {
           List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
             trip,
-            passengerPickup,
-            passengerDropoff,
+            snappedPickup,
+            snappedDropoff,
             stopDuration
           );
 
@@ -239,23 +275,22 @@ public class DefaultCarpoolingService implements CarpoolingService {
             trip.getId()
           );
 
-          var tripWithVertices = CarpoolTripWithVertices.create(
-            trip,
-            streetVertexUtils,
-            linkingContext
-          );
+          var tripWithVertices = CarpoolTripWithVertices.create(trip, streetVertexUtils);
 
           if (tripWithVertices == null) {
             LOG.error("Could not resolve vertices for trip {}", trip.getId());
             return null;
           }
 
-          // Evaluate only viable positions with expensive routing
           return insertionEvaluator.findBestInsertion(
             tripWithVertices,
             viablePositions,
-            passengerPickup,
-            passengerDropoff
+            new PassengerSnap(
+              pickupSnap.vertex(),
+              dropoffSnap.vertex(),
+              pickupSnap.walkPath(),
+              dropoffSnap.walkPath()
+            )
           );
         })
         .filter(Objects::nonNull)
@@ -263,9 +298,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       LOG.debug("Found {} viable insertion candidates", insertionCandidates.size());
 
+      var carpoolReluctance = request.preferences().car().reluctance();
       itineraries = insertionCandidates
         .stream()
-        .map(itineraryMapper::toItinerary)
+        .map(candidate -> itineraryMapper.toItinerary(candidate, carpoolReluctance))
         .filter(Objects::nonNull)
         .toList();
     }
@@ -297,8 +333,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * @param streetRequest
    * @param accessOrEgress whether this is an access leg (origin to transit) or egress leg
    *        (transit to destination)
-   * @param stopResolver used for nearby stop search
-   * @param linkingContext pre-linked vertices for the passenger's origin and destination
+   * @param transitServiceResolver used for resolving stop locations and nearby stop search
    * @param transitSearchTimeZero the reference time for computing relative start/end times
    *        used by Raptor
    * @return a list of {@link CarpoolAccessEgress} results for Raptor, or an empty list if the
@@ -310,8 +345,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
     RouteRequest request,
     StreetRequest streetRequest,
     AccessEgressType accessOrEgress,
-    StopResolver stopResolver,
-    LinkingContext linkingContext,
+    TransitServiceResolver transitServiceResolver,
     ZonedDateTime transitSearchTimeZero
   ) throws RoutingValidationException {
     if (
@@ -331,15 +365,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
     var allTrips = repository.getCarpoolTrips();
     LOG.debug("Repository contains {} carpool trips", allTrips.size());
 
-    /*
-      The passenger's origin if the request is for access,
-      or the passenger's destination if the request is for egress
-     */
     GenericLocation passengerLocation = accessOrEgress.isAccess() ? request.from() : request.to();
-    WgsCoordinate passengerCoordinates = new WgsCoordinate(
-      passengerLocation.lat,
-      passengerLocation.lng
-    );
+    WgsCoordinate passengerCoordinates = passengerLocation.wgsCoordinate();
 
     var passengerDepartureTime = request.dateTime();
 
@@ -360,12 +387,21 @@ public class DefaultCarpoolingService implements CarpoolingService {
     }
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var streetVertexUtils = new StreetVertexUtils(this.vertexLinker, temporaryVerticesContainer);
+      var streetVertexUtils = new StreetVertexUtils(
+        this.vertexCreationService,
+        temporaryVerticesContainer
+      );
 
       var carpoolTreeVertexRouter = new CarpoolTreeStreetRouter();
-      Vertex passengerAccessEgressVertex = streetVertexUtils.getOrCreateVertex(
-        passengerCoordinates,
-        linkingContext
+      var streetSearchRequest = StreetSearchRequestMapper.map(request).build();
+      var maxWalkToCarpool = request
+        .preferences()
+        .street()
+        .accessEgress()
+        .maxDuration()
+        .valueOf(StreetMode.WALK);
+      Vertex passengerAccessEgressVertex = streetVertexUtils.createPassengerVertex(
+        passengerCoordinates
       );
 
       if (passengerAccessEgressVertex == null) {
@@ -373,39 +409,84 @@ public class DefaultCarpoolingService implements CarpoolingService {
         return List.of();
       }
 
+      var passengerSnap = accessOrEgress.isEgress()
+        ? CarAccessibleVertexSnapper.snapDropoff(
+            streetSearchRequest,
+            passengerAccessEgressVertex,
+            maxWalkToCarpool
+          )
+        : CarAccessibleVertexSnapper.snapPickup(
+            streetSearchRequest,
+            passengerAccessEgressVertex,
+            maxWalkToCarpool
+          );
+      if (passengerSnap == null) {
+        LOG.debug(
+          "No car-accessible vertex reachable within {} from passenger coords {}",
+          maxWalkToCarpool,
+          passengerCoordinates
+        );
+        return List.of();
+      }
+
       var streetNearbyStopFinder = StreetNearbyStopFinder.of(
-        stopResolver,
+        null,
         MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS,
         0
       );
 
-      var nearbyStops = streetNearbyStopFinder
+      // CAR_PICKUP models a walk → drive → walk chain inside a single A*. Using it here (instead
+      // of plain CAR) lets the search find transit stops whose link endpoint is only walk-reachable
+      // from the drivable network — typically pedestrian-plaza stops, platforms reached via walk-
+      // only tunnels, etc. — which a pure CAR search misses because it cannot leave the car
+      // network to walk the final stretch.
+      //
+      // CAR_PICKUP can return several NearbyStop records per stopId (different paths to the same
+      // stop link vertex). They all share the same vertex and stopId — which is everything we read
+      // downstream — so any representative works; we don't rank them.
+      var foundStops = streetNearbyStopFinder
         .build()
         .findNearbyStops(
-          Set.of(passengerAccessEgressVertex),
+          Set.of(passengerSnap.vertex()),
           request,
-          StreetMode.CAR,
+          StreetMode.CAR_PICKUP,
           accessOrEgress.isEgress()
-        )
-        .stream()
-        .filter(stop -> !(stop.stop instanceof AreaStop))
-        .toList();
-
-      var nearbyStopsWithVertices = new HashMap<NearbyStop, Vertex>();
-      for (var stop : nearbyStops) {
-        nearbyStopsWithVertices.put(stop, stop.state.getVertex());
+        );
+      // AreaStops are GTFS Flex zones — their linked vertex is a synthetic point inside the zone,
+      // not a real curb/platform a carpool driver could drop the passenger at, so skip them.
+      var byStopId = new LinkedHashMap<FeedScopedId, NearbyStop>();
+      for (var stop : foundStops) {
+        if (transitServiceResolver.getStopLocation(stop.stopId) instanceof AreaStop) {
+          continue;
+        }
+        byStopId.putIfAbsent(stop.stopId, stop);
+      }
+      var stopSnaps = new HashMap<NearbyStop, CarAccessibleVertexSnapper.SnapResult>();
+      for (var stop : byStopId.values()) {
+        var snap = accessOrEgress.isAccess()
+          ? CarAccessibleVertexSnapper.snapDropoff(
+              streetSearchRequest,
+              stop.state.getVertex(),
+              maxWalkToCarpool
+            )
+          : CarAccessibleVertexSnapper.snapPickup(
+              streetSearchRequest,
+              stop.state.getVertex(),
+              maxWalkToCarpool
+            );
+        if (snap != null) {
+          stopSnaps.put(stop, snap);
+        }
       }
 
       var candidateTripsWithVertices = candidateTrips
         .stream()
-        .map(carpoolTrip ->
-          CarpoolTripWithVertices.create(carpoolTrip, streetVertexUtils, linkingContext)
-        )
+        .map(carpoolTrip -> CarpoolTripWithVertices.create(carpoolTrip, streetVertexUtils))
         .filter(Objects::nonNull)
         .toList();
 
       carpoolTreeVertexRouter.addVertex(
-        passengerAccessEgressVertex,
+        passengerSnap.vertex(),
         CarpoolTreeStreetRouter.Direction.BOTH,
         MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS
       );
@@ -434,39 +515,34 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var stopDuration = request.preferences().car().pickupTime();
 
-      var insertionEvaluator = new InsertionEvaluator(
-        linkingContext,
-        streetVertexUtils,
-        carpoolTreeVertexRouter,
-        stopDuration
-      );
+      var insertionEvaluator = new InsertionEvaluator(carpoolTreeVertexRouter, stopDuration);
 
       var candidateTripsWithViableStopsAndPositions = candidateTripsWithVertices
         .stream()
         .map(tripWithVertices -> {
-          var viableSegmentInsertions = nearbyStopsWithVertices
-            .keySet()
+          var viableSegmentInsertions = stopSnaps
+            .entrySet()
             .stream()
-            .map(nearbyStop -> {
-              var pickUpCoord = accessOrEgress.isAccess()
-                ? passengerCoordinates
-                : nearbyStop.stop.getCoordinate();
-              var dropOffCoord = accessOrEgress.isAccess()
-                ? nearbyStop.stop.getCoordinate()
-                : passengerCoordinates;
+            .map(entry -> {
+              var nearbyStop = entry.getKey();
+              var stopSnap = entry.getValue();
+              var pickupSide = accessOrEgress.isAccess() ? passengerSnap : stopSnap;
+              var dropoffSide = accessOrEgress.isAccess() ? stopSnap : passengerSnap;
 
               var viablePositions = positionFinder.findViablePositions(
                 tripWithVertices.trip(),
-                pickUpCoord,
-                dropOffCoord,
+                new WgsCoordinate(pickupSide.vertex().getCoordinate()),
+                new WgsCoordinate(dropoffSide.vertex().getCoordinate()),
                 stopDuration
               );
               return new ViableAccessEgress(
                 nearbyStop,
-                nearbyStopsWithVertices.get(nearbyStop),
-                passengerAccessEgressVertex,
+                stopSnap.vertex(),
+                passengerSnap.vertex(),
                 accessOrEgress,
-                viablePositions
+                viablePositions,
+                pickupSide.walkPath(),
+                dropoffSide.walkPath()
               );
             })
             .filter(it -> !it.insertionPositions().isEmpty())
@@ -484,6 +560,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .stream()
         .map(it ->
           createCarpoolAccessEgress(
+            transitServiceResolver,
             it,
             transitSearchTimeZero,
             /*
@@ -500,12 +577,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private void validateRequest(RouteRequest request) throws RoutingValidationException {
     Objects.requireNonNull(request.from());
     Objects.requireNonNull(request.to());
-    if (request.from().lat == null || request.from().lng == null) {
+    if (request.from().wgsCoordinate() == null) {
       throw new RoutingValidationException(
         List.of(new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.FROM_PLACE))
       );
     }
-    if (request.to().lat == null || request.to().lng == null) {
+    if (request.to().wgsCoordinate() == null) {
       throw new RoutingValidationException(
         List.of(new RoutingError(RoutingErrorCode.LOCATION_NOT_FOUND, InputField.TO_PLACE))
       );
@@ -513,32 +590,28 @@ public class DefaultCarpoolingService implements CarpoolingService {
   }
 
   private CarpoolAccessEgress createCarpoolAccessEgress(
+    TransitServiceResolver transitServiceResolver,
     InsertionCandidate insertionCandidate,
     ZonedDateTime transitSearchTimeZero,
-    Double carpoolReluctance
+    double carpoolReluctance
   ) {
-    var sharedSegments = insertionCandidate.getSharedSegments();
-    var durationUntilPickup = insertionCandidate.getDurationUntilPickupArrival();
-    var passengerRideDuration = insertionCandidate.getPassengerRideDuration();
-
-    var startTimeOfSegment = insertionCandidate.trip().startTime().plus(durationUntilPickup);
-    var endTimeOfSegment = startTimeOfSegment.plus(passengerRideDuration);
-
-    var relativeStartTime = TimeUtils.toTransitTimeSeconds(
-      transitSearchTimeZero,
-      startTimeOfSegment.toInstant()
+    var carpoolPickupTime = insertionCandidate
+      .trip()
+      .startTime()
+      .plus(insertionCandidate.getDurationUntilPickupArrival());
+    var passengerStartTime = carpoolPickupTime.minus(
+      GraphPathUtils.durationOrZero(insertionCandidate.walkToPickup())
     );
-    var relativeEndTime = TimeUtils.toTransitTimeSeconds(
+
+    var passengerDepartureTime = TimeUtils.toTransitTimeSeconds(
       transitSearchTimeZero,
-      endTimeOfSegment.toInstant()
+      passengerStartTime.toInstant()
     );
 
     return new CarpoolAccessEgress(
-      insertionCandidate.transitStop().stop.getIndex(),
-      passengerRideDuration,
-      relativeStartTime,
-      relativeEndTime,
-      sharedSegments,
+      transitServiceResolver.getStopLocation(insertionCandidate.transitStop().stopId).getIndex(),
+      passengerDepartureTime,
+      insertionCandidate,
       TimeAndCost.ZERO,
       carpoolReluctance
     );

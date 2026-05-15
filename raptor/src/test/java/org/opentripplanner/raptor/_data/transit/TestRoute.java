@@ -108,9 +108,8 @@ public class TestRoute implements RaptorRoute<TestTripSchedule>, RaptorTimeTable
       .toString();
   }
 
-  void clearTransferConstraints() {
-    transferConstraintsForwardSearch.clear();
-    transferConstraintsReverseSearch.clear();
+  public void initTripPatternIndex(int tripPatternIndex) {
+    pattern.initIndex(tripPatternIndex);
   }
 
   /**

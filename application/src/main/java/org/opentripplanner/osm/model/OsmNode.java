@@ -3,9 +3,11 @@ package org.opentripplanner.osm.model;
 import static org.opentripplanner.street.model.StreetTraversalPermission.ALL;
 import static org.opentripplanner.street.model.StreetTraversalPermission.NONE;
 
+import java.util.Map;
 import java.util.OptionalDouble;
 import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.osm.OsmProvider;
 
 public class OsmNode extends OsmEntity {
 
@@ -14,18 +16,21 @@ public class OsmNode extends OsmEntity {
     "train_station_entrance"
   );
 
-  public double lat;
-  public double lon;
+  public final double lat;
+  public final double lon;
 
-  public OsmNode() {}
-
-  public OsmNode(double lat, double lon) {
+  OsmNode(long id, double lat, double lon, Map<String, String> tags, OsmProvider osmProvider) {
+    super(id, tags, osmProvider);
     this.lat = lat;
     this.lon = lon;
   }
 
-  public String toString() {
-    return "osm node " + id;
+  public static OsmNodeBuilder of() {
+    return new OsmNodeBuilder();
+  }
+
+  public OsmNodeBuilder copy() {
+    return new OsmNodeBuilder(this);
   }
 
   public Coordinate getCoordinate() {
@@ -33,11 +38,11 @@ public class OsmNode extends OsmEntity {
   }
 
   public boolean hasHighwayTrafficLight() {
-    return hasTag("highway") && "traffic_signals".equals(getTag("highway"));
+    return "traffic_signals".equals(getTag("highway"));
   }
 
   public boolean hasCrossingTrafficLight() {
-    return hasTag("crossing") && "traffic_signals".equals(getTag("crossing"));
+    return "traffic_signals".equals(getTag("crossing"));
   }
 
   /**
@@ -46,6 +51,10 @@ public class OsmNode extends OsmEntity {
    * @return true if it does
    */
   public boolean isBarrier() {
+    // the majority of nodes have no tags at all, so this yields a good speed-up
+    if (this.isTagless()) {
+      return false;
+    }
     return overridePermissions(ALL) != ALL;
   }
 
@@ -64,6 +73,10 @@ public class OsmNode extends OsmEntity {
    * @return True if this entity provides an entrance to a platform or similar entity
    */
   public boolean isEntrance() {
+    // the majority of nodes have no tags at all, so this yields a good speed-up
+    if (this.isTagless()) {
+      return false;
+    }
     return (
       (isStationEntrance() || isTag("entrance", "yes") || isTag("entrance", "main")) &&
       !isTag("access", "private") &&

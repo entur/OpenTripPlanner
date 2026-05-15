@@ -66,6 +66,8 @@ import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.warmup.WarmupLauncher;
+import org.opentripplanner.warmup.configure.WarmupModule;
 
 /**
  * A Factory used by the Dagger dependency injection system to create the components of OTP, which
@@ -99,6 +101,7 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
     VehicleRentalRepositoryModule.class,
     VehicleRentalServiceModule.class,
     ViaModule.class,
+    WarmupModule.class,
     WorldEnvelopeServiceModule.class,
   }
 )
@@ -165,6 +168,8 @@ public interface ConstructApplicationFactory {
   FareServiceFactory fareServiceFactory();
 
   DeduplicatorService deduplicatorService();
+
+  WarmupLauncher warmupLauncher();
 
   @Component.Builder
   interface Builder {

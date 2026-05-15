@@ -22,7 +22,9 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-class DefaultStopArrivalState<T extends RaptorTripSchedule> implements StopArrivalState<T> {
+sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
+  implements StopArrivalState<T>
+  permits EgressStopArrivalState {
 
   /**
    * Used to initialize all none time based attributes.
@@ -59,11 +61,6 @@ class DefaultStopArrivalState<T extends RaptorTripSchedule> implements StopArriv
   @Override
   public final boolean reachedOnBoard() {
     return onBoardArrivalTime != NOT_SET;
-  }
-
-  @Override
-  public final boolean reachedOnStreet() {
-    return arrivedByTransfer();
   }
 
   /* Access */
