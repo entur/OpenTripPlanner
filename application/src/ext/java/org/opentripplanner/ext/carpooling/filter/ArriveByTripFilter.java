@@ -41,13 +41,11 @@ import org.slf4j.LoggerFactory;
  *       principle this should come from
  *       {@code request.preferences().street().accessEgress().maxDuration().valueOf(WALK)}; today
  *       the constant is hardcoded.</li>
- *   <li><strong>{@code T} = {@link CarpoolTripFilter#EGRESS_SLACK}</strong> (max total
+ *   <li><strong>{@code T} = {@link CarpoolTripFilter#MAX_TOTAL_TRAVEL_TIME}</strong> (max total
  *       passenger travel time, fallback) — used <em>only</em> for the access/too-early cell, where
  *       transit + egress between the carpool dropoff and the destination anchor is otherwise
  *       unbounded. {@code T} caps that unknown duration with a deliberately conservative number
- *       so the filter degrades to "almost a no-op" rather than producing false negatives. The
- *       constant is named {@code EGRESS_SLACK} on the interface for historical reasons;
- *       semantically it is the total-travel cap.</li>
+ *       so the filter degrades to "almost a no-op" rather than producing false negatives.</li>
  * </ul>
  *
  * <h2>Rules (the {@code arriveBy = true} half)</h2>
@@ -100,7 +98,7 @@ public class ArriveByTripFilter implements CarpoolTripFilter {
     if (tripStart.isAfter(lat)) {
       return reject(trip, "tripStart", tripStart, "is after LAT", lat);
     }
-    var slack = request.isAccessRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
+    var slack = request.isAccessRequest() ? MAX_TOTAL_TRAVEL_TIME : MAX_WALK_TIME;
     var threshold = lat.minus(searchWindow).minus(slack);
     if (tripEnd.isBefore(threshold)) {
       return reject(trip, "tripEnd", tripEnd, "is before EAT − slack", threshold);

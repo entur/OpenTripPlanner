@@ -6,11 +6,14 @@ import static org.opentripplanner._support.time.ZoneIds.UTC;
 import static org.opentripplanner.ext.carpooling.CarpoolItineraryTestData.SERVICE_DAY;
 import static org.opentripplanner.ext.carpooling.CarpoolItineraryTestData.driveItinerary;
 
+import java.time.Duration;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
 
 class ItineraryPostFiltersTest {
+
+  private static final Duration WINDOW = Duration.ofMinutes(30);
 
   @Test
   void isValidItinerary_arriveByRequest_acceptedReturnsTrue() {
@@ -20,7 +23,7 @@ class ItineraryPostFiltersTest {
       .withRequestedDateTime(ZonedDateTime.of(SERVICE_DAY, LocalTime.of(12, 0, 0), UTC).toInstant())
       .build();
 
-    assertTrue(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, null));
+    assertTrue(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, WINDOW));
   }
 
   @Test
@@ -31,14 +34,14 @@ class ItineraryPostFiltersTest {
       .withRequestedDateTime(ZonedDateTime.of(SERVICE_DAY, LocalTime.of(11, 0, 0), UTC).toInstant())
       .build();
 
-    assertFalse(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, null));
+    assertFalse(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, WINDOW));
   }
 
   @Test
   void isValidItinerary_isNotAnArriveByRequest_acceptedReturnsTrue() {
     var request = new CarpoolingRequestBuilder().withArriveBy(false).build();
 
-    assertTrue(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, null));
+    assertTrue(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, WINDOW));
   }
 
   @Test
@@ -49,7 +52,7 @@ class ItineraryPostFiltersTest {
       .withRequestedDateTime(ZonedDateTime.of(SERVICE_DAY, LocalTime.of(11, 0, 0), UTC).toInstant())
       .build();
 
-    assertTrue(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, null));
+    assertTrue(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, WINDOW));
   }
 
   @Test
@@ -62,6 +65,6 @@ class ItineraryPostFiltersTest {
       )
       .build();
 
-    assertFalse(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, null));
+    assertFalse(ItineraryPostFilters.defaults().isValidItinerary(driveItinerary(), request, WINDOW));
   }
 }

@@ -16,7 +16,6 @@ import org.slf4j.LoggerFactory;
  *   <li>Upper bound: {@code itinerary.startTime <= T + searchWindow} — the itinerary must not
  *       depart too far into the future.</li>
  * </ul>
- * The upper bound is only enforced when {@code searchWindow} is non-null.
  */
 public class DepartAfterItineraryFilter implements CarpoolItineraryFilter {
 
@@ -46,17 +45,15 @@ public class DepartAfterItineraryFilter implements CarpoolItineraryFilter {
       return false;
     }
 
-    if (searchWindow != null) {
-      var upperBound = requestedDepartureTime.plus(searchWindow);
-      if (startTime.isAfter(upperBound)) {
-        LOG.debug(
-          "Itinerary {} rejected by depart-after post-filter: departs at {}, which is after upper bound {}",
-          itinerary.keyAsString(),
-          startTime,
-          upperBound
-        );
-        return false;
-      }
+    var upperBound = requestedDepartureTime.plus(searchWindow);
+    if (startTime.isAfter(upperBound)) {
+      LOG.debug(
+        "Itinerary {} rejected by depart-after post-filter: departs at {}, which is after upper bound {}",
+        itinerary.keyAsString(),
+        startTime,
+        upperBound
+      );
+      return false;
     }
 
     return true;

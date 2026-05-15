@@ -47,15 +47,14 @@ import org.slf4j.LoggerFactory;
  *       in principle this should come from
  *       {@code request.preferences().street().accessEgress().maxDuration().valueOf(WALK)}; today
  *       the constant is hardcoded.</li>
- *   <li><strong>{@code T} = {@link CarpoolTripFilter#EGRESS_SLACK}</strong> (max total
+ *   <li><strong>{@code T} = {@link CarpoolTripFilter#MAX_TOTAL_TRAVEL_TIME}</strong> (max total
  *       passenger travel time, fallback) — used <em>only</em> in the two cells where neither the
  *       request window nor {@code W} can produce a real bound: <em>access / arriveBy=true / too
  *       early</em> and <em>egress / arriveBy=false / too late</em>. In both cases the carpool
  *       sits on the opposite end of the journey from the request anchor, separated from it by a
  *       transit ride of unknown duration. {@code T} caps that unknown duration with a
  *       deliberately conservative number so the filter degrades to "almost a no-op" in those
- *       cells rather than producing false negatives. The constant is named {@code EGRESS_SLACK}
- *       on the interface for historical reasons; semantically it is the total-travel cap.</li>
+ *       cells rather than producing false negatives.</li>
  * </ul>
  *
  * <h2>Rules</h2>
@@ -122,8 +121,9 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
    * Rules for {@code arriveBy = true}: requestedDateTime is LAT; EAT = LAT − searchWindow.
    * <ul>
    *   <li>Too late: {@code tripStart > LAT} for all leg types.</li>
-   *   <li>Too early: {@code tripEnd < EAT − slack} where slack is {@code T} for access (transit +
-   *       egress on the destination side is unbounded) and {@code W} otherwise.</li>
+   *   <li>Too early: {@code tripEnd < EAT − maxConnectionTime} where maxConnectionTime is {@code T}
+   *       for access (transit + egress on the destination side is unbounded) and {@code W}
+   *       otherwise.</li>
    * </ul>
    */
   private static boolean acceptsArriveBy(
@@ -137,10 +137,16 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     if (tripStart.isAfter(lat)) {
       return reject(trip, "tripStart", tripStart, "is after LAT", lat);
     }
-    var slack = request.isAccessRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
-    var threshold = lat.minus(searchWindow).minus(slack);
-    if (tripEnd.isBefore(threshold)) {
-      return reject(trip, "tripEnd", tripEnd, "is before EAT − slack", threshold);
+    var maxConnectionTime = request.isAccessRequest() ? MAX_TOTAL_TRAVEL_TIME : MAX_WALK_TIME;
+    var earliestAcceptableTripEnd = lat.minus(searchWindow).minus(maxConnectionTime);
+    if (tripEnd.isBefore(earliestAcceptableTripEnd)) {
+      return reject(
+        trip,
+        "tripEnd",
+        tripEnd,
+        "is before EAT − maxConnectionTime",
+        earliestAcceptableTripEnd
+      );
     }
     return true;
   }
@@ -149,8 +155,9 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
    * Rules for {@code arriveBy = false}: requestedDateTime is EDT; LDT = EDT + searchWindow.
    * <ul>
    *   <li>Too early: {@code tripEnd < EDT} for all leg types.</li>
-   *   <li>Too late: {@code tripStart > LDT + slack} where slack is {@code T} for egress (access +
-   *       transit on the origin side is unbounded) and {@code W} otherwise.</li>
+   *   <li>Too late: {@code tripStart > LDT + maxConnectionTime} where maxConnectionTime is
+   *       {@code T} for egress (access + transit on the origin side is unbounded) and {@code W}
+   *       otherwise.</li>
    * </ul>
    */
   private static boolean acceptsDepartAfter(
@@ -164,10 +171,16 @@ public class TimeBasedTripFilter implements CarpoolTripFilter {
     if (tripEnd.isBefore(edt)) {
       return reject(trip, "tripEnd", tripEnd, "is before EDT", edt);
     }
-    var slack = request.isEgressRequest() ? EGRESS_SLACK : MAX_WALK_TIME;
-    var threshold = edt.plus(searchWindow).plus(slack);
-    if (tripStart.isAfter(threshold)) {
-      return reject(trip, "tripStart", tripStart, "is after LDT + slack", threshold);
+    var maxConnectionTime = request.isEgressRequest() ? MAX_TOTAL_TRAVEL_TIME : MAX_WALK_TIME;
+    var latestAcceptableTripStart = edt.plus(searchWindow).plus(maxConnectionTime);
+    if (tripStart.isAfter(latestAcceptableTripStart)) {
+      return reject(
+        trip,
+        "tripStart",
+        tripStart,
+        "is after LDT + maxConnectionTime",
+        latestAcceptableTripStart
+      );
     }
     return true;
   }

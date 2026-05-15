@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 class ArriveByItineraryFilterTest {
 
   // Itinerary departs at 11:00 UTC, arrives at 11:55 UTC (on SERVICE_DAY = 2020-02-02).
+  static final Duration WINDOW = Duration.ofMinutes(30);
   static final ArriveByItineraryFilter FILTER = new ArriveByItineraryFilter();
 
   // ---------------------------------------------------------------------------
@@ -31,84 +32,85 @@ class ArriveByItineraryFilterTest {
   @Test
   void isValidItinerary_ignores_departAfterDirectRequest_returnsTrue() {
     // T=11:00 would trigger an arrive-by rejection, but depart-after is ignored.
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(11, 0)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(11, 0)), WINDOW));
   }
 
   @Test
   void isValidItinerary_ignores_departAfterAccessRequest_returnsTrue() {
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterAccess(at(11, 0)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterAccess(at(11, 0)), WINDOW));
   }
 
   @Test
   void isValidItinerary_ignores_departAfterEgressRequest_returnsTrue() {
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterEgress(at(11, 0)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterEgress(at(11, 0)), WINDOW));
   }
 
   @Test
   void isValidItinerary_ignores_arriveByRequestWithNoTime_returnsTrue() {
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByWithNoTime(), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByWithNoTime(), WINDOW));
   }
 
   // ---------------------------------------------------------------------------
-  // Arrive By, direct routing — deadline: itinerary.endTime <= T
+  // Arrive By, direct routing — window: [T - searchWindow, T]
   // ---------------------------------------------------------------------------
 
   @Test
   void isValidItinerary_arriveByDirect_returnsTrue() {
     // Itinerary arrives at 11:55, deadline 12:00 — comfortably before.
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(12, 0)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(12, 0)), WINDOW));
   }
 
   @Test
   void isValidItinerary_arriveByDirect_itineraryArrivesAtDeadline_returnsTrue() {
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(11, 55)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(11, 55)), WINDOW));
   }
 
   @Test
   void isValidItinerary_arriveByDirect_itineraryArrivesAfterDeadline_returnsFalse() {
     // Itinerary arrives at 11:55, deadline 11:54 — one minute too late.
-    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(11, 54)), null));
+    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(11, 54)), WINDOW));
   }
 
   @Test
-  void isValidItinerary_arriveByDirect_searchWindowNotUsed_returnsTrue() {
-    // Search window must not affect arrive-by filtering.
-    assertTrue(
-      FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(12, 0)), Duration.ofMinutes(30))
-    );
+  void isValidItinerary_arriveByDirect_itineraryArrivesAtLowerBound_returnsTrue() {
+    // T=12:25 → lower bound = 12:25 − 30 = 11:55 = itinerary arrival.
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(12, 25)), WINDOW));
+  }
+
+  @Test
+  void isValidItinerary_arriveByDirect_itineraryArrivesJustBeforeLowerBound_returnsFalse() {
+    // T=12:26 → lower bound = 11:56 > 11:55.
+    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByDirect(at(12, 26)), WINDOW));
   }
 
   // ---------------------------------------------------------------------------
-  // Arrive By, access — same tight deadline as direct
+  // Arrive By, access — same window as direct
   // ---------------------------------------------------------------------------
 
   @Test
   void isValidItinerary_arriveByAccess_returnsTrue() {
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByAccess(at(12, 0)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByAccess(at(12, 0)), WINDOW));
   }
 
   @Test
   void isValidItinerary_arriveByAccess_itineraryArrivesAfterDeadline_returnsFalse() {
-    // Access uses the same tight deadline as direct — no egress slack.
-    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByAccess(at(11, 54)), null));
+    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByAccess(at(11, 54)), WINDOW));
   }
 
   // ---------------------------------------------------------------------------
-  // Arrive By, egress — deadline extended by 24 h
+  // Arrive By, egress — same window as direct
   // ---------------------------------------------------------------------------
 
   @Test
   void isValidItinerary_arriveByEgress_returnsTrue() {
-    // T=11:00 → direct deadline = 11:00 < 11:55 (would reject for direct), but egress deadline =
-    // next day 11:00 > 11:55.
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByEgress(at(11, 0)), null));
+    assertTrue(FILTER.isValidItinerary(driveItinerary(), arriveByEgress(at(12, 0)), WINDOW));
   }
 
   @Test
-  void isValidItinerary_arriveByEgress_itineraryArrivesAfterEgressDeadline_returnsFalse() {
-    // T = 25 h before the itinerary arrival → egress deadline = T + 24 h = 1 h before arrival.
-    var T = ZonedDateTime.of(SERVICE_DAY, LocalTime.of(11, 55), UTC).minusHours(25).toInstant();
-    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByEgress(T), null));
+  void isValidItinerary_arriveByEgress_itineraryArrivesAfterDeadline_returnsFalse() {
+    // T = 1 h before the itinerary arrival → upper = T = 1 h before itinerary end.
+    var T = ZonedDateTime.of(SERVICE_DAY, LocalTime.of(11, 55), UTC).minusHours(1).toInstant();
+    assertFalse(FILTER.isValidItinerary(driveItinerary(), arriveByEgress(T), WINDOW));
   }
 
   // ---------------------------------------------------------------------------

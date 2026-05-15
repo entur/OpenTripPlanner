@@ -20,8 +20,11 @@ public interface CarpoolTripFilter {
   /** Extra time added to the search-window upper bound to account for walking to the pickup. */
   Duration MAX_WALK_TIME = Duration.ofMinutes(15);
 
-  /** Extra slack added to the upper bound for egress legs, where transit arrival time is unknown. */
-  Duration EGRESS_SLACK = Duration.ofHours(24);
+  /**
+   * Conservative cap on total passenger travel time, used as a fallback bound when an unbounded
+   * transit segment separates the carpool leg from the request anchor.
+   */
+  Duration MAX_TOTAL_TRAVEL_TIME = Duration.ofHours(24);
 
   /**
    * Returns {@code true} if the trip is a viable candidate worth routing.

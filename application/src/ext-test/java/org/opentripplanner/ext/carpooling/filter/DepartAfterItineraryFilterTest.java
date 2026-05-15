@@ -83,12 +83,6 @@ class DepartAfterItineraryFilterTest {
     assertFalse(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(10, 29)), WINDOW));
   }
 
-  @Test
-  void isValidItinerary_departAfterDirect_nullSearchWindow_returnsTrue() {
-    // Without a search window the upper bound is not enforced.
-    assertTrue(FILTER.isValidItinerary(driveItinerary(), departAfterDirect(at(9, 0)), null));
-  }
-
   // ---------------------------------------------------------------------------
   // Depart After, access — same tight upper bound as direct
   // ---------------------------------------------------------------------------
