@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -50,8 +51,6 @@ import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 class WalkableAreaBuilder {
 
@@ -71,10 +70,23 @@ class WalkableAreaBuilder {
   private final EdgeNamer namer;
   private final SafetyValueNormalizer normalizer;
 
+  /**
+   * Visibility cache loaded from disk before processing begins. Key: area group hash.
+   * Value: survived visibility edge pairs as {@code {fromX, fromY, toX, toY}} per entry.
+   * Null when visibility caching is disabled.
+   */
+  @Nullable
+  private final Map<Long, double[][]> visibilityCache;
+
+  /**
+   * Accumulates newly-computed visibility edge pairs for storage in the cache after all areas are
+   * processed. Null when visibility caching is disabled.
+   */
+  @Nullable
+  private final Map<Long, double[][]> newVisibilityCacheEntries;
+
   // template for AreaEdge names
   private static final String LABEL_TEMPLATE = "way (area) %s from %s to %s";
-
-  private static final Logger LOG = LoggerFactory.getLogger(WalkableAreaBuilder.class);
 
   public WalkableAreaBuilder(
     Graph graph,
@@ -88,6 +100,36 @@ class WalkableAreaBuilder {
     boolean platformEntriesLinking,
     Set<String> boardingLocationRefTags
   ) {
+    this(
+      graph,
+      osmdb,
+      osmInfoGraphBuildRepository,
+      vertexBuilder,
+      namer,
+      normalizer,
+      issueStore,
+      maxAreaNodes,
+      platformEntriesLinking,
+      boardingLocationRefTags,
+      null,
+      null
+    );
+  }
+
+  public WalkableAreaBuilder(
+    Graph graph,
+    OsmDatabase osmdb,
+    OsmInfoGraphBuildRepository osmInfoGraphBuildRepository,
+    VertexGenerator vertexBuilder,
+    EdgeNamer namer,
+    SafetyValueNormalizer normalizer,
+    DataImportIssueStore issueStore,
+    int maxAreaNodes,
+    boolean platformEntriesLinking,
+    Set<String> boardingLocationRefTags,
+    @Nullable Map<Long, double[][]> visibilityCache,
+    @Nullable Map<Long, double[][]> newVisibilityCacheEntries
+  ) {
     this.graph = graph;
     this.osmdb = osmdb;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
@@ -98,6 +140,8 @@ class WalkableAreaBuilder {
     this.maxAreaNodes = maxAreaNodes;
     this.platformEntriesLinking = platformEntriesLinking;
     this.boardingLocationRefTags = boardingLocationRefTags;
+    this.visibilityCache = visibilityCache;
+    this.newVisibilityCacheEntries = newVisibilityCacheEntries;
     this.platformLinkingPoints = platformEntriesLinking
       ? graph
           .getVertices()
@@ -165,6 +209,12 @@ class WalkableAreaBuilder {
     Set<Edge> ringEdges = new HashSet<>();
 
     HashMap<AreaGroup, HashSet<IntersectionVertex>> visibilityVertexCandidates = new HashMap<>();
+
+    // Vertex-to-areaGroup map needed for cache-hit reconstruction
+    Map<IntersectionVertex, AreaGroup> vertexToAreaGroup = new HashMap<>();
+
+    long cacheKey = visibilityCacheKey(group);
+    double[][] cachedPairs = visibilityCache != null ? visibilityCache.get(cacheKey) : null;
 
     // OSM ways that this area group consists of
     Set<Long> osmWayIds = group.areas
@@ -296,7 +346,16 @@ class WalkableAreaBuilder {
         issueStore.add(new AreaTooComplicated(group, visibilityVertices.size(), maxAreaNodes));
       }
       visibilityVertexCandidates.put(areaGroup, visibilityVertices);
+      for (IntersectionVertex v : visibilityVertices) {
+        vertexToAreaGroup.putIfAbsent(v, areaGroup);
+      }
       createAreas(areaGroup, ring, group.areas);
+
+      // Skip the O(n²) polygon containment check if we have a cache hit for this area group.
+      // The cached pairs are replayed after the ring loop (see below).
+      if (cachedPairs != null) {
+        continue;
+      }
 
       // if area is too complex, consider only part of visibility nodes
       // so that at least some edges passing through the area are added
@@ -339,7 +398,42 @@ class WalkableAreaBuilder {
         }
       }
     }
-    pruneAreaEdges(startingVertices, edges, ringEdges);
+
+    if (cachedPairs != null) {
+      // Cache hit: replay the previously-computed visibility edges without pruning.
+      Map<String, IntersectionVertex> vertexByCoord = new HashMap<>();
+      for (IntersectionVertex v : vertexToAreaGroup.keySet()) {
+        vertexByCoord.put(coordKey(v.getX(), v.getY()), v);
+      }
+      for (double[] pair : cachedPairs) {
+        IntersectionVertex v1 = vertexByCoord.get(coordKey(pair[0], pair[1]));
+        IntersectionVertex v2 = vertexByCoord.get(coordKey(pair[2], pair[3]));
+        if (v1 == null || v2 == null) {
+          continue;
+        }
+        AreaGroup ag = vertexToAreaGroup.getOrDefault(v1, vertexToAreaGroup.get(v2));
+        if (ag != null) {
+          createSegments(v1, v2, group.areas, ag, false);
+        }
+      }
+    } else {
+      // Cache miss: prune and, if caching is enabled, store the result.
+      Set<Edge> survivingVisibilityEdges = pruneAreaEdges(startingVertices, edges, ringEdges);
+      if (newVisibilityCacheEntries != null) {
+        double[][] pairs = survivingVisibilityEdges
+          .stream()
+          .map(e ->
+            new double[] {
+              e.getFromVertex().getX(),
+              e.getFromVertex().getY(),
+              e.getToVertex().getX(),
+              e.getToVertex().getY(),
+            }
+          )
+          .toArray(double[][]::new);
+        newVisibilityCacheEntries.put(cacheKey, pairs);
+      }
+    }
 
     visibilityVertexCandidates.forEach((areaGroup, vertices) -> {
       if (vertices.size() > maxAreaNodes) {
@@ -359,15 +453,17 @@ class WalkableAreaBuilder {
 
   /**
    * Do an all-pairs shortest path search from a list of vertices over a specified set of edges,
-   *  and retain only those edges which are actually used in some shortest path.
+   * and retain only those edges which are actually used in some shortest path.
+   *
+   * @return the visibility edges (not in {@code edgesToKeep}) that survived pruning
    */
-  private void pruneAreaEdges(
+  private Set<Edge> pruneAreaEdges(
     Collection<Vertex> startingVertices,
     Set<Edge> edges,
     Set<Edge> edgesToKeep
   ) {
     if (edges.isEmpty()) {
-      return;
+      return Set.of();
     }
     StreetMode mode;
     StreetEdge firstEdge = (StreetEdge) edges.iterator().next();
@@ -398,11 +494,15 @@ class WalkableAreaBuilder {
         }
       }
     }
+    Set<Edge> survivingVisibilityEdges = new HashSet<>();
     for (Edge edge : edges) {
       if (!usedEdges.contains(edge) && !edgesToKeep.contains(edge)) {
         graph.removeEdge(edge);
+      } else if (!edgesToKeep.contains(edge)) {
+        survivingVisibilityEdges.add(edge);
       }
     }
+    return survivingVisibilityEdges;
   }
 
   private boolean isStartingNode(OsmNode node, Set<Long> osmWayIds) {
@@ -621,4 +721,35 @@ class WalkableAreaBuilder {
   }
 
   private record NodeEdge(IntersectionVertex from, IntersectionVertex to) {}
+
+  /**
+   * Compute a stable hash key for an {@link OsmAreaGroup} that is used to look up and store
+   * cached visibility computation results. The hash incorporates the sorted OSM entity IDs forming
+   * the group and the coordinates of all ring polygons, so that any change to the underlying OSM
+   * data produces a different key and forces a cache miss.
+   */
+  static long visibilityCacheKey(OsmAreaGroup group) {
+    long hash = 1L;
+    long[] entityIds = group.areas
+      .stream()
+      .map(a -> a.parent)
+      .mapToLong(OsmEntity::getId)
+      .sorted()
+      .toArray();
+    for (long id : entityIds) {
+      hash = 31L * hash + id;
+    }
+    for (Ring ring : group.outermostRings) {
+      for (Coordinate c : ring.jtsPolygon.getCoordinates()) {
+        hash = 31L * hash + Double.doubleToLongBits(c.x);
+        hash = 31L * hash + Double.doubleToLongBits(c.y);
+      }
+    }
+    return hash;
+  }
+
+  /** Encode a vertex coordinate as a string key for map lookup. */
+  private static String coordKey(double x, double y) {
+    return Double.doubleToLongBits(x) + "," + Double.doubleToLongBits(y);
+  }
 }
