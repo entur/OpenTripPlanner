@@ -62,7 +62,6 @@ public class GraphBuilderDataSources implements Closeable {
   private final Multimap<FileType, DataSource> inputData = ArrayListMultimap.create();
   private final Multimap<FileType, DataSource> skipData = ArrayListMultimap.create();
   private final Set<FileType> includeTypes = EnumSet.complementOf(EnumSet.of(FileType.UNKNOWN));
-  private final File cacheDirectory;
   private final DataSource outputGraph;
   private final BuildConfig buildConfig;
   private final File baseDirectory;
@@ -80,7 +79,6 @@ public class GraphBuilderDataSources implements Closeable {
   ) {
     this.store = store;
     this.buildConfig = bc;
-    this.cacheDirectory = cli.cacheDirectory;
     this.outputGraph = getOutputGraph(cli);
     this.baseDirectory = baseDirectory;
 
@@ -147,12 +145,12 @@ public class GraphBuilderDataSources implements Closeable {
     return store.stopConsolidation();
   }
 
-  public CompositeDataSource getBuildReportDir() {
-    return store.getBuildReportDir();
+  public File getBaseDirectory() {
+    return baseDirectory;
   }
 
-  public File getCacheDirectory() {
-    return cacheDirectory;
+  public CompositeDataSource getBuildReportDir() {
+    return store.getBuildReportDir();
   }
 
   /**

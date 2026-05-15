@@ -2,14 +2,7 @@ package org.opentripplanner.graph_builder.module.ned;
 
 import static org.opentripplanner.routing.util.EllipsoidUtils.computeEllipsoidToGeoidDifference;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -34,6 +27,9 @@ import org.opentripplanner.graph_builder.issues.ElevationFlattened;
 import org.opentripplanner.graph_builder.issues.ElevationProfileFailure;
 import org.opentripplanner.graph_builder.issues.Graphwide;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
+import org.opentripplanner.graph_builder.module.cache.CacheTask;
+import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
+import org.opentripplanner.standalone.config.buildconfig.GraphBuildCacheConfig;
 import org.opentripplanner.graph_builder.services.ned.ElevationGridCoverageFactory;
 import org.opentripplanner.street.geometry.PolylineEncoder;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -89,13 +85,8 @@ public class ElevationModule implements GraphBuilderModule {
 
   /** The elevation data to be used in calculating elevations. */
   private final ElevationGridCoverageFactory gridCoverageFactory;
-  /* Whether or not to attempt reading in a file of cached elevations */
-  private final boolean readCachedElevations;
-  /* Whether or not to attempt writing out a file of cached elevations */
-  private final boolean writeCachedElevations;
   private final Graph graph;
-  /* The file of cached elevations */
-  private final File cachedElevationsFile;
+  private final GraphBuildCacheManager cacheManager;
   private final double maxElevationPropagationMeters;
   /* Whether or not to include geoid difference values in individual elevation calculations */
   private final boolean includeEllipsoidToGeoidDifference;
@@ -141,10 +132,8 @@ public class ElevationModule implements GraphBuilderModule {
       factory,
       graph,
       DataImportIssueStore.NOOP,
-      null,
+      new GraphBuildCacheManager(GraphBuildCacheConfig.DEFAULT, new File(".")),
       new HashMap<>(),
-      false,
-      false,
       10,
       2000,
       true,
@@ -157,10 +146,8 @@ public class ElevationModule implements GraphBuilderModule {
     ElevationGridCoverageFactory factory,
     Graph graph,
     DataImportIssueStore issueStore,
-    File cachedElevationsFile,
+    GraphBuildCacheManager cacheManager,
     Map<Vertex, Double> elevationData,
-    boolean readCachedElevations,
-    boolean writeCachedElevations,
     double distanceBetweenSamplesM,
     double maxElevationPropagationMeters,
     boolean includeEllipsoidToGeoidDifference,
@@ -170,10 +157,8 @@ public class ElevationModule implements GraphBuilderModule {
     gridCoverageFactory = factory;
     this.graph = graph;
     this.issueStore = issueStore;
-    this.cachedElevationsFile = cachedElevationsFile;
+    this.cacheManager = cacheManager;
     this.elevationData = elevationData;
-    this.readCachedElevations = readCachedElevations;
-    this.writeCachedElevations = writeCachedElevations;
     this.maxElevationPropagationMeters = maxElevationPropagationMeters;
     this.includeEllipsoidToGeoidDifference = includeEllipsoidToGeoidDifference;
     this.multiThreadElevationCalculations = multiThreadElevationCalculations;
@@ -189,22 +174,10 @@ public class ElevationModule implements GraphBuilderModule {
 
     graph.setDistanceBetweenElevationSamples(this.distanceBetweenSamplesM);
 
-    // try to load in the cached elevation data
-    if (readCachedElevations) {
-      // try to load in the cached elevation data
-      try {
-        ObjectInputStream in = new ObjectInputStream(new FileInputStream(cachedElevationsFile));
-        cachedElevations = (HashMap<String, PackedCoordinateSequence>) in.readObject();
-        LOG.info("Cached elevation data loaded into memory!");
-      } catch (IOException | ClassNotFoundException e) {
-        issueStore.add(
-          new Graphwide(
-            String.format(
-              "Cached elevations file could not be read in due to error: %s!",
-              e.getMessage()
-            )
-          )
-        );
+    if (cacheManager.isEnabled(CacheTask.ELEVATION)) {
+      cachedElevations = cacheManager.load(CacheTask.ELEVATION);
+      if (cachedElevations == null) {
+        cachedElevations = new HashMap<>();
       }
     }
     LOG.info("Setting street elevation profiles from digital elevation model...");
@@ -276,9 +249,7 @@ public class ElevationModule implements GraphBuilderModule {
       }
     }
 
-    if (writeCachedElevations) {
-      // write information from edgesWithElevation to a new cache file for subsequent graph builds
-      LOG.info("Writing elevation cache");
+    if (cacheManager.isEnabled(CacheTask.ELEVATION)) {
       HashMap<String, PackedCoordinateSequence> newCachedElevations = new HashMap<>();
       for (StreetEdge streetEdge : edgesWithCalculatedElevations) {
         newCachedElevations.put(
@@ -286,15 +257,7 @@ public class ElevationModule implements GraphBuilderModule {
           streetEdge.getElevationProfile()
         );
       }
-      try {
-        ObjectOutputStream out = new ObjectOutputStream(
-          new BufferedOutputStream(new FileOutputStream(cachedElevationsFile))
-        );
-        out.writeObject(newCachedElevations);
-        out.close();
-      } catch (IOException e) {
-        issueStore.add(new Graphwide("Failed to write cached elevation file: " + e.getMessage()));
-      }
+      cacheManager.save(CacheTask.ELEVATION, newCachedElevations);
     }
 
     @SuppressWarnings("unchecked")
@@ -321,20 +284,6 @@ public class ElevationModule implements GraphBuilderModule {
   public void checkInputs() {
     gridCoverageFactory.checkInputs();
 
-    // check for the existence of cached elevation data.
-    if (readCachedElevations) {
-      if (Files.exists(cachedElevationsFile.toPath())) {
-        LOG.info("Cached elevations file found!");
-      } else {
-        LOG.warn(
-          "No cached elevations file found at {} or read access not allowed! Unable " +
-            "to load in cached elevations. This could take a while...",
-          cachedElevationsFile.toPath().toAbsolutePath()
-        );
-      }
-    } else {
-      LOG.warn("Not using cached elevations! This could take a while...");
-    }
   }
 
   /**

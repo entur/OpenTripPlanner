@@ -25,6 +25,7 @@ import org.opentripplanner.graph_builder.model.ConfiguredDataSource;
 import org.opentripplanner.graph_builder.module.RouteToCentroidStationIdsValidator;
 import org.opentripplanner.graph_builder.module.StreetLinkerModule;
 import org.opentripplanner.graph_builder.module.TurnRestrictionModule;
+import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
 import org.opentripplanner.graph_builder.module.islandpruning.PruneIslands;
 import org.opentripplanner.graph_builder.module.ned.DegreeGridNEDTileSource;
 import org.opentripplanner.graph_builder.module.ned.ElevationModule;
@@ -61,6 +62,15 @@ import org.opentripplanner.transit.service.TimetableRepository;
  */
 @Module
 public class GraphBuilderModules {
+
+  @Provides
+  @Singleton
+  static GraphBuildCacheManager provideGraphBuildCacheManager(
+    BuildConfig config,
+    GraphBuilderDataSources dataSources
+  ) {
+    return new GraphBuildCacheManager(config.cache, dataSources.getBaseDirectory());
+  }
 
   @Provides
   @Singleton
@@ -224,13 +234,14 @@ public class GraphBuilderModules {
     GraphBuilderDataSources dataSources,
     Graph graph,
     OsmModule osmModule,
-    DataImportIssueStore issueStore
+    DataImportIssueStore issueStore,
+    GraphBuildCacheManager cacheManager
   ) {
     List<ElevationModule> result = new ArrayList<>();
     List<ElevationGridCoverageFactory> gridCoverageFactories = new ArrayList<>();
     if (config.elevationBucket != null) {
       gridCoverageFactories.add(
-        createNedElevationFactory(new File(dataSources.getCacheDirectory(), "ned"), config)
+        createNedElevationFactory(new File(dataSources.getBaseDirectory(), "ned"), config)
       );
     } else if (dataSources.has(DEM)) {
       gridCoverageFactories.addAll(
@@ -241,16 +252,7 @@ public class GraphBuilderModules {
     // modules to the same graph builder. We do not actually know if this is supported by the
     // ElevationModule class.
     for (ElevationGridCoverageFactory it : gridCoverageFactories) {
-      result.add(
-        createElevationModule(
-          config,
-          graph,
-          issueStore,
-          it,
-          osmModule,
-          dataSources.getCacheDirectory()
-        )
-      );
+      result.add(createElevationModule(config, graph, issueStore, it, osmModule, cacheManager));
     }
     return result;
   }
@@ -405,18 +407,14 @@ public class GraphBuilderModules {
     DataImportIssueStore issueStore,
     ElevationGridCoverageFactory it,
     OsmModule osmModule,
-    File cacheDirectory
+    GraphBuildCacheManager cacheManager
   ) {
-    var cachedElevationsFile = new File(cacheDirectory, "cached_elevations.obj");
-
     return new ElevationModule(
       it,
       graph,
       issueStore,
-      cachedElevationsFile,
+      cacheManager,
       osmModule.elevationDataOutput(),
-      config.readCachedElevations,
-      config.writeCachedElevations,
       config.distanceBetweenElevationSamples,
       config.maxElevationPropagationMeters,
       config.includeEllipsoidToGeoidDifference,
