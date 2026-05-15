@@ -16,10 +16,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.EnumSet;
-import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.opentripplanner.datastore.OtpDataStore;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
@@ -159,7 +159,7 @@ public class GraphBuilderDataSources implements Closeable {
    * is {@code null}, the OTP base directory is used. Works with any configured repository —
    * local filesystem, GCS bucket, etc.
    */
-  public CompositeDataSource getCacheDir(@Nullable URI path) {
+  public CompositeDataSource getCacheDirectory(@Nullable URI path) {
     return store.getCacheDir(path);
   }
 

@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.dataoverlay.EdgeUpdaterModule;
 import org.opentripplanner.ext.dataoverlay.configure.DataOverlayFactory;
@@ -70,8 +71,8 @@ public class GraphBuilderModules {
     GraphBuilderDataSources dataSources
   ) {
     return new GraphBuildCacheManager(
-      config.cache.toParameters(),
-      dataSources.getCacheDir(config.cache.path)
+      config.cache(),
+      dataSources.getCacheDirectory(config.cachePath())
     );
   }
 
@@ -245,8 +246,9 @@ public class GraphBuilderModules {
     List<ElevationModule> result = new ArrayList<>();
     List<ElevationGridCoverageFactory> gridCoverageFactories = new ArrayList<>();
     if (config.elevationBucket != null) {
+      var nedUri = new File(dataSources.getBaseDirectory(), "ned").toURI();
       gridCoverageFactories.add(
-        createNedElevationFactory(new File(dataSources.getBaseDirectory(), "ned"), config)
+        createNedElevationFactory(dataSources.getCacheDirectory(nedUri), config)
       );
     } else if (dataSources.has(DEM)) {
       gridCoverageFactories.addAll(
@@ -377,7 +379,7 @@ public class GraphBuilderModules {
   /* private methods */
 
   private static ElevationGridCoverageFactory createNedElevationFactory(
-    File nedCacheDirectory,
+    CompositeDataSource nedCacheDir,
     BuildConfig config
   ) {
     // Download the elevation tiles from an Amazon S3 bucket
@@ -387,7 +389,7 @@ public class GraphBuilderModules {
     awsTileSource.awsBucketName = config.elevationBucket.bucketName;
 
     return new NEDGridCoverageFactoryImpl(
-      nedCacheDirectory,
+      nedCacheDir,
       config.elevationBucket.datumUrl,
       awsTileSource
     );
