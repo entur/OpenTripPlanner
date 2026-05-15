@@ -159,7 +159,7 @@ public class GraphBuilderDataSources implements Closeable {
    * is {@code null}, the OTP base directory is used. Works with any configured repository —
    * local filesystem, GCS bucket, etc.
    */
-  public CompositeDataSource getCacheDir(@Nullable URI path) {
+  public CompositeDataSource getCacheDirectory(@Nullable URI path) {
     return store.getCacheDir(path);
   }
 
