@@ -7,7 +7,6 @@ import com.esotericsoftware.kryo.io.Output;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.routing.graph.kryosupport.KryoBuilder;
-import org.opentripplanner.standalone.config.buildconfig.GraphBuildCacheConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,24 +26,27 @@ public class GraphBuildCacheManager {
 
   /** Disabled no-op instance — safe to use as a default when no real cache is needed. */
   public static final GraphBuildCacheManager NOOP = new GraphBuildCacheManager(
-    GraphBuildCacheConfig.DEFAULT,
+    GraphBuildCacheParameters.DISABLED,
     null
   );
 
   private static final Logger LOG = LoggerFactory.getLogger(GraphBuildCacheManager.class);
 
-  private final GraphBuildCacheConfig config;
+  private final GraphBuildCacheParameters parameters;
   private final CompositeDataSource cacheDir;
   private final Kryo kryo;
 
-  public GraphBuildCacheManager(GraphBuildCacheConfig config, CompositeDataSource cacheDir) {
-    this.config = config;
+  public GraphBuildCacheManager(
+    GraphBuildCacheParameters parameters,
+    CompositeDataSource cacheDir
+  ) {
+    this.parameters = parameters;
     this.cacheDir = cacheDir;
     this.kryo = KryoBuilder.create();
   }
 
   public boolean isEnabled(CacheTask task) {
-    return config.isEnabled(task);
+    return parameters.isEnabled(task);
   }
 
   /**

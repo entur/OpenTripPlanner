@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.module.cache.CacheTask;
+import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheParameters;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 
 /**
@@ -15,21 +16,14 @@ import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
  */
 public class GraphBuildCacheConfig {
 
-  /** Disabled cache — used as a safe no-op default when no config is available (e.g. tests). */
-  public static final GraphBuildCacheConfig DEFAULT = new GraphBuildCacheConfig(
-    false,
-    null,
-    EnumSet.allOf(CacheTask.class)
-  );
-
   public final boolean enabled;
 
   /**
    * Root directory for cache files. {@code null} means "use the OTP base directory", resolved at
-   * runtime via {@link org.opentripplanner.graph_builder.GraphBuilderDataSources#getCacheDir}.
+   * runtime via {@link org.opentripplanner.graph_builder.GraphBuilderDataSources#getCacheDirectory(URI)}.
    */
   @Nullable
-  public final URI path;
+  private final URI path;
 
   /** Which tasks are enabled. Defaults to all known tasks when not set in config. */
   public final Set<CacheTask> tasks;
@@ -94,7 +88,12 @@ public class GraphBuildCacheConfig {
     return new GraphBuildCacheConfig(enabled, path, tasks);
   }
 
-  public boolean isEnabled(CacheTask task) {
-    return enabled && tasks.contains(task);
+  @Nullable
+  public URI path() {
+    return path;
+  }
+
+  public GraphBuildCacheParameters toParameters() {
+    return new GraphBuildCacheParameters(enabled, tasks);
   }
 }

@@ -69,7 +69,10 @@ public class GraphBuilderModules {
     BuildConfig config,
     GraphBuilderDataSources dataSources
   ) {
-    return new GraphBuildCacheManager(config.cache, dataSources.getCacheDir(config.cache.path));
+    return new GraphBuildCacheManager(
+      config.cache.toParameters(),
+      dataSources.getCacheDir(config.cache.path)
+    );
   }
 
   @Provides
