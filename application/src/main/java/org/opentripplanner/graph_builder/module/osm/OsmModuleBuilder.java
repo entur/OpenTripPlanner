@@ -2,10 +2,8 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import java.util.Collection;
 import java.util.Set;
-import java.io.File;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
-import org.opentripplanner.standalone.config.buildconfig.GraphBuildCacheConfig;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
 import org.opentripplanner.graph_builder.services.osm.DefaultNamer;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
@@ -40,10 +38,7 @@ public class OsmModuleBuilder {
   private boolean includeOsmStationEntrances = false;
   private int maxAreaNodes = StreetConstants.DEFAULT_MAX_AREA_NODES;
 
-  private GraphBuildCacheManager cacheManager = new GraphBuildCacheManager(
-    GraphBuildCacheConfig.DEFAULT,
-    new File(".")
-  );
+  private GraphBuildCacheManager cacheManager = GraphBuildCacheManager.NOOP;
 
   public OsmModuleBuilder(
     Collection<OsmProvider> providers,
