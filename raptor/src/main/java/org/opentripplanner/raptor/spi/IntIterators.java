@@ -1,7 +1,6 @@
-package org.opentripplanner.raptor.util;
+package org.opentripplanner.raptor.spi;
 
-import org.opentripplanner.raptor.spi.IntIterator;
-import org.opentripplanner.raptor.spi.RaptorConstants;
+import java.util.BitSet;
 
 public class IntIterators {
 
@@ -23,6 +22,14 @@ public class IntIterators {
   }
 
   /* Static factories */
+
+  /**
+   * Create an iterator over the given bitset. The iterator will return the index of the set bits
+   * in the bitset, in ascending order.
+   */
+  public static IntIterator of(BitSet set) {
+    return new BitSetIterator(set);
+  }
 
   /**
    * Create an int iterator incrementing by 1.

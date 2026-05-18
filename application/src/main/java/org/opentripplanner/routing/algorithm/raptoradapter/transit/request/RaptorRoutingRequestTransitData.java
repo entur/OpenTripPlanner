@@ -7,6 +7,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.spi.IntIterator;
+import org.opentripplanner.raptor.spi.IntIterators;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorConstrainedTransfer;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
@@ -17,7 +18,6 @@ import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
-import org.opentripplanner.raptor.util.BitSetIterator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultSlackProvider;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -168,7 +168,7 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       }
     }
 
-    return new BitSetIterator(activeTripPatternsForGivenStops);
+    return IntIterators.of(activeTripPatternsForGivenStops);
   }
 
   @Override
