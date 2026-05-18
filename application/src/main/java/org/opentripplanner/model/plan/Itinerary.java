@@ -282,19 +282,6 @@ public class Itinerary implements ItinerarySortKey {
     return systemNotices.stream().map(SystemNotice::tag).anyMatch(tag::equals);
   }
 
-  public Itinerary withTimeShiftToStartAt(ZonedDateTime afterTime) {
-    Duration duration = Duration.between(legs().getFirst().startTime(), afterTime);
-    List<Leg> timeShiftedLegs = legs()
-      .stream()
-      .map(leg -> leg.withTimeShift(duration))
-      .collect(Collectors.toList());
-    return new ItineraryBuilder(timeShiftedLegs, searchWindowAware)
-      .withGeneralizedCost(generalizedCost)
-      .withAccessPenalty(accessPenalty)
-      .withEgressPenalty(egressPenalty)
-      .build();
-  }
-
   /** Total duration of the itinerary in seconds */
   public Duration totalDuration() {
     return totalDuration;
@@ -611,9 +598,9 @@ public class Itinerary implements ItinerarySortKey {
       .addTime("end", legs().getLast().endTime())
       .addNum("nTransfers", numberOfTransfers)
       .addDuration("duration", totalDuration)
-      .addDuration("nonTransitTime", totalStreetDuration)
-      .addDuration("transitTime", totalTransitDuration)
-      .addDuration("waitingTime", totalWaitingDuration)
+      .addDuration("nonTransitDuration", totalStreetDuration)
+      .addDuration("transitDuration", totalTransitDuration)
+      .addDuration("waitingDuration", totalWaitingDuration)
       .addObj("generalizedCost", generalizedCost)
       .addNum("generalizedCost2", generalizedCost2)
       .addNum("waitTimeOptimizedCost", waitTimeOptimizedCost, UNKNOWN)

@@ -43,7 +43,8 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *     (generating randomized schedules)
  * </ul>
  * <p>
- * This class originated as a rewrite of Conveyals RAPTOR code: https://github.com/conveyal/r5.
+ * This class originated as a rewrite of <a href="https://github.com/conveyal/r5">Conveyals RAPTOR
+ * code</a>.
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
@@ -117,25 +118,25 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   @Override
-  public void applyStreetStopAccess() {
+  public void applyAccessArrivedOnStreet() {
     addAccessPaths(accessPaths.arrivedOnStreetByNumOfRides(round));
   }
 
   @Override
-  public void applyOnBoardStopAccess() {
+  public void applyAccessArrivedOnBoard() {
     addAccessPaths(accessPaths.arrivedOnBoardByNumOfRides(round));
   }
 
   @Override
-  public void applyOnBoardTripAccess() {
-    for (var accessPath : accessPaths.startOnBoardAccessPaths()) {
+  public void applyAccessStartOnBoard() {
+    for (var accessPath : accessPaths.listStartOnBoardAccesses()) {
       var boarding = accessPath.tripBoarding();
       var route = transitData.getRouteForIndex(boarding.routeIndex());
       var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
       var boardTime = trip.departure(boarding.stopPositionInPattern());
 
       if (calculator.isInIteration(boardTime, iterationDepartureTime)) {
-        transitWorker.registerOnBoardAccessStopArrival(accessPath, boardTime);
+        transitWorker.addStartOnBoardAccessStopArrival(accessPath, boardTime);
       }
     }
   }
@@ -194,7 +195,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
 
       // Access must be available after the iteration departure time
       if (departureTime != RaptorConstants.TIME_NOT_SET) {
-        transitWorker.setAccessToStop(it, departureTime);
+        transitWorker.addAccessStopArrival(it, departureTime);
       }
     }
   }
@@ -213,13 +214,12 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
     int boardSlack = slackProvider.boardSlack(pattern.slackIndex());
 
     transitWorker.prepareForTransitWith(route);
-    var onBoardArrivals = transitWorker.consumeOnBoardStopArrivals(routeIndex);
+
+    var onBoardArrivals = transitWorker.consumeStartOnBoardStopArrivalsForRoute(routeIndex);
 
     while (stopPositions.hasNext()) {
       int stopPos = stopPositions.next();
       int stopIndex = pattern.stopIndex(stopPos);
-
-      transitWorker.prepareForNextStop(stopIndex, stopPos);
 
       // attempt to alight if we're on board, this is done above the board search
       // so that we don't alight on first stop boarded
@@ -230,12 +230,18 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule>
           transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
         }
       }
-      // attempt to board using on-board trip access
-      if (onBoardArrivals != null && onBoardArrivals.containsKey(stopPos)) {
+
+      // attempt to board using on-board trip access/pass-though. This happens after
+      // the alight at the given stop position.
+      if (onBoardArrivals != null && onBoardArrivals.arrivalExistForStopPosition(stopPos)) {
         for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
-          var boarding = arrival.subsequentBoardingConstraint();
+          var boarding = arrival.boardingConstraint();
           var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
-          transitWorker.boardAsOnBoardAccess(arrival, stopPos, trip);
+          transitWorker.boardWithStartOnBoardAccess(
+            arrival.accessStopArrival(),
+            trip,
+            boarding.stopPositionInPattern()
+          );
         }
       }
 

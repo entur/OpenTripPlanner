@@ -2,8 +2,8 @@ package org.opentripplanner.ext.flex.flexpathcalculator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
-import static org.opentripplanner.ext.flex.FlexStopTimesForTest.area;
-import static org.opentripplanner.ext.flex.FlexStopTimesForTest.regularStop;
+import static org.opentripplanner.model.FlexStopTimesFactory.area;
+import static org.opentripplanner.model.FlexStopTimesFactory.regularStop;
 import static org.opentripplanner.street.model.StreetModelForTest.V1;
 import static org.opentripplanner.street.model.StreetModelForTest.V2;
 

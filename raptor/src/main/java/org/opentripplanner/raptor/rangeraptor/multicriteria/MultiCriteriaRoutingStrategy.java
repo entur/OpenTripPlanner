@@ -7,15 +7,15 @@ import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.view.ArrivalView;
-import org.opentripplanner.raptor.rangeraptor.internalapi.OnBoardTripAccessPathsForRoute;
-import org.opentripplanner.raptor.rangeraptor.internalapi.PassThroughPointsService;
+import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrival;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRide;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideFactory;
 import org.opentripplanner.raptor.rangeraptor.support.TimeBasedBoardingSupport;
 import org.opentripplanner.raptor.spi.RaptorBoardOrAlightEvent;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorRoute;
@@ -28,14 +28,16 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSet;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extends PatternRide<T>>
+public class MultiCriteriaRoutingStrategy<
+  T extends RaptorTripSchedule,
+  R extends AbstractPatternRide<T>
+>
   implements RoutingStrategy<T> {
 
   private final McRangeRaptorWorkerState<T> state;
   private final TimeBasedBoardingSupport<T> boardingSupport;
   private final PatternRideFactory<T, R> patternRideFactory;
   private final ParetoSet<R> patternRides;
-  private final PassThroughPointsService passThroughPointsService;
   private final RaptorCostCalculator<T> c1Calculator;
   private final SlackProvider slackProvider;
 
@@ -43,7 +45,6 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     McRangeRaptorWorkerState<T> state,
     TimeBasedBoardingSupport<T> boardingSupport,
     PatternRideFactory<T, R> patternRideFactory,
-    PassThroughPointsService passThroughPointsService,
     RaptorCostCalculator<T> c1Calculator,
     SlackProvider slackProvider,
     ParetoSet<R> patternRides
@@ -51,15 +52,14 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     this.state = Objects.requireNonNull(state);
     this.boardingSupport = Objects.requireNonNull(boardingSupport);
     this.patternRideFactory = Objects.requireNonNull(patternRideFactory);
-    this.passThroughPointsService = Objects.requireNonNull(passThroughPointsService);
     this.c1Calculator = Objects.requireNonNull(c1Calculator);
     this.slackProvider = Objects.requireNonNull(slackProvider);
     this.patternRides = Objects.requireNonNull(patternRides);
   }
 
   @Override
-  public void setAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
-    state.setAccessToStop(accessPath, departureTime);
+  public void addAccessStopArrival(RaptorAccessEgress accessPath, int departureTime) {
+    state.addAccessToStop(accessPath, departureTime);
   }
 
   @Override
@@ -67,23 +67,6 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     boardingSupport.prepareForTransitWith(route.timetable());
     patternRideFactory.prepareForTransitWith(route.pattern());
     this.patternRides.clear();
-  }
-
-  @Override
-  public void prepareForNextStop(int stopIndex, int stopPos) {
-    // If no pass-through service exist, this block will be removed by the JIT compiler
-    if (passThroughPointsService.isPassThroughPoint(stopIndex)) {
-      for (int i = 0; i < patternRides.size(); ++i) {
-        R ride = patternRides.get(i);
-        // Replace existing ride with same ride with the C2 value updated. This only happens if
-        // the stop is a pass-through point and the path has visited the pass-through points in the
-        // correct order.
-        //noinspection unchecked
-        passThroughPointsService.updateC2Value(ride.c2(), newC2 ->
-          patternRides.add((R) ride.updateC2(newC2))
-        );
-      }
-    }
   }
 
   @Override
@@ -121,68 +104,36 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   @Override
-  public void registerOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
-    state.addOnBoardAccessStopArrival(access, boardTime);
+  public void addStartOnBoardAccessStopArrival(RaptorStartOnBoardAccess access, int boardTime) {
+    state.addOnTripAccessStopArrival(access, boardTime);
   }
 
-  @Override
   @Nullable
-  public OnBoardTripAccessPathsForRoute<T> consumeOnBoardStopArrivals(int routeIndex) {
-    return state.consumeOnBoardStopArrivals(routeIndex);
+  @Override
+  public OnTripAccessArrivals<T> consumeStartOnBoardStopArrivalsForRoute(int routeIndex) {
+    return state.consumeOnTripStopArrivalsForRoute(routeIndex);
   }
 
   @Override
-  public boolean boardAsOnBoardAccess(
+  public void boardWithStartOnBoardAccess(
     ArrivalView<T> prevArrival,
-    int stopPositionInPattern,
-    T trip
+    T trip,
+    int stopPositionInPattern
   ) {
     if (!(prevArrival instanceof McStopArrival<T> prevMcArrival)) {
-      throw new UnsupportedOperationException();
+      throw new IllegalArgumentException(prevArrival.toString());
     }
 
+    // Use the trip's exact departure time to find the same trip that was riding in the previous segment
     var boarding = boardingSupport.searchForRegularBoarding(
-      prevArrival.arrivalTime(),
+      trip.departure(stopPositionInPattern),
       stopPositionInPattern,
-      slackProvider.boardSlack(trip.pattern().slackIndex())
+      RaptorConstants.ZERO
     );
-
     if (boarding.empty()) {
-      return false;
+      throw new IllegalArgumentException("Unable to board trip " + trip + " from " + prevArrival);
     }
-
     board(prevMcArrival, prevArrival.stop(), boarding);
-    return true;
-  }
-
-  private void board(
-    McStopArrival<T> prevArrival,
-    final int stopIndex,
-    final RaptorBoardOrAlightEvent<T> boarding
-  ) {
-    final T trip = boarding.trip();
-    final int boardTime = boarding.time();
-
-    if (prevArrival.arrivedBy(ACCESS)) {
-      int latestArrivalTime = boardTime - slackProvider.boardSlack(trip.pattern().slackIndex());
-      prevArrival = prevArrival.timeShiftNewArrivalTime(latestArrivalTime);
-    }
-
-    final int boardC1 = calculateCostAtBoardTime(prevArrival, boarding);
-
-    final int relativeBoardC1 = boardC1 + calculateOnTripRelativeCost(boardTime, trip);
-
-    patternRides.add(
-      patternRideFactory.createPatternRide(
-        prevArrival,
-        stopIndex,
-        boarding.stopPositionInPattern(),
-        boardTime,
-        boardC1,
-        relativeBoardC1,
-        trip
-      )
-    );
   }
 
   private void boardWithRegularTransfer(
@@ -221,6 +172,34 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
     }
   }
 
+  private void board(
+    McStopArrival<T> prevArrival,
+    final int stopIndex,
+    final RaptorBoardOrAlightEvent<T> boarding
+  ) {
+    final T trip = boarding.trip();
+    final int boardTime = boarding.time();
+
+    if (prevArrival.arrivedBy(ACCESS)) {
+      int latestArrivalTime = boardTime - slackProvider.boardSlack(trip.pattern().slackIndex());
+      prevArrival = prevArrival.timeShiftNewArrivalTime(latestArrivalTime);
+    }
+
+    final int boardC1 = calculateCostAtBoardTime(prevArrival, boarding);
+    final int relativeBoardC1 = boardC1 + calculateOnTripRelativeCost(boardTime, trip);
+
+    var ride = patternRideFactory.createPatternRide(
+      prevArrival,
+      stopIndex,
+      boarding.stopPositionInPattern(),
+      boardTime,
+      boardC1,
+      relativeBoardC1,
+      trip
+    );
+    patternRides.add(ride);
+  }
+
   /**
    * Calculate a cost for riding a trip. It should include the cost from the beginning of the
    * journey all the way until a trip is boarded. Any slack at the end of the last leg is not part
@@ -247,13 +226,13 @@ public class MultiCriteriaRoutingStrategy<T extends RaptorTripSchedule, R extend
   }
 
   /**
-   * Calculate a cost for riding a trip. It should include the cost from the beginning of the
-   * journey all the way until a trip is boarded. The cost is used to compare trips boarding the
-   * same pattern with the same number of transfers. It is ok for the cost to be relative to any
+   * Calculate a cost for riding a trip. The cost is used to compare trips boarding in the same
+   * pattern with the same number of transfers. It is ok for the cost to be relative to any
    * point in place or time - as long as it can be used to compare to paths that started at the
-   * origin in the same iteration, having used the same number-of-rounds to board the same trip.
+   * origin in the same iteration, having used the same number-of-rounds to board trips in the same
+   * pattern.
    */
   private int calculateOnTripRelativeCost(int boardTime, T tripSchedule) {
-    return c1Calculator.onTripRelativeRidingCost(boardTime, tripSchedule);
+    return c1Calculator.transitCost(tripSchedule.relativeTravelDuration(boardTime), tripSchedule);
   }
 }

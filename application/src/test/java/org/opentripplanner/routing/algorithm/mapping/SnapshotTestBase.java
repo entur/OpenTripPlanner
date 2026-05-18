@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
-import org.opentripplanner.TestServerContext;
 import org.opentripplanner.api.parameter.ApiRequestMode;
 import org.opentripplanner.api.parameter.QualifiedMode;
 import org.opentripplanner.api.parameter.Qualifier;
@@ -49,6 +48,7 @@ import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFil
 import org.opentripplanner.routing.api.request.request.filter.TransitFilterRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
+import org.opentripplanner.standalone.api.TestServerContext;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
@@ -295,10 +295,13 @@ public abstract class SnapshotTestBase {
 
   private String formatPlace(GenericLocation location) {
     String formatted;
-    if (location.stopId != null) {
-      formatted = String.format("%s::%s", location.label, location.stopId);
+    if (location.stopId() != null) {
+      formatted = String.format("%s::%s", location.label(), location.stopId());
+    } else if (location.wgsCoordinate() != null) {
+      var coord = location.wgsCoordinate();
+      formatted = String.format("%s::%s,%s", location.label(), coord.latitude(), coord.longitude());
     } else {
-      formatted = String.format("%s::%s,%s", location.label, location.lat, location.lng);
+      formatted = String.format("%s::null", location.label());
     }
     return URLEncoder.encode(formatted, StandardCharsets.UTF_8);
   }

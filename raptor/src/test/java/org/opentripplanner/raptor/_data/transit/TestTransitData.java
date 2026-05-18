@@ -64,11 +64,6 @@ public class TestTransitData
     setUpDebugToStdErr();
   }
 
-  /// Create an new instance and call {@link #withTimetables(String)}
-  public static TestTransitData of(String routeTimetables) {
-    return new TestTransitData().withTimetables(routeTimetables);
-  }
-
   public TestTransitData access(String... accessList) {
     access(Arrays.stream(accessList).map(TestAccessEgress::of).toArray(TestAccessEgress[]::new));
     return this;
@@ -126,6 +121,11 @@ public class TestTransitData
   @Override
   public int numberOfStops() {
     return routeIndexesByStopIndex.size();
+  }
+
+  @Override
+  public int numberOfTripPatterns() {
+    return routes.size();
   }
 
   @Override
@@ -266,14 +266,15 @@ public class TestTransitData
   }
 
   public TestTransitData withRoute(TestRoute route) {
-    int routeIndex = routes.size();
+    int tripPatternIndex = routes.size();
+    route.initTripPatternIndex(tripPatternIndex);
     this.routes.add(route);
     var pattern = route.pattern();
     for (int i = 0; i < pattern.numberOfStopsInPattern(); ++i) {
       int stopIndex = pattern.stopIndex(i);
       requestBuilder.debug().withStops(stopIndex);
       expandNumOfStops(stopIndex);
-      routeIndexesByStopIndex.get(stopIndex).add(routeIndex);
+      routeIndexesByStopIndex.get(stopIndex).add(tripPatternIndex);
     }
     return this;
   }
@@ -388,7 +389,7 @@ public class TestTransitData
     } else {
       if (WARNING_COUNTER.getAndIncrement() % 20 == 0) {
         System.err.println(
-          "[INFO] The debug logging for raptor module teste is off by default! " +
+          "[INFO] The debug logging for raptor module tests is off by default! " +
             "Add \"-DdebugRaptor\" to the command line to enable."
         );
       }

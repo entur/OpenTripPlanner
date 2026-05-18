@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.TestOtpModel;
-import org.opentripplanner.TestServerContext;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -28,6 +27,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
+import org.opentripplanner.standalone.api.TestServerContext;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.transfer.regular.TransferRepository;
@@ -101,11 +101,13 @@ class ScheduledDeviatedTripIntegrationTest {
     );
 
     // from zone 3 to zone 2
-    var from = GenericLocation.fromStopId("Transfer Point for Route 30", feedId, "cujv");
+    var from = GenericLocation.fromStopId(
+      new FeedScopedId(feedId, "cujv"),
+      "Transfer Point for Route 30"
+    );
     var to = GenericLocation.fromStopId(
-      "Zone 1 - PUBLIX Super Market,Zone 1 Collection Point",
-      feedId,
-      "yz85"
+      new FeedScopedId(feedId, "yz85"),
+      "Zone 1 - PUBLIX Super Market,Zone 1 Collection Point"
     );
 
     var itineraries = getItineraries(from, to, serverContext);

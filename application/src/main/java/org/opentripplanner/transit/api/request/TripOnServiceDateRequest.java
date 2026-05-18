@@ -13,7 +13,7 @@ import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
 /**
  * A request for trips on certain service dates.
- * </p>
+ * <p>
  * This request is used to retrieve {@link TripOnServiceDate}s that match the provided filter
  * values.
  */

@@ -5,18 +5,25 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultAccessEgress;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.FlexAccessEgressAdapter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RoutingAccessEgress;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.service.TransitServiceResolver;
 
 public class AccessEgressMapper {
 
-  public static List<RoutingAccessEgress> mapNearbyStops(Collection<NearbyStop> accessStops) {
+  private final TransitServiceResolver resolver;
+
+  public AccessEgressMapper(TransitServiceResolver resolver) {
+    this.resolver = resolver;
+  }
+
+  public List<RoutingAccessEgress> mapNearbyStops(Collection<NearbyStop> accessStops) {
     return accessStops
       .stream()
-      .map(AccessEgressMapper::mapNearbyStop)
+      .map(this::mapNearbyStop)
       .filter(Objects::nonNull)
       .collect(Collectors.toList());
   }
@@ -30,11 +37,12 @@ public class AccessEgressMapper {
       .collect(Collectors.toList());
   }
 
-  private static RoutingAccessEgress mapNearbyStop(NearbyStop nearbyStop) {
-    if (!(nearbyStop.stop instanceof RegularStop)) {
+  private RoutingAccessEgress mapNearbyStop(NearbyStop nearbyStop) {
+    var stop = resolver.getStopLocation(nearbyStop.stopId);
+    if (!(stop instanceof RegularStop)) {
       return null;
     }
 
-    return new DefaultAccessEgress(nearbyStop.stop.getIndex(), nearbyStop.state);
+    return new DefaultAccessEgress(stop.getIndex(), nearbyStop.state);
   }
 }
