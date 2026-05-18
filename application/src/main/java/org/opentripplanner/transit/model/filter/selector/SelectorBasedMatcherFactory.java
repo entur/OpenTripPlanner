@@ -7,13 +7,16 @@ import org.opentripplanner.transit.model.filter.expr.ExpressionBuilder;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
 import org.opentripplanner.transit.model.filter.expr.OrMatcher;
 
+/**
+ * A factory for creating {@link FilterRequest} filters based on a selector.
+ */
 public class SelectorBasedMatcherFactory {
 
   /**
    * Creates a matcher from a list of {@link FilterRequest} filters.
    * A T matches if it matches at least one of the filters (OR between filters).
    *
-   * <br>
+   * <p>
    * Each filter implements select/not semantics, meaning each selector will:
    * <ul>
    *   <li>Match at least one select criterion (or all if select is null), AND</li>
