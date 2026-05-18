@@ -1,7 +1,6 @@
 package org.opentripplanner.apis.gtfs.mapping;
 
 import graphql.schema.DataFetchingEnvironment;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -43,14 +42,14 @@ public class CanceledTripsFilterMapper {
     if (modesToInclude != null) {
       filterRequestBuilder.addSelect(
         TripOnServiceDateSelectRequest.of()
-          .withTransportModes(toMainAndSubModes(modesToInclude))
+          .withTransportModes(MainAndSubMode.ofTransitModes(modesToInclude))
           .build()
       );
     }
     if (modesToExclude != null) {
       filterRequestBuilder.addNot(
         TripOnServiceDateSelectRequest.of()
-          .withTransportModes(toMainAndSubModes(modesToExclude))
+          .withTransportModes(MainAndSubMode.ofTransitModes(modesToExclude))
           .build()
       );
     }
@@ -84,15 +83,5 @@ public class CanceledTripsFilterMapper {
         return include.getGraphQLModes().stream().map(TransitModeMapper::map);
       })
       .collect(Collectors.toSet());
-  }
-
-  @Nullable
-  public static List<MainAndSubMode> toMainAndSubModes(
-    @Nullable Collection<TransitMode> transitModes
-  ) {
-    if (transitModes == null) {
-      return null;
-    }
-    return transitModes.stream().map(MainAndSubMode::new).collect(Collectors.toList());
   }
 }
