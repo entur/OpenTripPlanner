@@ -11,16 +11,18 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * Select: an item must match at least one select criterion (OR between selects).
  * Not: an item is excluded if it matches any not criterion.
  * A filter with no select and no not is not allowed.
+ *
+ * @param <T> The selector type
  */
-public class FilterRequest<TSelectRequest> {
+public class FilterRequest<T> {
 
   @Nullable
-  private final List<TSelectRequest> select;
+  private final List<T> select;
 
   @Nullable
-  private final List<TSelectRequest> not;
+  private final List<T> not;
 
-  private FilterRequest(Builder<TSelectRequest> builder) {
+  private FilterRequest(Builder<T> builder) {
     this.select = builder.select.isEmpty() ? null : List.copyOf(builder.select);
     this.not = builder.not.isEmpty() ? null : List.copyOf(builder.not);
   }
@@ -29,11 +31,11 @@ public class FilterRequest<TSelectRequest> {
     return new Builder<>();
   }
 
-  public List<TSelectRequest> select() {
+  public List<T> select() {
     return select;
   }
 
-  public List<TSelectRequest> not() {
+  public List<T> not() {
     return not;
   }
 

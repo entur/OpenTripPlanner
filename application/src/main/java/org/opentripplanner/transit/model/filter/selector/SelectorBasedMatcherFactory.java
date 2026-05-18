@@ -19,10 +19,13 @@ public class SelectorBasedMatcherFactory {
    *   <li>Match at least one select criterion (or all if select is null), AND</li>
    *   <li>Match none of the not criteria.</li>
    * </ul>
+   *
+   * @param <T> Domain type to match.
+   * @param <S> The selector type
    */
-  public static <T, TSelectRequest> Matcher<T> of(
-    List<FilterRequest<TSelectRequest>> filters,
-    Function<TSelectRequest, Matcher<T>> selectorMatcherProvider
+  public static <T, S> Matcher<T> of(
+    List<FilterRequest<S>> filters,
+    Function<S, Matcher<T>> selectorMatcherProvider
   ) {
     List<Matcher<T>> filterMatchers = filters
       .stream()
@@ -38,10 +41,13 @@ public class SelectorBasedMatcherFactory {
    *   <li>Match at least one select criterion (or all if select is null), AND</li>
    *   <li>Match none of the not criteria.</li>
    * </ul>
+   *
+   * @param <T> Domain type to match.
+   * @param <S> The selector type
    */
-  private static <T, TSelectRequest> Matcher<T> buildFilterMatcher(
-    FilterRequest<TSelectRequest> filter,
-    Function<TSelectRequest, Matcher<T>> buildSelectorMatcher
+  private static <T, S> Matcher<T> buildFilterMatcher(
+    FilterRequest<S> filter,
+    Function<S, Matcher<T>> buildSelectorMatcher
   ) {
     return ExpressionBuilder.<T>of()
       .atLeastOneMatch(
