@@ -13,6 +13,7 @@ import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
+import org.opentripplanner.transit.model.filter.selector.FilterRequest;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -106,7 +107,7 @@ class TripOnServiceDateMatcherFactoryTest {
       )
       .withFilters(
         List.of(
-          TripOnServiceDateFilterRequest.of()
+          FilterRequest.<TripOnServiceDateSelectRequest>of()
             .addSelect(
               TripOnServiceDateSelectRequest.of()
                 .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
@@ -158,7 +159,7 @@ class TripOnServiceDateMatcherFactoryTest {
     var busSelector = TripOnServiceDateSelectRequest.of()
       .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
       .build();
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(busSelector)
       .addNot(busSelector)
       .build();
@@ -178,7 +179,7 @@ class TripOnServiceDateMatcherFactoryTest {
 
   @Test
   void compositeFilterSelectByAgency() {
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
@@ -191,7 +192,7 @@ class TripOnServiceDateMatcherFactoryTest {
 
   @Test
   void compositeFilterNotByAgency() {
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
@@ -205,7 +206,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterSelectIsOrBetweenSelectors() {
     // Two selectors in select — a trip matching either one should pass
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
@@ -220,7 +221,7 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void compositeFilterNotOverridesSelect() {
     // select RUT:1 and AKT:1, but not AKT:1 — AKT:1 should be excluded despite being selected
-    var filter = TripOnServiceDateFilterRequest.of()
+    var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
@@ -236,10 +237,10 @@ class TripOnServiceDateMatcherFactoryTest {
   @Test
   void multipleFiltersAreOred() {
     // Two separate filters — a trip matching either filter should pass
-    var filterRut = TripOnServiceDateFilterRequest.of()
+    var filterRut = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("RUT:1"))).build())
       .build();
-    var filterAkt = TripOnServiceDateFilterRequest.of()
+    var filterAkt = FilterRequest.<TripOnServiceDateSelectRequest>of()
       .addSelect(TripOnServiceDateSelectRequest.of().withAgencies(List.of(id("AKT:1"))).build())
       .build();
     var request = TripOnServiceDateRequest.of().withFilters(List.of(filterRut, filterAkt)).build();

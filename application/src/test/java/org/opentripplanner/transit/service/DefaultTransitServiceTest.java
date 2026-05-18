@@ -29,7 +29,7 @@ import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateFilterRequest;
+import org.opentripplanner.transit.model.filter.selector.FilterRequest;
 import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateSelectRequest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.StopPattern;
@@ -287,7 +287,7 @@ class DefaultTransitServiceTest {
     @Test
     void filtersByAgencyNot() {
       // NOT AGENCY should exclude all canceled trips since they all belong to this same agency
-      var filter = TripOnServiceDateFilterRequest.of()
+      var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
         .addNot(TripOnServiceDateSelectRequest.of().withAgencies(List.of(AGENCY.getId())).build())
         .build();
       var request = TripOnServiceDateRequest.of().withFilters(List.of(filter)).build();
@@ -297,7 +297,7 @@ class DefaultTransitServiceTest {
 
     @Test
     void findCanceledBusTrips() {
-      var filter = TripOnServiceDateFilterRequest.of()
+      var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
         .addSelect(
           TripOnServiceDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))
@@ -311,7 +311,7 @@ class DefaultTransitServiceTest {
 
     @Test
     void findCanceledNonBusTrips() {
-      var filter = TripOnServiceDateFilterRequest.of()
+      var filter = FilterRequest.<TripOnServiceDateSelectRequest>of()
         .addNot(
           TripOnServiceDateSelectRequest.of()
             .withTransportModes(List.of(new MainAndSubMode(TransitMode.BUS)))

@@ -12,7 +12,7 @@ import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
-import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateFilterRequest;
+import org.opentripplanner.transit.model.filter.selector.FilterRequest;
 import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateSelectRequest;
 import org.opentripplanner.utils.collection.CollectionUtils;
 
@@ -39,7 +39,7 @@ public class CanceledTripsFilterMapper {
     var modesToExclude = CanceledTripsFilterMapper.toTransitModes(excludes);
 
     // Because only one filter is allowed for now, we can create a single flat list of includes/excludes
-    var filterRequestBuilder = TripOnServiceDateFilterRequest.of();
+    var filterRequestBuilder = FilterRequest.<TripOnServiceDateSelectRequest>of();
     if (modesToInclude != null) {
       filterRequestBuilder.addSelect(
         TripOnServiceDateSelectRequest.of()

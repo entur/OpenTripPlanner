@@ -10,7 +10,7 @@ import org.opentripplanner.transit.model.filter.expr.OrMatcher;
 public class SelectorBasedMatcherFactory {
 
   /**
-   * Creates a matcher from a list of {@link TFilterRequest} filters.
+   * Creates a matcher from a list of {@link FilterRequest} filters.
    * A T matches if it matches at least one of the filters (OR between filters).
    *
    * <br>
@@ -20,12 +20,8 @@ public class SelectorBasedMatcherFactory {
    *   <li>Match none of the not criteria.</li>
    * </ul>
    */
-  public static <
-    T,
-    TSelectRequest,
-    TFilterRequest extends SelectorBasedFilterRequest<TSelectRequest>
-  > Matcher<T> of(
-    List<TFilterRequest> filters,
+  public static <T, TSelectRequest> Matcher<T> of(
+    List<FilterRequest<TSelectRequest>> filters,
     Function<TSelectRequest, Matcher<T>> selectorMatcherProvider
   ) {
     List<Matcher<T>> filterMatchers = filters
@@ -43,12 +39,8 @@ public class SelectorBasedMatcherFactory {
    *   <li>Match none of the not criteria.</li>
    * </ul>
    */
-  private static <
-    T,
-    TSelectRequest,
-    TFilterRequest extends SelectorBasedFilterRequest<TSelectRequest>
-  > Matcher<T> buildFilterMatcher(
-    TFilterRequest filter,
+  private static <T, TSelectRequest> Matcher<T> buildFilterMatcher(
+    FilterRequest<TSelectRequest> filter,
     Function<TSelectRequest, Matcher<T>> buildSelectorMatcher
   ) {
     return ExpressionBuilder.<T>of()
