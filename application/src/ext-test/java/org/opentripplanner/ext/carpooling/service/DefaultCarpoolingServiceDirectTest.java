@@ -3,7 +3,9 @@ package org.opentripplanner.ext.carpooling.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.ext.carpooling.CarpoolBookingUrlTestData.expectedAugmentedUrl;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -16,6 +18,7 @@ import org.opentripplanner.ext.carpooling.CarpoolTripTestData;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.filter.DistanceBasedFilter;
 import org.opentripplanner.ext.carpooling.internal.DefaultCarpoolingRepository;
+import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
 import org.opentripplanner.ext.carpooling.routing.CarpoolTreeStreetRouter;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
@@ -29,6 +32,7 @@ import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.transit.model.organization.ContactInfo;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TransitService;
 
@@ -481,5 +485,56 @@ class DefaultCarpoolingServiceDirectTest extends GraphRoutingTest {
           "to dropoff"
       );
     }
+  }
+
+  /**
+   * Verifies that the booking URL on the carpool leg is augmented with {@code from_coordinate}
+   * and {@code to_coordinate} query parameters reflecting the passenger's carpool boarding and
+   * alighting points. In this graph the passenger's requested pickup is itself a graph vertex
+   * (P) and the carpool ride goes P → Q, so the URL coordinates equal P/Q (which are also the
+   * passenger's request endpoints here — distinguishing them from a separate walk leg is the job
+   * of {@link DefaultCarpoolingServiceWalkLegsTest}). The exact-equality assertion also pins
+   * down that the URL does NOT use the driver's origin (A) or destination (D).
+   */
+  @Test
+  void directItinerary_appendsCarpoolPickupAndDropoffCoordsToBookingUrl() {
+    var departureTime = SEARCH_TIME.plusMinutes(10);
+    var baseTrip = CarpoolTripTestData.createSimpleTripWithTime(tripStart, tripEnd, departureTime);
+    var trip = new CarpoolTripBuilder(baseTrip)
+      .withPublicContactInformation(
+        ContactInfo.of().withBookingUrl("https://book.example.com").build()
+      )
+      .build();
+    repository.upsertCarpoolTrip(trip);
+
+    var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
+    var results = service.routeDirect(request);
+    assertFalse(results.isEmpty());
+
+    var bookingInfo = results.getFirst().legs().getFirst().pickupBookingInfo();
+    assertNotNull(bookingInfo);
+
+    assertEquals(
+      expectedAugmentedUrl("https://book.example.com", passengerPickup, passengerDropoff),
+      bookingInfo.getContactInfo().getBookingUrl()
+    );
+  }
+
+  /**
+   * When the trip has no {@code publicContactInformation} the carpool leg's
+   * {@code pickupBookingInfo} must be {@code null} — i.e. a {@code BookingInfo} is not
+   * fabricated out of thin air just because a trip is present.
+   */
+  @Test
+  void directItinerary_withoutPublicContact_hasNullPickupBookingInfo() {
+    var departureTime = SEARCH_TIME.plusMinutes(10);
+    var trip = CarpoolTripTestData.createSimpleTripWithTime(tripStart, tripEnd, departureTime);
+    repository.upsertCarpoolTrip(trip);
+
+    var request = buildDirectCarpoolRequest(passengerPickup, passengerDropoff, SEARCH_TIME);
+    var results = service.routeDirect(request);
+    assertFalse(results.isEmpty());
+
+    assertNull(results.getFirst().legs().getFirst().pickupBookingInfo());
   }
 }
