@@ -636,10 +636,39 @@ What OSM tags should be looked on for the source of matching stops to platforms 
 
 Configuration for the graph-build file cache.
 
-OTP can cache the results of expensive graph-build computations (elevation lookups,
-OSM area visibility graphs) between builds. Caching is disabled by default; set
-`enabled: true` to turn it on. Cache files are stored next to the other build outputs
-in the OTP base directory by default.
+OTP can cache the results of expensive graph-build computations between builds. The two
+cached tasks are:
+
+- **ELEVATION** – elevation profiles sampled from the DEM for each street edge.
+- **VISIBILITY** – pre-computed visibility graphs for walkable OSM areas (e.g. squares
+  and parks).
+
+Both tasks can take a significant portion of total graph-build time. Enabling the cache
+skips their computation on subsequent builds and can cut build time considerably when
+the same OSM and DEM files are reused.
+
+**When to enable:** any pipeline that rebuilds the graph repeatedly from the same OSM
+and elevation data (e.g. nightly GTFS-only updates).
+
+**Cache invalidation:** the two tasks have different staleness characteristics:
+
+- *ELEVATION* – the cache key is the encoded geometry of each street edge, and on save
+  only edges present in the current build are written. OSM changes therefore take care of
+  themselves: new or modified edges produce a cache miss and are recomputed; removed edges
+  simply disappear from the next save. **Delete the elevation cache when the DEM source
+  file is replaced**, because edge geometries are unchanged but the sampled height values
+  would be stale.
+- *VISIBILITY* – the cache key is a hash of both the OSM entity IDs and all polygon
+  coordinates of an area group. Any geometry change therefore produces a cache miss and
+  triggers a recompute automatically. Deleted areas leave orphaned entries that are never
+  looked up (harmless bloat). **The visibility cache never needs to be deleted manually**;
+  clearing it only removes accumulated bloat from deleted areas.
+
+Cache files are named `<task>-cache-<version>.obj` (for example `elevation-cache-1.obj`).
+When OTP bumps the internal serialization version the old file is ignored automatically
+and a new one is written, so old versioned files can be deleted safely at any time.
+
+Caching is **disabled by default**. Set `enabled: true` to activate it.
 
 
 <h3 id="cache_enabled">enabled</h3>
@@ -670,9 +699,17 @@ Path to the directory where cache files are stored. Defaults to the OTP base dir
 
 Which cache tasks to enable.
 
-List of cache tasks to enable. Valid values are `ELEVATION` and `VISIBILITY`. When not
-set, all tasks are enabled. To disable a specific task while keeping others, list only
-the tasks you want.
+List of cache tasks to enable. Valid values:
+
+- `ELEVATION` – caches the elevation profile of every street edge. OSM changes are handled
+  automatically (the cache key is the edge geometry; on save only the current build's edges
+  are written). Delete the cache when the DEM source file is replaced.
+- `VISIBILITY` – caches pre-computed visibility graphs for walkable OSM areas. The cache
+  key includes the full polygon geometry, so OSM changes automatically cause a cache miss
+  for affected areas. This cache never needs to be deleted manually.
+
+When not set, all tasks are enabled. Omit a task from the list to skip its cache while
+keeping the others active.
 
 
 <h3 id="dem">dem</h3>
