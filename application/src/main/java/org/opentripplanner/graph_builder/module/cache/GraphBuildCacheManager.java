@@ -4,9 +4,15 @@ import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+import java.io.Closeable;
+import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.routing.graph.kryosupport.KryoBuilder;
+import org.opentripplanner.utils.time.DurationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,8 +27,19 @@ import org.slf4j.LoggerFactory;
  * <p>
  * Only the cache for the task currently being executed is held in memory, reducing peak memory
  * usage during large graph builds.
+ * <p>
+ * Cache writes are performed asynchronously on a dedicated background thread so that the main
+ * graph-build thread can continue immediately after a save is requested. Call {@link #close()}
+ * at the end of the build to wait for any in-flight write to finish before exiting.
  */
-public class GraphBuildCacheManager {
+public class GraphBuildCacheManager implements Closeable {
+
+  /**
+   * Maximum time to wait for a background cache write to finish before giving up.
+   * The write should normally complete well within this window; the limit exists purely
+   * as a safety valve so a slow or hung write never stalls the build process indefinitely.
+   */
+  static final Duration WRITE_TIMEOUT = Duration.ofMinutes(30);
 
   /** Disabled no-op instance — safe to use as a default when no real cache is needed. */
   public static final GraphBuildCacheManager NOOP = new GraphBuildCacheManager(
@@ -34,7 +51,11 @@ public class GraphBuildCacheManager {
 
   private final GraphBuildCacheParameters parameters;
   private final CompositeDataSource cacheDir;
+
+  /** Used for load operations only (main thread). Save operations create their own Kryo instance. */
   private final Kryo kryo;
+
+  private final ExecutorService writeExecutor;
 
   public GraphBuildCacheManager(
     GraphBuildCacheParameters parameters,
@@ -43,6 +64,11 @@ public class GraphBuildCacheManager {
     this.parameters = parameters;
     this.cacheDir = cacheDir;
     this.kryo = KryoBuilder.create();
+    this.writeExecutor = Executors.newSingleThreadExecutor(r -> {
+      var t = new Thread(r, "cache-writer");
+      t.setDaemon(true);
+      return t;
+    });
   }
 
   public boolean isEnabled(CacheTask task) {
@@ -87,18 +113,50 @@ public class GraphBuildCacheManager {
   }
 
   /**
-   * Save the cache for the given task, overwriting any existing entry.
+   * Schedule an asynchronous write of {@code data} to the cache file for {@code task}.
+   * <p>
+   * The write is performed on a dedicated background thread so the calling (graph-build) thread
+   * can continue immediately. A fresh {@link Kryo} instance is created for each write to avoid
+   * thread-safety issues with the instance used by {@link #load}.
+   * <p>
+   * Call {@link #close()} at the end of the build to wait for the write to finish.
    */
   public <T> void save(CacheTask task, T data) {
     DataSource entry = cacheDir.entry(task.cacheFileName());
-    LOG.info("Saving {} cache to '{}'.", task, entry.path());
-    try (Output output = new Output(entry.asOutputStream())) {
-      kryo.writeClassAndObject(
-        output,
-        new CacheSerializationObject<>(task.serializationVersionId, data)
-      );
-    } catch (KryoException e) {
-      LOG.warn("Failed to save {} cache to '{}': {}.", task, entry.path(), e.getMessage());
+    LOG.info("Saving {} cache to '{}' (async).", task, entry.path());
+    writeExecutor.submit(() -> {
+      try (Output output = new Output(entry.asOutputStream())) {
+        KryoBuilder.create().writeClassAndObject(
+          output,
+          new CacheSerializationObject<>(task.serializationVersionId, data)
+        );
+        LOG.info("Saved {} cache to '{}'.", task, entry.path());
+      } catch (KryoException e) {
+        LOG.warn("Failed to save {} cache to '{}': {}.", task, entry.path(), e.getMessage());
+      }
+    });
+  }
+
+  /**
+   * Signals that no more saves will be submitted, then waits up to {@link #WRITE_TIMEOUT} for
+   * any in-flight write to finish. Should be called once at the end of the graph build, before
+   * closing the underlying data sources.
+   */
+  @Override
+  public void close() {
+    writeExecutor.shutdown();
+    try {
+      if (!writeExecutor.awaitTermination(WRITE_TIMEOUT.toSeconds(), TimeUnit.SECONDS)) {
+        LOG.warn(
+          "Cache write did not finish within {}; aborting.",
+          DurationUtils.durationToStr(WRITE_TIMEOUT)
+        );
+        writeExecutor.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      LOG.warn("Interrupted while waiting for cache write to finish; aborting.");
+      writeExecutor.shutdownNow();
+      Thread.currentThread().interrupt();
     }
   }
 }
