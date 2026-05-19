@@ -4,6 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
+import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.raptor.spi.RaptorConstants;
@@ -187,6 +188,16 @@ public class CarpoolAccessEgress implements RoutingAccessEgress {
       penalty,
       this.carpoolReluctance
     );
+  }
+
+  /**
+   * The underlying carpool trip — i.e. the driver's committed route, schedule, and public-contact
+   * details. Exposed for the itinerary mapper, which reads trip-level metadata (start time,
+   * {@code publicContactInformation}, ...) to build the carpool leg's {@code pickupBookingInfo}.
+   * Mirrors how the direct path reads the same data straight off the {@link InsertionCandidate}.
+   */
+  public CarpoolTrip trip() {
+    return insertionCandidate.trip();
   }
 
   /**
