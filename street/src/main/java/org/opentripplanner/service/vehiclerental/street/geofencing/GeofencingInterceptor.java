@@ -2,6 +2,7 @@ package org.opentripplanner.service.vehiclerental.street.geofencing;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.VehicleRentalState;
 
@@ -10,18 +11,16 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  * {@code StreetEdge.traverse()} — returns {@code State[]} to override the normal traversal,
  * or {@code null} to let it proceed.
  *
- * <p>Delegates to three handlers:
+ * <p>Orchestrator only. Per-zone decisions live in {@link GeofencingEnforcement}
+ * implementations. The interceptor:
  * <ul>
- *   <li>{@link DeferredForkHandler} — completes renting branches deferred from a prior edge</li>
- *   <li>{@link GeofencingEnforcement} — zone-type-specific decisions (fork, block, drop)
- *       via {@link RestrictedZoneEnforcement} and {@link BusinessAreaEnforcement}</li>
- *   <li>{@link NetworkCommitmentHandler} — forks generic arrive-by states into per-network
- *       committed branches at zone boundaries</li>
+ *   <li>Runs a pre-guard for renting states inside a no-traversal zone (force drop or block).</li>
+ *   <li>Iterates boundaries and dispatches to the strategy by <em>position</em>:
+ *       approaching (tov, outside), at far boundary (tov, inside), at near boundary
+ *       (fromv, inside).</li>
+ *   <li>Delegates deferred renting forks to {@link DeferredForkHandler} and generic
+ *       network commitment to {@link NetworkCommitmentHandler}.</li>
  * </ul>
- *
- * <p>Forward enforcement checks <b>tov</b> boundaries (approaching/inside a zone) and fromv
- * for business area exit. ArriveBy enforcement checks <b>fromv</b> boundaries for committed
- * renting states and HAVE_RENTED walkers.
  */
 public class GeofencingInterceptor {
 
@@ -50,10 +49,6 @@ public class GeofencingInterceptor {
     }
   }
 
-  /**
-   * Forward enforcement: check tov boundaries for zone approach/entry, and fromv boundaries
-   * for business area exit.
-   */
   @Nullable
   private static State[] evaluateForward(
     State s0,
@@ -66,64 +61,44 @@ public class GeofencingInterceptor {
     }
     String network = s0.getVehicleRentalNetwork();
 
-    // Check tov boundaries: approaching or inside a zone
+    // tov boundaries: state will arrive at tov on this edge. entering=true means tov is outside
+    // (next edge enters the zone — fork at approach). entering=false means tov is inside (next
+    // edge exits — at far boundary).
     for (var boundary : toBoundaries) {
       var zone = boundary.zone();
       if (network != null && !zone.id().getFeedId().equals(network)) {
         continue;
       }
-
-      if (boundary.entering()) {
-        // tov is a boundary vertex (outside zone, entering direction) — fork at approach
-        var enforcement = GeofencingEnforcement.forZone(zone);
-        var result = enforcement.evaluate(zone, true, false, s0, edge);
-        if (result != null) {
-          return result;
-        }
-      } else {
-        // tov is inside a zone (exiting direction)
-        if (Boolean.TRUE.equals(zone.traversalBanned())) {
-          return State.empty();
-        }
-        // BA exit (primary): tov is the last vertex inside the BA. Ride to it and
-        // drop there, so the drop-off is inside the BA (not one vertex outside).
-        // This fires on the edge BEFORE the boundary crossing.
-        if (zone.isBusinessArea()) {
-          var result = BusinessAreaEnforcement.INSTANCE.evaluateForwardExitingAtBoundary(s0, edge);
-          if (result != null && result.length > 0) {
-            return result;
-          }
-        }
+      var enforcement = GeofencingEnforcement.forZone(zone);
+      var result = boundary.entering()
+        ? enforcement.forwardApproachingEntry(zone, s0, edge)
+        : enforcement.forwardApproachingExit(zone, s0, edge);
+      if (result != null) {
+        return result;
       }
     }
 
-    // BA exit (fallback): fromv is the exit boundary vertex. This handles the case
-    // where the state starts at the boundary (no previous edge for the tov check).
-    // The rider is forced to walk; drop-off is at tov (one vertex outside).
+    // fromv boundaries: state at fromv is at the boundary, current edge crosses it.
+    // entering=false → fromv inside, edge exits the zone (CrossingExit, BA fallback drop).
+    // entering=true  → fromv outside, edge enters the zone (CrossingEntry, normally a no-op
+    // since the fork was made one edge earlier by ApproachingEntry).
     for (var boundary : fromBoundaries) {
       var zone = boundary.zone();
-      if (!zone.isBusinessArea()) {
-        continue;
-      }
       if (network != null && !zone.id().getFeedId().equals(network)) {
         continue;
       }
-      if (!boundary.entering()) {
-        var enforcement = GeofencingEnforcement.forZone(zone);
-        var result = enforcement.evaluate(zone, false, false, s0, edge);
-        if (result != null) {
-          return result;
-        }
+      var enforcement = GeofencingEnforcement.forZone(zone);
+      var result = boundary.entering()
+        ? enforcement.forwardCrossingEntry(zone, s0, edge)
+        : enforcement.forwardCrossingExit(zone, s0, edge);
+      if (result != null) {
+        return result;
       }
     }
 
     return null;
   }
 
-  /**
-   * ArriveBy enforcement: check fromv boundaries for committed renting states and HAVE_RENTED
-   * walkers, then handle generic state network commitment.
-   */
   @Nullable
   private static State[] evaluateArriveBy(
     State s0,
@@ -142,26 +117,29 @@ public class GeofencingInterceptor {
 
     String network = s0.getVehicleRentalNetwork();
 
-    // Committed renting states: check fromv boundaries (no pairing needed)
+    // Committed renting: when the real-time edge would enter the zone (fromv + entering=false),
+    // the committed state can't ride into a no-traversal zone — block.
     if (s0.isRentingVehicle() && network != null) {
       for (var boundary : fromBoundaries) {
         var zone = boundary.zone();
         if (!zone.id().getFeedId().equals(network)) {
           continue;
         }
-        // entering=false on fromv → effectiveEntering = true in arriveBy (entering zone)
-        if (!boundary.entering() && Boolean.TRUE.equals(zone.traversalBanned())) {
-          return State.empty();
+        if (boundary.entering()) {
+          continue;
+        }
+        var enforcement = GeofencingEnforcement.forZone(zone);
+        var result = enforcement.arriveByApproaching(zone, s0, edge);
+        if (result != null) {
+          return result;
         }
       }
     }
 
-    // HAVE_RENTED walkers: check fromv paired boundaries for zone enforcement.
-    // Restricted zones and business areas need opposite direction handling:
-    //  - Restricted: enforcement at FAR boundary (walker exits zone in arrive-by)
-    //    fromv entering=true → effectiveEntering = !true = false → evaluateExiting
-    //  - BA: enforcement at NEAR boundary (walker enters BA in arrive-by)
-    //    fromv entering=false → effectiveEntering = false → evaluateExiting (= forward exit)
+    // HAVE_RENTED walkers: trigger at boundaries where the walker exits the zone in real time.
+    // For business areas, that's where the real-time edge exits the BA (boundary entering=false).
+    // For restricted zones, that's where the real-time edge exits the zone (boundary entering=true,
+    // since restricted-zone "inside" is on the opposite side from a BA "inside").
     if (s0.getVehicleRentalState() == VehicleRentalState.HAVE_RENTED) {
       for (var boundary : fromBoundaries) {
         if (!hasPairedBoundary(boundary, toBoundaries)) {
@@ -171,11 +149,14 @@ public class GeofencingInterceptor {
         if (!zone.hasRestriction() && !zone.isBusinessArea()) {
           continue;
         }
-        boolean effectiveEntering = zone.isBusinessArea()
-          ? boundary.entering()
-          : !boundary.entering();
+        boolean walkerExitsInRealTime = zone.isBusinessArea()
+          ? !boundary.entering()
+          : boundary.entering();
+        if (!walkerExitsInRealTime) {
+          continue;
+        }
         var enforcement = GeofencingEnforcement.forZone(zone);
-        var result = enforcement.evaluate(zone, effectiveEntering, true, s0, edge);
+        var result = enforcement.arriveByAtBoundary(zone, s0, edge);
         if (result != null) {
           return result;
         }
@@ -191,7 +172,7 @@ public class GeofencingInterceptor {
   }
 
   private static State[] forceDrop(State s0, EdgeTraversal edge) {
-    var editor = edge.traverse(s0, org.opentripplanner.street.search.TraverseMode.WALK);
+    var editor = edge.traverse(s0, TraverseMode.WALK);
     if (editor != null) {
       if (editor.isDropOffBannedByCurrentZones()) {
         return State.empty();

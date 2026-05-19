@@ -10,21 +10,33 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  * Enforcement for restricted geofencing zones (no-drop-off and no-traversal). Logic varies by
  * search direction and zone restriction type.
  *
- * <h3>Forward + entering restricted zone</h3>
+ * <h3>Overrides</h3>
  * <ul>
- *   <li>No-traversal: fork — one branch drops vehicle here, one continues riding.
- *       If drop-off is also banned (overlapping zones), return empty (dead end).</li>
- *   <li>No-drop-off: fork — one branch drops here, one continues riding.
- *       Post-traversal veto: if the traversal entered a no-drop-off zone during the edge
- *       (adjacent zone boundaries), discard the drop branch.</li>
+ *   <li>{@link #forwardApproachingEntry} — entering a restricted zone in forward search:
+ *       <ul>
+ *         <li>no-traversal: fork — drop here, or ride into the zone (ride branch will be killed
+ *             at the next edge by the pre-guard).</li>
+ *         <li>no-drop-off: fork — drop here, or ride through. Post-traversal veto removes the
+ *             drop branch if the edge entered a no-drop-off zone during traversal.</li>
+ *       </ul></li>
+ *   <li>{@link #forwardApproachingExit} — defensive block for no-traversal zones (the state
+ *       shouldn't normally reach this position; the pre-guard usually catches it).</li>
+ *   <li>{@link #arriveByApproaching} — block committed renting states from entering a
+ *       no-traversal zone in reverse-time.</li>
+ *   <li>{@link #arriveByAtBoundary} — HAVE_RENTED walker only; produce a walking branch.
+ *       Renting branches are deferred by {@link DeferredForkHandler}.</li>
  * </ul>
  *
- * <h3>ArriveBy + exiting restricted zone (= entering in forward time)</h3>
- * Walking branch only (HAVE_RENTED walker at boundary). Renting branches are deferred to the
- * next edge by {@link DeferredForkHandler}.
+ * <h3>Inherited as no-op (default {@code null})</h3>
+ * <ul>
+ *   <li>{@code forwardCrossingExit} — exiting a restricted zone in forward is fine; the
+ *       restriction is on being <em>inside</em>, not on leaving.</li>
+ *   <li>{@code forwardCrossingEntry} — entering decision was made one edge earlier via
+ *       {@link #forwardApproachingEntry}.</li>
+ * </ul>
  *
- * <h3>ArriveBy + entering restricted zone (committed state)</h3>
- * No-traversal: block. The committed state can't ride into a no-traversal zone.
+ * <p>Station rentals can't legally drop mid-street; they're blocked outright when approaching
+ * a no-traversal zone.
  */
 final class RestrictedZoneEnforcement implements GeofencingEnforcement {
 
@@ -32,59 +44,45 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
 
   private RestrictedZoneEnforcement() {}
 
+  /**
+   * Forward search: the next edge from tov will enter the restricted zone. The rider must
+   * decide before entering — drop here (and walk on) or continue riding into the zone.
+   *
+   * <p>Behavior depends on zone restriction and rental type:
+   * <ul>
+   *   <li><b>No-traversal, floating</b> — fork: drop branch + ride branch. The ride branch
+   *       will be killed at the next edge by the pre-guard once the state lands inside.</li>
+   *   <li><b>No-drop-off, floating</b> — fork: drop branch + ride branch. The drop branch is
+   *       post-veto'd if the edge itself crossed into a no-drop-off zone.</li>
+   *   <li><b>No-traversal, station</b> — block (station rentals can't drop mid-street).</li>
+   *   <li><b>No-drop-off, station</b> — pass through (mid-street drops are irrelevant to
+   *       station rentals; they only drop at stations).</li>
+   * </ul>
+   *
+   * <p>Returns:
+   * <ul>
+   *   <li>{@code null} — non-renting state; or station rental into a no-drop-off zone.</li>
+   *   <li>{@code State.empty()} — station rental into no-traversal zone; or no-traversal fork
+   *       where the drop position is also banned (overlapping no-drop-off zone — dead end).</li>
+   *   <li>{@code State[2]} — both fork branches (drop + ride) survived.</li>
+   *   <li>{@code State[1]} — only one branch survived (e.g., post-traversal veto removed the
+   *       drop branch in the no-drop-off case, or the ride branch traversal failed).</li>
+   *   <li>{@code State[0]} — both branches failed to traverse (edge unreachable).</li>
+   * </ul>
+   */
   @Override
   @Nullable
-  public State[] evaluate(
-    GeofencingZone zone,
-    boolean entering,
-    boolean arriveBy,
-    State state,
-    EdgeTraversal edge
-  ) {
-    if (entering) {
-      return evaluateEntering(zone, arriveBy, state, edge);
-    } else {
-      return evaluateExiting(zone, arriveBy, state, edge);
-    }
-  }
-
-  /**
-   * State is entering a restricted zone (in forward/geographic terms).
-   */
-  @Nullable
-  private State[] evaluateEntering(
-    GeofencingZone zone,
-    boolean arriveBy,
-    State state,
-    EdgeTraversal edge
-  ) {
-    if (arriveBy) {
-      // ArriveBy entering restricted zone: block committed renting states from riding
-      // into a no-traversal zone. The committed state can't legally traverse it.
-      if (
-        state.isRentingVehicle() &&
-        state.getVehicleRentalNetwork() != null &&
-        Boolean.TRUE.equals(zone.traversalBanned())
-      ) {
-        return State.empty();
-      }
-      return null;
-    }
-
-    // Forward entering
+  public State[] forwardApproachingEntry(GeofencingZone zone, State state, EdgeTraversal edge) {
     if (!state.isRentingVehicle()) {
       return null;
     }
-
     // Station rentals can't legally drop mid-street, so the floating-style fork doesn't apply.
-    // No-traversal: block outright. No-drop-off: irrelevant (no street drops anyway).
     if (state.isRentingVehicleFromStation()) {
       if (Boolean.TRUE.equals(zone.traversalBanned())) {
         return State.empty();
       }
       return null;
     }
-
     if (Boolean.TRUE.equals(zone.traversalBanned())) {
       return forwardEnteringNoTraversal(state, edge);
     }
@@ -95,11 +93,89 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * Forward entering a no-traversal zone: fork — drop vehicle + continue riding.
-   * The ride branch will be blocked at the next edge by the pre-enforcement traversal ban guard.
+   * Forward search: state is inside a restricted zone (tov is the inside boundary; next edge
+   * exits). Normally a restricted zone is fine to exit, but for a no-traversal zone, the state
+   * shouldn't be here at all — the pre-guard catches renting states inside no-traversal zones
+   * before enforcement runs. This method is a defensive backstop in case the pre-guard misses.
+   *
+   * <p>Returns:
+   * <ul>
+   *   <li>{@code null} — no-drop-off (exit is fine), or any non-restricted zone. No
+   *       enforcement.</li>
+   *   <li>{@code State.empty()} — no-traversal zone reached here despite the pre-guard. Block
+   *       defensively.</li>
+   * </ul>
+   */
+  @Override
+  @Nullable
+  public State[] forwardApproachingExit(GeofencingZone zone, State state, EdgeTraversal edge) {
+    if (Boolean.TRUE.equals(zone.traversalBanned())) {
+      return State.empty();
+    }
+    return null;
+  }
+
+  /**
+   * ArriveBy search: a committed renting state (network-bound, mid-rental) would, in real time,
+   * be riding <em>into</em> this zone on the current edge. For a no-traversal zone, that's
+   * illegal — the bike couldn't have legally crossed this boundary. Block.
+   *
+   * <p>Only committed states are checked here. HAVE_RENTED walkers don't trigger this — they're
+   * handled by {@link #arriveByAtBoundary}. Generic (null-network) renting states aren't yet
+   * committed and are handled separately by {@link NetworkCommitmentHandler}.
+   *
+   * <p>Returns:
+   * <ul>
+   *   <li>{@code null} — not a committed renting state (HAVE_RENTED, generic null-network, or
+   *       non-renting); or zone isn't no-traversal (no-drop-off doesn't block entry).</li>
+   *   <li>{@code State.empty()} — committed renting state about to enter a no-traversal zone
+   *       in real time. Block.</li>
+   * </ul>
+   */
+  @Override
+  @Nullable
+  public State[] arriveByApproaching(GeofencingZone zone, State state, EdgeTraversal edge) {
+    if (
+      state.isRentingVehicle() &&
+      state.getVehicleRentalNetwork() != null &&
+      Boolean.TRUE.equals(zone.traversalBanned())
+    ) {
+      return State.empty();
+    }
+    return null;
+  }
+
+  /**
+   * ArriveBy search: a HAVE_RENTED walker is at a boundary where, in real time, the walker
+   * exits the restricted zone (i.e., the rider dropped just outside the zone and was walking
+   * through it back to destination). Produce a walking continuation; renting branches are
+   * deferred to the next edge by {@link DeferredForkHandler}.
+   *
+   * <p>Returns:
+   * <ul>
+   *   <li>{@code null} — state isn't a HAVE_RENTED walker.</li>
+   *   <li>{@code State.empty()} — walking traversal failed (edge not walkable).</li>
+   *   <li>{@code State[1]} — the HAVE_RENTED walker continues walking.</li>
+   * </ul>
+   */
+  @Override
+  @Nullable
+  public State[] arriveByAtBoundary(GeofencingZone zone, State state, EdgeTraversal edge) {
+    if (state.getVehicleRentalState() != VehicleRentalState.HAVE_RENTED) {
+      return null;
+    }
+    var walking = edge.traverse(state, TraverseMode.WALK);
+    if (walking != null) {
+      return walking.makeStateArray();
+    }
+    return State.empty();
+  }
+
+  /**
+   * Helper for {@link #forwardApproachingEntry} on a no-traversal zone: fork — drop vehicle +
+   * continue riding. The ride branch will be blocked at the next edge by the pre-guard.
    */
   private State[] forwardEnteringNoTraversal(State state, EdgeTraversal edge) {
-    // If drop-off is also banned here (overlapping no-drop-off zone), dead end
     if (state.isDropOffBannedByCurrentZones()) {
       return State.empty();
     }
@@ -123,14 +199,13 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * Forward entering a no-drop-off zone: fork — drop vehicle + continue riding.
-   * If already inside a restricted zone, just pass through (can't drop here anyway).
-   * Post-traversal veto: if the traversal entered a no-drop-off zone during the edge,
+   * Helper for {@link #forwardApproachingEntry} on a no-drop-off zone: fork — drop vehicle +
+   * continue riding. If already inside a restricted zone, just pass through (can't drop here
+   * anyway). Post-traversal veto: if the traversal entered a no-drop-off zone during the edge,
    * discard the drop branch.
    */
   @Nullable
   private State[] forwardEnteringNoDropOff(State state, EdgeTraversal edge) {
-    // Already inside a no-drop-off zone — can't drop here, just ride through
     if (state.isDropOffBannedByCurrentZones()) {
       return null;
     }
@@ -138,8 +213,6 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
     var dropEditor = edge.traverse(state, state.currentMode());
     State dropState = null;
     if (dropEditor != null) {
-      // Post-traversal veto: the traversal updated zone state. If the state entered a
-      // no-drop-off zone during this edge (adjacent zone boundaries), discard the drop.
       if (!dropEditor.isDropOffBannedByCurrentZones()) {
         dropEditor.dropFloatingVehicle(
           state.vehicleRentalFormFactor(),
@@ -155,35 +228,5 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
     State rideState = rideEditor != null ? rideEditor.makeState() : null;
 
     return State.ofNullable(dropState, rideState);
-  }
-
-  /**
-   * State is exiting a restricted zone (in forward/geographic terms).
-   * In arriveBy, this means the real-time trip enters the zone — the walker (HAVE_RENTED)
-   * is crossing out of the restricted zone. Produce a walking branch only; renting branches
-   * are deferred to the next edge by {@link DeferredForkHandler}.
-   */
-  @Nullable
-  private State[] evaluateExiting(
-    GeofencingZone zone,
-    boolean arriveBy,
-    State state,
-    EdgeTraversal edge
-  ) {
-    if (!arriveBy) {
-      return null;
-    }
-
-    // ArriveBy exiting restricted zone: only applies to HAVE_RENTED walkers
-    if (state.getVehicleRentalState() != VehicleRentalState.HAVE_RENTED) {
-      return null;
-    }
-
-    // Produce walking branch — renting branches deferred to next edge
-    var walking = edge.traverse(state, TraverseMode.WALK);
-    if (walking != null) {
-      return walking.makeStateArray();
-    }
-    return State.empty();
   }
 }

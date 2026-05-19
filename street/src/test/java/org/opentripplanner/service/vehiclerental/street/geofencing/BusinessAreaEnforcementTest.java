@@ -96,7 +96,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void passesThrough() {
       var state = createRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(BUSINESS_AREA, state, edgeTraversal);
       assertNull(result, "entering business area should pass through");
     }
   }
@@ -107,7 +107,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void forceDropAtBoundary() {
       var state = createRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(1, result.length, "should produce one drop branch");
@@ -122,7 +122,7 @@ class BusinessAreaEnforcementTest {
     void blockedWhenDropOffBanned() {
       // Only NO_DROP_OFF_ZONE in state (no competing BUSINESS_AREA zone)
       var state = createRentingState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "should return empty — drop-off banned");
@@ -143,7 +143,7 @@ class BusinessAreaEnforcementTest {
 
       // State starts without no-drop-off zone — it enters one during traversal
       var state = createRentingState();
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, zoneUpdatingTraversal);
+      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, zoneUpdatingTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "should block — post-traversal entered no-drop-off zone");
@@ -152,7 +152,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void passesForNonRentingState() {
       var state = createHaveRentedState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, edgeTraversal);
       assertNull(result, "HAVE_RENTED should pass — not renting");
     }
   }
@@ -163,7 +163,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void blockedExitingBusinessArea() {
       var state = createStationRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(
@@ -176,7 +176,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void blockedExitingAtBoundary() {
       var state = createStationRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluateForwardExitingAtBoundary(state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingExit(BUSINESS_AREA, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "station rentals can't drop at BA boundary — must block");
@@ -185,7 +185,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void passesEnteringBusinessArea() {
       var state = createStationRentingState();
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(BUSINESS_AREA, state, edgeTraversal);
 
       assertNull(result, "entering BA is fine for any rental type");
     }
@@ -197,7 +197,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void passesThrough() {
       var state = createRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, true, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByApproaching(BUSINESS_AREA, state, edgeTraversal);
       assertNull(result, "entering business area in arriveBy should pass");
     }
   }
@@ -211,7 +211,7 @@ class BusinessAreaEnforcementTest {
       // so the edge traversal must use testEdge2 (v3→v4)
       EdgeTraversal arriveByTraversal = (s0, mode) -> s0.edit(testEdge2);
       var state = createHaveRentedState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, true, state, arriveByTraversal);
+      var result = ENFORCEMENT.arriveByAtBoundary(BUSINESS_AREA, state, arriveByTraversal);
 
       // HAVE_RENTED walker at business area boundary produces walking branch only.
       // Renting branches are deferred to the next edge by DeferredForkHandler.
@@ -226,11 +226,10 @@ class BusinessAreaEnforcementTest {
 
     @Test
     void passesForRentingState() {
-      // Renting state reaching arriveBy exiting → evaluateArriveByExiting checks HAVE_RENTED
+      // Renting state reaching arriveBy exiting → returns null (not HAVE_RENTED)
       var state = createRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.evaluate(BUSINESS_AREA, false, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByAtBoundary(BUSINESS_AREA, state, edgeTraversal);
 
-      // Renting states are not HAVE_RENTED, so evaluateArriveByExiting returns null
       assertNull(result, "renting state arriveBy exiting should return null");
     }
   }

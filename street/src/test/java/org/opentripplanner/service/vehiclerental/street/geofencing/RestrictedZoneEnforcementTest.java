@@ -105,7 +105,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void forkDropAndRide() {
       var state = createRentingState();
-      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNotNull(result, "should produce a result");
       assertEquals(2, result.length, "should fork into drop + ride branches");
@@ -127,7 +127,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void blockedWhenDropOffAlsoBanned() {
       var state = createRentingState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "should return empty — dead end");
@@ -140,7 +140,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void forkDropAndRide() {
       var state = createRentingState();
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(NO_DROP_OFF_ZONE, state, edgeTraversal);
 
       assertNotNull(result, "should produce a result");
       assertTrue(result.length >= 1, "should have at least one branch");
@@ -162,7 +162,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passWhenAlreadyInsideNoDropOffZone() {
       var state = createRentingState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(NO_DROP_OFF_ZONE, state, edgeTraversal);
 
       assertNull(result, "should pass through — already inside restricted zone");
     }
@@ -180,10 +180,8 @@ class RestrictedZoneEnforcementTest {
       };
 
       var state = createRentingState();
-      var result = ENFORCEMENT.evaluate(
+      var result = ENFORCEMENT.forwardApproachingEntry(
         NO_DROP_OFF_ZONE,
-        true,
-        false,
         state,
         zoneUpdatingTraversal
       );
@@ -204,7 +202,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesThrough() {
       var state = createRentingState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, false, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardCrossingExit(NO_DROP_OFF_ZONE, state, edgeTraversal);
 
       assertNull(result, "forward exiting restricted zone should pass through");
     }
@@ -216,7 +214,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void blockedAtNoTraversalZone() {
       var state = createStationRentingState();
-      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "station rentals can't drop mid-street — must block");
@@ -225,7 +223,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesAtNoDropOffZone() {
       var state = createStationRentingState();
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, true, false, state, edgeTraversal);
+      var result = ENFORCEMENT.forwardApproachingEntry(NO_DROP_OFF_ZONE, state, edgeTraversal);
 
       assertNull(result, "no-drop-off is irrelevant for station rentals — pass through");
     }
@@ -237,7 +235,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void blocksCommittedRentingState() {
       var state = createRentingState();
-      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByApproaching(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "should block committed state entering no-traversal zone");
@@ -246,7 +244,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesForNonRentingState() {
       var state = createHaveRentedState();
-      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByApproaching(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNull(result, "should pass — HAVE_RENTED is not a renting state");
     }
@@ -260,7 +258,7 @@ class RestrictedZoneEnforcementTest {
       editor.beginFloatingVehicleRenting(RentalFormFactor.SCOOTER_STANDING, null, null, false);
       var state = editor.makeState();
 
-      var result = ENFORCEMENT.evaluate(NO_TRAVERSAL_ZONE, true, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByApproaching(NO_TRAVERSAL_ZONE, state, edgeTraversal);
       assertNull(result, "null-network renting state should pass — not committed");
     }
   }
@@ -271,7 +269,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesThrough() {
       var state = createRentingState();
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, true, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByApproaching(NO_DROP_OFF_ZONE, state, edgeTraversal);
       assertNull(result, "no-drop-off zone should not block entering in arriveBy");
     }
   }
@@ -282,7 +280,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void producesWalkingBranchForHaveRented() {
       var state = createHaveRentedState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, false, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByAtBoundary(NO_DROP_OFF_ZONE, state, edgeTraversal);
 
       assertNotNull(result, "should produce walking branch");
       assertEquals(1, result.length);
@@ -292,7 +290,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesForRentingState() {
       var state = createRentingState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.evaluate(NO_DROP_OFF_ZONE, false, true, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByAtBoundary(NO_DROP_OFF_ZONE, state, edgeTraversal);
 
       assertNull(result, "should pass — renting states don't trigger arriveBy exit fork");
     }
