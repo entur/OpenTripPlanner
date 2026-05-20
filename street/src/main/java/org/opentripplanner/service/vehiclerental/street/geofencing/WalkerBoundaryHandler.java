@@ -49,7 +49,7 @@ public class WalkerBoundaryHandler {
       return null;
     }
     for (var boundary : fromBoundaries) {
-      if (!hasPairedBoundary(boundary, toBoundaries)) {
+      if (!hasPair(boundary, toBoundaries)) {
         continue;
       }
       var zone = boundary.zone();
@@ -71,14 +71,12 @@ public class WalkerBoundaryHandler {
     return null;
   }
 
-  private static boolean hasPairedBoundary(
+  private static boolean hasPair(
     GeofencingBoundaryExtension boundary,
     List<GeofencingBoundaryExtension> toBoundaries
   ) {
     for (var tovBoundary : toBoundaries) {
-      if (
-        tovBoundary.zone().equals(boundary.zone()) && tovBoundary.entering() != boundary.entering()
-      ) {
+      if (tovBoundary.isPairedWith(boundary)) {
         return true;
       }
     }
