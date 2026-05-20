@@ -439,7 +439,10 @@ public class SiriAzureUpdater implements GraphUpdater {
         f.get();
       }
       LOG.info("{} updater initialized in {} ms.", updaterType, (System.currentTimeMillis() - t1));
-    } catch (ExecutionException | InterruptedException e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new SiriAzureInitializationException("Interrupted while applying history", e);
+    } catch (ExecutionException e) {
       throw new SiriAzureInitializationException("Error applying history", e);
     }
   }
