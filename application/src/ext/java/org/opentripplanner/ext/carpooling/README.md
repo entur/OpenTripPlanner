@@ -325,7 +325,7 @@ Add domain-specific filters by implementing `CarpoolTripFilter`:
 ```java
 public class CustomFilter implements CarpoolTripFilter {
   @Override
-  public boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow) {
+  public boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request) {
     // Custom logic
     return true;
   }

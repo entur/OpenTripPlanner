@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.filter;
 
-import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.model.plan.Itinerary;
 
@@ -21,13 +20,7 @@ public class ItineraryPostFilters implements CarpoolItineraryFilter {
   }
 
   @Override
-  public boolean isValidItinerary(
-    Itinerary itinerary,
-    CarpoolingRequest request,
-    Duration searchWindow
-  ) {
-    return filters
-      .stream()
-      .allMatch(filter -> filter.isValidItinerary(itinerary, request, searchWindow));
+  public boolean isValidItinerary(Itinerary itinerary, CarpoolingRequest request) {
+    return filters.stream().allMatch(filter -> filter.isValidItinerary(itinerary, request));
   }
 }

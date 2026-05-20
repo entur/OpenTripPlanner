@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.filter;
 
-import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -34,11 +33,7 @@ public class DistanceTripFilter implements CarpoolTripFilter {
   }
 
   @Override
-  public boolean isCandidateTrip(
-    CarpoolTrip trip,
-    CarpoolingRequest request,
-    Duration searchWindow
-  ) {
+  public boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request) {
     return request.isAccessEgressRequest()
       ? isProximateForAccessEgress(trip, request)
       : isProximateForDirect(trip, request);
@@ -111,9 +106,5 @@ public class DistanceTripFilter implements CarpoolTripFilter {
     );
 
     return tripLength > lengthFromTripToPassenger;
-  }
-
-  double getMaxDistanceMeters() {
-    return maxDistanceMeters;
   }
 }

@@ -10,8 +10,9 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
 /**
  * Encapsulates the passenger-facing parameters of a carpooling routing request: pickup and dropoff
  * coordinates, requested time, whether it is an arrive-by or depart-after search, the maximum time
- * the passenger is willing to walk between origin/destination and a carpool pickup/dropoff, and —
- * for transit-combined searches — whether the carpool leg is access or egress.
+ * the passenger is willing to walk between origin/destination and a carpool pickup/dropoff, the
+ * search window applied to the requested time, and — for transit-combined searches — whether the
+ * carpool leg is access or egress.
  * <p>
  * Instances are constructed from a {@link org.opentripplanner.routing.api.request.RouteRequest}
  * via the {@link #of} factory methods.
@@ -24,6 +25,7 @@ public class CarpoolingRequest {
   private final WgsCoordinate passengerDropoff;
   private final Instant requestedDateTime;
   private final Duration maxWalkTime;
+  private final Duration searchWindow;
 
   CarpoolingRequest(
     AccessEgressType accessOrEgress,
@@ -31,7 +33,8 @@ public class CarpoolingRequest {
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff,
     Instant requestedDateTime,
-    Duration maxWalkTime
+    Duration maxWalkTime,
+    Duration searchWindow
   ) {
     this.accessOrEgress = accessOrEgress;
     this.isArriveByRequest = isArriveByRequest;
@@ -42,6 +45,10 @@ public class CarpoolingRequest {
       maxWalkTime,
       "maxWalkTime is required; populate it via the RouteRequest-based builder or withMaxWalkTime()"
     );
+    this.searchWindow = Objects.requireNonNull(
+      searchWindow,
+      "searchWindow is required; populate it via the RouteRequest-based builder or withSearchWindow()"
+    );
   }
 
   public static CarpoolingRequest of(RouteRequest request) {
@@ -50,10 +57,6 @@ public class CarpoolingRequest {
 
   public static CarpoolingRequest of(RouteRequest request, AccessEgressType accessOrEgress) {
     return new CarpoolingRequestBuilder(request).withAccessOrEgress(accessOrEgress).build();
-  }
-
-  public AccessEgressType getAccessOrEgress() {
-    return accessOrEgress;
   }
 
   /**
@@ -107,51 +110,12 @@ public class CarpoolingRequest {
     return maxWalkTime;
   }
 
-  @Override
-  public int hashCode() {
-    return Objects.hash(
-      accessOrEgress,
-      isArriveByRequest,
-      passengerPickup,
-      passengerDropoff,
-      requestedDateTime,
-      maxWalkTime
-    );
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    CarpoolingRequest that = (CarpoolingRequest) o;
-    return (
-      isArriveByRequest == that.isArriveByRequest &&
-      accessOrEgress == that.accessOrEgress &&
-      Objects.equals(passengerPickup, that.passengerPickup) &&
-      Objects.equals(passengerDropoff, that.passengerDropoff) &&
-      Objects.equals(requestedDateTime, that.requestedDateTime) &&
-      Objects.equals(maxWalkTime, that.maxWalkTime)
-    );
-  }
-
-  @Override
-  public String toString() {
-    return (
-      "CarpoolingRequest{" +
-      "accessOrEgress=" +
-      accessOrEgress +
-      ", isArriveByRequest=" +
-      isArriveByRequest +
-      ", passengerPickup=" +
-      passengerPickup +
-      ", passengerDropoff=" +
-      passengerDropoff +
-      ", requestedDateTime=" +
-      requestedDateTime +
-      ", maxWalkTime=" +
-      maxWalkTime +
-      '}'
-    );
+  /**
+   * Returns the search window applied to {@link #getRequestedDateTime()}. For depart-after this
+   * widens the latest acceptable departure; for arrive-by it widens the earliest acceptable
+   * arrival. Never {@code null}; enforced at construction.
+   */
+  public Duration getSearchWindow() {
+    return searchWindow;
   }
 }

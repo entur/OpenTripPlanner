@@ -18,8 +18,9 @@ import org.slf4j.LoggerFactory;
  *
  * <h2>Variables</h2>
  *
- * The passenger's window is derived from {@code request.getRequestedDateTime()} and the
- * {@code searchWindow}. Which two of EDT/LDT/EAT/LAT exist depends on {@code arriveBy}:
+ * The passenger's window is derived from {@code request.getRequestedDateTime()} and
+ * {@code request.getSearchWindow()}. Which two of EDT/LDT/EAT/LAT exist depends on
+ * {@code arriveBy}:
  *
  * <ul>
  *   <li><strong>EDT</strong> — earliest departure time = {@code requestedDateTime}
@@ -35,16 +36,17 @@ import org.slf4j.LoggerFactory;
  * <h2>Rules</h2>
  *
  * <pre>
- * | arriveBy | Reject if itinerary.startTime ... | Reject if itinerary.endTime ... |
- * |----------|-----------------------------------|---------------------------------|
- * | false    | &lt; EDT  or  &gt; LDT                  | —                               |
- * | true     | —                                 | &lt; EAT  or  &gt; LAT                |
+ * | arriveBy | Reject when itinerary.startTime | Reject when itinerary.endTime |
+ * |----------|---------------------------------|-------------------------------|
+ * | false    | ∉ [EDT, LDT]                    | —                             |
+ * | true     | —                               | ∉ [EAT, LAT]                  |
  * </pre>
  *
  * The arriveBy=false rules anchor the passenger's departure from origin; the arriveBy=true rules
  * anchor the passenger's arrival at destination. No slack is added on either side: post-filters
  * see actual itinerary times rather than trip-endpoint estimates, so the walk-time padding used
- * by the pre-filter is already baked into {@code startTime}/{@code endTime}.
+ * by the pre-filter is already baked into {@code startTime}/{@code endTime}. The leg type
+ * (direct, access, egress) is irrelevant: identical bounds apply in all cases.
  *
  * <h2>Behavior with missing inputs</h2>
  *
@@ -57,19 +59,15 @@ public class TimeItineraryFilter implements CarpoolItineraryFilter {
   private static final Logger LOG = LoggerFactory.getLogger(TimeItineraryFilter.class);
 
   @Override
-  public boolean isValidItinerary(
-    Itinerary itinerary,
-    CarpoolingRequest request,
-    Duration searchWindow
-  ) {
+  public boolean isValidItinerary(Itinerary itinerary, CarpoolingRequest request) {
     var requestedDateTime = request.getRequestedDateTime();
     if (requestedDateTime == null) {
       return true;
     }
 
     return request.isArriveByRequest()
-      ? acceptsArriveBy(itinerary, requestedDateTime, searchWindow)
-      : acceptsDepartAfter(itinerary, requestedDateTime, searchWindow);
+      ? acceptsArriveBy(itinerary, requestedDateTime, request.getSearchWindow())
+      : acceptsDepartAfter(itinerary, requestedDateTime, request.getSearchWindow());
   }
 
   /**

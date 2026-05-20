@@ -59,8 +59,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Default implementation of {@link CarpoolingService} that orchestrates the two-phase
- * carpooling routing algorithm: position finding and insertion evaluation.
+ * Default implementation of {@link CarpoolingService} that orchestrates the carpooling routing
+ * algorithm: pre-filtering, position finding, insertion evaluation, and post-filtering.
  * <p>
  * This service is the main entry point for carpool routing functionality. It coordinates multiple
  * components to efficiently find viable carpool matches while minimizing expensive routing
@@ -68,7 +68,7 @@ import org.slf4j.LoggerFactory;
  *
  * <h2>Algorithm Phases</h2>
  * <p>
- * The service executes routing requests in three distinct phases:
+ * The service executes routing requests in four phases:
  * <ol>
  *   <li><strong>Pre-filtering ({@link TripPreFilters}):</strong> Quickly eliminates incompatible
  *       trips based on capacity, time windows, and distance.</li>
@@ -78,6 +78,10 @@ import org.slf4j.LoggerFactory;
  *   <li><strong>Insertion Evaluation ({@link InsertionEvaluator}):</strong> For viable positions,
  *       computes actual routes using A* street routing. Evaluates all feasible insertion positions
  *       and selects the one minimizing additional travel time while satisfying delay constraints.</li>
+ *   <li><strong>Post-filtering ({@link ItineraryPostFilters}, direct routing only):</strong>
+ *       Re-checks the fully-routed {@link Itinerary} against tight time bounds that the loose
+ *       pre-filter could not enforce. Access/egress routing skips this phase because it emits
+ *       {@link CarpoolAccessEgress} objects rather than itineraries.</li>
  * </ol>
  *
  * <h2>Component Dependencies</h2>
@@ -89,22 +93,24 @@ import org.slf4j.LoggerFactory;
  *   <li><strong>{@link InsertionPositionFinder}:</strong> Heuristic position filtering</li>
  *   <li><strong>{@link InsertionEvaluator}:</strong> Routing evaluation and selection</li>
  *   <li><strong>{@link CarpoolItineraryMapper}:</strong> Maps insertions to OTP itineraries</li>
+ *   <li><strong>{@link ItineraryPostFilters}:</strong> Tight time-window enforcement on routed
+ *       itineraries (direct routing only)</li>
  * </ul>
  *
  * @see CarpoolingService for interface documentation and usage examples
  * @see TripPreFilters for filtering strategy details
  * @see InsertionPositionFinder for position finding strategy details
  * @see InsertionEvaluator for insertion evaluation algorithm details
+ * @see ItineraryPostFilters for post-filter behaviour
  */
 public class DefaultCarpoolingService implements CarpoolingService {
 
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCarpoolingService.class);
-  private static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(300);
-  // How far away in time a carpooling trip can be from the requested departure time to be considered
-  private static final Duration ACCESS_EGRESS_SEARCH_WINDOW = Duration.ofHours(12);
-  /*
-    This is needed for managing computational complexity unless we find a smarter way of searching
-    for nearby stops.
+
+  /**
+   * Caps the radius of the nearby-stop search used in access/egress routing. Required to keep
+   * computational complexity bounded; remove or widen only after the nearby-stop search is made
+   * smarter.
    */
   public static final Duration MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS =
     Duration.ofMinutes(60);
@@ -119,8 +125,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
   /**
    * Creates a new carpooling service with the specified dependencies.
    * <p>
-   * The service is initialized with a standard filter chain. The filter chain
-   * is currently hardcoded but could be made configurable in future versions.
+   * The service is initialized with standard pre- and post-filters; both filter sets are
+   * hardcoded today and could be made configurable in future versions.
    *
    * @param repository provides access to active driver trips, must not be null
    * @param streetLimitationParametersService provides street routing configuration including
@@ -138,7 +144,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   ) {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
-    this.preFilters = TripPreFilters.standard();
+    this.preFilters = TripPreFilters.defaults();
     this.postFilters = ItineraryPostFilters.defaults();
     this.itineraryMapper = new CarpoolItineraryMapper();
     this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
@@ -148,7 +154,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
   /**
    * Routes a direct carpool trip from the passenger's origin to destination.
    * <p>
-   * This method executes the full three-phase carpooling algorithm:
+   * This method executes the full four-phase carpooling algorithm:
    * <ol>
    *   <li><strong>Pre-filtering:</strong> All trips from the repository are filtered by capacity,
    *       time window, and distance to quickly eliminate incompatible matches.</li>
@@ -157,6 +163,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
    *   <li><strong>Insertion evaluation:</strong> Viable positions are evaluated with A* street
    *       routing to find the insertion that minimizes additional driver travel time while
    *       respecting delay constraints.</li>
+   *   <li><strong>Post-filtering:</strong> Routed itineraries are re-checked against tight time
+   *       bounds that the loose pre-filter could not enforce.</li>
    * </ol>
    *
    * @param request the routing request. Must have {@link StreetMode#CARPOOL} as the direct mode.
@@ -173,9 +181,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
     validateRequest(request);
 
     var carpoolingRequest = CarpoolingRequest.of(request);
-    var searchWindow = request.searchWindow() == null
-      ? DEFAULT_SEARCH_WINDOW
-      : request.searchWindow();
 
     LOG.debug(
       "Finding carpool itineraries from {} to {} at {}",
@@ -189,7 +194,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var candidateTrips = allTrips
       .stream()
-      .filter(trip -> preFilters.isCandidateTrip(trip, carpoolingRequest, searchWindow))
+      .filter(trip -> preFilters.isCandidateTrip(trip, carpoolingRequest))
       .toList();
 
     LOG.debug(
@@ -300,9 +305,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
           itineraryMapper.toItinerary(candidate, carpoolReluctance, request.from(), request.to())
         )
         .filter(Objects::nonNull)
-        .filter(itinerary ->
-          postFilters.isValidItinerary(itinerary, carpoolingRequest, searchWindow)
-        )
+        .filter(itinerary -> postFilters.isValidItinerary(itinerary, carpoolingRequest))
         .toList();
     }
 
@@ -371,9 +374,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var candidateTrips = allTrips
       .stream()
-      .filter(trip ->
-        preFilters.isCandidateTrip(trip, carpoolingRequest, ACCESS_EGRESS_SEARCH_WINDOW)
-      )
+      .filter(trip -> preFilters.isCandidateTrip(trip, carpoolingRequest))
       .toList();
 
     if (candidateTrips.isEmpty()) {
@@ -545,6 +546,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .flatMap(it -> insertionEvaluator.findBestInsertions(it).stream())
         .toList();
 
+      // TODO carpooling currently reuses the car-mode reluctance; revisit whether it should have
+      //   its own preference.
+      var carpoolReluctance = request.preferences().car().reluctance();
       return insertionCandidates
         .stream()
         .map(it ->
@@ -552,11 +556,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
             transitServiceResolver,
             it,
             transitSearchTimeZero,
-            /*
-              Using the reluctance of mode car.
-              TODO: Figure out whether carpooling should have its own reluctance variable
-             */
-            request.preferences().car().reluctance(),
+            carpoolReluctance,
             accessOrEgress,
             passengerLocation
           )

@@ -9,16 +9,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Pre-filters carpool trip candidates based on time compatibility with the passenger request.
  * <p>
- * A trip is rejected only when it is provably outside the passenger's window, never on a
- * "this looks unlikely" basis. Trips that pass are still subject to expensive routing and a
- * tighter post-filter on the actual itinerary times.
+ * A trip is rejected when it is outside the passenger's window. Trips that pass are still subject
+ * to expensive routing and a tighter post-filter on the actual itinerary times.
  *
  * <h2>Variables</h2>
  *
  * <h3>Request window</h3>
  *
- * The passenger's window is derived from {@code request.getRequestedDateTime()} and the
- * {@code searchWindow}. Which two of EDT/LDT/EAT/LAT exist depends on {@code arriveBy}:
+ * The passenger's window is derived from {@code request.getRequestedDateTime()} and
+ * {@code request.getSearchWindow()}. Which two of EDT/LDT/EAT/LAT exist depends on
+ * {@code arriveBy}:
  *
  * <ul>
  *   <li><strong>EDT</strong> — earliest departure time. Defined when {@code arriveBy = false} as
@@ -44,14 +44,14 @@ import org.slf4j.LoggerFactory;
  *       bounded amount: a passenger leaving by LDT can be at the pickup as late as
  *       {@code LDT + W}; a carpool that drops off by {@code EAT − W} still gives an arrival at or
  *       after EAT after a W-long walk to destination.</li>
- *   <li><strong>{@code T} = {@link CarpoolTripFilter#MAX_TOTAL_TRAVEL_TIME}</strong> (max total
- *       passenger travel time, fallback) — used <em>only</em> in the two cells where neither the
- *       request window nor {@code W} can produce a real bound: <em>access / arriveBy=true / too
- *       early</em> and <em>egress / arriveBy=false / too late</em>. In both cases the carpool
- *       sits on the opposite end of the journey from the request anchor, separated from it by a
- *       transit ride of unknown duration. {@code T} caps that unknown duration with a
- *       deliberately conservative number so the filter degrades to "almost a no-op" in those
- *       cells rather than producing false negatives.</li>
+ *   <li><strong>{@code T} = {@link #MAX_TOTAL_TRAVEL_TIME}</strong> (max total passenger travel
+ *       time, fallback) — used <em>only</em> in the two cells where neither the request window nor
+ *       {@code W} can produce a real bound: <em>access / arriveBy=true / too early</em> and
+ *       <em>egress / arriveBy=false / too late</em>. In both cases the carpool sits on the
+ *       opposite end of the journey from the request anchor, separated from it by a transit ride
+ *       of unknown duration. {@code T} caps that unknown duration with a deliberately
+ *       conservative number so the filter degrades to "almost a no-op" in those cells rather than
+ *       producing false negatives.</li>
  * </ul>
  *
  * <h2>Rules</h2>
@@ -62,8 +62,8 @@ import org.slf4j.LoggerFactory;
  * | Direct   | false    | tripEnd   &lt; EDT        | tripStart &gt; LDT + W    |
  * | Direct   | true     | tripEnd   &lt; EAT − W    | tripStart &gt; LAT        |
  * | Access   | false    | tripEnd   &lt; EDT        | tripStart &gt; LDT + W    |
- * | Access   | true     | tripEnd   &lt; EAT − T    | tripStart &gt; LAT        |  (T fallback)
- * | Egress   | false    | tripEnd   &lt; EDT        | tripStart &gt; LDT + T    |  (T fallback)
+ * | Access   | true     | tripEnd   &lt; EAT − T    | tripStart &gt; LAT        |
+ * | Egress   | false    | tripEnd   &lt; EDT        | tripStart &gt; LDT + T    |
  * | Egress   | true     | tripEnd   &lt; EAT − W    | tripStart &gt; LAT        |
  * </pre>
  *
@@ -95,12 +95,14 @@ public class TimeTripFilter implements CarpoolTripFilter {
 
   private static final Logger LOG = LoggerFactory.getLogger(TimeTripFilter.class);
 
+  /**
+   * Conservative cap on total passenger travel time, used as a fallback bound when an unbounded
+   * transit segment separates the carpool leg from the request anchor.
+   */
+  private static final Duration MAX_TOTAL_TRAVEL_TIME = Duration.ofHours(24);
+
   @Override
-  public boolean isCandidateTrip(
-    CarpoolTrip trip,
-    CarpoolingRequest request,
-    Duration searchWindow
-  ) {
+  public boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request) {
     var requestedDateTime = request.getRequestedDateTime();
     if (requestedDateTime == null) {
       return true;
@@ -110,8 +112,8 @@ public class TimeTripFilter implements CarpoolTripFilter {
     var tripEnd = trip.latestEndTime().toInstant();
 
     return request.isArriveByRequest()
-      ? acceptsArriveBy(trip, request, searchWindow, requestedDateTime, tripStart, tripEnd)
-      : acceptsDepartAfter(trip, request, searchWindow, requestedDateTime, tripStart, tripEnd);
+      ? acceptsArriveBy(trip, request, requestedDateTime, tripStart, tripEnd)
+      : acceptsDepartAfter(trip, request, requestedDateTime, tripStart, tripEnd);
   }
 
   /**
@@ -126,7 +128,6 @@ public class TimeTripFilter implements CarpoolTripFilter {
   private static boolean acceptsArriveBy(
     CarpoolTrip trip,
     CarpoolingRequest request,
-    Duration searchWindow,
     Instant lat,
     Instant tripStart,
     Instant tripEnd
@@ -137,7 +138,7 @@ public class TimeTripFilter implements CarpoolTripFilter {
     var maxConnectionTime = request.isAccessRequest()
       ? MAX_TOTAL_TRAVEL_TIME
       : request.getMaxWalkTime();
-    var earliestAcceptableTripEnd = lat.minus(searchWindow).minus(maxConnectionTime);
+    var earliestAcceptableTripEnd = lat.minus(request.getSearchWindow()).minus(maxConnectionTime);
     if (tripEnd.isBefore(earliestAcceptableTripEnd)) {
       return reject(
         trip,
@@ -162,7 +163,6 @@ public class TimeTripFilter implements CarpoolTripFilter {
   private static boolean acceptsDepartAfter(
     CarpoolTrip trip,
     CarpoolingRequest request,
-    Duration searchWindow,
     Instant edt,
     Instant tripStart,
     Instant tripEnd
@@ -173,7 +173,7 @@ public class TimeTripFilter implements CarpoolTripFilter {
     var maxConnectionTime = request.isEgressRequest()
       ? MAX_TOTAL_TRAVEL_TIME
       : request.getMaxWalkTime();
-    var latestAcceptableTripStart = edt.plus(searchWindow).plus(maxConnectionTime);
+    var latestAcceptableTripStart = edt.plus(request.getSearchWindow()).plus(maxConnectionTime);
     if (tripStart.isAfter(latestAcceptableTripStart)) {
       return reject(
         trip,

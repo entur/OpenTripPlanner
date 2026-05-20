@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.filter;
 
-import java.time.Duration;
 import java.util.List;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 
@@ -14,7 +13,7 @@ import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
  * The standard configuration includes (in order of performance impact):
  * <ol>
  *   <li>{@link TimeTripFilter} — O(1) time checks for both depart-after and arrive-by</li>
- *   <li>{@link DistanceTripFilter} — O(1) with a few distance calculations</li>
+ *   <li>{@link DistanceTripFilter} — distance calculations against every segment of the route</li>
  * </ol>
  */
 public class TripPreFilters implements CarpoolTripFilter {
@@ -25,17 +24,13 @@ public class TripPreFilters implements CarpoolTripFilter {
     this.filters = filters;
   }
 
-  /** Creates a standard pre-filter with all recommended filters in performance order. */
-  public static TripPreFilters standard() {
+  /** Creates a default pre-filter with all recommended filters in performance order. */
+  public static TripPreFilters defaults() {
     return new TripPreFilters(List.of(new TimeTripFilter(), new DistanceTripFilter()));
   }
 
   @Override
-  public boolean isCandidateTrip(
-    CarpoolTrip trip,
-    CarpoolingRequest request,
-    Duration searchWindow
-  ) {
-    return filters.stream().allMatch(filter -> filter.isCandidateTrip(trip, request, searchWindow));
+  public boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request) {
+    return filters.stream().allMatch(filter -> filter.isCandidateTrip(trip, request));
   }
 }

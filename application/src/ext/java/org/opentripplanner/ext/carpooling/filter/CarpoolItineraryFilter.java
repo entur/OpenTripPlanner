@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.filter;
 
-import java.time.Duration;
 import org.opentripplanner.model.plan.Itinerary;
 
 /**
@@ -16,10 +15,9 @@ public interface CarpoolItineraryFilter {
   /**
    * Returns {@code true} if the itinerary satisfies this filter's criteria.
    *
-   * @param itinerary    the routed itinerary to evaluate
-   * @param request      the passenger's journey preferences
-   * @param searchWindow the routing search window; guaranteed non-null by callers
+   * @param itinerary the routed itinerary to evaluate
+   * @param request   the passenger's journey preferences
    * @return {@code true} if the itinerary passes the filter, {@code false} otherwise
    */
-  boolean isValidItinerary(Itinerary itinerary, CarpoolingRequest request, Duration searchWindow);
+  boolean isValidItinerary(Itinerary itinerary, CarpoolingRequest request);
 }

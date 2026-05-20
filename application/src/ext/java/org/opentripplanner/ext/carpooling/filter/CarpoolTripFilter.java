@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.carpooling.filter;
 
-import java.time.Duration;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 
 /**
@@ -18,22 +17,15 @@ import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
  */
 public interface CarpoolTripFilter {
   /**
-   * Conservative cap on total passenger travel time, used as a fallback bound when an unbounded
-   * transit segment separates the carpool leg from the request anchor.
-   */
-  Duration MAX_TOTAL_TRAVEL_TIME = Duration.ofHours(24);
-
-  /**
    * Returns {@code true} if the trip is a viable candidate worth routing.
    * <p>
    * Uses estimated times as a necessary condition only to limit computational cost; tight
    * enforcement is done by post-filters after routing. The routing mode (direct, access, or egress)
    * is available via the {@code request}.
    *
-   * @param trip         the carpool trip to evaluate
-   * @param request      the passenger's journey preferences
-   * @param searchWindow the routing search window; guaranteed non-null by callers
+   * @param trip    the carpool trip to evaluate
+   * @param request the passenger's journey preferences
    * @return {@code true} if the trip is a candidate, {@code false} otherwise
    */
-  boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request, Duration searchWindow);
+  boolean isCandidateTrip(CarpoolTrip trip, CarpoolingRequest request);
 }

@@ -14,12 +14,20 @@ import org.opentripplanner.street.model.StreetMode;
  */
 public class CarpoolingRequestBuilder {
 
+  /**
+   * Fallback search window applied when the {@link RouteRequest} carries none. Five hours wide
+   * because carpool repositories are sparse: rejecting trips outside a narrow window would lose
+   * matches the passenger would accept.
+   */
+  static final Duration DEFAULT_SEARCH_WINDOW = Duration.ofMinutes(300);
+
   private AccessEgressType accessOrEgress;
   private boolean isArriveByRequest;
   private WgsCoordinate passengerDropoff;
   private WgsCoordinate passengerPickup;
   private Instant requestedDateTime;
   private Duration maxWalkTime;
+  private Duration searchWindow;
 
   public CarpoolingRequestBuilder() {}
 
@@ -34,6 +42,9 @@ public class CarpoolingRequestBuilder {
       .accessEgress()
       .maxDuration()
       .valueOf(StreetMode.WALK);
+    this.searchWindow = request.searchWindow() == null
+      ? DEFAULT_SEARCH_WINDOW
+      : request.searchWindow();
   }
 
   public CarpoolingRequestBuilder withAccessOrEgress(AccessEgressType accessOrEgress) {
@@ -66,6 +77,11 @@ public class CarpoolingRequestBuilder {
     return this;
   }
 
+  public CarpoolingRequestBuilder withSearchWindow(Duration searchWindow) {
+    this.searchWindow = searchWindow;
+    return this;
+  }
+
   public CarpoolingRequest build() {
     return new CarpoolingRequest(
       accessOrEgress,
@@ -73,7 +89,8 @@ public class CarpoolingRequestBuilder {
       passengerPickup,
       passengerDropoff,
       requestedDateTime,
-      maxWalkTime
+      maxWalkTime,
+      searchWindow
     );
   }
 }

@@ -7,111 +7,33 @@ import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_EAS
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NORTH;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_WEST;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createSimpleTrip;
+import static org.opentripplanner.ext.carpooling.CarpoolingRequestTestData.directRequest;
 
-import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TripPreFiltersTest {
 
-  private static final Duration WINDOW = Duration.ofMinutes(30);
-
   @Test
-  void isCandidateTrip_allFiltersAccept_returnsTrue() {
-    CarpoolTripFilter filter1 = (trip, request, searchWindow) -> true;
-    CarpoolTripFilter filter2 = (trip, request, searchWindow) -> true;
+  void anyRejectingFilter_failsTheTrip() {
+    CarpoolTripFilter accept = (trip, request) -> true;
+    CarpoolTripFilter reject = (trip, request) -> false;
     var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
+    var request = directRequest(OSLO_EAST, OSLO_WEST);
 
-    var preFilter = new TripPreFilters(List.of(filter1, filter2));
-    var request = new CarpoolingRequestBuilder()
-      .withPassengerPickup(OSLO_EAST)
-      .withPassengerDropoff(OSLO_WEST)
-      .build();
-
-    assertTrue(preFilter.isCandidateTrip(trip, request, WINDOW));
+    assertTrue(new TripPreFilters(List.of(accept, accept)).isCandidateTrip(trip, request));
+    assertFalse(new TripPreFilters(List.of(accept, reject)).isCandidateTrip(trip, request));
   }
 
   @Test
-  void isCandidateTrip_oneFilterRejects_returnsFalse() {
-    CarpoolTripFilter filter1 = (trip, request, searchWindow) -> true;
-    CarpoolTripFilter filter2 = (trip, request, searchWindow) -> false;
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-
-    var preFilter = new TripPreFilters(List.of(filter1, filter2));
-    var request = new CarpoolingRequestBuilder()
-      .withPassengerPickup(OSLO_EAST)
-      .withPassengerDropoff(OSLO_WEST)
-      .build();
-
-    assertFalse(preFilter.isCandidateTrip(trip, request, WINDOW));
-  }
-
-  @Test
-  void isCandidateTrip_shortCircuits_afterFirstRejection() {
-    var filter3Called = new boolean[] { false };
-
-    CarpoolTripFilter filter1 = (trip, request, searchWindow) -> true;
-    CarpoolTripFilter filter2 = (trip, request, searchWindow) -> false;
-    CarpoolTripFilter filter3 = (trip, request, searchWindow) -> {
-      filter3Called[0] = true;
-      return true;
-    };
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var request = new CarpoolingRequestBuilder()
-      .withPassengerPickup(OSLO_EAST)
-      .withPassengerDropoff(OSLO_WEST)
-      .build();
-
-    var preFilter = new TripPreFilters(List.of(filter1, filter2, filter3));
-    preFilter.isCandidateTrip(trip, request, WINDOW);
-
-    assertFalse(filter3Called[0], "Filter3 should not have been called due to short-circuit");
-  }
-
-  @Test
-  void isCandidateTrip_firstFilterRejects_doesNotCallOthers() {
-    var filter2Called = new boolean[] { false };
-
-    CarpoolTripFilter filter1 = (trip, request, searchWindow) -> false;
-    CarpoolTripFilter filter2 = (trip, request, searchWindow) -> {
-      filter2Called[0] = true;
-      return true;
-    };
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var request = new CarpoolingRequestBuilder()
-      .withPassengerPickup(OSLO_EAST)
-      .withPassengerDropoff(OSLO_WEST)
-      .build();
-
-    var preFilter = new TripPreFilters(List.of(filter1, filter2));
-    preFilter.isCandidateTrip(trip, request, WINDOW);
-
-    assertFalse(filter2Called[0], "Filter2 should not have been called due to short-circuit");
-  }
-
-  @Test
-  void emptyTripPreFilters_acceptsAll() {
+  void noFilters_acceptsAll() {
     var preFilter = new TripPreFilters(List.of());
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var request = new CarpoolingRequestBuilder()
-      .withPassengerPickup(OSLO_EAST)
-      .withPassengerDropoff(OSLO_WEST)
-      .build();
 
-    assertTrue(preFilter.isCandidateTrip(trip, request, WINDOW));
-  }
-
-  @Test
-  void singleFilter_behavesCorrectly() {
-    CarpoolTripFilter filter = (trip, request, searchWindow) -> true;
-
-    var preFilter = new TripPreFilters(List.of(filter));
-    var trip = createSimpleTrip(OSLO_CENTER, OSLO_NORTH);
-    var request = new CarpoolingRequestBuilder()
-      .withPassengerPickup(OSLO_EAST)
-      .withPassengerDropoff(OSLO_WEST)
-      .build();
-
-    assertTrue(preFilter.isCandidateTrip(trip, request, WINDOW));
+    assertTrue(
+      preFilter.isCandidateTrip(
+        createSimpleTrip(OSLO_CENTER, OSLO_NORTH),
+        directRequest(OSLO_EAST, OSLO_WEST)
+      )
+    );
   }
 }
