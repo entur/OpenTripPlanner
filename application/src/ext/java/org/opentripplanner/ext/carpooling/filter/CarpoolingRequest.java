@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling.filter;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
@@ -8,8 +9,9 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
 
 /**
  * Encapsulates the passenger-facing parameters of a carpooling routing request: pickup and dropoff
- * coordinates, requested time, whether it is an arrive-by or depart-after search, and — for
- * transit-combined searches — whether the carpool leg is access or egress.
+ * coordinates, requested time, whether it is an arrive-by or depart-after search, the maximum time
+ * the passenger is willing to walk between origin/destination and a carpool pickup/dropoff, and —
+ * for transit-combined searches — whether the carpool leg is access or egress.
  * <p>
  * Instances are constructed from a {@link org.opentripplanner.routing.api.request.RouteRequest}
  * via the {@link #of} factory methods.
@@ -21,19 +23,25 @@ public class CarpoolingRequest {
   private final WgsCoordinate passengerPickup;
   private final WgsCoordinate passengerDropoff;
   private final Instant requestedDateTime;
+  private final Duration maxWalkTime;
 
   CarpoolingRequest(
     AccessEgressType accessOrEgress,
     boolean isArriveByRequest,
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff,
-    Instant requestedDateTime
+    Instant requestedDateTime,
+    Duration maxWalkTime
   ) {
     this.accessOrEgress = accessOrEgress;
     this.isArriveByRequest = isArriveByRequest;
     this.passengerPickup = passengerPickup;
     this.passengerDropoff = passengerDropoff;
     this.requestedDateTime = requestedDateTime;
+    this.maxWalkTime = Objects.requireNonNull(
+      maxWalkTime,
+      "maxWalkTime is required; populate it via the RouteRequest-based builder or withMaxWalkTime()"
+    );
   }
 
   public static CarpoolingRequest of(RouteRequest request) {
@@ -91,6 +99,14 @@ public class CarpoolingRequest {
     return requestedDateTime;
   }
 
+  /**
+   * Returns the maximum time the passenger is willing to walk between their origin/destination and
+   * a carpool pickup/dropoff point. Never {@code null}; enforced at construction.
+   */
+  public Duration getMaxWalkTime() {
+    return maxWalkTime;
+  }
+
   @Override
   public int hashCode() {
     return Objects.hash(
@@ -98,7 +114,8 @@ public class CarpoolingRequest {
       isArriveByRequest,
       passengerPickup,
       passengerDropoff,
-      requestedDateTime
+      requestedDateTime,
+      maxWalkTime
     );
   }
 
@@ -113,7 +130,8 @@ public class CarpoolingRequest {
       accessOrEgress == that.accessOrEgress &&
       Objects.equals(passengerPickup, that.passengerPickup) &&
       Objects.equals(passengerDropoff, that.passengerDropoff) &&
-      Objects.equals(requestedDateTime, that.requestedDateTime)
+      Objects.equals(requestedDateTime, that.requestedDateTime) &&
+      Objects.equals(maxWalkTime, that.maxWalkTime)
     );
   }
 
@@ -131,6 +149,8 @@ public class CarpoolingRequest {
       passengerDropoff +
       ", requestedDateTime=" +
       requestedDateTime +
+      ", maxWalkTime=" +
+      maxWalkTime +
       '}'
     );
   }

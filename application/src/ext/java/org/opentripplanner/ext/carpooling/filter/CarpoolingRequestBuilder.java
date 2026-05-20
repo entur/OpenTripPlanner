@@ -1,9 +1,11 @@
 package org.opentripplanner.ext.carpooling.filter;
 
+import java.time.Duration;
 import java.time.Instant;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressType;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.model.StreetMode;
 
 /**
  * Builder for {@link CarpoolingRequest}. Can be constructed directly for testing, or from a
@@ -17,6 +19,7 @@ public class CarpoolingRequestBuilder {
   private WgsCoordinate passengerDropoff;
   private WgsCoordinate passengerPickup;
   private Instant requestedDateTime;
+  private Duration maxWalkTime;
 
   public CarpoolingRequestBuilder() {}
 
@@ -25,6 +28,12 @@ public class CarpoolingRequestBuilder {
     this.passengerPickup = new WgsCoordinate(request.from().getCoordinate());
     this.passengerDropoff = new WgsCoordinate(request.to().getCoordinate());
     this.requestedDateTime = request.dateTime();
+    this.maxWalkTime = request
+      .preferences()
+      .street()
+      .accessEgress()
+      .maxDuration()
+      .valueOf(StreetMode.WALK);
   }
 
   public CarpoolingRequestBuilder withAccessOrEgress(AccessEgressType accessOrEgress) {
@@ -52,13 +61,19 @@ public class CarpoolingRequestBuilder {
     return this;
   }
 
+  public CarpoolingRequestBuilder withMaxWalkTime(Duration maxWalkTime) {
+    this.maxWalkTime = maxWalkTime;
+    return this;
+  }
+
   public CarpoolingRequest build() {
     return new CarpoolingRequest(
       accessOrEgress,
       isArriveByRequest,
       passengerPickup,
       passengerDropoff,
-      requestedDateTime
+      requestedDateTime,
+      maxWalkTime
     );
   }
 }

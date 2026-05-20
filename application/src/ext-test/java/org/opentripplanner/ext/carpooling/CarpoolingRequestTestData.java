@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling;
 
+import java.time.Duration;
 import java.time.Instant;
 import org.opentripplanner.ext.carpooling.filter.CarpoolingRequest;
 import org.opentripplanner.ext.carpooling.filter.CarpoolingRequestBuilder;
@@ -13,11 +14,19 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
  */
 public class CarpoolingRequestTestData {
 
+  /**
+   * Default max walk time used by every factory here. Matches the 15-minute slack the
+   * {@code TimeTripFilter} tests are tuned around. Pinning an explicit value here keeps the
+   * test boundary assertions independent of any future preference-default changes.
+   */
+  public static final Duration DEFAULT_MAX_WALK_TIME = Duration.ofMinutes(15);
+
   /** Direct routing request with specific passenger coordinates; no time constraint. */
   public static CarpoolingRequest directRequest(WgsCoordinate pickup, WgsCoordinate dropoff) {
     return new CarpoolingRequestBuilder()
       .withPassengerPickup(pickup)
       .withPassengerDropoff(dropoff)
+      .withMaxWalkTime(DEFAULT_MAX_WALK_TIME)
       .build();
   }
 
@@ -26,6 +35,7 @@ public class CarpoolingRequestTestData {
     return new CarpoolingRequestBuilder()
       .withPassengerPickup(passengerPickup)
       .withAccessOrEgress(AccessEgressType.ACCESS)
+      .withMaxWalkTime(DEFAULT_MAX_WALK_TIME)
       .build();
   }
 
@@ -34,15 +44,22 @@ public class CarpoolingRequestTestData {
     return new CarpoolingRequestBuilder()
       .withPassengerDropoff(passengerDropoff)
       .withAccessOrEgress(AccessEgressType.EGRESS)
+      .withMaxWalkTime(DEFAULT_MAX_WALK_TIME)
       .build();
   }
 
   public static CarpoolingRequest departAfterWithNoTime() {
-    return new CarpoolingRequestBuilder().withArriveBy(false).build();
+    return new CarpoolingRequestBuilder()
+      .withArriveBy(false)
+      .withMaxWalkTime(DEFAULT_MAX_WALK_TIME)
+      .build();
   }
 
   public static CarpoolingRequest arriveByWithNoTime() {
-    return new CarpoolingRequestBuilder().withArriveBy(true).build();
+    return new CarpoolingRequestBuilder()
+      .withArriveBy(true)
+      .withMaxWalkTime(DEFAULT_MAX_WALK_TIME)
+      .build();
   }
 
   public static CarpoolingRequest departAfterDirect(Instant T) {
@@ -78,6 +95,7 @@ public class CarpoolingRequestTestData {
       .withArriveBy(arriveBy)
       .withRequestedDateTime(T)
       .withAccessOrEgress(accessOrEgress)
+      .withMaxWalkTime(DEFAULT_MAX_WALK_TIME)
       .build();
   }
 

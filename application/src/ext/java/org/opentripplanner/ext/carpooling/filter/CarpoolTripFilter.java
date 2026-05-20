@@ -17,9 +17,6 @@ import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
  * {@link CarpoolingRequest#isAccessEgressRequest()} and {@link CarpoolingRequest#isAccessRequest()}.
  */
 public interface CarpoolTripFilter {
-  /** Extra time added to the search-window upper bound to account for walking to the pickup. */
-  Duration MAX_WALK_TIME = Duration.ofMinutes(15);
-
   /**
    * Conservative cap on total passenger travel time, used as a fallback bound when an unbounded
    * transit segment separates the carpool leg from the request anchor.

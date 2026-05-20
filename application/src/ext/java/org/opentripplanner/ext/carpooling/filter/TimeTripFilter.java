@@ -38,15 +38,12 @@ import org.slf4j.LoggerFactory;
  * still pick up or drop off a passenger inside their window are not rejected:
  *
  * <ul>
- *   <li><strong>{@code W} = {@link CarpoolTripFilter#MAX_WALK_TIME}</strong> (max walk time) —
+ *   <li><strong>{@code W} = {@link CarpoolingRequest#getMaxWalkTime()}</strong> (max walk time) —
  *       upper bound on how long the passenger walks between origin/destination and the carpool
  *       pickup/dropoff. Used wherever a single walk segment shifts the relevant bound by a known,
  *       bounded amount: a passenger leaving by LDT can be at the pickup as late as
  *       {@code LDT + W}; a carpool that drops off by {@code EAT − W} still gives an arrival at or
- *       after EAT after a W-long walk to destination. <em>Concrete and known per request</em> —
- *       in principle this should come from
- *       {@code request.preferences().street().accessEgress().maxDuration().valueOf(WALK)}; today
- *       the constant is hardcoded.</li>
+ *       after EAT after a W-long walk to destination.</li>
  *   <li><strong>{@code T} = {@link CarpoolTripFilter#MAX_TOTAL_TRAVEL_TIME}</strong> (max total
  *       passenger travel time, fallback) — used <em>only</em> in the two cells where neither the
  *       request window nor {@code W} can produce a real bound: <em>access / arriveBy=true / too
@@ -137,7 +134,9 @@ public class TimeTripFilter implements CarpoolTripFilter {
     if (tripStart.isAfter(lat)) {
       return reject(trip, "tripStart", tripStart, "is after LAT", lat);
     }
-    var maxConnectionTime = request.isAccessRequest() ? MAX_TOTAL_TRAVEL_TIME : MAX_WALK_TIME;
+    var maxConnectionTime = request.isAccessRequest()
+      ? MAX_TOTAL_TRAVEL_TIME
+      : request.getMaxWalkTime();
     var earliestAcceptableTripEnd = lat.minus(searchWindow).minus(maxConnectionTime);
     if (tripEnd.isBefore(earliestAcceptableTripEnd)) {
       return reject(
@@ -171,7 +170,9 @@ public class TimeTripFilter implements CarpoolTripFilter {
     if (tripEnd.isBefore(edt)) {
       return reject(trip, "tripEnd", tripEnd, "is before EDT", edt);
     }
-    var maxConnectionTime = request.isEgressRequest() ? MAX_TOTAL_TRAVEL_TIME : MAX_WALK_TIME;
+    var maxConnectionTime = request.isEgressRequest()
+      ? MAX_TOTAL_TRAVEL_TIME
+      : request.getMaxWalkTime();
     var latestAcceptableTripStart = edt.plus(searchWindow).plus(maxConnectionTime);
     if (tripStart.isAfter(latestAcceptableTripStart)) {
       return reject(

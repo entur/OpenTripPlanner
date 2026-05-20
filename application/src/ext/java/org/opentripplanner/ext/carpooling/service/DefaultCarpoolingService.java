@@ -212,12 +212,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
       );
 
       var stopDuration = request.preferences().car().pickupTime();
-      var maxWalkToCarpool = request
-        .preferences()
-        .street()
-        .accessEgress()
-        .maxDuration()
-        .valueOf(StreetMode.WALK);
+      var maxWalkToCarpool = carpoolingRequest.getMaxWalkTime();
       var streetSearchRequest = StreetSearchRequestMapper.map(request).build();
 
       var passengerPickupVertex = streetVertexUtils.createPassengerVertex(
@@ -393,12 +388,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var carpoolTreeVertexRouter = new CarpoolTreeStreetRouter();
       var streetSearchRequest = StreetSearchRequestMapper.map(request).build();
-      var maxWalkToCarpool = request
-        .preferences()
-        .street()
-        .accessEgress()
-        .maxDuration()
-        .valueOf(StreetMode.WALK);
+      var maxWalkToCarpool = carpoolingRequest.getMaxWalkTime();
       Vertex passengerAccessEgressVertex = streetVertexUtils.createPassengerVertex(
         passengerCoordinates
       );
