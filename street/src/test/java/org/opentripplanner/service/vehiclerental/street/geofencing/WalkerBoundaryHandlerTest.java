@@ -83,7 +83,7 @@ class WalkerBoundaryHandlerTest {
   class BusinessArea {
 
     @Test
-    void enforcesAtNearBoundary_walkerExitsBAInRealTime() {
+    void enforcesWhenWalkerExitsBA() {
       // Real time: edge v2→v3 exits BA (fromv inside, tov outside).
       //   fromv entering=false (inside, away exits)
       //   tov   entering=true  (outside, away enters)
@@ -95,7 +95,7 @@ class WalkerBoundaryHandlerTest {
       var state = createArriveByHaveRentedWalker();
       var result = WalkerBoundaryHandler.apply(state, fromBounds, toBounds, edgeTraversal);
 
-      assertNotNull(result, "BA NEAR boundary should trigger walking branch");
+      assertNotNull(result, "walker exits BA → should trigger walking branch");
       assertEquals(1, result.length, "should produce walking-only branch");
       assertEquals(
         VehicleRentalState.HAVE_RENTED,
@@ -105,7 +105,7 @@ class WalkerBoundaryHandlerTest {
     }
 
     @Test
-    void passesAtFarBoundary_walkerEntersBAInRealTime() {
+    void passesWhenWalkerEntersBA() {
       // Real time: edge v2→v3 enters BA (fromv outside, tov inside).
       //   fromv entering=true  (outside, away enters)
       //   tov   entering=false (inside, away exits)
@@ -117,7 +117,7 @@ class WalkerBoundaryHandlerTest {
       var state = createArriveByHaveRentedWalker();
       var result = WalkerBoundaryHandler.apply(state, fromBounds, toBounds, edgeTraversal);
 
-      assertNull(result, "BA FAR boundary — walker enters BA in real time, no enforcement");
+      assertNull(result, "walker enters BA in real time → no enforcement");
     }
   }
 
@@ -125,7 +125,7 @@ class WalkerBoundaryHandlerTest {
   class RestrictedZone {
 
     @Test
-    void enforcesAtFarBoundary_walkerExitsRestrictedZoneInRealTime() {
+    void enforcesWhenWalkerExitsRestrictedZone() {
       // Real time: edge v2→v3 enters the no-drop-off zone (fromv outside, tov inside).
       //   fromv entering=true  (outside, away enters)
       // In arrive-by, walker goes real-time-backward (tov→fromv), so the walker EXITED the
@@ -137,7 +137,7 @@ class WalkerBoundaryHandlerTest {
       var state = createArriveByHaveRentedWalker();
       var result = WalkerBoundaryHandler.apply(state, fromBounds, toBounds, edgeTraversal);
 
-      assertNotNull(result, "restricted FAR boundary should trigger walking branch");
+      assertNotNull(result, "walker exits restricted zone → should trigger walking branch");
       assertEquals(1, result.length, "should produce walking-only branch");
       assertEquals(
         VehicleRentalState.HAVE_RENTED,
@@ -147,7 +147,7 @@ class WalkerBoundaryHandlerTest {
     }
 
     @Test
-    void passesAtNearBoundary_walkerEntersRestrictedZoneInRealTime() {
+    void passesWhenWalkerEntersRestrictedZone() {
       // Real time: edge v2→v3 exits the zone (fromv inside, tov outside).
       //   fromv entering=false
       // In real time the walker entered the zone here — not a rental drop point (drop must
@@ -158,12 +158,12 @@ class WalkerBoundaryHandlerTest {
       var state = createArriveByHaveRentedWalker();
       var result = WalkerBoundaryHandler.apply(state, fromBounds, toBounds, edgeTraversal);
 
-      assertNull(result, "restricted NEAR boundary — no enforcement");
+      assertNull(result, "walker enters restricted zone in real time → no enforcement");
     }
 
     @Test
     void triggersForNoTraversalZoneToo() {
-      // Same direction as the no-drop-off FAR case; verify it works for any restriction type.
+      // Same direction as the no-drop-off case; verify it works for any restriction type.
       var fromBounds = List.of(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
       var toBounds = List.of(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
 

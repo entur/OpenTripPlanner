@@ -236,10 +236,10 @@ class GeofencingInterceptorTest {
     }
 
     @Test
-    void enforcesAtNearBoundary() {
-      // Walker outside BA enters BA in arrive-by. fromv has entering=false (inside BA),
-      // paired with toBounds entering=true (outside). BA-specific effectiveEntering=false
-      // should trigger evaluateArriveByExiting → walking-only branch.
+    void enforcesWhenWalkerExitsBA() {
+      // Real time: edge v2→v3 exits BA (fromv inside, tov outside). In arrive-by, the walker
+      // is going backward, so the walker exited BA at this edge in real time — should trigger
+      // walking branch via WalkerBoundaryHandler → arriveByAtBoundary.
       var fromBounds = List.of(new GeofencingBoundaryExtension(BUSINESS_AREA, false));
       var toBounds = List.of(new GeofencingBoundaryExtension(BUSINESS_AREA, true));
 
@@ -248,7 +248,7 @@ class GeofencingInterceptorTest {
       var state = createArriveByHaveRentedState();
       var result = GeofencingInterceptor.apply(state, fromBounds, toBounds, arriveByTraversal);
 
-      assertNotNull(result, "should trigger enforcement at NEAR BA boundary");
+      assertNotNull(result, "walker exits BA → should trigger walking branch");
       assertEquals(1, result.length, "should produce walking-only branch");
       assertEquals(
         VehicleRentalState.HAVE_RENTED,
@@ -258,9 +258,9 @@ class GeofencingInterceptorTest {
     }
 
     @Test
-    void passesAtFarBoundary() {
-      // Walker inside BA exits BA in arrive-by. fromv has entering=true (outside BA).
-      // BA-specific effectiveEntering=true → "entering is fine" → null.
+    void passesWhenWalkerEntersBA() {
+      // Real time: edge v2→v3 enters BA (fromv outside, tov inside). Walker entered BA in
+      // real time — not a rental drop point (drop must be inside BA). No enforcement.
       var fromBounds = List.of(new GeofencingBoundaryExtension(BUSINESS_AREA, true));
       var toBounds = List.of(new GeofencingBoundaryExtension(BUSINESS_AREA, false));
 
@@ -268,7 +268,7 @@ class GeofencingInterceptorTest {
       var state = createArriveByHaveRentedState(BUSINESS_AREA);
       var result = GeofencingInterceptor.apply(state, fromBounds, toBounds, arriveByTraversal);
 
-      assertNull(result, "should pass at FAR BA boundary — entering is fine");
+      assertNull(result, "walker enters BA in real time → no enforcement");
     }
   }
 
