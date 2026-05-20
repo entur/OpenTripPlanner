@@ -2,6 +2,7 @@ package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -15,7 +16,12 @@ import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.street.graph.GraphDataFetcher;
 
+/// Tests that a P&R areas that are intersected by other ways, which share no nodes, should
+/// create synthetic nodes to connect the P&R area to the street network.
+///
+/// This is quite a dubious feature that I would like to revisit.
 class UnconnectedParkAndRideTest {
 
   @Test
@@ -24,6 +30,8 @@ class UnconnectedParkAndRideTest {
     var n2 = OsmNode.of().withId(2).withLatLon(0.001, 0.0).build();
     var n3 = OsmNode.of().withId(3).withLatLon(0.001, 0.001).build();
     var n4 = OsmNode.of().withId(4).withLatLon(0.0, 0.001).build();
+    var n5 = OsmNode.of().withId(5).withLatLon(0.0, -0.001).build();
+    var n6 = OsmNode.of().withId(6).withLatLon(0.001, 0.002).build();
 
     var parkingArea = OsmWay.of()
       .withId(1)
@@ -33,7 +41,13 @@ class UnconnectedParkAndRideTest {
       .addNodeRef(1, 2, 3, 4, 1)
       .build();
 
-    var provider = new TestOsmProvider(List.of(), List.of(parkingArea), List.of(n1, n2, n3, n4));
+    var serviceRoad = OsmWay.of().withId(2).withTag("highway", "service").addNodeRef(5, 6).build();
+
+    var provider = new TestOsmProvider(
+      List.of(),
+      List.of(parkingArea, serviceRoad),
+      List.of(n1, n2, n3, n4, n5, n6)
+    );
 
     var graph = new Graph();
     var parkingRepository = new DefaultVehicleParkingRepository();
