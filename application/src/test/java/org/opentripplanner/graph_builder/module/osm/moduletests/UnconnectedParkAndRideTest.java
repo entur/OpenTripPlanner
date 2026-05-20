@@ -25,7 +25,7 @@ import org.opentripplanner.street.graph.GraphDataFetcher;
 class UnconnectedParkAndRideTest {
 
   @Test
-  void simpleSquareParkAndRideArea() {
+  void wayCrossingPR() {
     var n1 = OsmNode.of().withId(1).withLatLon(0.0, 0.0).build();
     var n2 = OsmNode.of().withId(2).withLatLon(0.001, 0.0).build();
     var n3 = OsmNode.of().withId(3).withLatLon(0.001, 0.001).build();
@@ -74,9 +74,16 @@ class UnconnectedParkAndRideTest {
     assertWithMessage("Unexpected edges. Check graph at %s", fetcher.geoJsonUrl())
       .that(fetcher.summarizeEdges())
       .containsExactly(
-        "(0,-0.001) → (0.001,0.002) ALL ♿✅",
-        "(0.001,0.002) → (0,-0.001) ALL ♿✅",
-        "Parking (0.0005,0.0005)[Vehicle parking OSM:OsmWay/1/centroid] → (0.0005,0.0005)[Vehicle parking OSM:OsmWay/1/centroid]"
+        "(0.000333,0) → (0,-0.001) ALL ♿✅",
+        "(0.000333,0) → (0.000667,0.001) ALL ♿✅",
+        "(0,-0.001) → (0.000333,0) ALL ♿✅",
+        "(0.000667,0.001) → (0.000333,0) ALL ♿✅",
+        "(0.001,0.002) → (0.000667,0.001) ALL ♿✅",
+        "(0.000667,0.001) → (0.001,0.002) ALL ♿✅",
+        "Parking (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000] → (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000]",
+        "Parking (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000] → (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001]",
+        "Parking (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001] → (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000]",
+        "Parking (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001] → (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001]"
       );
 
     assertThat(issueStore.listIssues().stream().map(DataImportIssue::getType)).containsExactly(
