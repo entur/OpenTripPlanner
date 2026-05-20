@@ -4,7 +4,6 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
-import org.opentripplanner.street.search.state.VehicleRentalState;
 
 /**
  * Intercepts rental edge traversals to enforce geofencing zone restrictions. Called from
@@ -136,31 +135,9 @@ public class GeofencingInterceptor {
       }
     }
 
-    // HAVE_RENTED walkers: trigger at boundaries where the walker exits the zone in real time.
-    // For business areas, that's where the real-time edge exits the BA (boundary entering=false).
-    // For restricted zones, that's where the real-time edge exits the zone (boundary entering=true,
-    // since restricted-zone "inside" is on the opposite side from a BA "inside").
-    if (s0.getVehicleRentalState() == VehicleRentalState.HAVE_RENTED) {
-      for (var boundary : fromBoundaries) {
-        if (!hasPairedBoundary(boundary, toBoundaries)) {
-          continue;
-        }
-        var zone = boundary.zone();
-        if (!zone.hasRestriction() && !zone.isBusinessArea()) {
-          continue;
-        }
-        boolean walkerExitsInRealTime = zone.isBusinessArea()
-          ? !boundary.entering()
-          : boundary.entering();
-        if (!walkerExitsInRealTime) {
-          continue;
-        }
-        var enforcement = GeofencingEnforcement.forZone(zone);
-        var result = enforcement.arriveByAtBoundary(zone, s0, edge);
-        if (result != null) {
-          return result;
-        }
-      }
+    var walkerResult = WalkerBoundaryHandler.apply(s0, fromBoundaries, toBoundaries, edge);
+    if (walkerResult != null) {
+      return walkerResult;
     }
 
     // Generic states: network commitment at zone boundaries
@@ -186,19 +163,5 @@ public class GeofencingInterceptor {
       return State.ofNullable(editor.makeState());
     }
     return State.empty();
-  }
-
-  private static boolean hasPairedBoundary(
-    GeofencingBoundaryExtension boundary,
-    List<GeofencingBoundaryExtension> toBoundaries
-  ) {
-    for (var tovBoundary : toBoundaries) {
-      if (
-        tovBoundary.zone().equals(boundary.zone()) && tovBoundary.entering() != boundary.entering()
-      ) {
-        return true;
-      }
-    }
-    return false;
   }
 }
